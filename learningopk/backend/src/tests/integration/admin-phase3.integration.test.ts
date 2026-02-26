@@ -173,3 +173,32 @@ test("admin community threads listing enforces auth/role and supports solved+pin
   assert.ok(filtered.body.entries.every((row: { isPinned: boolean }) => row.isPinned === false));
   assert.ok(filtered.body.entries.every((row: { openFlagCount: number }) => row.openFlagCount > 0));
 });
+
+test("admin analytics overview enforces auth/role and returns windowed KPI aggregates", async () => {
+  const app = createApp();
+  const anonAgent = request(app);
+  const adminAgent = request.agent(app);
+  const memberAgent = request.agent(app);
+
+  await signUp(adminAgent, "Analytics Admin", `tst_phase3_analytics_admin_${Date.now()}@example.com`);
+  await signUp(memberAgent, "Analytics Member", `tst_phase3_analytics_member_${Date.now()}@example.com`);
+
+  const adminUser = await getSessionUser(adminAgent);
+  await assignAdminRole(adminUser.id);
+
+  const unauthenticated = await anonAgent.get("/api/admin/analytics/overview");
+  assert.equal(unauthenticated.status, 401);
+
+  const forbidden = await memberAgent.get("/api/admin/analytics/overview");
+  assert.equal(forbidden.status, 403);
+
+  const analytics = await adminAgent.get("/api/admin/analytics/overview").query({ windowDays: 30 });
+  assert.equal(analytics.status, 200);
+  assert.equal(analytics.body.windowDays, 30);
+  assert.equal(typeof analytics.body.summary?.activeStudents, "number");
+  assert.equal(typeof analytics.body.summary?.quizAttempts, "number");
+  assert.equal(typeof analytics.body.summary?.averageQuizScorePercent, "number");
+  assert.equal(typeof analytics.body.summary?.threadsCreated, "number");
+  assert.equal(typeof analytics.body.summary?.openModerationFlags, "number");
+  assert.ok(Array.isArray(analytics.body.subjectPerformance), "Expected subject performance list.");
+});

@@ -4,7 +4,18 @@ import { z } from "zod";
 
 import { requireAdminRole } from "../lib/admin.js";
 import { db } from "../lib/db/index.js";
-import { adminAuditLogs, boards, chapters, forumThreads, moderationFlags, subjects, users } from "../lib/db/schema.js";
+import {
+  adminAuditLogs,
+  boards,
+  chapters,
+  forumThreads,
+  moderationFlags,
+  quizAttempts,
+  quizzes,
+  subjects,
+  userProgress,
+  users
+} from "../lib/db/schema.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 
 const chapterParamsSchema = z.object({
@@ -56,6 +67,17 @@ const adminCommunityThreadsQuerySchema = z.object({
   solved: z.enum(["all", "solved", "unsolved"]).optional().default("all"),
   pinned: z.enum(["all", "pinned", "unpinned"]).optional().default("all"),
   flagState: z.enum(["all", "openFlags", "noOpenFlags"]).optional().default("all")
+});
+
+const adminAnalyticsOverviewQuerySchema = z.object({
+  windowDays: z.coerce
+    .number()
+    .int()
+    .optional()
+    .default(30)
+    .refine((value) => [7, 30, 90].includes(value), {
+      message: "windowDays must be one of: 7, 30, 90"
+    })
 });
 
 type AdminAuditScope = "content" | "forum" | "moderation";
@@ -380,6 +402,88 @@ const listAdminCommunityThreads = async ({
   };
 };
 
+const listAdminAnalyticsOverview = async ({
+  windowDays
+}: {
+  windowDays: number;
+}) => {
+  const windowStart = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000);
+
+  const [activeStudentsRow] = await db
+    .select({
+      count: sql<number>`count(distinct ${userProgress.userId})::int`
+    })
+    .from(userProgress)
+    .where(sql`${userProgress.visitedAt} >= ${windowStart}`);
+
+  const [quizAttemptsRow] = await db
+    .select({
+      count: sql<number>`count(*)::int`
+    })
+    .from(quizAttempts)
+    .where(sql`${quizAttempts.completedAt} >= ${windowStart}`);
+
+  const [averageQuizScoreRow] = await db
+    .select({
+      value: sql<number>`coalesce(avg(case when ${quizAttempts.totalMarks} > 0 then (${quizAttempts.score}::numeric * 100.0) / ${quizAttempts.totalMarks} else 0 end), 0)::float`
+    })
+    .from(quizAttempts)
+    .where(sql`${quizAttempts.completedAt} >= ${windowStart}`);
+
+  const [threadsCreatedRow] = await db
+    .select({
+      count: sql<number>`count(*)::int`
+    })
+    .from(forumThreads)
+    .where(sql`${forumThreads.createdAt} >= ${windowStart}`);
+
+  const [openModerationFlagsRow] = await db
+    .select({
+      count: sql<number>`count(*)::int`
+    })
+    .from(moderationFlags)
+    .where(eq(moderationFlags.status, "open"));
+
+  const subjectPerformanceRows = await db
+    .select({
+      subjectId: subjects.id,
+      subjectName: subjects.name,
+      grade: subjects.grade,
+      boardName: boards.name,
+      attempts: sql<number>`count(${quizAttempts.id})::int`,
+      averageScorePercent: sql<number>`coalesce(avg(case when ${quizAttempts.totalMarks} > 0 then (${quizAttempts.score}::numeric * 100.0) / ${quizAttempts.totalMarks} else 0 end), 0)::float`,
+      activeStudents: sql<number>`count(distinct ${quizAttempts.userId})::int`
+    })
+    .from(quizAttempts)
+    .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
+    .innerJoin(chapters, eq(quizzes.chapterId, chapters.id))
+    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+    .innerJoin(boards, eq(subjects.boardId, boards.id))
+    .where(sql`${quizAttempts.completedAt} >= ${windowStart}`)
+    .groupBy(subjects.id, subjects.name, subjects.grade, boards.name)
+    .orderBy(desc(sql`count(${quizAttempts.id})`), asc(subjects.name));
+
+  return {
+    windowDays,
+    summary: {
+      activeStudents: activeStudentsRow?.count ?? 0,
+      quizAttempts: quizAttemptsRow?.count ?? 0,
+      averageQuizScorePercent: Number(averageQuizScoreRow?.value ?? 0),
+      threadsCreated: threadsCreatedRow?.count ?? 0,
+      openModerationFlags: openModerationFlagsRow?.count ?? 0
+    },
+    subjectPerformance: subjectPerformanceRows.map((row) => ({
+      subjectId: row.subjectId,
+      subjectName: row.subjectName,
+      grade: row.grade,
+      boardName: row.boardName,
+      attempts: row.attempts,
+      averageScorePercent: Number(row.averageScorePercent),
+      activeStudents: row.activeStudents
+    }))
+  };
+};
+
 export const adminRouter = Router();
 
 adminRouter.get("/moderation/flags", requireSession, async (req, res) => {
@@ -588,6 +692,28 @@ adminRouter.get("/community/threads", requireSession, async (req, res) => {
     pageSize,
     hasMore: payload.hasMore
   });
+});
+
+adminRouter.get("/analytics/overview", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedQuery = adminAnalyticsOverviewQuerySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid analytics overview query parameters",
+      details: parsedQuery.error.flatten()
+    });
+    return;
+  }
+
+  const payload = await listAdminAnalyticsOverview({
+    windowDays: parsedQuery.data.windowDays
+  });
+
+  res.status(200).json(payload);
 });
 
 adminRouter.get("/content/chapters", requireSession, async (req, res) => {
