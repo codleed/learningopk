@@ -1,7 +1,10 @@
 "use client";
 
+import { X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+
+import { Button } from "@/components/ui/button";
 
 import type { AdminSession } from "./admin-guard";
 import { AdminSidebar } from "./admin-sidebar";
@@ -14,6 +17,7 @@ type AdminShellProps = {
 
 export function AdminShell({ children, session }: AdminShellProps) {
   const currentPath = usePathname() ?? "/admin";
+  const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -26,17 +30,42 @@ export function AdminShell({ children, session }: AdminShellProps) {
 
       <div className="mx-auto w-full max-w-[1400px] px-4 pb-12 pt-6 sm:px-6 lg:px-8">
         <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
-          <div className="lg:sticky lg:top-4 lg:w-80 lg:self-start">
+          <div className="hidden lg:sticky lg:top-4 lg:block lg:w-80 lg:self-start">
             <AdminSidebar currentPath={currentPath} />
           </div>
           <div className="min-w-0 flex-1 space-y-4">
-            <AdminTopbar session={session} />
+            <AdminTopbar session={session} onOpenNavigation={() => setIsMobileNavigationOpen(true)} />
             <main id="main-content" className="min-w-0">
               {children}
             </main>
           </div>
         </div>
       </div>
+
+      {isMobileNavigationOpen ? (
+        <div className="lg:hidden">
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-slate-950/55"
+            aria-label="Dismiss navigation overlay"
+            onClick={() => setIsMobileNavigationOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 z-50 w-[88vw] max-w-sm p-4">
+            <div className="mb-2 flex justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-label="Close navigation"
+                onClick={() => setIsMobileNavigationOpen(false)}
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </Button>
+            </div>
+            <AdminSidebar currentPath={currentPath} onNavigate={() => setIsMobileNavigationOpen(false)} />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

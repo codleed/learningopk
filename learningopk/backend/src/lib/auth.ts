@@ -31,6 +31,11 @@ export const auth = betterAuth({
       board: {
         type: "string",
         required: false
+      },
+      role: {
+        type: "string",
+        required: false,
+        input: false
       }
     }
   },

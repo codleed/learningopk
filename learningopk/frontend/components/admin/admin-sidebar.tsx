@@ -6,9 +6,10 @@ import { adminNavItems, isAdminNavItemActive } from "./admin-nav-config";
 
 type AdminSidebarProps = {
   currentPath: string;
+  onNavigate?: () => void;
 };
 
-export function AdminSidebar({ currentPath }: AdminSidebarProps) {
+export function AdminSidebar({ currentPath, onNavigate }: AdminSidebarProps) {
   return (
     <aside className="surface-card rounded-3xl border border-slate-700/60 bg-slate-900 p-4 text-slate-100 shadow-xl">
       <div className="mb-4 border-b border-slate-700/70 pb-4">
@@ -26,6 +27,7 @@ export function AdminSidebar({ currentPath }: AdminSidebarProps) {
               key={item.href}
               href={item.href}
               aria-current={isActive ? "page" : undefined}
+              onClick={onNavigate}
               className={cn(
                 "flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition",
                 isActive
