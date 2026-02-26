@@ -48,6 +48,28 @@ const assignAdminRole = async (userId: string): Promise<void> => {
   await db.update(users).set({ role: "admin" }).where(eq(users.id, userId));
 };
 
+const seedSettingFixture = async ({
+  key,
+  value,
+  description,
+  updatedBy
+}: {
+  key: string;
+  value: string;
+  description: string;
+  updatedBy: string;
+}): Promise<void> => {
+  await pool.query(
+    `
+      insert into admin_settings (key, value, description, updated_by)
+      values ($1, $2, $3, $4)
+      on conflict (key)
+      do update set value = excluded.value, description = excluded.description, updated_by = excluded.updated_by
+    `,
+    [key, value, description, updatedBy]
+  );
+};
+
 after(async () => {
   if (redis.isOpen) {
     await redis.quit();
@@ -118,4 +140,70 @@ test("admin notifications listing and creation enforce auth/role with validation
   assert.equal(notificationAudit.status, "success");
   assert.equal(notificationAudit.actor_id, adminUser.id);
   assert.match(notificationAudit.message, /Maintenance window/i);
+});
+
+test("admin settings listing and update enforce auth/role and key validation", async () => {
+  const app = createApp();
+  const anonAgent = request(app);
+  const adminAgent = request.agent(app);
+  const memberAgent = request.agent(app);
+
+  await signUp(adminAgent, "Phase4 Settings Admin", `tst_phase4_settings_admin_${Date.now()}@example.com`);
+  await signUp(memberAgent, "Phase4 Settings Member", `tst_phase4_settings_member_${Date.now()}@example.com`);
+
+  const adminUser = await getSessionUser(adminAgent);
+  await assignAdminRole(adminUser.id);
+  await seedSettingFixture({
+    key: "forum_auto_lock_hours",
+    value: "24",
+    description: "Auto-lock inactive forum threads after N hours.",
+    updatedBy: adminUser.id
+  });
+
+  const unauthenticated = await anonAgent.get("/api/admin/settings");
+  assert.equal(unauthenticated.status, 401);
+
+  const forbidden = await memberAgent.get("/api/admin/settings");
+  assert.equal(forbidden.status, 403);
+
+  const listing = await adminAgent.get("/api/admin/settings").query({ page: 1, pageSize: 10 });
+  assert.equal(listing.status, 200);
+  assert.ok(Array.isArray(listing.body.entries), "Expected settings entries payload.");
+  assert.ok(
+    listing.body.entries.some((entry: { key: string }) => entry.key === "forum_auto_lock_hours"),
+    "Expected seeded forum_auto_lock_hours setting."
+  );
+
+  const notFound = await adminAgent.post("/api/admin/settings/unknown_key").send({ value: "true" });
+  assert.equal(notFound.status, 404);
+
+  const invalid = await adminAgent.post("/api/admin/settings/forum_auto_lock_hours").send({ value: "   " });
+  assert.equal(invalid.status, 400);
+
+  const updated = await adminAgent.post("/api/admin/settings/forum_auto_lock_hours").send({ value: "48" });
+  assert.equal(updated.status, 200);
+  assert.equal(updated.body.setting.key, "forum_auto_lock_hours");
+  assert.equal(updated.body.setting.value, "48");
+
+  const settingsAuditRows = await pool.query<{
+    scope: string;
+    status: string;
+    actor_id: string | null;
+    message: string;
+  }>(
+    `
+      select scope, status, actor_id, message
+      from admin_audit_logs
+      where scope = 'settings'
+      order by created_at desc
+      limit 1
+    `
+  );
+
+  const settingsAudit = settingsAuditRows.rows[0];
+  assert.ok(settingsAudit, "Expected settings audit log entry.");
+  assert.equal(settingsAudit.scope, "settings");
+  assert.equal(settingsAudit.status, "success");
+  assert.equal(settingsAudit.actor_id, adminUser.id);
+  assert.match(settingsAudit.message, /forum_auto_lock_hours/i);
 });
