@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
 import { Router, type Response } from "express";
 import { z } from "zod";
 
@@ -48,6 +48,14 @@ const adminUsersQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
   q: z.string().trim().optional().default(""),
   role: z.enum(["student", "admin"]).optional()
+});
+
+const adminCommunityThreadsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
+  solved: z.enum(["all", "solved", "unsolved"]).optional().default("all"),
+  pinned: z.enum(["all", "pinned", "unpinned"]).optional().default("all"),
+  flagState: z.enum(["all", "openFlags", "noOpenFlags"]).optional().default("all")
 });
 
 type AdminAuditScope = "content" | "forum" | "moderation";
@@ -265,6 +273,113 @@ const listAdminUsers = async ({
   };
 };
 
+const listAdminCommunityThreads = async ({
+  page,
+  pageSize,
+  solved,
+  pinned,
+  flagState
+}: {
+  page: number;
+  pageSize: number;
+  solved: "all" | "solved" | "unsolved";
+  pinned: "all" | "pinned" | "unpinned";
+  flagState: "all" | "openFlags" | "noOpenFlags";
+}) => {
+  const offset = (page - 1) * pageSize;
+  const threadIdAsText = sql`${forumThreads.id}::text`;
+  const predicates: SQL[] = [];
+
+  if (solved === "solved") {
+    predicates.push(eq(forumThreads.isSolved, true));
+  } else if (solved === "unsolved") {
+    predicates.push(eq(forumThreads.isSolved, false));
+  }
+
+  if (pinned === "pinned") {
+    predicates.push(eq(forumThreads.isPinned, true));
+  } else if (pinned === "unpinned") {
+    predicates.push(eq(forumThreads.isPinned, false));
+  }
+
+  if (flagState === "openFlags") {
+    predicates.push(
+      sql`exists (
+        select 1
+        from moderation_flags
+        where moderation_flags.target_type = 'thread'
+          and moderation_flags.status = 'open'
+          and moderation_flags.target_id = ${threadIdAsText}
+      )`
+    );
+  } else if (flagState === "noOpenFlags") {
+    predicates.push(
+      sql`not exists (
+        select 1
+        from moderation_flags
+        where moderation_flags.target_type = 'thread'
+          and moderation_flags.status = 'open'
+          and moderation_flags.target_id = ${threadIdAsText}
+      )`
+    );
+  }
+
+  const whereClause = predicates.length > 0 ? and(...predicates) : undefined;
+
+  const rows = await db
+    .select({
+      threadId: forumThreads.id,
+      title: forumThreads.title,
+      authorName: users.name,
+      createdAt: forumThreads.createdAt,
+      isPinned: forumThreads.isPinned,
+      isSolved: forumThreads.isSolved,
+      replyCount: sql<number>`(
+        select count(*)::int
+        from forum_replies
+        where forum_replies.thread_id = ${forumThreads.id}
+      )`,
+      views: forumThreads.views,
+      openFlagCount: sql<number>`(
+        select count(*)::int
+        from moderation_flags
+        where moderation_flags.target_type = 'thread'
+          and moderation_flags.status = 'open'
+          and moderation_flags.target_id = ${threadIdAsText}
+      )`
+    })
+    .from(forumThreads)
+    .innerJoin(users, eq(forumThreads.userId, users.id))
+    .where(whereClause)
+    .orderBy(desc(forumThreads.createdAt), desc(forumThreads.id))
+    .offset(offset)
+    .limit(pageSize);
+
+  const totalRows = await db
+    .select({
+      count: sql<number>`count(*)::int`
+    })
+    .from(forumThreads)
+    .where(whereClause);
+  const total = totalRows[0]?.count ?? 0;
+
+  return {
+    entries: rows.map((row) => ({
+      threadId: row.threadId,
+      title: row.title,
+      authorName: row.authorName,
+      createdAt: row.createdAt.toISOString(),
+      isPinned: row.isPinned,
+      isSolved: row.isSolved,
+      replyCount: row.replyCount,
+      views: row.views,
+      openFlagCount: row.openFlagCount
+    })),
+    total,
+    hasMore: offset + rows.length < total
+  };
+};
+
 export const adminRouter = Router();
 
 adminRouter.get("/moderation/flags", requireSession, async (req, res) => {
@@ -431,6 +546,39 @@ adminRouter.get("/users", requireSession, async (req, res) => {
     pageSize,
     q,
     ...(role ? { role } : {})
+  });
+
+  res.status(200).json({
+    entries: payload.entries,
+    total: payload.total,
+    page,
+    pageSize,
+    hasMore: payload.hasMore
+  });
+});
+
+adminRouter.get("/community/threads", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedQuery = adminCommunityThreadsQuerySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid community threads query parameters",
+      details: parsedQuery.error.flatten()
+    });
+    return;
+  }
+
+  const { page, pageSize, solved, pinned, flagState } = parsedQuery.data;
+  const payload = await listAdminCommunityThreads({
+    page,
+    pageSize,
+    solved,
+    pinned,
+    flagState
   });
 
   res.status(200).json({
