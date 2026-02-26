@@ -98,6 +98,28 @@ const adminCommunityThreadsResponseSchema = z.object({
   hasMore: z.boolean()
 });
 
+const adminAnalyticsSubjectPerformanceSchema = z.object({
+  subjectId: z.number().int().positive(),
+  subjectName: z.string(),
+  grade: z.enum(["9", "10"]),
+  boardName: z.string(),
+  attempts: z.number().int().nonnegative(),
+  averageScorePercent: z.number(),
+  activeStudents: z.number().int().nonnegative()
+});
+
+const adminAnalyticsOverviewSchema = z.object({
+  windowDays: z.union([z.literal(7), z.literal(30), z.literal(90)]),
+  summary: z.object({
+    activeStudents: z.number().int().nonnegative(),
+    quizAttempts: z.number().int().nonnegative(),
+    averageQuizScorePercent: z.number(),
+    threadsCreated: z.number().int().nonnegative(),
+    openModerationFlags: z.number().int().nonnegative()
+  }),
+  subjectPerformance: z.array(adminAnalyticsSubjectPerformanceSchema)
+});
+
 export type AdminChapterResponse = z.infer<typeof adminChapterSchema>;
 export type AdminAuditLogResponse = z.infer<typeof adminAuditLogResponseSchema>;
 export type AdminAuditLogResponseEntry = z.infer<typeof adminAuditLogEntrySchema>;
@@ -108,6 +130,8 @@ export type AdminUser = z.infer<typeof adminUserSchema>;
 export type AdminUsersResponse = z.infer<typeof adminUsersResponseSchema>;
 export type AdminCommunityThread = z.infer<typeof adminCommunityThreadSchema>;
 export type AdminCommunityThreadsResponse = z.infer<typeof adminCommunityThreadsResponseSchema>;
+export type AdminAnalyticsOverview = z.infer<typeof adminAnalyticsOverviewSchema>;
+export type AdminAnalyticsSubjectPerformance = z.infer<typeof adminAnalyticsSubjectPerformanceSchema>;
 
 const fetchAdminJson = async <T>({
   path,
@@ -311,6 +335,24 @@ export const getAdminCommunityThreads = async ({
   return fetchAdminJson({
     path: `/api/admin/community/threads?${query.toString()}`,
     schema: adminCommunityThreadsResponseSchema,
+    ...(cookieHeader ? { cookieHeader } : {})
+  });
+};
+
+export const getAdminAnalyticsOverview = async ({
+  windowDays,
+  cookieHeader
+}: {
+  windowDays: 7 | 30 | 90;
+  cookieHeader?: string;
+}): Promise<AdminAnalyticsOverview> => {
+  const query = new URLSearchParams({
+    windowDays: String(windowDays)
+  });
+
+  return fetchAdminJson({
+    path: `/api/admin/analytics/overview?${query.toString()}`,
+    schema: adminAnalyticsOverviewSchema,
     ...(cookieHeader ? { cookieHeader } : {})
   });
 };

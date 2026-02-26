@@ -24,3 +24,14 @@ test("admin community page filters thread health rows and paginates", async ({ p
     await loadMoreButton.click();
   }
 });
+
+test("admin analytics page switches windows and renders KPI + subject table data", async ({ page }) => {
+  await loginAsSeededAdmin(page);
+  await page.goto("/admin/analytics");
+
+  await expect(page.getByRole("heading", { name: "Analytics & Reporting" })).toBeVisible();
+  await expect(page.getByRole("paragraph").filter({ hasText: "Active students" })).toBeVisible();
+  await page.getByLabel("Time window").selectOption("7");
+  await expect(page.getByText("Last 7 days").first()).toBeVisible();
+  await expect(page.getByRole("table", { name: "Subject performance" })).toBeVisible();
+});

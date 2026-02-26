@@ -1,12 +1,41 @@
-import { AdminComingSoonAction } from "@/components/admin/admin-coming-soon-action";
-import { AdminSectionPlaceholder } from "@/components/admin/admin-section-placeholder";
+import Link from "next/link";
+import { cookies } from "next/headers";
 
-export default function AdminAnalyticsPage() {
+import { AdminAnalyticsPanel } from "@/components/admin/admin-analytics-panel";
+import { PageHeader } from "@/components/foundation/page-header";
+import { getAdminAnalyticsOverview } from "@/lib/admin-api";
+
+export default async function AdminAnalyticsPage() {
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+  const payload = await getAdminAnalyticsOverview({
+    windowDays: 30,
+    cookieHeader
+  }).catch(() => ({
+    windowDays: 30 as const,
+    summary: {
+      activeStudents: 0,
+      quizAttempts: 0,
+      averageQuizScorePercent: 0,
+      threadsCreated: 0,
+      openModerationFlags: 0
+    },
+    subjectPerformance: []
+  }));
+
   return (
-    <AdminSectionPlaceholder
-      title="Analytics & Reporting"
-      description="Delivery and moderation KPI dashboards will launch with saved report templates."
-      action={<AdminComingSoonAction label="Generate Report (Coming Soon)" />}
-    />
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Admin Analytics"
+        title="Analytics & Reporting"
+        subtitle="Inspect learning and moderation health trends across recent activity windows."
+        actions={
+          <Link href="/admin" className="text-sm font-medium text-foreground underline underline-offset-4">
+            Back to admin
+          </Link>
+        }
+      />
+      <AdminAnalyticsPanel initialPayload={payload} />
+    </div>
   );
 }
