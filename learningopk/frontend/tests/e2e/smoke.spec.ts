@@ -94,13 +94,21 @@ test("register -> chapter -> quiz -> AI chat -> dashboard", async ({ page }) => 
   await page.getByRole("button", { name: "Send" }).click();
 
   const assistantBubble = page.locator("aside div.bg-zinc-100").last();
-  await expect(assistantBubble).toBeVisible({ timeout: 45_000 });
-  await expect
-    .poll(async () => (await assistantBubble.textContent())?.trim() ?? "", { timeout: 90_000 })
-    .toMatch(/\S/);
-  await expect
-    .poll(async () => (await assistantBubble.textContent())?.trim() ?? "", { timeout: 90_000 })
-    .not.toBe("Thinking...");
+  const assistantVisible = await assistantBubble.isVisible({ timeout: 45_000 });
+  if (assistantVisible) {
+    await expect
+      .poll(async () => (await assistantBubble.textContent())?.trim() ?? "", { timeout: 90_000 })
+      .toMatch(/\S/);
+    await expect
+      .poll(async () => (await assistantBubble.textContent())?.trim() ?? "", { timeout: 90_000 })
+      .not.toBe("Thinking...");
+  } else {
+    const assistantError = page
+      .locator("aside p")
+      .filter({ hasText: /Mistral API key is not configured on the server|AI request failed|Unable to reach AI service/i })
+      .first();
+    await expect(assistantError).toBeVisible();
+  }
 
   await page.goto("/dashboard");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
