@@ -62,12 +62,30 @@ const adminModerationResolveResponseSchema = z.object({
   flag: adminModerationFlagSchema
 });
 
+const adminUserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+  role: z.enum(["student", "admin"]),
+  createdAt: z.string().datetime()
+});
+
+const adminUsersResponseSchema = z.object({
+  entries: z.array(adminUserSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
+  hasMore: z.boolean()
+});
+
 export type AdminChapterResponse = z.infer<typeof adminChapterSchema>;
 export type AdminAuditLogResponse = z.infer<typeof adminAuditLogResponseSchema>;
 export type AdminAuditLogResponseEntry = z.infer<typeof adminAuditLogEntrySchema>;
 export type AdminModerationFlag = z.infer<typeof adminModerationFlagSchema>;
 export type AdminModerationFlagsResponse = z.infer<typeof adminModerationFlagsResponseSchema>;
 export type AdminModerationResolveResponse = z.infer<typeof adminModerationResolveResponseSchema>;
+export type AdminUser = z.infer<typeof adminUserSchema>;
+export type AdminUsersResponse = z.infer<typeof adminUsersResponseSchema>;
 
 const fetchAdminJson = async <T>({
   path,
@@ -213,5 +231,34 @@ export const resolveAdminModerationFlag = async ({
     schema: adminModerationResolveResponseSchema,
     method: "POST",
     body: { note }
+  });
+};
+
+export const getAdminUsers = async ({
+  page,
+  pageSize,
+  q,
+  role,
+  cookieHeader
+}: {
+  page: number;
+  pageSize: number;
+  q: string;
+  role?: "" | "student" | "admin";
+  cookieHeader?: string;
+}): Promise<AdminUsersResponse> => {
+  const query = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+    q
+  });
+  if (role) {
+    query.set("role", role);
+  }
+
+  return fetchAdminJson({
+    path: `/api/admin/users?${query.toString()}`,
+    schema: adminUsersResponseSchema,
+    ...(cookieHeader ? { cookieHeader } : {})
   });
 };

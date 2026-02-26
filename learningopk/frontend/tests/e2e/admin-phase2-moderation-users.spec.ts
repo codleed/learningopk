@@ -26,3 +26,17 @@ test("admin moderation queue filters open/resolved and resolves an open flag", a
   await page.getByLabel("Status").selectOption("resolved");
   await expect(page.getByText("This report was reviewed and valid corrective action was taken.")).toBeVisible();
 });
+
+test("admin users directory supports text search and role filtering", async ({ page }) => {
+  await loginAsSeededAdmin(page);
+  await page.goto("/admin/users");
+
+  await expect(page.getByRole("heading", { name: "User Management" })).toBeVisible();
+  await page.getByLabel("Search users").fill("admin@example.com");
+  await page.getByRole("button", { name: "Apply filters" }).click();
+  await expect(page.getByRole("cell", { name: "admin@example.com" })).toBeVisible();
+
+  await page.getByLabel("Role").selectOption("student");
+  await page.getByRole("button", { name: "Apply filters" }).click();
+  await expect(page.getByRole("cell", { name: "admin@example.com" })).toHaveCount(0);
+});
