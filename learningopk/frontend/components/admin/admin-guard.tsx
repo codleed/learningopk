@@ -3,9 +3,16 @@ import type { ReactNode } from "react";
 import { AuthGuardMessage } from "@/components/auth/auth-guard-message";
 import type { SessionPayload } from "@/lib/session";
 
+export type AdminSession = SessionPayload & {
+  user: SessionPayload["user"] & { role: "admin" };
+};
+
+export const isAdminSession = (session: SessionPayload | null): session is AdminSession =>
+  Boolean(session && session.user.role === "admin");
+
 type AdminGuardProps = {
   session: SessionPayload | null;
-  children: ReactNode;
+  children?: ReactNode;
 };
 
 export function AdminGuard({ session, children }: AdminGuardProps) {
@@ -24,6 +31,6 @@ export function AdminGuard({ session, children }: AdminGuardProps) {
     );
   }
 
-  return <>{children}</>;
+  return <>{children ?? null}</>;
 }
 
