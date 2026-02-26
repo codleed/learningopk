@@ -1,0 +1,75 @@
+import { expect, test, type Page } from "@playwright/test";
+
+const registerAndOpenForum = async (baseEmail: string, page: Page) => {
+  const timestamp = Date.now();
+  const password = "StrongPass123";
+
+  await page.goto("/register");
+  await page.getByLabel("Name").fill("Forum Chrome Student");
+  await page.getByLabel("Class").fill("10th");
+  await page.getByLabel("Degree").fill("Matriculation");
+  await page.getByLabel("Board").fill("Balochistan");
+  await page.getByLabel("Email").fill(`${baseEmail}_${timestamp}@example.com`);
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByLabel("Confirm Password").fill(password);
+  await page.getByRole("button", { name: "Create account" }).click();
+
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await page.goto("/forum");
+  await expect(page).toHaveURL(/\/forum$/);
+};
+
+const assertNoHorizontalOverflow = async (page: Page) => {
+  await page.waitForLoadState("domcontentloaded");
+  const hasOverflow = await page.evaluate(() => {
+    const root = document.documentElement;
+    if (!root) {
+      return false;
+    }
+
+    return root.scrollWidth > window.innerWidth + 1;
+  });
+  expect(hasOverflow).toBeFalsy();
+};
+
+test("forum keeps dashboard shell styling while showing authenticated left rail", async ({ page }) => {
+  await registerAndOpenForum("phase1_forum_chrome", page);
+
+  await expect(page.getByTestId("dashboard-chrome-shell")).toBeVisible();
+  await expect(page.getByTestId("dashboard-chrome-header")).toBeVisible();
+
+  await expect(page.getByLabel("Primary navigation")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Dashboard", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Subjects", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Forum", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Home", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Log out shortcut" })).toBeVisible();
+
+  await page.getByLabel("Search").fill("phase1-filter-check");
+  await page.getByRole("button", { name: "Apply filters" }).click();
+  await expect(page).toHaveURL(/q=phase1-filter-check/);
+
+  await page.goto("/dashboard");
+  await expect(page).toHaveURL(/\/dashboard$/);
+});
+
+test.describe("forum mobile layout", () => {
+  test.use({
+    viewport: { width: 390, height: 844 }
+  });
+
+  test("forum dashboard shell avoids horizontal overflow on mobile", async ({ page }) => {
+    await page.goto("/forum");
+
+    await expect(page.getByTestId("dashboard-chrome-shell")).toBeVisible();
+    await expect(page.getByTestId("dashboard-chrome-header")).toBeVisible();
+    await expect(page.getByLabel("Primary navigation")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Log out shortcut" })).toHaveCount(0);
+
+    await page.getByLabel("Search").fill("mobile-phase1-check");
+    await page.getByRole("button", { name: "Apply filters" }).click();
+    await expect(page).toHaveURL(/q=mobile-phase1-check/);
+
+    await assertNoHorizontalOverflow(page);
+  });
+});

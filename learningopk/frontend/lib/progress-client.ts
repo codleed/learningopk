@@ -1,0 +1,50 @@
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
+
+type ChapterVisitEvent = {
+  eventType: "chapter_visit";
+  chapterId: number;
+};
+
+type ExerciseViewEvent = {
+  eventType: "exercise_view";
+  chapterId: number;
+};
+
+type FlashcardCompleteEvent = {
+  eventType: "flashcard_complete";
+  chapterId: number;
+};
+
+export type ProgressClientEvent = ChapterVisitEvent | ExerciseViewEvent | FlashcardCompleteEvent;
+
+type ProgressClientResponse = {
+  error?: string;
+};
+
+export const trackProgressEvent = async (event: ProgressClientEvent): Promise<boolean> => {
+  try {
+    const response = await fetch(`${backendUrl}/api/progress/events`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(event)
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as ProgressClientResponse | null;
+      if (response.status === 401) {
+        return false;
+      }
+      if (payload?.error) {
+        console.error(payload.error);
+      }
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+};

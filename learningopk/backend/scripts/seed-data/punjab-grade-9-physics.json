@@ -1,0 +1,233 @@
+{
+  "board": {
+    "name": "Punjab Board",
+    "slug": "punjab"
+  },
+  "grade": "9",
+  "subject": {
+    "name": "Physics",
+    "slug": "physics",
+    "description": "Fundamental mechanics and measurement for Punjab Board Grade 9."
+  },
+  "chapters": [
+    {
+      "chapterNumber": 1,
+      "title": "Physical Quantities and Measurement",
+      "slug": "physical-quantities-and-measurement",
+      "summary": "Physics uses base quantities like length, mass, and time. SI units standardize measurement. Significant figures preserve precision when reporting values in calculations.",
+      "isPublished": true,
+      "exercises": [
+        {
+          "exerciseNumber": "1.1",
+          "question": "Convert 2.5 km into meters.",
+          "solution": "1. Use $1\\text{ km}=1000\\text{ m}$.\n2. Multiply $2.5 \\times 1000$.\n3. Result is $2500\\text{ m}$.",
+          "difficulty": "easy",
+          "type": "numerical"
+        },
+        {
+          "exerciseNumber": "1.2",
+          "question": "State why SI units are important in science.",
+          "solution": "1. SI provides one global standard.\n2. It removes confusion across regions.\n3. It improves reproducibility of experiments.\n4. It supports clear communication of results.",
+          "difficulty": "easy",
+          "type": "short"
+        }
+      ],
+      "flashcards": [
+        {
+          "front": "SI Unit of Length",
+          "back": "meter (m)"
+        },
+        {
+          "front": "SI Unit of Mass",
+          "back": "kilogram (kg)"
+        },
+        {
+          "front": "Significant Figures",
+          "back": "Digits that carry meaningful precision in a measured value."
+        }
+      ],
+      "quiz": {
+        "title": "Measurement Checkpoint",
+        "durationMinutes": 20,
+        "questions": [
+          {
+            "question": "SI unit of time is:",
+            "optionA": "minute",
+            "optionB": "hour",
+            "optionC": "second",
+            "optionD": "day",
+            "correctOption": "c",
+            "explanation": "The base SI unit is second.",
+            "marks": 1
+          },
+          {
+            "question": "100 cm equals:",
+            "optionA": "1 m",
+            "optionB": "10 m",
+            "optionC": "0.1 m",
+            "optionD": "1000 m",
+            "correctOption": "a",
+            "explanation": "1 meter is 100 centimeters.",
+            "marks": 1
+          },
+          {
+            "question": "A standard unit system helps by:",
+            "optionA": "Increasing random errors",
+            "optionB": "Ensuring consistency",
+            "optionC": "Removing calculations",
+            "optionD": "Changing constants",
+            "correctOption": "b",
+            "explanation": "Consistency is the primary benefit.",
+            "marks": 1
+          }
+        ]
+      }
+    },
+    {
+      "chapterNumber": 2,
+      "title": "Kinematics",
+      "slug": "kinematics",
+      "summary": "Kinematics describes motion without discussing forces. For uniform acceleration: $v=u+at$, $s=ut+\\frac{1}{2}at^2$, and $v^2=u^2+2as$.",
+      "isPublished": true,
+      "exercises": [
+        {
+          "exerciseNumber": "2.1",
+          "question": "A body starts from rest and accelerates at $2\\text{ m/s}^2$ for 5 s. Find final velocity.",
+          "solution": "1. Given $u=0$, $a=2$, $t=5$.\n2. Use $v=u+at$.\n3. $v=0+2\\times5=10\\text{ m/s}$.",
+          "difficulty": "medium",
+          "type": "numerical"
+        },
+        {
+          "exerciseNumber": "2.2",
+          "question": "Define uniform motion.",
+          "solution": "1. Uniform motion means equal distances in equal time intervals.\n2. Speed remains constant.\n3. Acceleration is zero in straight-line uniform motion.",
+          "difficulty": "easy",
+          "type": "short"
+        }
+      ],
+      "flashcards": [
+        {
+          "front": "Velocity Formula",
+          "back": "$v=u+at$ for constant acceleration."
+        },
+        {
+          "front": "Displacement Formula",
+          "back": "$s=ut+\\frac{1}{2}at^2$."
+        },
+        {
+          "front": "Uniform Motion",
+          "back": "Object covers equal distances in equal intervals of time."
+        }
+      ],
+      "quiz": {
+        "title": "Kinematics Checkpoint",
+        "durationMinutes": 20,
+        "questions": [
+          {
+            "question": "If u=2 m/s, a=3 m/s^2, t=4 s, v is:",
+            "optionA": "10 m/s",
+            "optionB": "14 m/s",
+            "optionC": "20 m/s",
+            "optionD": "24 m/s",
+            "correctOption": "b",
+            "explanation": "v=u+at=2+12=14 m/s.",
+            "marks": 1
+          },
+          {
+            "question": "In uniform motion acceleration is:",
+            "optionA": "zero",
+            "optionB": "positive",
+            "optionC": "negative",
+            "optionD": "infinite",
+            "correctOption": "a",
+            "explanation": "Constant velocity means no acceleration.",
+            "marks": 1
+          },
+          {
+            "question": "The equation s=ut+1/2at^2 gives:",
+            "optionA": "speed only",
+            "optionB": "displacement in constant acceleration",
+            "optionC": "mass",
+            "optionD": "force",
+            "correctOption": "b",
+            "explanation": "It gives displacement under uniform acceleration.",
+            "marks": 1
+          }
+        ]
+      }
+    },
+    {
+      "chapterNumber": 3,
+      "title": "Dynamics",
+      "slug": "dynamics",
+      "summary": "Dynamics links forces to motion. Newton's second law states $F=ma$. Balanced forces keep acceleration zero, while unbalanced forces change velocity.",
+      "isPublished": true,
+      "exercises": [
+        {
+          "exerciseNumber": "3.1",
+          "question": "Find force on a 4 kg object accelerating at $3\\text{ m/s}^2$.",
+          "solution": "1. Use $F=ma$.\n2. Put values: $F=4\\times3$.\n3. $F=12\\text{ N}$.",
+          "difficulty": "easy",
+          "type": "numerical"
+        },
+        {
+          "exerciseNumber": "3.2",
+          "question": "Explain Newton's third law with one example.",
+          "solution": "1. Third law says every action has equal and opposite reaction.\n2. Forces occur in pairs on different bodies.\n3. Example: rocket pushes gases backward; gases push rocket forward.",
+          "difficulty": "medium",
+          "type": "long"
+        }
+      ],
+      "flashcards": [
+        {
+          "front": "Newton's Second Law",
+          "back": "$F=ma$."
+        },
+        {
+          "front": "Balanced Forces",
+          "back": "Net force is zero, so acceleration is zero."
+        },
+        {
+          "front": "Action-Reaction Pair",
+          "back": "Equal in magnitude and opposite in direction, acting on different bodies."
+        }
+      ],
+      "quiz": {
+        "title": "Dynamics Checkpoint",
+        "durationMinutes": 20,
+        "questions": [
+          {
+            "question": "Unit of force is:",
+            "optionA": "joule",
+            "optionB": "pascal",
+            "optionC": "newton",
+            "optionD": "watt",
+            "correctOption": "c",
+            "explanation": "Force is measured in newton (N).",
+            "marks": 1
+          },
+          {
+            "question": "If net force is zero, object:",
+            "optionA": "must stop",
+            "optionB": "must accelerate",
+            "optionC": "has no acceleration",
+            "optionD": "has infinite speed",
+            "correctOption": "c",
+            "explanation": "Zero net force means no change in velocity.",
+            "marks": 1
+          },
+          {
+            "question": "For m=5 kg and a=2 m/s^2, force is:",
+            "optionA": "2 N",
+            "optionB": "5 N",
+            "optionC": "7 N",
+            "optionD": "10 N",
+            "correctOption": "d",
+            "explanation": "F=ma=5x2=10 N.",
+            "marks": 1
+          }
+        ]
+      }
+    }
+  ]
+}

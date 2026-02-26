@@ -1,0 +1,233 @@
+{
+  "board": {
+    "name": "Punjab Board",
+    "slug": "punjab"
+  },
+  "grade": "9",
+  "subject": {
+    "name": "Mathematics",
+    "slug": "mathematics",
+    "description": "Core algebra and geometry foundations for Punjab Board Grade 9."
+  },
+  "chapters": [
+    {
+      "chapterNumber": 1,
+      "title": "Real Numbers",
+      "slug": "real-numbers",
+      "summary": "Real numbers include rational and irrational numbers. For a number in the form $\\frac{p}{q}$, $q \\neq 0$. A decimal expansion is terminating when denominator factors are only 2 and 5.\n\nUse Euclid's method to find GCD and simplify fractions before operations.",
+      "isPublished": true,
+      "exercises": [
+        {
+          "exerciseNumber": "1.1",
+          "question": "Classify $\\sqrt{2}$ and justify your answer.",
+          "solution": "1. Assume $\\sqrt{2}$ is rational.\n2. Write $\\sqrt{2} = \\frac{p}{q}$ in lowest terms.\n3. Squaring gives $2q^2 = p^2$, so $p$ is even.\n4. Let $p=2k$, then $q$ is also even, contradiction.\n5. Therefore $\\sqrt{2}$ is irrational.",
+          "difficulty": "medium",
+          "type": "short"
+        },
+        {
+          "exerciseNumber": "1.2",
+          "question": "Find HCF of 84 and 126 using Euclid's algorithm.",
+          "solution": "1. $126 = 84 \\times 1 + 42$\n2. $84 = 42 \\times 2 + 0$\n3. Last non-zero remainder is $42$.\n4. So HCF$(84,126)=42$.",
+          "difficulty": "easy",
+          "type": "numerical"
+        }
+      ],
+      "flashcards": [
+        {
+          "front": "Rational Number",
+          "back": "A number that can be written as $\\frac{p}{q}$ where $p,q$ are integers and $q \\neq 0$."
+        },
+        {
+          "front": "Irrational Number",
+          "back": "A number that cannot be expressed as a simple fraction and has non-terminating, non-repeating decimals."
+        },
+        {
+          "front": "Euclid Algorithm",
+          "back": "Repeatedly divide and use remainder until remainder becomes zero; last non-zero remainder is HCF."
+        }
+      ],
+      "quiz": {
+        "title": "Real Numbers Checkpoint",
+        "durationMinutes": 20,
+        "questions": [
+          {
+            "question": "Which number is irrational?",
+            "optionA": "0.5",
+            "optionB": "1.25",
+            "optionC": "sqrt(3)",
+            "optionD": "7/8",
+            "correctOption": "c",
+            "explanation": "sqrt(3) has non-terminating non-repeating decimal expansion.",
+            "marks": 1
+          },
+          {
+            "question": "HCF of 18 and 30 is:",
+            "optionA": "3",
+            "optionB": "6",
+            "optionC": "9",
+            "optionD": "12",
+            "correctOption": "b",
+            "explanation": "Common factors are 1,2,3,6 and maximum is 6.",
+            "marks": 1
+          },
+          {
+            "question": "A decimal terminates only if denominator factors are:",
+            "optionA": "2 and 3",
+            "optionB": "3 and 5",
+            "optionC": "2 and 5",
+            "optionD": "5 and 7",
+            "correctOption": "c",
+            "explanation": "Only prime factors 2 and 5 allow terminating decimals in base 10.",
+            "marks": 1
+          }
+        ]
+      }
+    },
+    {
+      "chapterNumber": 2,
+      "title": "Sets and Functions",
+      "slug": "sets-and-functions",
+      "summary": "A set is a well-defined collection of objects. Important operations are union $A \\cup B$, intersection $A \\cap B$, and complement $A'$. A function maps each element of domain to exactly one element in codomain.",
+      "isPublished": true,
+      "exercises": [
+        {
+          "exerciseNumber": "2.1",
+          "question": "If $A=\\{1,2,3\\}$ and $B=\\{3,4\\}$, find $A \\cup B$ and $A \\cap B$.",
+          "solution": "1. Union includes all unique elements.\n2. So $A \\cup B = \\{1,2,3,4\\}$.\n3. Intersection includes common elements.\n4. So $A \\cap B = \\{3\\}$.",
+          "difficulty": "easy",
+          "type": "short"
+        },
+        {
+          "exerciseNumber": "2.2",
+          "question": "State if relation $f=\\{(1,2),(2,4),(3,6)\\}$ is a function.",
+          "solution": "1. Check each input value on first position.\n2. Inputs are 1,2,3 and each appears once.\n3. Each input has exactly one output.\n4. Therefore relation is a function.",
+          "difficulty": "medium",
+          "type": "short"
+        }
+      ],
+      "flashcards": [
+        {
+          "front": "Union",
+          "back": "$A \\cup B$ contains every element in A or B."
+        },
+        {
+          "front": "Intersection",
+          "back": "$A \\cap B$ contains elements common to both sets."
+        },
+        {
+          "front": "Function Rule",
+          "back": "Each domain element must map to one and only one codomain element."
+        }
+      ],
+      "quiz": {
+        "title": "Sets and Functions Checkpoint",
+        "durationMinutes": 20,
+        "questions": [
+          {
+            "question": "If A={1,2} and B={2,3}, A∩B is:",
+            "optionA": "{1,2,3}",
+            "optionB": "{2}",
+            "optionC": "{1,3}",
+            "optionD": "{}",
+            "correctOption": "b",
+            "explanation": "2 is the only common element.",
+            "marks": 1
+          },
+          {
+            "question": "A mapping is a function when:",
+            "optionA": "One input has many outputs",
+            "optionB": "Every output has many inputs",
+            "optionC": "Each input has exactly one output",
+            "optionD": "Inputs are optional",
+            "correctOption": "c",
+            "explanation": "That is the defining property of function.",
+            "marks": 1
+          },
+          {
+            "question": "Complement of set A means:",
+            "optionA": "Elements in A only",
+            "optionB": "Elements not in universal set",
+            "optionC": "Elements outside A but inside universal set",
+            "optionD": "Common elements of A and B",
+            "correctOption": "c",
+            "explanation": "Complement is relative to universal set.",
+            "marks": 1
+          }
+        ]
+      }
+    },
+    {
+      "chapterNumber": 3,
+      "title": "Quadratic Equations",
+      "slug": "quadratic-equations",
+      "summary": "A quadratic equation has form $ax^2+bx+c=0$ where $a \\neq 0$. Solutions can be found by factorization, completing square, or formula $x=\\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$.",
+      "isPublished": true,
+      "exercises": [
+        {
+          "exerciseNumber": "3.1",
+          "question": "Solve $x^2-5x+6=0$ by factorization.",
+          "solution": "1. Find two numbers with sum 5 and product 6: 2 and 3.\n2. Write equation as $(x-2)(x-3)=0$.\n3. Set each factor to zero.\n4. Solutions: $x=2$ or $x=3$.",
+          "difficulty": "medium",
+          "type": "numerical"
+        },
+        {
+          "exerciseNumber": "3.2",
+          "question": "Use formula to solve $x^2+2x-3=0$.",
+          "solution": "1. Here $a=1,b=2,c=-3$.\n2. Discriminant $D=b^2-4ac=4+12=16$.\n3. $x=\\frac{-2 \\pm 4}{2}$.\n4. So $x=1$ or $x=-3$.",
+          "difficulty": "hard",
+          "type": "numerical"
+        }
+      ],
+      "flashcards": [
+        {
+          "front": "Quadratic Form",
+          "back": "$ax^2+bx+c=0$ with $a \\neq 0$."
+        },
+        {
+          "front": "Discriminant",
+          "back": "$D=b^2-4ac$ decides nature of roots."
+        },
+        {
+          "front": "Two Real Roots",
+          "back": "When $D>0$, equation has two distinct real roots."
+        }
+      ],
+      "quiz": {
+        "title": "Quadratic Equations Checkpoint",
+        "durationMinutes": 20,
+        "questions": [
+          {
+            "question": "For x^2-9=0, roots are:",
+            "optionA": "3 only",
+            "optionB": "-3 only",
+            "optionC": "3 and -3",
+            "optionD": "0 and 9",
+            "correctOption": "c",
+            "explanation": "x^2=9 gives x=±3.",
+            "marks": 1
+          },
+          {
+            "question": "Discriminant of x^2+4x+4 is:",
+            "optionA": "0",
+            "optionB": "4",
+            "optionC": "8",
+            "optionD": "16",
+            "correctOption": "a",
+            "explanation": "D=4^2-4(1)(4)=16-16=0.",
+            "marks": 1
+          },
+          {
+            "question": "If D<0, roots are:",
+            "optionA": "Real and equal",
+            "optionB": "Real and distinct",
+            "optionC": "Not real",
+            "optionD": "Always zero",
+            "correctOption": "c",
+            "explanation": "Negative discriminant gives complex roots.",
+            "marks": 1
+          }
+        ]
+      }
+    }
+  ]
+}

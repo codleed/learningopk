@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-02-24T22:39:04.401Z",
+  "parserVersion": "v1.0.0",
+  "dryRun": false,
+  "filters": {
+    "board": "*",
+    "grade": "*",
+    "subject": "*"
+  },
+  "parseSummary": {
+    "filesScanned": 2,
+    "filesParsed": 2,
+    "filesMatched": 2,
+    "chapters": 6,
+    "exercises": 12,
+    "flashcards": 18,
+    "quizzes": 6,
+    "quizQuestions": 18
+  },
+  "inserted": {
+    "files": 0,
+    "boards": 0,
+    "subjects": 0,
+    "contentSources": 0,
+    "chapters": 0,
+    "exercises": 0,
+    "flashcards": 0,
+    "quizzes": 0,
+    "quizQuestions": 0
+  },
+  "skipped": {
+    "files": 2
+  },
+  "warnings": [],
+  "warningCount": 0
+}

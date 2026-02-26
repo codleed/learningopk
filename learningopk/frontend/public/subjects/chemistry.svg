@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="gChem" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b224ef" /><stop offset="100%" stop-color="#7579ff" />
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="184" height="184" rx="28" fill="url(#gChem)" />
+  <path d="M78 36h44M84 36v28l-30 50a13 13 0 0 0 11 20h70a13 13 0 0 0 11-20L116 64V36" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M70 110h60" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="80" cy="92" r="6" fill="white"/>
+  <circle cx="106" cy="84" r="5" fill="white"/>
+</svg>

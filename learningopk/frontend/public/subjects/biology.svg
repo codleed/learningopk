@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="gBio" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0ba360" /><stop offset="100%" stop-color="#3cba92" />
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="184" height="184" rx="28" fill="url(#gBio)" />
+  <path d="M100 148c-48 0-58-76 0-106 58 30 48 106 0 106Z" stroke="white" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M100 48v96" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <path d="M100 94c-14 0-25-6-34-16M100 112c14 0 25-6 34-16" stroke="white" stroke-width="6" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,26 @@
+{
+  "name": "learningopk",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.30.1",
+  "scripts": {
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:all": "concurrently -n frontend,backend -c blue,green \"pnpm dev:frontend\" \"pnpm dev:backend\"",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:clear": "pnpm --filter backend db:clear",
+    "db:seed": "pnpm --filter backend db:seed",
+    "verify:services": "pnpm --filter backend healthcheck"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "drizzle-kit": "^0.31.4"
+  }
+}
