@@ -1,12 +1,41 @@
-import { AdminComingSoonAction } from "@/components/admin/admin-coming-soon-action";
-import { AdminSectionPlaceholder } from "@/components/admin/admin-section-placeholder";
+import Link from "next/link";
+import { cookies } from "next/headers";
 
-export default function AdminCommunityPage() {
+import { AdminCommunityPanel } from "@/components/admin/admin-community-panel";
+import { PageHeader } from "@/components/foundation/page-header";
+import { getAdminCommunityThreads } from "@/lib/admin-api";
+
+export default async function AdminCommunityPage() {
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+  const payload = await getAdminCommunityThreads({
+    page: 1,
+    pageSize: 20,
+    solved: "all",
+    pinned: "all",
+    flagState: "all",
+    cookieHeader
+  }).catch(() => ({
+    entries: [],
+    total: 0,
+    page: 1,
+    pageSize: 20,
+    hasMore: false
+  }));
+
   return (
-    <AdminSectionPlaceholder
-      title="Community Forum"
-      description="Forum policy controls and escalation tooling are planned for the next sprint."
-      action={<AdminComingSoonAction label="Open Policy Matrix (Coming Soon)" />}
-    />
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Admin Community"
+        title="Community Forum"
+        subtitle="Track thread health and moderation pressure across the forum."
+        actions={
+          <Link href="/admin" className="text-sm font-medium text-foreground underline underline-offset-4">
+            Back to admin
+          </Link>
+        }
+      />
+      <AdminCommunityPanel initialEntries={payload.entries} initialTotal={payload.total} />
+    </div>
   );
 }

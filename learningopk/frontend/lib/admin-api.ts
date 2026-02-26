@@ -78,6 +78,26 @@ const adminUsersResponseSchema = z.object({
   hasMore: z.boolean()
 });
 
+const adminCommunityThreadSchema = z.object({
+  threadId: z.string().uuid(),
+  title: z.string(),
+  authorName: z.string(),
+  createdAt: z.string().datetime(),
+  isPinned: z.boolean(),
+  isSolved: z.boolean(),
+  replyCount: z.number().int().nonnegative(),
+  views: z.number().int().nonnegative(),
+  openFlagCount: z.number().int().nonnegative()
+});
+
+const adminCommunityThreadsResponseSchema = z.object({
+  entries: z.array(adminCommunityThreadSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
+  hasMore: z.boolean()
+});
+
 export type AdminChapterResponse = z.infer<typeof adminChapterSchema>;
 export type AdminAuditLogResponse = z.infer<typeof adminAuditLogResponseSchema>;
 export type AdminAuditLogResponseEntry = z.infer<typeof adminAuditLogEntrySchema>;
@@ -86,6 +106,8 @@ export type AdminModerationFlagsResponse = z.infer<typeof adminModerationFlagsRe
 export type AdminModerationResolveResponse = z.infer<typeof adminModerationResolveResponseSchema>;
 export type AdminUser = z.infer<typeof adminUserSchema>;
 export type AdminUsersResponse = z.infer<typeof adminUsersResponseSchema>;
+export type AdminCommunityThread = z.infer<typeof adminCommunityThreadSchema>;
+export type AdminCommunityThreadsResponse = z.infer<typeof adminCommunityThreadsResponseSchema>;
 
 const fetchAdminJson = async <T>({
   path,
@@ -259,6 +281,36 @@ export const getAdminUsers = async ({
   return fetchAdminJson({
     path: `/api/admin/users?${query.toString()}`,
     schema: adminUsersResponseSchema,
+    ...(cookieHeader ? { cookieHeader } : {})
+  });
+};
+
+export const getAdminCommunityThreads = async ({
+  page,
+  pageSize,
+  solved,
+  pinned,
+  flagState,
+  cookieHeader
+}: {
+  page: number;
+  pageSize: number;
+  solved: "all" | "solved" | "unsolved";
+  pinned: "all" | "pinned" | "unpinned";
+  flagState: "all" | "openFlags" | "noOpenFlags";
+  cookieHeader?: string;
+}): Promise<AdminCommunityThreadsResponse> => {
+  const query = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+    solved,
+    pinned,
+    flagState
+  });
+
+  return fetchAdminJson({
+    path: `/api/admin/community/threads?${query.toString()}`,
+    schema: adminCommunityThreadsResponseSchema,
     ...(cookieHeader ? { cookieHeader } : {})
   });
 };
