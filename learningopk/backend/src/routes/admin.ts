@@ -1,10 +1,10 @@
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { Router, type Response } from "express";
 import { z } from "zod";
 
 import { requireAdminRole } from "../lib/admin.js";
 import { db } from "../lib/db/index.js";
-import { adminAuditLogs, boards, chapters, forumThreads, moderationFlags, subjects } from "../lib/db/schema.js";
+import { adminAuditLogs, boards, chapters, forumThreads, moderationFlags, subjects, users } from "../lib/db/schema.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 
 const chapterParamsSchema = z.object({
@@ -41,6 +41,13 @@ const moderationFlagResolveParamsSchema = z.object({
 
 const moderationFlagResolveBodySchema = z.object({
   note: z.string().trim().min(10)
+});
+
+const adminUsersQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
+  q: z.string().trim().optional().default(""),
+  role: z.enum(["student", "admin"]).optional()
 });
 
 type AdminAuditScope = "content" | "forum" | "moderation";
@@ -204,6 +211,60 @@ const listModerationFlags = async ({
   };
 };
 
+const listAdminUsers = async ({
+  page,
+  pageSize,
+  q,
+  role
+}: {
+  page: number;
+  pageSize: number;
+  q: string;
+  role?: "student" | "admin";
+}) => {
+  const offset = (page - 1) * pageSize;
+  const searchTerm = q.trim();
+  const rolePredicate = role ? eq(users.role, role) : undefined;
+  const searchPredicate =
+    searchTerm.length > 0 ? or(ilike(users.name, `%${searchTerm}%`), ilike(users.email, `%${searchTerm}%`)) : undefined;
+  const whereClause =
+    rolePredicate && searchPredicate ? and(rolePredicate, searchPredicate) : (rolePredicate ?? searchPredicate);
+
+  const rows = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      createdAt: users.createdAt
+    })
+    .from(users)
+    .where(whereClause)
+    .orderBy(desc(users.createdAt), desc(users.id))
+    .offset(offset)
+    .limit(pageSize);
+
+  const totalRows = await db
+    .select({
+      count: sql<number>`count(*)::int`
+    })
+    .from(users)
+    .where(whereClause);
+  const total = totalRows[0]?.count ?? 0;
+
+  return {
+    entries: rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      role: row.role,
+      createdAt: row.createdAt.toISOString()
+    })),
+    total,
+    hasMore: offset + rows.length < total
+  };
+};
+
 export const adminRouter = Router();
 
 adminRouter.get("/moderation/flags", requireSession, async (req, res) => {
@@ -346,6 +407,38 @@ adminRouter.post("/moderation/flags/:id/resolve", requireSession, async (req, re
       resolvedAt: updatedFlag.resolvedAt ? updatedFlag.resolvedAt.toISOString() : null,
       resolutionNote: updatedFlag.resolutionNote
     }
+  });
+});
+
+adminRouter.get("/users", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedQuery = adminUsersQuerySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid users query parameters",
+      details: parsedQuery.error.flatten()
+    });
+    return;
+  }
+
+  const { page, pageSize, q, role } = parsedQuery.data;
+  const payload = await listAdminUsers({
+    page,
+    pageSize,
+    q,
+    role
+  });
+
+  res.status(200).json({
+    entries: payload.entries,
+    total: payload.total,
+    page,
+    pageSize,
+    hasMore: payload.hasMore
   });
 });
 

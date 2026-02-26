@@ -245,3 +245,45 @@ test("admin moderation resolve requires note, persists lifecycle fields, and wri
   assert.equal(moderationAudit.actor_id, adminUser.id);
   assert.match(moderationAudit.message, /Resolved after verifying context and evidence/i);
 });
+
+test("admin users listing enforces auth/role and supports search + role filters with pagination", async () => {
+  const app = createApp();
+  const anonAgent = request(app);
+  const adminAgent = request.agent(app);
+  const memberAgent = request.agent(app);
+
+  const adminEmail = `tst_users_admin_${Date.now()}@example.com`;
+  await signUp(adminAgent, "Users Admin", adminEmail);
+  await signUp(memberAgent, "Users Member", `tst_users_member_${Date.now()}@example.com`);
+
+  const adminUser = await getSessionUser(adminAgent);
+  await assignAdminRole(adminUser.id);
+
+  const unauthenticated = await anonAgent.get("/api/admin/users");
+  assert.equal(unauthenticated.status, 401);
+
+  const forbidden = await memberAgent.get("/api/admin/users");
+  assert.equal(forbidden.status, 403);
+
+  const byEmail = await adminAgent.get("/api/admin/users").query({
+    q: adminEmail,
+    page: 1,
+    pageSize: 10
+  });
+  assert.equal(byEmail.status, 200);
+  assert.ok(Array.isArray(byEmail.body?.entries), "Expected users entries payload.");
+  assert.ok(
+    byEmail.body.entries.some((row: { email: string }) => row.email === adminEmail),
+    "Expected users listing to include searched admin email."
+  );
+
+  const studentsOnly = await adminAgent.get("/api/admin/users").query({
+    role: "student",
+    page: 1,
+    pageSize: 10
+  });
+  assert.equal(studentsOnly.status, 200);
+  assert.ok(Array.isArray(studentsOnly.body?.entries), "Expected users entries payload.");
+  assert.ok(studentsOnly.body.entries.length >= 1, "Expected at least one student row.");
+  assert.ok(studentsOnly.body.entries.every((row: { role: string }) => row.role === "student"));
+});
