@@ -145,6 +145,31 @@ const adminNotificationCreateResponseSchema = z.object({
   notification: adminNotificationSchema
 });
 
+const adminSettingSchema = z.object({
+  key: z.string(),
+  value: z.string(),
+  description: z.string(),
+  updatedBy: z
+    .object({
+      id: z.string(),
+      name: z.string()
+    })
+    .nullable(),
+  updatedAt: z.string().datetime()
+});
+
+const adminSettingsResponseSchema = z.object({
+  entries: z.array(adminSettingSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
+  hasMore: z.boolean()
+});
+
+const adminSettingUpdateResponseSchema = z.object({
+  setting: adminSettingSchema
+});
+
 export type AdminChapterResponse = z.infer<typeof adminChapterSchema>;
 export type AdminAuditLogResponse = z.infer<typeof adminAuditLogResponseSchema>;
 export type AdminAuditLogResponseEntry = z.infer<typeof adminAuditLogEntrySchema>;
@@ -160,6 +185,9 @@ export type AdminAnalyticsSubjectPerformance = z.infer<typeof adminAnalyticsSubj
 export type AdminNotification = z.infer<typeof adminNotificationSchema>;
 export type AdminNotificationsResponse = z.infer<typeof adminNotificationsResponseSchema>;
 export type AdminNotificationCreateResponse = z.infer<typeof adminNotificationCreateResponseSchema>;
+export type AdminSetting = z.infer<typeof adminSettingSchema>;
+export type AdminSettingsResponse = z.infer<typeof adminSettingsResponseSchema>;
+export type AdminSettingUpdateResponse = z.infer<typeof adminSettingUpdateResponseSchema>;
 
 const fetchAdminJson = async <T>({
   path,
@@ -420,5 +448,41 @@ export const createAdminNotification = async ({
     schema: adminNotificationCreateResponseSchema,
     method: "POST",
     body: { title, message, audience }
+  });
+};
+
+export const getAdminSettings = async ({
+  page,
+  pageSize,
+  cookieHeader
+}: {
+  page: number;
+  pageSize: number;
+  cookieHeader?: string;
+}): Promise<AdminSettingsResponse> => {
+  const query = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize)
+  });
+
+  return fetchAdminJson({
+    path: `/api/admin/settings?${query.toString()}`,
+    schema: adminSettingsResponseSchema,
+    ...(cookieHeader ? { cookieHeader } : {})
+  });
+};
+
+export const updateAdminSetting = async ({
+  key,
+  value
+}: {
+  key: string;
+  value: string;
+}): Promise<AdminSettingUpdateResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/settings/${encodeURIComponent(key)}`,
+    schema: adminSettingUpdateResponseSchema,
+    method: "POST",
+    body: { value }
   });
 };

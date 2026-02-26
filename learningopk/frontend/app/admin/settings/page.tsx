@@ -1,12 +1,38 @@
-import { AdminComingSoonAction } from "@/components/admin/admin-coming-soon-action";
-import { AdminSectionPlaceholder } from "@/components/admin/admin-section-placeholder";
+import Link from "next/link";
+import { cookies } from "next/headers";
 
-export default function AdminSettingsPage() {
+import { AdminSettingsPanel } from "@/components/admin/admin-settings-panel";
+import { PageHeader } from "@/components/foundation/page-header";
+import { getAdminSettings } from "@/lib/admin-api";
+
+export default async function AdminSettingsPage() {
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+  const payload = await getAdminSettings({
+    page: 1,
+    pageSize: 20,
+    cookieHeader
+  }).catch(() => ({
+    entries: [],
+    total: 0,
+    page: 1,
+    pageSize: 20,
+    hasMore: false
+  }));
+
   return (
-    <AdminSectionPlaceholder
-      title="System Settings"
-      description="Global defaults, feature gates, and audit retention controls are planned next."
-      action={<AdminComingSoonAction label="Save Defaults (Coming Soon)" />}
-    />
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Admin Settings"
+        title="System Settings"
+        subtitle="Manage allowlisted platform defaults and operational flags."
+        actions={
+          <Link href="/admin" className="text-sm font-medium text-foreground underline underline-offset-4">
+            Back to admin
+          </Link>
+        }
+      />
+      <AdminSettingsPanel initialPayload={payload} />
+    </div>
   );
 }
