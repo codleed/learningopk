@@ -32,10 +32,11 @@ test("admin shell exposes phase-1 section navigation", async ({ page }) => {
   await page.goto("/admin/analytics");
   await expect(page.getByRole("heading", { name: "Analytics & Reporting" })).toBeVisible();
 
-  for (const target of ["/admin/notifications", "/admin/settings"]) {
-    await page.goto(target);
-    await expect(page.getByText("Coming in next sprint")).toBeVisible();
-  }
+  await page.goto("/admin/notifications");
+  await expect(page.getByRole("heading", { name: "Notifications" })).toBeVisible();
+
+  await page.goto("/admin/settings");
+  await expect(page.getByRole("heading", { name: "System Settings" })).toBeVisible();
 });
 
 test.describe("admin shell mobile behavior", () => {
