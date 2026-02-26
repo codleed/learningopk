@@ -22,7 +22,9 @@ export const quizTypeEnum = pgEnum("quiz_type", ["chapter_quiz", "mock_exam"]);
 export const answerOptionEnum = pgEnum("answer_option", ["a", "b", "c", "d"]);
 export const aiMessageRoleEnum = pgEnum("ai_message_role", ["user", "assistant"]);
 export const voteTypeEnum = pgEnum("vote_type", ["upvote", "downvote"]);
-export const adminAuditScopeEnum = pgEnum("admin_audit_scope", ["content", "forum"]);
+export const moderationTargetTypeEnum = pgEnum("moderation_target_type", ["thread", "reply", "chapter"]);
+export const moderationStatusEnum = pgEnum("moderation_status", ["open", "resolved"]);
+export const adminAuditScopeEnum = pgEnum("admin_audit_scope", ["content", "forum", "moderation"]);
 export const adminAuditStatusEnum = pgEnum("admin_audit_status", ["success", "failed"]);
 
 export const users = pgTable("user", {
@@ -303,6 +305,23 @@ export const forumReplyVotes = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
   },
   (table) => [uniqueIndex("forum_reply_votes_user_reply_idx").on(table.userId, table.replyId)]
+);
+
+export const moderationFlags = pgTable(
+  "moderation_flags",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    targetType: moderationTargetTypeEnum("target_type").notNull(),
+    targetId: text("target_id").notNull(),
+    targetLabel: text("target_label").notNull(),
+    reason: text("reason").notNull(),
+    status: moderationStatusEnum("status").notNull().default("open"),
+    resolvedBy: text("resolved_by").references(() => users.id, { onDelete: "set null" }),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true, mode: "date" }),
+    resolutionNote: text("resolution_note")
+  },
+  (table) => [index("moderation_flags_status_target_type_created_at_idx").on(table.status, table.targetType, table.createdAt)]
 );
 
 export const adminAuditLogs = pgTable(

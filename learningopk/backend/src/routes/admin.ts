@@ -1,10 +1,10 @@
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { Router, type Response } from "express";
 import { z } from "zod";
 
 import { requireAdminRole } from "../lib/admin.js";
 import { db } from "../lib/db/index.js";
-import { adminAuditLogs, boards, chapters, forumThreads, subjects } from "../lib/db/schema.js";
+import { adminAuditLogs, boards, chapters, forumThreads, moderationFlags, subjects } from "../lib/db/schema.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 
 const chapterParamsSchema = z.object({
@@ -28,7 +28,22 @@ const auditLogQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20)
 });
 
-type AdminAuditScope = "content" | "forum";
+const moderationFlagQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
+  status: z.enum(["open", "resolved"]).optional().default("open"),
+  targetType: z.enum(["thread", "reply", "chapter"]).optional()
+});
+
+const moderationFlagResolveParamsSchema = z.object({
+  id: z.string().uuid()
+});
+
+const moderationFlagResolveBodySchema = z.object({
+  note: z.string().trim().min(10)
+});
+
+type AdminAuditScope = "content" | "forum" | "moderation";
 
 type PersistAuditLogInput = {
   scope: AdminAuditScope;
@@ -125,7 +140,214 @@ const handleAuditLogRead = async (req: AuthenticatedRequest, res: Response, scop
   });
 };
 
+const listModerationFlags = async ({
+  page,
+  pageSize,
+  status,
+  targetType
+}: {
+  page: number;
+  pageSize: number;
+  status: "open" | "resolved";
+  targetType?: "thread" | "reply" | "chapter";
+}) => {
+  const offset = (page - 1) * pageSize;
+  const predicates = [eq(moderationFlags.status, status)];
+  if (targetType) {
+    predicates.push(eq(moderationFlags.targetType, targetType));
+  }
+
+  const whereClause = predicates.length > 1 ? and(...predicates) : predicates[0];
+
+  const rows = await db
+    .select({
+      id: moderationFlags.id,
+      createdAt: moderationFlags.createdAt,
+      targetType: moderationFlags.targetType,
+      targetId: moderationFlags.targetId,
+      targetLabel: moderationFlags.targetLabel,
+      reason: moderationFlags.reason,
+      status: moderationFlags.status,
+      resolvedBy: moderationFlags.resolvedBy,
+      resolvedAt: moderationFlags.resolvedAt,
+      resolutionNote: moderationFlags.resolutionNote
+    })
+    .from(moderationFlags)
+    .where(whereClause)
+    .orderBy(desc(moderationFlags.createdAt), desc(moderationFlags.id))
+    .offset(offset)
+    .limit(pageSize);
+
+  const totalRows = await db
+    .select({
+      count: sql<number>`count(*)::int`
+    })
+    .from(moderationFlags)
+    .where(whereClause);
+  const total = totalRows[0]?.count ?? 0;
+
+  return {
+    entries: rows.map((row) => ({
+      id: row.id,
+      createdAt: row.createdAt.toISOString(),
+      targetType: row.targetType,
+      targetId: row.targetId,
+      targetLabel: row.targetLabel,
+      reason: row.reason,
+      status: row.status,
+      resolvedBy: row.resolvedBy,
+      resolvedAt: row.resolvedAt ? row.resolvedAt.toISOString() : null,
+      resolutionNote: row.resolutionNote
+    })),
+    total,
+    hasMore: offset + rows.length < total
+  };
+};
+
 export const adminRouter = Router();
+
+adminRouter.get("/moderation/flags", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedQuery = moderationFlagQuerySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid moderation query parameters",
+      details: parsedQuery.error.flatten()
+    });
+    return;
+  }
+
+  const { page, pageSize, status, targetType } = parsedQuery.data;
+  const payload = await listModerationFlags({
+    page,
+    pageSize,
+    status,
+    targetType
+  });
+
+  res.status(200).json({
+    entries: payload.entries,
+    total: payload.total,
+    page,
+    pageSize,
+    hasMore: payload.hasMore
+  });
+});
+
+adminRouter.post("/moderation/flags/:id/resolve", requireSession, async (req, res) => {
+  const parsedParams = moderationFlagResolveParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid moderation flag identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const parsedBody = moderationFlagResolveBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid moderation resolve payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const flagRows = await db
+    .select({
+      id: moderationFlags.id,
+      targetType: moderationFlags.targetType,
+      targetLabel: moderationFlags.targetLabel,
+      status: moderationFlags.status
+    })
+    .from(moderationFlags)
+    .where(eq(moderationFlags.id, parsedParams.data.id))
+    .limit(1);
+
+  const flag = flagRows[0];
+  if (!flag) {
+    res.status(404).json({
+      error: "Moderation flag not found"
+    });
+    return;
+  }
+
+  if (flag.status !== "open") {
+    res.status(409).json({
+      error: "Moderation flag already resolved"
+    });
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const note = parsedBody.data.note.trim();
+  const resolvedAt = new Date();
+
+  const updatedRows = await db
+    .update(moderationFlags)
+    .set({
+      status: "resolved",
+      resolvedBy: actorId,
+      resolvedAt,
+      resolutionNote: note
+    })
+    .where(and(eq(moderationFlags.id, flag.id), eq(moderationFlags.status, "open")))
+    .returning({
+      id: moderationFlags.id,
+      createdAt: moderationFlags.createdAt,
+      targetType: moderationFlags.targetType,
+      targetId: moderationFlags.targetId,
+      targetLabel: moderationFlags.targetLabel,
+      reason: moderationFlags.reason,
+      status: moderationFlags.status,
+      resolvedBy: moderationFlags.resolvedBy,
+      resolvedAt: moderationFlags.resolvedAt,
+      resolutionNote: moderationFlags.resolutionNote
+    });
+
+  const updatedFlag = updatedRows[0];
+  if (!updatedFlag) {
+    res.status(409).json({
+      error: "Moderation flag already resolved"
+    });
+    return;
+  }
+
+  await persistAuditLog({
+    scope: "moderation",
+    action: "Resolve flag",
+    target: `${flag.targetType}:${flag.targetLabel}`,
+    status: "success",
+    message: note,
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    flag: {
+      id: updatedFlag.id,
+      createdAt: updatedFlag.createdAt.toISOString(),
+      targetType: updatedFlag.targetType,
+      targetId: updatedFlag.targetId,
+      targetLabel: updatedFlag.targetLabel,
+      reason: updatedFlag.reason,
+      status: updatedFlag.status,
+      resolvedBy: updatedFlag.resolvedBy,
+      resolvedAt: updatedFlag.resolvedAt ? updatedFlag.resolvedAt.toISOString() : null,
+      resolutionNote: updatedFlag.resolutionNote
+    }
+  });
+});
 
 adminRouter.get("/content/chapters", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;

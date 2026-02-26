@@ -25,6 +25,7 @@ import {
   mockExams,
   contentSources,
   adminAuditLogs,
+  moderationFlags,
 } from "./src/lib/db/schema.js";
 
 config();
@@ -626,6 +627,35 @@ async function seed() {
   console.log("✅ Forum threads, replies & votes seeded");
 
   // ── Admin Audit Logs ───────────────────────────────────────────────────────
+  // Moderation flags
+  await db.insert(moderationFlags).values([
+    {
+      targetType: "thread",
+      targetId: thread1.id,
+      targetLabel: thread1.title,
+      reason: "Abusive language",
+      status: "open",
+    },
+    {
+      targetType: "reply",
+      targetId: reply1.id,
+      targetLabel: "Great question! Speed is a scalar�",
+      reason: "Spam",
+      status: "open",
+    },
+    {
+      targetType: "chapter",
+      targetId: String(ch1.id),
+      targetLabel: ch1.title,
+      reason: "Outdated content",
+      status: "resolved",
+      resolvedBy: adminUser.id,
+      resolvedAt: new Date(),
+      resolutionNote: "Content owner confirmed updated edition was already published.",
+    },
+  ]);
+
+  console.log("? Moderation flags seeded");
   await db.insert(adminAuditLogs).values([
     {
       scope: "content",
@@ -676,3 +706,4 @@ seed().catch((err) => {
   console.error("❌ Seed failed:", err);
   process.exit(1);
 });
+
