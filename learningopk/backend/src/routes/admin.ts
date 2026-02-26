@@ -287,7 +287,7 @@ adminRouter.get("/moderation/flags", requireSession, async (req, res) => {
     page,
     pageSize,
     status,
-    targetType
+    ...(targetType ? { targetType } : {})
   });
 
   res.status(200).json({
@@ -430,7 +430,7 @@ adminRouter.get("/users", requireSession, async (req, res) => {
     page,
     pageSize,
     q,
-    role
+    ...(role ? { role } : {})
   });
 
   res.status(200).json({
