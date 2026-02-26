@@ -37,31 +37,65 @@ const adminAuditLogResponseSchema = z.object({
   hasMore: z.boolean()
 });
 
+const adminModerationFlagSchema = z.object({
+  id: z.string().uuid(),
+  createdAt: z.string().datetime(),
+  targetType: z.enum(["thread", "reply", "chapter"]),
+  targetId: z.string(),
+  targetLabel: z.string(),
+  reason: z.string(),
+  status: z.enum(["open", "resolved"]),
+  resolvedBy: z.string().nullable(),
+  resolvedAt: z.string().datetime().nullable(),
+  resolutionNote: z.string().nullable()
+});
+
+const adminModerationFlagsResponseSchema = z.object({
+  entries: z.array(adminModerationFlagSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
+  hasMore: z.boolean()
+});
+
+const adminModerationResolveResponseSchema = z.object({
+  flag: adminModerationFlagSchema
+});
+
 export type AdminChapterResponse = z.infer<typeof adminChapterSchema>;
 export type AdminAuditLogResponse = z.infer<typeof adminAuditLogResponseSchema>;
 export type AdminAuditLogResponseEntry = z.infer<typeof adminAuditLogEntrySchema>;
+export type AdminModerationFlag = z.infer<typeof adminModerationFlagSchema>;
+export type AdminModerationFlagsResponse = z.infer<typeof adminModerationFlagsResponseSchema>;
+export type AdminModerationResolveResponse = z.infer<typeof adminModerationResolveResponseSchema>;
 
 const fetchAdminJson = async <T>({
   path,
   schema,
-  cookieHeader
+  cookieHeader,
+  method = "GET",
+  body
 }: {
   path: string;
   schema: z.ZodType<T>;
   cookieHeader?: string;
+  method?: "GET" | "POST";
+  body?: unknown;
 }): Promise<T> => {
+  const headers: Record<string, string> = {};
+  if (cookieHeader) {
+    headers.cookie = cookieHeader;
+  }
+  if (body !== undefined) {
+    headers["content-type"] = "application/json";
+  }
+
   const response = await fetch(`${backendUrl}${path}`, {
-    method: "GET",
+    method,
     cache: "no-store",
-    ...(cookieHeader
-      ? {
-          headers: {
-            cookie: cookieHeader
-          }
-        }
-      : {
-          credentials: "include"
-        })
+    ...(!cookieHeader ? { credentials: "include" } : {}),
+    ...(Object.keys(headers).length > 0 ? { headers } : {}),
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {})
   });
 
   if (!response.ok) {
@@ -135,5 +169,49 @@ export const getAdminForumAuditLogs = async ({
     page,
     pageSize,
     ...(cookieHeader ? { cookieHeader } : {})
+  });
+};
+
+export const getAdminModerationFlags = async ({
+  page,
+  pageSize,
+  status,
+  targetType,
+  cookieHeader
+}: {
+  page: number;
+  pageSize: number;
+  status: "open" | "resolved";
+  targetType?: "thread" | "reply" | "chapter";
+  cookieHeader?: string;
+}): Promise<AdminModerationFlagsResponse> => {
+  const query = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+    status
+  });
+  if (targetType) {
+    query.set("targetType", targetType);
+  }
+
+  return fetchAdminJson({
+    path: `/api/admin/moderation/flags?${query.toString()}`,
+    schema: adminModerationFlagsResponseSchema,
+    ...(cookieHeader ? { cookieHeader } : {})
+  });
+};
+
+export const resolveAdminModerationFlag = async ({
+  id,
+  note
+}: {
+  id: string;
+  note: string;
+}): Promise<AdminModerationResolveResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/moderation/flags/${id}/resolve`,
+    schema: adminModerationResolveResponseSchema,
+    method: "POST",
+    body: { note }
   });
 };
