@@ -24,8 +24,16 @@ export const aiMessageRoleEnum = pgEnum("ai_message_role", ["user", "assistant"]
 export const voteTypeEnum = pgEnum("vote_type", ["upvote", "downvote"]);
 export const moderationTargetTypeEnum = pgEnum("moderation_target_type", ["thread", "reply", "chapter"]);
 export const moderationStatusEnum = pgEnum("moderation_status", ["open", "resolved"]);
-export const adminAuditScopeEnum = pgEnum("admin_audit_scope", ["content", "forum", "moderation"]);
+export const adminAuditScopeEnum = pgEnum("admin_audit_scope", [
+  "content",
+  "forum",
+  "moderation",
+  "notifications",
+  "settings"
+]);
 export const adminAuditStatusEnum = pgEnum("admin_audit_status", ["success", "failed"]);
+export const notificationAudienceEnum = pgEnum("notification_audience", ["all", "students", "admins"]);
+export const notificationStatusEnum = pgEnum("notification_status", ["sent"]);
 
 export const users = pgTable("user", {
   id: text("id").primaryKey(),
@@ -338,6 +346,34 @@ export const adminAuditLogs = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
   },
   (table) => [index("admin_audit_logs_scope_created_at_idx").on(table.scope, table.createdAt)]
+);
+
+export const adminNotifications = pgTable(
+  "admin_notifications",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    title: text("title").notNull(),
+    message: text("message").notNull(),
+    audience: notificationAudienceEnum("audience").notNull(),
+    status: notificationStatusEnum("status").notNull().default("sent"),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [index("admin_notifications_created_at_idx").on(table.createdAt)]
+);
+
+export const adminSettings = pgTable(
+  "admin_settings",
+  {
+    key: text("key").primaryKey(),
+    value: text("value").notNull(),
+    description: text("description").notNull(),
+    updatedBy: text("updated_by").references(() => users.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [index("admin_settings_updated_at_idx").on(table.updatedAt)]
 );
 
 export const userProgress = pgTable(

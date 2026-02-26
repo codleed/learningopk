@@ -1,4 +1,4 @@
-import { config } from "dotenv";
+﻿import { config } from "dotenv";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { hashPassword } from "better-auth/crypto";
 import { Pool } from "pg";
@@ -26,6 +26,8 @@ import {
   contentSources,
   adminAuditLogs,
   moderationFlags,
+  adminNotifications,
+  adminSettings,
 } from "./src/lib/db/schema.js";
 
 config();
@@ -39,11 +41,11 @@ const pool = new Pool({
 const db = drizzle(pool, { schema });
 
 async function seed() {
-  console.log("🌱 Seeding database...");
+  console.log("ðŸŒ± Seeding database...");
   await clearDatabase(db);
   console.log("Cleared existing data");
 
-  // ── Boards ────────────────────────────────────────────────────────────────
+  // â”€â”€ Boards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [boardFBISE, boardPunjab] = await db
     .insert(boards)
     .values([
@@ -52,9 +54,9 @@ async function seed() {
     ])
     .returning();
 
-  console.log("✅ Boards seeded");
+  console.log("âœ… Boards seeded");
 
-  // ── Subjects ──────────────────────────────────────────────────────────────
+  // â”€â”€ Subjects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [subjectPhysics, subjectChem, subjectBio, subjectMath] = await db
     .insert(subjects)
     .values([
@@ -63,7 +65,7 @@ async function seed() {
         grade: "9",
         name: "Physics",
         slug: "physics",
-        icon: "⚛️",
+        icon: "âš›ï¸",
         description: "Fundamentals of physics for grade 9 students.",
       },
       {
@@ -71,7 +73,7 @@ async function seed() {
         grade: "9",
         name: "Chemistry",
         slug: "chemistry",
-        icon: "🧪",
+        icon: "ðŸ§ª",
         description: "Introduction to chemistry concepts.",
       },
       {
@@ -79,7 +81,7 @@ async function seed() {
         grade: "10",
         name: "Biology",
         slug: "biology",
-        icon: "🧬",
+        icon: "ðŸ§¬",
         description: "Life sciences for grade 10.",
       },
       {
@@ -87,15 +89,15 @@ async function seed() {
         grade: "9",
         name: "Mathematics",
         slug: "mathematics",
-        icon: "📐",
+        icon: "ðŸ“",
         description: "Core mathematics curriculum.",
       },
     ])
     .returning();
 
-  console.log("✅ Subjects seeded");
+  console.log("âœ… Subjects seeded");
 
-  // ── Content Sources ────────────────────────────────────────────────────────
+  // â”€â”€ Content Sources â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [sourcePhysics] = await db
     .insert(contentSources)
     .values([
@@ -110,9 +112,9 @@ async function seed() {
     ])
     .returning();
 
-  console.log("✅ Content sources seeded");
+  console.log("âœ… Content sources seeded");
 
-  // ── Chapters ──────────────────────────────────────────────────────────────
+  // â”€â”€ Chapters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [ch1, ch2, ch3] = await db
     .insert(chapters)
     .values([
@@ -149,9 +151,9 @@ async function seed() {
     ])
     .returning();
 
-  console.log("✅ Chapters seeded");
+  console.log("âœ… Chapters seeded");
 
-  // ── Exercises ─────────────────────────────────────────────────────────────
+  // â”€â”€ Exercises â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   await db.insert(exercises).values([
     {
       chapterId: ch1.id,
@@ -167,7 +169,7 @@ async function seed() {
       exerciseNumber: "1.2",
       question: "What is the least count of a vernier caliper?",
       solution:
-        "The least count of a vernier caliper is 0.1 mm or 0.01 cm. It is calculated as: LC = 1 MSD − 1 VSD.",
+        "The least count of a vernier caliper is 0.1 mm or 0.01 cm. It is calculated as: LC = 1 MSD âˆ’ 1 VSD.",
       difficulty: "medium",
       type: "short",
     },
@@ -176,7 +178,7 @@ async function seed() {
       exerciseNumber: "1.3",
       question:
         "A student measures the diameter of a wire as 1.24 mm using a screw gauge. Express this in scientific notation.",
-      solution: "1.24 mm = 1.24 × 10⁻³ m",
+      solution: "1.24 mm = 1.24 Ã— 10â»Â³ m",
       difficulty: "easy",
       type: "numerical",
     },
@@ -195,7 +197,7 @@ async function seed() {
       question:
         "A car travels 60 km north and then 80 km east. Calculate the resultant displacement.",
       solution:
-        "Using Pythagoras theorem: displacement = √(60² + 80²) = √(3600 + 6400) = √10000 = 100 km at an angle θ = tan⁻¹(80/60) ≈ 53° east of north.",
+        "Using Pythagoras theorem: displacement = âˆš(60Â² + 80Â²) = âˆš(3600 + 6400) = âˆš10000 = 100 km at an angle Î¸ = tanâ»Â¹(80/60) â‰ˆ 53Â° east of north.",
       difficulty: "hard",
       type: "numerical",
     },
@@ -210,9 +212,9 @@ async function seed() {
     },
   ]);
 
-  console.log("✅ Exercises seeded");
+  console.log("âœ… Exercises seeded");
 
-  // ── Flashcards ────────────────────────────────────────────────────────────
+  // â”€â”€ Flashcards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   await db.insert(flashcards).values([
     {
       chapterId: ch1.id,
@@ -241,7 +243,7 @@ async function seed() {
     {
       chapterId: ch2.id,
       front: "Define acceleration.",
-      back: "Acceleration is the rate of change of velocity. a = Δv/Δt (m/s²).",
+      back: "Acceleration is the rate of change of velocity. a = Î”v/Î”t (m/sÂ²).",
       orderIndex: 2,
     },
     {
@@ -258,22 +260,22 @@ async function seed() {
     },
   ]);
 
-  console.log("✅ Flashcards seeded");
+  console.log("âœ… Flashcards seeded");
 
-  // ── Quizzes ───────────────────────────────────────────────────────────────
+  // â”€â”€ Quizzes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [quiz1, quiz2] = await db
     .insert(quizzes)
     .values([
       {
         chapterId: ch1.id,
-        title: "Chapter 1 Quiz – Physical Quantities",
+        title: "Chapter 1 Quiz â€“ Physical Quantities",
         durationMinutes: 20,
         totalMarks: 10,
         type: "chapter_quiz",
       },
       {
         chapterId: ch2.id,
-        title: "Chapter 2 Quiz – Kinematics",
+        title: "Chapter 2 Quiz â€“ Kinematics",
         durationMinutes: 25,
         totalMarks: 10,
         type: "chapter_quiz",
@@ -281,9 +283,9 @@ async function seed() {
     ])
     .returning();
 
-  console.log("✅ Quizzes seeded");
+  console.log("âœ… Quizzes seeded");
 
-  // ── Quiz Questions ─────────────────────────────────────────────────────────
+  // â”€â”€ Quiz Questions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   await db.insert(quizQuestions).values([
     {
       quizId: quiz1.id,
@@ -311,12 +313,12 @@ async function seed() {
     {
       quizId: quiz1.id,
       question: "Scientific notation for 0.00045 is:",
-      optionA: "4.5 × 10²",
-      optionB: "4.5 × 10⁻⁴",
-      optionC: "45 × 10⁻⁵",
-      optionD: "0.45 × 10⁻³",
+      optionA: "4.5 Ã— 10Â²",
+      optionB: "4.5 Ã— 10â»â´",
+      optionC: "45 Ã— 10â»âµ",
+      optionD: "0.45 Ã— 10â»Â³",
       correctOption: "b",
-      explanation: "0.00045 = 4.5 × 10⁻⁴ in proper scientific notation.",
+      explanation: "0.00045 = 4.5 Ã— 10â»â´ in proper scientific notation.",
       marks: 1,
     },
     {
@@ -336,7 +338,7 @@ async function seed() {
       question:
         "A body moving with uniform velocity has acceleration equal to:",
       optionA: "Maximum",
-      optionB: "1 m/s²",
+      optionB: "1 m/sÂ²",
       optionC: "Zero",
       optionD: "Variable",
       correctOption: "c",
@@ -346,9 +348,9 @@ async function seed() {
     },
   ]);
 
-  console.log("✅ Quiz questions seeded");
+  console.log("âœ… Quiz questions seeded");
 
-  // ── Mock Exam ─────────────────────────────────────────────────────────────
+  // â”€â”€ Mock Exam â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [mockQuiz] = await db
     .insert(quizzes)
     .values([
@@ -375,9 +377,9 @@ async function seed() {
     },
   ]);
 
-  console.log("✅ Mock exams seeded");
+  console.log("âœ… Mock exams seeded");
 
-  // ── Users ─────────────────────────────────────────────────────────────────
+  // â”€â”€ Users â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [adminUser, studentAli, studentSara] = await db
     .insert(users)
     .values([
@@ -414,7 +416,7 @@ async function seed() {
     ])
     .returning();
 
-  console.log("✅ Users seeded");
+  console.log("âœ… Users seeded");
 
   const seededPasswordHash = await hashPassword("password");
   await db.insert(accounts).values([
@@ -441,9 +443,9 @@ async function seed() {
     },
   ]);
 
-  console.log("✅ Credential accounts seeded");
+  console.log("âœ… Credential accounts seeded");
 
-  // ── Quiz Attempts ─────────────────────────────────────────────────────────
+  // â”€â”€ Quiz Attempts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   await db.insert(quizAttempts).values([
     {
       userId: studentAli.id,
@@ -468,9 +470,9 @@ async function seed() {
     },
   ]);
 
-  console.log("✅ Quiz attempts seeded");
+  console.log("âœ… Quiz attempts seeded");
 
-  // ── User Progress ──────────────────────────────────────────────────────────
+  // â”€â”€ User Progress â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   await db.insert(userProgress).values([
     {
       userId: studentAli.id,
@@ -498,9 +500,9 @@ async function seed() {
     },
   ]);
 
-  console.log("✅ User progress seeded");
+  console.log("âœ… User progress seeded");
 
-  // ── AI Chat Sessions & Messages ───────────────────────────────────────────
+  // â”€â”€ AI Chat Sessions & Messages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [session1] = await db
     .insert(aiChatSessions)
     .values([
@@ -522,7 +524,7 @@ async function seed() {
       sessionId: session1.id,
       role: "assistant",
       content:
-        "Sure! To read a vernier caliper: 1) Read the main scale to get the whole mm value. 2) Find which vernier division aligns with a main scale division – that's your decimal. 3) Add them together. For example, if the main scale reads 12 mm and the 4th vernier division aligns, the reading is 12.4 mm.",
+        "Sure! To read a vernier caliper: 1) Read the main scale to get the whole mm value. 2) Find which vernier division aligns with a main scale division â€“ that's your decimal. 3) Add them together. For example, if the main scale reads 12 mm and the 4th vernier division aligns, the reading is 12.4 mm.",
     },
     {
       sessionId: session1.id,
@@ -533,7 +535,7 @@ async function seed() {
       sessionId: session1.id,
       role: "assistant",
       content:
-        "The least count of a standard vernier caliper is 0.1 mm, calculated as 1 MSD − 1 VSD.",
+        "The least count of a standard vernier caliper is 0.1 mm, calculated as 1 MSD âˆ’ 1 VSD.",
     },
   ]);
 
@@ -554,9 +556,9 @@ async function seed() {
     },
   ]);
 
-  console.log("✅ AI chat sessions & usage logs seeded");
+  console.log("âœ… AI chat sessions & usage logs seeded");
 
-  // ── Forum Threads & Replies ───────────────────────────────────────────────
+  // â”€â”€ Forum Threads & Replies â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [thread1, thread2] = await db
     .insert(forumThreads)
     .values([
@@ -590,7 +592,7 @@ async function seed() {
         threadId: thread1.id,
         userId: adminUser.id,
         parentReplyId: null,
-        body: "Great question! Speed is a scalar – it only has magnitude (how fast). Velocity is a vector – it has both magnitude and direction. So a car going 60 km/h is speed, but 60 km/h northward is velocity.",
+        body: "Great question! Speed is a scalar â€“ it only has magnitude (how fast). Velocity is a vector â€“ it has both magnitude and direction. So a car going 60 km/h is speed, but 60 km/h northward is velocity.",
         isAcceptedAnswer: false,
         upvotes: 5,
       },
@@ -598,7 +600,7 @@ async function seed() {
         threadId: thread2.id,
         userId: adminUser.id,
         parentReplyId: null,
-        body: "To avoid backlash error, always approach the final reading from the same direction. Never reverse the thimble when measuring – move it in one direction only.",
+        body: "To avoid backlash error, always approach the final reading from the same direction. Never reverse the thimble when measuring â€“ move it in one direction only.",
         isAcceptedAnswer: true,
         upvotes: 12,
       },
@@ -624,9 +626,9 @@ async function seed() {
     { userId: studentAli.id, replyId: reply2.id, voteType: "upvote" },
   ]);
 
-  console.log("✅ Forum threads, replies & votes seeded");
+  console.log("âœ… Forum threads, replies & votes seeded");
 
-  // ── Admin Audit Logs ───────────────────────────────────────────────────────
+  // â”€â”€ Admin Audit Logs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Moderation flags
   await db.insert(moderationFlags).values([
     {
@@ -639,7 +641,7 @@ async function seed() {
     {
       targetType: "reply",
       targetId: reply1.id,
-      targetLabel: "Great question! Speed is a scalar�",
+      targetLabel: "Great question! Speed is a scalar…",
       reason: "Spam",
       status: "open",
     },
@@ -696,14 +698,49 @@ async function seed() {
     },
   ]);
 
-  console.log("✅ Admin audit logs seeded");
+  console.log("âœ… Admin audit logs seeded");
+  await db.insert(adminSettings).values([
+    {
+      key: "forum_auto_lock_hours",
+      value: "24",
+      description: "Auto-lock inactive forum threads after N hours.",
+      updatedBy: adminUser.id,
+    },
+    {
+      key: "quiz_pass_threshold_percent",
+      value: "50",
+      description: "Minimum score percentage required to pass quizzes.",
+      updatedBy: adminUser.id,
+    },
+    {
+      key: "maintenance_banner_enabled",
+      value: "false",
+      description: "Controls maintenance announcement banner visibility.",
+      updatedBy: adminUser.id,
+    },
+  ]);
 
-  console.log("\n🎉 Database seeded successfully!");
+  console.log("✅ Admin settings seeded");
+
+  await db.insert(adminNotifications).values([
+    {
+      title: "Welcome admin team",
+      message: "Phase 4 operations are enabled for manual broadcast notifications.",
+      audience: "admins",
+      status: "sent",
+      createdBy: adminUser.id,
+    },
+  ]);
+
+  console.log("✅ Admin notifications seeded");
+
+  console.log("\nðŸŽ‰ Database seeded successfully!");
   await pool.end();
 }
 
 seed().catch((err) => {
-  console.error("❌ Seed failed:", err);
+  console.error("âŒ Seed failed:", err);
   process.exit(1);
 });
+
 
