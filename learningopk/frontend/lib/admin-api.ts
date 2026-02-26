@@ -120,6 +120,31 @@ const adminAnalyticsOverviewSchema = z.object({
   subjectPerformance: z.array(adminAnalyticsSubjectPerformanceSchema)
 });
 
+const adminNotificationSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string(),
+  message: z.string(),
+  audience: z.enum(["all", "students", "admins"]),
+  status: z.enum(["sent"]),
+  createdBy: z.object({
+    id: z.string(),
+    name: z.string()
+  }),
+  createdAt: z.string().datetime()
+});
+
+const adminNotificationsResponseSchema = z.object({
+  entries: z.array(adminNotificationSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
+  hasMore: z.boolean()
+});
+
+const adminNotificationCreateResponseSchema = z.object({
+  notification: adminNotificationSchema
+});
+
 export type AdminChapterResponse = z.infer<typeof adminChapterSchema>;
 export type AdminAuditLogResponse = z.infer<typeof adminAuditLogResponseSchema>;
 export type AdminAuditLogResponseEntry = z.infer<typeof adminAuditLogEntrySchema>;
@@ -132,6 +157,9 @@ export type AdminCommunityThread = z.infer<typeof adminCommunityThreadSchema>;
 export type AdminCommunityThreadsResponse = z.infer<typeof adminCommunityThreadsResponseSchema>;
 export type AdminAnalyticsOverview = z.infer<typeof adminAnalyticsOverviewSchema>;
 export type AdminAnalyticsSubjectPerformance = z.infer<typeof adminAnalyticsSubjectPerformanceSchema>;
+export type AdminNotification = z.infer<typeof adminNotificationSchema>;
+export type AdminNotificationsResponse = z.infer<typeof adminNotificationsResponseSchema>;
+export type AdminNotificationCreateResponse = z.infer<typeof adminNotificationCreateResponseSchema>;
 
 const fetchAdminJson = async <T>({
   path,
@@ -354,5 +382,43 @@ export const getAdminAnalyticsOverview = async ({
     path: `/api/admin/analytics/overview?${query.toString()}`,
     schema: adminAnalyticsOverviewSchema,
     ...(cookieHeader ? { cookieHeader } : {})
+  });
+};
+
+export const getAdminNotifications = async ({
+  page,
+  pageSize,
+  cookieHeader
+}: {
+  page: number;
+  pageSize: number;
+  cookieHeader?: string;
+}): Promise<AdminNotificationsResponse> => {
+  const query = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize)
+  });
+
+  return fetchAdminJson({
+    path: `/api/admin/notifications?${query.toString()}`,
+    schema: adminNotificationsResponseSchema,
+    ...(cookieHeader ? { cookieHeader } : {})
+  });
+};
+
+export const createAdminNotification = async ({
+  title,
+  message,
+  audience
+}: {
+  title: string;
+  message: string;
+  audience: "all" | "students" | "admins";
+}): Promise<AdminNotificationCreateResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/notifications",
+    schema: adminNotificationCreateResponseSchema,
+    method: "POST",
+    body: { title, message, audience }
   });
 };

@@ -1,12 +1,38 @@
-import { AdminComingSoonAction } from "@/components/admin/admin-coming-soon-action";
-import { AdminSectionPlaceholder } from "@/components/admin/admin-section-placeholder";
+import Link from "next/link";
+import { cookies } from "next/headers";
 
-export default function AdminNotificationsPage() {
+import { AdminNotificationsPanel } from "@/components/admin/admin-notifications-panel";
+import { PageHeader } from "@/components/foundation/page-header";
+import { getAdminNotifications } from "@/lib/admin-api";
+
+export default async function AdminNotificationsPage() {
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+  const payload = await getAdminNotifications({
+    page: 1,
+    pageSize: 10,
+    cookieHeader
+  }).catch(() => ({
+    entries: [],
+    total: 0,
+    page: 1,
+    pageSize: 10,
+    hasMore: false
+  }));
+
   return (
-    <AdminSectionPlaceholder
-      title="Notifications"
-      description="Broadcast campaigns and audience segmentation are staged for upcoming phases."
-      action={<AdminComingSoonAction label="Create Broadcast (Coming Soon)" />}
-    />
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Admin Notifications"
+        title="Notifications"
+        subtitle="Broadcast operational messages and review recent sends."
+        actions={
+          <Link href="/admin" className="text-sm font-medium text-foreground underline underline-offset-4">
+            Back to admin
+          </Link>
+        }
+      />
+      <AdminNotificationsPanel initialPayload={payload} />
+    </div>
   );
 }
