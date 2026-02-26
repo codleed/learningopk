@@ -26,7 +26,13 @@ test("admin shell exposes phase-1 section navigation", async ({ page }) => {
   await page.goto("/admin/moderation");
   await expect(page.getByRole("heading", { name: "Flagging & Moderation" })).toBeVisible();
 
-  for (const target of ["/admin/community", "/admin/analytics", "/admin/notifications", "/admin/settings"]) {
+  await page.goto("/admin/community");
+  await expect(page.getByRole("heading", { name: "Community Forum" })).toBeVisible();
+
+  await page.goto("/admin/analytics");
+  await expect(page.getByRole("heading", { name: "Analytics & Reporting" })).toBeVisible();
+
+  for (const target of ["/admin/notifications", "/admin/settings"]) {
     await page.goto(target);
     await expect(page.getByText("Coming in next sprint")).toBeVisible();
   }
