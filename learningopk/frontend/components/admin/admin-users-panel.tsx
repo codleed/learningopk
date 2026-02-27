@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
-import { getAdminUsers, type AdminUser, updateAdminUserRole } from "@/lib/admin-api";
+import { getAdminUsers, type AdminUser, updateAdminUserRole, updateAdminUserSuspension } from "@/lib/admin-api";
 
 import { AdminUsersTable } from "./admin-users-table";
 
 type UsersRoleFilter = "" | "student" | "admin";
+type UsersStatusFilter = "" | "active" | "suspended";
 
 type AdminUsersPanelProps = {
   initialEntries: AdminUser[];
@@ -26,9 +27,11 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [role, setRole] = useState<UsersRoleFilter>("");
+  const [status, setStatus] = useState<UsersStatusFilter>("");
   const [isApplying, setIsApplying] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [mutatingUserIds, setMutatingUserIds] = useState<Set<string>>(new Set());
+  const [suspensionMutatingUserIds, setSuspensionMutatingUserIds] = useState<Set<string>>(new Set());
   const { pushToast } = useToast();
   const hasMore = entries.length < total;
 
@@ -44,7 +47,8 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
         page: nextPage,
         pageSize: usersPageSize,
         q: searchTerm,
-        role
+        role,
+        status
       });
 
       setEntries((previous) => (append ? [...previous, ...payload.entries] : payload.entries));
@@ -127,6 +131,83 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
     }
   };
 
+  const suspendUser = async (user: AdminUser, reason: string): Promise<boolean> => {
+    setSuspensionMutatingUserIds((previous) => {
+      const next = new Set(previous);
+      next.add(user.id);
+      return next;
+    });
+
+    try {
+      await updateAdminUserSuspension({
+        id: user.id,
+        action: "suspend",
+        reason
+      });
+      pushToast({
+        tone: "success",
+        title: "User suspended",
+        description: `${user.name} has been suspended.`
+      });
+      await runFetch({
+        nextPage: 1,
+        append: false
+      });
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to suspend user.";
+      pushToast({
+        tone: "error",
+        title: "Suspension failed",
+        description: message
+      });
+      return false;
+    } finally {
+      setSuspensionMutatingUserIds((previous) => {
+        const next = new Set(previous);
+        next.delete(user.id);
+        return next;
+      });
+    }
+  };
+
+  const reactivateUser = async (user: AdminUser) => {
+    setSuspensionMutatingUserIds((previous) => {
+      const next = new Set(previous);
+      next.add(user.id);
+      return next;
+    });
+
+    try {
+      await updateAdminUserSuspension({
+        id: user.id,
+        action: "reactivate"
+      });
+      pushToast({
+        tone: "success",
+        title: "User reactivated",
+        description: `${user.name} has been reactivated.`
+      });
+      await runFetch({
+        nextPage: 1,
+        append: false
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to reactivate user.";
+      pushToast({
+        tone: "error",
+        title: "Reactivation failed",
+        description: message
+      });
+    } finally {
+      setSuspensionMutatingUserIds((previous) => {
+        const next = new Set(previous);
+        next.delete(user.id);
+        return next;
+      });
+    }
+  };
+
   return (
     <SectionCard
       title="Users Directory"
@@ -140,7 +221,7 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
       }
     >
       <div className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-[1fr_220px_auto] md:items-end">
+        <div className="grid gap-3 md:grid-cols-[1fr_220px_220px_auto] md:items-end">
           <div className="space-y-1.5">
             <label htmlFor="users-search" className="text-xs font-semibold uppercase tracking-wide text-foreground">
               Search users
@@ -163,12 +244,34 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
               <option value="student">Student</option>
             </Select>
           </div>
+          <div className="space-y-1.5">
+            <label htmlFor="users-status" className="text-xs font-semibold uppercase tracking-wide text-foreground">
+              Status
+            </label>
+            <Select
+              id="users-status"
+              value={status}
+              onChange={(event) => setStatus(event.target.value as UsersStatusFilter)}
+              disabled={isApplying}
+            >
+              <option value="">All statuses</option>
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
+            </Select>
+          </div>
           <Button type="button" variant="secondary" onClick={() => void applyFilters()} disabled={isApplying}>
             {isApplying ? "Applying..." : "Apply filters"}
           </Button>
         </div>
 
-        <AdminUsersTable rows={entries} mutatingUserIds={mutatingUserIds} onToggleRole={toggleRole} />
+        <AdminUsersTable
+          rows={entries}
+          mutatingUserIds={mutatingUserIds}
+          suspensionMutatingUserIds={suspensionMutatingUserIds}
+          onToggleRole={toggleRole}
+          onSuspend={suspendUser}
+          onReactivate={reactivateUser}
+        />
       </div>
     </SectionCard>
   );

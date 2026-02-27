@@ -86,6 +86,10 @@ const adminUserRoleUpdateResponseSchema = z.object({
   user: adminUserSchema
 });
 
+const adminUserSuspensionUpdateResponseSchema = z.object({
+  user: adminUserSchema
+});
+
 const adminCommunityThreadSchema = z.object({
   threadId: z.string().uuid(),
   title: z.string(),
@@ -187,6 +191,7 @@ export type AdminModerationResolveResponse = z.infer<typeof adminModerationResol
 export type AdminUser = z.infer<typeof adminUserSchema>;
 export type AdminUsersResponse = z.infer<typeof adminUsersResponseSchema>;
 export type AdminUserRoleUpdateResponse = z.infer<typeof adminUserRoleUpdateResponseSchema>;
+export type AdminUserSuspensionUpdateResponse = z.infer<typeof adminUserSuspensionUpdateResponseSchema>;
 export type AdminCommunityThread = z.infer<typeof adminCommunityThreadSchema>;
 export type AdminCommunityThreadsResponse = z.infer<typeof adminCommunityThreadsResponseSchema>;
 export type AdminAnalyticsOverview = z.infer<typeof adminAnalyticsOverviewSchema>;
@@ -350,12 +355,14 @@ export const getAdminUsers = async ({
   pageSize,
   q,
   role,
+  status,
   cookieHeader
 }: {
   page: number;
   pageSize: number;
   q: string;
   role?: "" | "student" | "admin";
+  status?: "" | "active" | "suspended";
   cookieHeader?: string;
 }): Promise<AdminUsersResponse> => {
   const query = new URLSearchParams({
@@ -365,6 +372,9 @@ export const getAdminUsers = async ({
   });
   if (role) {
     query.set("role", role);
+  }
+  if (status) {
+    query.set("status", status);
   }
 
   return fetchAdminJson({
@@ -386,6 +396,23 @@ export const updateAdminUserRole = async ({
     schema: adminUserRoleUpdateResponseSchema,
     method: "POST",
     body: { role }
+  });
+};
+
+export const updateAdminUserSuspension = async ({
+  id,
+  action,
+  reason
+}: {
+  id: string;
+  action: "suspend" | "reactivate";
+  reason?: string;
+}): Promise<AdminUserSuspensionUpdateResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/users/${encodeURIComponent(id)}/suspension`,
+    schema: adminUserSuspensionUpdateResponseSchema,
+    method: "POST",
+    body: action === "suspend" ? { action, reason } : { action }
   });
 };
 
