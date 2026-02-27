@@ -211,3 +211,26 @@ test("admin suspension mutation is students-only, requires reason, and supports 
   });
   assert.equal(duplicateReactivate.status, 409);
 });
+
+test("suspended users are blocked from protected routes", async () => {
+  const app = createApp();
+  const adminAgent = request.agent(app);
+  const studentAgent = request.agent(app);
+
+  await signUp(adminAgent, "Blocked Admin", `tst_phase5_block_admin_${Date.now()}@example.com`);
+  await signUp(studentAgent, "Blocked Student", `tst_phase5_block_student_${Date.now()}@example.com`);
+
+  const adminUser = await getSessionUser(adminAgent);
+  const studentUser = await getSessionUser(studentAgent);
+  await assignRole(adminUser.id, "admin");
+
+  const suspended = await adminAgent.post(`/api/admin/users/${studentUser.id}/suspension`).send({
+    action: "suspend",
+    reason: "Temporary suspension for policy review and moderation follow-up."
+  });
+  assert.equal(suspended.status, 200);
+
+  const blocked = await studentAgent.get("/api/progress/dashboard");
+  assert.equal(blocked.status, 403);
+  assert.equal(blocked.body.code, "ACCOUNT_SUSPENDED");
+});
