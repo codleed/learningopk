@@ -36,7 +36,18 @@ const threadPinBodySchema = z.object({
   isPinned: z.boolean()
 });
 
+const adminAuditScopeValues = ["content", "forum", "moderation", "notifications", "settings", "users"] as const;
+const adminAuditStatusValues = ["success", "failed"] as const;
+
 const auditLogQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).optional().default(20)
+});
+
+const aggregatedAuditLogQuerySchema = z.object({
+  scope: z.enum(["all", ...adminAuditScopeValues]).optional().default("all"),
+  status: z.enum(["all", ...adminAuditStatusValues]).optional().default("all"),
+  q: z.string().trim().optional().default(""),
   page: z.coerce.number().int().min(1).optional().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20)
 });
@@ -132,7 +143,16 @@ const updatableAdminSettingKeys = new Set([
   "maintenance_banner_enabled"
 ]);
 
-type AdminAuditScope = "content" | "forum" | "moderation" | "notifications" | "settings" | "users";
+type AdminAuditScope = (typeof adminAuditScopeValues)[number];
+type AdminAuditStatus = (typeof adminAuditStatusValues)[number];
+
+type ListAuditLogsInput = {
+  scope?: AdminAuditScope;
+  status?: AdminAuditStatus;
+  q?: string;
+  page: number;
+  pageSize: number;
+};
 
 type PersistAuditLogInput = {
   scope: AdminAuditScope;
@@ -156,12 +176,33 @@ const persistAuditLog = async (input: PersistAuditLogInput): Promise<void> => {
   });
 };
 
-const listAuditLogs = async (scope: AdminAuditScope, page: number, pageSize: number) => {
+const listAuditLogs = async ({ scope, status, q, page, pageSize }: ListAuditLogsInput) => {
   const offset = (page - 1) * pageSize;
+  const searchTerm = q?.trim() ?? "";
+  const predicates: SQL[] = [];
+
+  if (scope) {
+    predicates.push(eq(adminAuditLogs.scope, scope));
+  }
+  if (status) {
+    predicates.push(eq(adminAuditLogs.status, status));
+  }
+  if (searchTerm.length > 0) {
+    predicates.push(
+      or(
+        ilike(adminAuditLogs.action, `%${searchTerm}%`),
+        ilike(adminAuditLogs.target, `%${searchTerm}%`),
+        ilike(adminAuditLogs.message, `%${searchTerm}%`),
+        ilike(adminAuditLogs.actorName, `%${searchTerm}%`)
+      )
+    );
+  }
+  const whereClause = predicates.length > 0 ? and(...predicates) : undefined;
 
   const rows = await db
     .select({
       id: adminAuditLogs.id,
+      scope: adminAuditLogs.scope,
       action: adminAuditLogs.action,
       target: adminAuditLogs.target,
       status: adminAuditLogs.status,
@@ -171,7 +212,7 @@ const listAuditLogs = async (scope: AdminAuditScope, page: number, pageSize: num
       createdAt: adminAuditLogs.createdAt
     })
     .from(adminAuditLogs)
-    .where(eq(adminAuditLogs.scope, scope))
+    .where(whereClause)
     .orderBy(desc(adminAuditLogs.createdAt), desc(adminAuditLogs.id))
     .offset(offset)
     .limit(pageSize);
@@ -181,13 +222,14 @@ const listAuditLogs = async (scope: AdminAuditScope, page: number, pageSize: num
       count: sql<number>`count(*)::int`
     })
     .from(adminAuditLogs)
-    .where(eq(adminAuditLogs.scope, scope));
+    .where(whereClause);
 
   const total = totalRows[0]?.count ?? 0;
 
   return {
     entries: rows.map((row) => ({
       id: row.id,
+      scope: row.scope,
       action: row.action,
       target: row.target,
       status: row.status,
@@ -218,7 +260,39 @@ const handleAuditLogRead = async (req: AuthenticatedRequest, res: Response, scop
   }
 
   const { page, pageSize } = parsedQuery.data;
-  const payload = await listAuditLogs(scope, page, pageSize);
+  const payload = await listAuditLogs({ scope, page, pageSize });
+
+  res.status(200).json({
+    entries: payload.entries,
+    total: payload.total,
+    page,
+    pageSize,
+    hasMore: payload.hasMore
+  });
+};
+
+const handleAggregatedAuditLogRead = async (req: AuthenticatedRequest, res: Response) => {
+  if (!(await requireAdminRole(req, res))) {
+    return;
+  }
+
+  const parsedQuery = aggregatedAuditLogQuerySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid aggregated audit log query parameters",
+      details: parsedQuery.error.flatten()
+    });
+    return;
+  }
+
+  const { scope, status, q, page, pageSize } = parsedQuery.data;
+  const payload = await listAuditLogs({
+    ...(scope !== "all" ? { scope } : {}),
+    ...(status !== "all" ? { status } : {}),
+    ...(q.length > 0 ? { q } : {}),
+    page,
+    pageSize
+  });
 
   res.status(200).json({
     entries: payload.entries,
@@ -1577,4 +1651,24 @@ adminRouter.get("/content/audit-logs", requireSession, async (req, res) => {
 
 adminRouter.get("/forum/audit-logs", requireSession, async (req, res) => {
   await handleAuditLogRead(req as AuthenticatedRequest, res, "forum");
+});
+
+adminRouter.get("/moderation/audit-logs", requireSession, async (req, res) => {
+  await handleAuditLogRead(req as AuthenticatedRequest, res, "moderation");
+});
+
+adminRouter.get("/users/audit-logs", requireSession, async (req, res) => {
+  await handleAuditLogRead(req as AuthenticatedRequest, res, "users");
+});
+
+adminRouter.get("/notifications/audit-logs", requireSession, async (req, res) => {
+  await handleAuditLogRead(req as AuthenticatedRequest, res, "notifications");
+});
+
+adminRouter.get("/settings/audit-logs", requireSession, async (req, res) => {
+  await handleAuditLogRead(req as AuthenticatedRequest, res, "settings");
+});
+
+adminRouter.get("/audit-logs", requireSession, async (req, res) => {
+  await handleAggregatedAuditLogRead(req as AuthenticatedRequest, res);
 });

@@ -279,3 +279,79 @@ test("admin aggregated audit logs paginate deterministically", async () => {
   assert.ok(secondId, "Expected second page entry id.");
   assert.notEqual(firstId, secondId, "Expected different audit rows across pages.");
 });
+
+test("admin scoped audit log routes are available for moderation/users/notifications/settings", async () => {
+  const app = createApp();
+  const adminAgent = request.agent(app);
+
+  await signUp(adminAgent, "Phase6 Scoped Admin", `tst_phase6_scoped_admin_${Date.now()}@example.com`);
+  const adminUser = await getSessionUser(adminAgent);
+  await assignAdminRole(adminUser.id);
+
+  const now = Date.now();
+  await seedAuditLog({
+    id: randomUUID(),
+    scope: "moderation",
+    action: "Resolve flag",
+    target: "thread:Quadratic equations",
+    status: "success",
+    message: "Resolved reported thread after review.",
+    actorId: adminUser.id,
+    actorName: adminUser.name,
+    createdAt: new Date(now - 2000)
+  });
+  await seedAuditLog({
+    id: randomUUID(),
+    scope: "users",
+    action: "Suspend user",
+    target: "hamza@example.com",
+    status: "success",
+    message: "Suspended user for policy violations.",
+    actorId: adminUser.id,
+    actorName: adminUser.name,
+    createdAt: new Date(now - 1500)
+  });
+  await seedAuditLog({
+    id: randomUUID(),
+    scope: "notifications",
+    action: "Send notification broadcast",
+    target: "Students",
+    status: "success",
+    message: "Sent maintenance advisory.",
+    actorId: adminUser.id,
+    actorName: adminUser.name,
+    createdAt: new Date(now - 1000)
+  });
+  await seedAuditLog({
+    id: randomUUID(),
+    scope: "settings",
+    action: "Update setting",
+    target: "quiz_pass_threshold_percent",
+    status: "success",
+    message: "Updated threshold to 70.",
+    actorId: adminUser.id,
+    actorName: adminUser.name,
+    createdAt: new Date(now - 500)
+  });
+
+  const routes = [
+    { path: "/api/admin/moderation/audit-logs", expectedScope: "moderation" },
+    { path: "/api/admin/users/audit-logs", expectedScope: "users" },
+    { path: "/api/admin/notifications/audit-logs", expectedScope: "notifications" },
+    { path: "/api/admin/settings/audit-logs", expectedScope: "settings" }
+  ] as const;
+
+  for (const route of routes) {
+    const response = await adminAgent.get(route.path).query({ page: 1, pageSize: 20 });
+    assert.equal(response.status, 200, `Expected ${route.path} to return 200`);
+    assert.equal(response.body.page, 1);
+    assert.equal(response.body.pageSize, 20);
+    assert.ok(typeof response.body.total === "number");
+    assert.ok(typeof response.body.hasMore === "boolean");
+    assert.ok(Array.isArray(response.body.entries));
+    assert.ok(
+      response.body.entries.every((row: { scope?: string }) => row.scope === undefined || row.scope === route.expectedScope),
+      `Expected ${route.path} entries to align with scope ${route.expectedScope}`
+    );
+  }
+});
