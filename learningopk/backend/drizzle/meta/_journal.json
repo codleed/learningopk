@@ -43,6 +43,13 @@
       "when": 1772144032192,
       "tag": "0005_admin_phase4_notifications_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772152777835,
+      "tag": "0006_sparkling_epoch",
+      "breakpoints": true
     }
   ]
 }

@@ -413,6 +413,19 @@ async function seed() {
         degree: null,
         board: "fbise",
       },
+      {
+        id: "user_student_003",
+        name: "Omar Saeed",
+        email: "omar.saeed@example.com",
+        emailVerified: true,
+        role: "student",
+        class: "10-A",
+        degree: null,
+        board: "fbise",
+        status: "suspended",
+        suspendedReason: "Seeded suspended account for admin lifecycle e2e coverage.",
+        suspendedBy: "user_admin_001",
+      },
     ])
     .returning();
 

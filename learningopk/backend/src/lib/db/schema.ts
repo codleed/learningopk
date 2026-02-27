@@ -22,6 +22,7 @@ export const quizTypeEnum = pgEnum("quiz_type", ["chapter_quiz", "mock_exam"]);
 export const answerOptionEnum = pgEnum("answer_option", ["a", "b", "c", "d"]);
 export const aiMessageRoleEnum = pgEnum("ai_message_role", ["user", "assistant"]);
 export const voteTypeEnum = pgEnum("vote_type", ["upvote", "downvote"]);
+export const userStatusEnum = pgEnum("user_status", ["active", "suspended"]);
 export const moderationTargetTypeEnum = pgEnum("moderation_target_type", ["thread", "reply", "chapter"]);
 export const moderationStatusEnum = pgEnum("moderation_status", ["open", "resolved"]);
 export const adminAuditScopeEnum = pgEnum("admin_audit_scope", [
@@ -29,7 +30,8 @@ export const adminAuditScopeEnum = pgEnum("admin_audit_scope", [
   "forum",
   "moderation",
   "notifications",
-  "settings"
+  "settings",
+  "users"
 ]);
 export const adminAuditStatusEnum = pgEnum("admin_audit_status", ["success", "failed"]);
 export const notificationAudienceEnum = pgEnum("notification_audience", ["all", "students", "admins"]);
@@ -45,6 +47,10 @@ export const users = pgTable("user", {
   degree: text("degree"),
   board: text("board"),
   role: userRoleEnum("role").notNull().default("student"),
+  status: userStatusEnum("status").notNull().default("active"),
+  suspendedAt: timestamp("suspended_at", { withTimezone: true, mode: "date" }),
+  suspendedReason: text("suspended_reason"),
+  suspendedBy: text("suspended_by").references((): AnyPgColumn => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
 });
