@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
-import { getAdminUsers, type AdminUser } from "@/lib/admin-api";
+import { getAdminUsers, type AdminUser, updateAdminUserRole } from "@/lib/admin-api";
 
 import { AdminUsersTable } from "./admin-users-table";
 
@@ -28,6 +28,7 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
   const [role, setRole] = useState<UsersRoleFilter>("");
   const [isApplying, setIsApplying] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [mutatingUserIds, setMutatingUserIds] = useState<Set<string>>(new Set());
   const { pushToast } = useToast();
   const hasMore = entries.length < total;
 
@@ -87,6 +88,45 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
     }
   };
 
+  const toggleRole = async (user: AdminUser) => {
+    const nextRole = user.role === "admin" ? "student" : "admin";
+
+    setMutatingUserIds((previous) => {
+      const next = new Set(previous);
+      next.add(user.id);
+      return next;
+    });
+
+    try {
+      await updateAdminUserRole({
+        id: user.id,
+        role: nextRole
+      });
+      pushToast({
+        tone: "success",
+        title: "Role updated",
+        description: `${user.name} is now ${nextRole}.`
+      });
+      await runFetch({
+        nextPage: 1,
+        append: false
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to update user role.";
+      pushToast({
+        tone: "error",
+        title: "Role update failed",
+        description: message
+      });
+    } finally {
+      setMutatingUserIds((previous) => {
+        const next = new Set(previous);
+        next.delete(user.id);
+        return next;
+      });
+    }
+  };
+
   return (
     <SectionCard
       title="Users Directory"
@@ -128,7 +168,7 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
           </Button>
         </div>
 
-        <AdminUsersTable rows={entries} />
+        <AdminUsersTable rows={entries} mutatingUserIds={mutatingUserIds} onToggleRole={toggleRole} />
       </div>
     </SectionCard>
   );

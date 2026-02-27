@@ -67,6 +67,10 @@ const adminUserSchema = z.object({
   name: z.string(),
   email: z.string().email(),
   role: z.enum(["student", "admin"]),
+  status: z.enum(["active", "suspended"]).optional(),
+  suspendedAt: z.string().datetime().nullable().optional(),
+  suspendedReason: z.string().nullable().optional(),
+  suspendedBy: z.string().nullable().optional(),
   createdAt: z.string().datetime()
 });
 
@@ -76,6 +80,10 @@ const adminUsersResponseSchema = z.object({
   page: z.number().int().positive(),
   pageSize: z.number().int().positive(),
   hasMore: z.boolean()
+});
+
+const adminUserRoleUpdateResponseSchema = z.object({
+  user: adminUserSchema
 });
 
 const adminCommunityThreadSchema = z.object({
@@ -178,6 +186,7 @@ export type AdminModerationFlagsResponse = z.infer<typeof adminModerationFlagsRe
 export type AdminModerationResolveResponse = z.infer<typeof adminModerationResolveResponseSchema>;
 export type AdminUser = z.infer<typeof adminUserSchema>;
 export type AdminUsersResponse = z.infer<typeof adminUsersResponseSchema>;
+export type AdminUserRoleUpdateResponse = z.infer<typeof adminUserRoleUpdateResponseSchema>;
 export type AdminCommunityThread = z.infer<typeof adminCommunityThreadSchema>;
 export type AdminCommunityThreadsResponse = z.infer<typeof adminCommunityThreadsResponseSchema>;
 export type AdminAnalyticsOverview = z.infer<typeof adminAnalyticsOverviewSchema>;
@@ -362,6 +371,21 @@ export const getAdminUsers = async ({
     path: `/api/admin/users?${query.toString()}`,
     schema: adminUsersResponseSchema,
     ...(cookieHeader ? { cookieHeader } : {})
+  });
+};
+
+export const updateAdminUserRole = async ({
+  id,
+  role
+}: {
+  id: string;
+  role: "student" | "admin";
+}): Promise<AdminUserRoleUpdateResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/users/${encodeURIComponent(id)}/role`,
+    schema: adminUserRoleUpdateResponseSchema,
+    method: "POST",
+    body: { role }
   });
 };
 

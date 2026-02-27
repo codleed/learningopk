@@ -1,12 +1,15 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import type { AdminUser } from "@/lib/admin-api";
 
 type AdminUsersTableProps = {
   rows: AdminUser[];
+  mutatingUserIds: Set<string>;
+  onToggleRole: (user: AdminUser) => void;
 };
 
-export function AdminUsersTable({ rows }: AdminUsersTableProps) {
+export function AdminUsersTable({ rows, mutatingUserIds, onToggleRole }: AdminUsersTableProps) {
   if (rows.length === 0) {
     return <p className="text-sm text-muted-foreground">No users match the current filters.</p>;
   }
@@ -20,11 +23,12 @@ export function AdminUsersTable({ rows }: AdminUsersTableProps) {
             <th className="px-3 py-2 text-left font-semibold text-foreground">Email</th>
             <th className="px-3 py-2 text-left font-semibold text-foreground">Role</th>
             <th className="px-3 py-2 text-left font-semibold text-foreground">Created</th>
+            <th className="px-3 py-2 text-left font-semibold text-foreground">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
           {rows.map((user) => (
-            <tr key={user.id}>
+            <tr key={user.id} data-testid="admin-user-row">
               <td className="px-3 py-2 text-foreground">{user.name}</td>
               <td className="px-3 py-2 text-foreground/90">{user.email}</td>
               <td className="px-3 py-2">
@@ -38,6 +42,21 @@ export function AdminUsersTable({ rows }: AdminUsersTableProps) {
                 </span>
               </td>
               <td className="px-3 py-2 text-foreground/90">{new Date(user.createdAt).toLocaleDateString()}</td>
+              <td className="px-3 py-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => onToggleRole(user)}
+                  disabled={mutatingUserIds.has(user.id)}
+                >
+                  {mutatingUserIds.has(user.id)
+                    ? "Saving..."
+                    : user.role === "admin"
+                      ? "Demote to student"
+                      : "Promote to admin"}
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>
