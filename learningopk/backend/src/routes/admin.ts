@@ -63,6 +63,14 @@ const adminUsersQuerySchema = z.object({
   role: z.enum(["student", "admin"]).optional()
 });
 
+const adminUserParamsSchema = z.object({
+  id: z.string().trim().min(1)
+});
+
+const adminUserRoleUpdateBodySchema = z.object({
+  role: z.enum(["student", "admin"])
+});
+
 const adminCommunityThreadsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
@@ -994,6 +1002,98 @@ adminRouter.get("/users", requireSession, async (req, res) => {
     page,
     pageSize,
     hasMore: payload.hasMore
+  });
+});
+
+adminRouter.post("/users/:id/role", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedParams = adminUserParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid user identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const parsedBody = adminUserRoleUpdateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid role update payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const targetUserId = parsedParams.data.id;
+  if (targetUserId === authedReq.session.user.id) {
+    res.status(409).json({
+      error: "Self role mutation is not allowed"
+    });
+    return;
+  }
+
+  const targetRows = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      createdAt: users.createdAt
+    })
+    .from(users)
+    .where(eq(users.id, targetUserId))
+    .limit(1);
+
+  const target = targetRows[0];
+  if (!target) {
+    res.status(404).json({
+      error: "User not found"
+    });
+    return;
+  }
+
+  if (target.role === parsedBody.data.role) {
+    res.status(409).json({
+      error: "User already has this role"
+    });
+    return;
+  }
+
+  const updatedRows = await db
+    .update(users)
+    .set({
+      role: parsedBody.data.role
+    })
+    .where(eq(users.id, target.id))
+    .returning({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      createdAt: users.createdAt
+    });
+
+  const updated = updatedRows[0];
+  if (!updated) {
+    res.status(404).json({
+      error: "User not found"
+    });
+    return;
+  }
+
+  res.status(200).json({
+    user: {
+      id: updated.id,
+      name: updated.name,
+      email: updated.email,
+      role: updated.role,
+      createdAt: updated.createdAt.toISOString()
+    }
   });
 });
 
