@@ -218,9 +218,11 @@ test("admin aggregated audit logs paginate deterministically", async () => {
   await assignAdminRole(adminUser.id);
 
   const base = Date.now();
-  const seededIds = [randomUUID(), randomUUID(), randomUUID()];
+  const seededIdOne = randomUUID();
+  const seededIdTwo = randomUUID();
+  const seededIdThree = randomUUID();
   await seedAuditLog({
-    id: seededIds[0],
+    id: seededIdOne,
     scope: "content",
     action: "Publish chapter",
     target: "Physics - Motion",
@@ -231,7 +233,7 @@ test("admin aggregated audit logs paginate deterministically", async () => {
     createdAt: new Date(base - 3000)
   });
   await seedAuditLog({
-    id: seededIds[1],
+    id: seededIdTwo,
     scope: "forum",
     action: "Pin thread",
     target: "Need help with vectors",
@@ -242,7 +244,7 @@ test("admin aggregated audit logs paginate deterministically", async () => {
     createdAt: new Date(base - 2000)
   });
   await seedAuditLog({
-    id: seededIds[2],
+    id: seededIdThree,
     scope: "users",
     action: "Suspend user",
     target: "Ahsan <ahsan@example.com>",

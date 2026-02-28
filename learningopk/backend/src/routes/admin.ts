@@ -188,14 +188,15 @@ const listAuditLogs = async ({ scope, status, q, page, pageSize }: ListAuditLogs
     predicates.push(eq(adminAuditLogs.status, status));
   }
   if (searchTerm.length > 0) {
-    predicates.push(
-      or(
-        ilike(adminAuditLogs.action, `%${searchTerm}%`),
-        ilike(adminAuditLogs.target, `%${searchTerm}%`),
-        ilike(adminAuditLogs.message, `%${searchTerm}%`),
-        ilike(adminAuditLogs.actorName, `%${searchTerm}%`)
-      )
+    const searchPredicate = or(
+      ilike(adminAuditLogs.action, `%${searchTerm}%`),
+      ilike(adminAuditLogs.target, `%${searchTerm}%`),
+      ilike(adminAuditLogs.message, `%${searchTerm}%`),
+      ilike(adminAuditLogs.actorName, `%${searchTerm}%`)
     );
+    if (searchPredicate) {
+      predicates.push(searchPredicate);
+    }
   }
   const whereClause = predicates.length > 0 ? and(...predicates) : undefined;
 
