@@ -130,7 +130,7 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
                 data-testid="admin-overview-kpi-failed-actions-link"
                 className="mt-2 inline-block text-sm font-medium text-foreground underline underline-offset-4"
               >
-                Investigate in audit trail
+                Investigate failures
               </Link>
             </article>
 
@@ -138,7 +138,7 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Notifications sent</p>
               <p className="mt-1 text-2xl font-semibold text-foreground">{payload.kpis.notificationsSentInWindow}</p>
               <Link href="/admin/notifications" className="mt-2 inline-block text-sm font-medium text-foreground underline underline-offset-4">
-                Open notifications
+                View notifications log
               </Link>
             </article>
           </div>

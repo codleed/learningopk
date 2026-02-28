@@ -34,7 +34,7 @@ export default async function AdminPage() {
         subtitle="Track operational risk, admin activity, and response priorities in real time."
         actions={
           <Link href="/admin/audit" className="text-sm font-medium text-foreground underline underline-offset-4">
-            Open audit trail
+            Open operations log
           </Link>
         }
       />
