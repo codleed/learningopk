@@ -113,6 +113,17 @@ const adminAnalyticsOverviewQuerySchema = z.object({
     })
 });
 
+const adminOverviewQuerySchema = z.object({
+  windowDays: z.coerce
+    .number()
+    .int()
+    .optional()
+    .default(30)
+    .refine((value) => [7, 30, 90].includes(value), {
+      message: "windowDays must be one of: 7, 30, 90"
+    })
+});
+
 const adminNotificationsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20)
@@ -618,6 +629,97 @@ const listAdminAnalyticsOverview = async ({
       attempts: row.attempts,
       averageScorePercent: Number(row.averageScorePercent),
       activeStudents: row.activeStudents
+    }))
+  };
+};
+
+const listAdminOverview = async ({
+  windowDays
+}: {
+  windowDays: number;
+}) => {
+  const now = Date.now();
+  const windowStart = new Date(now - windowDays * 24 * 60 * 60 * 1000);
+  const failedActionsWindowStart = new Date(now - 24 * 60 * 60 * 1000);
+
+  const [openModerationFlagsRow] = await db
+    .select({
+      count: sql<number>`count(*)::int`
+    })
+    .from(moderationFlags)
+    .where(eq(moderationFlags.status, "open"));
+
+  const [suspendedUsersRow] = await db
+    .select({
+      count: sql<number>`count(*)::int`
+    })
+    .from(users)
+    .where(eq(users.status, "suspended"));
+
+  const [failedActionsRow] = await db
+    .select({
+      count: sql<number>`count(*)::int`
+    })
+    .from(adminAuditLogs)
+    .where(and(eq(adminAuditLogs.status, "failed"), sql`${adminAuditLogs.createdAt} >= ${failedActionsWindowStart}`));
+
+  const [notificationsSentRow] = await db
+    .select({
+      count: sql<number>`count(*)::int`
+    })
+    .from(adminNotifications)
+    .where(sql`${adminNotifications.createdAt} >= ${windowStart}`);
+
+  const recentActivityRows = await db
+    .select({
+      id: adminAuditLogs.id,
+      scope: adminAuditLogs.scope,
+      action: adminAuditLogs.action,
+      target: adminAuditLogs.target,
+      status: adminAuditLogs.status,
+      message: adminAuditLogs.message,
+      actorId: adminAuditLogs.actorId,
+      actorName: adminAuditLogs.actorName,
+      occurredAt: adminAuditLogs.createdAt
+    })
+    .from(adminAuditLogs)
+    .orderBy(desc(adminAuditLogs.createdAt), desc(adminAuditLogs.id))
+    .limit(20);
+
+  const kpis = {
+    openModerationFlags: openModerationFlagsRow?.count ?? 0,
+    suspendedUsers: suspendedUsersRow?.count ?? 0,
+    failedAdminActionsLast24h: failedActionsRow?.count ?? 0,
+    notificationsSentInWindow: notificationsSentRow?.count ?? 0
+  };
+
+  const reasons: string[] = [];
+  if (kpis.openModerationFlags >= 10) {
+    reasons.push(`Open moderation flags threshold exceeded (${kpis.openModerationFlags}/10).`);
+  }
+  if (kpis.failedAdminActionsLast24h >= 5) {
+    reasons.push(`Failed admin actions in last 24h threshold exceeded (${kpis.failedAdminActionsLast24h}/5).`);
+  }
+
+  return {
+    windowDays,
+    kpis,
+    alerts: {
+      showHighPriorityBanner: reasons.length > 0,
+      reasons
+    },
+    recentActivity: recentActivityRows.map((row) => ({
+      id: row.id,
+      scope: row.scope,
+      action: row.action,
+      target: row.target,
+      status: row.status,
+      message: row.message,
+      actor: {
+        id: row.actorId,
+        name: row.actorName
+      },
+      occurredAt: row.occurredAt.toISOString()
     }))
   };
 };
@@ -1386,6 +1488,28 @@ adminRouter.get("/community/threads", requireSession, async (req, res) => {
     pageSize,
     hasMore: payload.hasMore
   });
+});
+
+adminRouter.get("/overview", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedQuery = adminOverviewQuerySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid admin overview query parameters",
+      details: parsedQuery.error.flatten()
+    });
+    return;
+  }
+
+  const payload = await listAdminOverview({
+    windowDays: parsedQuery.data.windowDays
+  });
+
+  res.status(200).json(payload);
 });
 
 adminRouter.get("/analytics/overview", requireSession, async (req, res) => {
