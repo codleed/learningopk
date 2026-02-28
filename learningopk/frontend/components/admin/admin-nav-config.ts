@@ -6,6 +6,7 @@ import {
   Flag,
   LayoutDashboard,
   MessagesSquare,
+  ScrollText,
   Settings,
   Users
 } from "lucide-react";
@@ -28,6 +29,7 @@ export const adminNavItems = [
     icon: MessagesSquare,
     matchers: ["/admin/forum"] as const
   },
+  { href: "/admin/audit", label: "Audit Trail", icon: ScrollText },
   { href: "/admin/analytics", label: "Analytics & Reporting", icon: BarChart3 },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/settings", label: "System Settings", icon: Settings }

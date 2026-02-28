@@ -18,6 +18,7 @@ const adminContentChaptersResponseSchema = z.object({
 
 const adminAuditLogEntrySchema = z.object({
   id: z.string().uuid(),
+  scope: z.enum(["content", "forum", "moderation", "notifications", "settings", "users"]).optional(),
   action: z.string(),
   target: z.string(),
   status: z.enum(["success", "failed"]),
@@ -255,7 +256,7 @@ const getAuditLogs = async ({
   pageSize,
   cookieHeader
 }: {
-  scope: "content" | "forum";
+  scope: "content" | "forum" | "moderation" | "notifications" | "settings" | "users";
   page: number;
   pageSize: number;
   cookieHeader?: string;
@@ -302,6 +303,36 @@ export const getAdminForumAuditLogs = async ({
     scope: "forum",
     page,
     pageSize,
+    ...(cookieHeader ? { cookieHeader } : {})
+  });
+};
+
+export const getAdminAuditLogs = async ({
+  scope,
+  status,
+  q,
+  page,
+  pageSize,
+  cookieHeader
+}: {
+  scope: "all" | "content" | "forum" | "moderation" | "notifications" | "settings" | "users";
+  status: "all" | "success" | "failed";
+  q: string;
+  page: number;
+  pageSize: number;
+  cookieHeader?: string;
+}): Promise<AdminAuditLogResponse> => {
+  const query = new URLSearchParams({
+    scope,
+    status,
+    q,
+    page: String(page),
+    pageSize: String(pageSize)
+  });
+
+  return fetchAdminJson({
+    path: `/api/admin/audit-logs?${query.toString()}`,
+    schema: adminAuditLogResponseSchema,
     ...(cookieHeader ? { cookieHeader } : {})
   });
 };
