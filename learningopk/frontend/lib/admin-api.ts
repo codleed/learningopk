@@ -133,6 +133,44 @@ const adminAnalyticsOverviewSchema = z.object({
   subjectPerformance: z.array(adminAnalyticsSubjectPerformanceSchema)
 });
 
+const adminOverviewActivityScopeSchema = z.enum([
+  "content",
+  "forum",
+  "moderation",
+  "notifications",
+  "settings",
+  "users"
+]);
+
+const adminOverviewActivityEntrySchema = z.object({
+  id: z.string().uuid(),
+  scope: adminOverviewActivityScopeSchema,
+  action: z.string(),
+  target: z.string(),
+  status: z.enum(["success", "failed"]),
+  message: z.string(),
+  actor: z.object({
+    id: z.string().nullable(),
+    name: z.string()
+  }),
+  occurredAt: z.string().datetime()
+});
+
+const adminOverviewResponseSchema = z.object({
+  windowDays: z.union([z.literal(7), z.literal(30), z.literal(90)]),
+  kpis: z.object({
+    openModerationFlags: z.number().int().nonnegative(),
+    suspendedUsers: z.number().int().nonnegative(),
+    failedAdminActionsLast24h: z.number().int().nonnegative(),
+    notificationsSentInWindow: z.number().int().nonnegative()
+  }),
+  alerts: z.object({
+    showHighPriorityBanner: z.boolean(),
+    reasons: z.array(z.string())
+  }),
+  recentActivity: z.array(adminOverviewActivityEntrySchema)
+});
+
 const adminNotificationSchema = z.object({
   id: z.string().uuid(),
   title: z.string(),
@@ -197,6 +235,8 @@ export type AdminCommunityThread = z.infer<typeof adminCommunityThreadSchema>;
 export type AdminCommunityThreadsResponse = z.infer<typeof adminCommunityThreadsResponseSchema>;
 export type AdminAnalyticsOverview = z.infer<typeof adminAnalyticsOverviewSchema>;
 export type AdminAnalyticsSubjectPerformance = z.infer<typeof adminAnalyticsSubjectPerformanceSchema>;
+export type AdminOverviewResponse = z.infer<typeof adminOverviewResponseSchema>;
+export type AdminOverviewActivityScope = z.infer<typeof adminOverviewActivityScopeSchema>;
 export type AdminNotification = z.infer<typeof adminNotificationSchema>;
 export type AdminNotificationsResponse = z.infer<typeof adminNotificationsResponseSchema>;
 export type AdminNotificationCreateResponse = z.infer<typeof adminNotificationCreateResponseSchema>;
@@ -491,6 +531,24 @@ export const getAdminAnalyticsOverview = async ({
   return fetchAdminJson({
     path: `/api/admin/analytics/overview?${query.toString()}`,
     schema: adminAnalyticsOverviewSchema,
+    ...(cookieHeader ? { cookieHeader } : {})
+  });
+};
+
+export const getAdminOverview = async ({
+  windowDays,
+  cookieHeader
+}: {
+  windowDays: 7 | 30 | 90;
+  cookieHeader?: string;
+}): Promise<AdminOverviewResponse> => {
+  const query = new URLSearchParams({
+    windowDays: String(windowDays)
+  });
+
+  return fetchAdminJson({
+    path: `/api/admin/overview?${query.toString()}`,
+    schema: adminOverviewResponseSchema,
     ...(cookieHeader ? { cookieHeader } : {})
   });
 };

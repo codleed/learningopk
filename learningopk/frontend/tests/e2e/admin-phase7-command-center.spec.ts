@@ -1,4 +1,4 @@
-﻿import { expect, test, type Page } from "@playwright/test";
+﻿import { expect, request as playwrightRequest, test, type Page } from "@playwright/test";
 
 const loginAsSeededAdmin = async (page: Page) => {
   await page.goto("/login");
@@ -31,17 +31,21 @@ test("admin command center supports time window filter and refresh", async ({ pa
   await expect(page.getByTestId("admin-overview-kpi-open-flags")).toBeVisible();
 });
 
-test("admin command center shows high-priority alerts and deep links", async ({ page, request }) => {
+test("admin command center shows high-priority alerts and deep links", async ({ page }) => {
   await loginAsSeededAdmin(page);
 
+  const api = await playwrightRequest.newContext({
+    storageState: await page.context().storageState()
+  });
   for (let index = 0; index < 5; index += 1) {
-    const response = await request.post("http://localhost:3001/api/admin/users/user_admin_001/role", {
+    const response = await api.post("http://localhost:3001/api/admin/content/chapters/999999/publish", {
       data: {
-        role: "student"
+        isPublished: true
       }
     });
-    expect(response.status()).toBe(409);
+    expect(response.status()).toBe(404);
   }
+  await api.dispose();
 
   await page.goto("/admin");
   await page.getByRole("button", { name: "Refresh" }).click();
@@ -55,3 +59,4 @@ test("admin command center shows high-priority alerts and deep links", async ({ 
   await page.getByTestId("admin-overview-activity-link").first().click();
   await expect(page).toHaveURL(/\/admin\/(content|community|moderation|users|notifications|settings)/);
 });
+
