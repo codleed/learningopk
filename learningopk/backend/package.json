@@ -37,6 +37,8 @@
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "express": "^5.1.0",
+    "minio": "^8.0.7",
+    "multer": "^2.1.0",
     "pg": "^8.16.3",
     "redis": "^5.10.0",
     "zod": "^4.1.12"
@@ -44,6 +46,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
+    "@types/multer": "^2.0.0",
     "@types/node": "^24.10.1",
     "@types/pg": "^8.15.6",
     "@types/supertest": "^6.0.3",

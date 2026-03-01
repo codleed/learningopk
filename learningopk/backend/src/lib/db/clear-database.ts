@@ -13,6 +13,7 @@ export const CLEAR_TABLES = [
   "quizzes",
   "flashcards",
   "exercises",
+  "chapter_summary_media",
   "user_progress",
   "chapters",
   "content_sources",

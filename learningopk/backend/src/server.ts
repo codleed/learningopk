@@ -9,6 +9,8 @@ import { authRouter } from "./routes/auth.js";
 import { forumRouter } from "./routes/forum.js";
 import { healthRouter } from "./routes/health.js";
 import { learnRouter } from "./routes/learn.js";
+import { chapterMediaRouter } from "./routes/chapter-media.js";
+import { profileRouter } from "./routes/profile.js";
 import { progressRouter } from "./routes/progress.js";
 import { quizRouter } from "./routes/quiz.js";
 
@@ -32,6 +34,8 @@ export const createApp = () => {
   app.use("/api/forum", forumRouter);
   app.use("/api/quiz", quizRouter);
   app.use("/api/progress", progressRouter);
+  app.use("/api/users", profileRouter);
+  app.use("/api/admin/content", chapterMediaRouter);
 
   app.get("/api/ready", (_req, res) => {
     res.status(200).json({ ok: true });

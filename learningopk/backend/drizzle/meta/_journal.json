@@ -50,6 +50,13 @@
       "when": 1772152777835,
       "tag": "0006_sparkling_epoch",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1772392500000,
+      "tag": "0007_chapter_summary_media",
+      "breakpoints": true
     }
   ]
 }

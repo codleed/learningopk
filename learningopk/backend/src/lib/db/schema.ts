@@ -161,6 +161,28 @@ export const chapters = pgTable(
   (table) => [uniqueIndex("chapters_subject_slug_idx").on(table.subjectId, table.slug)]
 );
 
+export const chapterSummaryMedia = pgTable(
+  "chapter_summary_media",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    chapterId: integer("chapter_id")
+      .notNull()
+      .references(() => chapters.id, { onDelete: "cascade" }),
+    objectKey: text("object_key").notNull(),
+    objectUrl: text("object_url").notNull(),
+    mimeType: text("mime_type").notNull(),
+    fileSize: integer("file_size").notNull(),
+    uploadedBy: text("uploaded_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    uniqueIndex("chapter_summary_media_object_key_idx").on(table.objectKey),
+    index("chapter_summary_media_chapter_created_at_idx").on(table.chapterId, table.createdAt)
+  ]
+);
+
 export const exercises = pgTable(
   "exercises",
   {

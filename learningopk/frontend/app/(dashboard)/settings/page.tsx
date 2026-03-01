@@ -13,6 +13,7 @@ export default async function SettingsPage() {
 
   const settingsProfile = {
     name: session.user.name,
+    image: session.user.image ?? null,
     studentClass: session.user.class ?? "",
     degree: session.user.degree ?? "",
     board: session.user.board ?? "",

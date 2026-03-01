@@ -10,6 +10,7 @@ export type SessionPayload = {
     id: string;
     email: string;
     name: string;
+    image?: string | null;
     class?: string | null;
     degree?: string | null;
     board?: string | null;
