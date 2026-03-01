@@ -107,7 +107,7 @@ const loadChapterContext = async (chapterId: number, latestPrompt: string): Prom
     chapterId: chapterRow.chapterId,
     context: {
       board: chapterRow.boardName,
-      grade: chapterRow.grade,
+      grade: chapterRow.grade ?? "9",
       subject: chapterRow.subjectName,
       chapterTitle: chapterRow.chapterTitle,
       chapterSummary: chapterRow.chapterSummary,

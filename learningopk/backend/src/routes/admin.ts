@@ -8,6 +8,7 @@ import {
   adminAuditLogs,
   adminNotifications,
   adminSettings,
+  boardClasses,
   boards,
   chapters,
   forumThreads,
@@ -34,6 +35,34 @@ const chapterPublishBodySchema = z.object({
 
 const threadPinBodySchema = z.object({
   isPinned: z.boolean()
+});
+
+const curriculumBoardCreateBodySchema = z.object({
+  name: z.string().trim().min(2),
+  slug: z.string().trim().min(2)
+});
+
+const curriculumClassCreateBodySchema = z.object({
+  boardId: z.coerce.number().int().positive(),
+  name: z.string().trim().min(1),
+  slug: z.string().trim().min(1)
+});
+
+const curriculumSubjectCreateBodySchema = z.object({
+  boardClassId: z.coerce.number().int().positive(),
+  name: z.string().trim().min(1),
+  slug: z.string().trim().min(1),
+  icon: z.string().trim().optional(),
+  description: z.string().trim().optional()
+});
+
+const curriculumChapterCreateBodySchema = z.object({
+  subjectId: z.coerce.number().int().positive(),
+  chapterNumber: z.coerce.number().int().positive(),
+  title: z.string().trim().min(1),
+  slug: z.string().trim().min(1),
+  summary: z.string().trim().min(1),
+  isPublished: z.boolean().optional().default(false)
 });
 
 const adminAuditScopeValues = ["content", "forum", "moderation", "notifications", "settings", "users"] as const;
@@ -185,6 +214,17 @@ const persistAuditLog = async (input: PersistAuditLogInput): Promise<void> => {
     actorId: input.actorId,
     actorName: input.actorName
   });
+};
+
+const inferLegacyGrade = (input: string): "9" | "10" | null => {
+  const normalized = input.trim().toLowerCase();
+  if (normalized === "9" || normalized === "9th" || normalized.includes("class 9")) {
+    return "9";
+  }
+  if (normalized === "10" || normalized === "10th" || normalized.includes("class 10")) {
+    return "10";
+  }
+  return null;
 };
 
 const listAuditLogs = async ({ scope, status, q, page, pageSize }: ListAuditLogsInput) => {
@@ -1534,6 +1574,488 @@ adminRouter.get("/analytics/overview", requireSession, async (req, res) => {
   res.status(200).json(payload);
 });
 
+adminRouter.get("/content/curriculum", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const boardRows = await db
+    .select({
+      id: boards.id,
+      name: boards.name,
+      slug: boards.slug
+    })
+    .from(boards)
+    .orderBy(asc(boards.name));
+
+  const classRows = await db
+    .select({
+      id: boardClasses.id,
+      boardId: boardClasses.boardId,
+      name: boardClasses.name,
+      slug: boardClasses.slug
+    })
+    .from(boardClasses)
+    .orderBy(asc(boardClasses.name));
+
+  const subjectRows = await db
+    .select({
+      id: subjects.id,
+      boardClassId: subjects.boardClassId,
+      name: subjects.name,
+      slug: subjects.slug,
+      icon: subjects.icon,
+      description: subjects.description
+    })
+    .from(subjects)
+    .where(sql`${subjects.boardClassId} is not null`)
+    .orderBy(asc(subjects.name));
+
+  const chapterRows = await db
+    .select({
+      id: chapters.id,
+      subjectId: chapters.subjectId,
+      chapterNumber: chapters.chapterNumber,
+      title: chapters.title,
+      slug: chapters.slug,
+      isPublished: chapters.isPublished
+    })
+    .from(chapters)
+    .orderBy(asc(chapters.chapterNumber));
+
+  const chaptersBySubjectId = new Map<number, Array<(typeof chapterRows)[number]>>();
+  for (const chapter of chapterRows) {
+    const chapterList = chaptersBySubjectId.get(chapter.subjectId) ?? [];
+    chapterList.push(chapter);
+    chaptersBySubjectId.set(chapter.subjectId, chapterList);
+  }
+
+  const subjectsByClassId = new Map<number, Array<(typeof subjectRows)[number]>>();
+  for (const subject of subjectRows) {
+    if (!subject.boardClassId) {
+      continue;
+    }
+    const subjectList = subjectsByClassId.get(subject.boardClassId) ?? [];
+    subjectList.push(subject);
+    subjectsByClassId.set(subject.boardClassId, subjectList);
+  }
+
+  const classesByBoardId = new Map<number, Array<(typeof classRows)[number]>>();
+  for (const boardClass of classRows) {
+    const classList = classesByBoardId.get(boardClass.boardId) ?? [];
+    classList.push(boardClass);
+    classesByBoardId.set(boardClass.boardId, classList);
+  }
+
+  const tree = boardRows.map((board) => ({
+    id: board.id,
+    name: board.name,
+    slug: board.slug,
+    classes: (classesByBoardId.get(board.id) ?? []).map((boardClass) => ({
+      id: boardClass.id,
+      name: boardClass.name,
+      slug: boardClass.slug,
+      subjects: (subjectsByClassId.get(boardClass.id) ?? []).map((subject) => ({
+        id: subject.id,
+        name: subject.name,
+        slug: subject.slug,
+        icon: subject.icon,
+        description: subject.description,
+        chapters: (chaptersBySubjectId.get(subject.id) ?? []).map((chapter) => ({
+          id: chapter.id,
+          chapterNumber: chapter.chapterNumber,
+          title: chapter.title,
+          slug: chapter.slug,
+          isPublished: chapter.isPublished
+        }))
+      }))
+    }))
+  }));
+
+  res.status(200).json({
+    boards: tree
+  });
+});
+
+adminRouter.post("/content/boards", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedBody = curriculumBoardCreateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid board payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const name = parsedBody.data.name.trim();
+  const slug = parsedBody.data.slug.trim().toLowerCase();
+
+  try {
+    const insertedRows = await db
+      .insert(boards)
+      .values({
+        name,
+        slug
+      })
+      .returning({
+        id: boards.id,
+        name: boards.name,
+        slug: boards.slug
+      });
+
+    const board = insertedRows[0];
+    if (!board) {
+      res.status(500).json({
+        error: "Failed to create board"
+      });
+      return;
+    }
+
+    await persistAuditLog({
+      scope: "content",
+      action: "Create board",
+      target: board.name,
+      status: "success",
+      message: `Created board ${board.slug}`,
+      actorId,
+      actorName
+    });
+
+    res.status(201).json({
+      board
+    });
+  } catch {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create board",
+      target: name,
+      status: "failed",
+      message: "Board create failed",
+      actorId,
+      actorName
+    });
+    res.status(409).json({
+      error: "Board already exists"
+    });
+  }
+});
+
+adminRouter.post("/content/classes", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedBody = curriculumClassCreateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid class payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const name = parsedBody.data.name.trim();
+  const slug = parsedBody.data.slug.trim().toLowerCase();
+
+  const boardRows = await db
+    .select({
+      id: boards.id,
+      name: boards.name
+    })
+    .from(boards)
+    .where(eq(boards.id, parsedBody.data.boardId))
+    .limit(1);
+
+  const board = boardRows[0];
+  if (!board) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create class",
+      target: `${name} (${slug})`,
+      status: "failed",
+      message: "Board not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Board not found"
+    });
+    return;
+  }
+
+  try {
+    const insertedRows = await db
+      .insert(boardClasses)
+      .values({
+        boardId: board.id,
+        name,
+        slug
+      })
+      .returning({
+        id: boardClasses.id,
+        boardId: boardClasses.boardId,
+        name: boardClasses.name,
+        slug: boardClasses.slug
+      });
+
+    const boardClass = insertedRows[0];
+    if (!boardClass) {
+      res.status(500).json({
+        error: "Failed to create class"
+      });
+      return;
+    }
+
+    await persistAuditLog({
+      scope: "content",
+      action: "Create class",
+      target: `${board.name} / ${boardClass.name}`,
+      status: "success",
+      message: `Created class ${boardClass.slug}`,
+      actorId,
+      actorName
+    });
+
+    res.status(201).json({
+      class: boardClass
+    });
+  } catch {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create class",
+      target: `${board.name} / ${name}`,
+      status: "failed",
+      message: "Class create failed",
+      actorId,
+      actorName
+    });
+    res.status(409).json({
+      error: "Class already exists for board"
+    });
+  }
+});
+
+adminRouter.post("/content/subjects", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedBody = curriculumSubjectCreateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid subject payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const name = parsedBody.data.name.trim();
+  const slug = parsedBody.data.slug.trim().toLowerCase();
+
+  const classRows = await db
+    .select({
+      id: boardClasses.id,
+      boardId: boardClasses.boardId,
+      name: boardClasses.name,
+      slug: boardClasses.slug
+    })
+    .from(boardClasses)
+    .where(eq(boardClasses.id, parsedBody.data.boardClassId))
+    .limit(1);
+
+  const boardClass = classRows[0];
+  if (!boardClass) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create subject",
+      target: `${name} (${slug})`,
+      status: "failed",
+      message: "Class not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Class not found"
+    });
+    return;
+  }
+
+  const legacyGrade = inferLegacyGrade(`${boardClass.slug} ${boardClass.name}`);
+  try {
+    const insertedRows = await db
+      .insert(subjects)
+      .values({
+        boardId: boardClass.boardId,
+        boardClassId: boardClass.id,
+        grade: legacyGrade,
+        name,
+        slug,
+        ...(parsedBody.data.icon ? { icon: parsedBody.data.icon.trim() } : {}),
+        ...(parsedBody.data.description ? { description: parsedBody.data.description.trim() } : {})
+      })
+      .returning({
+        id: subjects.id,
+        boardClassId: subjects.boardClassId,
+        name: subjects.name,
+        slug: subjects.slug,
+        icon: subjects.icon,
+        description: subjects.description
+      });
+
+    const subject = insertedRows[0];
+    if (!subject) {
+      res.status(500).json({
+        error: "Failed to create subject"
+      });
+      return;
+    }
+
+    await persistAuditLog({
+      scope: "content",
+      action: "Create subject",
+      target: `${boardClass.name} / ${subject.name}`,
+      status: "success",
+      message: `Created subject ${subject.slug}`,
+      actorId,
+      actorName
+    });
+
+    res.status(201).json({
+      subject
+    });
+  } catch {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create subject",
+      target: `${boardClass.name} / ${name}`,
+      status: "failed",
+      message: "Subject create failed",
+      actorId,
+      actorName
+    });
+    res.status(409).json({
+      error: "Subject already exists for class"
+    });
+  }
+});
+
+adminRouter.post("/content/chapters", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedBody = curriculumChapterCreateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid chapter payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const title = parsedBody.data.title.trim();
+  const slug = parsedBody.data.slug.trim().toLowerCase();
+
+  const subjectRows = await db
+    .select({
+      id: subjects.id,
+      name: subjects.name
+    })
+    .from(subjects)
+    .where(eq(subjects.id, parsedBody.data.subjectId))
+    .limit(1);
+
+  const subject = subjectRows[0];
+  if (!subject) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create chapter",
+      target: `${title} (${slug})`,
+      status: "failed",
+      message: "Subject not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Subject not found"
+    });
+    return;
+  }
+
+  try {
+    const insertedRows = await db
+      .insert(chapters)
+      .values({
+        subjectId: subject.id,
+        chapterNumber: parsedBody.data.chapterNumber,
+        title,
+        slug,
+        summary: parsedBody.data.summary.trim(),
+        isPublished: parsedBody.data.isPublished
+      })
+      .returning({
+        id: chapters.id,
+        subjectId: chapters.subjectId,
+        chapterNumber: chapters.chapterNumber,
+        title: chapters.title,
+        slug: chapters.slug,
+        isPublished: chapters.isPublished
+      });
+
+    const chapter = insertedRows[0];
+    if (!chapter) {
+      res.status(500).json({
+        error: "Failed to create chapter"
+      });
+      return;
+    }
+
+    await persistAuditLog({
+      scope: "content",
+      action: "Create chapter",
+      target: `${subject.name} / ${chapter.title}`,
+      status: "success",
+      message: `Created chapter ${chapter.slug}`,
+      actorId,
+      actorName
+    });
+
+    res.status(201).json({
+      chapter
+    });
+  } catch {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create chapter",
+      target: `${subject.name} / ${title}`,
+      status: "failed",
+      message: "Chapter create failed",
+      actorId,
+      actorName
+    });
+    res.status(409).json({
+      error: "Chapter already exists for subject"
+    });
+  }
+});
+
 adminRouter.get("/content/chapters", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireAdminRole(authedReq, res))) {
@@ -1546,13 +2068,14 @@ adminRouter.get("/content/chapters", requireSession, async (req, res) => {
       chapterNumber: chapters.chapterNumber,
       title: chapters.title,
       subjectName: subjects.name,
-      grade: subjects.grade,
+      className: sql<string>`coalesce(${boardClasses.name}, concat(${subjects.grade}::text, 'th'), 'Unknown')`,
       boardName: boards.name,
       isPublished: chapters.isPublished
     })
     .from(chapters)
     .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
     .innerJoin(boards, eq(subjects.boardId, boards.id))
+    .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
     .orderBy(asc(subjects.name), asc(chapters.chapterNumber));
 
   res.status(200).json({

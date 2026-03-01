@@ -18,6 +18,7 @@ test("CLEAR_TABLES includes all critical auth and learning tables without duplic
   assert.equal(CLEAR_TABLES.includes("verification"), true);
   assert.equal(CLEAR_TABLES.includes("user"), true);
   assert.equal(CLEAR_TABLES.includes("boards"), true);
+  assert.equal(CLEAR_TABLES.includes("board_classes"), true);
   assert.equal(CLEAR_TABLES.includes("quizzes"), true);
   assert.equal(CLEAR_TABLES.includes("forum_threads"), true);
   assert.equal(CLEAR_TABLES.includes("chapter_summary_media"), true);

@@ -148,7 +148,7 @@ progressRouter.get("/dashboard", requireSession, async (req, res) => {
         subjectId: row.subjectId,
         subjectSlug: row.subjectSlug,
         subjectName: row.subjectName,
-        grade: row.grade,
+        grade: row.grade ?? "9",
         boardName: row.boardName,
         totalChapters: 1,
         visitedChapters: visitedAt ? 1 : 0,

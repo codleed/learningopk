@@ -9,7 +9,7 @@ export type ChapterPublishRow = {
   chapterNumber: number;
   title: string;
   subjectName: string;
-  grade: "9" | "10";
+  className: string;
   boardName: string;
   isPublished: boolean;
 };
@@ -29,7 +29,7 @@ export function ChapterPublishTable({ rows, onMutationComplete }: ChapterPublish
           <tr>
             <th className="px-3 py-2 text-left font-semibold text-foreground">Chapter</th>
             <th className="px-3 py-2 text-left font-semibold text-foreground">Subject</th>
-            <th className="px-3 py-2 text-left font-semibold text-foreground">Board / Grade</th>
+            <th className="px-3 py-2 text-left font-semibold text-foreground">Board / Class</th>
             <th className="px-3 py-2 text-left font-semibold text-foreground">Status</th>
             <th className="px-3 py-2 text-left font-semibold text-foreground">Action</th>
           </tr>
@@ -42,7 +42,7 @@ export function ChapterPublishTable({ rows, onMutationComplete }: ChapterPublish
               </td>
               <td className="px-3 py-2 text-foreground/90">{chapter.subjectName}</td>
               <td className="px-3 py-2 text-foreground/90">
-                {chapter.boardName} / Grade {chapter.grade}
+                {chapter.boardName} / {chapter.className}
               </td>
               <td className="px-3 py-2">
                 <span

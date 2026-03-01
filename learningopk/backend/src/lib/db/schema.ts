@@ -109,6 +109,19 @@ export const boards = pgTable("boards", {
   slug: text("slug").notNull().unique()
 });
 
+export const boardClasses = pgTable(
+  "board_classes",
+  {
+    id: serial("id").primaryKey(),
+    boardId: integer("board_id")
+      .notNull()
+      .references(() => boards.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    slug: text("slug").notNull()
+  },
+  (table) => [uniqueIndex("board_classes_board_slug_idx").on(table.boardId, table.slug)]
+);
+
 export const subjects = pgTable(
   "subjects",
   {
@@ -116,13 +129,17 @@ export const subjects = pgTable(
     boardId: integer("board_id")
       .notNull()
       .references(() => boards.id, { onDelete: "cascade" }),
-    grade: gradeEnum("grade").notNull(),
+    grade: gradeEnum("grade"),
+    boardClassId: integer("board_class_id").references(() => boardClasses.id, { onDelete: "set null" }),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     icon: text("icon"),
     description: text("description")
   },
-  (table) => [uniqueIndex("subjects_board_grade_slug_idx").on(table.boardId, table.grade, table.slug)]
+  (table) => [
+    uniqueIndex("subjects_board_grade_slug_idx").on(table.boardId, table.grade, table.slug),
+    uniqueIndex("subjects_board_class_slug_idx").on(table.boardClassId, table.slug)
+  ]
 );
 
 export const contentSources = pgTable(
@@ -158,7 +175,10 @@ export const chapters = pgTable(
     isPublished: boolean("is_published").notNull().default(false),
     sourceId: uuid("source_id").references(() => contentSources.id, { onDelete: "set null" })
   },
-  (table) => [uniqueIndex("chapters_subject_slug_idx").on(table.subjectId, table.slug)]
+  (table) => [
+    uniqueIndex("chapters_subject_slug_idx").on(table.subjectId, table.slug),
+    uniqueIndex("chapters_subject_chapter_number_idx").on(table.subjectId, table.chapterNumber)
+  ]
 );
 
 export const chapterSummaryMedia = pgTable(

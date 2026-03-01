@@ -3,12 +3,13 @@ import { cookies } from "next/headers";
 
 import { AdminContentPanel } from "@/components/admin/admin-content-panel";
 import { PageHeader } from "@/components/foundation/page-header";
-import { getAdminContentAuditLogs, getAdminContentChapters } from "@/lib/admin-api";
+import { getAdminContentAuditLogs, getAdminContentChapters, getAdminCurriculumTree } from "@/lib/admin-api";
 
 export default async function AdminContentPage() {
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
+  const curriculumBoards = await getAdminCurriculumTree(cookieHeader).catch(() => []);
   const chapters = await getAdminContentChapters(cookieHeader).catch(() => []);
   const contentAuditLogs = await getAdminContentAuditLogs({
     page: 1,
@@ -36,6 +37,7 @@ export default async function AdminContentPage() {
       />
       <AdminContentPanel
         chapters={chapters}
+        curriculumBoards={curriculumBoards}
         initialAuditEntries={contentAuditLogs.entries}
         initialAuditTotal={contentAuditLogs.total}
       />

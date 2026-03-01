@@ -7,13 +7,87 @@ const adminChapterSchema = z.object({
   chapterNumber: z.number().int().positive(),
   title: z.string(),
   subjectName: z.string(),
-  grade: z.enum(["9", "10"]),
+  className: z.string(),
   boardName: z.string(),
   isPublished: z.boolean()
 });
 
 const adminContentChaptersResponseSchema = z.object({
   chapters: z.array(adminChapterSchema)
+});
+
+const adminCurriculumChapterSchema = z.object({
+  id: z.number().int().positive(),
+  chapterNumber: z.number().int().positive(),
+  title: z.string(),
+  slug: z.string(),
+  isPublished: z.boolean()
+});
+
+const adminCurriculumSubjectSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string(),
+  slug: z.string(),
+  icon: z.string().nullable(),
+  description: z.string().nullable(),
+  chapters: z.array(adminCurriculumChapterSchema)
+});
+
+const adminCurriculumClassSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string(),
+  slug: z.string(),
+  subjects: z.array(adminCurriculumSubjectSchema)
+});
+
+const adminCurriculumBoardSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string(),
+  slug: z.string(),
+  classes: z.array(adminCurriculumClassSchema)
+});
+
+const adminCurriculumResponseSchema = z.object({
+  boards: z.array(adminCurriculumBoardSchema)
+});
+
+const adminCurriculumBoardCreateResponseSchema = z.object({
+  board: z.object({
+    id: z.number().int().positive(),
+    name: z.string(),
+    slug: z.string()
+  })
+});
+
+const adminCurriculumClassCreateResponseSchema = z.object({
+  class: z.object({
+    id: z.number().int().positive(),
+    boardId: z.number().int().positive(),
+    name: z.string(),
+    slug: z.string()
+  })
+});
+
+const adminCurriculumSubjectCreateResponseSchema = z.object({
+  subject: z.object({
+    id: z.number().int().positive(),
+    boardClassId: z.number().int().positive().nullable(),
+    name: z.string(),
+    slug: z.string(),
+    icon: z.string().nullable(),
+    description: z.string().nullable()
+  })
+});
+
+const adminCurriculumChapterCreateResponseSchema = z.object({
+  chapter: z.object({
+    id: z.number().int().positive(),
+    subjectId: z.number().int().positive(),
+    chapterNumber: z.number().int().positive(),
+    title: z.string(),
+    slug: z.string(),
+    isPublished: z.boolean()
+  })
 });
 
 const adminAuditLogEntrySchema = z.object({
@@ -222,6 +296,15 @@ const adminSettingUpdateResponseSchema = z.object({
 });
 
 export type AdminChapterResponse = z.infer<typeof adminChapterSchema>;
+export type AdminCurriculumBoard = z.infer<typeof adminCurriculumBoardSchema>;
+export type AdminCurriculumClass = z.infer<typeof adminCurriculumClassSchema>;
+export type AdminCurriculumSubject = z.infer<typeof adminCurriculumSubjectSchema>;
+export type AdminCurriculumChapter = z.infer<typeof adminCurriculumChapterSchema>;
+export type AdminCurriculumResponse = z.infer<typeof adminCurriculumResponseSchema>;
+export type AdminCurriculumBoardCreateResponse = z.infer<typeof adminCurriculumBoardCreateResponseSchema>;
+export type AdminCurriculumClassCreateResponse = z.infer<typeof adminCurriculumClassCreateResponseSchema>;
+export type AdminCurriculumSubjectCreateResponse = z.infer<typeof adminCurriculumSubjectCreateResponseSchema>;
+export type AdminCurriculumChapterCreateResponse = z.infer<typeof adminCurriculumChapterCreateResponseSchema>;
 export type AdminAuditLogResponse = z.infer<typeof adminAuditLogResponseSchema>;
 export type AdminAuditLogResponseEntry = z.infer<typeof adminAuditLogEntrySchema>;
 export type AdminModerationFlag = z.infer<typeof adminModerationFlagSchema>;
@@ -288,6 +371,72 @@ export const getAdminContentChapters = async (cookieHeader: string): Promise<Adm
   });
 
   return payload.chapters;
+};
+
+export const getAdminCurriculumTree = async (cookieHeader?: string): Promise<AdminCurriculumBoard[]> => {
+  const payload = await fetchAdminJson({
+    path: "/api/admin/content/curriculum",
+    schema: adminCurriculumResponseSchema,
+    ...(cookieHeader ? { cookieHeader } : {})
+  });
+
+  return payload.boards;
+};
+
+export const createAdminCurriculumBoard = async (input: {
+  name: string;
+  slug: string;
+}): Promise<AdminCurriculumBoardCreateResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/content/boards",
+    schema: adminCurriculumBoardCreateResponseSchema,
+    method: "POST",
+    body: input
+  });
+};
+
+export const createAdminCurriculumClass = async (input: {
+  boardId: number;
+  name: string;
+  slug: string;
+}): Promise<AdminCurriculumClassCreateResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/content/classes",
+    schema: adminCurriculumClassCreateResponseSchema,
+    method: "POST",
+    body: input
+  });
+};
+
+export const createAdminCurriculumSubject = async (input: {
+  boardClassId: number;
+  name: string;
+  slug: string;
+  icon?: string;
+  description?: string;
+}): Promise<AdminCurriculumSubjectCreateResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/content/subjects",
+    schema: adminCurriculumSubjectCreateResponseSchema,
+    method: "POST",
+    body: input
+  });
+};
+
+export const createAdminCurriculumChapter = async (input: {
+  subjectId: number;
+  chapterNumber: number;
+  title: string;
+  slug: string;
+  summary: string;
+  isPublished?: boolean;
+}): Promise<AdminCurriculumChapterCreateResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/content/chapters",
+    schema: adminCurriculumChapterCreateResponseSchema,
+    method: "POST",
+    body: input
+  });
 };
 
 const getAuditLogs = async ({

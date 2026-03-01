@@ -18,6 +18,7 @@ export const CLEAR_TABLES = [
   "chapters",
   "content_sources",
   "subjects",
+  "board_classes",
   "boards",
   "admin_audit_logs",
   "account",

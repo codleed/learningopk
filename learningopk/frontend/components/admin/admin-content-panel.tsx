@@ -4,20 +4,27 @@ import { useState } from "react";
 
 import { SectionCard } from "@/components/foundation/section-card";
 import { Button } from "@/components/ui/button";
-import { getAdminContentAuditLogs, type AdminAuditLogResponseEntry } from "@/lib/admin-api";
+import { getAdminContentAuditLogs, type AdminAuditLogResponseEntry, type AdminCurriculumBoard } from "@/lib/admin-api";
 
 import { AdminAuditLogList, type AdminAuditLogEntry } from "./admin-audit-log-list";
+import { AdminCurriculumBuilder } from "./admin-curriculum-builder";
 import { ChapterPublishTable, type ChapterPublishRow } from "./chapter-publish-table";
 
 type AdminContentPanelProps = {
   chapters: ChapterPublishRow[];
+  curriculumBoards: AdminCurriculumBoard[];
   initialAuditEntries: AdminAuditLogResponseEntry[];
   initialAuditTotal: number;
 };
 
 const auditPageSize = 10;
 
-export function AdminContentPanel({ chapters, initialAuditEntries, initialAuditTotal }: AdminContentPanelProps) {
+export function AdminContentPanel({
+  chapters,
+  curriculumBoards,
+  initialAuditEntries,
+  initialAuditTotal
+}: AdminContentPanelProps) {
   const [auditEntries, setAuditEntries] = useState<AdminAuditLogEntry[]>(initialAuditEntries);
   const [auditTotal, setAuditTotal] = useState(initialAuditTotal);
   const [auditPage, setAuditPage] = useState(1);
@@ -67,6 +74,12 @@ export function AdminContentPanel({ chapters, initialAuditEntries, initialAuditT
 
   return (
     <div className="space-y-5">
+      <SectionCard
+        title="Curriculum Builder"
+        description="Create board, class, subject, and chapter hierarchy in one flow."
+      >
+        <AdminCurriculumBuilder initialBoards={curriculumBoards} />
+      </SectionCard>
       <SectionCard
         title="Chapter Publish Controls"
         description="Use publish/unpublish actions to control chapter visibility. Failed actions are logged."
