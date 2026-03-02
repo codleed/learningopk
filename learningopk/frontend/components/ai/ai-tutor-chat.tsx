@@ -336,7 +336,7 @@ export function AITutorChat() {
     <section
       className={cn(
         "grid min-w-0 gap-4 xl:items-start",
-        isHistoryVisible ? "xl:grid-cols-[minmax(0,1fr)_19rem]" : "xl:grid-cols-[minmax(0,1fr)]"
+        isHistoryVisible ? "xl:grid-cols-[minmax(0,1fr)_19rem]" : "xl:grid-cols-[minmax(0,1fr)_auto]"
       )}
     >
       <div className="surface-card flex h-[72vh] min-h-[34rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border xl:h-[calc(100vh-2.5rem)]">
@@ -345,15 +345,6 @@ export function AITutorChat() {
             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary">General Tutor</p>
             <h2 className="text-lg font-semibold text-foreground">Always-on AI study assistant</h2>
           </div>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => setIsHistoryVisible((previous) => !previous)}
-            aria-label={isHistoryVisible ? "Hide chat history" : "Show chat history"}
-          >
-            {isHistoryVisible ? "Hide History" : "Show History"}
-          </Button>
         </header>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -423,59 +414,73 @@ export function AITutorChat() {
         </div>
       </div>
 
-      {isHistoryVisible ? (
-        <aside
-          aria-label="Chat history sidebar"
-          className="surface-card flex min-h-[18rem] w-full flex-col overflow-hidden rounded-2xl border border-border bg-card/90 xl:sticky xl:top-4 xl:h-[calc(100vh-2.5rem)]"
-        >
-          <div className="flex items-center justify-between border-b border-border px-3 py-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">History</p>
+      <div className="xl:sticky xl:top-4 xl:self-start">
+        {isHistoryVisible ? (
+          <aside
+            aria-label="Chat history sidebar"
+            className="surface-card flex min-h-[18rem] w-full flex-col overflow-hidden rounded-2xl border border-border bg-card/90 xl:h-[calc(100vh-2.5rem)] xl:w-[19rem]"
+          >
+            <div className="flex items-center justify-between border-b border-border px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">History</p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsHistoryVisible(false)}
+                aria-label="Hide chat history"
+              >
+                Hide
+              </Button>
+            </div>
+
+            <div className="border-b border-border px-3 py-3">
+              <Button type="button" variant="secondary" size="sm" width="full" onClick={startFreshChat} disabled={isSending}>
+                New Chat
+              </Button>
+            </div>
+            <div className="flex-1 space-y-2 overflow-y-auto px-2 py-2">
+              {isLoadingHistoryList ? <p className="px-2 py-1 text-xs text-muted-foreground">Loading history...</p> : null}
+
+              {!isLoadingHistoryList && sessions.length === 0 ? (
+                <p className="px-2 py-1 text-xs text-muted-foreground">No previous chats yet.</p>
+              ) : null}
+
+              {sessions.map((session) => {
+                const isActive = session.id === sessionId;
+                return (
+                  <button
+                    key={session.id}
+                    type="button"
+                    onClick={() => void onSelectSession(session.id)}
+                    disabled={isSending || isLoadingSessionMessages}
+                    className={cn(
+                      "w-full rounded-xl border px-3 py-2 text-left transition",
+                      isActive
+                        ? "border-primary/45 bg-primary/10 text-foreground"
+                        : "border-border bg-card text-muted-foreground hover:border-primary/35 hover:text-foreground"
+                    )}
+                  >
+                    <p className="truncate text-sm font-medium">{session.title}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{formatRelativeTimestamp(session.lastMessageAt)}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
+        ) : (
+          <div className="surface-card flex items-center rounded-2xl border border-border bg-card/90 p-2 xl:min-h-[3rem]">
             <Button
               type="button"
-              variant="ghost"
+              variant="secondary"
               size="sm"
-              onClick={() => setIsHistoryVisible(false)}
-              aria-label="Hide chat history"
+              onClick={() => setIsHistoryVisible(true)}
+              aria-label="Show chat history"
             >
-              Hide
+              Show History
             </Button>
           </div>
-
-          <div className="border-b border-border px-3 py-3">
-            <Button type="button" variant="secondary" size="sm" width="full" onClick={startFreshChat} disabled={isSending}>
-              New Chat
-            </Button>
-          </div>
-          <div className="flex-1 space-y-2 overflow-y-auto px-2 py-2">
-            {isLoadingHistoryList ? <p className="px-2 py-1 text-xs text-muted-foreground">Loading history...</p> : null}
-
-            {!isLoadingHistoryList && sessions.length === 0 ? (
-              <p className="px-2 py-1 text-xs text-muted-foreground">No previous chats yet.</p>
-            ) : null}
-
-            {sessions.map((session) => {
-              const isActive = session.id === sessionId;
-              return (
-                <button
-                  key={session.id}
-                  type="button"
-                  onClick={() => void onSelectSession(session.id)}
-                  disabled={isSending || isLoadingSessionMessages}
-                  className={cn(
-                    "w-full rounded-xl border px-3 py-2 text-left transition",
-                    isActive
-                      ? "border-primary/45 bg-primary/10 text-foreground"
-                      : "border-border bg-card text-muted-foreground hover:border-primary/35 hover:text-foreground"
-                  )}
-                >
-                  <p className="truncate text-sm font-medium">{session.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{formatRelativeTimestamp(session.lastMessageAt)}</p>
-                </button>
-              );
-            })}
-          </div>
-        </aside>
-      ) : null}
+        )}
+      </div>
     </section>
   );
 }
