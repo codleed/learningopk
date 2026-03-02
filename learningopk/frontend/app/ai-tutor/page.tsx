@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
 import { DashboardChromeHeader, DashboardChromeLayout } from "@/components/dashboard/dashboard-chrome-layout";
-import { DashboardSurface } from "@/components/foundation/dashboard-primitives";
 import { AITutorChat } from "@/components/ai/ai-tutor-chat";
 import { getServerSession } from "@/lib/session";
 
@@ -23,9 +22,7 @@ export default async function AITutorPage() {
         />
       }
     >
-      <DashboardSurface as="section" tone="panel" className="p-4 sm:p-5">
-        <AITutorChat />
-      </DashboardSurface>
+      <AITutorChat />
     </DashboardChromeLayout>
   );
 }

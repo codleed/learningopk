@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, History, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -98,7 +98,7 @@ export function AITutorChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [isHistoryCollapsed, setIsHistoryCollapsed] = useState(false);
+  const [isHistoryVisible, setIsHistoryVisible] = useState(true);
   const [isLoadingHistoryList, setIsLoadingHistoryList] = useState(true);
   const [isLoadingSessionMessages, setIsLoadingSessionMessages] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -333,13 +333,27 @@ export function AITutorChat() {
   };
 
   return (
-    <section className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_19rem] xl:items-start">
+    <section
+      className={cn(
+        "grid min-w-0 gap-4 xl:items-start",
+        isHistoryVisible ? "xl:grid-cols-[minmax(0,1fr)_19rem]" : "xl:grid-cols-[minmax(0,1fr)]"
+      )}
+    >
       <div className="surface-card flex h-[72vh] min-h-[34rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border xl:h-[calc(100vh-2.5rem)]">
-        <header className="flex items-center justify-between border-b border-border px-5 py-4">
+        <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary">General Tutor</p>
             <h2 className="text-lg font-semibold text-foreground">Always-on AI study assistant</h2>
           </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setIsHistoryVisible((previous) => !previous)}
+            aria-label={isHistoryVisible ? "Hide chat history" : "Show chat history"}
+          >
+            {isHistoryVisible ? "Hide History" : "Show History"}
+          </Button>
         </header>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -409,81 +423,59 @@ export function AITutorChat() {
         </div>
       </div>
 
-      <aside
-        aria-label="Chat history sidebar"
-        className="surface-card flex min-h-[18rem] w-full flex-col overflow-hidden rounded-2xl border border-border bg-card/90 xl:sticky xl:top-4 xl:h-[calc(100vh-2.5rem)]"
-      >
-        <div className="flex items-center justify-between border-b border-border px-2 py-2">
-          {isHistoryCollapsed ? null : (
-            <p className="pl-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">History</p>
-          )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsHistoryCollapsed((previous) => !previous)}
-            aria-label={isHistoryCollapsed ? "Expand chat history" : "Collapse chat history"}
-            className={cn("shrink-0", isHistoryCollapsed ? "mx-auto" : "")}
-          >
-            {isHistoryCollapsed ? <ChevronLeft className="h-4 w-4" aria-hidden /> : <ChevronRight className="h-4 w-4" aria-hidden />}
-          </Button>
-        </div>
-
-        {isHistoryCollapsed ? (
-          <div className="flex flex-1 flex-col items-center gap-3 px-2 py-3">
+      {isHistoryVisible ? (
+        <aside
+          aria-label="Chat history sidebar"
+          className="surface-card flex min-h-[18rem] w-full flex-col overflow-hidden rounded-2xl border border-border bg-card/90 xl:sticky xl:top-4 xl:h-[calc(100vh-2.5rem)]"
+        >
+          <div className="flex items-center justify-between border-b border-border px-3 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">History</p>
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              onClick={startFreshChat}
-              disabled={isSending}
-              aria-label="New Chat"
-              className="h-8 w-8 p-0"
+              onClick={() => setIsHistoryVisible(false)}
+              aria-label="Hide chat history"
             >
-              <Sparkles className="h-4 w-4" aria-hidden />
+              Hide
             </Button>
-            <History className="h-4 w-4 text-muted-foreground" aria-hidden />
           </div>
-        ) : (
-          <>
-            <div className="border-b border-border px-3 py-3">
-              <Button type="button" variant="secondary" size="sm" width="full" onClick={startFreshChat} disabled={isSending}>
-                New Chat
-              </Button>
-            </div>
-            <div className="flex-1 space-y-2 overflow-y-auto px-2 py-2">
-              {isLoadingHistoryList ? (
-                <p className="px-2 py-1 text-xs text-muted-foreground">Loading history...</p>
-              ) : null}
 
-              {!isLoadingHistoryList && sessions.length === 0 ? (
-                <p className="px-2 py-1 text-xs text-muted-foreground">No previous chats yet.</p>
-              ) : null}
+          <div className="border-b border-border px-3 py-3">
+            <Button type="button" variant="secondary" size="sm" width="full" onClick={startFreshChat} disabled={isSending}>
+              New Chat
+            </Button>
+          </div>
+          <div className="flex-1 space-y-2 overflow-y-auto px-2 py-2">
+            {isLoadingHistoryList ? <p className="px-2 py-1 text-xs text-muted-foreground">Loading history...</p> : null}
 
-              {sessions.map((session) => {
-                const isActive = session.id === sessionId;
-                return (
-                  <button
-                    key={session.id}
-                    type="button"
-                    onClick={() => void onSelectSession(session.id)}
-                    disabled={isSending || isLoadingSessionMessages}
-                    className={cn(
-                      "w-full rounded-xl border px-3 py-2 text-left transition",
-                      isActive
-                        ? "border-primary/45 bg-primary/10 text-foreground"
-                        : "border-border bg-card text-muted-foreground hover:border-primary/35 hover:text-foreground"
-                    )}
-                  >
-                    <p className="truncate text-sm font-medium">{session.title}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{formatRelativeTimestamp(session.lastMessageAt)}</p>
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </aside>
+            {!isLoadingHistoryList && sessions.length === 0 ? (
+              <p className="px-2 py-1 text-xs text-muted-foreground">No previous chats yet.</p>
+            ) : null}
+
+            {sessions.map((session) => {
+              const isActive = session.id === sessionId;
+              return (
+                <button
+                  key={session.id}
+                  type="button"
+                  onClick={() => void onSelectSession(session.id)}
+                  disabled={isSending || isLoadingSessionMessages}
+                  className={cn(
+                    "w-full rounded-xl border px-3 py-2 text-left transition",
+                    isActive
+                      ? "border-primary/45 bg-primary/10 text-foreground"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/35 hover:text-foreground"
+                  )}
+                >
+                  <p className="truncate text-sm font-medium">{session.title}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{formatRelativeTimestamp(session.lastMessageAt)}</p>
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+      ) : null}
     </section>
   );
 }
