@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+﻿import { and, eq } from "drizzle-orm";
 import request from "supertest";
 import { z } from "zod";
 
@@ -16,7 +16,9 @@ const signUpUser = async (agent: RequestAgent, prefix: string) => {
   const signUpResponse = await agent.post("/api/auth/sign-up/email").set("origin", "http://localhost:3000").send({
     name: `${prefix} user`,
     email,
-    password
+    password,
+    class: "9th",
+    board: "fbise"
   });
   if (signUpResponse.status >= 400) {
     throw new Error(`Sign-up failed for ${prefix}: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`);
@@ -211,3 +213,4 @@ run()
       await redis.quit().catch(() => undefined);
     }
   });
+

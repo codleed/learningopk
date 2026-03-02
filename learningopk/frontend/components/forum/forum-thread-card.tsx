@@ -41,7 +41,7 @@ export function ForumThreadCard({ thread }: ForumThreadCardProps) {
         {thread.isPinned ? <Badge variant="info">Pinned</Badge> : null}
         <Badge variant={thread.isSolved ? "success" : "warning"}>{thread.isSolved ? "Solved" : "Unsolved"}</Badge>
         {thread.boardName ? <span className="text-muted-foreground">{thread.boardName}</span> : null}
-        {thread.grade ? <span className="text-muted-foreground">Grade {thread.grade}</span> : null}
+        {thread.className ? <span className="text-muted-foreground">Class {thread.className}</span> : null}
         {thread.subjectName ? <span className="text-muted-foreground">{thread.subjectName}</span> : null}
       </div>
 
@@ -57,4 +57,3 @@ export function ForumThreadCard({ thread }: ForumThreadCardProps) {
     </Link>
   );
 }
-

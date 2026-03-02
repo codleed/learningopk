@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+﻿import { eq } from "drizzle-orm";
 import request, { type Response } from "supertest";
 import { z } from "zod";
 
@@ -65,7 +65,9 @@ const run = async (): Promise<void> => {
   const signUpResponse = await agent.post("/api/auth/sign-up/email").set("origin", "http://localhost:3000").send({
     name: "AI Concurrency User",
     email,
-    password
+    password,
+    class: "9th",
+    board: "fbise"
   });
 
   if (signUpResponse.status >= 400) {
@@ -134,3 +136,4 @@ run()
       await redis.quit().catch(() => undefined);
     }
   });
+

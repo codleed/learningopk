@@ -1,4 +1,4 @@
-import request from "supertest";
+﻿import request from "supertest";
 import { z } from "zod";
 
 import { pool } from "../lib/db/index.js";
@@ -21,7 +21,9 @@ const signUp = async (agent: ReturnType<typeof request.agent>, label: string) =>
   const signUpResponse = await agent.post("/api/auth/sign-up/email").set("origin", "http://localhost:3000").send({
     name: `${label} user`,
     email,
-    password
+    password,
+    class: "9th",
+    board: "fbise"
   });
   if (signUpResponse.status >= 400) {
     throw new Error(`Sign-up failed for ${label}: ${signUpResponse.status}`);
@@ -121,3 +123,4 @@ run()
       await redis.quit().catch(() => undefined);
     }
   });
+

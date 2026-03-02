@@ -2,15 +2,15 @@ import type { SubjectResponse } from "@/lib/learn-api";
 
 type SubjectHeaderProps = {
   board: SubjectResponse["board"];
-  grade: SubjectResponse["grade"];
+  className: SubjectResponse["class"]["name"];
   subject: SubjectResponse["subject"];
 };
 
-export function SubjectHeader({ board, grade, subject }: SubjectHeaderProps) {
+export function SubjectHeader({ board, className, subject }: SubjectHeaderProps) {
   return (
     <header className="surface-card rounded-3xl border border-border p-6 sm:p-8">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-        {board.name} | Grade {grade}
+        {board.name} | Class {className}
       </p>
       <h1 className="mt-2 text-3xl font-semibold text-foreground sm:text-4xl">{subject.name}</h1>
       <p className="mt-3 max-w-3xl text-sm text-muted-foreground sm:text-base">
@@ -21,4 +21,3 @@ export function SubjectHeader({ board, grade, subject }: SubjectHeaderProps) {
     </header>
   );
 }
-

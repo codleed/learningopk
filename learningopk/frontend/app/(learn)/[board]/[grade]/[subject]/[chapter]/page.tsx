@@ -16,7 +16,7 @@ import { getServerSession } from "@/lib/session";
 
 const routeParamsSchema = z.object({
   board: z.string().trim().regex(/^[a-z0-9-]+$/),
-  grade: z.enum(["9", "10"]),
+  grade: z.string().trim().regex(/^[a-z0-9-]+$/),
   subject: z.string().trim().regex(/^[a-z0-9-]+$/),
   chapter: z.string().trim().regex(/^[a-z0-9-]+$/)
 });
@@ -39,6 +39,14 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
   if (!routeParams.success) {
     notFound();
   }
+  if (session?.user.role === "student") {
+    if (session.user.board && session.user.board !== routeParams.data.board) {
+      notFound();
+    }
+    if (session.user.class && session.user.class !== routeParams.data.grade) {
+      notFound();
+    }
+  }
 
   const query = await searchParams;
   const activeTab = tabSchema.parse(query.tab);
@@ -49,7 +57,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
     notFound();
   }
 
-  const basePath = `/${payload.board.slug}/${payload.grade}/${payload.subject.slug}/${payload.chapter.slug}`;
+  const basePath = `/${payload.board.slug}/${payload.class.slug}/${payload.subject.slug}/${payload.chapter.slug}`;
   const tabs: TabItem[] = [
     { key: "summary", label: "Summary", href: `${basePath}?tab=summary` },
     { key: "exercises", label: "Exercises", href: `${basePath}?tab=exercises` },
@@ -72,7 +80,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
       <DashboardSurface as="section" tone="shell" className="space-y-4 p-4 sm:p-5">
         <DashboardSurface as="header" tone="hero" className="px-5 py-6 sm:px-7">
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
-            {payload.board.name} | Grade {payload.grade} | {payload.subject.name}
+            {payload.board.name} | Class {payload.class.name} | {payload.subject.name}
           </p>
           <h1 className="mt-2 text-3xl font-medium text-foreground sm:text-4xl">
             Chapter {payload.chapter.chapterNumber}: {payload.chapter.title}
@@ -82,7 +90,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
           </p>
           <Link
             className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary underline underline-offset-4"
-            href={`/${payload.board.slug}/${payload.grade}/${payload.subject.slug}`}
+            href={`/${payload.board.slug}/${payload.class.slug}/${payload.subject.slug}`}
           >
             Back to subject
           </Link>
@@ -110,7 +118,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
             <FlashcardDeck
               chapterId={payload.chapter.id}
               flashcards={payload.flashcards}
-              storageKey={`learningopk:flashcards:${payload.board.slug}:${payload.grade}:${payload.subject.slug}:${payload.chapter.slug}`}
+              storageKey={`learningopk:flashcards:${payload.board.slug}:${payload.class.slug}:${payload.subject.slug}:${payload.chapter.slug}`}
             />
           ) : null}
 

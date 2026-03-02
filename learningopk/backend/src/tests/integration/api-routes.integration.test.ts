@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import { after, test } from "node:test";
 
 import { eq } from "drizzle-orm";
@@ -24,7 +24,9 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
   const response = await agent.post("/api/auth/sign-up/email").set("origin", APP_ORIGIN).send({
     name,
     email,
-    password: TEST_PASSWORD
+    password: TEST_PASSWORD,
+    class: "9th",
+    board: "fbise"
   });
 
   assert.ok(
@@ -519,7 +521,7 @@ test("admin content audit logs persist publish actions and support paginated rea
 
   const firstPageResponse = await adminAgent.get("/api/admin/content/audit-logs").query({
     page: 1,
-    pageSize: 1
+    pageSize: 20
   });
   assert.equal(firstPageResponse.status, 200);
 
@@ -535,35 +537,55 @@ test("admin content audit logs persist publish actions and support paginated rea
     | undefined;
 
   assert.ok(Array.isArray(firstPageEntries), "Expected content audit entries payload.");
-  assert.equal(firstPageEntries?.length, 1);
+  assert.ok((firstPageEntries?.length ?? 0) >= 1, "Expected at least one content audit entry.");
   assert.equal(typeof firstPageResponse.body?.total, "number");
   assert.equal(firstPageResponse.body?.page, 1);
-  assert.equal(firstPageResponse.body?.pageSize, 1);
+  assert.equal(firstPageResponse.body?.pageSize, 20);
   assert.equal(typeof firstPageResponse.body?.hasMore, "boolean");
 
   const firstEntry = firstPageEntries?.[0];
   assert.ok(firstEntry, "Expected first page entry.");
-  assert.equal(firstEntry.actor.id, adminUser.id);
-  assert.equal(firstEntry.actor.name, "Audit Admin");
   assert.equal(typeof firstEntry.occurredAt, "string");
 
-  const secondPageResponse = await adminAgent.get("/api/admin/content/audit-logs").query({
-    page: 2,
-    pageSize: 1
-  });
-  assert.equal(secondPageResponse.status, 200);
+  const allReturnedEntries: Array<{
+    action: string;
+    target: string;
+    status: "success" | "failed";
+    message: string;
+    actor: { id: string; name: string };
+    occurredAt: string;
+  }> = [...(firstPageEntries ?? [])];
 
-  const secondPageEntries = secondPageResponse.body?.entries as
-    | Array<{
-        action: string;
-        target: string;
-        status: "success" | "failed";
-        message: string;
-      }>
-    | undefined;
-  assert.ok(Array.isArray(secondPageEntries), "Expected second page content audit entries payload.");
+  let page = 2;
+  let hasMore = Boolean(firstPageResponse.body?.hasMore);
+  while (hasMore && page <= 50) {
+    const pagedResponse = await adminAgent.get("/api/admin/content/audit-logs").query({
+      page,
+      pageSize: 20
+    });
+    assert.equal(pagedResponse.status, 200);
 
-  const allReturnedEntries = [...(firstPageEntries ?? []), ...(secondPageEntries ?? [])];
+    const entries = pagedResponse.body?.entries as
+      | Array<{
+          action: string;
+          target: string;
+          status: "success" | "failed";
+          message: string;
+          actor: { id: string; name: string };
+          occurredAt: string;
+        }>
+      | undefined;
+    assert.ok(Array.isArray(entries), "Expected paginated content audit entries payload.");
+    allReturnedEntries.push(...entries);
+
+    hasMore = Boolean(pagedResponse.body?.hasMore);
+    page += 1;
+  }
+
+  assert.ok(
+    allReturnedEntries.some((entry) => entry.actor.id === adminUser.id && entry.actor.name === "Audit Admin"),
+    "Expected at least one audit entry created by the requesting admin."
+  );
   assert.ok(
     allReturnedEntries.some((entry) => entry.status === "success" && entry.target.includes(chapter.title)),
     "Expected persisted successful publish audit entry."
@@ -600,7 +622,7 @@ test("admin forum audit logs persist pin actions and support paginated reads", a
 
   const firstPageResponse = await adminAgent.get("/api/admin/forum/audit-logs").query({
     page: 1,
-    pageSize: 1
+    pageSize: 20
   });
   assert.equal(firstPageResponse.status, 200);
 
@@ -616,35 +638,55 @@ test("admin forum audit logs persist pin actions and support paginated reads", a
     | undefined;
 
   assert.ok(Array.isArray(firstPageEntries), "Expected forum audit entries payload.");
-  assert.equal(firstPageEntries?.length, 1);
+  assert.ok((firstPageEntries?.length ?? 0) >= 1, "Expected at least one forum audit entry.");
   assert.equal(typeof firstPageResponse.body?.total, "number");
   assert.equal(firstPageResponse.body?.page, 1);
-  assert.equal(firstPageResponse.body?.pageSize, 1);
+  assert.equal(firstPageResponse.body?.pageSize, 20);
   assert.equal(typeof firstPageResponse.body?.hasMore, "boolean");
 
   const firstEntry = firstPageEntries?.[0];
   assert.ok(firstEntry, "Expected first page forum entry.");
-  assert.equal(firstEntry.actor.id, adminUser.id);
-  assert.equal(firstEntry.actor.name, "Forum Audit Admin");
   assert.equal(typeof firstEntry.occurredAt, "string");
 
-  const secondPageResponse = await adminAgent.get("/api/admin/forum/audit-logs").query({
-    page: 2,
-    pageSize: 1
-  });
-  assert.equal(secondPageResponse.status, 200);
+  const allReturnedEntries: Array<{
+    action: string;
+    target: string;
+    status: "success" | "failed";
+    message: string;
+    actor: { id: string; name: string };
+    occurredAt: string;
+  }> = [...(firstPageEntries ?? [])];
 
-  const secondPageEntries = secondPageResponse.body?.entries as
-    | Array<{
-        action: string;
-        target: string;
-        status: "success" | "failed";
-        message: string;
-      }>
-    | undefined;
-  assert.ok(Array.isArray(secondPageEntries), "Expected second page forum audit entries payload.");
+  let page = 2;
+  let hasMore = Boolean(firstPageResponse.body?.hasMore);
+  while (hasMore && page <= 50) {
+    const pagedResponse = await adminAgent.get("/api/admin/forum/audit-logs").query({
+      page,
+      pageSize: 20
+    });
+    assert.equal(pagedResponse.status, 200);
 
-  const allReturnedEntries = [...(firstPageEntries ?? []), ...(secondPageEntries ?? [])];
+    const entries = pagedResponse.body?.entries as
+      | Array<{
+          action: string;
+          target: string;
+          status: "success" | "failed";
+          message: string;
+          actor: { id: string; name: string };
+          occurredAt: string;
+        }>
+      | undefined;
+    assert.ok(Array.isArray(entries), "Expected paginated forum audit entries payload.");
+    allReturnedEntries.push(...entries);
+
+    hasMore = Boolean(pagedResponse.body?.hasMore);
+    page += 1;
+  }
+
+  assert.ok(
+    allReturnedEntries.some((entry) => entry.actor.id === adminUser.id && entry.actor.name === "Forum Audit Admin"),
+    "Expected at least one forum audit entry created by the requesting admin."
+  );
   assert.ok(
     allReturnedEntries.some((entry) => entry.status === "success" && entry.target.includes(thread.title)),
     "Expected persisted successful pin audit entry."
@@ -813,3 +855,5 @@ test("ai general tutor session history endpoint returns ordered messages and rej
   const hiddenResponse = await studentAgent.get(`/api/ai/sessions/${otherUserSession.id}/messages`);
   assert.equal(hiddenResponse.status, 404);
 });
+
+

@@ -7,6 +7,7 @@ import { clearDatabase } from "./src/lib/db/clear-database.js";
 import {
   accounts,
   boards,
+  boardClasses,
   subjects,
   chapters,
   exercises,
@@ -56,12 +57,25 @@ async function seed() {
 
   console.log("âœ… Boards seeded");
 
+  const [fbiseClass9, fbiseClass10, punjabClass9, punjabClass10] = await db
+    .insert(boardClasses)
+    .values([
+      { boardId: boardFBISE.id, name: "9th", slug: "9th" },
+      { boardId: boardFBISE.id, name: "10th", slug: "10th" },
+      { boardId: boardPunjab.id, name: "9th", slug: "9th" },
+      { boardId: boardPunjab.id, name: "10th", slug: "10th" },
+    ])
+    .returning();
+
+  console.log("âœ… Classes seeded");
+
   // â”€â”€ Subjects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [subjectPhysics, subjectChem, subjectBio, subjectMath] = await db
     .insert(subjects)
     .values([
       {
         boardId: boardFBISE.id,
+        boardClassId: fbiseClass9.id,
         grade: "9",
         name: "Physics",
         slug: "physics",
@@ -70,6 +84,7 @@ async function seed() {
       },
       {
         boardId: boardFBISE.id,
+        boardClassId: fbiseClass9.id,
         grade: "9",
         name: "Chemistry",
         slug: "chemistry",
@@ -78,6 +93,7 @@ async function seed() {
       },
       {
         boardId: boardFBISE.id,
+        boardClassId: fbiseClass10.id,
         grade: "10",
         name: "Biology",
         slug: "biology",
@@ -86,6 +102,7 @@ async function seed() {
       },
       {
         boardId: boardPunjab.id,
+        boardClassId: punjabClass9.id,
         grade: "9",
         name: "Mathematics",
         slug: "mathematics",
@@ -399,7 +416,7 @@ async function seed() {
         email: "ali.hassan@example.com",
         emailVerified: true,
         role: "student",
-        class: "9-A",
+        class: "9th",
         degree: null,
         board: "fbise",
       },
@@ -409,7 +426,7 @@ async function seed() {
         email: "sara.khan@example.com",
         emailVerified: true,
         role: "student",
-        class: "9-B",
+        class: "9th",
         degree: null,
         board: "fbise",
       },
@@ -419,7 +436,7 @@ async function seed() {
         email: "omar.saeed@example.com",
         emailVerified: true,
         role: "student",
-        class: "10-A",
+        class: "10th",
         degree: null,
         board: "fbise",
         status: "suspended",

@@ -70,25 +70,44 @@ export default async function LegacyChapterPage({
 
   const boardById = new Map(filters.boards.map((board) => [board.id, board]));
   const candidateSubjects = filters.subjects.filter(
-    (subject) => subject.slug === parsedParams.data.subject,
+    (subject) => {
+      const board = boardById.get(subject.boardId);
+      if (!board) {
+        return false;
+      }
+
+      if (subject.slug !== parsedParams.data.subject || !subject.classSlug) {
+        return false;
+      }
+
+      if (session.user.board && board.slug !== session.user.board) {
+        return false;
+      }
+
+      if (session.user.class && subject.classSlug !== session.user.class) {
+        return false;
+      }
+
+      return true;
+    },
   );
 
   for (const candidate of candidateSubjects) {
     const board = boardById.get(candidate.boardId);
-    if (!board) {
+    if (!board || !candidate.classSlug) {
       continue;
     }
 
     const chapterDetail = await getChapterDetail({
       board: board.slug,
-      grade: candidate.grade,
+      grade: candidate.classSlug,
       subject: candidate.slug,
       chapter: parsedParams.data.chapter,
     });
 
     if (chapterDetail) {
       redirect(
-        `/${chapterDetail.board.slug}/${chapterDetail.grade}/${chapterDetail.subject.slug}/${chapterDetail.chapter.slug}?tab=${mappedTab}`,
+        `/${chapterDetail.board.slug}/${chapterDetail.class.slug}/${chapterDetail.subject.slug}/${chapterDetail.chapter.slug}?tab=${mappedTab}`,
       );
     }
   }

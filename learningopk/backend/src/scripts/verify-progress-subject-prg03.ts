@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+﻿import { and, asc, eq } from "drizzle-orm";
 import request from "supertest";
 import { z } from "zod";
 
@@ -85,7 +85,9 @@ const run = async (): Promise<void> => {
   const userOneSignUp = await userOneAgent.post("/api/auth/sign-up/email").set("origin", "http://localhost:3000").send({
     name: "Subject Progress User One",
     email: `prg03_u1_${Date.now()}@example.com`,
-    password
+    password,
+    class: "9th",
+    board: "fbise"
   });
   if (userOneSignUp.status >= 400) {
     throw new Error(`User one sign-up failed: ${userOneSignUp.status} ${JSON.stringify(userOneSignUp.body)}`);
@@ -94,7 +96,9 @@ const run = async (): Promise<void> => {
   const userTwoSignUp = await userTwoAgent.post("/api/auth/sign-up/email").set("origin", "http://localhost:3000").send({
     name: "Subject Progress User Two",
     email: `prg03_u2_${Date.now()}@example.com`,
-    password
+    password,
+    class: "9th",
+    board: "fbise"
   });
   if (userTwoSignUp.status >= 400) {
     throw new Error(`User two sign-up failed: ${userTwoSignUp.status} ${JSON.stringify(userTwoSignUp.body)}`);
@@ -199,3 +203,4 @@ run()
   .finally(async () => {
     await pool.end().catch(() => undefined);
   });
+

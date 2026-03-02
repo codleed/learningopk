@@ -13,7 +13,11 @@ const subjectResponseSchema = z.object({
     slug: z.string(),
     name: z.string()
   }),
-  grade: z.enum(["9", "10"]),
+  grade: z.string(),
+  class: z.object({
+    slug: z.string(),
+    name: z.string()
+  }),
   subject: z.object({
     id: z.number().int().positive(),
     slug: z.string(),
@@ -28,7 +32,11 @@ const chapterDetailResponseSchema = z.object({
     slug: z.string(),
     name: z.string()
   }),
-  grade: z.enum(["9", "10"]),
+  grade: z.string(),
+  class: z.object({
+    slug: z.string(),
+    name: z.string()
+  }),
   subject: z.object({
     id: z.number().int().positive(),
     slug: z.string(),
@@ -104,12 +112,12 @@ const fetchLearnJson = async <T>(url: string, schema: z.ZodType<T>): Promise<T |
   return schema.parse(json);
 };
 
-export const getSubjectOverview = async (params: { board: string; grade: "9" | "10"; subject: string }) => {
+export const getSubjectOverview = async (params: { board: string; grade: string; subject: string }) => {
   const url = `${backendUrl}/api/learn/${params.board}/${params.grade}/${params.subject}`;
   return fetchLearnJson(url, subjectResponseSchema);
 };
 
-export const getChapterDetail = async (params: { board: string; grade: "9" | "10"; subject: string; chapter: string }) => {
+export const getChapterDetail = async (params: { board: string; grade: string; subject: string; chapter: string }) => {
   const url = `${backendUrl}/api/learn/${params.board}/${params.grade}/${params.subject}/${params.chapter}`;
   return fetchLearnJson(url, chapterDetailResponseSchema);
 };

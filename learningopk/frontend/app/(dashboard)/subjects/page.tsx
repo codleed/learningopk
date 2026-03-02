@@ -61,11 +61,32 @@ export default async function SubjectsPage() {
     filtersResult.filters === null
       ? []
       : filtersResult.filters.subjects
+          .filter((subject) => {
+            const board = filtersResult.filters?.boards.find((entry) => entry.id === subject.boardId);
+            if (!board) {
+              return false;
+            }
+
+            if (session.user.role === "student") {
+              const selectedBoard = session.user.board ?? "";
+              const selectedClass = session.user.class ?? "";
+
+              if (selectedBoard.length > 0 && board.slug !== selectedBoard) {
+                return false;
+              }
+
+              if (selectedClass.length > 0 && subject.classSlug !== selectedClass) {
+                return false;
+              }
+            }
+
+            return true;
+          })
           .map((subject) => {
             const board = filtersResult.filters?.boards.find(
               (entry) => entry.id === subject.boardId,
             );
-            if (!board) {
+            if (!board || !subject.classSlug) {
               return null;
             }
 
@@ -73,7 +94,8 @@ export default async function SubjectsPage() {
               id: subject.id,
               slug: subject.slug,
               name: subject.name,
-              grade: subject.grade,
+              className: subject.className ?? subject.classSlug,
+              classSlug: subject.classSlug,
               boardName: board.name,
               boardSlug: board.slug,
               iconSrc: resolveSubjectIcon(subject.slug),
@@ -116,7 +138,7 @@ export default async function SubjectsPage() {
               <DashboardCard
                 key={subject.id}
                 as={Link}
-                href={`/${subject.boardSlug}/${subject.grade}/${subject.slug}`}
+                href={`/${subject.boardSlug}/${subject.classSlug}/${subject.slug}`}
                 aria-label={`Open ${subject.name} chapters`}
                 className="space-y-3 p-4 transition hover:-translate-y-0.5 hover:border-primary/45"
               >
@@ -131,7 +153,7 @@ export default async function SubjectsPage() {
                   <div>
                     <h2 className="text-xl font-semibold text-foreground">{subject.name}</h2>
                     <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                      {subject.boardName} | Grade {subject.grade}
+                      {subject.boardName} | Class {subject.className}
                     </p>
                   </div>
                 </div>

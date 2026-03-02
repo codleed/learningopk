@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { consumeForumMutationRateLimit, moderateForumInput } from "../lib/ai-guardrails.js";
 import { db } from "../lib/db/index.js";
-import { boards, chapters, forumReplies, forumReplyVotes, forumThreads, subjects, users } from "../lib/db/schema.js";
+import { boardClasses, boards, chapters, forumReplies, forumReplyVotes, forumThreads, subjects, users } from "../lib/db/schema.js";
 import { getSessionFromRequest, requireSession, type AuthenticatedRequest } from "../lib/session.js";
 
 const createThreadSchema = z.object({
@@ -33,7 +33,7 @@ const replyVoteSchema = z.object({
 
 const threadFeedQuerySchema = z.object({
   board: z.string().trim().regex(/^[a-z0-9-]+$/).optional(),
-  grade: z.enum(["9", "10"]).optional(),
+  grade: z.string().trim().regex(/^[a-z0-9-]+$/).optional(),
   subjectId: z.coerce.number().int().positive().optional(),
   chapterId: z.coerce.number().int().positive().optional(),
   q: z.string().trim().min(1).max(160).optional(),
@@ -95,7 +95,7 @@ const buildForumFilters = (filters: ThreadFeedFilters) => {
   }
 
   if (filters.grade) {
-    clauses.push(eq(subjects.grade, filters.grade));
+    clauses.push(sql`coalesce(${boardClasses.slug}, ${subjects.grade}::text) = ${filters.grade}`);
   }
 
   if (filters.subjectId) {
@@ -281,10 +281,14 @@ forumRouter.get("/filters", async (_req, res) => {
       name: subjects.name,
       slug: subjects.slug,
       grade: subjects.grade,
+      className: sql<string | null>`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
+      classSlug: sql<string | null>`coalesce(${boardClasses.slug}, ${subjects.grade}::text)`,
+      boardClassId: subjects.boardClassId,
       boardId: subjects.boardId
     })
     .from(subjects)
-    .orderBy(asc(subjects.boardId), asc(subjects.grade), asc(subjects.name));
+    .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
+    .orderBy(asc(subjects.boardId), asc(sql`coalesce(${boardClasses.name}, ${subjects.grade}::text)`), asc(subjects.name));
 
   const chapterRows = await db
     .select({
@@ -300,6 +304,15 @@ forumRouter.get("/filters", async (_req, res) => {
 
   res.status(200).json({
     boards: boardRows,
+    classes: await db
+      .select({
+        id: boardClasses.id,
+        boardId: boardClasses.boardId,
+        name: boardClasses.name,
+        slug: boardClasses.slug
+      })
+      .from(boardClasses)
+      .orderBy(asc(boardClasses.boardId), asc(boardClasses.name)),
     subjects: subjectRows,
     chapters: chapterRows
   });
@@ -343,7 +356,8 @@ forumRouter.get("/threads", async (req, res) => {
       updatedAt: forumThreads.updatedAt,
       boardSlug: boards.slug,
       boardName: boards.name,
-      grade: subjects.grade,
+      grade: sql<string | null>`coalesce(${boardClasses.slug}, ${subjects.grade}::text)`,
+      className: sql<string | null>`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
       subjectName: subjects.name,
       relevance: relevanceScoreSql,
       replyCount: sql<number>`(
@@ -356,6 +370,7 @@ forumRouter.get("/threads", async (req, res) => {
     .innerJoin(users, eq(forumThreads.userId, users.id))
     .leftJoin(subjects, eq(forumThreads.subjectId, subjects.id))
     .leftJoin(boards, eq(subjects.boardId, boards.id))
+    .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
     .where(buildForumFilters(filters))
     .orderBy(...orderByClauses)
     .limit(filters.limit)
@@ -413,13 +428,15 @@ forumRouter.get("/threads/:threadId", async (req, res) => {
       updatedAt: forumThreads.updatedAt,
       boardSlug: boards.slug,
       boardName: boards.name,
-      grade: subjects.grade,
+      grade: sql<string | null>`coalesce(${boardClasses.slug}, ${subjects.grade}::text)`,
+      className: sql<string | null>`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
       subjectName: subjects.name
     })
     .from(forumThreads)
     .innerJoin(users, eq(forumThreads.userId, users.id))
     .leftJoin(subjects, eq(forumThreads.subjectId, subjects.id))
     .leftJoin(boards, eq(subjects.boardId, boards.id))
+    .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
     .where(eq(forumThreads.id, threadId))
     .limit(1);
 
@@ -552,6 +569,7 @@ forumRouter.post("/threads", requireSession, async (req, res) => {
       boardSlug: null,
       boardName: null,
       grade: null,
+      className: null,
       subjectName: null,
       replyCount: 0
     }

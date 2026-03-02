@@ -1,4 +1,4 @@
-import request from "supertest";
+﻿import request from "supertest";
 
 import { createApp } from "../server.js";
 
@@ -23,7 +23,9 @@ const run = async (): Promise<void> => {
     .send({
       name: "Phase One User",
       email,
-      password
+      password,
+      class: "9th",
+      board: "fbise"
     });
 
   if (signUpResponse.status >= 400) {
@@ -83,3 +85,4 @@ run().catch((error) => {
   console.error("Auth verification failed:", error);
   process.exitCode = 1;
 });
+

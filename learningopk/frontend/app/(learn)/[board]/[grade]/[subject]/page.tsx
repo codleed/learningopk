@@ -12,7 +12,7 @@ import { getServerSession } from "@/lib/session";
 
 const routeParamsSchema = z.object({
   board: z.string().trim().regex(/^[a-z0-9-]+$/),
-  grade: z.enum(["9", "10"]),
+  grade: z.string().trim().regex(/^[a-z0-9-]+$/),
   subject: z.string().trim().regex(/^[a-z0-9-]+$/)
 });
 
@@ -30,6 +30,14 @@ export default async function SubjectPage({ params }: SubjectPageProps) {
   if (!routeParams.success) {
     notFound();
   }
+  if (session?.user.role === "student") {
+    if (session.user.board && session.user.board !== routeParams.data.board) {
+      notFound();
+    }
+    if (session.user.class && session.user.class !== routeParams.data.grade) {
+      notFound();
+    }
+  }
 
   const payload = await getSubjectOverview(routeParams.data);
   if (!payload) {
@@ -39,12 +47,12 @@ export default async function SubjectPage({ params }: SubjectPageProps) {
   return (
     <AppShell
       session={session}
-      currentPath={`/${payload.board.slug}/${payload.grade}/${payload.subject.slug}`}
+      currentPath={`/${payload.board.slug}/${payload.class.slug}/${payload.subject.slug}`}
       contentClassName="max-w-[95rem] px-3 pb-10 pt-4 sm:px-5 lg:px-7"
     >
       <DashboardSurface as="section" tone="shell" className="space-y-4 p-4 sm:p-5">
         <DashboardSurface as="div" tone="hero" className="p-1">
-          <SubjectHeader board={payload.board} grade={payload.grade} subject={payload.subject} />
+          <SubjectHeader board={payload.board} className={payload.class.name} subject={payload.subject} />
         </DashboardSurface>
 
         <DashboardSection
@@ -67,7 +75,7 @@ export default async function SubjectPage({ params }: SubjectPageProps) {
                 <ChapterCard
                   key={chapter.id}
                   chapter={chapter}
-                  href={`/${payload.board.slug}/${payload.grade}/${payload.subject.slug}/${chapter.slug}`}
+                  href={`/${payload.board.slug}/${payload.class.slug}/${payload.subject.slug}/${chapter.slug}`}
                 />
               ))}
             </div>

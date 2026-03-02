@@ -1,12 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { authClient } from "@/lib/auth-client";
+
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
 const registerSchema = z
   .object({
@@ -23,11 +26,82 @@ const registerSchema = z
     path: ["confirmPassword"]
   });
 
+const registerProfileOptionsSchema = z.object({
+  boards: z.array(
+    z.object({
+      id: z.number().int().positive(),
+      name: z.string(),
+      slug: z.string()
+    })
+  ),
+  classes: z.array(
+    z.object({
+      id: z.number().int().positive(),
+      boardId: z.number().int().positive(),
+      name: z.string(),
+      slug: z.string()
+    })
+  )
+});
+
 export const RegisterForm = () => {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [optionsError, setOptionsError] = useState<string | null>(null);
+  const [profileOptions, setProfileOptions] = useState<z.infer<typeof registerProfileOptionsSchema> | null>(null);
+  const [selectedBoard, setSelectedBoard] = useState("");
+  const [selectedClass, setSelectedClass] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    const loadProfileOptions = async () => {
+      try {
+        const response = await fetch(`${backendUrl}/api/forum/filters`, {
+          method: "GET",
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          throw new Error(`Profile options request failed: ${response.status}`);
+        }
+
+        const parsed = registerProfileOptionsSchema.safeParse((await response.json()) as unknown);
+        if (!parsed.success) {
+          throw new Error("Invalid profile options payload.");
+        }
+
+        if (active) {
+          setProfileOptions(parsed.data);
+          setOptionsError(null);
+        }
+      } catch {
+        if (active) {
+          setProfileOptions(null);
+          setOptionsError("Unable to load boards and classes. Ensure backend is running on http://localhost:3001.");
+        }
+      }
+    };
+
+    void loadProfileOptions();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const classOptions = useMemo(() => {
+    if (!profileOptions) {
+      return [];
+    }
+    const selectedBoardId = profileOptions.boards.find((board) => board.slug === selectedBoard)?.id;
+    if (!selectedBoardId) {
+      return [];
+    }
+    return profileOptions.classes.filter((option) => option.boardId === selectedBoardId);
+  }, [profileOptions, selectedBoard]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -37,9 +111,9 @@ export const RegisterForm = () => {
     const formData = new FormData(event.currentTarget);
     const parsed = registerSchema.safeParse({
       name: String(formData.get("name") ?? ""),
-      class: String(formData.get("class") ?? ""),
+      class: selectedClass,
       degree: String(formData.get("degree") ?? ""),
-      board: String(formData.get("board") ?? ""),
+      board: selectedBoard,
       email: String(formData.get("email") ?? ""),
       password: String(formData.get("password") ?? ""),
       confirmPassword: String(formData.get("confirmPassword") ?? "")
@@ -99,15 +173,22 @@ export const RegisterForm = () => {
         <label htmlFor="class" className="block text-sm font-medium text-foreground">
           Class
         </label>
-        <Input
+        <Select
           id="class"
           name="class"
-          type="text"
+          value={selectedClass}
+          onChange={(event) => setSelectedClass(event.target.value)}
           required
-          autoComplete="off"
+          disabled={!selectedBoard || classOptions.length === 0}
           aria-invalid={classError ? true : undefined}
-          placeholder="10th"
-        />
+        >
+          <option value="">Select class</option>
+          {classOptions.map((option) => (
+            <option key={option.id} value={option.slug}>
+              {option.name}
+            </option>
+          ))}
+        </Select>
         {classError ? <p className="text-xs text-rose-700">{classError}</p> : null}
       </div>
       <div className="space-y-1">
@@ -129,15 +210,24 @@ export const RegisterForm = () => {
         <label htmlFor="board" className="block text-sm font-medium text-foreground">
           Board
         </label>
-        <Input
+        <Select
           id="board"
           name="board"
-          type="text"
+          value={selectedBoard}
+          onChange={(event) => {
+            setSelectedBoard(event.target.value);
+            setSelectedClass("");
+          }}
           required
-          autoComplete="off"
           aria-invalid={boardError ? true : undefined}
-          placeholder="Balochistan"
-        />
+        >
+          <option value="">Select board</option>
+          {(profileOptions?.boards ?? []).map((board) => (
+            <option key={board.id} value={board.slug}>
+              {board.name}
+            </option>
+          ))}
+        </Select>
         {boardError ? <p className="text-xs text-rose-700">{boardError}</p> : null}
       </div>
       <div className="space-y-1">
@@ -183,10 +273,11 @@ export const RegisterForm = () => {
         />
       </div>
       {passwordError ? <p className="text-xs text-rose-700">{passwordError}</p> : null}
+      {optionsError ? <p className="text-xs text-rose-700">{optionsError}</p> : null}
       {errorMessage && !nameError && !classError && !degreeError && !boardError && !emailError && !passwordError ? (
         <p className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">{errorMessage}</p>
       ) : null}
-      <Button type="submit" disabled={isPending} width="full">
+      <Button type="submit" disabled={isPending || !!optionsError} width="full">
         {isPending ? "Creating account..." : "Create account"}
       </Button>
     </form>

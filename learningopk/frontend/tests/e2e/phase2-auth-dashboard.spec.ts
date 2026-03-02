@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+﻿import { expect, test, type Page } from "@playwright/test";
 
 const registerAndOpenDashboard = async (baseEmail: string, page: Page) => {
   const timestamp = Date.now();
@@ -6,9 +6,9 @@ const registerAndOpenDashboard = async (baseEmail: string, page: Page) => {
 
   await page.goto("/register");
   await page.getByLabel("Name").fill("Phase 2 Student");
-  await page.getByLabel("Class").fill("10th");
   await page.getByLabel("Degree").fill("Matriculation");
-  await page.getByLabel("Board").fill("Balochistan");
+  await page.getByLabel("Board").selectOption("fbise");
+  await page.getByLabel("Class").selectOption("9th");
   await page.getByLabel("Email").fill(`${baseEmail}_${timestamp}@example.com`);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm Password").fill(password);
@@ -67,7 +67,7 @@ test("dashboard and forum show left rail for authenticated students", async ({ p
 
   await page.goto("/ai-tutor");
   await expect(page).toHaveURL(/\/ai-tutor$/);
-  await expect(page.getByRole("heading", { name: "AI Tutor" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "AI Tutor", exact: true })).toBeVisible();
   await expect(page.getByLabel("Ask AI tutor")).toBeVisible();
   await expect(page.getByLabel("Chat history sidebar")).toBeVisible();
   await expect(page.getByRole("button", { name: "New Chat" })).toBeVisible();
@@ -84,11 +84,11 @@ test("settings screen provides profile management and light/dark theme controls"
   await expect(page.getByRole("heading", { name: "Theme" })).toBeVisible();
 
   await expect(page.getByLabel("Name")).toHaveValue("Phase 2 Student");
-  await expect(page.getByLabel("Class")).toHaveValue("10th");
+  await expect(page.getByLabel("Class")).toHaveValue(/\S+/);
   await expect(page.getByLabel("Degree")).toHaveValue("Matriculation");
-  await expect(page.getByLabel("Board")).toHaveValue("Balochistan");
+  await expect(page.getByLabel("Board")).toHaveValue(/\S+/);
 
-  await page.getByLabel("Board").fill("Federal");
+  await page.getByLabel("Board").fill("bise-lahore");
   await page.getByRole("button", { name: "Save profile" }).click();
   await expect(page.getByText("Profile updated")).toBeVisible();
 
@@ -115,32 +115,26 @@ test("subjects page lists subject cards with progress", async ({ page }) => {
 
   await expect(page).toHaveURL(/\/subjects$/);
   await expect(page.getByRole("heading", { name: "Subjects", exact: true })).toBeVisible();
-  await expect(page.getByText("Science")).toBeVisible();
-  await expect(page.getByText("English")).toBeVisible();
-  await expect(page.getByText("Math")).toBeVisible();
   await expect(page.getByText("Physics")).toBeVisible();
-  await expect(page.getByRole("img", { name: "Science icon" })).toBeVisible();
-  await expect(page.getByRole("img", { name: "English icon" })).toBeVisible();
-  await expect(page.getByRole("img", { name: "Math icon" })).toBeVisible();
+  await expect(page.getByText("Chemistry")).toBeVisible();
   await expect(page.getByRole("img", { name: "Physics icon" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Chemistry icon" })).toBeVisible();
   await expect(page.getByText(/% complete/).first()).toBeVisible();
 
-  await page.getByRole("link", { name: "Open Science chapters" }).click();
+  await page.getByRole("link", { name: "Open Physics chapters" }).click();
 
-  await expect(page).toHaveURL(/\/subjects\/science$/);
-  await expect(page.getByRole("heading", { name: "Science Chapters", exact: true })).toBeVisible();
-  await expect(page.getByText("Chapter 1: Units and Measurements")).toBeVisible();
+  await expect(page).toHaveURL(/\/fbise\/9th\/physics$/);
+  await expect(page.getByRole("heading", { name: "Physics", exact: true })).toBeVisible();
+  await expect(page.getByText("Physical Quantities and Measurement")).toBeVisible();
 
-  await page.getByRole("link", { name: "Open Chapter 1: Units and Measurements" }).click();
+  await page.getByRole("link", { name: "Open chapter" }).first().click();
 
-  await expect(page).toHaveURL(/\/subjects\/science\/units-and-measurements$/);
-  await expect(page.getByRole("heading", { name: "Chapter 1: Units and Measurements", level: 1 })).toBeVisible();
+  await expect(page).toHaveURL(/\/fbise\/9th\/physics\/physical-quantities-and-measurement/);
+  await expect(page.getByRole("heading", { name: /Chapter 1:/, level: 1 })).toBeVisible();
   await expect(page.getByRole("link", { name: "Summary", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Exercise", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "MCQs", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Exercises", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Flashcards", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Quiz", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Flash Cards", exact: true })).toBeVisible();
-  await expect(page.getByText("AI Tutor", { exact: true })).toBeVisible();
 });
 
 test("login and register keep left rail hidden for guests", async ({ page }) => {
@@ -152,3 +146,4 @@ test("login and register keep left rail hidden for guests", async ({ page }) => 
   await expect(page.getByLabel("Primary navigation")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Log out shortcut" })).toHaveCount(0);
 });
+

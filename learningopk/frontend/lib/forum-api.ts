@@ -8,11 +8,21 @@ const boardSchema = z.object({
   slug: z.string()
 });
 
+const boardClassSchema = z.object({
+  id: z.number().int().positive(),
+  boardId: z.number().int().positive(),
+  name: z.string(),
+  slug: z.string()
+});
+
 const subjectSchema = z.object({
   id: z.number().int().positive(),
   name: z.string(),
   slug: z.string(),
-  grade: z.enum(["9", "10"]),
+  grade: z.string().nullable(),
+  className: z.string().nullable(),
+  classSlug: z.string().nullable(),
+  boardClassId: z.number().int().positive().nullable(),
   boardId: z.number().int().positive()
 });
 
@@ -26,6 +36,7 @@ const chapterSchema = z.object({
 
 const forumFiltersResponseSchema = z.object({
   boards: z.array(boardSchema),
+  classes: z.array(boardClassSchema),
   subjects: z.array(subjectSchema),
   chapters: z.array(chapterSchema)
 });
@@ -45,7 +56,8 @@ const threadSummarySchema = z.object({
   updatedAt: z.string().datetime(),
   boardSlug: z.string().nullable(),
   boardName: z.string().nullable(),
-  grade: z.enum(["9", "10"]).nullable(),
+  grade: z.string().nullable(),
+  className: z.string().nullable(),
   subjectName: z.string().nullable(),
   relevance: z.number().optional().default(0),
   replyCount: z.number().int().nonnegative()
@@ -97,7 +109,7 @@ export type ForumThreadDetailResponse = z.infer<typeof forumThreadDetailResponse
 export type ForumFeedQuery = {
   q?: string;
   board?: string;
-  grade?: "9" | "10";
+  grade?: string;
   subjectId?: number;
   chapterId?: number;
   solved?: "all" | "solved" | "unsolved";

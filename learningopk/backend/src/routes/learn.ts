@@ -1,13 +1,13 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { Router } from "express";
 import { z } from "zod";
 
 import { db } from "../lib/db/index.js";
-import { boards, chapters, exercises, flashcards, quizQuestions, quizzes, subjects } from "../lib/db/schema.js";
+import { boardClasses, boards, chapters, exercises, flashcards, quizQuestions, quizzes, subjects } from "../lib/db/schema.js";
 
 const paramsSchema = z.object({
   board: z.string().trim().regex(/^[a-z0-9-]+$/),
-  grade: z.enum(["9", "10"]),
+  grade: z.string().trim().regex(/^[a-z0-9-]+$/),
   subject: z.string().trim().regex(/^[a-z0-9-]+$/)
 });
 
@@ -34,6 +34,8 @@ learnRouter.get("/:board/:grade/:subject", async (req, res) => {
       boardId: boards.id,
       boardName: boards.name,
       boardSlug: boards.slug,
+      className: boardClasses.name,
+      classSlug: boardClasses.slug,
       subjectId: subjects.id,
       subjectName: subjects.name,
       subjectSlug: subjects.slug,
@@ -41,7 +43,14 @@ learnRouter.get("/:board/:grade/:subject", async (req, res) => {
     })
     .from(subjects)
     .innerJoin(boards, eq(subjects.boardId, boards.id))
-    .where(and(eq(boards.slug, board), eq(subjects.grade, grade), eq(subjects.slug, subject)))
+    .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
+    .where(
+      and(
+        eq(boards.slug, board),
+        eq(subjects.slug, subject),
+        sql`coalesce(${boardClasses.slug}, ${subjects.grade}::text) = ${grade}`
+      )
+    )
     .limit(1);
 
   const subjectRow = subjectRows[0];
@@ -68,6 +77,10 @@ learnRouter.get("/:board/:grade/:subject", async (req, res) => {
       name: subjectRow.boardName
     },
     grade,
+    class: {
+      slug: subjectRow.classSlug ?? grade,
+      name: subjectRow.className ?? grade
+    },
     subject: {
       id: subjectRow.subjectId,
       slug: subjectRow.subjectSlug,
@@ -99,6 +112,8 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
       chapterSummary: chapters.summary,
       boardName: boards.name,
       boardSlug: boards.slug,
+      className: boardClasses.name,
+      classSlug: boardClasses.slug,
       subjectId: subjects.id,
       subjectName: subjects.name,
       subjectSlug: subjects.slug
@@ -106,10 +121,11 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
     .from(chapters)
     .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
     .innerJoin(boards, eq(subjects.boardId, boards.id))
+    .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
     .where(
       and(
         eq(boards.slug, board),
-        eq(subjects.grade, grade),
+        sql`coalesce(${boardClasses.slug}, ${subjects.grade}::text) = ${grade}`,
         eq(subjects.slug, subject),
         eq(chapters.slug, chapter),
         eq(chapters.isPublished, true)
@@ -183,6 +199,10 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
       name: chapterRow.boardName
     },
     grade,
+    class: {
+      slug: chapterRow.classSlug ?? grade,
+      name: chapterRow.className ?? grade
+    },
     subject: {
       id: chapterRow.subjectId,
       slug: chapterRow.subjectSlug,

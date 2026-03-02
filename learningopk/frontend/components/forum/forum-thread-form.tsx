@@ -30,7 +30,9 @@ type ForumSubjectOption = {
   id: number;
   name: string;
   slug: string;
-  grade: "9" | "10";
+  grade: string | null;
+  className: string | null;
+  classSlug: string | null;
   boardId: number;
 };
 
@@ -169,7 +171,8 @@ export const ForumThreadForm = ({ subjects, chapters }: ForumThreadFormProps) =>
             <option value="">No subject tag</option>
             {subjects.map((subject) => (
               <option key={subject.id} value={String(subject.id)}>
-                {subject.name} (Grade {subject.grade})
+                {subject.name}
+                {subject.className ? ` (${subject.className})` : ""}
               </option>
             ))}
           </Select>

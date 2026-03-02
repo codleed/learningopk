@@ -35,7 +35,9 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
   const response = await agent.post("/api/auth/sign-up/email").set("origin", APP_ORIGIN).send({
     name,
     email,
-    password: TEST_PASSWORD
+    password: TEST_PASSWORD,
+    class: "9th",
+    board: "fbise"
   });
 
   assert.ok(
@@ -432,3 +434,5 @@ test("admin overview applies windowDays to notifications KPI", async () => {
   assert.ok(countThirty >= countSeven, "Expected 30-day notification count to be >= 7-day count.");
   assert.ok(countThirty - countSeven >= 1, "Expected 30-day count to include at least one additional seeded notification.");
 });
+
+

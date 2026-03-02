@@ -33,24 +33,43 @@ export default async function SubjectRedirectPage({
 
   const boardById = new Map(filters.boards.map((board) => [board.id, board]));
   const candidateSubjects = filters.subjects.filter(
-    (subject) => subject.slug === parsedParams.data.subject,
+    (subject) => {
+      const board = boardById.get(subject.boardId);
+      if (!board) {
+        return false;
+      }
+
+      if (subject.slug !== parsedParams.data.subject || !subject.classSlug) {
+        return false;
+      }
+
+      if (session.user.board && board.slug !== session.user.board) {
+        return false;
+      }
+
+      if (session.user.class && subject.classSlug !== session.user.class) {
+        return false;
+      }
+
+      return true;
+    },
   );
 
   for (const candidate of candidateSubjects) {
     const board = boardById.get(candidate.boardId);
-    if (!board) {
+    if (!board || !candidate.classSlug) {
       continue;
     }
 
     const subjectOverview = await getSubjectOverview({
       board: board.slug,
-      grade: candidate.grade,
+      grade: candidate.classSlug,
       subject: candidate.slug,
     });
 
     if (subjectOverview) {
       redirect(
-        `/${subjectOverview.board.slug}/${subjectOverview.grade}/${subjectOverview.subject.slug}`,
+        `/${subjectOverview.board.slug}/${subjectOverview.class.slug}/${subjectOverview.subject.slug}`,
       );
     }
   }

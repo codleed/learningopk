@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import { after, test } from "node:test";
 
 import { eq } from "drizzle-orm";
@@ -24,7 +24,9 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
   const response = await agent.post("/api/auth/sign-up/email").set("origin", APP_ORIGIN).send({
     name,
     email,
-    password: TEST_PASSWORD
+    password: TEST_PASSWORD,
+    class: "9th",
+    board: "fbise"
   });
 
   assert.ok(
@@ -287,3 +289,5 @@ test("admin users listing enforces auth/role and supports search + role filters 
   assert.ok(studentsOnly.body.entries.length >= 1, "Expected at least one student row.");
   assert.ok(studentsOnly.body.entries.every((row: { role: string }) => row.role === "student"));
 });
+
+

@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 
 type LearnRouteSeed = {
   boardSlug: string;
-  grade: "9" | "10";
+  classSlug: string;
   subjectSlug: string;
 };
 
@@ -274,34 +274,64 @@ export default async function DashboardPage({
     const filters = await getForumFilters();
 
     if (featuredSubject) {
-      const matchedSubject = filters.subjects.find(
-        (subject) =>
-          subject.slug === featuredSubject.subjectSlug &&
-          subject.grade === featuredSubject.grade,
-      );
+      const matchedSubject = filters.subjects.find((subject) => {
+        const board = filters.boards.find((entry) => entry.id === subject.boardId);
+        if (!board || !subject.classSlug) {
+          return false;
+        }
+
+        if (subject.slug !== featuredSubject.subjectSlug) {
+          return false;
+        }
+
+        if (session.user.board && board.slug !== session.user.board) {
+          return false;
+        }
+
+        if (session.user.class && subject.classSlug !== session.user.class) {
+          return false;
+        }
+
+        return true;
+      });
       if (matchedSubject) {
         const matchedBoard = filters.boards.find(
           (board) => board.id === matchedSubject.boardId,
         );
-        if (matchedBoard) {
+        if (matchedBoard && matchedSubject.classSlug) {
           routeSeed = {
             boardSlug: matchedBoard.slug,
-            grade: matchedSubject.grade,
+            classSlug: matchedSubject.classSlug,
             subjectSlug: matchedSubject.slug,
           };
         }
       }
     }
 
-    if (!routeSeed && filters.subjects.length > 0) {
-      const fallbackSubject = filters.subjects[0];
+    if (!routeSeed) {
+      const fallbackSubject = filters.subjects.find((subject) => {
+        const board = filters.boards.find((entry) => entry.id === subject.boardId);
+        if (!board || !subject.classSlug) {
+          return false;
+        }
+        if (session.user.board && board.slug !== session.user.board) {
+          return false;
+        }
+        if (session.user.class && subject.classSlug !== session.user.class) {
+          return false;
+        }
+        return true;
+      });
+      if (!fallbackSubject) {
+        throw new Error("No subject route available for the current profile scope.");
+      }
       const fallbackBoard = filters.boards.find(
         (board) => board.id === fallbackSubject.boardId,
       );
-      if (fallbackBoard) {
+      if (fallbackBoard && fallbackSubject.classSlug) {
         routeSeed = {
           boardSlug: fallbackBoard.slug,
-          grade: fallbackSubject.grade,
+          classSlug: fallbackSubject.classSlug,
           subjectSlug: fallbackSubject.slug,
         };
       }
@@ -315,7 +345,7 @@ export default async function DashboardPage({
     try {
       const overview = await getSubjectOverview({
         board: routeSeed.boardSlug,
-        grade: routeSeed.grade,
+        grade: routeSeed.classSlug,
         subject: routeSeed.subjectSlug,
       });
       const publishedChapters =
@@ -327,7 +357,7 @@ export default async function DashboardPage({
       ].sort((a, b) => a.chapterNumber - b.chapterNumber);
       const firstChapter = orderedChapters[0];
       if (firstChapter) {
-        firstChapterBasePath = `/${routeSeed.boardSlug}/${routeSeed.grade}/${routeSeed.subjectSlug}/${firstChapter.slug}`;
+        firstChapterBasePath = `/${routeSeed.boardSlug}/${routeSeed.classSlug}/${routeSeed.subjectSlug}/${firstChapter.slug}`;
       }
     } catch {
       firstChapterBasePath = null;

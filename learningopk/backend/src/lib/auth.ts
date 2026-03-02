@@ -22,7 +22,7 @@ export const auth = betterAuth({
     additionalFields: {
       class: {
         type: "string",
-        required: false
+        required: true
       },
       degree: {
         type: "string",
@@ -30,7 +30,7 @@ export const auth = betterAuth({
       },
       board: {
         type: "string",
-        required: false
+        required: true
       },
       role: {
         type: "string",

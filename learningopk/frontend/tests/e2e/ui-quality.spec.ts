@@ -1,16 +1,16 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+﻿import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
 const backendBaseUrl = "http://localhost:3001";
 
 type ForumFiltersResponse = {
   boards: Array<{ id: number; slug: string; name: string }>;
-  subjects: Array<{ id: number; slug: string; name: string; grade: "9" | "10"; boardId: number }>;
+  subjects: Array<{ id: number; slug: string; name: string; classSlug: string | null; boardId: number }>;
   chapters: Array<{ id: number; slug: string; title: string; chapterNumber: number; subjectId: number }>;
 };
 
 type ChapterRoute = {
   boardSlug: string;
-  grade: "9" | "10";
+  grade: string;
   subjectSlug: string;
   chapterSlug: string;
 };
@@ -38,9 +38,12 @@ const pickChapterRouteWithQuiz = async (api: APIRequestContext): Promise<Chapter
     if (!board) {
       continue;
     }
+    if (!subject.classSlug) {
+      continue;
+    }
 
     const chapterResponse = await api.get(
-      `${backendBaseUrl}/api/learn/${board.slug}/${subject.grade}/${subject.slug}/${chapter.slug}`
+      `${backendBaseUrl}/api/learn/${board.slug}/${subject.classSlug}/${subject.slug}/${chapter.slug}`
     );
     if (!chapterResponse.ok()) {
       continue;
@@ -50,7 +53,7 @@ const pickChapterRouteWithQuiz = async (api: APIRequestContext): Promise<Chapter
     if (chapterPayload.quiz && chapterPayload.quiz.questions.length > 0) {
       return {
         boardSlug: board.slug,
-        grade: subject.grade,
+        grade: subject.classSlug,
         subjectSlug: subject.slug,
         chapterSlug: chapter.slug
       };
@@ -87,9 +90,9 @@ test("critical UI routes render with expected structure", async ({ page }) => {
 
   await page.goto("/register");
   await page.getByLabel("Name").fill("UI Quality Student");
-  await page.getByLabel("Class").fill("10th");
   await page.getByLabel("Degree").fill("Matriculation");
-  await page.getByLabel("Board").fill("Balochistan");
+  await page.getByLabel("Board").selectOption("fbise");
+  await page.getByLabel("Class").selectOption("9th");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm Password").fill(password);
@@ -136,3 +139,4 @@ test.describe("mobile layout smoke", () => {
     await assertNoHorizontalOverflow(page);
   });
 });
+

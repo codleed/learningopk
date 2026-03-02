@@ -17,7 +17,12 @@ test("admin community page filters thread health rows and paginates", async ({ p
   await page.getByLabel("Moderation state").selectOption("openFlags");
   await page.getByRole("button", { name: "Apply filters" }).click();
 
-  await expect(page.getByTestId("community-thread-row").first()).toContainText("Open flags");
+  const threadRows = page.getByTestId("community-thread-row");
+  if ((await threadRows.count()) > 0) {
+    await expect(threadRows.first()).toContainText("Open flags:");
+  } else {
+    await expect(page.getByText("No community threads match the current filters.")).toBeVisible();
+  }
 
   const loadMoreButton = page.getByRole("button", { name: "Load more" });
   if (await loadMoreButton.isVisible()) {

@@ -21,7 +21,9 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
   const response = await agent.post("/api/auth/sign-up/email").set("origin", APP_ORIGIN).send({
     name,
     email,
-    password: TEST_PASSWORD
+    password: TEST_PASSWORD,
+    class: "9th",
+    board: "fbise"
   });
 
   assert.ok(
@@ -234,3 +236,5 @@ test("suspended users are blocked from protected routes", async () => {
   assert.equal(blocked.status, 403);
   assert.equal(blocked.body.code, "ACCOUNT_SUSPENDED");
 });
+
+

@@ -14,7 +14,7 @@ type ForumFilterBarProps = {
   selected: {
     q?: string;
     board?: string;
-    grade?: "9" | "10";
+    grade?: string;
     subjectId?: number;
     chapterId?: number;
     solved: "all" | "solved" | "unsolved";
@@ -37,11 +37,19 @@ export function ForumFilterBar({
       }
     }
 
-    if (selected.grade && subject.grade !== selected.grade) {
+    if (selected.grade && subject.classSlug !== selected.grade) {
       return false;
     }
 
     return true;
+  });
+  const filteredClasses = filters.classes.filter((entry) => {
+    if (!selected.board) {
+      return true;
+    }
+
+    const board = filters.boards.find((boardOption) => boardOption.id === entry.boardId);
+    return board?.slug === selected.board;
   });
 
   const filteredChapters = filters.chapters.filter((chapter) => {
@@ -83,11 +91,14 @@ export function ForumFilterBar({
         </label>
 
         <label className="space-y-1 text-sm text-foreground">
-          <span>Grade</span>
+          <span>Class</span>
           <Select name="grade" defaultValue={selected.grade ?? ""}>
-            <option value="">All grades</option>
-            <option value="9">Grade 9</option>
-            <option value="10">Grade 10</option>
+            <option value="">All classes</option>
+            {filteredClasses.map((entry) => (
+              <option key={entry.id} value={entry.slug}>
+                {entry.name}
+              </option>
+            ))}
           </Select>
         </label>
 
@@ -100,7 +111,8 @@ export function ForumFilterBar({
             <option value="">All subjects</option>
             {filteredSubjects.map((subject) => (
               <option key={subject.id} value={String(subject.id)}>
-                {subject.name} (Grade {subject.grade})
+                {subject.name}
+                {subject.className ? ` (${subject.className})` : ""}
               </option>
             ))}
           </Select>

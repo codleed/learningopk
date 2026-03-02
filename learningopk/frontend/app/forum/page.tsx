@@ -13,7 +13,7 @@ import { getServerSession } from "@/lib/session";
 const forumSearchParamsSchema = z.object({
   q: z.string().trim().min(1).max(160).optional(),
   board: z.string().trim().regex(/^[a-z0-9-]+$/).optional(),
-  grade: z.enum(["9", "10"]).optional(),
+  grade: z.string().trim().regex(/^[a-z0-9-]+$/).optional(),
   subjectId: z.string().regex(/^\d+$/).optional(),
   chapterId: z.string().regex(/^\d+$/).optional(),
   solved: z.enum(["all", "solved", "unsolved"]).optional().default("all"),
@@ -35,7 +35,7 @@ const getFirstValue = (value: string | string[] | undefined): string | undefined
 const buildForumHref = (query: {
   q?: string;
   board?: string;
-  grade?: "9" | "10";
+  grade?: string;
   subjectId?: number;
   chapterId?: number;
   solved?: "all" | "solved" | "unsolved";
@@ -109,6 +109,7 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
   });
   let forumFilters: Awaited<ReturnType<typeof getForumFilters>> = {
     boards: [],
+    classes: [],
     subjects: [],
     chapters: []
   };
@@ -161,6 +162,48 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
     );
   }
 
+  const scopedForumFilters =
+    session?.user.role === "student"
+      ? (() => {
+          const scopedBoards = forumFilters.boards.filter((board) => {
+            if (!session.user.board) {
+              return true;
+            }
+            return board.slug === session.user.board;
+          });
+          const scopedBoardIds = new Set(scopedBoards.map((board) => board.id));
+
+          const scopedClasses = forumFilters.classes.filter((boardClass) => {
+            if (!scopedBoardIds.has(boardClass.boardId)) {
+              return false;
+            }
+            if (!session.user.class) {
+              return true;
+            }
+            return boardClass.slug === session.user.class;
+          });
+          const scopedClassSlugs = new Set(scopedClasses.map((boardClass) => boardClass.slug));
+
+          const scopedSubjects = forumFilters.subjects.filter((subject) => {
+            if (!scopedBoardIds.has(subject.boardId)) {
+              return false;
+            }
+            if (!session.user.class) {
+              return true;
+            }
+            return subject.classSlug !== null && scopedClassSlugs.has(subject.classSlug);
+          });
+          const scopedSubjectIds = new Set(scopedSubjects.map((subject) => subject.id));
+
+          return {
+            boards: scopedBoards,
+            classes: scopedClasses,
+            subjects: scopedSubjects,
+            chapters: forumFilters.chapters.filter((chapter) => scopedSubjectIds.has(chapter.subjectId))
+          };
+        })()
+      : forumFilters;
+
   return (
     <DashboardChromeLayout
       session={session}
@@ -182,14 +225,14 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
                 Back to forum
               </Link>
             </div>
-            <ForumThreadForm subjects={forumFilters.subjects} chapters={forumFilters.chapters} />
+            <ForumThreadForm subjects={scopedForumFilters.subjects} chapters={scopedForumFilters.chapters} />
           </section>
         </DashboardSurface>
       ) : (
         <>
           <DashboardSurface as="section" tone="panel" className="p-4 sm:p-5">
             <ForumFilterBar
-              filters={forumFilters}
+              filters={scopedForumFilters}
               createThreadHref={session ? forumComposeHref : undefined}
               topContent={
                 session ? null : (

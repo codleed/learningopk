@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import { after, test } from "node:test";
 
 import { eq } from "drizzle-orm";
@@ -21,7 +21,9 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
   const response = await agent.post("/api/auth/sign-up/email").set("origin", APP_ORIGIN).send({
     name,
     email,
-    password: TEST_PASSWORD
+    password: TEST_PASSWORD,
+    class: "9th",
+    board: "fbise"
   });
 
   assert.ok(
@@ -230,4 +232,6 @@ test("admin can create board class subject chapter hierarchy and fetch nested cu
     "Expected successful chapter create audit row."
   );
 });
+
+
 

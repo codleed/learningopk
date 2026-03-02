@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+﻿import { expect, test, type Page } from "@playwright/test";
 
 const registerAndOpenForum = async (baseEmail: string, page: Page) => {
   const timestamp = Date.now();
@@ -6,9 +6,9 @@ const registerAndOpenForum = async (baseEmail: string, page: Page) => {
 
   await page.goto("/register");
   await page.getByLabel("Name").fill("Forum Chrome Student");
-  await page.getByLabel("Class").fill("10th");
   await page.getByLabel("Degree").fill("Matriculation");
-  await page.getByLabel("Board").fill("Balochistan");
+  await page.getByLabel("Board").selectOption("fbise");
+  await page.getByLabel("Class").selectOption("9th");
   await page.getByLabel("Email").fill(`${baseEmail}_${timestamp}@example.com`);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm Password").fill(password);
@@ -73,3 +73,4 @@ test.describe("forum mobile layout", () => {
     await assertNoHorizontalOverflow(page);
   });
 });
+
