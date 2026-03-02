@@ -77,7 +77,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
       contentClassName="max-w-[95rem] px-3 pb-10 pt-4 sm:px-5 lg:px-7"
     >
       <ChapterProgressTracker chapterId={payload.chapter.id} />
-      <DashboardSurface as="section" tone="shell" className="space-y-4 p-4 sm:p-5">
+      <DashboardSurface as="section" tone="shell" className="overflow-visible space-y-4 p-4 sm:p-5">
         <DashboardSurface as="header" tone="hero" className="px-5 py-6 sm:px-7">
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
             {payload.board.name} | Class {payload.class.name} | {payload.subject.name}

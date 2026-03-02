@@ -41,7 +41,7 @@ export function ChapterExercisesWithAi({
   const emptyAwarePrompt = useMemo(() => prompt ?? undefined, [prompt]);
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[7fr_3fr]">
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)] xl:items-start">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/45 p-4">
           <div>
@@ -72,7 +72,7 @@ export function ChapterExercisesWithAi({
         />
       </div>
 
-      <div className="xl:sticky xl:top-6">
+      <div className="xl:sticky xl:top-4 xl:self-start">
         <AIChatPanel chapterId={chapterId} chapterTitle={chapterTitle} initialPrompt={emptyAwarePrompt} layout="sidebar" />
       </div>
     </div>

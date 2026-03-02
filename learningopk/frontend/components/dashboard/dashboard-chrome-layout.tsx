@@ -28,7 +28,12 @@ export function DashboardChromeLayout({
       currentPath={currentPath}
       contentClassName="max-w-[95rem] px-3 pb-10 pt-4 sm:px-5 lg:px-7"
     >
-      <DashboardSurface as="section" tone="shell" data-testid="dashboard-chrome-shell" className="p-3 sm:p-4 lg:p-5">
+      <DashboardSurface
+        as="section"
+        tone="shell"
+        data-testid="dashboard-chrome-shell"
+        className="overflow-visible p-3 sm:p-4 lg:p-5"
+      >
         <div className={cn("relative min-w-0 space-y-4", contentClassName)}>
           {header}
           {children}

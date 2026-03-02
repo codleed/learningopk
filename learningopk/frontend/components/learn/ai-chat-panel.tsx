@@ -256,7 +256,7 @@ export function AIChatPanel({
 
   if (layout === "sidebar") {
     return (
-      <aside className="flex h-[32rem] min-h-[32rem] w-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--elevation-card)] xl:h-[calc(100vh-9rem)]">
+      <aside className="flex h-[32rem] min-h-[32rem] w-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--elevation-card)] xl:h-[calc(100vh-2.5rem)] xl:min-h-[calc(100vh-2.5rem)]">
         {panelBody}
       </aside>
     );

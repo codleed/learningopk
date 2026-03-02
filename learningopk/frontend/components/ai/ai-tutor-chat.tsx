@@ -333,16 +333,16 @@ export function AITutorChat() {
   };
 
   return (
-    <section className="surface-card flex h-[72vh] min-h-[34rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border">
-      <header className="flex items-center justify-between border-b border-border px-5 py-4">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary">General Tutor</p>
-          <h2 className="text-lg font-semibold text-foreground">Always-on AI study assistant</h2>
-        </div>
-      </header>
+    <section className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_19rem] xl:items-start">
+      <div className="surface-card flex h-[72vh] min-h-[34rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border xl:h-[calc(100vh-2.5rem)]">
+        <header className="flex items-center justify-between border-b border-border px-5 py-4">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary">General Tutor</p>
+            <h2 className="text-lg font-semibold text-foreground">Always-on AI study assistant</h2>
+          </div>
+        </header>
 
-      <div className="flex min-h-0 min-w-0 flex-1">
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <div className="flex-1 space-y-4 overflow-y-auto bg-muted/10 px-5 py-5">
             {isLoadingSessionMessages ? (
               <p className="text-sm text-muted-foreground">Loading conversation...</p>
@@ -407,86 +407,83 @@ export function AITutorChat() {
             </div>
           </form>
         </div>
+      </div>
 
-        <aside
-          aria-label="Chat history sidebar"
-          className={cn(
-            "flex h-full flex-col border-l border-border bg-card/90 transition-[width] duration-200",
-            isHistoryCollapsed ? "w-14" : "w-72"
+      <aside
+        aria-label="Chat history sidebar"
+        className="surface-card flex min-h-[18rem] w-full flex-col overflow-hidden rounded-2xl border border-border bg-card/90 xl:sticky xl:top-4 xl:h-[calc(100vh-2.5rem)]"
+      >
+        <div className="flex items-center justify-between border-b border-border px-2 py-2">
+          {isHistoryCollapsed ? null : (
+            <p className="pl-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">History</p>
           )}
-        >
-          <div className="flex items-center justify-between border-b border-border px-2 py-2">
-            {isHistoryCollapsed ? null : (
-              <p className="pl-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">History</p>
-            )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsHistoryCollapsed((previous) => !previous)}
+            aria-label={isHistoryCollapsed ? "Expand chat history" : "Collapse chat history"}
+            className={cn("shrink-0", isHistoryCollapsed ? "mx-auto" : "")}
+          >
+            {isHistoryCollapsed ? <ChevronLeft className="h-4 w-4" aria-hidden /> : <ChevronRight className="h-4 w-4" aria-hidden />}
+          </Button>
+        </div>
+
+        {isHistoryCollapsed ? (
+          <div className="flex flex-1 flex-col items-center gap-3 px-2 py-3">
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => setIsHistoryCollapsed((previous) => !previous)}
-              aria-label={isHistoryCollapsed ? "Expand chat history" : "Collapse chat history"}
-              className={cn("shrink-0", isHistoryCollapsed ? "mx-auto" : "")}
+              onClick={startFreshChat}
+              disabled={isSending}
+              aria-label="New Chat"
+              className="h-8 w-8 p-0"
             >
-              {isHistoryCollapsed ? <ChevronLeft className="h-4 w-4" aria-hidden /> : <ChevronRight className="h-4 w-4" aria-hidden />}
+              <Sparkles className="h-4 w-4" aria-hidden />
             </Button>
+            <History className="h-4 w-4 text-muted-foreground" aria-hidden />
           </div>
-
-          {isHistoryCollapsed ? (
-            <div className="flex flex-1 flex-col items-center gap-3 px-2 py-3">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={startFreshChat}
-                disabled={isSending}
-                aria-label="New Chat"
-                className="h-8 w-8 p-0"
-              >
-                <Sparkles className="h-4 w-4" aria-hidden />
+        ) : (
+          <>
+            <div className="border-b border-border px-3 py-3">
+              <Button type="button" variant="secondary" size="sm" width="full" onClick={startFreshChat} disabled={isSending}>
+                New Chat
               </Button>
-              <History className="h-4 w-4 text-muted-foreground" aria-hidden />
             </div>
-          ) : (
-            <>
-              <div className="border-b border-border px-3 py-3">
-                <Button type="button" variant="secondary" size="sm" width="full" onClick={startFreshChat} disabled={isSending}>
-                  New Chat
-                </Button>
-              </div>
-              <div className="flex-1 space-y-2 overflow-y-auto px-2 py-2">
-                {isLoadingHistoryList ? (
-                  <p className="px-2 py-1 text-xs text-muted-foreground">Loading history...</p>
-                ) : null}
+            <div className="flex-1 space-y-2 overflow-y-auto px-2 py-2">
+              {isLoadingHistoryList ? (
+                <p className="px-2 py-1 text-xs text-muted-foreground">Loading history...</p>
+              ) : null}
 
-                {!isLoadingHistoryList && sessions.length === 0 ? (
-                  <p className="px-2 py-1 text-xs text-muted-foreground">No previous chats yet.</p>
-                ) : null}
+              {!isLoadingHistoryList && sessions.length === 0 ? (
+                <p className="px-2 py-1 text-xs text-muted-foreground">No previous chats yet.</p>
+              ) : null}
 
-                {sessions.map((session) => {
-                  const isActive = session.id === sessionId;
-                  return (
-                    <button
-                      key={session.id}
-                      type="button"
-                      onClick={() => void onSelectSession(session.id)}
-                      disabled={isSending || isLoadingSessionMessages}
-                      className={cn(
-                        "w-full rounded-xl border px-3 py-2 text-left transition",
-                        isActive
-                          ? "border-primary/45 bg-primary/10 text-foreground"
-                          : "border-border bg-card text-muted-foreground hover:border-primary/35 hover:text-foreground"
-                      )}
-                    >
-                      <p className="truncate text-sm font-medium">{session.title}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{formatRelativeTimestamp(session.lastMessageAt)}</p>
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </aside>
-      </div>
+              {sessions.map((session) => {
+                const isActive = session.id === sessionId;
+                return (
+                  <button
+                    key={session.id}
+                    type="button"
+                    onClick={() => void onSelectSession(session.id)}
+                    disabled={isSending || isLoadingSessionMessages}
+                    className={cn(
+                      "w-full rounded-xl border px-3 py-2 text-left transition",
+                      isActive
+                        ? "border-primary/45 bg-primary/10 text-foreground"
+                        : "border-border bg-card text-muted-foreground hover:border-primary/35 hover:text-foreground"
+                    )}
+                  >
+                    <p className="truncate text-sm font-medium">{session.title}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{formatRelativeTimestamp(session.lastMessageAt)}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </aside>
     </section>
   );
 }
