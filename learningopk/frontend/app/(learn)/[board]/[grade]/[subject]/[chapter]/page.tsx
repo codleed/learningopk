@@ -1,12 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 
 import { AppShell } from "@/components/foundation/app-shell";
-import { DashboardSection, DashboardSurface } from "@/components/foundation/dashboard-primitives";
-import { Tabs, type TabItem } from "@/components/foundation/tabs";
 import { ChapterProgressTracker } from "@/components/learn/chapter-progress-tracker";
-import { ChapterStudyContentWithAi } from "@/components/learn/chapter-study-content-with-ai";
+import { ChapterStudyWorkspace } from "@/components/learn/chapter-study-workspace";
 import { getChapterDetail } from "@/lib/learn-api";
 import { getServerSession } from "@/lib/session";
 
@@ -54,7 +51,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
   }
 
   const basePath = `/${payload.board.slug}/${payload.class.slug}/${payload.subject.slug}/${payload.chapter.slug}`;
-  const tabs: TabItem[] = [
+  const tabs = [
     { key: "summary", label: "Summary", href: `${basePath}?tab=summary` },
     { key: "exercises", label: "Exercises", href: `${basePath}?tab=exercises` },
     { key: "flashcards", label: "Flashcards", href: `${basePath}?tab=flashcards` },
@@ -73,43 +70,25 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
       contentClassName="max-w-[95rem] px-3 pb-10 pt-4 sm:px-5 lg:px-7"
     >
       <ChapterProgressTracker chapterId={payload.chapter.id} />
-      <DashboardSurface as="section" tone="shell" className="overflow-visible space-y-4 p-4 sm:p-5">
-        <DashboardSurface as="header" tone="hero" className="px-5 py-6 sm:px-7">
-          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
-            {payload.board.name} | Class {payload.class.name} | {payload.subject.name}
-          </p>
-          <h1 className="mt-2 text-3xl font-medium text-foreground sm:text-4xl">
-            Chapter {payload.chapter.chapterNumber}: {payload.chapter.title}
-          </h1>
-          <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-            Switch tabs to study summary, solve exercises with AI guidance, revise flashcards, and attempt quiz.
-          </p>
-          <Link
-            className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary underline underline-offset-4"
-            href={`/${payload.board.slug}/${payload.class.slug}/${payload.subject.slug}`}
-          >
-            Back to subject
-          </Link>
-        </DashboardSurface>
-
-        <DashboardSurface as="div" tone="header" className="px-4 py-3">
-          <Tabs activeKey={activeTab} items={tabs} ariaLabel="Chapter study tabs" />
-        </DashboardSurface>
-
-        <DashboardSection title="Study Content">
-          <ChapterStudyContentWithAi
-            activeTab={activeTab}
-            chapterId={payload.chapter.id}
-            chapterTitle={payload.chapter.title}
-            summary={payload.chapter.summary}
-            exercises={payload.exercises}
-            flashcards={payload.flashcards}
-            quiz={payload.quiz}
-            flashcardStorageKey={`learningopk:flashcards:${payload.board.slug}:${payload.class.slug}:${payload.subject.slug}:${payload.chapter.slug}`}
-            autoOpenAi={autoOpenAi}
-          />
-        </DashboardSection>
-      </DashboardSurface>
+      <ChapterStudyWorkspace
+        boardName={payload.board.name}
+        className={payload.class.name}
+        subjectName={payload.subject.name}
+        boardSlug={payload.board.slug}
+        classSlug={payload.class.slug}
+        subjectSlug={payload.subject.slug}
+        activeTab={activeTab}
+        tabs={tabs}
+        chapterId={payload.chapter.id}
+        chapterNumber={payload.chapter.chapterNumber}
+        chapterTitle={payload.chapter.title}
+        chapterSummary={payload.chapter.summary}
+        exercises={payload.exercises}
+        flashcards={payload.flashcards}
+        quiz={payload.quiz}
+        flashcardStorageKey={`learningopk:flashcards:${payload.board.slug}:${payload.class.slug}:${payload.subject.slug}:${payload.chapter.slug}`}
+        autoOpenAi={autoOpenAi}
+      />
     </AppShell>
   );
 }
