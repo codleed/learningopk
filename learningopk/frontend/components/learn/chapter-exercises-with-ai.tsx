@@ -16,6 +16,8 @@ type ChapterExercisesWithAiProps = {
   chapterTitle: string;
   exercises: Exercise[];
   initialAiOpen?: boolean;
+  showSidebar?: boolean;
+  onPromptChange?: (prompt: string) => void;
 };
 
 const buildExercisePrompt = (exercise: Exercise): string =>
@@ -25,7 +27,9 @@ export function ChapterExercisesWithAi({
   chapterId,
   chapterTitle,
   exercises,
-  initialAiOpen = false
+  initialAiOpen = false,
+  showSidebar = true,
+  onPromptChange
 }: ChapterExercisesWithAiProps) {
   const [prompt, setPrompt] = useState<string | null>(
     initialAiOpen ? "Guide me through solving the first exercise using hints first." : null
@@ -39,38 +43,50 @@ export function ChapterExercisesWithAi({
   };
 
   const emptyAwarePrompt = useMemo(() => prompt ?? undefined, [prompt]);
+  const pushPrompt = (nextPrompt: string) => {
+    onPromptChange?.(nextPrompt);
+    setPrompt(nextPrompt);
+  };
+
+  const exercisesContent = (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/45 p-4">
+        <div>
+          <p className="text-sm font-semibold text-foreground">AI Tutor Sidebar</p>
+          <p className="text-sm text-muted-foreground">
+            AI is docked on the right side. Expand any exercise to send a guided prompt to the tutor.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          onClick={() => {
+            pushPrompt("Guide me through solving the first exercise using hints first.");
+          }}
+        >
+          Open AI Tutor
+        </Button>
+      </div>
+
+      <ExerciseAccordion
+        exercises={exercises}
+        chapterId={chapterId}
+        onExerciseExpanded={onExerciseExpanded}
+        onAskAi={(exercise) => {
+          pushPrompt(buildExercisePrompt(exercise));
+        }}
+      />
+    </div>
+  );
+
+  if (!showSidebar) {
+    return exercisesContent;
+  }
 
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)] xl:items-start">
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/45 p-4">
-          <div>
-            <p className="text-sm font-semibold text-foreground">AI Tutor Sidebar</p>
-            <p className="text-sm text-muted-foreground">
-              AI is docked on the right side. Expand any exercise to send a guided prompt to the tutor.
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={() => {
-              setPrompt("Guide me through solving the first exercise using hints first.");
-            }}
-          >
-            Open AI Tutor
-          </Button>
-        </div>
-
-        <ExerciseAccordion
-          exercises={exercises}
-          chapterId={chapterId}
-          onExerciseExpanded={onExerciseExpanded}
-          onAskAi={(exercise) => {
-            setPrompt(buildExercisePrompt(exercise));
-          }}
-        />
-      </div>
+      {exercisesContent}
 
       <div className="xl:sticky xl:top-4 xl:self-start">
         <AIChatPanel chapterId={chapterId} chapterTitle={chapterTitle} initialPrompt={emptyAwarePrompt} layout="sidebar" />

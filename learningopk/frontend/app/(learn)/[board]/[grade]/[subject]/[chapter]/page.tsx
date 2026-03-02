@@ -5,12 +5,8 @@ import { z } from "zod";
 import { AppShell } from "@/components/foundation/app-shell";
 import { DashboardSection, DashboardSurface } from "@/components/foundation/dashboard-primitives";
 import { Tabs, type TabItem } from "@/components/foundation/tabs";
-import { ChapterExercisesWithAi } from "@/components/learn/chapter-exercises-with-ai";
 import { ChapterProgressTracker } from "@/components/learn/chapter-progress-tracker";
-import { FlashcardDeck } from "@/components/learn/flashcard-deck";
-import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
-import { QuizRunner } from "@/components/learn/quiz-runner";
-import { EmptyState } from "@/components/ui/states";
+import { ChapterStudyContentWithAi } from "@/components/learn/chapter-study-content-with-ai";
 import { getChapterDetail } from "@/lib/learn-api";
 import { getServerSession } from "@/lib/session";
 
@@ -101,37 +97,17 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
         </DashboardSurface>
 
         <DashboardSection title="Study Content">
-          {activeTab === "summary" ? (
-            <MarkdownMathRenderer content={payload.chapter.summary} />
-          ) : null}
-
-          {activeTab === "exercises" ? (
-            <ChapterExercisesWithAi
-              chapterId={payload.chapter.id}
-              chapterTitle={payload.chapter.title}
-              exercises={payload.exercises}
-              initialAiOpen={autoOpenAi}
-            />
-          ) : null}
-
-          {activeTab === "flashcards" ? (
-            <FlashcardDeck
-              chapterId={payload.chapter.id}
-              flashcards={payload.flashcards}
-              storageKey={`learningopk:flashcards:${payload.board.slug}:${payload.class.slug}:${payload.subject.slug}:${payload.chapter.slug}`}
-            />
-          ) : null}
-
-          {activeTab === "quiz" ? (
-            payload.quiz ? (
-              <QuizRunner quiz={payload.quiz} />
-            ) : (
-              <EmptyState
-                title="Quiz unavailable"
-                description="This chapter does not have a quiz yet. Continue with summary, exercises, and flashcards."
-              />
-            )
-          ) : null}
+          <ChapterStudyContentWithAi
+            activeTab={activeTab}
+            chapterId={payload.chapter.id}
+            chapterTitle={payload.chapter.title}
+            summary={payload.chapter.summary}
+            exercises={payload.exercises}
+            flashcards={payload.flashcards}
+            quiz={payload.quiz}
+            flashcardStorageKey={`learningopk:flashcards:${payload.board.slug}:${payload.class.slug}:${payload.subject.slug}:${payload.chapter.slug}`}
+            autoOpenAi={autoOpenAi}
+          />
         </DashboardSection>
       </DashboardSurface>
     </AppShell>
