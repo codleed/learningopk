@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { DashboardChromeHeader, DashboardChromeLayout } from "@/components/dashboard/dashboard-chrome-layout";
+import { AppShell } from "@/components/foundation/app-shell";
 import { AITutorChat } from "@/components/ai/ai-tutor-chat";
 import { getServerSession } from "@/lib/session";
 
@@ -11,18 +11,12 @@ export default async function AITutorPage() {
   }
 
   return (
-    <DashboardChromeLayout
+    <AppShell
       session={session}
       currentPath="/ai-tutor"
-      header={
-        <DashboardChromeHeader
-          eyebrow="AI"
-          title="AI Tutor"
-          subtitle="Get general learning support, concept clarity, and exam-focused study guidance."
-        />
-      }
+      contentClassName="max-w-[95rem] px-3 pb-10 pt-4 sm:px-5 lg:px-7"
     >
       <AITutorChat />
-    </DashboardChromeLayout>
+    </AppShell>
   );
 }

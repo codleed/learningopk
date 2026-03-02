@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 
+import { DashboardChromeHeader } from "@/components/dashboard/dashboard-chrome-layout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -339,78 +340,86 @@ export function AITutorChat() {
         isHistoryVisible ? "xl:grid-cols-[minmax(0,1fr)_19rem]" : "xl:grid-cols-[minmax(0,1fr)_auto]"
       )}
     >
-      <div className="surface-card flex h-[72vh] min-h-[34rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border xl:h-[calc(100vh-2.5rem)]">
-        <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary">General Tutor</p>
-            <h2 className="text-lg font-semibold text-foreground">Always-on AI study assistant</h2>
-          </div>
-        </header>
+      <div className="min-w-0 space-y-4">
+        <DashboardChromeHeader
+          eyebrow="AI"
+          title="AI Tutor"
+          subtitle="Get general learning support, concept clarity, and exam-focused study guidance."
+        />
 
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <div className="flex-1 space-y-4 overflow-y-auto bg-muted/10 px-5 py-5">
-            {isLoadingSessionMessages ? (
-              <p className="text-sm text-muted-foreground">Loading conversation...</p>
-            ) : null}
-
-            {!isLoadingSessionMessages && messages.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border bg-card p-6">
-                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Sparkles className="h-5 w-5" aria-hidden="true" />
-                </div>
-                <h3 className="text-base font-semibold text-foreground">Start learning with AI Tutor</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Ask for concept explanations, practice plans, quiz revision tips, or step-by-step guidance.
-                </p>
-              </div>
-            ) : null}
-
-            {messages.map((message) => (
-              <article
-                key={message.id}
-                className={[
-                  "max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-[var(--elevation-soft)]",
-                  message.role === "user"
-                    ? "ml-auto bg-primary text-primary-foreground"
-                    : "border border-border bg-card text-foreground"
-                ].join(" ")}
-              >
-                {message.content || (message.role === "assistant" ? "Thinking..." : "")}
-              </article>
-            ))}
-
-            {error ? (
-              <p className="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">{error}</p>
-            ) : null}
-
-            <div ref={endOfMessagesRef} />
-          </div>
-
-          <form onSubmit={onSubmit} className="border-t border-border bg-card px-5 py-4">
-            <label
-              htmlFor="ai-tutor-input"
-              className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground"
-            >
-              Ask AI tutor
-            </label>
-            <Textarea
-              id="ai-tutor-input"
-              value={inputValue}
-              onChange={(event) => setInputValue(event.target.value)}
-              rows={3}
-              disabled={isSending}
-              placeholder={placeholder}
-              className="resize-none"
-            />
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <p className="text-xs text-muted-foreground">
-                {isSending ? "Streaming response..." : "Clear, concise, exam-focused help."}
-              </p>
-              <Button type="submit" disabled={isSending || inputValue.trim().length === 0}>
-                {isSending ? "Sending..." : "Send"}
-              </Button>
+        <div className="surface-card flex h-[72vh] min-h-[34rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border xl:h-[calc(100vh-2.5rem)]">
+          <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary">General Tutor</p>
+              <h2 className="text-lg font-semibold text-foreground">Always-on AI study assistant</h2>
             </div>
-          </form>
+          </header>
+
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            <div className="flex-1 space-y-4 overflow-y-auto bg-muted/10 px-5 py-5">
+              {isLoadingSessionMessages ? (
+                <p className="text-sm text-muted-foreground">Loading conversation...</p>
+              ) : null}
+
+              {!isLoadingSessionMessages && messages.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border bg-card p-6">
+                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Sparkles className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <h3 className="text-base font-semibold text-foreground">Start learning with AI Tutor</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Ask for concept explanations, practice plans, quiz revision tips, or step-by-step guidance.
+                  </p>
+                </div>
+              ) : null}
+
+              {messages.map((message) => (
+                <article
+                  key={message.id}
+                  className={[
+                    "max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-[var(--elevation-soft)]",
+                    message.role === "user"
+                      ? "ml-auto bg-primary text-primary-foreground"
+                      : "border border-border bg-card text-foreground"
+                  ].join(" ")}
+                >
+                  {message.content || (message.role === "assistant" ? "Thinking..." : "")}
+                </article>
+              ))}
+
+              {error ? (
+                <p className="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">{error}</p>
+              ) : null}
+
+              <div ref={endOfMessagesRef} />
+            </div>
+
+            <form onSubmit={onSubmit} className="border-t border-border bg-card px-5 py-4">
+              <label
+                htmlFor="ai-tutor-input"
+                className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground"
+              >
+                Ask AI tutor
+              </label>
+              <Textarea
+                id="ai-tutor-input"
+                value={inputValue}
+                onChange={(event) => setInputValue(event.target.value)}
+                rows={3}
+                disabled={isSending}
+                placeholder={placeholder}
+                className="resize-none"
+              />
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <p className="text-xs text-muted-foreground">
+                  {isSending ? "Streaming response..." : "Clear, concise, exam-focused help."}
+                </p>
+                <Button type="submit" disabled={isSending || inputValue.trim().length === 0}>
+                  {isSending ? "Sending..." : "Send"}
+                </Button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
 
