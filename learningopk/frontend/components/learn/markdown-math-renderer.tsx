@@ -8,7 +8,18 @@ type MarkdownMathRendererProps = {
   className?: string;
 };
 
+const normalizeStandaloneBlockMath = (content: string) =>
+  content.replace(/(^|\r?\n)[ \t]*\$\$([^\r\n]+?)\$\$[ \t]*(?=\r?\n|$)/g, (match, lineStart, expression) => {
+    const normalizedExpression = String(expression).trim();
+    if (!normalizedExpression) {
+      return match;
+    }
+    return `${lineStart}$$\n${normalizedExpression}\n$$`;
+  });
+
 export function MarkdownMathRenderer({ content, className }: MarkdownMathRendererProps) {
+  const normalizedContent = normalizeStandaloneBlockMath(content);
+
   return (
     <div
       className={[
@@ -18,9 +29,8 @@ export function MarkdownMathRenderer({ content, className }: MarkdownMathRendere
       ].join(" ")}
     >
       <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
-        {content}
+        {normalizedContent}
       </ReactMarkdown>
     </div>
   );
 }
-

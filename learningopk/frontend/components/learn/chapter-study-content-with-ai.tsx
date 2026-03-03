@@ -37,7 +37,11 @@ export function ChapterStudyContentWithAi({
 }: ChapterStudyContentWithAiProps) {
   return (
     <div className="min-w-0">
-      {activeTab === "summary" ? <MarkdownMathRenderer content={summary} /> : null}
+      {activeTab === "summary" ? (
+        <div data-testid="chapter-summary-markdown">
+          <MarkdownMathRenderer content={summary} />
+        </div>
+      ) : null}
 
       {activeTab === "exercises" ? (
         <ChapterExercisesWithAi

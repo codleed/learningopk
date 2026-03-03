@@ -11,6 +11,7 @@ import {
   boardClasses,
   boards,
   chapters,
+  exercises,
   forumThreads,
   moderationFlags,
   quizAttempts,
@@ -63,6 +64,15 @@ const curriculumChapterCreateBodySchema = z.object({
   slug: z.string().trim().min(1),
   summary: z.string().trim().min(1),
   isPublished: z.boolean().optional().default(false)
+});
+
+const curriculumExerciseCreateBodySchema = z.object({
+  chapterId: z.coerce.number().int().positive(),
+  exerciseNumber: z.string().trim().min(1),
+  question: z.string().trim().min(1),
+  solution: z.string().trim().min(1),
+  difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
+  type: z.enum(["mcq", "short", "long", "numerical"]).optional().default("short")
 });
 
 const adminAuditScopeValues = ["content", "forum", "moderation", "notifications", "settings", "users"] as const;
@@ -2052,6 +2062,128 @@ adminRouter.post("/content/chapters", requireSession, async (req, res) => {
     });
     res.status(409).json({
       error: "Chapter already exists for subject"
+    });
+  }
+});
+
+adminRouter.post("/content/exercises", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedBody = curriculumExerciseCreateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid exercise payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const exerciseNumber = parsedBody.data.exerciseNumber.trim();
+
+  const chapterRows = await db
+    .select({
+      id: chapters.id,
+      title: chapters.title,
+      subjectName: subjects.name
+    })
+    .from(chapters)
+    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+    .where(eq(chapters.id, parsedBody.data.chapterId))
+    .limit(1);
+
+  const chapter = chapterRows[0];
+  if (!chapter) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create exercise",
+      target: `Chapter #${parsedBody.data.chapterId} / ${exerciseNumber}`,
+      status: "failed",
+      message: "Chapter not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Chapter not found"
+    });
+    return;
+  }
+
+  const isPhysicsChapter = chapter.subjectName.toLowerCase().includes("physics");
+  if (parsedBody.data.type === "numerical" && !isPhysicsChapter) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create exercise",
+      target: `${chapter.subjectName} / ${chapter.title} / ${exerciseNumber}`,
+      status: "failed",
+      message: "Numerical exercises are only allowed for Physics chapters",
+      actorId,
+      actorName
+    });
+    res.status(400).json({
+      error: "Numerical problems are only allowed for Physics chapters"
+    });
+    return;
+  }
+
+  try {
+    const insertedRows = await db
+      .insert(exercises)
+      .values({
+        chapterId: chapter.id,
+        exerciseNumber,
+        question: parsedBody.data.question.trim(),
+        solution: parsedBody.data.solution.trim(),
+        difficulty: parsedBody.data.difficulty,
+        type: parsedBody.data.type
+      })
+      .returning({
+        id: exercises.id,
+        chapterId: exercises.chapterId,
+        exerciseNumber: exercises.exerciseNumber,
+        question: exercises.question,
+        solution: exercises.solution,
+        difficulty: exercises.difficulty,
+        type: exercises.type
+      });
+
+    const exercise = insertedRows[0];
+    if (!exercise) {
+      res.status(500).json({
+        error: "Failed to create exercise"
+      });
+      return;
+    }
+
+    await persistAuditLog({
+      scope: "content",
+      action: "Create exercise",
+      target: `${chapter.subjectName} / ${chapter.title} / ${exercise.exerciseNumber}`,
+      status: "success",
+      message: `Created ${exercise.type} exercise`,
+      actorId,
+      actorName
+    });
+
+    res.status(201).json({
+      exercise
+    });
+  } catch {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create exercise",
+      target: `${chapter.subjectName} / ${chapter.title} / ${exerciseNumber}`,
+      status: "failed",
+      message: "Exercise create failed",
+      actorId,
+      actorName
+    });
+    res.status(409).json({
+      error: "Exercise already exists for chapter"
     });
   }
 });

@@ -90,6 +90,18 @@ const adminCurriculumChapterCreateResponseSchema = z.object({
   })
 });
 
+const adminCurriculumExerciseCreateResponseSchema = z.object({
+  exercise: z.object({
+    id: z.number().int().positive(),
+    chapterId: z.number().int().positive(),
+    exerciseNumber: z.string(),
+    question: z.string(),
+    solution: z.string(),
+    difficulty: z.enum(["easy", "medium", "hard"]),
+    type: z.enum(["mcq", "short", "long", "numerical"])
+  })
+});
+
 const adminAuditLogEntrySchema = z.object({
   id: z.string().uuid(),
   scope: z.enum(["content", "forum", "moderation", "notifications", "settings", "users"]).optional(),
@@ -305,6 +317,7 @@ export type AdminCurriculumBoardCreateResponse = z.infer<typeof adminCurriculumB
 export type AdminCurriculumClassCreateResponse = z.infer<typeof adminCurriculumClassCreateResponseSchema>;
 export type AdminCurriculumSubjectCreateResponse = z.infer<typeof adminCurriculumSubjectCreateResponseSchema>;
 export type AdminCurriculumChapterCreateResponse = z.infer<typeof adminCurriculumChapterCreateResponseSchema>;
+export type AdminCurriculumExerciseCreateResponse = z.infer<typeof adminCurriculumExerciseCreateResponseSchema>;
 export type AdminAuditLogResponse = z.infer<typeof adminAuditLogResponseSchema>;
 export type AdminAuditLogResponseEntry = z.infer<typeof adminAuditLogEntrySchema>;
 export type AdminModerationFlag = z.infer<typeof adminModerationFlagSchema>;
@@ -434,6 +447,22 @@ export const createAdminCurriculumChapter = async (input: {
   return fetchAdminJson({
     path: "/api/admin/content/chapters",
     schema: adminCurriculumChapterCreateResponseSchema,
+    method: "POST",
+    body: input
+  });
+};
+
+export const createAdminCurriculumExercise = async (input: {
+  chapterId: number;
+  exerciseNumber: string;
+  question: string;
+  solution: string;
+  difficulty?: "easy" | "medium" | "hard";
+  type?: "mcq" | "short" | "long" | "numerical";
+}): Promise<AdminCurriculumExerciseCreateResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/content/exercises",
+    schema: adminCurriculumExerciseCreateResponseSchema,
     method: "POST",
     body: input
   });

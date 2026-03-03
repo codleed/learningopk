@@ -109,6 +109,15 @@ test("admin curriculum management endpoints enforce auth/role and validate paylo
     summary: ""
   });
   assert.equal(invalidChapter.status, 400);
+
+  const invalidExercise = await adminAgent.post("/api/admin/content/exercises").send({
+    chapterId: 1,
+    exerciseNumber: "",
+    question: "",
+    solution: "",
+    type: "short"
+  });
+  assert.equal(invalidExercise.status, 400);
 });
 
 test("admin can create board class subject chapter hierarchy and fetch nested curriculum tree", async () => {
@@ -165,6 +174,18 @@ test("admin can create board class subject chapter hierarchy and fetch nested cu
   const chapterId = chapterResponse.body?.chapter?.id as number;
   assert.equal(typeof chapterId, "number");
 
+  const exerciseResponse = await adminAgent.post("/api/admin/content/exercises").send({
+    chapterId,
+    exerciseNumber: "Q1",
+    question: "Define motion.",
+    solution: "Motion is change in position over time.",
+    difficulty: "easy",
+    type: "short"
+  });
+  assert.equal(exerciseResponse.status, 201);
+  const exerciseId = exerciseResponse.body?.exercise?.id as number;
+  assert.equal(typeof exerciseId, "number");
+
   const treeResponse = await adminAgent.get("/api/admin/content/curriculum");
   assert.equal(treeResponse.status, 200);
 
@@ -208,13 +229,13 @@ test("admin can create board class subject chapter hierarchy and fetch nested cu
       from admin_audit_logs
       where scope = 'content'
         and actor_id = $1
-        and action in ('Create board', 'Create class', 'Create subject', 'Create chapter')
+        and action in ('Create board', 'Create class', 'Create subject', 'Create chapter', 'Create exercise')
       order by created_at desc
     `,
     [adminUser.id]
   );
 
-  assert.ok(auditRows.rows.length >= 4, "Expected curriculum create audit rows.");
+  assert.ok(auditRows.rows.length >= 5, "Expected curriculum create audit rows.");
   assert.ok(
     auditRows.rows.some((row) => row.action === "Create board" && row.status === "success"),
     "Expected successful board create audit row."
@@ -230,6 +251,10 @@ test("admin can create board class subject chapter hierarchy and fetch nested cu
   assert.ok(
     auditRows.rows.some((row) => row.action === "Create chapter" && row.status === "success"),
     "Expected successful chapter create audit row."
+  );
+  assert.ok(
+    auditRows.rows.some((row) => row.action === "Create exercise" && row.status === "success"),
+    "Expected successful exercise create audit row."
   );
 });
 
