@@ -1,0 +1,12 @@
+{
+  "capturedAt": "2026-03-03T21:26:42.336Z",
+  "editorType": "codemirror",
+  "routeLoadMs": 5005,
+  "summaryLoadMs": 348,
+  "typing": {
+    "sampleCount": 60,
+    "p95Ms": 34.9,
+    "meanMs": 34.05,
+    "maxMs": 80.8
+  }
+}

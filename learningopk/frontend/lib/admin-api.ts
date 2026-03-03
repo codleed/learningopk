@@ -107,6 +107,68 @@ const adminChapterSummaryUpdateResponseSchema = z.object({
   timestamp: z.string().datetime()
 });
 
+const adminChapterLinksResponseSchema = z.object({
+  links: z.object({
+    outgoing: z.array(
+      z.object({
+        sourceChapterId: z.number().int().positive(),
+        targetChapterId: z.number().int().positive().nullable(),
+        targetTitle: z.string(),
+        normalizedTarget: z.string(),
+        isResolved: z.boolean(),
+        targetChapterTitle: z.string().nullable()
+      })
+    ),
+    backlinks: z.array(
+      z.object({
+        sourceChapterId: z.number().int().positive(),
+        sourceChapterTitle: z.string(),
+        normalizedTarget: z.string()
+      })
+    )
+  })
+});
+
+const adminChapterLinkSuggestionsResponseSchema = z.object({
+  suggestions: z.array(
+    z.object({
+      id: z.number().int().positive(),
+      title: z.string(),
+      slug: z.string(),
+      chapterNumber: z.number().int().positive()
+    })
+  )
+});
+
+const adminChapterGraphResponseSchema = z.object({
+  graph: z.object({
+    nodes: z.array(
+      z.object({
+        id: z.number().int().positive(),
+        title: z.string(),
+        isPublished: z.boolean()
+      })
+    ),
+    edges: z.array(
+      z.object({
+        sourceChapterId: z.number().int().positive(),
+        targetChapterId: z.number().int().positive().nullable(),
+        isResolved: z.boolean()
+      })
+    ),
+    unresolvedEdgeCount: z.number().int().nonnegative()
+  })
+});
+
+const adminChapterRenameResponseSchema = z.object({
+  chapter: z.object({
+    id: z.number().int().positive(),
+    title: z.string(),
+    slug: z.string()
+  }),
+  timestamp: z.string().datetime()
+});
+
 const adminChapterSummaryMediaUploadResponseSchema = z.object({
   asset: z.object({
     id: z.string().uuid(),
@@ -348,6 +410,10 @@ export type AdminCurriculumSubjectCreateResponse = z.infer<typeof adminCurriculu
 export type AdminCurriculumChapterCreateResponse = z.infer<typeof adminCurriculumChapterCreateResponseSchema>;
 export type AdminChapterSummaryResponse = z.infer<typeof adminChapterSummaryResponseSchema>;
 export type AdminChapterSummaryUpdateResponse = z.infer<typeof adminChapterSummaryUpdateResponseSchema>;
+export type AdminChapterLinksResponse = z.infer<typeof adminChapterLinksResponseSchema>;
+export type AdminChapterLinkSuggestionsResponse = z.infer<typeof adminChapterLinkSuggestionsResponseSchema>;
+export type AdminChapterGraphResponse = z.infer<typeof adminChapterGraphResponseSchema>;
+export type AdminChapterRenameResponse = z.infer<typeof adminChapterRenameResponseSchema>;
 export type AdminChapterSummaryMediaUploadResponse = z.infer<typeof adminChapterSummaryMediaUploadResponseSchema>;
 export type AdminCurriculumExerciseCreateResponse = z.infer<typeof adminCurriculumExerciseCreateResponseSchema>;
 export type AdminAuditLogResponse = z.infer<typeof adminAuditLogResponseSchema>;
@@ -503,6 +569,64 @@ export const updateAdminChapterSummary = async ({
     schema: adminChapterSummaryUpdateResponseSchema,
     method: "POST",
     body: { summary }
+  });
+};
+
+export const getAdminChapterLinks = async (chapterId: number): Promise<AdminChapterLinksResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/${chapterId}/links`,
+    schema: adminChapterLinksResponseSchema
+  });
+};
+
+export const getAdminChapterLinkSuggestions = async ({
+  query,
+  limit = 20
+}: {
+  query: string;
+  limit?: number;
+}): Promise<AdminChapterLinkSuggestionsResponse> => {
+  const searchParams = new URLSearchParams({
+    q: query,
+    limit: String(limit)
+  });
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/link-suggestions?${searchParams.toString()}`,
+    schema: adminChapterLinkSuggestionsResponseSchema
+  });
+};
+
+export const getAdminChapterGraph = async ({
+  query
+}: {
+  query: string;
+}): Promise<AdminChapterGraphResponse> => {
+  const searchParams = new URLSearchParams({
+    q: query
+  });
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/graph?${searchParams.toString()}`,
+    schema: adminChapterGraphResponseSchema
+  });
+};
+
+export const renameAdminChapter = async ({
+  chapterId,
+  title,
+  slug
+}: {
+  chapterId: number;
+  title: string;
+  slug: string;
+}): Promise<AdminChapterRenameResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/${chapterId}/rename`,
+    schema: adminChapterRenameResponseSchema,
+    method: "POST",
+    body: {
+      title,
+      slug
+    }
   });
 };
 

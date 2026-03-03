@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
 import { Router, type Response } from "express";
 import { z } from "zod";
 
@@ -10,6 +10,8 @@ import {
   adminSettings,
   boardClasses,
   boards,
+  chapterSummaryLinks,
+  chapterTitleAliases,
   chapters,
   exercises,
   forumThreads,
@@ -21,6 +23,7 @@ import {
   users
 } from "../lib/db/schema.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
+import { extractWikiLinks, normalizeWikiLinkTarget } from "../lib/wiki-links.js";
 
 const chapterParamsSchema = z.object({
   id: z.coerce.number().int().positive()
@@ -36,6 +39,20 @@ const chapterPublishBodySchema = z.object({
 
 const chapterSummaryUpdateBodySchema = z.object({
   summary: z.string().trim().min(1)
+});
+
+const chapterRenameBodySchema = z.object({
+  title: z.string().trim().min(1),
+  slug: z.string().trim().min(1)
+});
+
+const chapterLinkSuggestionQuerySchema = z.object({
+  q: z.string().trim().optional().default(""),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(20)
+});
+
+const chapterGraphQuerySchema = z.object({
+  q: z.string().trim().optional().default("")
 });
 
 const threadPinBodySchema = z.object({
@@ -239,6 +256,174 @@ const inferLegacyGrade = (input: string): "9" | "10" | null => {
     return "10";
   }
   return null;
+};
+
+type ResolvedWikiLink = {
+  targetTitle: string;
+  normalizedTarget: string;
+  targetChapterId: number | null;
+  isResolved: boolean;
+};
+
+const ensureChapterTitleAlias = async ({
+  chapterId,
+  aliasTitle
+}: {
+  chapterId: number;
+  aliasTitle: string;
+}): Promise<void> => {
+  const normalizedAlias = normalizeWikiLinkTarget(aliasTitle);
+  if (!normalizedAlias) {
+    return;
+  }
+  await db
+    .insert(chapterTitleAliases)
+    .values({
+      chapterId,
+      aliasTitle: aliasTitle.trim(),
+      normalizedAlias
+    })
+    .onConflictDoNothing({
+      target: [chapterTitleAliases.chapterId, chapterTitleAliases.normalizedAlias]
+    });
+};
+
+const resolveWikiLinks = async ({
+  sourceSubjectId,
+  summary
+}: {
+  sourceSubjectId: number;
+  summary: string;
+}): Promise<ResolvedWikiLink[]> => {
+  const parsedLinks = extractWikiLinks(summary);
+  if (parsedLinks.length === 0) {
+    return [];
+  }
+
+  const uniqueTargets = new Map<string, string>();
+  for (const link of parsedLinks) {
+    if (!uniqueTargets.has(link.normalizedTarget)) {
+      uniqueTargets.set(link.normalizedTarget, link.targetTitle);
+    }
+  }
+
+  const chapterRows = await db
+    .select({
+      id: chapters.id,
+      title: chapters.title,
+      subjectId: chapters.subjectId
+    })
+    .from(chapters);
+  const aliasRows = await db
+    .select({
+      chapterId: chapterTitleAliases.chapterId,
+      normalizedAlias: chapterTitleAliases.normalizedAlias
+    })
+    .from(chapterTitleAliases);
+
+  const candidateMap = new Map<string, Array<{ chapterId: number; subjectId: number }>>();
+  const chapterById = new Map<number, (typeof chapterRows)[number]>();
+  for (const chapter of chapterRows) {
+    chapterById.set(chapter.id, chapter);
+    const normalizedTitle = normalizeWikiLinkTarget(chapter.title);
+    const candidates = candidateMap.get(normalizedTitle) ?? [];
+    candidates.push({
+      chapterId: chapter.id,
+      subjectId: chapter.subjectId
+    });
+    candidateMap.set(normalizedTitle, candidates);
+  }
+  for (const alias of aliasRows) {
+    const chapter = chapterById.get(alias.chapterId);
+    if (!chapter) {
+      continue;
+    }
+    const candidates = candidateMap.get(alias.normalizedAlias) ?? [];
+    if (!candidates.some((candidate) => candidate.chapterId === alias.chapterId)) {
+      candidates.push({
+        chapterId: alias.chapterId,
+        subjectId: chapter.subjectId
+      });
+      candidateMap.set(alias.normalizedAlias, candidates);
+    }
+  }
+
+  const resolvedLinks: ResolvedWikiLink[] = [];
+  for (const [normalizedTarget, targetTitle] of uniqueTargets.entries()) {
+    const candidates = candidateMap.get(normalizedTarget) ?? [];
+    const preferredCandidate = candidates.find((candidate) => candidate.subjectId === sourceSubjectId) ?? candidates[0];
+    resolvedLinks.push({
+      targetTitle,
+      normalizedTarget,
+      targetChapterId: preferredCandidate?.chapterId ?? null,
+      isResolved: Boolean(preferredCandidate)
+    });
+  }
+  return resolvedLinks;
+};
+
+const rebuildChapterSummaryLinks = async ({
+  sourceChapterId,
+  sourceSubjectId,
+  summary
+}: {
+  sourceChapterId: number;
+  sourceSubjectId: number;
+  summary: string;
+}): Promise<void> => {
+  const resolvedLinks = await resolveWikiLinks({
+    sourceSubjectId,
+    summary
+  });
+
+  await db.delete(chapterSummaryLinks).where(eq(chapterSummaryLinks.sourceChapterId, sourceChapterId));
+
+  if (resolvedLinks.length === 0) {
+    return;
+  }
+
+  const now = new Date();
+  await db.insert(chapterSummaryLinks).values(
+    resolvedLinks.map((link) => ({
+      sourceChapterId,
+      targetChapterId: link.targetChapterId,
+      targetTitle: link.targetTitle,
+      normalizedTarget: link.normalizedTarget,
+      isResolved: link.isResolved,
+      updatedAt: now
+    }))
+  );
+};
+
+const refreshLinksForChapterAliases = async ({
+  chapterId
+}: {
+  chapterId: number;
+}): Promise<void> => {
+  const aliasRows = await db
+    .select({
+      normalizedAlias: chapterTitleAliases.normalizedAlias
+    })
+    .from(chapterTitleAliases)
+    .where(eq(chapterTitleAliases.chapterId, chapterId));
+  const normalizedAliases = aliasRows.map((entry) => entry.normalizedAlias);
+  if (normalizedAliases.length === 0) {
+    return;
+  }
+
+  await db
+    .update(chapterSummaryLinks)
+    .set({
+      targetChapterId: chapterId,
+      isResolved: true,
+      updatedAt: new Date()
+    })
+    .where(
+      and(
+        inArray(chapterSummaryLinks.normalizedTarget, normalizedAliases),
+        or(eq(chapterSummaryLinks.targetChapterId, chapterId), isNull(chapterSummaryLinks.targetChapterId))
+      )
+    );
 };
 
 const listAuditLogs = async ({ scope, status, q, page, pageSize }: ListAuditLogsInput) => {
@@ -2041,6 +2226,16 @@ adminRouter.post("/content/chapters", requireSession, async (req, res) => {
       return;
     }
 
+    await ensureChapterTitleAlias({
+      chapterId: chapter.id,
+      aliasTitle: chapter.title
+    });
+    await rebuildChapterSummaryLinks({
+      sourceChapterId: chapter.id,
+      sourceSubjectId: subject.id,
+      summary: parsedBody.data.summary.trim()
+    });
+
     await persistAuditLog({
       scope: "content",
       action: "Create chapter",
@@ -2093,6 +2288,7 @@ adminRouter.post("/content/exercises", requireSession, async (req, res) => {
     .select({
       id: chapters.id,
       title: chapters.title,
+      subjectId: chapters.subjectId,
       subjectName: subjects.name
     })
     .from(chapters)
@@ -2219,6 +2415,177 @@ adminRouter.get("/content/chapters", requireSession, async (req, res) => {
   });
 });
 
+adminRouter.get("/content/chapters/graph", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedQuery = chapterGraphQuerySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid chapter graph query",
+      details: parsedQuery.error.flatten()
+    });
+    return;
+  }
+
+  const query = parsedQuery.data.q.trim().toLowerCase();
+  const allNodes = await db
+    .select({
+      id: chapters.id,
+      title: chapters.title,
+      isPublished: chapters.isPublished
+    })
+    .from(chapters)
+    .orderBy(asc(chapters.title));
+  const allEdges = await db
+    .select({
+      sourceChapterId: chapterSummaryLinks.sourceChapterId,
+      targetChapterId: chapterSummaryLinks.targetChapterId,
+      isResolved: chapterSummaryLinks.isResolved
+    })
+    .from(chapterSummaryLinks)
+    .where(isNull(chapterSummaryLinks.targetChapterId))
+    .orderBy(asc(chapterSummaryLinks.sourceChapterId));
+
+  const resolvedEdges = await db
+    .select({
+      sourceChapterId: chapterSummaryLinks.sourceChapterId,
+      targetChapterId: chapterSummaryLinks.targetChapterId,
+      isResolved: chapterSummaryLinks.isResolved
+    })
+    .from(chapterSummaryLinks)
+    .where(sql`${chapterSummaryLinks.targetChapterId} is not null`)
+    .orderBy(asc(chapterSummaryLinks.sourceChapterId), asc(chapterSummaryLinks.targetChapterId));
+
+  const filteredNodes = query.length
+    ? allNodes.filter((node) => node.title.toLowerCase().includes(query))
+    : allNodes;
+  const nodeIds = new Set(filteredNodes.map((node) => node.id));
+  const filteredEdges = resolvedEdges.filter((edge) => {
+    const targetChapterId = edge.targetChapterId;
+    if (!targetChapterId) {
+      return false;
+    }
+    return nodeIds.has(edge.sourceChapterId) || nodeIds.has(targetChapterId);
+  });
+
+  const connectedNodeIds = new Set<number>();
+  for (const edge of filteredEdges) {
+    if (edge.targetChapterId) {
+      connectedNodeIds.add(edge.sourceChapterId);
+      connectedNodeIds.add(edge.targetChapterId);
+    }
+  }
+  const finalNodes = query.length
+    ? filteredNodes.filter((node) => connectedNodeIds.has(node.id) || node.title.toLowerCase().includes(query))
+    : filteredNodes;
+
+  res.status(200).json({
+    graph: {
+      nodes: finalNodes,
+      edges: filteredEdges,
+      unresolvedEdgeCount: allEdges.length
+    }
+  });
+});
+
+adminRouter.get("/content/chapters/link-suggestions", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedQuery = chapterLinkSuggestionQuerySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid chapter link suggestion query",
+      details: parsedQuery.error.flatten()
+    });
+    return;
+  }
+
+  const searchTerm = parsedQuery.data.q.trim();
+  const suggestions = await db
+    .select({
+      id: chapters.id,
+      title: chapters.title,
+      slug: chapters.slug,
+      chapterNumber: chapters.chapterNumber
+    })
+    .from(chapters)
+    .where(searchTerm.length > 0 ? ilike(chapters.title, `%${searchTerm}%`) : undefined)
+    .orderBy(asc(chapters.title), asc(chapters.chapterNumber))
+    .limit(parsedQuery.data.limit);
+
+  res.status(200).json({
+    suggestions
+  });
+});
+
+adminRouter.get("/content/chapters/:id/links", requireSession, async (req, res) => {
+  const parsedParams = chapterParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid chapter identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const chapterRows = await db
+    .select({
+      id: chapters.id
+    })
+    .from(chapters)
+    .where(eq(chapters.id, parsedParams.data.id))
+    .limit(1);
+  if (!chapterRows[0]) {
+    res.status(404).json({
+      error: "Chapter not found"
+    });
+    return;
+  }
+
+  const outgoingRows = await db
+    .select({
+      sourceChapterId: chapterSummaryLinks.sourceChapterId,
+      targetChapterId: chapterSummaryLinks.targetChapterId,
+      targetTitle: chapterSummaryLinks.targetTitle,
+      normalizedTarget: chapterSummaryLinks.normalizedTarget,
+      isResolved: chapterSummaryLinks.isResolved,
+      targetChapterTitle: chapters.title
+    })
+    .from(chapterSummaryLinks)
+    .leftJoin(chapters, eq(chapterSummaryLinks.targetChapterId, chapters.id))
+    .where(eq(chapterSummaryLinks.sourceChapterId, parsedParams.data.id))
+    .orderBy(asc(chapterSummaryLinks.targetTitle));
+
+  const backlinkRows = await db
+    .select({
+      sourceChapterId: chapterSummaryLinks.sourceChapterId,
+      sourceChapterTitle: chapters.title,
+      normalizedTarget: chapterSummaryLinks.normalizedTarget
+    })
+    .from(chapterSummaryLinks)
+    .innerJoin(chapters, eq(chapterSummaryLinks.sourceChapterId, chapters.id))
+    .where(eq(chapterSummaryLinks.targetChapterId, parsedParams.data.id))
+    .orderBy(asc(chapters.title));
+
+  res.status(200).json({
+    links: {
+      outgoing: outgoingRows,
+      backlinks: backlinkRows
+    }
+  });
+});
+
 adminRouter.get("/content/chapters/:id/summary", requireSession, async (req, res) => {
   const parsedParams = chapterParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
@@ -2290,6 +2657,7 @@ adminRouter.post("/content/chapters/:id/summary", requireSession, async (req, re
     .select({
       id: chapters.id,
       title: chapters.title,
+      subjectId: chapters.subjectId,
       subjectName: subjects.name
     })
     .from(chapters)
@@ -2345,12 +2713,133 @@ adminRouter.post("/content/chapters/:id/summary", requireSession, async (req, re
     return;
   }
 
+  await rebuildChapterSummaryLinks({
+    sourceChapterId: chapter.id,
+    sourceSubjectId: chapter.subjectId,
+    summary
+  });
+
   await persistAuditLog({
     scope: "content",
     action,
     target: `${chapter.subjectName} / ${chapter.title}`,
     status: "success",
     message: "Updated chapter summary markdown",
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    chapter: updatedChapter,
+    timestamp: new Date().toISOString()
+  });
+});
+
+adminRouter.post("/content/chapters/:id/rename", requireSession, async (req, res) => {
+  const parsedParams = chapterParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid chapter identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const parsedBody = chapterRenameBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid chapter rename payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Rename chapter";
+  const fallbackTarget = `Chapter #${parsedParams.data.id}`;
+
+  const chapterRows = await db
+    .select({
+      id: chapters.id,
+      title: chapters.title,
+      subjectName: subjects.name
+    })
+    .from(chapters)
+    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+    .where(eq(chapters.id, parsedParams.data.id))
+    .limit(1);
+  const chapter = chapterRows[0];
+  if (!chapter) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Chapter not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Chapter not found"
+    });
+    return;
+  }
+
+  const nextTitle = parsedBody.data.title.trim();
+  const nextSlug = parsedBody.data.slug.trim().toLowerCase();
+  const updatedRows = await db
+    .update(chapters)
+    .set({
+      title: nextTitle,
+      slug: nextSlug
+    })
+    .where(eq(chapters.id, chapter.id))
+    .returning({
+      id: chapters.id,
+      title: chapters.title,
+      slug: chapters.slug
+    });
+  const updatedChapter = updatedRows[0];
+  if (!updatedChapter) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${chapter.subjectName} / ${chapter.title}`,
+      status: "failed",
+      message: "Chapter rename failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({
+      error: "Failed to rename chapter"
+    });
+    return;
+  }
+
+  await ensureChapterTitleAlias({
+    chapterId: chapter.id,
+    aliasTitle: chapter.title
+  });
+  await ensureChapterTitleAlias({
+    chapterId: chapter.id,
+    aliasTitle: updatedChapter.title
+  });
+  await refreshLinksForChapterAliases({
+    chapterId: chapter.id
+  });
+
+  await persistAuditLog({
+    scope: "content",
+    action,
+    target: `${chapter.subjectName} / ${chapter.title}`,
+    status: "success",
+    message: `Renamed chapter to ${updatedChapter.title}`,
     actorId,
     actorName
   });
