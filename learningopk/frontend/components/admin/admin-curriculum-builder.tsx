@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
 import {
   createAdminCurriculumBoard,
@@ -8,10 +8,14 @@ import {
   createAdminCurriculumClass,
   createAdminCurriculumExercise,
   createAdminCurriculumSubject,
+  getAdminChapterGraph,
+  getAdminChapterLinks,
   getAdminChapterSummary,
   getAdminCurriculumTree,
   updateAdminChapterSummary,
   uploadAdminChapterSummaryMedia,
+  type AdminChapterGraphResponse,
+  type AdminChapterLinksResponse,
   type AdminCurriculumBoard
 } from "@/lib/admin-api";
 
@@ -21,6 +25,8 @@ import { MarkdownMathRenderer } from "../learn/markdown-math-renderer";
 import { Select } from "../ui/select";
 import { Textarea } from "../ui/textarea";
 import { useToast } from "../ui/toast";
+import { ChapterLinkGraph } from "./chapter-link-graph";
+import { CodeMirrorMarkdownEditor, type CodeMirrorMarkdownEditorHandle } from "./codemirror-markdown-editor";
 
 type AdminCurriculumBuilderProps = {
   initialBoards: AdminCurriculumBoard[];
@@ -116,6 +122,15 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
   const [isSummarySaving, setIsSummarySaving] = useState(false);
   const [isSummaryMediaUploading, setIsSummaryMediaUploading] = useState(false);
+  const [isSummaryLinksLoading, setIsSummaryLinksLoading] = useState(false);
+  const [summaryEditorOutgoingLinks, setSummaryEditorOutgoingLinks] = useState<AdminChapterLinksResponse["links"]["outgoing"]>([]);
+  const [summaryEditorBacklinks, setSummaryEditorBacklinks] = useState<AdminChapterLinksResponse["links"]["backlinks"]>([]);
+  const [isSummaryGraphLoading, setIsSummaryGraphLoading] = useState(false);
+  const [summaryGraphNodes, setSummaryGraphNodes] = useState<AdminChapterGraphResponse["graph"]["nodes"]>([]);
+  const [summaryGraphEdges, setSummaryGraphEdges] = useState<AdminChapterGraphResponse["graph"]["edges"]>([]);
+  const [summaryGraphSearch, setSummaryGraphSearch] = useState("");
+  const [wikiLinkSuggestionQuery, setWikiLinkSuggestionQuery] = useState("");
+  const [wikiLinkSuggestions, setWikiLinkSuggestions] = useState<string[]>([]);
   const [exerciseChapterId, setExerciseChapterId] = useState("");
   const [exerciseType, setExerciseType] = useState<ExerciseType>("short");
   const [exerciseDifficulty, setExerciseDifficulty] = useState<"easy" | "medium" | "hard">("medium");
@@ -124,8 +139,30 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   const [exerciseSolution, setExerciseSolution] = useState("");
   const [activeFormTab, setActiveFormTab] = useState<CurriculumFormTab>("board");
   const [expandedBoardIds, setExpandedBoardIds] = useState<Set<number>>(new Set());
-  const summaryEditorInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const summaryEditorCodeMirrorRef = useRef<CodeMirrorMarkdownEditorHandle | null>(null);
+  const summaryEditorLiveContentRef = useRef("");
+  const summaryEditorSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const summaryEditorUploadInputRef = useRef<HTMLInputElement | null>(null);
+
+  const setSummaryEditorContentImmediate = (nextContent: string) => {
+    if (summaryEditorSyncTimeoutRef.current) {
+      clearTimeout(summaryEditorSyncTimeoutRef.current);
+      summaryEditorSyncTimeoutRef.current = null;
+    }
+    summaryEditorLiveContentRef.current = nextContent;
+    setSummaryEditorContent(nextContent);
+  };
+
+  const handleSummaryEditorContentChange = (nextContent: string) => {
+    summaryEditorLiveContentRef.current = nextContent;
+    if (summaryEditorSyncTimeoutRef.current) {
+      clearTimeout(summaryEditorSyncTimeoutRef.current);
+    }
+    summaryEditorSyncTimeoutRef.current = setTimeout(() => {
+      setSummaryEditorContent(summaryEditorLiveContentRef.current);
+      summaryEditorSyncTimeoutRef.current = null;
+    }, 120);
+  };
 
   useEffect(() => {
     setExpandedBoardIds((current) => {
@@ -139,6 +176,14 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       return next;
     });
   }, [boards]);
+
+  useEffect(() => {
+    return () => {
+      if (summaryEditorSyncTimeoutRef.current) {
+        clearTimeout(summaryEditorSyncTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const classOptions = useMemo(
     () =>
@@ -172,6 +217,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
             subject.chapters.map((chapter) => ({
               id: chapter.id,
               subjectName: subject.name,
+              title: chapter.title,
               label: `${board.name} / ${boardClass.name} / ${subject.name} / Chapter ${chapter.chapterNumber}: ${chapter.title}`
             }))
           )
@@ -179,6 +225,49 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       ),
     [boards]
   );
+
+  const wikiLinkTargets = useMemo(
+    () =>
+      Array.from(
+        chapterOptions.reduce((targets, chapter) => {
+          targets.add(chapter.title);
+          return targets;
+        }, new Set<string>())
+      ).sort((left, right) => left.localeCompare(right)),
+    [chapterOptions]
+  );
+
+  const resolvedOutgoingLinks = useMemo(
+    () => summaryEditorOutgoingLinks.filter((link) => link.isResolved),
+    [summaryEditorOutgoingLinks]
+  );
+
+  const unresolvedOutgoingLinks = useMemo(
+    () => summaryEditorOutgoingLinks.filter((link) => !link.isResolved),
+    [summaryEditorOutgoingLinks]
+  );
+
+  const filteredGraphNodes = useMemo(() => {
+    const search = summaryGraphSearch.trim().toLowerCase();
+    if (!search) {
+      return summaryGraphNodes;
+    }
+    return summaryGraphNodes.filter((node) => node.title.toLowerCase().includes(search));
+  }, [summaryGraphNodes, summaryGraphSearch]);
+
+  const filteredGraphEdges = useMemo(() => {
+    if (summaryGraphSearch.trim().length === 0) {
+      return summaryGraphEdges;
+    }
+    const allowedNodeIds = new Set(filteredGraphNodes.map((node) => node.id));
+    return summaryGraphEdges.filter((edge) => {
+      const target = edge.targetChapterId;
+      if (!target) {
+        return false;
+      }
+      return allowedNodeIds.has(edge.sourceChapterId) || allowedNodeIds.has(target);
+    });
+  }, [filteredGraphNodes, summaryGraphEdges, summaryGraphSearch]);
 
   const selectedExerciseChapter = useMemo(
     () => chapterOptions.find((option) => option.id === Number(exerciseChapterId)),
@@ -205,29 +294,75 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     }
   }, [exerciseType, isPhysicsExerciseChapter]);
 
+  const loadSummaryLinks = useCallback(async (chapterId: number) => {
+    setIsSummaryLinksLoading(true);
+    try {
+      const payload = await getAdminChapterLinks(chapterId);
+      setSummaryEditorOutgoingLinks(payload.links.outgoing);
+      setSummaryEditorBacklinks(payload.links.backlinks);
+    } catch {
+      setSummaryEditorOutgoingLinks([]);
+      setSummaryEditorBacklinks([]);
+      pushToast({
+        title: "Could not load chapter links",
+        tone: "error"
+      });
+    } finally {
+      setIsSummaryLinksLoading(false);
+    }
+  }, [pushToast]);
+
+  const loadSummaryGraph = useCallback(async () => {
+    setIsSummaryGraphLoading(true);
+    try {
+      const payload = await getAdminChapterGraph({
+        query: ""
+      });
+      setSummaryGraphNodes(payload.graph.nodes);
+      setSummaryGraphEdges(payload.graph.edges);
+    } catch {
+      setSummaryGraphNodes([]);
+      setSummaryGraphEdges([]);
+      pushToast({
+        title: "Could not load summary graph",
+        tone: "error"
+      });
+    } finally {
+      setIsSummaryGraphLoading(false);
+    }
+  }, [pushToast]);
+
   useEffect(() => {
     if (!summaryEditorChapterId) {
-      setSummaryEditorContent("");
+      setSummaryEditorContentImmediate("");
+      setSummaryEditorOutgoingLinks([]);
+      setSummaryEditorBacklinks([]);
       return;
     }
 
     let isCancelled = false;
     const chapterId = Number(summaryEditorChapterId);
     if (!chapterId) {
-      setSummaryEditorContent("");
+      setSummaryEditorContentImmediate("");
+      setSummaryEditorOutgoingLinks([]);
+      setSummaryEditorBacklinks([]);
       return;
     }
 
     setIsSummaryLoading(true);
-    getAdminChapterSummary(chapterId)
-      .then((payload) => {
+    Promise.all([getAdminChapterSummary(chapterId), getAdminChapterLinks(chapterId)])
+      .then(([summaryPayload, linksPayload]) => {
         if (!isCancelled) {
-          setSummaryEditorContent(payload.chapter.summary);
+          setSummaryEditorContentImmediate(summaryPayload.chapter.summary);
+          setSummaryEditorOutgoingLinks(linksPayload.links.outgoing);
+          setSummaryEditorBacklinks(linksPayload.links.backlinks);
         }
       })
       .catch(() => {
         if (!isCancelled) {
-          setSummaryEditorContent("");
+          setSummaryEditorContentImmediate("");
+          setSummaryEditorOutgoingLinks([]);
+          setSummaryEditorBacklinks([]);
           pushToast({
             title: "Could not load chapter summary",
             tone: "error"
@@ -253,9 +388,33 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     const selectedId = Number(summaryEditorChapterId);
     if (!chapterOptions.some((option) => option.id === selectedId)) {
       setSummaryEditorChapterId("");
-      setSummaryEditorContent("");
+      setSummaryEditorContentImmediate("");
+      setSummaryEditorOutgoingLinks([]);
+      setSummaryEditorBacklinks([]);
     }
   }, [chapterOptions, summaryEditorChapterId]);
+
+  useEffect(() => {
+    if (!summaryEditorChapterId) {
+      setWikiLinkSuggestionQuery("");
+      setWikiLinkSuggestions([]);
+    }
+  }, [summaryEditorChapterId]);
+
+  useEffect(() => {
+    if (activeFormTab !== "chapter") {
+      return;
+    }
+    void loadSummaryGraph();
+  }, [activeFormTab, chapterOptions.length, loadSummaryGraph]);
+
+  const refreshSummaryLinks = async () => {
+    const chapterId = Number(summaryEditorChapterId);
+    if (!chapterId) {
+      return;
+    }
+    await loadSummaryLinks(chapterId);
+  };
 
   const refreshTree = async () => {
     setIsRefreshing(true);
@@ -414,7 +573,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
 
   const saveSummaryEditor = async () => {
     const chapterId = Number(summaryEditorChapterId);
-    const summary = summaryEditorContent.trim();
+    const summary = summaryEditorLiveContentRef.current.trim();
     if (!chapterId || !summary) {
       pushToast({
         title: "Select a chapter and write summary first",
@@ -429,6 +588,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
         chapterId,
         summary
       });
+      await refreshSummaryLinks();
+      await loadSummaryGraph();
       pushToast({
         title: "Chapter summary updated",
         tone: "success"
@@ -462,9 +623,9 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       return;
     }
 
-    const textarea = summaryEditorInputRef.current;
-    const selectionStart = textarea?.selectionStart ?? summaryEditorContent.length;
-    const selectionEnd = textarea?.selectionEnd ?? summaryEditorContent.length;
+    const selection = summaryEditorCodeMirrorRef.current?.getSelectionRange();
+    const selectionStart = selection?.start ?? summaryEditorLiveContentRef.current.length;
+    const selectionEnd = selection?.end ?? summaryEditorLiveContentRef.current.length;
 
     setIsSummaryMediaUploading(true);
     try {
@@ -480,25 +641,27 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       });
       const insertion = `${imageMarkdown}\n`;
 
-      let cursorAfterInsert = selectionStart + insertion.length;
-      setSummaryEditorContent((current) => {
-        const result = insertAtSelection({
-          source: current,
+      const editor = summaryEditorCodeMirrorRef.current;
+      if (editor) {
+        editor.insertTextAtSelection(insertion);
+        editor.focus();
+      } else {
+        const nextValue = insertAtSelection({
+          source: summaryEditorLiveContentRef.current,
           insertion,
           start: selectionStart,
           end: selectionEnd
-        });
-        cursorAfterInsert = result.cursor;
-        return result.value;
-      });
+        }).value;
+        setSummaryEditorContentImmediate(nextValue);
+      }
 
-      requestAnimationFrame(() => {
-        const input = summaryEditorInputRef.current;
-        if (input) {
-          input.focus();
-          input.setSelectionRange(cursorAfterInsert, cursorAfterInsert);
-        }
-      });
+      if (summaryEditorSyncTimeoutRef.current) {
+        clearTimeout(summaryEditorSyncTimeoutRef.current);
+      }
+      summaryEditorSyncTimeoutRef.current = setTimeout(() => {
+        setSummaryEditorContent(summaryEditorLiveContentRef.current);
+        summaryEditorSyncTimeoutRef.current = null;
+      }, 120);
 
       if (summaryEditorUploadInputRef.current) {
         summaryEditorUploadInputRef.current.value = "";
@@ -516,6 +679,26 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     } finally {
       setIsSummaryMediaUploading(false);
     }
+  };
+
+  const handleWikiLinkQueryChange = ({
+    query,
+    suggestions
+  }: {
+    query: string;
+    suggestions: string[];
+  }) => {
+    setWikiLinkSuggestionQuery(query);
+    setWikiLinkSuggestions(suggestions);
+  };
+
+  const applyWikiLinkSuggestion = (targetTitle: string) => {
+    const applied = summaryEditorCodeMirrorRef.current?.applyWikiLinkSuggestion(targetTitle);
+    if (!applied) {
+      return;
+    }
+    setWikiLinkSuggestionQuery("");
+    setWikiLinkSuggestions([]);
   };
 
   const toggleBoard = (boardId: number) => {
@@ -746,15 +929,39 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 ))}
               </Select>
 
-              <Textarea
-                ref={summaryEditorInputRef}
-                data-testid="curriculum-summary-editor-input"
+              <CodeMirrorMarkdownEditor
+                ref={summaryEditorCodeMirrorRef}
                 value={summaryEditorContent}
-                onChange={(event) => setSummaryEditorContent(event.target.value)}
-                className="min-h-56 resize-y"
-                placeholder="Summary markdown for the selected chapter."
+                onChange={handleSummaryEditorContentChange}
+                placeholderText="Summary markdown for the selected chapter."
                 disabled={!summaryEditorChapterId || isSummaryLoading || isSummaryMediaUploading}
+                testId="curriculum-summary-editor-cm6"
+                wikiLinkTargets={wikiLinkTargets}
+                onWikiLinkQueryChange={handleWikiLinkQueryChange}
               />
+
+              {wikiLinkSuggestions.length > 0 && summaryEditorChapterId ? (
+                <div
+                  data-testid="curriculum-summary-editor-link-suggestions"
+                  className="space-y-1 rounded-lg border border-border/60 bg-background p-2"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    Wiki link suggestions for [[{wikiLinkSuggestionQuery || "..."}]]
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {wikiLinkSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        className="rounded-md border border-border/70 bg-background px-2 py-1 text-xs text-foreground transition hover:border-primary/60"
+                        onClick={() => applyWikiLinkSuggestion(suggestion)}
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
 
               <div className="grid gap-2 md:grid-cols-2">
                 <Input
@@ -816,8 +1023,92 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
 
               <p className="text-xs text-muted-foreground">
                 Uploaded image markdown is inserted at cursor position. Width/height are emitted as image title metadata
-                (`"width=640 height=320"`).
+                (`&quot;width=640 height=320&quot;`).
               </p>
+
+              <div
+                className="space-y-2 rounded-lg border border-border/60 bg-background p-3"
+                data-testid="curriculum-summary-editor-links-panel"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Links</p>
+                  <Button type="button" size="sm" variant="secondary" onClick={refreshSummaryLinks} disabled={isSummaryLinksLoading}>
+                    {isSummaryLinksLoading ? "Refreshing..." : "Refresh links"}
+                  </Button>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <p className="font-medium text-foreground">Outgoing</p>
+                  {summaryEditorOutgoingLinks.length === 0 ? (
+                    <p className="text-muted-foreground">No wiki links found in this summary.</p>
+                  ) : (
+                    <ul className="space-y-1 text-foreground/90">
+                      {resolvedOutgoingLinks.map((link) => (
+                        <li key={`${link.sourceChapterId}-${link.normalizedTarget}`}>- {link.targetChapterTitle ?? link.targetTitle}</li>
+                      ))}
+                      {unresolvedOutgoingLinks.map((link) => (
+                        <li key={`${link.sourceChapterId}-${link.normalizedTarget}`} className="text-amber-700">
+                          - {link.targetTitle} (unresolved)
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div className="space-y-1 text-sm">
+                  <p className="font-medium text-foreground">Backlinks</p>
+                  {summaryEditorBacklinks.length === 0 ? (
+                    <p className="text-muted-foreground">No other summaries currently link to this chapter.</p>
+                  ) : (
+                    <ul className="space-y-1 text-foreground/90">
+                      {summaryEditorBacklinks.map((link) => (
+                        <li key={`${link.sourceChapterId}-${link.normalizedTarget}`}>- {link.sourceChapterTitle}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-lg border border-border/60 bg-background p-3" data-testid="curriculum-summary-graph-panel">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Summary Graph</p>
+                  <Button type="button" size="sm" variant="secondary" onClick={loadSummaryGraph} disabled={isSummaryGraphLoading}>
+                    {isSummaryGraphLoading ? "Refreshing..." : "Refresh graph"}
+                  </Button>
+                </div>
+                <Input
+                  data-testid="curriculum-summary-graph-search"
+                  value={summaryGraphSearch}
+                  onChange={(event) => setSummaryGraphSearch(event.target.value)}
+                  placeholder="Filter graph by chapter title"
+                />
+                {filteredGraphNodes.length > 0 ? (
+                  <ChapterLinkGraph
+                    nodes={filteredGraphNodes}
+                    edges={filteredGraphEdges}
+                    activeChapterId={summaryEditorChapterId ? Number(summaryEditorChapterId) : null}
+                    onOpenChapter={(chapterId) => {
+                      setSummaryEditorChapterId(String(chapterId));
+                    }}
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground">No graph nodes match the current filter.</p>
+                )}
+                <div className="max-h-32 overflow-auto rounded-md border border-border/50 bg-background/60 p-2">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Open chapter</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {filteredGraphNodes.slice(0, 20).map((node) => (
+                      <button
+                        key={node.id}
+                        type="button"
+                        data-testid={`curriculum-summary-graph-node-button-${node.id}`}
+                        className="rounded-md border border-border/70 px-2 py-1 text-xs text-foreground transition hover:border-primary/60"
+                        onClick={() => setSummaryEditorChapterId(String(node.id))}
+                      >
+                        {node.title}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
               <div
                 className="rounded-lg border border-border/60 bg-background p-3"

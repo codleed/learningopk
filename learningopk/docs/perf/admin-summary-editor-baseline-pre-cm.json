@@ -1,0 +1,12 @@
+{
+  "capturedAt": "2026-03-03T19:59:33.413Z",
+  "editorType": "textarea",
+  "routeLoadMs": 3887,
+  "summaryLoadMs": 286,
+  "typing": {
+    "sampleCount": 60,
+    "p95Ms": 122.6,
+    "meanMs": 91.59,
+    "maxMs": 206.5
+  }
+}

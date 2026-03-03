@@ -233,6 +233,81 @@ const createAdminContentFixture = async (): Promise<{
   };
 };
 
+const createLinkingFixture = async (): Promise<{
+  sourceChapterId: number;
+  targetChapterId: number;
+  sourceChapterTitle: string;
+  targetChapterTitle: string;
+}> => {
+  const suffix = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+
+  const insertedBoards = await db
+    .insert(boards)
+    .values({
+      name: `Link Board ${suffix}`,
+      slug: `link-board-${suffix}`
+    })
+    .returning({
+      id: boards.id
+    });
+  const board = insertedBoards[0];
+  assert.ok(board, "Expected board fixture insert.");
+
+  const insertedSubjects = await db
+    .insert(subjects)
+    .values({
+      boardId: board.id,
+      grade: "9",
+      name: `Link Subject ${suffix}`,
+      slug: `link-subject-${suffix}`
+    })
+    .returning({
+      id: subjects.id
+    });
+  const subject = insertedSubjects[0];
+  assert.ok(subject, "Expected subject fixture insert.");
+
+  const sourceChapterTitle = `Link Source ${suffix}`;
+  const targetChapterTitle = `Link Target ${suffix}`;
+
+  const insertedChapters = await db
+    .insert(chapters)
+    .values([
+      {
+        subjectId: subject.id,
+        chapterNumber: 1,
+        title: sourceChapterTitle,
+        slug: `link-source-${suffix}`,
+        summary: "Source summary fixture.",
+        isPublished: true
+      },
+      {
+        subjectId: subject.id,
+        chapterNumber: 2,
+        title: targetChapterTitle,
+        slug: `link-target-${suffix}`,
+        summary: "Target summary fixture.",
+        isPublished: true
+      }
+    ])
+    .returning({
+      id: chapters.id,
+      title: chapters.title
+    });
+
+  const sourceChapter = insertedChapters.find((chapter) => chapter.title === sourceChapterTitle);
+  const targetChapter = insertedChapters.find((chapter) => chapter.title === targetChapterTitle);
+  assert.ok(sourceChapter, "Expected source chapter fixture insert.");
+  assert.ok(targetChapter, "Expected target chapter fixture insert.");
+
+  return {
+    sourceChapterId: sourceChapter.id,
+    targetChapterId: targetChapter.id,
+    sourceChapterTitle,
+    targetChapterTitle
+  };
+};
+
 const createThreadFixture = async (userId: string): Promise<string> => {
   const insertedThreads = await db
     .insert(forumThreads)
@@ -460,6 +535,102 @@ test("admin chapter summary endpoints enforce auth/role and support summary upda
     .limit(1);
 
   assert.equal(chapterRows[0]?.summary, updatedSummary);
+});
+
+test("admin chapter wiki-link endpoints persist backlinks and survive target rename", async () => {
+  const app = createApp();
+  const anonAgent = request(app);
+  const adminAgent = request.agent(app);
+  const memberAgent = request.agent(app);
+
+  await signUp(adminAgent, "Link Admin", `tst_link_admin_${Date.now()}@example.com`);
+  await signUp(memberAgent, "Link Member", `tst_link_member_${Date.now()}@example.com`);
+
+  const adminUser = await getSessionUser(adminAgent);
+  await assignAdminRole(adminUser.id);
+  const fixture = await createLinkingFixture();
+
+  const updatedSummary = `Refer to [[${fixture.targetChapterTitle}]] and [[Missing Concept ${Date.now()}]].`;
+  const updateResponse = await adminAgent.post(`/api/admin/content/chapters/${fixture.sourceChapterId}/summary`).send({
+    summary: updatedSummary
+  });
+  assert.equal(updateResponse.status, 200);
+
+  const unauthenticatedLinks = await anonAgent.get(`/api/admin/content/chapters/${fixture.sourceChapterId}/links`);
+  assert.equal(unauthenticatedLinks.status, 401);
+
+  const forbiddenLinks = await memberAgent.get(`/api/admin/content/chapters/${fixture.sourceChapterId}/links`);
+  assert.equal(forbiddenLinks.status, 403);
+
+  const linksResponse = await adminAgent.get(`/api/admin/content/chapters/${fixture.sourceChapterId}/links`);
+  assert.equal(linksResponse.status, 200);
+  const outgoing = linksResponse.body?.links?.outgoing as
+    | Array<{
+        sourceChapterId: number;
+        targetChapterId: number | null;
+        targetTitle: string;
+        isResolved: boolean;
+      }>
+    | undefined;
+  assert.ok(Array.isArray(outgoing), "Expected outgoing links payload.");
+  assert.ok(outgoing?.some((entry) => entry.targetChapterId === fixture.targetChapterId && entry.isResolved));
+  assert.ok(outgoing?.some((entry) => entry.targetChapterId === null && !entry.isResolved));
+
+  const backlinkResponse = await adminAgent.get(`/api/admin/content/chapters/${fixture.targetChapterId}/links`);
+  assert.equal(backlinkResponse.status, 200);
+  const backlinks = backlinkResponse.body?.links?.backlinks as
+    | Array<{
+        sourceChapterId: number;
+      }>
+    | undefined;
+  assert.ok(Array.isArray(backlinks), "Expected backlinks payload.");
+  assert.ok(backlinks?.some((entry) => entry.sourceChapterId === fixture.sourceChapterId));
+
+  const newTitle = `${fixture.targetChapterTitle} Renamed`;
+  const renameResponse = await adminAgent.post(`/api/admin/content/chapters/${fixture.targetChapterId}/rename`).send({
+    title: newTitle,
+    slug: `renamed-${Date.now()}`
+  });
+  assert.equal(renameResponse.status, 200);
+  assert.equal(renameResponse.body?.chapter?.title, newTitle);
+
+  const postRenameLinksResponse = await adminAgent.get(`/api/admin/content/chapters/${fixture.sourceChapterId}/links`);
+  assert.equal(postRenameLinksResponse.status, 200);
+  const postRenameOutgoing = postRenameLinksResponse.body?.links?.outgoing as
+    | Array<{
+        targetChapterId: number | null;
+        targetChapterTitle: string | null;
+        isResolved: boolean;
+      }>
+    | undefined;
+  assert.ok(Array.isArray(postRenameOutgoing), "Expected outgoing links payload after rename.");
+  const resolvedEntry = postRenameOutgoing?.find((entry) => entry.targetChapterId === fixture.targetChapterId);
+  assert.ok(resolvedEntry, "Expected renamed target link to stay resolved.");
+  assert.equal(resolvedEntry?.isResolved, true);
+  assert.equal(resolvedEntry?.targetChapterTitle, newTitle);
+
+  const suggestionsResponse = await adminAgent.get("/api/admin/content/chapters/link-suggestions").query({
+    q: "Link Target"
+  });
+  assert.equal(suggestionsResponse.status, 200);
+  const suggestions = suggestionsResponse.body?.suggestions as Array<{ id: number; title: string }> | undefined;
+  assert.ok(Array.isArray(suggestions), "Expected suggestions payload.");
+  assert.ok(suggestions?.some((entry) => entry.id === fixture.targetChapterId));
+
+  const graphResponse = await adminAgent.get("/api/admin/content/chapters/graph");
+  assert.equal(graphResponse.status, 200);
+  const graphNodes = graphResponse.body?.graph?.nodes as Array<{ id: number; title: string }> | undefined;
+  const graphEdges = graphResponse.body?.graph?.edges as Array<{ sourceChapterId: number; targetChapterId: number }> | undefined;
+  assert.ok(Array.isArray(graphNodes), "Expected graph nodes payload.");
+  assert.ok(Array.isArray(graphEdges), "Expected graph edges payload.");
+  assert.ok(graphNodes?.some((node) => node.id === fixture.sourceChapterId));
+  assert.ok(graphNodes?.some((node) => node.id === fixture.targetChapterId));
+  assert.ok(
+    graphEdges?.some(
+      (edge) => edge.sourceChapterId === fixture.sourceChapterId && edge.targetChapterId === fixture.targetChapterId
+    ),
+    "Expected graph edge from source chapter to linked target chapter."
+  );
 });
 
 test("admin thread pin endpoint enforces auth/role and updates thread pin status", async () => {

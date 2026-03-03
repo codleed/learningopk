@@ -14,6 +14,14 @@ const toSlug = (value: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
+const setSummaryCodeMirrorContent = async (page: Page, content: string) => {
+  const editorContent = page.locator("[data-testid='curriculum-summary-editor-cm6'] .cm-content");
+  await expect(editorContent).toBeVisible();
+  await editorContent.click();
+  await page.keyboard.press("Control+A");
+  await page.keyboard.insertText(content);
+};
+
 test("admin content renders curriculum builder controls", async ({ page }) => {
   await loginAsSeededAdmin(page);
   await page.goto("/admin/content");
@@ -35,7 +43,7 @@ test("admin content renders curriculum builder controls", async ({ page }) => {
   await expect(page.locator("textarea[data-testid='curriculum-chapter-summary-input']")).toBeVisible();
   await expect(page.getByText("Supports Markdown, images, and math notation.")).toBeVisible();
   await expect(page.getByTestId("curriculum-summary-editor-chapter-select")).toBeVisible();
-  await expect(page.getByTestId("curriculum-summary-editor-input")).toBeVisible();
+  await expect(page.getByTestId("curriculum-summary-editor-cm6")).toBeVisible();
   await expect(page.getByTestId("curriculum-summary-editor-upload-button")).toBeVisible();
   await expect(page.getByTestId("curriculum-summary-editor-save-button")).toBeVisible();
   await expect(page.getByTestId("curriculum-tree")).toBeVisible();
@@ -187,9 +195,11 @@ test("admin summary editor saves markdown for selected chapter", async ({ page }
   const chapterLabel = `${boardName} / ${className} / ${subjectName} / Chapter 1: ${chapterTitle}`;
   await page.getByTestId("curriculum-summary-editor-chapter-select").selectOption({ label: chapterLabel });
 
-  const editorInput = page.getByTestId("curriculum-summary-editor-input");
-  await expect(editorInput).toHaveValue("Draft summary from create form.");
-  await editorInput.fill("Updated summary from editor.\n\n![EditorFigure](https://example.com/editor.png \"width=200\")");
+  await expect(page.getByTestId("curriculum-summary-editor-preview")).toContainText("Draft summary from create form.");
+  await setSummaryCodeMirrorContent(
+    page,
+    "Updated summary from editor.\n\n![EditorFigure](https://example.com/editor.png \"width=200\")"
+  );
   await page.getByTestId("curriculum-summary-editor-save-button").click();
   await expect(page.getByText("Chapter summary updated")).toBeVisible();
 

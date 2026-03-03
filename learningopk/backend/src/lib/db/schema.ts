@@ -181,6 +181,45 @@ export const chapters = pgTable(
   ]
 );
 
+export const chapterSummaryLinks = pgTable(
+  "chapter_summary_links",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sourceChapterId: integer("source_chapter_id")
+      .notNull()
+      .references(() => chapters.id, { onDelete: "cascade" }),
+    targetChapterId: integer("target_chapter_id").references(() => chapters.id, { onDelete: "set null" }),
+    targetTitle: text("target_title").notNull(),
+    normalizedTarget: text("normalized_target").notNull(),
+    isResolved: boolean("is_resolved").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    uniqueIndex("chapter_summary_links_source_normalized_idx").on(table.sourceChapterId, table.normalizedTarget),
+    index("chapter_summary_links_source_idx").on(table.sourceChapterId),
+    index("chapter_summary_links_target_idx").on(table.targetChapterId),
+    index("chapter_summary_links_normalized_idx").on(table.normalizedTarget)
+  ]
+);
+
+export const chapterTitleAliases = pgTable(
+  "chapter_title_aliases",
+  {
+    id: serial("id").primaryKey(),
+    chapterId: integer("chapter_id")
+      .notNull()
+      .references(() => chapters.id, { onDelete: "cascade" }),
+    aliasTitle: text("alias_title").notNull(),
+    normalizedAlias: text("normalized_alias").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    uniqueIndex("chapter_title_aliases_chapter_normalized_idx").on(table.chapterId, table.normalizedAlias),
+    index("chapter_title_aliases_normalized_idx").on(table.normalizedAlias)
+  ]
+);
+
 export const chapterSummaryMedia = pgTable(
   "chapter_summary_media",
   {
