@@ -34,6 +34,10 @@ const chapterPublishBodySchema = z.object({
   isPublished: z.boolean()
 });
 
+const chapterSummaryUpdateBodySchema = z.object({
+  summary: z.string().trim().min(1)
+});
+
 const threadPinBodySchema = z.object({
   isPinned: z.boolean()
 });
@@ -2212,6 +2216,148 @@ adminRouter.get("/content/chapters", requireSession, async (req, res) => {
 
   res.status(200).json({
     chapters: chapterRows
+  });
+});
+
+adminRouter.get("/content/chapters/:id/summary", requireSession, async (req, res) => {
+  const parsedParams = chapterParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid chapter identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const chapterRows = await db
+    .select({
+      id: chapters.id,
+      title: chapters.title,
+      summary: chapters.summary
+    })
+    .from(chapters)
+    .where(eq(chapters.id, parsedParams.data.id))
+    .limit(1);
+
+  const chapter = chapterRows[0];
+  if (!chapter) {
+    res.status(404).json({
+      error: "Chapter not found"
+    });
+    return;
+  }
+
+  res.status(200).json({
+    chapter
+  });
+});
+
+adminRouter.post("/content/chapters/:id/summary", requireSession, async (req, res) => {
+  const parsedParams = chapterParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid chapter identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const parsedBody = chapterSummaryUpdateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid chapter summary payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Update chapter summary";
+  const fallbackTarget = `Chapter #${parsedParams.data.id}`;
+
+  const chapterRows = await db
+    .select({
+      id: chapters.id,
+      title: chapters.title,
+      subjectName: subjects.name
+    })
+    .from(chapters)
+    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+    .where(eq(chapters.id, parsedParams.data.id))
+    .limit(1);
+
+  const chapter = chapterRows[0];
+  if (!chapter) {
+    const message = "Chapter not found";
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message,
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: message
+    });
+    return;
+  }
+
+  const summary = parsedBody.data.summary.trim();
+  const updatedRows = await db
+    .update(chapters)
+    .set({
+      summary
+    })
+    .where(eq(chapters.id, chapter.id))
+    .returning({
+      id: chapters.id,
+      title: chapters.title,
+      summary: chapters.summary
+    });
+
+  const updatedChapter = updatedRows[0];
+  if (!updatedChapter) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${chapter.subjectName} / ${chapter.title}`,
+      status: "failed",
+      message: "Chapter summary update failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({
+      error: "Failed to update chapter summary"
+    });
+    return;
+  }
+
+  await persistAuditLog({
+    scope: "content",
+    action,
+    target: `${chapter.subjectName} / ${chapter.title}`,
+    status: "success",
+    message: "Updated chapter summary markdown",
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    chapter: updatedChapter,
+    timestamp: new Date().toISOString()
   });
 });
 

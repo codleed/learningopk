@@ -90,6 +90,35 @@ const adminCurriculumChapterCreateResponseSchema = z.object({
   })
 });
 
+const adminChapterSummaryResponseSchema = z.object({
+  chapter: z.object({
+    id: z.number().int().positive(),
+    title: z.string(),
+    summary: z.string()
+  })
+});
+
+const adminChapterSummaryUpdateResponseSchema = z.object({
+  chapter: z.object({
+    id: z.number().int().positive(),
+    title: z.string(),
+    summary: z.string()
+  }),
+  timestamp: z.string().datetime()
+});
+
+const adminChapterSummaryMediaUploadResponseSchema = z.object({
+  asset: z.object({
+    id: z.string().uuid(),
+    chapterId: z.number().int().positive(),
+    objectUrl: z.string().url(),
+    mimeType: z.string(),
+    fileSize: z.number().int().positive(),
+    createdAt: z.string().datetime()
+  }),
+  markdown: z.string().min(1)
+});
+
 const adminCurriculumExerciseCreateResponseSchema = z.object({
   exercise: z.object({
     id: z.number().int().positive(),
@@ -317,6 +346,9 @@ export type AdminCurriculumBoardCreateResponse = z.infer<typeof adminCurriculumB
 export type AdminCurriculumClassCreateResponse = z.infer<typeof adminCurriculumClassCreateResponseSchema>;
 export type AdminCurriculumSubjectCreateResponse = z.infer<typeof adminCurriculumSubjectCreateResponseSchema>;
 export type AdminCurriculumChapterCreateResponse = z.infer<typeof adminCurriculumChapterCreateResponseSchema>;
+export type AdminChapterSummaryResponse = z.infer<typeof adminChapterSummaryResponseSchema>;
+export type AdminChapterSummaryUpdateResponse = z.infer<typeof adminChapterSummaryUpdateResponseSchema>;
+export type AdminChapterSummaryMediaUploadResponse = z.infer<typeof adminChapterSummaryMediaUploadResponseSchema>;
 export type AdminCurriculumExerciseCreateResponse = z.infer<typeof adminCurriculumExerciseCreateResponseSchema>;
 export type AdminAuditLogResponse = z.infer<typeof adminAuditLogResponseSchema>;
 export type AdminAuditLogResponseEntry = z.infer<typeof adminAuditLogEntrySchema>;
@@ -450,6 +482,60 @@ export const createAdminCurriculumChapter = async (input: {
     method: "POST",
     body: input
   });
+};
+
+export const getAdminChapterSummary = async (chapterId: number): Promise<AdminChapterSummaryResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/${chapterId}/summary`,
+    schema: adminChapterSummaryResponseSchema
+  });
+};
+
+export const updateAdminChapterSummary = async ({
+  chapterId,
+  summary
+}: {
+  chapterId: number;
+  summary: string;
+}): Promise<AdminChapterSummaryUpdateResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/${chapterId}/summary`,
+    schema: adminChapterSummaryUpdateResponseSchema,
+    method: "POST",
+    body: { summary }
+  });
+};
+
+export const uploadAdminChapterSummaryMedia = async ({
+  chapterId,
+  file
+}: {
+  chapterId: number;
+  file: File;
+}): Promise<AdminChapterSummaryMediaUploadResponse> => {
+  const formData = new FormData();
+  formData.append("media", file);
+
+  const response = await fetch(`${backendUrl}/api/admin/content/chapters/${chapterId}/summary-media`, {
+    method: "POST",
+    body: formData,
+    credentials: "include"
+  });
+
+  if (!response.ok) {
+    let message = "Failed to upload chapter summary media.";
+    try {
+      const payload = (await response.json()) as { error?: string };
+      if (payload.error) {
+        message = payload.error;
+      }
+    } catch {
+      // Keep default message when body is not JSON.
+    }
+    throw new Error(message);
+  }
+
+  return adminChapterSummaryMediaUploadResponseSchema.parse((await response.json()) as unknown);
 };
 
 export const createAdminCurriculumExercise = async (input: {

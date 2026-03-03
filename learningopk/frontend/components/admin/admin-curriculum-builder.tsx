@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
 import {
   createAdminCurriculumBoard,
@@ -8,7 +8,10 @@ import {
   createAdminCurriculumClass,
   createAdminCurriculumExercise,
   createAdminCurriculumSubject,
+  getAdminChapterSummary,
   getAdminCurriculumTree,
+  updateAdminChapterSummary,
+  uploadAdminChapterSummaryMedia,
   type AdminCurriculumBoard
 } from "@/lib/admin-api";
 
@@ -33,6 +36,62 @@ const toSlug = (value: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
+const toPositiveInteger = (value: string): number | null => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed <= 0 || !Number.isInteger(parsed)) {
+    return null;
+  }
+  return parsed;
+};
+
+const buildSizedImageMarkdown = ({
+  imageUrl,
+  altText,
+  width,
+  height
+}: {
+  imageUrl: string;
+  altText: string;
+  width: string;
+  height: string;
+}): string => {
+  const widthValue = toPositiveInteger(width);
+  const heightValue = toPositiveInteger(height);
+  const titleParts: string[] = [];
+  if (widthValue) {
+    titleParts.push(`width=${widthValue}`);
+  }
+  if (heightValue) {
+    titleParts.push(`height=${heightValue}`);
+  }
+  const title = titleParts.length > 0 ? ` "${titleParts.join(" ")}"` : "";
+  return `![${altText.trim() || "Chapter figure"}](${imageUrl}${title})`;
+};
+
+const insertAtSelection = ({
+  source,
+  insertion,
+  start,
+  end
+}: {
+  source: string;
+  insertion: string;
+  start: number;
+  end: number;
+}): { value: string; cursor: number } => {
+  const safeStart = Math.max(0, Math.min(start, source.length));
+  const safeEnd = Math.max(safeStart, Math.min(end, source.length));
+  const nextValue = `${source.slice(0, safeStart)}${insertion}${source.slice(safeEnd)}`;
+  return {
+    value: nextValue,
+    cursor: safeStart + insertion.length
+  };
+};
+
 export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilderProps) {
   const { pushToast } = useToast();
   const [boards, setBoards] = useState(initialBoards);
@@ -49,6 +108,14 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   const [chapterNumber, setChapterNumber] = useState("1");
   const [chapterTitle, setChapterTitle] = useState("");
   const [chapterSummary, setChapterSummary] = useState("");
+  const [summaryEditorChapterId, setSummaryEditorChapterId] = useState("");
+  const [summaryEditorContent, setSummaryEditorContent] = useState("");
+  const [summaryEditorImageAlt, setSummaryEditorImageAlt] = useState("Figure");
+  const [summaryEditorImageWidth, setSummaryEditorImageWidth] = useState("640");
+  const [summaryEditorImageHeight, setSummaryEditorImageHeight] = useState("");
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+  const [isSummarySaving, setIsSummarySaving] = useState(false);
+  const [isSummaryMediaUploading, setIsSummaryMediaUploading] = useState(false);
   const [exerciseChapterId, setExerciseChapterId] = useState("");
   const [exerciseType, setExerciseType] = useState<ExerciseType>("short");
   const [exerciseDifficulty, setExerciseDifficulty] = useState<"easy" | "medium" | "hard">("medium");
@@ -57,6 +124,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   const [exerciseSolution, setExerciseSolution] = useState("");
   const [activeFormTab, setActiveFormTab] = useState<CurriculumFormTab>("board");
   const [expandedBoardIds, setExpandedBoardIds] = useState<Set<number>>(new Set());
+  const summaryEditorInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const summaryEditorUploadInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setExpandedBoardIds((current) => {
@@ -135,6 +204,58 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       setExerciseType("short");
     }
   }, [exerciseType, isPhysicsExerciseChapter]);
+
+  useEffect(() => {
+    if (!summaryEditorChapterId) {
+      setSummaryEditorContent("");
+      return;
+    }
+
+    let isCancelled = false;
+    const chapterId = Number(summaryEditorChapterId);
+    if (!chapterId) {
+      setSummaryEditorContent("");
+      return;
+    }
+
+    setIsSummaryLoading(true);
+    getAdminChapterSummary(chapterId)
+      .then((payload) => {
+        if (!isCancelled) {
+          setSummaryEditorContent(payload.chapter.summary);
+        }
+      })
+      .catch(() => {
+        if (!isCancelled) {
+          setSummaryEditorContent("");
+          pushToast({
+            title: "Could not load chapter summary",
+            tone: "error"
+          });
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsSummaryLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [summaryEditorChapterId, pushToast]);
+
+  useEffect(() => {
+    if (!summaryEditorChapterId) {
+      return;
+    }
+
+    const selectedId = Number(summaryEditorChapterId);
+    if (!chapterOptions.some((option) => option.id === selectedId)) {
+      setSummaryEditorChapterId("");
+      setSummaryEditorContent("");
+    }
+  }, [chapterOptions, summaryEditorChapterId]);
 
   const refreshTree = async () => {
     setIsRefreshing(true);
@@ -288,6 +409,112 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       pushToast({ title: "Could not create exercise", tone: "error" });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const saveSummaryEditor = async () => {
+    const chapterId = Number(summaryEditorChapterId);
+    const summary = summaryEditorContent.trim();
+    if (!chapterId || !summary) {
+      pushToast({
+        title: "Select a chapter and write summary first",
+        tone: "error"
+      });
+      return;
+    }
+
+    setIsSummarySaving(true);
+    try {
+      await updateAdminChapterSummary({
+        chapterId,
+        summary
+      });
+      pushToast({
+        title: "Chapter summary updated",
+        tone: "success"
+      });
+    } catch {
+      pushToast({
+        title: "Could not save chapter summary",
+        tone: "error"
+      });
+    } finally {
+      setIsSummarySaving(false);
+    }
+  };
+
+  const uploadSummaryFigure = async () => {
+    const chapterId = Number(summaryEditorChapterId);
+    if (!chapterId) {
+      pushToast({
+        title: "Select a chapter first",
+        tone: "error"
+      });
+      return;
+    }
+
+    const file = summaryEditorUploadInputRef.current?.files?.[0];
+    if (!file) {
+      pushToast({
+        title: "Choose an image file first",
+        tone: "error"
+      });
+      return;
+    }
+
+    const textarea = summaryEditorInputRef.current;
+    const selectionStart = textarea?.selectionStart ?? summaryEditorContent.length;
+    const selectionEnd = textarea?.selectionEnd ?? summaryEditorContent.length;
+
+    setIsSummaryMediaUploading(true);
+    try {
+      const payload = await uploadAdminChapterSummaryMedia({
+        chapterId,
+        file
+      });
+      const imageMarkdown = buildSizedImageMarkdown({
+        imageUrl: payload.asset.objectUrl,
+        altText: summaryEditorImageAlt,
+        width: summaryEditorImageWidth,
+        height: summaryEditorImageHeight
+      });
+      const insertion = `${imageMarkdown}\n`;
+
+      let cursorAfterInsert = selectionStart + insertion.length;
+      setSummaryEditorContent((current) => {
+        const result = insertAtSelection({
+          source: current,
+          insertion,
+          start: selectionStart,
+          end: selectionEnd
+        });
+        cursorAfterInsert = result.cursor;
+        return result.value;
+      });
+
+      requestAnimationFrame(() => {
+        const input = summaryEditorInputRef.current;
+        if (input) {
+          input.focus();
+          input.setSelectionRange(cursorAfterInsert, cursorAfterInsert);
+        }
+      });
+
+      if (summaryEditorUploadInputRef.current) {
+        summaryEditorUploadInputRef.current.value = "";
+      }
+
+      pushToast({
+        title: "Figure uploaded and inserted",
+        tone: "success"
+      });
+    } catch {
+      pushToast({
+        title: "Could not upload figure",
+        tone: "error"
+      });
+    } finally {
+      setIsSummaryMediaUploading(false);
     }
   };
 
@@ -445,57 +672,166 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
         ) : null}
 
         {activeFormTab === "chapter" ? (
-          <form className="space-y-2" data-testid="curriculum-chapter-form" onSubmit={submitChapter}>
-            <p className="text-sm font-semibold text-foreground">Add Chapter</p>
-            <Select
-              data-testid="curriculum-chapter-subject-select"
-              value={chapterSubjectId}
-              onChange={(event) => setChapterSubjectId(event.target.value)}
-            >
-              <option value="">Select subject</option>
-              {subjectOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-            <Input
-              data-testid="curriculum-chapter-number-input"
-              type="number"
-              min={1}
-              value={chapterNumber}
-              onChange={(event) => setChapterNumber(event.target.value)}
-              placeholder="Chapter number"
-            />
-            <Input
-              data-testid="curriculum-chapter-title-input"
-              value={chapterTitle}
-              onChange={(event) => setChapterTitle(event.target.value)}
-              placeholder="Chapter title"
-            />
-            <Textarea
-              data-testid="curriculum-chapter-summary-input"
-              value={chapterSummary}
-              onChange={(event) => setChapterSummary(event.target.value)}
-              className="min-h-48 resize-y"
-              placeholder="Write chapter summary in Markdown. Example: ![Diagram](https://...) and $$E=mc^2$$"
-            />
-            <p className="text-xs text-muted-foreground">Supports Markdown, images, and math notation.</p>
-            <div
-              className="rounded-lg border border-border/60 bg-background/50 p-3"
-              data-testid="curriculum-chapter-summary-preview"
-            >
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Summary preview</p>
-              {chapterSummary.trim().length > 0 ? (
-                <MarkdownMathRenderer content={chapterSummary} className="prose-sm" />
-              ) : (
-                <p className="text-sm text-muted-foreground">Preview appears here as rendered Markdown.</p>
-              )}
+          <div className="space-y-4">
+            <form className="space-y-2" data-testid="curriculum-chapter-form" onSubmit={submitChapter}>
+              <p className="text-sm font-semibold text-foreground">Add Chapter</p>
+              <Select
+                data-testid="curriculum-chapter-subject-select"
+                value={chapterSubjectId}
+                onChange={(event) => setChapterSubjectId(event.target.value)}
+              >
+                <option value="">Select subject</option>
+                {subjectOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+              <Input
+                data-testid="curriculum-chapter-number-input"
+                type="number"
+                min={1}
+                value={chapterNumber}
+                onChange={(event) => setChapterNumber(event.target.value)}
+                placeholder="Chapter number"
+              />
+              <Input
+                data-testid="curriculum-chapter-title-input"
+                value={chapterTitle}
+                onChange={(event) => setChapterTitle(event.target.value)}
+                placeholder="Chapter title"
+              />
+              <Textarea
+                data-testid="curriculum-chapter-summary-input"
+                value={chapterSummary}
+                onChange={(event) => setChapterSummary(event.target.value)}
+                className="min-h-48 resize-y"
+                placeholder="Write chapter summary in Markdown. Example: ![Diagram](https://...) and $$E=mc^2$$"
+              />
+              <p className="text-xs text-muted-foreground">Supports Markdown, images, and math notation.</p>
+              <div
+                className="rounded-lg border border-border/60 bg-background/50 p-3"
+                data-testid="curriculum-chapter-summary-preview"
+              >
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Summary preview</p>
+                {chapterSummary.trim().length > 0 ? (
+                  <MarkdownMathRenderer content={chapterSummary} className="prose-sm" />
+                ) : (
+                  <p className="text-sm text-muted-foreground">Preview appears here as rendered Markdown.</p>
+                )}
+              </div>
+              <Button
+                data-testid="curriculum-chapter-submit"
+                type="submit"
+                size="sm"
+                variant="secondary"
+                disabled={isSubmitting}
+              >
+                Add chapter
+              </Button>
+            </form>
+
+            <div className="space-y-3 rounded-lg border border-border/60 bg-background/50 p-3">
+              <p className="text-sm font-semibold text-foreground">Edit Existing Chapter Summary</p>
+              <Select
+                data-testid="curriculum-summary-editor-chapter-select"
+                value={summaryEditorChapterId}
+                onChange={(event) => setSummaryEditorChapterId(event.target.value)}
+              >
+                <option value="">Select chapter</option>
+                {chapterOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+
+              <Textarea
+                ref={summaryEditorInputRef}
+                data-testid="curriculum-summary-editor-input"
+                value={summaryEditorContent}
+                onChange={(event) => setSummaryEditorContent(event.target.value)}
+                className="min-h-56 resize-y"
+                placeholder="Summary markdown for the selected chapter."
+                disabled={!summaryEditorChapterId || isSummaryLoading || isSummaryMediaUploading}
+              />
+
+              <div className="grid gap-2 md:grid-cols-2">
+                <Input
+                  data-testid="curriculum-summary-editor-alt-input"
+                  value={summaryEditorImageAlt}
+                  onChange={(event) => setSummaryEditorImageAlt(event.target.value)}
+                  placeholder="Image alt text"
+                  disabled={!summaryEditorChapterId}
+                />
+                <Input
+                  ref={summaryEditorUploadInputRef}
+                  data-testid="curriculum-summary-editor-upload-input"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  disabled={!summaryEditorChapterId || isSummaryMediaUploading}
+                />
+                <Input
+                  data-testid="curriculum-summary-editor-width-input"
+                  type="number"
+                  min={1}
+                  value={summaryEditorImageWidth}
+                  onChange={(event) => setSummaryEditorImageWidth(event.target.value)}
+                  placeholder="Width (px)"
+                  disabled={!summaryEditorChapterId}
+                />
+                <Input
+                  data-testid="curriculum-summary-editor-height-input"
+                  type="number"
+                  min={1}
+                  value={summaryEditorImageHeight}
+                  onChange={(event) => setSummaryEditorImageHeight(event.target.value)}
+                  placeholder="Height (px, optional)"
+                  disabled={!summaryEditorChapterId}
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  data-testid="curriculum-summary-editor-upload-button"
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={uploadSummaryFigure}
+                  disabled={!summaryEditorChapterId || isSummaryMediaUploading}
+                >
+                  {isSummaryMediaUploading ? "Uploading..." : "Upload figure"}
+                </Button>
+                <Button
+                  data-testid="curriculum-summary-editor-save-button"
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={saveSummaryEditor}
+                  disabled={!summaryEditorChapterId || isSummarySaving || isSummaryLoading}
+                >
+                  {isSummarySaving ? "Saving..." : "Save summary"}
+                </Button>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Uploaded image markdown is inserted at cursor position. Width/height are emitted as image title metadata
+                (`"width=640 height=320"`).
+              </p>
+
+              <div
+                className="rounded-lg border border-border/60 bg-background p-3"
+                data-testid="curriculum-summary-editor-preview"
+              >
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Editor preview</p>
+                {summaryEditorContent.trim().length > 0 ? (
+                  <MarkdownMathRenderer content={summaryEditorContent} className="prose-sm" />
+                ) : (
+                  <p className="text-sm text-muted-foreground">Select a chapter to load and preview summary markdown.</p>
+                )}
+              </div>
             </div>
-            <Button data-testid="curriculum-chapter-submit" type="submit" size="sm" variant="secondary" disabled={isSubmitting}>
-              Add chapter
-            </Button>
-          </form>
+          </div>
         ) : null}
 
         {activeFormTab === "exercise" ? (

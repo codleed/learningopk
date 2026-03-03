@@ -405,6 +405,63 @@ test("admin chapter publish endpoint enforces auth/role and updates chapter visi
   assert.equal(chapterRows[0]?.isPublished, true);
 });
 
+test("admin chapter summary endpoints enforce auth/role and support summary updates", async () => {
+  const app = createApp();
+  const anonAgent = request(app);
+  const adminAgent = request.agent(app);
+  const memberAgent = request.agent(app);
+
+  await signUp(adminAgent, "Summary Admin", `tst_summary_admin_${Date.now()}@example.com`);
+  await signUp(memberAgent, "Summary Member", `tst_summary_member_${Date.now()}@example.com`);
+
+  const adminUser = await getSessionUser(adminAgent);
+  const chapterId = await createChapterFixture();
+
+  const unauthenticatedGet = await anonAgent.get(`/api/admin/content/chapters/${chapterId}/summary`);
+  assert.equal(unauthenticatedGet.status, 401);
+
+  const forbiddenGet = await memberAgent.get(`/api/admin/content/chapters/${chapterId}/summary`);
+  assert.equal(forbiddenGet.status, 403);
+
+  await assignAdminRole(adminUser.id);
+
+  const missingGet = await adminAgent.get("/api/admin/content/chapters/999999/summary");
+  assert.equal(missingGet.status, 404);
+
+  const getResponse = await adminAgent.get(`/api/admin/content/chapters/${chapterId}/summary`);
+  assert.equal(getResponse.status, 200);
+  assert.equal(getResponse.body?.chapter?.id, chapterId);
+  assert.equal(getResponse.body?.chapter?.summary, "Fixture chapter summary.");
+
+  const invalidUpdate = await adminAgent.post(`/api/admin/content/chapters/${chapterId}/summary`).send({
+    summary: ""
+  });
+  assert.equal(invalidUpdate.status, 400);
+
+  const missingUpdate = await adminAgent.post("/api/admin/content/chapters/999999/summary").send({
+    summary: "Updated summary markdown."
+  });
+  assert.equal(missingUpdate.status, 404);
+
+  const updatedSummary = "Updated summary markdown with image.\n\n![Figure](https://example.com/fig.png)";
+  const updateResponse = await adminAgent.post(`/api/admin/content/chapters/${chapterId}/summary`).send({
+    summary: updatedSummary
+  });
+  assert.equal(updateResponse.status, 200);
+  assert.equal(updateResponse.body?.chapter?.id, chapterId);
+  assert.equal(updateResponse.body?.chapter?.summary, updatedSummary);
+
+  const chapterRows = await db
+    .select({
+      summary: chapters.summary
+    })
+    .from(chapters)
+    .where(eq(chapters.id, chapterId))
+    .limit(1);
+
+  assert.equal(chapterRows[0]?.summary, updatedSummary);
+});
+
 test("admin thread pin endpoint enforces auth/role and updates thread pin status", async () => {
   const app = createApp();
   const anonAgent = request(app);
