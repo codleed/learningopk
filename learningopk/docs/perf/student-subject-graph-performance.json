@@ -1,0 +1,11 @@
+{
+  "capturedAt": "2026-03-03T22:22:24.351Z",
+  "subjectRouteLoadMs": 5148,
+  "graphLoadMs": 327,
+  "search": {
+    "sampleCount": 5,
+    "p95Ms": 527,
+    "meanMs": 471.6,
+    "maxMs": 527
+  }
+}

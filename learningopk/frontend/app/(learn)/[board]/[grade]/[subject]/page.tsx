@@ -4,9 +4,8 @@ import { z } from "zod";
 
 import { AppShell } from "@/components/foundation/app-shell";
 import { DashboardSection, DashboardSurface } from "@/components/foundation/dashboard-primitives";
-import { ChapterCard } from "@/components/learn/chapter-card";
 import { SubjectHeader } from "@/components/learn/subject-header";
-import { EmptyState } from "@/components/ui/states";
+import { SubjectViewSwitcher } from "@/components/learn/subject-view-switcher";
 import { getSubjectOverview } from "@/lib/learn-api";
 import { getServerSession } from "@/lib/session";
 
@@ -64,22 +63,13 @@ export default async function SubjectPage({ params }: SubjectPageProps) {
           }
           contentClassName="space-y-3"
         >
-          {payload.chapters.length === 0 ? (
-            <EmptyState
-              title="No chapters published yet"
-              description="This subject is configured but has no published chapters available."
-            />
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {payload.chapters.map((chapter) => (
-                <ChapterCard
-                  key={chapter.id}
-                  chapter={chapter}
-                  href={`/${payload.board.slug}/${payload.class.slug}/${payload.subject.slug}/${chapter.slug}`}
-                />
-              ))}
-            </div>
-          )}
+          <SubjectViewSwitcher
+            boardSlug={payload.board.slug}
+            classSlug={payload.class.slug}
+            subjectSlug={payload.subject.slug}
+            chapters={payload.chapters}
+            showGraph={session?.user.role === "student"}
+          />
         </DashboardSection>
       </DashboardSurface>
     </AppShell>

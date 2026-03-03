@@ -2,8 +2,10 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { Router } from "express";
 import { z } from "zod";
 
+import { listSubjectChapterGraph } from "../lib/chapter-graph.js";
 import { db } from "../lib/db/index.js";
 import { boardClasses, boards, chapters, exercises, flashcards, quizQuestions, quizzes, subjects } from "../lib/db/schema.js";
+import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 
 const paramsSchema = z.object({
   board: z.string().trim().regex(/^[a-z0-9-]+$/),
@@ -17,18 +19,7 @@ const chapterParamsSchema = paramsSchema.extend({
 
 export const learnRouter = Router();
 
-learnRouter.get("/:board/:grade/:subject", async (req, res) => {
-  const parsed = paramsSchema.safeParse(req.params);
-  if (!parsed.success) {
-    res.status(400).json({
-      error: "Invalid route parameters",
-      details: parsed.error.flatten()
-    });
-    return;
-  }
-
-  const { board, grade, subject } = parsed.data;
-
+const getSubjectRouteRow = async ({ board, grade, subject }: z.infer<typeof paramsSchema>) => {
   const subjectRows = await db
     .select({
       boardId: boards.id,
@@ -52,8 +43,22 @@ learnRouter.get("/:board/:grade/:subject", async (req, res) => {
       )
     )
     .limit(1);
+  return subjectRows[0] ?? null;
+};
 
-  const subjectRow = subjectRows[0];
+learnRouter.get("/:board/:grade/:subject", async (req, res) => {
+  const parsed = paramsSchema.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid route parameters",
+      details: parsed.error.flatten()
+    });
+    return;
+  }
+
+  const grade = parsed.data.grade;
+  const subjectRow = await getSubjectRouteRow(parsed.data);
+
   if (!subjectRow) {
     res.status(404).json({ error: "Subject not found" });
     return;
@@ -88,6 +93,51 @@ learnRouter.get("/:board/:grade/:subject", async (req, res) => {
       description: subjectRow.subjectDescription ?? ""
     },
     chapters: chapterRows
+  });
+});
+
+learnRouter.get("/:board/:grade/:subject/graph", requireSession, async (req, res) => {
+  const parsed = paramsSchema.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid route parameters",
+      details: parsed.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  const { board, grade } = parsed.data;
+  if (authedReq.session.user.role === "student") {
+    if (authedReq.session.user.board && authedReq.session.user.board !== board) {
+      res.status(403).json({
+        error: "Forbidden"
+      });
+      return;
+    }
+    if (authedReq.session.user.class && authedReq.session.user.class !== grade) {
+      res.status(403).json({
+        error: "Forbidden"
+      });
+      return;
+    }
+  }
+
+  const subjectRow = await getSubjectRouteRow(parsed.data);
+  if (!subjectRow) {
+    res.status(404).json({
+      error: "Subject not found"
+    });
+    return;
+  }
+
+  const graph = await listSubjectChapterGraph({
+    subjectId: subjectRow.subjectId,
+    userId: authedReq.session.user.id
+  });
+
+  res.status(200).json({
+    graph
   });
 });
 

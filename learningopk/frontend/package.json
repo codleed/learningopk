@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.ts",
+    "test:e2e:perf:subject-baseline": "playwright test tests/e2e/student-subject-page-baseline-performance.spec.ts",
+    "test:e2e:perf:subject-graph": "playwright test tests/e2e/student-subject-graph-performance.spec.ts",
     "test:e2e:perf:summary": "playwright test tests/e2e/admin-summary-editor-performance.spec.ts",
     "playwright:install": "playwright install chromium"
   },

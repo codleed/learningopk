@@ -3,6 +3,7 @@ import { Router, type Response } from "express";
 import { z } from "zod";
 
 import { requireAdminRole } from "../lib/admin.js";
+import { listAdminChapterGraph } from "../lib/chapter-graph.js";
 import { db } from "../lib/db/index.js";
 import {
   adminAuditLogs,
@@ -2430,63 +2431,15 @@ adminRouter.get("/content/chapters/graph", requireSession, async (req, res) => {
     return;
   }
 
-  const query = parsedQuery.data.q.trim().toLowerCase();
-  const allNodes = await db
-    .select({
-      id: chapters.id,
-      title: chapters.title,
-      isPublished: chapters.isPublished
-    })
-    .from(chapters)
-    .orderBy(asc(chapters.title));
-  const allEdges = await db
-    .select({
-      sourceChapterId: chapterSummaryLinks.sourceChapterId,
-      targetChapterId: chapterSummaryLinks.targetChapterId,
-      isResolved: chapterSummaryLinks.isResolved
-    })
-    .from(chapterSummaryLinks)
-    .where(isNull(chapterSummaryLinks.targetChapterId))
-    .orderBy(asc(chapterSummaryLinks.sourceChapterId));
-
-  const resolvedEdges = await db
-    .select({
-      sourceChapterId: chapterSummaryLinks.sourceChapterId,
-      targetChapterId: chapterSummaryLinks.targetChapterId,
-      isResolved: chapterSummaryLinks.isResolved
-    })
-    .from(chapterSummaryLinks)
-    .where(sql`${chapterSummaryLinks.targetChapterId} is not null`)
-    .orderBy(asc(chapterSummaryLinks.sourceChapterId), asc(chapterSummaryLinks.targetChapterId));
-
-  const filteredNodes = query.length
-    ? allNodes.filter((node) => node.title.toLowerCase().includes(query))
-    : allNodes;
-  const nodeIds = new Set(filteredNodes.map((node) => node.id));
-  const filteredEdges = resolvedEdges.filter((edge) => {
-    const targetChapterId = edge.targetChapterId;
-    if (!targetChapterId) {
-      return false;
-    }
-    return nodeIds.has(edge.sourceChapterId) || nodeIds.has(targetChapterId);
+  const graph = await listAdminChapterGraph({
+    query: parsedQuery.data.q
   });
-
-  const connectedNodeIds = new Set<number>();
-  for (const edge of filteredEdges) {
-    if (edge.targetChapterId) {
-      connectedNodeIds.add(edge.sourceChapterId);
-      connectedNodeIds.add(edge.targetChapterId);
-    }
-  }
-  const finalNodes = query.length
-    ? filteredNodes.filter((node) => connectedNodeIds.has(node.id) || node.title.toLowerCase().includes(query))
-    : filteredNodes;
 
   res.status(200).json({
     graph: {
-      nodes: finalNodes,
-      edges: filteredEdges,
-      unresolvedEdgeCount: allEdges.length
+      nodes: graph.nodes,
+      edges: graph.edges,
+      unresolvedEdgeCount: graph.unresolvedEdgeCount
     }
   });
 });
