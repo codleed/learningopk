@@ -97,6 +97,55 @@ test("chapter summary preview preserves heading hierarchy for h1 h2 h3", async (
   expect(sizes.h2Size).toBeGreaterThan(sizes.h3Size);
 });
 
+test("chapter summary preview renders core markdown formatting primitives", async ({ page }) => {
+  await loginAsSeededAdmin(page);
+  await page.goto("/admin/content");
+  await page.getByTestId("curriculum-tab-chapter").click();
+
+  await page.getByTestId("curriculum-chapter-summary-input").fill(
+    "# Title\n" +
+      "## Section\n" +
+      "### Sub-section\n\n" +
+      "---\n\n" +
+      "**Strong emphasis** and *Light emphasis* and ~~Mistake~~\n\n" +
+      '> "Quote of the day"\n\n' +
+      "- Bullet one\n" +
+      "- Bullet two\n\n" +
+      "1. First\n" +
+      "2. Second\n\n" +
+      "- [x] Task completed\n" +
+      "- [ ] Task pending\n\n" +
+      "Inline code: `print(\"Hello\")`\n\n" +
+      "```javascript\n" +
+      'const gemini = "Creative and helpful";\n' +
+      "console.log(gemini);\n" +
+      "```\n\n" +
+      "$$E = mc^2$$\n\n" +
+      "[Display Text](https://example.com)\n\n" +
+      "![Alt Text](https://example.com/image.png)\n\n" +
+      "Text[^1]\n\n" +
+      "[^1]: The reference."
+  );
+
+  const preview = page.locator("[data-testid='curriculum-chapter-summary-preview']");
+
+  await expect(preview.locator("hr")).toHaveCount(1);
+  await expect(preview.locator("strong", { hasText: "Strong emphasis" })).toBeVisible();
+  await expect(preview.locator("em", { hasText: "Light emphasis" })).toBeVisible();
+  await expect(preview.locator("del", { hasText: "Mistake" })).toBeVisible();
+  await expect(preview.locator("blockquote", { hasText: "Quote of the day" })).toBeVisible();
+  await expect(preview.locator("ul").first()).toHaveCSS("list-style-type", "disc");
+  await expect(preview.locator("ol").first()).toHaveCSS("list-style-type", "decimal");
+  await expect(preview.locator("ul li input[type='checkbox']")).toHaveCount(2);
+  await expect(preview.locator("code", { hasText: 'print("Hello")' })).toBeVisible();
+  await expect(preview.locator("pre code.language-javascript")).toContainText("console.log(gemini);");
+  await expect(preview.locator(".katex-display")).toHaveCount(1);
+  await expect(preview.locator("a[href='https://example.com']")).toHaveText("Display Text");
+  await expect(preview.locator("img[alt='Alt Text']")).toHaveCount(1);
+  await expect(preview.locator("sup a[href*='fn-1']")).toHaveCount(1);
+  await expect(preview.locator("section[data-footnotes]")).toContainText("The reference.");
+});
+
 test("chapter summary preview renders legacy latex fragments and center html", async ({ page }) => {
   await loginAsSeededAdmin(page);
   await page.goto("/admin/content");

@@ -76,8 +76,7 @@ export function MarkdownMathRenderer({ content, className }: MarkdownMathRendere
   return (
     <div
       className={[
-        "prose prose-zinc max-w-none prose-headings:text-foreground prose-p:text-foreground/95 prose-li:text-foreground/95",
-        "prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:text-sm prose-code:text-foreground",
+        "max-w-none text-foreground/95",
         className ?? ""
       ].join(" ")}
     >
@@ -100,9 +99,147 @@ export function MarkdownMathRenderer({ content, className }: MarkdownMathRendere
               {children}
             </h3>
           ),
-          img: ({ title, style, ...props }) => (
+          h4: ({ children, ...props }) => (
+            <h4 {...props} className="mt-3 mb-2 text-lg font-semibold leading-tight text-foreground">
+              {children}
+            </h4>
+          ),
+          h5: ({ children, ...props }) => (
+            <h5 {...props} className="mt-3 mb-2 text-base font-semibold leading-tight text-foreground">
+              {children}
+            </h5>
+          ),
+          h6: ({ children, ...props }) => (
+            <h6 {...props} className="mt-3 mb-2 text-sm font-semibold leading-tight uppercase tracking-wide text-foreground">
+              {children}
+            </h6>
+          ),
+          p: ({ children, ...props }) => (
+            <p {...props} className="my-3 leading-7 text-foreground/95">
+              {children}
+            </p>
+          ),
+          hr: (props) => <hr {...props} className="my-6 border-border/80" />,
+          strong: ({ children, ...props }) => (
+            <strong {...props} className="font-semibold text-foreground">
+              {children}
+            </strong>
+          ),
+          em: ({ children, ...props }) => (
+            <em {...props} className="italic text-foreground/95">
+              {children}
+            </em>
+          ),
+          del: ({ children, ...props }) => (
+            <del {...props} className="text-muted-foreground">
+              {children}
+            </del>
+          ),
+          blockquote: ({ children, ...props }) => (
+            <blockquote
+              {...props}
+              className="my-4 border-l-4 border-primary/45 bg-muted/35 px-4 py-2 italic text-foreground/90"
+            >
+              {children}
+            </blockquote>
+          ),
+          ul: ({ children, className, ...props }) => {
+            const isTaskList = (className ?? "").includes("contains-task-list");
+            return (
+              <ul
+                {...props}
+                className={
+                  isTaskList
+                    ? "my-3 space-y-2 list-none pl-0 text-foreground/95"
+                    : "my-3 ml-6 list-disc space-y-1 text-foreground/95"
+                }
+              >
+                {children}
+              </ul>
+            );
+          },
+          ol: ({ children, ...props }) => (
+            <ol {...props} className="my-3 ml-6 list-decimal space-y-1 text-foreground/95">
+              {children}
+            </ol>
+          ),
+          li: ({ children, className, ...props }) => {
+            const isTaskItem = (className ?? "").includes("task-list-item");
+            return (
+              <li {...props} className={isTaskItem ? "flex items-start gap-2 leading-7" : "pl-1 leading-7"}>
+                {children}
+              </li>
+            );
+          },
+          a: ({ children, ...props }) => (
+            <a
+              {...props}
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-primary underline decoration-primary/50 underline-offset-2 hover:decoration-primary"
+            >
+              {children}
+            </a>
+          ),
+          pre: ({ children, ...props }) => (
+            <pre
+              {...props}
+              className="my-4 overflow-x-auto rounded-lg border border-border/70 bg-muted/55 p-3 text-sm text-foreground"
+            >
+              {children}
+            </pre>
+          ),
+          code: ({ children, className, ...props }) => {
+            const isBlock = (className ?? "").includes("language-");
+            if (isBlock) {
+              return (
+                <code {...props} className={[className ?? "", "font-mono text-sm text-foreground"].join(" ").trim()}>
+                  {children}
+                </code>
+              );
+            }
+            return (
+              <code {...props} className="rounded bg-muted px-1 py-0.5 font-mono text-[0.92em] text-foreground">
+                {children}
+              </code>
+            );
+          },
+          input: ({ type, checked, ...props }) => {
+            if (type === "checkbox") {
+              return (
+                <input
+                  {...props}
+                  checked={Boolean(checked)}
+                  disabled
+                  readOnly
+                  type="checkbox"
+                  className="mt-1 h-4 w-4 shrink-0 accent-primary"
+                />
+              );
+            }
+            return <input {...props} type={type} />;
+          },
+          sup: ({ children, ...props }) => (
+            <sup {...props} className="text-xs align-super">
+              {children}
+            </sup>
+          ),
+          section: ({ children, className, ...props }) => {
+            const isFootnotesSection = Boolean((props as Record<string, unknown>)["data-footnotes"]);
+            const sectionClassName = isFootnotesSection
+              ? "mt-8 border-t border-border/70 pt-4 text-sm text-muted-foreground"
+              : className ?? "";
+            return (
+              <section {...props} className={sectionClassName}>
+                {children}
+              </section>
+            );
+          },
+          img: ({ title, style, alt, ...props }) => (
             <img
               {...props}
+              alt={alt ?? ""}
+              className="my-4 h-auto max-w-full rounded-md border border-border/70"
               style={{
                 ...parseImageDimensionsFromTitle(title),
                 ...style
