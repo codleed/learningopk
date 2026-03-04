@@ -8,6 +8,7 @@ import type { CSSProperties } from "react";
 type MarkdownMathRendererProps = {
   content: string;
   className?: string;
+  forceWrap?: boolean;
 };
 
 const normalizeStandaloneBlockMath = (content: string) =>
@@ -45,6 +46,35 @@ const normalizeLegacyBracketedMath = (content: string) => {
   );
 };
 
+const stripNestedInlineMathDelimiters = (expression: string): string =>
+  expression.replace(/(?<!\\)\$([^\r\n$]+?)\$/g, (_match, nestedExpression) => String(nestedExpression).trim());
+
+const normalizeNestedMathDelimiters = (content: string): string => {
+  const normalizedBlocks = content.replace(/\$\$([\s\S]*?)\$\$/g, (_match, expression) => {
+    const normalizedExpression = stripNestedInlineMathDelimiters(String(expression));
+    return `$$${normalizedExpression}$$`;
+  });
+
+  return normalizedBlocks.replace(/(?<!\\)(?<!\$)\$([^\r\n$]+?)\$(?!\$)/g, (_match, expression) => {
+    const normalizedExpression = stripNestedInlineMathDelimiters(String(expression));
+    return `$${normalizedExpression}$`;
+  });
+};
+
+const normalizeBareLatexLines = (content: string): string =>
+  content.replace(/(^|\r?\n)([ \t]*\\[A-Za-z]+[^\r\n]*)(?=\r?\n|$)/g, (match, lineStart, expression) => {
+    const normalizedExpression = String(expression).trim();
+    if (!normalizedExpression || normalizedExpression.startsWith("\\[") || normalizedExpression.startsWith("\\(")) {
+      return match;
+    }
+
+    if (/^\$/.test(normalizedExpression) || /^\$\$/.test(normalizedExpression)) {
+      return `${lineStart}${normalizedExpression}`;
+    }
+
+    return `${lineStart}$${stripNestedInlineMathDelimiters(normalizedExpression)}$`;
+  });
+
 const DIMENSION_TOKEN_PATTERN = /\b(width|height)\s*=\s*([0-9]+(?:\.[0-9]+)?(?:px|%)?)\b/gi;
 
 const parseImageDimensionsFromTitle = (title: string | null | undefined): CSSProperties => {
@@ -68,15 +98,18 @@ const parseImageDimensionsFromTitle = (title: string | null | undefined): CSSPro
   return style;
 };
 
-export function MarkdownMathRenderer({ content, className }: MarkdownMathRendererProps) {
+export function MarkdownMathRenderer({ content, className, forceWrap = false }: MarkdownMathRendererProps) {
   const normalizedContent = normalizeStandaloneBlockMath(
-    normalizeLegacyBracketedMath(normalizeEscapedMathDelimiters(content))
+    normalizeNestedMathDelimiters(
+      normalizeBareLatexLines(normalizeLegacyBracketedMath(normalizeEscapedMathDelimiters(content)))
+    )
   );
 
   return (
     <div
       className={[
         "max-w-none text-foreground/95",
+        forceWrap ? "break-words [overflow-wrap:anywhere] [&_*]:break-words [&_*]:[overflow-wrap:anywhere]" : "",
         className ?? ""
       ].join(" ")}
     >
@@ -115,7 +148,7 @@ export function MarkdownMathRenderer({ content, className }: MarkdownMathRendere
             </h6>
           ),
           p: ({ children, ...props }) => (
-            <p {...props} className="my-3 leading-7 text-foreground/95">
+            <p {...props} className={forceWrap ? "my-3 break-words leading-7 text-foreground/95 [overflow-wrap:anywhere]" : "my-3 leading-7 text-foreground/95"}>
               {children}
             </p>
           ),
@@ -184,7 +217,11 @@ export function MarkdownMathRenderer({ content, className }: MarkdownMathRendere
           pre: ({ children, ...props }) => (
             <pre
               {...props}
-              className="my-4 overflow-x-auto rounded-lg border border-border/70 bg-muted/55 p-3 text-sm text-foreground"
+              className={
+                forceWrap
+                  ? "my-4 overflow-x-hidden whitespace-pre-wrap break-words rounded-lg border border-border/70 bg-muted/55 p-3 text-sm text-foreground"
+                  : "my-4 overflow-x-auto rounded-lg border border-border/70 bg-muted/55 p-3 text-sm text-foreground"
+              }
             >
               {children}
             </pre>

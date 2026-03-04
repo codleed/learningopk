@@ -6,6 +6,8 @@ import { useMemo, useState } from "react";
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 import { DashboardSection, DashboardSurface } from "@/components/foundation/dashboard-primitives";
 import { Tabs, type TabItem } from "@/components/foundation/tabs";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 import { AIChatPanel } from "./ai-chat-panel";
 import { ChapterStudyContentWithAi } from "./chapter-study-content-with-ai";
@@ -52,11 +54,23 @@ export function ChapterStudyWorkspace({
   autoOpenAi = false
 }: ChapterStudyWorkspaceProps) {
   const [prompt, setPrompt] = useState<string | null>(autoOpenAi ? "Guide me through this chapter using hints first." : null);
+  const [isAiSidebarMaximized, setIsAiSidebarMaximized] = useState(false);
+  const [isAiSidebarHidden, setIsAiSidebarHidden] = useState(false);
   const panelPrompt = useMemo(() => prompt ?? undefined, [prompt]);
+  const useSingleColumnLayout = isAiSidebarMaximized || isAiSidebarHidden;
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)] xl:items-start">
-      <DashboardSurface as="section" tone="shell" className="overflow-visible space-y-4 p-4 sm:p-5">
+    <div
+      className={cn(
+        "grid gap-4 xl:items-start",
+        useSingleColumnLayout ? "xl:grid-cols-[minmax(0,1fr)]" : "xl:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)]"
+      )}
+    >
+      <DashboardSurface
+        as="section"
+        tone="shell"
+        className={cn("overflow-visible space-y-4 p-4 sm:p-5", isAiSidebarMaximized ? "xl:hidden" : "")}
+      >
         <DashboardSurface as="header" tone="hero" className="px-5 py-6 sm:px-7">
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
             {boardName} | Class {className} | {subjectName}
@@ -76,7 +90,21 @@ export function ChapterStudyWorkspace({
         </DashboardSurface>
 
         <DashboardSurface as="div" tone="header" className="px-4 py-3">
-          <Tabs activeKey={activeTab} items={tabs} ariaLabel="Chapter study tabs" />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Tabs activeKey={activeTab} items={tabs} ariaLabel="Chapter study tabs" />
+            {isAiSidebarHidden ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setIsAiSidebarHidden(false);
+                }}
+              >
+                Show AI Tutor
+              </Button>
+            ) : null}
+          </div>
         </DashboardSurface>
 
         <DashboardSection title="Study Content">
@@ -97,9 +125,24 @@ export function ChapterStudyWorkspace({
         </DashboardSection>
       </DashboardSurface>
 
-      <div className="xl:sticky xl:top-4 xl:self-start">
-        <AIChatPanel chapterId={chapterId} chapterTitle={chapterTitle} initialPrompt={panelPrompt} layout="sidebar" />
-      </div>
+      {!isAiSidebarHidden ? (
+        <div className="xl:sticky xl:top-4 xl:self-start">
+          <AIChatPanel
+            chapterId={chapterId}
+            chapterTitle={chapterTitle}
+            initialPrompt={panelPrompt}
+            layout="sidebar"
+            isSidebarMaximized={isAiSidebarMaximized}
+            onToggleSidebarMaximized={() => {
+              setIsAiSidebarMaximized((previous) => !previous);
+            }}
+            onHideSidebar={() => {
+              setIsAiSidebarHidden(true);
+              setIsAiSidebarMaximized(false);
+            }}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import { Sparkles } from "lucide-react";
 
 import { DashboardChromeHeader } from "@/components/dashboard/dashboard-chrome-layout";
+import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -377,13 +378,25 @@ export function AITutorChat() {
                 <article
                   key={message.id}
                   className={[
-                    "max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-[var(--elevation-soft)]",
+                    "max-w-[88%] break-words rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-[var(--elevation-soft)] [overflow-wrap:anywhere]",
                     message.role === "user"
                       ? "ml-auto bg-primary text-primary-foreground"
                       : "border border-border bg-card text-foreground"
                   ].join(" ")}
                 >
-                  {message.content || (message.role === "assistant" ? "Thinking..." : "")}
+                  {message.role === "assistant" ? (
+                    message.content ? (
+                      <MarkdownMathRenderer
+                        content={message.content}
+                        forceWrap
+                        className="text-sm [&_.katex-display]:overflow-x-visible [&_p:first-child]:mt-0 [&_p:last-child]:mb-0"
+                      />
+                    ) : (
+                      "Thinking..."
+                    )
+                  ) : (
+                    message.content
+                  )}
                 </article>
               ))}
 
