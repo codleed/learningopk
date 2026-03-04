@@ -244,10 +244,10 @@ export function AIChatPanel({
           <div
             key={message.id}
             className={[
-              "max-w-[90%] break-words rounded-xl px-3 py-2 text-sm leading-relaxed [overflow-wrap:anywhere]",
+              "break-words rounded-xl px-3 py-2 text-sm leading-relaxed [overflow-wrap:anywhere]",
               message.role === "user"
-                ? "ml-auto bg-primary text-primary-foreground"
-                : "bg-zinc-100 text-foreground dark:bg-zinc-800"
+                ? "ml-auto w-fit min-w-[4.5rem] max-w-[72%] bg-primary text-primary-foreground"
+                : "max-w-[90%] bg-zinc-100 text-foreground dark:bg-zinc-800"
             ].join(" ")}
           >
             {message.role === "assistant" ? (
