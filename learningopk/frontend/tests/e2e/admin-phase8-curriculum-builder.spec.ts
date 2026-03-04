@@ -39,13 +39,23 @@ test("admin content renders curriculum builder controls", async ({ page }) => {
   await expect(page.getByTestId("curriculum-chapter-form")).toHaveCount(0);
 
   await page.getByTestId("curriculum-tab-chapter").click();
+  await expect(page.getByTestId("curriculum-chapter-mode-tabs")).toBeVisible();
+  await expect(page.getByTestId("curriculum-chapter-mode-add")).toBeVisible();
+  await expect(page.getByTestId("curriculum-chapter-mode-edit")).toBeVisible();
   await expect(page.getByTestId("curriculum-chapter-form")).toBeVisible();
   await expect(page.locator("textarea[data-testid='curriculum-chapter-summary-input']")).toBeVisible();
   await expect(page.getByText("Supports Markdown, images, and math notation.")).toBeVisible();
+  await expect(page.getByTestId("curriculum-summary-editor-chapter-select")).toHaveCount(0);
+  await expect(page.getByTestId("curriculum-chapter-summary-preview-toggle")).toBeVisible();
+  await expect(page.getByTestId("curriculum-chapter-summary-preview")).toHaveCount(0);
+  await page.getByTestId("curriculum-chapter-mode-edit").click();
+  await expect(page.getByTestId("curriculum-chapter-form")).toHaveCount(0);
   await expect(page.getByTestId("curriculum-summary-editor-chapter-select")).toBeVisible();
   await expect(page.getByTestId("curriculum-summary-editor-cm6")).toBeVisible();
   await expect(page.getByTestId("curriculum-summary-editor-upload-button")).toBeVisible();
   await expect(page.getByTestId("curriculum-summary-editor-save-button")).toBeVisible();
+  await expect(page.getByTestId("curriculum-summary-editor-preview-toggle")).toBeVisible();
+  await expect(page.getByTestId("curriculum-summary-editor-preview")).toHaveCount(0);
   await expect(page.getByTestId("curriculum-tree")).toBeVisible();
 });
 
@@ -55,6 +65,7 @@ test("chapter summary preview renders markdown, images, and math", async ({ page
   await page.getByTestId("curriculum-tab-chapter").click();
 
   await page.getByTestId("curriculum-chapter-summary-input").fill("$$x = 8 \\quad \\text{or} \\quad x = 3$$");
+  await page.getByTestId("curriculum-chapter-summary-preview-toggle").click();
 
   await expect(page.locator("[data-testid='curriculum-chapter-summary-preview'] .katex-display")).toHaveCount(1);
   await expect(page.locator("[data-testid='curriculum-chapter-summary-preview']")).not.toContainText("$$x = 8");
@@ -66,6 +77,7 @@ test("chapter summary preview preserves heading hierarchy for h1 h2 h3", async (
   await page.getByTestId("curriculum-tab-chapter").click();
 
   await page.getByTestId("curriculum-chapter-summary-input").fill("# Heading 1\n## Heading 2\n### Heading 3");
+  await page.getByTestId("curriculum-chapter-summary-preview-toggle").click();
 
   const preview = page.locator("[data-testid='curriculum-chapter-summary-preview']");
   const h1 = preview.locator("h1", { hasText: "Heading 1" });
@@ -126,6 +138,7 @@ test("chapter summary preview renders core markdown formatting primitives", asyn
       "Text[^1]\n\n" +
       "[^1]: The reference."
   );
+  await page.getByTestId("curriculum-chapter-summary-preview-toggle").click();
 
   const preview = page.locator("[data-testid='curriculum-chapter-summary-preview']");
 
@@ -154,11 +167,32 @@ test("chapter summary preview renders legacy latex fragments and center html", a
   await page.getByTestId("curriculum-chapter-summary-input").fill(
     "(1 \\mathrm{fm} = 10^{-15} \\mathrm{m}) [ \\text{Atom} = 1 \\mathrm{\\AA} = 10^{-10} \\mathrm{m} ]\n\n<center>Fig 1.5 The modern view of an Atom</center>"
   );
+  await page.getByTestId("curriculum-chapter-summary-preview-toggle").click();
 
   const preview = page.locator("[data-testid='curriculum-chapter-summary-preview']");
   await expect(preview.locator(".katex")).toHaveCount(2);
   await expect(preview.locator("center")).toContainText("Fig 1.5 The modern view of an Atom");
   await expect(preview).not.toContainText("<center>");
+});
+
+test("chapter add and edit summary previews can be toggled", async ({ page }) => {
+  await loginAsSeededAdmin(page);
+  await page.goto("/admin/content");
+  await page.getByTestId("curriculum-tab-chapter").click();
+
+  await expect(page.getByTestId("curriculum-chapter-summary-preview")).toHaveCount(0);
+  await page.getByTestId("curriculum-chapter-summary-input").fill("Preview toggle check.");
+  await page.getByTestId("curriculum-chapter-summary-preview-toggle").click();
+  await expect(page.getByTestId("curriculum-chapter-summary-preview")).toBeVisible();
+  await page.getByTestId("curriculum-chapter-summary-preview-toggle").click();
+  await expect(page.getByTestId("curriculum-chapter-summary-preview")).toHaveCount(0);
+
+  await page.getByTestId("curriculum-chapter-mode-edit").click();
+  await expect(page.getByTestId("curriculum-summary-editor-preview")).toHaveCount(0);
+  await page.getByTestId("curriculum-summary-editor-preview-toggle").click();
+  await expect(page.getByTestId("curriculum-summary-editor-preview")).toBeVisible();
+  await page.getByTestId("curriculum-summary-editor-preview-toggle").click();
+  await expect(page.getByTestId("curriculum-summary-editor-preview")).toHaveCount(0);
 });
 
 test("student chapter summary screen renders markdown content", async ({ page }) => {
@@ -278,9 +312,11 @@ test("admin summary editor saves markdown for selected chapter", async ({ page }
   await page.getByTestId("curriculum-chapter-summary-input").fill("Draft summary from create form.");
   await page.getByTestId("curriculum-chapter-submit").click();
 
+  await page.getByTestId("curriculum-chapter-mode-edit").click();
   const chapterLabel = `${boardName} / ${className} / ${subjectName} / Chapter 1: ${chapterTitle}`;
   await page.getByTestId("curriculum-summary-editor-chapter-select").selectOption({ label: chapterLabel });
 
+  await page.getByTestId("curriculum-summary-editor-preview-toggle").click();
   await expect(page.getByTestId("curriculum-summary-editor-preview")).toContainText("Draft summary from create form.");
   await setSummaryCodeMirrorContent(
     page,

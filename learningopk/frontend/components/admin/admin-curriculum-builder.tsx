@@ -33,6 +33,7 @@ type AdminCurriculumBuilderProps = {
 };
 
 type CurriculumFormTab = "board" | "class" | "subject" | "chapter" | "exercise";
+type ChapterModeTab = "add" | "edit";
 type ExerciseType = "short" | "mcq" | "long" | "numerical";
 
 const toSlug = (value: string) =>
@@ -138,6 +139,9 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   const [exerciseQuestion, setExerciseQuestion] = useState("");
   const [exerciseSolution, setExerciseSolution] = useState("");
   const [activeFormTab, setActiveFormTab] = useState<CurriculumFormTab>("board");
+  const [activeChapterModeTab, setActiveChapterModeTab] = useState<ChapterModeTab>("add");
+  const [isChapterSummaryPreviewVisible, setIsChapterSummaryPreviewVisible] = useState(false);
+  const [isSummaryEditorPreviewVisible, setIsSummaryEditorPreviewVisible] = useState(false);
   const [expandedBoardIds, setExpandedBoardIds] = useState<Set<number>>(new Set());
   const summaryEditorCodeMirrorRef = useRef<CodeMirrorMarkdownEditorHandle | null>(null);
   const summaryEditorLiveContentRef = useRef("");
@@ -402,11 +406,11 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   }, [summaryEditorChapterId]);
 
   useEffect(() => {
-    if (activeFormTab !== "chapter") {
+    if (activeFormTab !== "chapter" || activeChapterModeTab !== "edit") {
       return;
     }
     void loadSummaryGraph();
-  }, [activeFormTab, chapterOptions.length, loadSummaryGraph]);
+  }, [activeFormTab, activeChapterModeTab, chapterOptions.length, loadSummaryGraph]);
 
   const refreshSummaryLinks = async () => {
     const chapterId = Number(summaryEditorChapterId);
@@ -763,7 +767,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 : "border-border bg-card text-foreground hover:border-primary/40"
             }`}
           >
-            Add Chapter
+            Chapter
           </button>
           <button
             type="button"
@@ -856,272 +860,325 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
 
         {activeFormTab === "chapter" ? (
           <div className="space-y-4">
-            <form className="space-y-2" data-testid="curriculum-chapter-form" onSubmit={submitChapter}>
-              <p className="text-sm font-semibold text-foreground">Add Chapter</p>
-              <Select
-                data-testid="curriculum-chapter-subject-select"
-                value={chapterSubjectId}
-                onChange={(event) => setChapterSubjectId(event.target.value)}
+            <div className="flex flex-wrap gap-2" data-testid="curriculum-chapter-mode-tabs">
+              <button
+                type="button"
+                data-testid="curriculum-chapter-mode-add"
+                onClick={() => setActiveChapterModeTab("add")}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                  activeChapterModeTab === "add"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-foreground hover:border-primary/40"
+                }`}
               >
-                <option value="">Select subject</option>
-                {subjectOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
-              <Input
-                data-testid="curriculum-chapter-number-input"
-                type="number"
-                min={1}
-                value={chapterNumber}
-                onChange={(event) => setChapterNumber(event.target.value)}
-                placeholder="Chapter number"
-              />
-              <Input
-                data-testid="curriculum-chapter-title-input"
-                value={chapterTitle}
-                onChange={(event) => setChapterTitle(event.target.value)}
-                placeholder="Chapter title"
-              />
-              <Textarea
-                data-testid="curriculum-chapter-summary-input"
-                value={chapterSummary}
-                onChange={(event) => setChapterSummary(event.target.value)}
-                className="min-h-48 resize-y"
-                placeholder="Write chapter summary in Markdown. Example: ![Diagram](https://...) and $$E=mc^2$$"
-              />
-              <p className="text-xs text-muted-foreground">Supports Markdown, images, and math notation.</p>
-              <div
-                className="rounded-lg border border-border/60 bg-background/50 p-3"
-                data-testid="curriculum-chapter-summary-preview"
+                Add New
+              </button>
+              <button
+                type="button"
+                data-testid="curriculum-chapter-mode-edit"
+                onClick={() => setActiveChapterModeTab("edit")}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                  activeChapterModeTab === "edit"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-foreground hover:border-primary/40"
+                }`}
               >
-                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Summary preview</p>
-                {chapterSummary.trim().length > 0 ? (
-                  <MarkdownMathRenderer content={chapterSummary} className="prose-sm" />
-                ) : (
-                  <p className="text-sm text-muted-foreground">Preview appears here as rendered Markdown.</p>
-                )}
-              </div>
-              <Button
-                data-testid="curriculum-chapter-submit"
-                type="submit"
-                size="sm"
-                variant="secondary"
-                disabled={isSubmitting}
-              >
-                Add chapter
-              </Button>
-            </form>
-
-            <div className="space-y-3 rounded-lg border border-border/60 bg-background/50 p-3">
-              <p className="text-sm font-semibold text-foreground">Edit Existing Chapter Summary</p>
-              <Select
-                data-testid="curriculum-summary-editor-chapter-select"
-                value={summaryEditorChapterId}
-                onChange={(event) => setSummaryEditorChapterId(event.target.value)}
-              >
-                <option value="">Select chapter</option>
-                {chapterOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
-
-              <CodeMirrorMarkdownEditor
-                ref={summaryEditorCodeMirrorRef}
-                value={summaryEditorContent}
-                onChange={handleSummaryEditorContentChange}
-                placeholderText="Summary markdown for the selected chapter."
-                disabled={!summaryEditorChapterId || isSummaryLoading || isSummaryMediaUploading}
-                testId="curriculum-summary-editor-cm6"
-                wikiLinkTargets={wikiLinkTargets}
-                onWikiLinkQueryChange={handleWikiLinkQueryChange}
-              />
-
-              {wikiLinkSuggestions.length > 0 && summaryEditorChapterId ? (
-                <div
-                  data-testid="curriculum-summary-editor-link-suggestions"
-                  className="space-y-1 rounded-lg border border-border/60 bg-background p-2"
-                >
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                    Wiki link suggestions for [[{wikiLinkSuggestionQuery || "..."}]]
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {wikiLinkSuggestions.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        type="button"
-                        className="rounded-md border border-border/70 bg-background px-2 py-1 text-xs text-foreground transition hover:border-primary/60"
-                        onClick={() => applyWikiLinkSuggestion(suggestion)}
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="grid gap-2 md:grid-cols-2">
-                <Input
-                  data-testid="curriculum-summary-editor-alt-input"
-                  value={summaryEditorImageAlt}
-                  onChange={(event) => setSummaryEditorImageAlt(event.target.value)}
-                  placeholder="Image alt text"
-                  disabled={!summaryEditorChapterId}
-                />
-                <Input
-                  ref={summaryEditorUploadInputRef}
-                  data-testid="curriculum-summary-editor-upload-input"
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  disabled={!summaryEditorChapterId || isSummaryMediaUploading}
-                />
-                <Input
-                  data-testid="curriculum-summary-editor-width-input"
-                  type="number"
-                  min={1}
-                  value={summaryEditorImageWidth}
-                  onChange={(event) => setSummaryEditorImageWidth(event.target.value)}
-                  placeholder="Width (px)"
-                  disabled={!summaryEditorChapterId}
-                />
-                <Input
-                  data-testid="curriculum-summary-editor-height-input"
-                  type="number"
-                  min={1}
-                  value={summaryEditorImageHeight}
-                  onChange={(event) => setSummaryEditorImageHeight(event.target.value)}
-                  placeholder="Height (px, optional)"
-                  disabled={!summaryEditorChapterId}
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  data-testid="curriculum-summary-editor-upload-button"
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  onClick={uploadSummaryFigure}
-                  disabled={!summaryEditorChapterId || isSummaryMediaUploading}
-                >
-                  {isSummaryMediaUploading ? "Uploading..." : "Upload figure"}
-                </Button>
-                <Button
-                  data-testid="curriculum-summary-editor-save-button"
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  onClick={saveSummaryEditor}
-                  disabled={!summaryEditorChapterId || isSummarySaving || isSummaryLoading}
-                >
-                  {isSummarySaving ? "Saving..." : "Save summary"}
-                </Button>
-              </div>
-
-              <p className="text-xs text-muted-foreground">
-                Uploaded image markdown is inserted at cursor position. Width/height are emitted as image title metadata
-                (`&quot;width=640 height=320&quot;`).
-              </p>
-
-              <div
-                className="space-y-2 rounded-lg border border-border/60 bg-background p-3"
-                data-testid="curriculum-summary-editor-links-panel"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Links</p>
-                  <Button type="button" size="sm" variant="secondary" onClick={refreshSummaryLinks} disabled={isSummaryLinksLoading}>
-                    {isSummaryLinksLoading ? "Refreshing..." : "Refresh links"}
-                  </Button>
-                </div>
-                <div className="space-y-1 text-sm">
-                  <p className="font-medium text-foreground">Outgoing</p>
-                  {summaryEditorOutgoingLinks.length === 0 ? (
-                    <p className="text-muted-foreground">No wiki links found in this summary.</p>
-                  ) : (
-                    <ul className="space-y-1 text-foreground/90">
-                      {resolvedOutgoingLinks.map((link) => (
-                        <li key={`${link.sourceChapterId}-${link.normalizedTarget}`}>- {link.targetChapterTitle ?? link.targetTitle}</li>
-                      ))}
-                      {unresolvedOutgoingLinks.map((link) => (
-                        <li key={`${link.sourceChapterId}-${link.normalizedTarget}`} className="text-amber-700">
-                          - {link.targetTitle} (unresolved)
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <div className="space-y-1 text-sm">
-                  <p className="font-medium text-foreground">Backlinks</p>
-                  {summaryEditorBacklinks.length === 0 ? (
-                    <p className="text-muted-foreground">No other summaries currently link to this chapter.</p>
-                  ) : (
-                    <ul className="space-y-1 text-foreground/90">
-                      {summaryEditorBacklinks.map((link) => (
-                        <li key={`${link.sourceChapterId}-${link.normalizedTarget}`}>- {link.sourceChapterTitle}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-3 rounded-lg border border-border/60 bg-background p-3" data-testid="curriculum-summary-graph-panel">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Summary Graph</p>
-                  <Button type="button" size="sm" variant="secondary" onClick={loadSummaryGraph} disabled={isSummaryGraphLoading}>
-                    {isSummaryGraphLoading ? "Refreshing..." : "Refresh graph"}
-                  </Button>
-                </div>
-                <Input
-                  data-testid="curriculum-summary-graph-search"
-                  value={summaryGraphSearch}
-                  onChange={(event) => setSummaryGraphSearch(event.target.value)}
-                  placeholder="Filter graph by chapter title"
-                />
-                {filteredGraphNodes.length > 0 ? (
-                  <ChapterLinkGraph
-                    nodes={filteredGraphNodes}
-                    edges={filteredGraphEdges}
-                    activeChapterId={summaryEditorChapterId ? Number(summaryEditorChapterId) : null}
-                    onOpenChapter={(chapterId) => {
-                      setSummaryEditorChapterId(String(chapterId));
-                    }}
-                  />
-                ) : (
-                  <p className="text-sm text-muted-foreground">No graph nodes match the current filter.</p>
-                )}
-                <div className="max-h-32 overflow-auto rounded-md border border-border/50 bg-background/60 p-2">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Open chapter</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {filteredGraphNodes.slice(0, 20).map((node) => (
-                      <button
-                        key={node.id}
-                        type="button"
-                        data-testid={`curriculum-summary-graph-node-button-${node.id}`}
-                        className="rounded-md border border-border/70 px-2 py-1 text-xs text-foreground transition hover:border-primary/60"
-                        onClick={() => setSummaryEditorChapterId(String(node.id))}
-                      >
-                        {node.title}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className="rounded-lg border border-border/60 bg-background p-3"
-                data-testid="curriculum-summary-editor-preview"
-              >
-                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Editor preview</p>
-                {summaryEditorContent.trim().length > 0 ? (
-                  <MarkdownMathRenderer content={summaryEditorContent} className="prose-sm" />
-                ) : (
-                  <p className="text-sm text-muted-foreground">Select a chapter to load and preview summary markdown.</p>
-                )}
-              </div>
+                Edit Chapter
+              </button>
             </div>
+
+            {activeChapterModeTab === "add" ? (
+              <form className="space-y-2" data-testid="curriculum-chapter-form" onSubmit={submitChapter}>
+                <p className="text-sm font-semibold text-foreground">Add Chapter</p>
+                <Select
+                  data-testid="curriculum-chapter-subject-select"
+                  value={chapterSubjectId}
+                  onChange={(event) => setChapterSubjectId(event.target.value)}
+                >
+                  <option value="">Select subject</option>
+                  {subjectOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+                <Input
+                  data-testid="curriculum-chapter-number-input"
+                  type="number"
+                  min={1}
+                  value={chapterNumber}
+                  onChange={(event) => setChapterNumber(event.target.value)}
+                  placeholder="Chapter number"
+                />
+                <Input
+                  data-testid="curriculum-chapter-title-input"
+                  value={chapterTitle}
+                  onChange={(event) => setChapterTitle(event.target.value)}
+                  placeholder="Chapter title"
+                />
+                <Textarea
+                  data-testid="curriculum-chapter-summary-input"
+                  value={chapterSummary}
+                  onChange={(event) => setChapterSummary(event.target.value)}
+                  className="min-h-48 resize-y"
+                  placeholder="Write chapter summary in Markdown. Example: ![Diagram](https://...) and $$E=mc^2$$"
+                />
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">Supports Markdown, images, and math notation.</p>
+                  <Button
+                    data-testid="curriculum-chapter-summary-preview-toggle"
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setIsChapterSummaryPreviewVisible((current) => !current)}
+                  >
+                    {isChapterSummaryPreviewVisible ? "Hide preview" : "Show preview"}
+                  </Button>
+                </div>
+                {isChapterSummaryPreviewVisible ? (
+                  <div
+                    className="rounded-lg border border-border/60 bg-background/50 p-3"
+                    data-testid="curriculum-chapter-summary-preview"
+                  >
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Summary preview</p>
+                    {chapterSummary.trim().length > 0 ? (
+                      <MarkdownMathRenderer content={chapterSummary} className="prose-sm" />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Preview appears here as rendered Markdown.</p>
+                    )}
+                  </div>
+                ) : null}
+                <Button
+                  data-testid="curriculum-chapter-submit"
+                  type="submit"
+                  size="sm"
+                  variant="secondary"
+                  disabled={isSubmitting}
+                >
+                  Add chapter
+                </Button>
+              </form>
+            ) : (
+              <div className="space-y-3 rounded-lg border border-border/60 bg-background/50 p-3">
+                <p className="text-sm font-semibold text-foreground">Edit Existing Chapter Summary</p>
+                <Select
+                  data-testid="curriculum-summary-editor-chapter-select"
+                  value={summaryEditorChapterId}
+                  onChange={(event) => setSummaryEditorChapterId(event.target.value)}
+                >
+                  <option value="">Select chapter</option>
+                  {chapterOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+
+                <CodeMirrorMarkdownEditor
+                  ref={summaryEditorCodeMirrorRef}
+                  value={summaryEditorContent}
+                  onChange={handleSummaryEditorContentChange}
+                  placeholderText="Summary markdown for the selected chapter."
+                  disabled={!summaryEditorChapterId || isSummaryLoading || isSummaryMediaUploading}
+                  testId="curriculum-summary-editor-cm6"
+                  wikiLinkTargets={wikiLinkTargets}
+                  onWikiLinkQueryChange={handleWikiLinkQueryChange}
+                />
+
+                {wikiLinkSuggestions.length > 0 && summaryEditorChapterId ? (
+                  <div
+                    data-testid="curriculum-summary-editor-link-suggestions"
+                    className="space-y-1 rounded-lg border border-border/60 bg-background p-2"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                      Wiki link suggestions for [[{wikiLinkSuggestionQuery || "..."}]]
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {wikiLinkSuggestions.map((suggestion) => (
+                        <button
+                          key={suggestion}
+                          type="button"
+                          className="rounded-md border border-border/70 bg-background px-2 py-1 text-xs text-foreground transition hover:border-primary/60"
+                          onClick={() => applyWikiLinkSuggestion(suggestion)}
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="grid gap-2 md:grid-cols-2">
+                  <Input
+                    data-testid="curriculum-summary-editor-alt-input"
+                    value={summaryEditorImageAlt}
+                    onChange={(event) => setSummaryEditorImageAlt(event.target.value)}
+                    placeholder="Image alt text"
+                    disabled={!summaryEditorChapterId}
+                  />
+                  <Input
+                    ref={summaryEditorUploadInputRef}
+                    data-testid="curriculum-summary-editor-upload-input"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    disabled={!summaryEditorChapterId || isSummaryMediaUploading}
+                  />
+                  <Input
+                    data-testid="curriculum-summary-editor-width-input"
+                    type="number"
+                    min={1}
+                    value={summaryEditorImageWidth}
+                    onChange={(event) => setSummaryEditorImageWidth(event.target.value)}
+                    placeholder="Width (px)"
+                    disabled={!summaryEditorChapterId}
+                  />
+                  <Input
+                    data-testid="curriculum-summary-editor-height-input"
+                    type="number"
+                    min={1}
+                    value={summaryEditorImageHeight}
+                    onChange={(event) => setSummaryEditorImageHeight(event.target.value)}
+                    placeholder="Height (px, optional)"
+                    disabled={!summaryEditorChapterId}
+                  />
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    data-testid="curriculum-summary-editor-upload-button"
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={uploadSummaryFigure}
+                    disabled={!summaryEditorChapterId || isSummaryMediaUploading}
+                  >
+                    {isSummaryMediaUploading ? "Uploading..." : "Upload figure"}
+                  </Button>
+                  <Button
+                    data-testid="curriculum-summary-editor-save-button"
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={saveSummaryEditor}
+                    disabled={!summaryEditorChapterId || isSummarySaving || isSummaryLoading}
+                  >
+                    {isSummarySaving ? "Saving..." : "Save summary"}
+                  </Button>
+                  <Button
+                    data-testid="curriculum-summary-editor-preview-toggle"
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setIsSummaryEditorPreviewVisible((current) => !current)}
+                  >
+                    {isSummaryEditorPreviewVisible ? "Hide preview" : "Show preview"}
+                  </Button>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Uploaded image markdown is inserted at cursor position. Width/height are emitted as image title metadata
+                  (`&quot;width=640 height=320&quot;`).
+                </p>
+
+                <div
+                  className="space-y-2 rounded-lg border border-border/60 bg-background p-3"
+                  data-testid="curriculum-summary-editor-links-panel"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Links</p>
+                    <Button type="button" size="sm" variant="secondary" onClick={refreshSummaryLinks} disabled={isSummaryLinksLoading}>
+                      {isSummaryLinksLoading ? "Refreshing..." : "Refresh links"}
+                    </Button>
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <p className="font-medium text-foreground">Outgoing</p>
+                    {summaryEditorOutgoingLinks.length === 0 ? (
+                      <p className="text-muted-foreground">No wiki links found in this summary.</p>
+                    ) : (
+                      <ul className="space-y-1 text-foreground/90">
+                        {resolvedOutgoingLinks.map((link) => (
+                          <li key={`${link.sourceChapterId}-${link.normalizedTarget}`}>- {link.targetChapterTitle ?? link.targetTitle}</li>
+                        ))}
+                        {unresolvedOutgoingLinks.map((link) => (
+                          <li key={`${link.sourceChapterId}-${link.normalizedTarget}`} className="text-amber-700">
+                            - {link.targetTitle} (unresolved)
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <p className="font-medium text-foreground">Backlinks</p>
+                    {summaryEditorBacklinks.length === 0 ? (
+                      <p className="text-muted-foreground">No other summaries currently link to this chapter.</p>
+                    ) : (
+                      <ul className="space-y-1 text-foreground/90">
+                        {summaryEditorBacklinks.map((link) => (
+                          <li key={`${link.sourceChapterId}-${link.normalizedTarget}`}>- {link.sourceChapterTitle}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-3 rounded-lg border border-border/60 bg-background p-3" data-testid="curriculum-summary-graph-panel">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Summary Graph</p>
+                    <Button type="button" size="sm" variant="secondary" onClick={loadSummaryGraph} disabled={isSummaryGraphLoading}>
+                      {isSummaryGraphLoading ? "Refreshing..." : "Refresh graph"}
+                    </Button>
+                  </div>
+                  <Input
+                    data-testid="curriculum-summary-graph-search"
+                    value={summaryGraphSearch}
+                    onChange={(event) => setSummaryGraphSearch(event.target.value)}
+                    placeholder="Filter graph by chapter title"
+                  />
+                  {filteredGraphNodes.length > 0 ? (
+                    <ChapterLinkGraph
+                      nodes={filteredGraphNodes}
+                      edges={filteredGraphEdges}
+                      activeChapterId={summaryEditorChapterId ? Number(summaryEditorChapterId) : null}
+                      onOpenChapter={(chapterId) => {
+                        setSummaryEditorChapterId(String(chapterId));
+                      }}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No graph nodes match the current filter.</p>
+                  )}
+                  <div className="max-h-32 overflow-auto rounded-md border border-border/50 bg-background/60 p-2">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Open chapter</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {filteredGraphNodes.slice(0, 20).map((node) => (
+                        <button
+                          key={node.id}
+                          type="button"
+                          data-testid={`curriculum-summary-graph-node-button-${node.id}`}
+                          className="rounded-md border border-border/70 px-2 py-1 text-xs text-foreground transition hover:border-primary/60"
+                          onClick={() => setSummaryEditorChapterId(String(node.id))}
+                        >
+                          {node.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {isSummaryEditorPreviewVisible ? (
+                  <div
+                    className="rounded-lg border border-border/60 bg-background p-3"
+                    data-testid="curriculum-summary-editor-preview"
+                  >
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Editor preview</p>
+                    {summaryEditorContent.trim().length > 0 ? (
+                      <MarkdownMathRenderer content={summaryEditorContent} className="prose-sm" />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Select a chapter to load and preview summary markdown.</p>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>
         ) : null}
 
