@@ -1,9 +1,12 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Maximize2, Minimize2 } from "lucide-react";
 
+import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 type ChatRole = "user" | "assistant";
 
@@ -27,6 +30,9 @@ type AIChatPanelProps = {
   layout?: "overlay" | "sidebar";
   isOpen?: boolean;
   onClose?: () => void;
+  isSidebarMaximized?: boolean;
+  onToggleSidebarMaximized?: () => void;
+  onHideSidebar?: () => void;
 };
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
@@ -51,9 +57,13 @@ export function AIChatPanel({
   initialPrompt,
   layout = "overlay",
   isOpen = false,
-  onClose
+  onClose,
+  isSidebarMaximized = false,
+  onToggleSidebarMaximized,
+  onHideSidebar
 }: AIChatPanelProps) {
   const panelIsVisible = layout === "sidebar" ? true : isOpen;
+  const usePanelLevelScroll = layout === "sidebar" && isSidebarMaximized;
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -184,12 +194,12 @@ export function AIChatPanel({
   }
 
   const panelBody = (
-    <div className="flex h-full flex-col">
-      <header className="border-b border-border px-4 py-4">
+    <div className={cn("flex min-h-0 flex-col", usePanelLevelScroll ? "" : "h-full")}>
+      <header className="border-b border-border px-3 py-3">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-muted-foreground">AI Tutor</p>
-            <h2 className="text-lg font-semibold text-foreground">{chapterTitle}</h2>
+            <p className="text-xs font-semibold text-muted-foreground">AI Tutor</p>
+            <h2 className="text-base font-semibold text-foreground">{chapterTitle}</h2>
           </div>
           {layout === "overlay" && onClose ? (
             <Button type="button" variant="secondary" size="sm" onClick={onClose}>
@@ -197,15 +207,33 @@ export function AIChatPanel({
             </Button>
           ) : null}
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-2 flex flex-wrap gap-2">
           <Button type="button" variant="ghost" size="sm" onClick={startFreshSession}>
             Start Fresh Session
           </Button>
+          {layout === "sidebar" && onToggleSidebarMaximized ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onToggleSidebarMaximized}
+              aria-pressed={isSidebarMaximized}
+              aria-label={isSidebarMaximized ? "Restore AI sidebar size" : "Maximize AI sidebar"}
+            >
+              {isSidebarMaximized ? <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />}
+              {isSidebarMaximized ? "Restore" : "Maximize"}
+            </Button>
+          ) : null}
+          {layout === "sidebar" && onHideSidebar ? (
+            <Button type="button" variant="ghost" size="sm" onClick={onHideSidebar} aria-label="Hide AI sidebar">
+              Hide
+            </Button>
+          ) : null}
           {sessionId ? <p className="self-center text-xs text-muted-foreground">Session active</p> : null}
         </div>
       </header>
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+      <div className={cn("space-y-3 px-3 py-3", usePanelLevelScroll ? "" : "min-h-0 flex-1 overflow-y-auto")}>
         {messages.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
             Ask a question and the tutor will guide you step-by-step before revealing the final method.
@@ -216,20 +244,32 @@ export function AIChatPanel({
           <div
             key={message.id}
             className={[
-              "max-w-[90%] rounded-xl px-3 py-2 text-sm leading-relaxed",
+              "max-w-[90%] break-words rounded-xl px-3 py-2 text-sm leading-relaxed [overflow-wrap:anywhere]",
               message.role === "user"
                 ? "ml-auto bg-primary text-primary-foreground"
                 : "bg-zinc-100 text-foreground dark:bg-zinc-800"
             ].join(" ")}
           >
-            {message.content || (message.role === "assistant" ? "Thinking..." : "")}
+            {message.role === "assistant" ? (
+              message.content ? (
+                <MarkdownMathRenderer
+                  content={message.content}
+                  forceWrap
+                  className="text-sm [&_.katex-display]:overflow-x-visible [&_p:first-child]:mt-0 [&_p:last-child]:mb-0"
+                />
+              ) : (
+                "Thinking..."
+              )
+            ) : (
+              message.content
+            )}
           </div>
         ))}
 
         {error ? <p className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">{error}</p> : null}
       </div>
 
-      <form onSubmit={onSubmit} className="border-t border-border p-4">
+      <form onSubmit={onSubmit} className="border-t border-border p-3">
         <label htmlFor="ai-chat-input" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Ask AI tutor
         </label>
@@ -237,7 +277,7 @@ export function AIChatPanel({
           id="ai-chat-input"
           value={inputValue}
           onChange={(event) => setInputValue(event.target.value)}
-          rows={3}
+          rows={2}
           disabled={isSending}
           placeholder={placeholderMessage}
           className="resize-none"
@@ -256,7 +296,14 @@ export function AIChatPanel({
 
   if (layout === "sidebar") {
     return (
-      <aside className="flex h-[32rem] min-h-[32rem] w-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--elevation-card)] xl:h-[calc(100vh-2.5rem)] xl:min-h-[calc(100vh-2.5rem)]">
+      <aside
+        className={cn(
+          "flex w-full flex-col rounded-2xl border border-border bg-card shadow-[var(--elevation-card)] xl:h-[calc(100vh-2.5rem)] xl:min-h-[calc(100vh-2.5rem)]",
+          isSidebarMaximized
+            ? "h-[calc(100vh-2.5rem)] min-h-[calc(100vh-2.5rem)] overflow-y-auto"
+            : "h-[32rem] min-h-[32rem] overflow-hidden"
+        )}
+      >
         {panelBody}
       </aside>
     );
