@@ -85,6 +85,21 @@ export function MarkdownMathRenderer({ content, className }: MarkdownMathRendere
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeRaw, rehypeKatex]}
         components={{
+          h1: ({ children, ...props }) => (
+            <h1 {...props} className="mt-5 mb-3 text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
+              {children}
+            </h1>
+          ),
+          h2: ({ children, ...props }) => (
+            <h2 {...props} className="mt-4 mb-2 text-2xl font-semibold leading-tight text-foreground sm:text-3xl">
+              {children}
+            </h2>
+          ),
+          h3: ({ children, ...props }) => (
+            <h3 {...props} className="mt-3 mb-2 text-xl font-semibold leading-tight text-foreground sm:text-2xl">
+              {children}
+            </h3>
+          ),
           img: ({ title, style, ...props }) => (
             <img
               {...props}

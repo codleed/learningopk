@@ -60,6 +60,43 @@ test("chapter summary preview renders markdown, images, and math", async ({ page
   await expect(page.locator("[data-testid='curriculum-chapter-summary-preview']")).not.toContainText("$$x = 8");
 });
 
+test("chapter summary preview preserves heading hierarchy for h1 h2 h3", async ({ page }) => {
+  await loginAsSeededAdmin(page);
+  await page.goto("/admin/content");
+  await page.getByTestId("curriculum-tab-chapter").click();
+
+  await page.getByTestId("curriculum-chapter-summary-input").fill("# Heading 1\n## Heading 2\n### Heading 3");
+
+  const preview = page.locator("[data-testid='curriculum-chapter-summary-preview']");
+  const h1 = preview.locator("h1", { hasText: "Heading 1" });
+  const h2 = preview.locator("h2", { hasText: "Heading 2" });
+  const h3 = preview.locator("h3", { hasText: "Heading 3" });
+  await expect(h1).toBeVisible();
+  await expect(h2).toBeVisible();
+  await expect(h3).toBeVisible();
+
+  const sizes = await preview.evaluate(() => {
+    const h1El = Array.from(document.querySelectorAll("[data-testid='curriculum-chapter-summary-preview'] h1")).find((node) =>
+      node.textContent?.includes("Heading 1")
+    ) as HTMLElement | undefined;
+    const h2El = Array.from(document.querySelectorAll("[data-testid='curriculum-chapter-summary-preview'] h2")).find((node) =>
+      node.textContent?.includes("Heading 2")
+    ) as HTMLElement | undefined;
+    const h3El = Array.from(document.querySelectorAll("[data-testid='curriculum-chapter-summary-preview'] h3")).find((node) =>
+      node.textContent?.includes("Heading 3")
+    ) as HTMLElement | undefined;
+
+    const h1Size = h1El ? Number.parseFloat(window.getComputedStyle(h1El).fontSize) : 0;
+    const h2Size = h2El ? Number.parseFloat(window.getComputedStyle(h2El).fontSize) : 0;
+    const h3Size = h3El ? Number.parseFloat(window.getComputedStyle(h3El).fontSize) : 0;
+
+    return { h1Size, h2Size, h3Size };
+  });
+
+  expect(sizes.h1Size).toBeGreaterThan(sizes.h2Size);
+  expect(sizes.h2Size).toBeGreaterThan(sizes.h3Size);
+});
+
 test("chapter summary preview renders legacy latex fragments and center html", async ({ page }) => {
   await loginAsSeededAdmin(page);
   await page.goto("/admin/content");
