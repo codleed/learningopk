@@ -38,3 +38,27 @@ test("student subject graph renders, filters by chapter title, and opens chapter
   await page.getByTestId("subject-graph-node-link-kinematics").click();
   await expect(page).toHaveURL(/\/fbise\/9th\/physics\/kinematics(\?.*)?$/);
 });
+
+test("student subject graph publishes theme-aware style metadata", async ({ page }) => {
+  await registerStudent(page, "Subject Graph Theme Student");
+
+  await page.goto("/fbise/9th/physics");
+  await page.getByTestId("subject-view-tab-graph").click();
+
+  const graph = page.getByTestId("subject-graph-canvas");
+  await expect(graph).toHaveAttribute("data-graph-theme", "light");
+  await expect(graph).toHaveAttribute("data-graph-link-width", "2.2");
+  await expect(graph).toHaveAttribute("data-graph-background", "rgb(243, 244, 246)");
+
+  await page.evaluate(() => {
+    window.localStorage.setItem("learningopk-theme", "dark");
+    document.documentElement.classList.add("dark");
+    document.documentElement.style.colorScheme = "dark";
+  });
+  await page.reload();
+  await page.getByTestId("subject-view-tab-graph").click();
+
+  const darkGraph = page.getByTestId("subject-graph-canvas");
+  await expect(darkGraph).toHaveAttribute("data-graph-theme", "dark");
+  await expect(darkGraph).toHaveAttribute("data-graph-background", "rgb(17, 24, 39)");
+});
