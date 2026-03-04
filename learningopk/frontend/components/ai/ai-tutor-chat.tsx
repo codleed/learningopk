@@ -338,7 +338,7 @@ export function AITutorChat() {
     <section
       className={cn(
         "grid min-w-0 gap-4 xl:items-start",
-        isHistoryVisible ? "xl:grid-cols-[minmax(0,1fr)_19rem]" : "xl:grid-cols-[minmax(0,1fr)_auto]"
+        isHistoryVisible ? "xl:grid-cols-[minmax(0,1fr)_19rem]" : "xl:grid-cols-[minmax(0,1fr)]"
       )}
     >
       <div className="min-w-0 space-y-4">
@@ -354,6 +354,16 @@ export function AITutorChat() {
               <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary">General Tutor</p>
               <h2 className="text-lg font-semibold text-foreground">Always-on AI study assistant</h2>
             </div>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsHistoryVisible((previous) => !previous)}
+              aria-pressed={isHistoryVisible}
+              aria-label={isHistoryVisible ? "Hide chat history" : "Show chat history"}
+            >
+              {isHistoryVisible ? "Hide History" : "Show History"}
+            </Button>
           </header>
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -378,10 +388,10 @@ export function AITutorChat() {
                 <article
                   key={message.id}
                   className={[
-                    "max-w-[88%] break-words rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-[var(--elevation-soft)] [overflow-wrap:anywhere]",
+                    "break-words rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-[var(--elevation-soft)] [overflow-wrap:anywhere]",
                     message.role === "user"
-                      ? "ml-auto bg-primary text-primary-foreground"
-                      : "border border-border bg-card text-foreground"
+                      ? "ml-auto w-fit min-w-[4.5rem] max-w-[72%] bg-primary text-primary-foreground"
+                      : "max-w-[88%] border border-border bg-card text-foreground"
                   ].join(" ")}
                 >
                   {message.role === "assistant" ? (
@@ -442,17 +452,8 @@ export function AITutorChat() {
             aria-label="Chat history sidebar"
             className="surface-card flex min-h-[18rem] w-full flex-col overflow-hidden rounded-2xl border border-border bg-card/90 xl:h-[calc(100vh-2.5rem)] xl:w-[19rem]"
           >
-            <div className="flex items-center justify-between border-b border-border px-3 py-3">
+            <div className="border-b border-border px-3 py-3">
               <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">History</p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsHistoryVisible(false)}
-                aria-label="Hide chat history"
-              >
-                Hide
-              </Button>
             </div>
 
             <div className="border-b border-border px-3 py-3">
@@ -489,19 +490,7 @@ export function AITutorChat() {
               })}
             </div>
           </aside>
-        ) : (
-          <div className="surface-card flex items-center rounded-2xl border border-border bg-card/90 p-2 xl:min-h-[3rem]">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => setIsHistoryVisible(true)}
-              aria-label="Show chat history"
-            >
-              Show History
-            </Button>
-          </div>
-        )}
+        ) : null}
       </div>
     </section>
   );
