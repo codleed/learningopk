@@ -1,13 +1,13 @@
-import type { LucideIcon } from "lucide-react";
+import type { Icon } from "@phosphor-icons/react";
 import {
-  Activity,
   BookOpen,
-  CheckCircle2,
-  GraduationCap,
+  CheckCircle,
+  MagnifyingGlass,
   Play,
-  Search,
-  Sparkles,
-} from "lucide-react";
+  Pulse,
+  Sparkle,
+  Student,
+} from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -39,7 +39,7 @@ type LearningScreen = {
   label: string;
   description: string;
   href: string;
-  icon: LucideIcon;
+  icon: Icon;
 };
 
 type DashboardFilter = "all" | "in-progress" | "completed" | "high-score";
@@ -71,11 +71,11 @@ const railDescriptionMap: Record<
     "Calendar rail selected. Weekly activity and recent timeline are highlighted.",
 };
 
-const courseIcons: LucideIcon[] = [
+const courseIcons: Icon[] = [
   BookOpen,
-  Activity,
-  CheckCircle2,
-  GraduationCap,
+  Pulse,
+  CheckCircle,
+  Student,
 ];
 
 const getInitials = (name: string): string =>
@@ -376,19 +376,19 @@ export default async function DashboardPage({
           label: "Exercises",
           description: "Practice solved and unsolved questions.",
           href: `${firstChapterBasePath}?tab=exercises`,
-          icon: Activity,
+          icon: Pulse,
         },
         {
           label: "Quiz",
           description: "Attempt chapter quiz or mock exam.",
           href: `${firstChapterBasePath}?tab=quiz`,
-          icon: CheckCircle2,
+          icon: CheckCircle,
         },
         {
           label: "AI Tutor",
           description: "Open exercises with AI panel expanded.",
           href: `${firstChapterBasePath}?tab=exercises&ai=1`,
-          icon: Sparkles,
+          icon: Sparkle,
         },
       ]
     : [];
@@ -397,28 +397,28 @@ export default async function DashboardPage({
     <AppShell
       session={session}
       currentPath="/dashboard"
-      contentClassName="max-w-[95rem] px-3 pb-10 pt-4 sm:px-5 lg:px-7"
+      contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6"
     >
       <DashboardSurface as="section" tone="shell" className="p-3 sm:p-4 lg:p-5">
-        <div className="relative space-y-4">
+        <div className="relative space-y-5">
             <DashboardSurface
               as="header"
               tone="header"
               className="px-4 py-4 sm:px-6"
             >
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="min-w-[12rem]">
-                  <h1 className="text-base font-semibold text-foreground">
+                  <h1 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                     Dashboard
                   </h1>
-                  <p className="mt-1 text-3xl font-medium tracking-tight text-foreground">
+                  <p className="mt-1 text-3xl font-semibold tracking-[-0.02em] text-foreground sm:text-[2.1rem]">
                     My Classes
                   </p>
                 </div>
 
                 <form
                   method="GET"
-                  className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:gap-3"
+                  className="flex w-full flex-wrap items-center justify-end gap-2.5 sm:w-auto sm:gap-3"
                 >
                   {selectedFilter !== "all" ? (
                     <input type="hidden" name="filter" value={selectedFilter} />
@@ -426,8 +426,8 @@ export default async function DashboardPage({
                   {activeRail !== "dashboard" ? (
                     <input type="hidden" name="rail" value={activeRail} />
                   ) : null}
-                  <label className="flex min-w-[14rem] flex-1 items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm text-muted-foreground sm:min-w-[18rem] sm:flex-none">
-                    <Search className="h-4 w-4 text-muted-foreground" aria-hidden />
+                  <label className="flex min-w-[14rem] flex-1 items-center gap-2 rounded-2xl border border-border bg-secondary/70 px-4 py-2.5 text-sm text-muted-foreground sm:min-w-[18rem] sm:flex-none">
+                    <MagnifyingGlass className="h-4 w-4 text-muted-foreground" weight="duotone" aria-hidden />
                     <span className="sr-only">Search classes</span>
                     <input
                       id="dashboard-search"
@@ -436,7 +436,7 @@ export default async function DashboardPage({
                       aria-label="Search classes"
                       defaultValue={searchQuery}
                       placeholder="Search..."
-                      className="h-6 w-full border-0 bg-transparent p-0 text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
+                      className="h-6 w-full border-0 bg-transparent p-0 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
                     />
                   </label>
                   <DashboardSurface
@@ -453,13 +453,13 @@ export default async function DashboardPage({
                         filter: selectedFilter,
                         rail: activeRail,
                       })}
-                      className="text-xs font-semibold uppercase tracking-[0.06em] text-primary underline underline-offset-4"
+                      className="text-xs font-semibold uppercase tracking-[0.08em] text-primary underline underline-offset-4"
                     >
                       Clear
                     </Link>
                   ) : null}
                   <DashboardNotificationsControl items={notificationItems} />
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-primary/35 bg-primary/10 text-sm font-semibold text-primary">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-muted text-sm font-semibold text-primary">
                     {avatarInitials}
                   </span>
                 </form>
@@ -469,13 +469,13 @@ export default async function DashboardPage({
             <DashboardSurface
               as="article"
               tone="hero"
-              className="px-5 py-6 sm:px-8 sm:py-8"
+              className="px-6 py-7 sm:px-8 sm:py-8"
             >
               <div className="relative max-w-2xl">
-                <p className="inline-flex items-center rounded-lg border border-primary/35 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.07em] text-primary">
+                <p className="inline-flex items-center rounded-xl border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-primary">
                   {featuredSubject?.subjectName ?? "Physics"}
                 </p>
-                <p className="mt-6 text-4xl font-medium leading-tight text-foreground sm:text-6xl">
+                <p className="mt-6 text-4xl font-semibold leading-tight tracking-[-0.02em] text-foreground sm:text-6xl">
                   The study of the structure of matter.
                 </p>
                 <Link
@@ -485,10 +485,10 @@ export default async function DashboardPage({
                       ? `/dashboard/${featuredSubject.subjectSlug}`
                       : "/dashboard")
                   }
-                  className="mt-8 inline-flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.08em] text-primary"
+                  className="mt-8 inline-flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.1em] text-primary"
                 >
                   <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    <Play className="h-4 w-4 fill-current" aria-hidden />
+                    <Play className="h-4 w-4" weight="fill" aria-hidden />
                   </span>
                   Continue course
                 </Link>
@@ -513,9 +513,9 @@ export default async function DashboardPage({
                     href={screen.href}
                     className="group block"
                   >
-                    <DashboardCard className="p-4 transition group-hover:border-primary/30">
+                    <DashboardCard className="p-4 transition group-hover:border-primary/25 group-hover:shadow-[var(--elevation-card)]">
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <screen.icon className="h-5 w-5" aria-hidden />
+                        <screen.icon className="h-5 w-5" weight="duotone" aria-hidden />
                       </span>
                       <p className="mt-3 text-base font-semibold text-foreground group-hover:text-primary">
                         {screen.label}
@@ -559,7 +559,7 @@ export default async function DashboardPage({
                       name="filter"
                       aria-label="Filter courses"
                       defaultValue={selectedFilter}
-                      className="rounded-full border border-border bg-card px-3 py-1 text-xs font-semibold uppercase tracking-[0.06em] text-foreground"
+                      className="h-9 rounded-2xl border border-border bg-secondary/70 px-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground"
                     >
                       <option value="all">All</option>
                       <option value="in-progress">In progress</option>
@@ -612,10 +612,10 @@ export default async function DashboardPage({
                         href={`/dashboard/${subject.subjectSlug}`}
                         className="block"
                       >
-                        <DashboardCard className="px-3 py-3 transition hover:border-primary/30">
+                        <DashboardCard className="px-3 py-3 transition hover:border-primary/25 hover:shadow-[var(--elevation-card)]">
                           <article className="flex flex-wrap items-center gap-3 sm:flex-nowrap sm:gap-4">
                             <span className="inline-flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                              <SubjectIcon className="h-5 w-5" aria-hidden />
+                              <SubjectIcon className="h-5 w-5" weight="duotone" aria-hidden />
                             </span>
                             <div className="min-w-[12rem] flex-1">
                               <p className="text-xl font-medium text-foreground">
@@ -639,8 +639,8 @@ export default async function DashboardPage({
                               className={cn(
                                 "rounded-full px-3 py-1 text-xs font-semibold",
                                 status === "Completed"
-                                  ? "bg-emerald-100 text-emerald-800"
-                                  : "bg-accent text-accent-foreground",
+                                  ? "border border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-200"
+                                  : "border border-border bg-muted text-muted-foreground",
                               )}
                             >
                               {status}
@@ -687,10 +687,10 @@ export default async function DashboardPage({
                   </p>
                 </DashboardCard>
 
-                <article className="rounded-2xl border border-primary/30 bg-primary/10 p-4 text-foreground">
+                <article className="rounded-[1.35rem] border border-primary/30 bg-primary/10 p-4 text-foreground shadow-[var(--elevation-soft)]">
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="text-base font-medium">Courses completed</h3>
-                    <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/20 px-2 text-xs font-semibold text-primary">
+                    <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-muted/80 px-2 text-xs font-semibold text-primary">
                       2
                     </span>
                   </div>
@@ -702,10 +702,10 @@ export default async function DashboardPage({
                   </p>
                 </article>
 
-                <article className="rounded-2xl border border-primary/30 bg-primary/10 p-4 text-foreground">
+                <article className="rounded-[1.35rem] border border-primary/30 bg-primary/10 p-4 text-foreground shadow-[var(--elevation-soft)]">
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="text-base font-medium">Complete tests</h3>
-                    <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/20 px-2 text-xs font-semibold text-primary">
+                    <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-muted/80 px-2 text-xs font-semibold text-primary">
                       3
                     </span>
                   </div>
@@ -772,7 +772,7 @@ export default async function DashboardPage({
                   summary.recentActivity.slice(0, 5).map((entry, index) => (
                     <DashboardCard
                       key={`${entry.type}-${entry.occurredAt}-${index}`}
-                      className="rounded-xl px-4 py-3"
+                      className="rounded-[1rem] px-4 py-3"
                     >
                       <p className="text-sm font-medium text-foreground">
                         {toActivityLabel(entry)}

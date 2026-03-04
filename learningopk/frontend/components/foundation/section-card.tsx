@@ -20,17 +20,17 @@ export function SectionCard({
   contentClassName
 }: SectionCardProps) {
   return (
-    <section className={cn("surface-card rounded-2xl border border-border", className)}>
+    <section className={cn("border-b border-border/70 pb-6", className)}>
       {(title || description || actions) ? (
-        <header className="flex flex-col gap-3 border-b border-border/70 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+        <header className="flex flex-col gap-3 border-b border-border/75 pb-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            {title ? <h2 className="text-lg font-semibold text-foreground">{title}</h2> : null}
+            {title ? <h2 className="text-xl font-semibold tracking-[-0.01em] text-foreground">{title}</h2> : null}
             {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
           </div>
           {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
         </header>
       ) : null}
-      <div className={cn("p-5 sm:p-6", contentClassName)}>{children}</div>
+      <div className={cn("pt-4", contentClassName)}>{children}</div>
     </section>
   );
 }

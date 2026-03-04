@@ -12,13 +12,13 @@ type PageHeaderProps = {
 
 export function PageHeader({ title, subtitle, eyebrow, actions, className }: PageHeaderProps) {
   return (
-    <header className={cn("surface-card rounded-3xl border border-border p-6 sm:p-8", className)}>
+    <header className={cn("border-b border-border/75 pb-5", className)}>
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           {eyebrow ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{eyebrow}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{eyebrow}</p>
           ) : null}
-          <h1 className="text-3xl font-semibold leading-tight text-foreground sm:text-4xl">{title}</h1>
+          <h1 className="text-3xl font-semibold leading-tight tracking-[-0.02em] text-foreground sm:text-4xl">{title}</h1>
           {subtitle ? <p className="max-w-3xl text-sm text-muted-foreground sm:text-base">{subtitle}</p> : null}
         </div>
         {actions ? <div className="flex flex-wrap items-center gap-2 sm:justify-end">{actions}</div> : null}

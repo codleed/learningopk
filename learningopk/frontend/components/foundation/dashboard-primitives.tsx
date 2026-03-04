@@ -3,15 +3,14 @@ import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 const dashboardSurfaceToneClassNames = {
-  shell:
-    "relative overflow-hidden rounded-[2rem] border border-border bg-card shadow-[var(--elevation-strong)]",
-  rail: "rounded-[1.6rem] border border-border bg-card",
-  header: "rounded-[1.6rem] border border-border bg-card",
-  hero: "relative overflow-hidden rounded-[1.6rem] border border-primary/35 bg-primary/[0.08]",
-  panel: "rounded-[1.4rem] border border-border bg-card",
-  card: "rounded-2xl border border-border bg-card",
+  shell: "relative overflow-visible bg-transparent",
+  rail: "rounded-2xl border border-border/70 bg-transparent",
+  header: "border-b border-border/75",
+  hero: "border-b border-border/75",
+  panel: "border-b border-border/70",
+  card: "border-b border-border/60",
   toolbarButton:
-    "rounded-full border border-primary/35 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.06em] text-primary transition hover:bg-primary/20"
+    "rounded-full border border-primary/35 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-primary transition hover:border-primary/55 hover:bg-primary/15"
 } as const;
 
 export type DashboardSurfaceTone = keyof typeof dashboardSurfaceToneClassNames;
@@ -42,7 +41,7 @@ export function DashboardSurface<T extends ElementType = "div">({
 type DashboardToolbarProps = ComponentPropsWithoutRef<"div">;
 
 export function DashboardToolbar({ className, ...props }: DashboardToolbarProps) {
-  return <div className={cn("flex flex-wrap items-center justify-between gap-2", className)} {...props} />;
+  return <div className={cn("flex flex-wrap items-center justify-between gap-3", className)} {...props} />;
 }
 
 type DashboardSectionProps = {
@@ -63,11 +62,11 @@ export function DashboardSection({
   contentClassName
 }: DashboardSectionProps) {
   return (
-    <DashboardSurface as="section" tone="panel" className={cn("p-4 sm:p-5", className)}>
+    <DashboardSurface as="section" tone="panel" className={cn("pb-6", className)}>
       <DashboardToolbar>
         <div>
-          <h2 className="text-xl font-medium text-foreground">{title}</h2>
-          {subtitle ? <p className="text-xs text-muted-foreground">{subtitle}</p> : null}
+          <h2 className="text-[1.1rem] font-semibold tracking-[-0.01em] text-foreground sm:text-xl">{title}</h2>
+          {subtitle ? <p className="mt-1 text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{subtitle}</p> : null}
         </div>
         {actions ? <div>{actions}</div> : null}
       </DashboardToolbar>

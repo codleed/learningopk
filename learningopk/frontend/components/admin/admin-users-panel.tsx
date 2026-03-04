@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { SectionCard } from "@/components/foundation/section-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -209,17 +208,19 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
   };
 
   return (
-    <SectionCard
-      title="Users Directory"
-      description="Search users by name or email and filter by role."
-      actions={
-        hasMore ? (
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/75 pb-4">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-foreground">Users Directory</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Search users by name or email and filter by role.</p>
+        </div>
+        {hasMore ? (
           <Button type="button" size="sm" variant="secondary" onClick={() => void loadMore()} disabled={isLoadingMore}>
             {isLoadingMore ? "Loading..." : "Load more"}
           </Button>
-        ) : null
-      }
-    >
+        ) : null}
+      </div>
+
       <div className="space-y-4">
         <div className="grid gap-3 md:grid-cols-[1fr_220px_220px_auto] md:items-end">
           <div className="space-y-1.5">
@@ -273,6 +274,6 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
           onReactivate={reactivateUser}
         />
       </div>
-    </SectionCard>
+    </section>
   );
 }

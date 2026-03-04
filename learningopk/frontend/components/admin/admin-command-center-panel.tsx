@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { DashboardCard, DashboardSurface } from "@/components/foundation/dashboard-primitives";
 import { SectionCard } from "@/components/foundation/section-card";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -94,7 +95,7 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
           {payload.alerts.showHighPriorityBanner ? (
             <div
               data-testid="admin-overview-alert-banner"
-              className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+              className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-700/60 dark:bg-amber-950/35 dark:text-amber-200"
             >
               <p className="font-semibold">High-priority operational alert</p>
               {payload.alerts.reasons.map((reason) => (
@@ -106,41 +107,41 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
           ) : null}
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <article data-testid="admin-overview-kpi-open-flags" className="rounded-lg border border-border bg-card p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Open moderation flags</p>
-              <p className="mt-1 text-2xl font-semibold text-foreground">{payload.kpis.openModerationFlags}</p>
-              <Link href="/admin/moderation" className="mt-2 inline-block text-sm font-medium text-foreground underline underline-offset-4">
+            <DashboardCard data-testid="admin-overview-kpi-open-flags" className="p-3.5">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Open moderation flags</p>
+              <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">{payload.kpis.openModerationFlags}</p>
+              <Link href="/admin/moderation" className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4">
                 View moderation queue
               </Link>
-            </article>
+            </DashboardCard>
 
-            <article data-testid="admin-overview-kpi-suspended-users" className="rounded-lg border border-border bg-card p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Suspended users</p>
-              <p className="mt-1 text-2xl font-semibold text-foreground">{payload.kpis.suspendedUsers}</p>
-              <Link href="/admin/users" className="mt-2 inline-block text-sm font-medium text-foreground underline underline-offset-4">
+            <DashboardCard data-testid="admin-overview-kpi-suspended-users" className="p-3.5">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Suspended users</p>
+              <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">{payload.kpis.suspendedUsers}</p>
+              <Link href="/admin/users" className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4">
                 View user lifecycle
               </Link>
-            </article>
+            </DashboardCard>
 
-            <article data-testid="admin-overview-kpi-failed-actions" className="rounded-lg border border-border bg-card p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Failed admin actions (24h)</p>
-              <p className="mt-1 text-2xl font-semibold text-foreground">{payload.kpis.failedAdminActionsLast24h}</p>
+            <DashboardCard data-testid="admin-overview-kpi-failed-actions" className="p-3.5">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Failed admin actions (24h)</p>
+              <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">{payload.kpis.failedAdminActionsLast24h}</p>
               <Link
                 href="/admin/audit?status=failed"
                 data-testid="admin-overview-kpi-failed-actions-link"
-                className="mt-2 inline-block text-sm font-medium text-foreground underline underline-offset-4"
+                className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4"
               >
                 Investigate failures
               </Link>
-            </article>
+            </DashboardCard>
 
-            <article data-testid="admin-overview-kpi-notifications" className="rounded-lg border border-border bg-card p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Notifications sent</p>
-              <p className="mt-1 text-2xl font-semibold text-foreground">{payload.kpis.notificationsSentInWindow}</p>
-              <Link href="/admin/notifications" className="mt-2 inline-block text-sm font-medium text-foreground underline underline-offset-4">
+            <DashboardCard data-testid="admin-overview-kpi-notifications" className="p-3.5">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Notifications sent</p>
+              <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">{payload.kpis.notificationsSentInWindow}</p>
+              <Link href="/admin/notifications" className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4">
                 View notifications log
               </Link>
-            </article>
+            </DashboardCard>
           </div>
         </div>
       </SectionCard>
@@ -149,9 +150,9 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
         {payload.recentActivity.length === 0 ? (
           <p className="text-sm text-muted-foreground">No recent admin activity available for this environment.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <DashboardSurface as="div" tone="card" className="overflow-x-auto p-0">
             <table className="min-w-full divide-y divide-border text-sm" aria-label="Recent admin activity">
-              <thead className="bg-muted/50">
+              <thead className="bg-muted/60">
                 <tr>
                   <th className="px-3 py-2 text-left font-semibold text-foreground">Occurred at</th>
                   <th className="px-3 py-2 text-left font-semibold text-foreground">Scope</th>
@@ -175,7 +176,7 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
                       <Link
                         data-testid="admin-overview-activity-link"
                         href={activityScopeHref(entry.scope)}
-                        className="text-sm font-medium text-foreground underline underline-offset-4"
+                        className="text-sm font-semibold text-primary underline underline-offset-4"
                       >
                         Open scope
                       </Link>
@@ -184,7 +185,7 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
                 ))}
               </tbody>
             </table>
-          </div>
+          </DashboardSurface>
         )}
       </SectionCard>
     </div>

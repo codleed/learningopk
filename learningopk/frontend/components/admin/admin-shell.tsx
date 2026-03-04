@@ -20,7 +20,7 @@ export function AdminShell({ children, session }: AdminShellProps) {
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-transparent">
       <a
         href="#main-content"
         className="sr-only rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50"
@@ -28,9 +28,9 @@ export function AdminShell({ children, session }: AdminShellProps) {
         Skip to content
       </a>
 
-      <div className="mx-auto w-full max-w-[1400px] px-4 pb-12 pt-6 sm:px-6 lg:px-8">
-        <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
-          <div className="hidden lg:sticky lg:top-4 lg:block lg:w-80 lg:self-start">
+      <div className="mx-auto w-full max-w-[97rem] px-4 pb-12 pt-6 sm:px-6 lg:px-8">
+        <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:gap-5">
+          <div className="hidden lg:sticky lg:top-4 lg:block lg:w-[16.75rem] lg:self-start">
             <AdminSidebar currentPath={currentPath} />
           </div>
           <div className="min-w-0 flex-1 space-y-4">
@@ -46,7 +46,7 @@ export function AdminShell({ children, session }: AdminShellProps) {
         <div className="lg:hidden">
           <button
             type="button"
-            className="fixed inset-0 z-40 bg-slate-950/55"
+            className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm"
             aria-label="Dismiss navigation overlay"
             onClick={() => setIsMobileNavigationOpen(false)}
           />

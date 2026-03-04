@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { DashboardSurface } from "@/components/foundation/dashboard-primitives";
 import { cn } from "@/lib/utils";
 
 import { adminNavItems, isAdminNavItemActive } from "./admin-nav-config";
@@ -11,10 +12,10 @@ type AdminSidebarProps = {
 
 export function AdminSidebar({ currentPath, onNavigate }: AdminSidebarProps) {
   return (
-    <aside className="surface-card rounded-3xl border border-slate-700/60 bg-slate-900 p-4 text-slate-100 shadow-xl">
-      <div className="mb-4 border-b border-slate-700/70 pb-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Administration</p>
-        <p className="mt-1 text-lg font-semibold text-slate-100">Command Center</p>
+    <DashboardSurface as="aside" tone="rail" className="p-4">
+      <div className="mb-4 border-b border-border pb-4">
+        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Administration</p>
+        <p className="mt-1 text-lg font-semibold tracking-[-0.01em] text-foreground">Command Center</p>
       </div>
 
       <nav aria-label="Admin section navigation" className="space-y-2">
@@ -31,16 +32,18 @@ export function AdminSidebar({ currentPath, onNavigate }: AdminSidebarProps) {
               className={cn(
                 "flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition",
                 isActive
-                  ? "border-lime-300/40 bg-lime-300/15 text-white"
-                  : "border-slate-700 bg-slate-900 text-slate-200 hover:border-lime-300/35 hover:bg-slate-800 hover:text-white"
+                  ? "border-primary/45 bg-primary/10 text-foreground shadow-[0_14px_30px_-22px_rgba(53,67,184,0.6)]"
+                  : "border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-secondary/65 hover:text-foreground"
               )}
             >
-              <Icon className="h-4 w-4" aria-hidden />
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-background/75 dark:bg-card/80">
+                <Icon className="h-4 w-4" aria-hidden />
+              </span>
               <span>{item.label}</span>
             </Link>
           );
         })}
       </nav>
-    </aside>
+    </DashboardSurface>
   );
 }

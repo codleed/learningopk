@@ -72,7 +72,7 @@ export function ChapterStudyWorkspace({
         className={cn("overflow-visible space-y-4 p-4 sm:p-5", isAiSidebarMaximized ? "xl:hidden" : "")}
       >
         <DashboardSurface as="header" tone="hero" className="px-5 py-6 sm:px-7">
-          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
+          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
             {boardName} | Class {className} | {subjectName}
           </p>
           <h1 className="mt-2 text-3xl font-medium text-foreground sm:text-4xl">

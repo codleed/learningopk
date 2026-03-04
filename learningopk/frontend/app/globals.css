@@ -72,7 +72,7 @@
   h3,
   h4 {
     font-family: var(--font-display), var(--font-manrope), serif;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
 
   a,
@@ -90,14 +90,14 @@
 
 @layer components {
   .surface-card {
-    background: var(--surface-strong);
-    box-shadow: var(--elevation-card);
-    backdrop-filter: blur(4px);
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
   }
 
   .surface-soft {
-    background: var(--surface-soft);
-    box-shadow: var(--elevation-soft);
-    backdrop-filter: blur(4px);
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
   }
 }
