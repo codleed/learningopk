@@ -20,7 +20,8 @@ export const createApp = () => {
   app.use(
     cors({
       origin: env.FRONTEND_ORIGIN,
-      credentials: true
+      credentials: true,
+      exposedHeaders: ["x-ai-session-id", "x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset"]
     })
   );
 
