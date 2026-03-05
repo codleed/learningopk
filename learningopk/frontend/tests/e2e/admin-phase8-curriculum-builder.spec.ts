@@ -362,6 +362,122 @@ test("admin summary editor saves markdown for selected chapter", async ({ page }
   await expect(editorFigure).toHaveCSS("width", "200px");
 });
 
+test("admin summary editor imports markdown file for review before save", async ({ page }) => {
+  await loginAsSeededAdmin(page);
+  await page.goto("/admin/content");
+
+  const suffix = Date.now().toString();
+  const boardName = `Import Board ${suffix}`;
+  const className = `10th ${suffix}`;
+  const subjectName = `Import Biology ${suffix}`;
+  const chapterTitle = `Cell Theory ${suffix}`;
+  const originalSummary = "Original summary from create form.";
+  const unsavedSummary = "Unsaved editor draft that should survive cancel.";
+  const importedSummary = "# Imported summary\n\nImported markdown body.";
+
+  await page.getByTestId("curriculum-board-name-input").fill(boardName);
+  await page.getByTestId("curriculum-board-submit").click();
+
+  await page.getByTestId("curriculum-tab-class").click();
+  await page.getByTestId("curriculum-class-board-select").selectOption({ label: boardName });
+  await page.getByTestId("curriculum-class-name-input").fill(className);
+  await page.getByTestId("curriculum-class-submit").click();
+
+  await page.getByTestId("curriculum-tab-subject").click();
+  await page
+    .getByTestId("curriculum-subject-class-select")
+    .selectOption({ label: `${boardName} / ${className}` });
+  await page.getByTestId("curriculum-subject-name-input").fill(subjectName);
+  await page.getByTestId("curriculum-subject-submit").click();
+
+  await page.getByTestId("curriculum-tab-chapter").click();
+  await page
+    .getByTestId("curriculum-chapter-subject-select")
+    .selectOption({ label: `${boardName} / ${className} / ${subjectName}` });
+  await page.getByTestId("curriculum-chapter-number-input").fill("1");
+  await page.getByTestId("curriculum-chapter-title-input").fill(chapterTitle);
+  await page.getByTestId("curriculum-chapter-summary-input").fill(originalSummary);
+  await page.getByTestId("curriculum-chapter-submit").click();
+
+  await page.getByTestId("curriculum-chapter-mode-edit").click();
+  const chapterLabel = `${boardName} / ${className} / ${subjectName} / Chapter 1: ${chapterTitle}`;
+  await page.getByTestId("curriculum-summary-editor-chapter-select").selectOption({ label: chapterLabel });
+
+  await expect(page.getByTestId("curriculum-summary-editor-paste-option")).toBeVisible();
+  await expect(page.getByTestId("curriculum-summary-editor-markdown-option")).toBeVisible();
+
+  await setSummaryCodeMirrorContent(page, unsavedSummary);
+  await page.getByTestId("curriculum-summary-editor-preview-toggle").click();
+  await expect(page.getByTestId("curriculum-summary-editor-preview")).toContainText(unsavedSummary);
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("replace");
+    await dialog.dismiss();
+  });
+  await page.getByTestId("curriculum-summary-editor-markdown-input").setInputFiles({
+    name: "chapter-summary.md",
+    mimeType: "text/markdown",
+    buffer: Buffer.from(importedSummary)
+  });
+
+  await expect(page.getByTestId("curriculum-summary-editor-preview")).toContainText(unsavedSummary);
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("replace");
+    await dialog.accept();
+  });
+  await page.getByTestId("curriculum-summary-editor-markdown-input").setInputFiles({
+    name: "chapter-summary.md",
+    mimeType: "text/markdown",
+    buffer: Buffer.from(importedSummary)
+  });
+
+  await expect(page.getByTestId("curriculum-summary-editor-preview")).toContainText("Imported summary");
+  await expect(page.getByTestId("curriculum-summary-editor-preview")).toContainText("Imported markdown body.");
+
+  const curriculumResponse = await page.request.get("http://localhost:3001/api/admin/content/curriculum");
+  expect(curriculumResponse.status()).toBe(200);
+  const curriculumPayload = (await curriculumResponse.json()) as {
+    boards: Array<{
+      name: string;
+      classes: Array<{
+        name: string;
+        subjects: Array<{
+          name: string;
+          chapters: Array<{ id: number; title: string }>;
+        }>;
+      }>;
+    }>;
+  };
+  const chapterId = curriculumPayload.boards
+    .find((entry) => entry.name === boardName)
+    ?.classes.find((entry) => entry.name === className)
+    ?.subjects.find((entry) => entry.name === subjectName)
+    ?.chapters.find((entry) => entry.title === chapterTitle)?.id;
+  expect(typeof chapterId).toBe("number");
+
+  const summaryBeforeSaveResponse = await page.request.get(
+    `http://localhost:3001/api/admin/content/chapters/${chapterId}/summary`
+  );
+  expect(summaryBeforeSaveResponse.status()).toBe(200);
+  const summaryBeforeSavePayload = (await summaryBeforeSaveResponse.json()) as {
+    chapter: { summary: string };
+  };
+  expect(summaryBeforeSavePayload.chapter.summary).toBe(originalSummary);
+
+  await page.getByTestId("curriculum-summary-editor-save-button").click();
+  await expect(page.getByText("Chapter summary updated")).toBeVisible();
+
+  const summaryAfterSaveResponse = await page.request.get(
+    `http://localhost:3001/api/admin/content/chapters/${chapterId}/summary`
+  );
+  expect(summaryAfterSaveResponse.status()).toBe(200);
+  const summaryAfterSavePayload = (await summaryAfterSaveResponse.json()) as {
+    chapter: { summary: string };
+  };
+  expect(summaryAfterSavePayload.chapter.summary).toBe(importedSummary);
+});
+
 test("admin can create board class subject chapter using curriculum builder", async ({ page }) => {
   await loginAsSeededAdmin(page);
   await page.goto("/admin/content");
