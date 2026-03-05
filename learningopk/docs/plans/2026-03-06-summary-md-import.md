@@ -2,15 +2,15 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Add two explicit summary input options in the admin chapter summary editor so admins can either paste markdown directly or import a `.md` file into the editor for review before manually saving.
+**Goal:** Add explicit Markdown import options to both chapter summary entry points so admins can import a `.md` file into the add form or edit editor for review before manually submitting or saving.
 
-**Architecture:** Keep the feature fully inside the existing summary editor in `admin-curriculum-builder.tsx`. Reuse the current editor state and save flow, add a client-side Markdown file import path with unsaved-change confirmation, and cover it with focused Playwright regression tests.
+**Architecture:** Keep the feature fully inside `admin-curriculum-builder.tsx`. Reuse the existing add-form summary state and edit-mode editor state, add lightweight client-side Markdown file import paths with confirmation before replacing local draft content, and cover both flows with focused Playwright regression tests.
 
 **Tech Stack:** Next.js, React 19, TypeScript, Playwright end-to-end tests, existing toast/CodeMirror admin UI components.
 
 ---
 
-### Task 1: Add the failing import workflow test
+### Task 1: Add the failing add-form import workflow test
 
 **Files:**
 - Modify: `frontend/tests/e2e/admin-phase8-curriculum-builder.spec.ts`
@@ -18,23 +18,22 @@
 
 **Step 1: Write the failing test**
 
-Add a new Playwright test beside the existing summary editor save coverage that:
+Add a new Playwright test beside the existing chapter add-form coverage that:
 
-- creates a board, class, subject, and chapter
-- opens the chapter in the summary editor
-- verifies `Paste markdown` and `Upload .md file` controls are visible
-- edits the summary so the editor has unsaved changes
-- triggers a `.md` import, dismisses the confirmation dialog, and verifies the editor content is unchanged
-- triggers the import again, accepts the confirmation dialog, and verifies the editor content is replaced with the file contents
-- verifies the imported content appears in the preview
-- reloads the summary from the backend or student page before saving and confirms the old summary is still persisted
-- clicks `Save summary`, then verifies the imported markdown is persisted
+- creates a board, class, and subject
+- opens the chapter add form
+- verifies the add-form `Upload .md file` control is visible
+- types a draft into the summary textarea
+- triggers a `.md` import, dismisses the confirmation dialog, and verifies the textarea content is unchanged
+- triggers the import again, accepts the confirmation dialog, and verifies the textarea content is replaced with the file contents
+- verifies the imported content appears in the add-form preview
+- submits the chapter and verifies the imported markdown persisted to the created chapter summary
 
 Use Playwright file upload with an in-memory file:
 
 ```ts
-await page.getByTestId("curriculum-summary-editor-markdown-input").setInputFiles({
-  name: "chapter-summary.md",
+await page.getByTestId("curriculum-chapter-markdown-input").setInputFiles({
+  name: "chapter-add-summary.md",
   mimeType: "text/markdown",
   buffer: Buffer.from("# Imported heading\n\nImported body.")
 });
@@ -54,75 +53,65 @@ page.once("dialog", async (dialog) => {
 Run:
 
 ```bash
-pnpm.cmd --filter frontend test:e2e -- --grep "admin summary editor imports markdown file"
+pnpm.cmd exec playwright test --grep "admin add chapter imports markdown file"
 ```
 
-Expected: FAIL because the new UI controls and import behavior do not exist yet.
+Expected: FAIL because the add-form Markdown import control and replacement behavior do not exist yet.
 
 **Step 3: Commit the failing test**
 
 ```bash
 git add frontend/tests/e2e/admin-phase8-curriculum-builder.spec.ts
-git commit -m "test: cover summary markdown import workflow"
+git commit -m "test: cover add chapter markdown import workflow"
 ```
 
-### Task 2: Implement client-side Markdown import in the summary editor
+### Task 2: Implement client-side Markdown import in the add form
 
 **Files:**
 - Modify: `frontend/components/admin/admin-curriculum-builder.tsx`
 
-**Step 1: Add minimal state and refs for import tracking**
+**Step 1: Add minimal add-form state and refs for import tracking**
 
 Introduce the smallest state required to support the new behavior:
 
-- `summaryEditorImportMode` or equivalent for the visible two-option control
-- a dedicated ref for the Markdown file input
-- a baseline value ref such as `summaryEditorPersistedContentRef` to compare current editor content against the last loaded or saved summary
+- a dedicated ref for the add-form Markdown file input
+- a shared helper or small add-form-specific handler that reads file text and updates `chapterSummary`
+- confirmation only when `chapterSummary.trim().length > 0`
 
 Example shape:
 
 ```ts
-const [summaryEditorImportMode, setSummaryEditorImportMode] = useState<"paste" | "file">("paste");
-const summaryEditorMarkdownInputRef = useRef<HTMLInputElement | null>(null);
-const summaryEditorPersistedContentRef = useRef("");
+const chapterMarkdownInputRef = useRef<HTMLInputElement | null>(null);
 ```
 
-Update the chapter load and save paths so the persisted-content ref tracks the last backend-backed summary value.
+**Step 2: Add the add-form import controls**
 
-**Step 2: Add the failing implementation surface**
-
-Render two explicit option controls near the summary editor:
-
-- `Paste markdown`
-- `Upload .md file`
-
-Keep `Paste markdown` mapped to the existing editor workflow. For `Upload .md file`, render a file input restricted to Markdown files and a button or direct picker flow that calls a new import handler.
+Render a visible `Upload .md file` control in the add form near the summary textarea and preview toggle. The add form already supports direct paste/editing through the textarea, so no separate add-form `Paste markdown` button is needed.
 
 Use stable test ids:
 
 ```tsx
-data-testid="curriculum-summary-editor-paste-option"
-data-testid="curriculum-summary-editor-markdown-option"
-data-testid="curriculum-summary-editor-markdown-input"
+data-testid="curriculum-chapter-markdown-option"
+data-testid="curriculum-chapter-markdown-input"
 ```
 
-**Step 3: Implement the import handler**
+**Step 3: Implement the add-form import handler**
 
 Add a handler that:
 
 - reads the selected file via `await file.text()`
 - rejects empty files with an error toast
-- compares `summaryEditorLiveContentRef.current` to `summaryEditorPersistedContentRef.current`
-- shows `window.confirm(...)` if unsaved edits would be replaced
-- replaces the editor content with `setSummaryEditorContentImmediate(nextMarkdown)` when confirmed
+- checks whether `chapterSummary.trim().length > 0`
+- shows `window.confirm(...)` if typed add-form content would be replaced
+- replaces the textarea content with `setChapterSummary(nextMarkdown)` when confirmed
 - clears the file input afterward so the same file can be reselected
-- does not call the save API
+- does not auto-submit the chapter form
 
 Minimal handler shape:
 
 ```ts
-const importSummaryMarkdown = async () => {
-  const file = summaryEditorMarkdownInputRef.current?.files?.[0];
+const importChapterMarkdown = async () => {
+  const file = chapterMarkdownInputRef.current?.files?.[0];
   if (!file) {
     pushToast({ title: "Choose a Markdown file first", tone: "error" });
     return;
@@ -134,14 +123,14 @@ const importSummaryMarkdown = async () => {
     return;
   }
 
-  const hasUnsavedChanges = summaryEditorLiveContentRef.current !== summaryEditorPersistedContentRef.current;
-  if (hasUnsavedChanges && !window.confirm("Importing a Markdown file will replace unsaved summary edits. Continue?")) {
-    summaryEditorMarkdownInputRef.current.value = "";
+  const hasTypedDraft = chapterSummary.trim().length > 0;
+  if (hasTypedDraft && !window.confirm("Importing a Markdown file will replace the current chapter summary draft. Continue?")) {
+    chapterMarkdownInputRef.current.value = "";
     return;
   }
 
-  setSummaryEditorContentImmediate(nextMarkdown);
-  summaryEditorMarkdownInputRef.current.value = "";
+  setChapterSummary(nextMarkdown);
+  chapterMarkdownInputRef.current.value = "";
 };
 ```
 
@@ -150,7 +139,7 @@ const importSummaryMarkdown = async () => {
 Run:
 
 ```bash
-pnpm.cmd --filter frontend test:e2e -- --grep "admin summary editor imports markdown file"
+pnpm.cmd exec playwright test --grep "admin add chapter imports markdown file"
 ```
 
 Expected: PASS.
@@ -159,10 +148,33 @@ Expected: PASS.
 
 ```bash
 git add frontend/components/admin/admin-curriculum-builder.tsx
-git commit -m "feat: add summary markdown import option"
+git commit -m "feat: add add-form markdown import option"
 ```
 
-### Task 3: Run regression verification
+### Task 3: Keep edit-mode import coverage green
+
+**Files:**
+- Verify: `frontend/tests/e2e/admin-phase8-curriculum-builder.spec.ts`
+- Verify: `frontend/components/admin/admin-curriculum-builder.tsx`
+
+**Step 1: Run the existing edit-mode import test**
+
+Run:
+
+```bash
+pnpm.cmd exec playwright test --grep "admin summary editor imports markdown file for review before save"
+```
+
+Expected: PASS to confirm the add-form changes did not break the existing editor import behavior.
+
+**Step 2: Commit if any selector cleanup was required**
+
+```bash
+git add frontend/tests/e2e/admin-phase8-curriculum-builder.spec.ts frontend/components/admin/admin-curriculum-builder.tsx
+git commit -m "test: keep summary editor markdown import green"
+```
+
+### Task 4: Run regression verification
 
 **Files:**
 - Modify: `frontend/tests/e2e/admin-phase8-curriculum-builder.spec.ts` if any selector cleanup is needed
@@ -173,18 +185,18 @@ git commit -m "feat: add summary markdown import option"
 Run:
 
 ```bash
-pnpm.cmd --filter frontend test:e2e -- admin-phase8-curriculum-builder.spec.ts
-pnpm.cmd --filter frontend test:e2e -- admin-summary-editor-codemirror.spec.ts
+pnpm.cmd exec playwright test tests/e2e/admin-phase8-curriculum-builder.spec.ts
+pnpm.cmd exec playwright test tests/e2e/admin-summary-editor-codemirror.spec.ts
 ```
 
-Expected: PASS for the new import test and existing summary editor coverage.
+Expected: PASS for the new add-form import test, existing edit-mode import coverage, and summary editor smoke coverage.
 
 **Step 2: Run typecheck**
 
 Run:
 
 ```bash
-pnpm.cmd --filter frontend typecheck
+pnpm.cmd typecheck
 ```
 
 Expected: PASS with no TypeScript errors introduced by the new state, refs, or handlers.
