@@ -30,6 +30,10 @@ const chapterParamsSchema = z.object({
   id: z.coerce.number().int().positive()
 });
 
+const curriculumEntityParamsSchema = z.object({
+  id: z.coerce.number().int().positive()
+});
+
 const threadParamsSchema = z.object({
   threadId: z.string().uuid()
 });
@@ -65,8 +69,18 @@ const curriculumBoardCreateBodySchema = z.object({
   slug: z.string().trim().min(2)
 });
 
+const curriculumBoardUpdateBodySchema = z.object({
+  name: z.string().trim().min(2),
+  slug: z.string().trim().min(2)
+});
+
 const curriculumClassCreateBodySchema = z.object({
   boardId: z.coerce.number().int().positive(),
+  name: z.string().trim().min(1),
+  slug: z.string().trim().min(1)
+});
+
+const curriculumClassUpdateBodySchema = z.object({
   name: z.string().trim().min(1),
   slug: z.string().trim().min(1)
 });
@@ -88,6 +102,12 @@ const curriculumChapterCreateBodySchema = z.object({
   isPublished: z.boolean().optional().default(false)
 });
 
+const curriculumChapterUpdateBodySchema = z.object({
+  chapterNumber: z.coerce.number().int().positive(),
+  title: z.string().trim().min(1),
+  slug: z.string().trim().min(1)
+});
+
 const curriculumExerciseCreateBodySchema = z.object({
   chapterId: z.coerce.number().int().positive(),
   exerciseNumber: z.string().trim().min(1),
@@ -95,6 +115,18 @@ const curriculumExerciseCreateBodySchema = z.object({
   solution: z.string().trim().min(1),
   difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
   type: z.enum(["mcq", "short", "long", "numerical"]).optional().default("short")
+});
+
+const curriculumExerciseUpdateBodySchema = z.object({
+  exerciseNumber: z.string().trim().min(1),
+  question: z.string().trim().min(1),
+  solution: z.string().trim().min(1),
+  difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
+  type: z.enum(["mcq", "short", "long", "numerical"]).optional().default("short")
+});
+
+const curriculumExerciseListQuerySchema = z.object({
+  chapterId: z.coerce.number().int().positive().optional()
 });
 
 const adminAuditScopeValues = ["content", "forum", "moderation", "notifications", "settings", "users"] as const;
@@ -2387,6 +2419,852 @@ adminRouter.post("/content/exercises", requireSession, async (req, res) => {
       error: "Exercise already exists for chapter"
     });
   }
+});
+
+adminRouter.get("/content/exercises", requireSession, async (req, res) => {
+  const parsedQuery = curriculumExerciseListQuerySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid exercise query",
+      details: parsedQuery.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const exerciseRows = await db
+    .select({
+      id: exercises.id,
+      chapterId: exercises.chapterId,
+      chapterTitle: chapters.title,
+      subjectName: subjects.name,
+      exerciseNumber: exercises.exerciseNumber,
+      question: exercises.question,
+      solution: exercises.solution,
+      difficulty: exercises.difficulty,
+      type: exercises.type
+    })
+    .from(exercises)
+    .innerJoin(chapters, eq(exercises.chapterId, chapters.id))
+    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+    .where(parsedQuery.data.chapterId ? eq(exercises.chapterId, parsedQuery.data.chapterId) : undefined)
+    .orderBy(asc(exercises.chapterId), asc(exercises.exerciseNumber));
+
+  res.status(200).json({
+    exercises: exerciseRows
+  });
+});
+
+adminRouter.post("/content/boards/:id/update", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid board identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const parsedBody = curriculumBoardUpdateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid board payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Update board";
+  const fallbackTarget = `Board #${parsedParams.data.id}`;
+
+  const boardRows = await db
+    .select({
+      id: boards.id,
+      name: boards.name,
+      slug: boards.slug
+    })
+    .from(boards)
+    .where(eq(boards.id, parsedParams.data.id))
+    .limit(1);
+  const board = boardRows[0];
+  if (!board) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Board not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Board not found"
+    });
+    return;
+  }
+
+  try {
+    const updatedRows = await db
+      .update(boards)
+      .set({
+        name: parsedBody.data.name.trim(),
+        slug: parsedBody.data.slug.trim().toLowerCase()
+      })
+      .where(eq(boards.id, board.id))
+      .returning({
+        id: boards.id,
+        name: boards.name,
+        slug: boards.slug
+      });
+    const updatedBoard = updatedRows[0];
+    if (!updatedBoard) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: board.name,
+        status: "failed",
+        message: "Board not found",
+        actorId,
+        actorName
+      });
+      res.status(404).json({
+        error: "Board not found"
+      });
+      return;
+    }
+
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: board.name,
+      status: "success",
+      message: `Updated board to ${updatedBoard.slug}`,
+      actorId,
+      actorName
+    });
+    res.status(200).json({
+      board: updatedBoard,
+      timestamp: new Date().toISOString()
+    });
+  } catch {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: board.name,
+      status: "failed",
+      message: "Board update failed",
+      actorId,
+      actorName
+    });
+    res.status(409).json({
+      error: "Board already exists"
+    });
+  }
+});
+
+adminRouter.post("/content/boards/:id/delete", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid board identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Delete board";
+  const fallbackTarget = `Board #${parsedParams.data.id}`;
+
+  const boardRows = await db
+    .select({
+      id: boards.id,
+      name: boards.name,
+      slug: boards.slug
+    })
+    .from(boards)
+    .where(eq(boards.id, parsedParams.data.id))
+    .limit(1);
+  const board = boardRows[0];
+  if (!board) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Board not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Board not found"
+    });
+    return;
+  }
+
+  await db.delete(boards).where(eq(boards.id, board.id));
+
+  await persistAuditLog({
+    scope: "content",
+    action,
+    target: board.name,
+    status: "success",
+    message: `Deleted board ${board.slug}`,
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    board,
+    timestamp: new Date().toISOString()
+  });
+});
+
+adminRouter.post("/content/classes/:id/update", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid class identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const parsedBody = curriculumClassUpdateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid class payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Update class";
+  const fallbackTarget = `Class #${parsedParams.data.id}`;
+
+  const classRows = await db
+    .select({
+      id: boardClasses.id,
+      boardId: boardClasses.boardId,
+      name: boardClasses.name,
+      slug: boardClasses.slug,
+      boardName: boards.name
+    })
+    .from(boardClasses)
+    .innerJoin(boards, eq(boardClasses.boardId, boards.id))
+    .where(eq(boardClasses.id, parsedParams.data.id))
+    .limit(1);
+  const boardClass = classRows[0];
+  if (!boardClass) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Class not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Class not found"
+    });
+    return;
+  }
+
+  try {
+    const updatedRows = await db
+      .update(boardClasses)
+      .set({
+        name: parsedBody.data.name.trim(),
+        slug: parsedBody.data.slug.trim().toLowerCase()
+      })
+      .where(eq(boardClasses.id, boardClass.id))
+      .returning({
+        id: boardClasses.id,
+        boardId: boardClasses.boardId,
+        name: boardClasses.name,
+        slug: boardClasses.slug
+      });
+    const updatedClass = updatedRows[0];
+    if (!updatedClass) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: `${boardClass.boardName} / ${boardClass.name}`,
+        status: "failed",
+        message: "Class not found",
+        actorId,
+        actorName
+      });
+      res.status(404).json({
+        error: "Class not found"
+      });
+      return;
+    }
+
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${boardClass.boardName} / ${boardClass.name}`,
+      status: "success",
+      message: `Updated class to ${updatedClass.slug}`,
+      actorId,
+      actorName
+    });
+    res.status(200).json({
+      class: updatedClass,
+      timestamp: new Date().toISOString()
+    });
+  } catch {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${boardClass.boardName} / ${boardClass.name}`,
+      status: "failed",
+      message: "Class update failed",
+      actorId,
+      actorName
+    });
+    res.status(409).json({
+      error: "Class already exists for board"
+    });
+  }
+});
+
+adminRouter.post("/content/classes/:id/delete", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid class identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Delete class";
+  const fallbackTarget = `Class #${parsedParams.data.id}`;
+
+  const classRows = await db
+    .select({
+      id: boardClasses.id,
+      boardId: boardClasses.boardId,
+      name: boardClasses.name,
+      slug: boardClasses.slug,
+      boardName: boards.name
+    })
+    .from(boardClasses)
+    .innerJoin(boards, eq(boardClasses.boardId, boards.id))
+    .where(eq(boardClasses.id, parsedParams.data.id))
+    .limit(1);
+  const boardClass = classRows[0];
+  if (!boardClass) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Class not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Class not found"
+    });
+    return;
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.delete(subjects).where(eq(subjects.boardClassId, boardClass.id));
+    await tx.delete(boardClasses).where(eq(boardClasses.id, boardClass.id));
+  });
+
+  await persistAuditLog({
+    scope: "content",
+    action,
+    target: `${boardClass.boardName} / ${boardClass.name}`,
+    status: "success",
+    message: `Deleted class ${boardClass.slug}`,
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    class: {
+      id: boardClass.id,
+      boardId: boardClass.boardId,
+      name: boardClass.name,
+      slug: boardClass.slug
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+adminRouter.post("/content/chapters/:id/update", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid chapter identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const parsedBody = curriculumChapterUpdateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid chapter payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Update chapter";
+  const fallbackTarget = `Chapter #${parsedParams.data.id}`;
+
+  const chapterRows = await db
+    .select({
+      id: chapters.id,
+      subjectId: chapters.subjectId,
+      chapterNumber: chapters.chapterNumber,
+      title: chapters.title,
+      slug: chapters.slug,
+      isPublished: chapters.isPublished,
+      subjectName: subjects.name
+    })
+    .from(chapters)
+    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+    .where(eq(chapters.id, parsedParams.data.id))
+    .limit(1);
+  const chapter = chapterRows[0];
+  if (!chapter) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Chapter not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Chapter not found"
+    });
+    return;
+  }
+
+  try {
+    const updatedRows = await db
+      .update(chapters)
+      .set({
+        chapterNumber: parsedBody.data.chapterNumber,
+        title: parsedBody.data.title.trim(),
+        slug: parsedBody.data.slug.trim().toLowerCase()
+      })
+      .where(eq(chapters.id, chapter.id))
+      .returning({
+        id: chapters.id,
+        subjectId: chapters.subjectId,
+        chapterNumber: chapters.chapterNumber,
+        title: chapters.title,
+        slug: chapters.slug,
+        isPublished: chapters.isPublished
+      });
+    const updatedChapter = updatedRows[0];
+    if (!updatedChapter) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: `${chapter.subjectName} / ${chapter.title}`,
+        status: "failed",
+        message: "Chapter not found",
+        actorId,
+        actorName
+      });
+      res.status(404).json({
+        error: "Chapter not found"
+      });
+      return;
+    }
+
+    await ensureChapterTitleAlias({
+      chapterId: chapter.id,
+      aliasTitle: chapter.title
+    });
+    await ensureChapterTitleAlias({
+      chapterId: chapter.id,
+      aliasTitle: updatedChapter.title
+    });
+    await refreshLinksForChapterAliases({
+      chapterId: chapter.id
+    });
+
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${chapter.subjectName} / ${chapter.title}`,
+      status: "success",
+      message: `Updated chapter to ${updatedChapter.slug}`,
+      actorId,
+      actorName
+    });
+    res.status(200).json({
+      chapter: updatedChapter,
+      timestamp: new Date().toISOString()
+    });
+  } catch {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${chapter.subjectName} / ${chapter.title}`,
+      status: "failed",
+      message: "Chapter update failed",
+      actorId,
+      actorName
+    });
+    res.status(409).json({
+      error: "Chapter already exists for subject"
+    });
+  }
+});
+
+adminRouter.post("/content/chapters/:id/delete", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid chapter identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Delete chapter";
+  const fallbackTarget = `Chapter #${parsedParams.data.id}`;
+
+  const chapterRows = await db
+    .select({
+      id: chapters.id,
+      subjectId: chapters.subjectId,
+      chapterNumber: chapters.chapterNumber,
+      title: chapters.title,
+      slug: chapters.slug,
+      isPublished: chapters.isPublished,
+      subjectName: subjects.name
+    })
+    .from(chapters)
+    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+    .where(eq(chapters.id, parsedParams.data.id))
+    .limit(1);
+  const chapter = chapterRows[0];
+  if (!chapter) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Chapter not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Chapter not found"
+    });
+    return;
+  }
+
+  await db.delete(chapters).where(eq(chapters.id, chapter.id));
+
+  await persistAuditLog({
+    scope: "content",
+    action,
+    target: `${chapter.subjectName} / ${chapter.title}`,
+    status: "success",
+    message: `Deleted chapter ${chapter.slug}`,
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    chapter: {
+      id: chapter.id,
+      subjectId: chapter.subjectId,
+      chapterNumber: chapter.chapterNumber,
+      title: chapter.title,
+      slug: chapter.slug,
+      isPublished: chapter.isPublished
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+adminRouter.post("/content/exercises/:id/update", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid exercise identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const parsedBody = curriculumExerciseUpdateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid exercise payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Update exercise";
+  const fallbackTarget = `Exercise #${parsedParams.data.id}`;
+
+  const exerciseRows = await db
+    .select({
+      id: exercises.id,
+      chapterId: exercises.chapterId,
+      exerciseNumber: exercises.exerciseNumber,
+      question: exercises.question,
+      solution: exercises.solution,
+      difficulty: exercises.difficulty,
+      type: exercises.type,
+      chapterTitle: chapters.title,
+      subjectName: subjects.name
+    })
+    .from(exercises)
+    .innerJoin(chapters, eq(exercises.chapterId, chapters.id))
+    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+    .where(eq(exercises.id, parsedParams.data.id))
+    .limit(1);
+  const exercise = exerciseRows[0];
+  if (!exercise) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Exercise not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Exercise not found"
+    });
+    return;
+  }
+
+  const isPhysicsChapter = exercise.subjectName.toLowerCase().includes("physics");
+  if (parsedBody.data.type === "numerical" && !isPhysicsChapter) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${exercise.subjectName} / ${exercise.chapterTitle} / ${exercise.exerciseNumber}`,
+      status: "failed",
+      message: "Numerical exercises are only allowed for Physics chapters",
+      actorId,
+      actorName
+    });
+    res.status(400).json({
+      error: "Numerical problems are only allowed for Physics chapters"
+    });
+    return;
+  }
+
+  try {
+    const updatedRows = await db
+      .update(exercises)
+      .set({
+        exerciseNumber: parsedBody.data.exerciseNumber.trim(),
+        question: parsedBody.data.question.trim(),
+        solution: parsedBody.data.solution.trim(),
+        difficulty: parsedBody.data.difficulty,
+        type: parsedBody.data.type
+      })
+      .where(eq(exercises.id, exercise.id))
+      .returning({
+        id: exercises.id,
+        chapterId: exercises.chapterId,
+        exerciseNumber: exercises.exerciseNumber,
+        question: exercises.question,
+        solution: exercises.solution,
+        difficulty: exercises.difficulty,
+        type: exercises.type
+      });
+    const updatedExercise = updatedRows[0];
+    if (!updatedExercise) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: `${exercise.subjectName} / ${exercise.chapterTitle} / ${exercise.exerciseNumber}`,
+        status: "failed",
+        message: "Exercise not found",
+        actorId,
+        actorName
+      });
+      res.status(404).json({
+        error: "Exercise not found"
+      });
+      return;
+    }
+
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${exercise.subjectName} / ${exercise.chapterTitle} / ${exercise.exerciseNumber}`,
+      status: "success",
+      message: `Updated exercise to ${updatedExercise.exerciseNumber}`,
+      actorId,
+      actorName
+    });
+    res.status(200).json({
+      exercise: updatedExercise,
+      timestamp: new Date().toISOString()
+    });
+  } catch {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${exercise.subjectName} / ${exercise.chapterTitle} / ${exercise.exerciseNumber}`,
+      status: "failed",
+      message: "Exercise update failed",
+      actorId,
+      actorName
+    });
+    res.status(409).json({
+      error: "Exercise already exists for chapter"
+    });
+  }
+});
+
+adminRouter.post("/content/exercises/:id/delete", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid exercise identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Delete exercise";
+  const fallbackTarget = `Exercise #${parsedParams.data.id}`;
+
+  const exerciseRows = await db
+    .select({
+      id: exercises.id,
+      chapterId: exercises.chapterId,
+      exerciseNumber: exercises.exerciseNumber,
+      question: exercises.question,
+      solution: exercises.solution,
+      difficulty: exercises.difficulty,
+      type: exercises.type,
+      chapterTitle: chapters.title,
+      subjectName: subjects.name
+    })
+    .from(exercises)
+    .innerJoin(chapters, eq(exercises.chapterId, chapters.id))
+    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+    .where(eq(exercises.id, parsedParams.data.id))
+    .limit(1);
+  const exercise = exerciseRows[0];
+  if (!exercise) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Exercise not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Exercise not found"
+    });
+    return;
+  }
+
+  await db.delete(exercises).where(eq(exercises.id, exercise.id));
+
+  await persistAuditLog({
+    scope: "content",
+    action,
+    target: `${exercise.subjectName} / ${exercise.chapterTitle} / ${exercise.exerciseNumber}`,
+    status: "success",
+    message: `Deleted exercise ${exercise.exerciseNumber}`,
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    exercise: {
+      id: exercise.id,
+      chapterId: exercise.chapterId,
+      exerciseNumber: exercise.exerciseNumber,
+      question: exercise.question,
+      solution: exercise.solution,
+      difficulty: exercise.difficulty,
+      type: exercise.type
+    },
+    timestamp: new Date().toISOString()
+  });
 });
 
 adminRouter.get("/content/chapters", requireSession, async (req, res) => {

@@ -59,6 +59,15 @@ const adminCurriculumBoardCreateResponseSchema = z.object({
   })
 });
 
+const adminCurriculumBoardMutationResponseSchema = z.object({
+  board: z.object({
+    id: z.number().int().positive(),
+    name: z.string(),
+    slug: z.string()
+  }),
+  timestamp: z.string().datetime()
+});
+
 const adminCurriculumClassCreateResponseSchema = z.object({
   class: z.object({
     id: z.number().int().positive(),
@@ -66,6 +75,16 @@ const adminCurriculumClassCreateResponseSchema = z.object({
     name: z.string(),
     slug: z.string()
   })
+});
+
+const adminCurriculumClassMutationResponseSchema = z.object({
+  class: z.object({
+    id: z.number().int().positive(),
+    boardId: z.number().int().positive(),
+    name: z.string(),
+    slug: z.string()
+  }),
+  timestamp: z.string().datetime()
 });
 
 const adminCurriculumSubjectCreateResponseSchema = z.object({
@@ -88,6 +107,18 @@ const adminCurriculumChapterCreateResponseSchema = z.object({
     slug: z.string(),
     isPublished: z.boolean()
   })
+});
+
+const adminCurriculumChapterMutationResponseSchema = z.object({
+  chapter: z.object({
+    id: z.number().int().positive(),
+    subjectId: z.number().int().positive(),
+    chapterNumber: z.number().int().positive(),
+    title: z.string(),
+    slug: z.string(),
+    isPublished: z.boolean()
+  }),
+  timestamp: z.string().datetime()
 });
 
 const adminChapterSummaryResponseSchema = z.object({
@@ -191,6 +222,35 @@ const adminCurriculumExerciseCreateResponseSchema = z.object({
     difficulty: z.enum(["easy", "medium", "hard"]),
     type: z.enum(["mcq", "short", "long", "numerical"])
   })
+});
+
+const adminCurriculumExerciseReadSchema = z.object({
+  id: z.number().int().positive(),
+  chapterId: z.number().int().positive(),
+  chapterTitle: z.string(),
+  subjectName: z.string(),
+  exerciseNumber: z.string(),
+  question: z.string(),
+  solution: z.string(),
+  difficulty: z.enum(["easy", "medium", "hard"]),
+  type: z.enum(["mcq", "short", "long", "numerical"])
+});
+
+const adminCurriculumExerciseListResponseSchema = z.object({
+  exercises: z.array(adminCurriculumExerciseReadSchema)
+});
+
+const adminCurriculumExerciseMutationResponseSchema = z.object({
+  exercise: z.object({
+    id: z.number().int().positive(),
+    chapterId: z.number().int().positive(),
+    exerciseNumber: z.string(),
+    question: z.string(),
+    solution: z.string(),
+    difficulty: z.enum(["easy", "medium", "hard"]),
+    type: z.enum(["mcq", "short", "long", "numerical"])
+  }),
+  timestamp: z.string().datetime()
 });
 
 const adminAuditLogEntrySchema = z.object({
@@ -405,9 +465,12 @@ export type AdminCurriculumSubject = z.infer<typeof adminCurriculumSubjectSchema
 export type AdminCurriculumChapter = z.infer<typeof adminCurriculumChapterSchema>;
 export type AdminCurriculumResponse = z.infer<typeof adminCurriculumResponseSchema>;
 export type AdminCurriculumBoardCreateResponse = z.infer<typeof adminCurriculumBoardCreateResponseSchema>;
+export type AdminCurriculumBoardMutationResponse = z.infer<typeof adminCurriculumBoardMutationResponseSchema>;
 export type AdminCurriculumClassCreateResponse = z.infer<typeof adminCurriculumClassCreateResponseSchema>;
+export type AdminCurriculumClassMutationResponse = z.infer<typeof adminCurriculumClassMutationResponseSchema>;
 export type AdminCurriculumSubjectCreateResponse = z.infer<typeof adminCurriculumSubjectCreateResponseSchema>;
 export type AdminCurriculumChapterCreateResponse = z.infer<typeof adminCurriculumChapterCreateResponseSchema>;
+export type AdminCurriculumChapterMutationResponse = z.infer<typeof adminCurriculumChapterMutationResponseSchema>;
 export type AdminChapterSummaryResponse = z.infer<typeof adminChapterSummaryResponseSchema>;
 export type AdminChapterSummaryUpdateResponse = z.infer<typeof adminChapterSummaryUpdateResponseSchema>;
 export type AdminChapterLinksResponse = z.infer<typeof adminChapterLinksResponseSchema>;
@@ -416,6 +479,9 @@ export type AdminChapterGraphResponse = z.infer<typeof adminChapterGraphResponse
 export type AdminChapterRenameResponse = z.infer<typeof adminChapterRenameResponseSchema>;
 export type AdminChapterSummaryMediaUploadResponse = z.infer<typeof adminChapterSummaryMediaUploadResponseSchema>;
 export type AdminCurriculumExerciseCreateResponse = z.infer<typeof adminCurriculumExerciseCreateResponseSchema>;
+export type AdminCurriculumExerciseRead = z.infer<typeof adminCurriculumExerciseReadSchema>;
+export type AdminCurriculumExerciseListResponse = z.infer<typeof adminCurriculumExerciseListResponseSchema>;
+export type AdminCurriculumExerciseMutationResponse = z.infer<typeof adminCurriculumExerciseMutationResponseSchema>;
 export type AdminAuditLogResponse = z.infer<typeof adminAuditLogResponseSchema>;
 export type AdminAuditLogResponseEntry = z.infer<typeof adminAuditLogEntrySchema>;
 export type AdminModerationFlag = z.infer<typeof adminModerationFlagSchema>;
@@ -506,6 +572,31 @@ export const createAdminCurriculumBoard = async (input: {
   });
 };
 
+export const updateAdminCurriculumBoard = async ({
+  boardId,
+  name,
+  slug
+}: {
+  boardId: number;
+  name: string;
+  slug: string;
+}): Promise<AdminCurriculumBoardMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/boards/${boardId}/update`,
+    schema: adminCurriculumBoardMutationResponseSchema,
+    method: "POST",
+    body: { name, slug }
+  });
+};
+
+export const deleteAdminCurriculumBoard = async (boardId: number): Promise<AdminCurriculumBoardMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/boards/${boardId}/delete`,
+    schema: adminCurriculumBoardMutationResponseSchema,
+    method: "POST"
+  });
+};
+
 export const createAdminCurriculumClass = async (input: {
   boardId: number;
   name: string;
@@ -516,6 +607,31 @@ export const createAdminCurriculumClass = async (input: {
     schema: adminCurriculumClassCreateResponseSchema,
     method: "POST",
     body: input
+  });
+};
+
+export const updateAdminCurriculumClass = async ({
+  classId,
+  name,
+  slug
+}: {
+  classId: number;
+  name: string;
+  slug: string;
+}): Promise<AdminCurriculumClassMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/classes/${classId}/update`,
+    schema: adminCurriculumClassMutationResponseSchema,
+    method: "POST",
+    body: { name, slug }
+  });
+};
+
+export const deleteAdminCurriculumClass = async (classId: number): Promise<AdminCurriculumClassMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/classes/${classId}/delete`,
+    schema: adminCurriculumClassMutationResponseSchema,
+    method: "POST"
   });
 };
 
@@ -547,6 +663,37 @@ export const createAdminCurriculumChapter = async (input: {
     schema: adminCurriculumChapterCreateResponseSchema,
     method: "POST",
     body: input
+  });
+};
+
+export const updateAdminCurriculumChapter = async ({
+  chapterId,
+  chapterNumber,
+  title,
+  slug
+}: {
+  chapterId: number;
+  chapterNumber: number;
+  title: string;
+  slug: string;
+}): Promise<AdminCurriculumChapterMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/${chapterId}/update`,
+    schema: adminCurriculumChapterMutationResponseSchema,
+    method: "POST",
+    body: {
+      chapterNumber,
+      title,
+      slug
+    }
+  });
+};
+
+export const deleteAdminCurriculumChapter = async (chapterId: number): Promise<AdminCurriculumChapterMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/${chapterId}/delete`,
+    schema: adminCurriculumChapterMutationResponseSchema,
+    method: "POST"
   });
 };
 
@@ -675,6 +822,60 @@ export const createAdminCurriculumExercise = async (input: {
     schema: adminCurriculumExerciseCreateResponseSchema,
     method: "POST",
     body: input
+  });
+};
+
+export const getAdminCurriculumExercises = async ({
+  chapterId
+}: {
+  chapterId?: number;
+}): Promise<AdminCurriculumExerciseListResponse> => {
+  const searchParams = new URLSearchParams();
+  if (chapterId) {
+    searchParams.set("chapterId", String(chapterId));
+  }
+  return fetchAdminJson({
+    path: `/api/admin/content/exercises${searchParams.size > 0 ? `?${searchParams.toString()}` : ""}`,
+    schema: adminCurriculumExerciseListResponseSchema
+  });
+};
+
+export const updateAdminCurriculumExercise = async ({
+  exerciseId,
+  exerciseNumber,
+  question,
+  solution,
+  difficulty,
+  type
+}: {
+  exerciseId: number;
+  exerciseNumber: string;
+  question: string;
+  solution: string;
+  difficulty?: "easy" | "medium" | "hard";
+  type?: "mcq" | "short" | "long" | "numerical";
+}): Promise<AdminCurriculumExerciseMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/exercises/${exerciseId}/update`,
+    schema: adminCurriculumExerciseMutationResponseSchema,
+    method: "POST",
+    body: {
+      exerciseNumber,
+      question,
+      solution,
+      ...(difficulty ? { difficulty } : {}),
+      ...(type ? { type } : {})
+    }
+  });
+};
+
+export const deleteAdminCurriculumExercise = async (
+  exerciseId: number
+): Promise<AdminCurriculumExerciseMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/exercises/${exerciseId}/delete`,
+    schema: adminCurriculumExerciseMutationResponseSchema,
+    method: "POST"
   });
 };
 

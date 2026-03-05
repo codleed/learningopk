@@ -258,5 +258,202 @@ test("admin can create board class subject chapter hierarchy and fetch nested cu
   );
 });
 
+test("admin can read update and delete board class chapter and exercise entities", async () => {
+  const app = createApp();
+  const adminAgent = request.agent(app);
+
+  await signUp(adminAgent, "CRUD Admin", `tst_curr_crud_admin_${Date.now()}@example.com`);
+  const adminUser = await getSessionUser(adminAgent);
+  await assignAdminRole(adminUser.id);
+
+  const suffix = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  const boardName = `CRUD Board ${suffix}`;
+  const boardSlug = `crud-board-${suffix}`;
+  const className = `9th ${suffix}`;
+  const classSlug = `9th-${suffix}`;
+  const subjectName = `Physics ${suffix}`;
+  const subjectSlug = `physics-${suffix}`;
+  const chapterTitle = `Motion ${suffix}`;
+  const chapterSlug = `motion-${suffix}`;
+
+  const boardResponse = await adminAgent.post("/api/admin/content/boards").send({
+    name: boardName,
+    slug: boardSlug
+  });
+  assert.equal(boardResponse.status, 201);
+  const boardId = boardResponse.body?.board?.id as number;
+  assert.equal(typeof boardId, "number");
+
+  const classResponse = await adminAgent.post("/api/admin/content/classes").send({
+    boardId,
+    name: className,
+    slug: classSlug
+  });
+  assert.equal(classResponse.status, 201);
+  const boardClassId = classResponse.body?.class?.id as number;
+  assert.equal(typeof boardClassId, "number");
+
+  const subjectResponse = await adminAgent.post("/api/admin/content/subjects").send({
+    boardClassId,
+    name: subjectName,
+    slug: subjectSlug
+  });
+  assert.equal(subjectResponse.status, 201);
+  const subjectId = subjectResponse.body?.subject?.id as number;
+  assert.equal(typeof subjectId, "number");
+
+  const chapterResponse = await adminAgent.post("/api/admin/content/chapters").send({
+    subjectId,
+    chapterNumber: 1,
+    title: chapterTitle,
+    slug: chapterSlug,
+    summary: "Initial summary."
+  });
+  assert.equal(chapterResponse.status, 201);
+  const chapterId = chapterResponse.body?.chapter?.id as number;
+  assert.equal(typeof chapterId, "number");
+
+  const exerciseResponse = await adminAgent.post("/api/admin/content/exercises").send({
+    chapterId,
+    exerciseNumber: "Q1",
+    question: "Initial question",
+    solution: "Initial solution",
+    difficulty: "easy",
+    type: "short"
+  });
+  assert.equal(exerciseResponse.status, 201);
+  const exerciseId = exerciseResponse.body?.exercise?.id as number;
+  assert.equal(typeof exerciseId, "number");
+
+  const exerciseReadResponse = await adminAgent.get(`/api/admin/content/exercises?chapterId=${chapterId}`);
+  assert.equal(exerciseReadResponse.status, 200);
+  assert.equal(exerciseReadResponse.body?.exercises?.length, 1);
+  assert.equal(exerciseReadResponse.body?.exercises?.[0]?.id, exerciseId);
+
+  const updateBoardResponse = await adminAgent.post(`/api/admin/content/boards/${boardId}/update`).send({
+    name: `Updated ${boardName}`,
+    slug: `updated-${boardSlug}`
+  });
+  assert.equal(updateBoardResponse.status, 200);
+  assert.equal(updateBoardResponse.body?.board?.name, `Updated ${boardName}`);
+
+  const updateClassResponse = await adminAgent.post(`/api/admin/content/classes/${boardClassId}/update`).send({
+    name: `Updated ${className}`,
+    slug: `updated-${classSlug}`
+  });
+  assert.equal(updateClassResponse.status, 200);
+  assert.equal(updateClassResponse.body?.class?.name, `Updated ${className}`);
+
+  const updateChapterResponse = await adminAgent.post(`/api/admin/content/chapters/${chapterId}/update`).send({
+    chapterNumber: 2,
+    title: `Updated ${chapterTitle}`,
+    slug: `updated-${chapterSlug}`
+  });
+  assert.equal(updateChapterResponse.status, 200);
+  assert.equal(updateChapterResponse.body?.chapter?.chapterNumber, 2);
+  assert.equal(updateChapterResponse.body?.chapter?.title, `Updated ${chapterTitle}`);
+
+  const updateExerciseResponse = await adminAgent.post(`/api/admin/content/exercises/${exerciseId}/update`).send({
+    exerciseNumber: "Q2",
+    question: "Updated question",
+    solution: "Updated solution",
+    difficulty: "medium",
+    type: "mcq"
+  });
+  assert.equal(updateExerciseResponse.status, 200);
+  assert.equal(updateExerciseResponse.body?.exercise?.exerciseNumber, "Q2");
+  assert.equal(updateExerciseResponse.body?.exercise?.difficulty, "medium");
+  assert.equal(updateExerciseResponse.body?.exercise?.type, "mcq");
+
+  const readAfterUpdateResponse = await adminAgent.get(`/api/admin/content/exercises?chapterId=${chapterId}`);
+  assert.equal(readAfterUpdateResponse.status, 200);
+  assert.equal(readAfterUpdateResponse.body?.exercises?.length, 1);
+  assert.equal(readAfterUpdateResponse.body?.exercises?.[0]?.exerciseNumber, "Q2");
+
+  const deleteExerciseResponse = await adminAgent.post(`/api/admin/content/exercises/${exerciseId}/delete`).send();
+  assert.equal(deleteExerciseResponse.status, 200);
+
+  const readAfterDeleteExerciseResponse = await adminAgent.get(`/api/admin/content/exercises?chapterId=${chapterId}`);
+  assert.equal(readAfterDeleteExerciseResponse.status, 200);
+  assert.equal(readAfterDeleteExerciseResponse.body?.exercises?.length, 0);
+
+  const deleteChapterResponse = await adminAgent.post(`/api/admin/content/chapters/${chapterId}/delete`).send();
+  assert.equal(deleteChapterResponse.status, 200);
+
+  const deleteClassResponse = await adminAgent.post(`/api/admin/content/classes/${boardClassId}/delete`).send();
+  assert.equal(deleteClassResponse.status, 200);
+
+  const deleteBoardResponse = await adminAgent.post(`/api/admin/content/boards/${boardId}/delete`).send();
+  assert.equal(deleteBoardResponse.status, 200);
+
+  const treeAfterDeleteResponse = await adminAgent.get("/api/admin/content/curriculum");
+  assert.equal(treeAfterDeleteResponse.status, 200);
+  const boardsPayload = treeAfterDeleteResponse.body?.boards as Array<{ id: number }> | undefined;
+  assert.ok(Array.isArray(boardsPayload), "Expected curriculum board payload after deletes.");
+  assert.equal(
+    boardsPayload.some((entry) => entry.id === boardId),
+    false,
+    "Expected deleted board to be absent from curriculum tree."
+  );
+
+  const auditRows = await pool.query<{
+    action: string;
+    status: string;
+  }>(
+    `
+      select action, status
+      from admin_audit_logs
+      where scope = 'content'
+        and actor_id = $1
+        and action in (
+          'Update board',
+          'Update class',
+          'Update chapter',
+          'Update exercise',
+          'Delete exercise',
+          'Delete chapter',
+          'Delete class',
+          'Delete board'
+        )
+      order by created_at desc
+    `,
+    [adminUser.id]
+  );
+
+  assert.ok(auditRows.rows.length >= 8, "Expected CRUD update/delete audit rows.");
+  assert.ok(
+    auditRows.rows.some((row) => row.action === "Update board" && row.status === "success"),
+    "Expected successful board update audit row."
+  );
+  assert.ok(
+    auditRows.rows.some((row) => row.action === "Update class" && row.status === "success"),
+    "Expected successful class update audit row."
+  );
+  assert.ok(
+    auditRows.rows.some((row) => row.action === "Update chapter" && row.status === "success"),
+    "Expected successful chapter update audit row."
+  );
+  assert.ok(
+    auditRows.rows.some((row) => row.action === "Update exercise" && row.status === "success"),
+    "Expected successful exercise update audit row."
+  );
+  assert.ok(
+    auditRows.rows.some((row) => row.action === "Delete exercise" && row.status === "success"),
+    "Expected successful exercise delete audit row."
+  );
+  assert.ok(
+    auditRows.rows.some((row) => row.action === "Delete chapter" && row.status === "success"),
+    "Expected successful chapter delete audit row."
+  );
+  assert.ok(
+    auditRows.rows.some((row) => row.action === "Delete class" && row.status === "success"),
+    "Expected successful class delete audit row."
+  );
+  assert.ok(
+    auditRows.rows.some((row) => row.action === "Delete board" && row.status === "success"),
+    "Expected successful board delete audit row."
+  );
+});
+
 
 

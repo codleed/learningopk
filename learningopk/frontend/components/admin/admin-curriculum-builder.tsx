@@ -8,15 +8,25 @@ import {
   createAdminCurriculumClass,
   createAdminCurriculumExercise,
   createAdminCurriculumSubject,
+  deleteAdminCurriculumBoard,
+  deleteAdminCurriculumChapter,
+  deleteAdminCurriculumClass,
+  deleteAdminCurriculumExercise,
   getAdminChapterGraph,
   getAdminChapterLinks,
   getAdminChapterSummary,
+  getAdminCurriculumExercises,
   getAdminCurriculumTree,
+  updateAdminCurriculumBoard,
   updateAdminChapterSummary,
+  updateAdminCurriculumChapter,
+  updateAdminCurriculumClass,
+  updateAdminCurriculumExercise,
   uploadAdminChapterSummaryMedia,
   type AdminChapterGraphResponse,
   type AdminChapterLinksResponse,
-  type AdminCurriculumBoard
+  type AdminCurriculumBoard,
+  type AdminCurriculumExerciseRead
 } from "@/lib/admin-api";
 
 import { Button } from "../ui/button";
@@ -33,6 +43,7 @@ type AdminCurriculumBuilderProps = {
 };
 
 type CurriculumFormTab = "board" | "class" | "subject" | "chapter" | "exercise";
+type EntityModeTab = "add" | "manage";
 type ChapterModeTab = "add" | "edit";
 type ExerciseType = "short" | "mcq" | "long" | "numerical";
 
@@ -106,8 +117,12 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [boardName, setBoardName] = useState("");
+  const [manageBoardId, setManageBoardId] = useState("");
+  const [manageBoardName, setManageBoardName] = useState("");
   const [classBoardId, setClassBoardId] = useState("");
   const [className, setClassName] = useState("");
+  const [manageClassId, setManageClassId] = useState("");
+  const [manageClassName, setManageClassName] = useState("");
   const [subjectBoardClassId, setSubjectBoardClassId] = useState("");
   const [subjectName, setSubjectName] = useState("");
   const [subjectDescription, setSubjectDescription] = useState("");
@@ -115,6 +130,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   const [chapterNumber, setChapterNumber] = useState("1");
   const [chapterTitle, setChapterTitle] = useState("");
   const [chapterSummary, setChapterSummary] = useState("");
+  const [manageChapterNumber, setManageChapterNumber] = useState("1");
+  const [manageChapterTitle, setManageChapterTitle] = useState("");
   const [summaryEditorChapterId, setSummaryEditorChapterId] = useState("");
   const [summaryEditorContent, setSummaryEditorContent] = useState("");
   const [summaryEditorImageAlt, setSummaryEditorImageAlt] = useState("Figure");
@@ -138,6 +155,17 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   const [exerciseNumber, setExerciseNumber] = useState("");
   const [exerciseQuestion, setExerciseQuestion] = useState("");
   const [exerciseSolution, setExerciseSolution] = useState("");
+  const [chapterExercises, setChapterExercises] = useState<AdminCurriculumExerciseRead[]>([]);
+  const [isExerciseListLoading, setIsExerciseListLoading] = useState(false);
+  const [manageExerciseId, setManageExerciseId] = useState("");
+  const [manageExerciseType, setManageExerciseType] = useState<ExerciseType>("short");
+  const [manageExerciseDifficulty, setManageExerciseDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+  const [manageExerciseNumber, setManageExerciseNumber] = useState("");
+  const [manageExerciseQuestion, setManageExerciseQuestion] = useState("");
+  const [manageExerciseSolution, setManageExerciseSolution] = useState("");
+  const [activeBoardModeTab, setActiveBoardModeTab] = useState<EntityModeTab>("add");
+  const [activeClassModeTab, setActiveClassModeTab] = useState<EntityModeTab>("add");
+  const [activeExerciseModeTab, setActiveExerciseModeTab] = useState<EntityModeTab>("add");
   const [activeFormTab, setActiveFormTab] = useState<CurriculumFormTab>("board");
   const [activeChapterModeTab, setActiveChapterModeTab] = useState<ChapterModeTab>("add");
   const [isChapterSummaryPreviewVisible, setIsChapterSummaryPreviewVisible] = useState(false);
@@ -194,6 +222,9 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       boards.flatMap((board) =>
         board.classes.map((boardClass) => ({
           id: boardClass.id,
+          boardId: board.id,
+          boardName: board.name,
+          name: boardClass.name,
           label: `${board.name} / ${boardClass.name}`
         }))
       ),
@@ -221,6 +252,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
             subject.chapters.map((chapter) => ({
               id: chapter.id,
               subjectName: subject.name,
+              chapterNumber: chapter.chapterNumber,
               title: chapter.title,
               label: `${board.name} / ${boardClass.name} / ${subject.name} / Chapter ${chapter.chapterNumber}: ${chapter.title}`
             }))
@@ -297,6 +329,28 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       setExerciseType("short");
     }
   }, [exerciseType, isPhysicsExerciseChapter]);
+
+  useEffect(() => {
+    if (manageExerciseType === "numerical" && !isPhysicsExerciseChapter) {
+      setManageExerciseType("short");
+    }
+  }, [manageExerciseType, isPhysicsExerciseChapter]);
+
+  useEffect(() => {
+    const selectedBoard = boards.find((board) => board.id === Number(manageBoardId));
+    setManageBoardName(selectedBoard?.name ?? "");
+  }, [boards, manageBoardId]);
+
+  useEffect(() => {
+    const selectedClass = classOptions.find((option) => option.id === Number(manageClassId));
+    setManageClassName(selectedClass?.name ?? "");
+  }, [classOptions, manageClassId]);
+
+  useEffect(() => {
+    const selectedChapter = chapterOptions.find((option) => option.id === Number(summaryEditorChapterId));
+    setManageChapterTitle(selectedChapter?.title ?? "");
+    setManageChapterNumber(selectedChapter ? String(selectedChapter.chapterNumber) : "1");
+  }, [chapterOptions, summaryEditorChapterId]);
 
   const loadSummaryLinks = useCallback(async (chapterId: number) => {
     setIsSummaryLinksLoading(true);
@@ -420,6 +474,32 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     await loadSummaryLinks(chapterId);
   };
 
+  const refreshExercises = useCallback(
+    async (chapterId: number) => {
+      if (!chapterId) {
+        setChapterExercises([]);
+        setManageExerciseId("");
+        return;
+      }
+      setIsExerciseListLoading(true);
+      try {
+        const payload = await getAdminCurriculumExercises({
+          chapterId
+        });
+        setChapterExercises(payload.exercises);
+      } catch {
+        setChapterExercises([]);
+        pushToast({
+          title: "Could not load exercises",
+          tone: "error"
+        });
+      } finally {
+        setIsExerciseListLoading(false);
+      }
+    },
+    [pushToast]
+  );
+
   const refreshTree = async () => {
     setIsRefreshing(true);
     try {
@@ -434,6 +514,34 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       setIsRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    const chapterId = Number(exerciseChapterId);
+    if (!chapterId) {
+      setChapterExercises([]);
+      setManageExerciseId("");
+      return;
+    }
+    void refreshExercises(chapterId);
+  }, [exerciseChapterId, refreshExercises]);
+
+  useEffect(() => {
+    const selectedExercise = chapterExercises.find((exercise) => exercise.id === Number(manageExerciseId));
+    if (!selectedExercise) {
+      setManageExerciseNumber("");
+      setManageExerciseQuestion("");
+      setManageExerciseSolution("");
+      setManageExerciseDifficulty("medium");
+      setManageExerciseType("short");
+      return;
+    }
+
+    setManageExerciseNumber(selectedExercise.exerciseNumber);
+    setManageExerciseQuestion(selectedExercise.question);
+    setManageExerciseSolution(selectedExercise.solution);
+    setManageExerciseDifficulty(selectedExercise.difficulty);
+    setManageExerciseType(selectedExercise.type);
+  }, [chapterExercises, manageExerciseId]);
 
   const submitBoard = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -452,6 +560,54 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       pushToast({ title: "Board created", tone: "success" });
     } catch {
       pushToast({ title: "Could not create board", tone: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const updateBoard = async () => {
+    const boardId = Number(manageBoardId);
+    const normalizedName = manageBoardName.trim();
+    if (!boardId || !normalizedName) {
+      pushToast({ title: "Select a board and provide a name", tone: "error" });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await updateAdminCurriculumBoard({
+        boardId,
+        name: normalizedName,
+        slug: toSlug(normalizedName)
+      });
+      await refreshTree();
+      pushToast({ title: "Board updated", tone: "success" });
+    } catch {
+      pushToast({ title: "Could not update board", tone: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const deleteBoard = async () => {
+    const boardId = Number(manageBoardId);
+    if (!boardId) {
+      pushToast({ title: "Select a board first", tone: "error" });
+      return;
+    }
+    if (!window.confirm("Delete this board and all related classes, subjects, chapters, and exercises?")) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await deleteAdminCurriculumBoard(boardId);
+      setManageBoardId("");
+      setManageBoardName("");
+      await refreshTree();
+      pushToast({ title: "Board deleted", tone: "success" });
+    } catch {
+      pushToast({ title: "Could not delete board", tone: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -476,6 +632,54 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       pushToast({ title: "Class created", tone: "success" });
     } catch {
       pushToast({ title: "Could not create class", tone: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const updateClass = async () => {
+    const classId = Number(manageClassId);
+    const normalizedName = manageClassName.trim();
+    if (!classId || !normalizedName) {
+      pushToast({ title: "Select a class and provide a name", tone: "error" });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await updateAdminCurriculumClass({
+        classId,
+        name: normalizedName,
+        slug: toSlug(normalizedName)
+      });
+      await refreshTree();
+      pushToast({ title: "Class updated", tone: "success" });
+    } catch {
+      pushToast({ title: "Could not update class", tone: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const deleteClass = async () => {
+    const classId = Number(manageClassId);
+    if (!classId) {
+      pushToast({ title: "Select a class first", tone: "error" });
+      return;
+    }
+    if (!window.confirm("Delete this class and all related subjects, chapters, and exercises?")) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await deleteAdminCurriculumClass(classId);
+      setManageClassId("");
+      setManageClassName("");
+      await refreshTree();
+      pushToast({ title: "Class deleted", tone: "success" });
+    } catch {
+      pushToast({ title: "Could not delete class", tone: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -567,9 +771,122 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       setExerciseQuestion("");
       setExerciseSolution("");
       setExerciseDifficulty("medium");
+      await refreshExercises(chapterId);
       pushToast({ title: "Exercise created", tone: "success" });
     } catch {
       pushToast({ title: "Could not create exercise", tone: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const updateChapterMeta = async () => {
+    const chapterId = Number(summaryEditorChapterId);
+    const chapterNumberValue = Number(manageChapterNumber);
+    const title = manageChapterTitle.trim();
+    if (!chapterId || !chapterNumberValue || !title) {
+      pushToast({ title: "Select chapter and provide title/number", tone: "error" });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await updateAdminCurriculumChapter({
+        chapterId,
+        chapterNumber: chapterNumberValue,
+        title,
+        slug: toSlug(title)
+      });
+      await refreshTree();
+      await loadSummaryGraph();
+      pushToast({ title: "Chapter updated", tone: "success" });
+    } catch {
+      pushToast({ title: "Could not update chapter", tone: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const deleteChapter = async () => {
+    const chapterId = Number(summaryEditorChapterId);
+    if (!chapterId) {
+      pushToast({ title: "Select a chapter first", tone: "error" });
+      return;
+    }
+    if (!window.confirm("Delete this chapter and all related exercises?")) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await deleteAdminCurriculumChapter(chapterId);
+      setSummaryEditorChapterId("");
+      setSummaryEditorContentImmediate("");
+      setSummaryEditorOutgoingLinks([]);
+      setSummaryEditorBacklinks([]);
+      await refreshTree();
+      await loadSummaryGraph();
+      pushToast({ title: "Chapter deleted", tone: "success" });
+    } catch {
+      pushToast({ title: "Could not delete chapter", tone: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const updateExercise = async () => {
+    const exerciseId = Number(manageExerciseId);
+    const normalizedExerciseNumber = manageExerciseNumber.trim();
+    const question = manageExerciseQuestion.trim();
+    const solution = manageExerciseSolution.trim();
+
+    if (!exerciseId || !normalizedExerciseNumber || !question || !solution) {
+      pushToast({ title: "Select exercise and complete all fields", tone: "error" });
+      return;
+    }
+
+    if (manageExerciseType === "numerical" && !isPhysicsExerciseChapter) {
+      pushToast({ title: "Numerical problems are only for Physics chapters", tone: "error" });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await updateAdminCurriculumExercise({
+        exerciseId,
+        exerciseNumber: normalizedExerciseNumber,
+        question,
+        solution,
+        difficulty: manageExerciseDifficulty,
+        type: manageExerciseType
+      });
+      await refreshExercises(Number(exerciseChapterId));
+      pushToast({ title: "Exercise updated", tone: "success" });
+    } catch {
+      pushToast({ title: "Could not update exercise", tone: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const deleteExercise = async () => {
+    const exerciseId = Number(manageExerciseId);
+    if (!exerciseId) {
+      pushToast({ title: "Select an exercise first", tone: "error" });
+      return;
+    }
+    if (!window.confirm("Delete this exercise?")) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await deleteAdminCurriculumExercise(exerciseId);
+      setManageExerciseId("");
+      await refreshExercises(Number(exerciseChapterId));
+      pushToast({ title: "Exercise deleted", tone: "success" });
+    } catch {
+      pushToast({ title: "Could not delete exercise", tone: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -784,45 +1101,201 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
         </div>
 
         {activeFormTab === "board" ? (
-          <form className="space-y-2" data-testid="curriculum-board-form" onSubmit={submitBoard}>
-            <p className="text-sm font-semibold text-foreground">Add Board</p>
-            <Input
-              data-testid="curriculum-board-name-input"
-              value={boardName}
-              onChange={(event) => setBoardName(event.target.value)}
-              placeholder="Board name (e.g. Punjab Board)"
-            />
-            <Button data-testid="curriculum-board-submit" type="submit" size="sm" variant="secondary" disabled={isSubmitting}>
-              Add board
-            </Button>
-          </form>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2" data-testid="curriculum-board-mode-tabs">
+              <button
+                type="button"
+                data-testid="curriculum-board-mode-add"
+                onClick={() => setActiveBoardModeTab("add")}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                  activeBoardModeTab === "add"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-foreground hover:border-primary/40"
+                }`}
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                data-testid="curriculum-board-mode-manage"
+                onClick={() => setActiveBoardModeTab("manage")}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                  activeBoardModeTab === "manage"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-foreground hover:border-primary/40"
+                }`}
+              >
+                Edit / Delete
+              </button>
+            </div>
+
+            {activeBoardModeTab === "add" ? (
+              <form className="space-y-2" data-testid="curriculum-board-form" onSubmit={submitBoard}>
+                <p className="text-sm font-semibold text-foreground">Add Board</p>
+                <Input
+                  data-testid="curriculum-board-name-input"
+                  value={boardName}
+                  onChange={(event) => setBoardName(event.target.value)}
+                  placeholder="Board name (e.g. Punjab Board)"
+                />
+                <Button data-testid="curriculum-board-submit" type="submit" size="sm" variant="secondary" disabled={isSubmitting}>
+                  Add board
+                </Button>
+              </form>
+            ) : (
+              <div className="space-y-2 rounded-lg border border-border/60 bg-background/50 p-3" data-testid="curriculum-board-manage">
+                <p className="text-sm font-semibold text-foreground">Update / Delete Board</p>
+                <Select
+                  data-testid="curriculum-board-manage-select"
+                  value={manageBoardId}
+                  onChange={(event) => setManageBoardId(event.target.value)}
+                >
+                  <option value="">Select board</option>
+                  {boards.map((board) => (
+                    <option key={board.id} value={board.id}>
+                      {board.name}
+                    </option>
+                  ))}
+                </Select>
+                <Input
+                  data-testid="curriculum-board-manage-name-input"
+                  value={manageBoardName}
+                  onChange={(event) => setManageBoardName(event.target.value)}
+                  placeholder="Board name"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    data-testid="curriculum-board-manage-update"
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={isSubmitting}
+                    onClick={updateBoard}
+                  >
+                    Update board
+                  </Button>
+                  <Button
+                    data-testid="curriculum-board-manage-delete"
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={isSubmitting}
+                    onClick={deleteBoard}
+                  >
+                    Delete board
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         ) : null}
 
         {activeFormTab === "class" ? (
-          <form className="space-y-2" data-testid="curriculum-class-form" onSubmit={submitClass}>
-            <p className="text-sm font-semibold text-foreground">Add Class</p>
-            <Select
-              data-testid="curriculum-class-board-select"
-              value={classBoardId}
-              onChange={(event) => setClassBoardId(event.target.value)}
-            >
-              <option value="">Select board</option>
-              {boards.map((board) => (
-                <option key={board.id} value={board.id}>
-                  {board.name}
-                </option>
-              ))}
-            </Select>
-            <Input
-              data-testid="curriculum-class-name-input"
-              value={className}
-              onChange={(event) => setClassName(event.target.value)}
-              placeholder="Class name (e.g. 9th)"
-            />
-            <Button data-testid="curriculum-class-submit" type="submit" size="sm" variant="secondary" disabled={isSubmitting}>
-              Add class
-            </Button>
-          </form>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2" data-testid="curriculum-class-mode-tabs">
+              <button
+                type="button"
+                data-testid="curriculum-class-mode-add"
+                onClick={() => setActiveClassModeTab("add")}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                  activeClassModeTab === "add"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-foreground hover:border-primary/40"
+                }`}
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                data-testid="curriculum-class-mode-manage"
+                onClick={() => setActiveClassModeTab("manage")}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                  activeClassModeTab === "manage"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-foreground hover:border-primary/40"
+                }`}
+              >
+                Edit / Delete
+              </button>
+            </div>
+
+            {activeClassModeTab === "add" ? (
+              <form className="space-y-2" data-testid="curriculum-class-form" onSubmit={submitClass}>
+                <p className="text-sm font-semibold text-foreground">Add Class</p>
+                <Select
+                  data-testid="curriculum-class-board-select"
+                  value={classBoardId}
+                  onChange={(event) => setClassBoardId(event.target.value)}
+                >
+                  <option value="">Select board</option>
+                  {boards.map((board) => (
+                    <option key={board.id} value={board.id}>
+                      {board.name}
+                    </option>
+                  ))}
+                </Select>
+                <Input
+                  data-testid="curriculum-class-name-input"
+                  value={className}
+                  onChange={(event) => setClassName(event.target.value)}
+                  placeholder="Class name (e.g. 9th)"
+                />
+                <Button
+                  data-testid="curriculum-class-submit"
+                  type="submit"
+                  size="sm"
+                  variant="secondary"
+                  disabled={isSubmitting}
+                >
+                  Add class
+                </Button>
+              </form>
+            ) : (
+              <div className="space-y-2 rounded-lg border border-border/60 bg-background/50 p-3" data-testid="curriculum-class-manage">
+                <p className="text-sm font-semibold text-foreground">Update / Delete Class</p>
+                <Select
+                  data-testid="curriculum-class-manage-select"
+                  value={manageClassId}
+                  onChange={(event) => setManageClassId(event.target.value)}
+                >
+                  <option value="">Select class</option>
+                  {classOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+                <Input
+                  data-testid="curriculum-class-manage-name-input"
+                  value={manageClassName}
+                  onChange={(event) => setManageClassName(event.target.value)}
+                  placeholder="Class name"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    data-testid="curriculum-class-manage-update"
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={isSubmitting}
+                    onClick={updateClass}
+                  >
+                    Update class
+                  </Button>
+                  <Button
+                    data-testid="curriculum-class-manage-delete"
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={isSubmitting}
+                    onClick={deleteClass}
+                  >
+                    Delete class
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         ) : null}
 
         {activeFormTab === "subject" ? (
@@ -973,6 +1446,50 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                     </option>
                   ))}
                 </Select>
+
+                <div className="space-y-2 rounded-lg border border-border/60 bg-background/60 p-3" data-testid="curriculum-chapter-manage">
+                  <p className="text-sm font-semibold text-foreground">Update / Delete Chapter</p>
+                  <div className="grid gap-2 md:grid-cols-2">
+                    <Input
+                      data-testid="curriculum-chapter-manage-number-input"
+                      type="number"
+                      min={1}
+                      value={manageChapterNumber}
+                      onChange={(event) => setManageChapterNumber(event.target.value)}
+                      placeholder="Chapter number"
+                      disabled={!summaryEditorChapterId}
+                    />
+                    <Input
+                      data-testid="curriculum-chapter-manage-title-input"
+                      value={manageChapterTitle}
+                      onChange={(event) => setManageChapterTitle(event.target.value)}
+                      placeholder="Chapter title"
+                      disabled={!summaryEditorChapterId}
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      data-testid="curriculum-chapter-manage-update"
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      disabled={!summaryEditorChapterId || isSubmitting}
+                      onClick={updateChapterMeta}
+                    >
+                      Update chapter
+                    </Button>
+                    <Button
+                      data-testid="curriculum-chapter-manage-delete"
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      disabled={!summaryEditorChapterId || isSubmitting}
+                      onClick={deleteChapter}
+                    >
+                      Delete chapter
+                    </Button>
+                  </div>
+                </div>
 
                 <CodeMirrorMarkdownEditor
                   ref={summaryEditorCodeMirrorRef}
@@ -1183,65 +1700,191 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
         ) : null}
 
         {activeFormTab === "exercise" ? (
-          <form className="space-y-2" data-testid="curriculum-exercise-form" onSubmit={submitExercise}>
-            <p className="text-sm font-semibold text-foreground">Add Exercise</p>
-            <Select
-              data-testid="curriculum-exercise-chapter-select"
-              value={exerciseChapterId}
-              onChange={(event) => setExerciseChapterId(event.target.value)}
-            >
-              <option value="">Select chapter</option>
-              {chapterOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-            <Select
-              data-testid="curriculum-exercise-type-select"
-              value={exerciseType}
-              onChange={(event) => setExerciseType(event.target.value as ExerciseType)}
-            >
-              {exerciseTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-            <Select
-              data-testid="curriculum-exercise-difficulty-select"
-              value={exerciseDifficulty}
-              onChange={(event) => setExerciseDifficulty(event.target.value as "easy" | "medium" | "hard")}
-            >
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </Select>
-            <Input
-              data-testid="curriculum-exercise-number-input"
-              value={exerciseNumber}
-              onChange={(event) => setExerciseNumber(event.target.value)}
-              placeholder="Exercise number (e.g. Q1)"
-            />
-            <Textarea
-              data-testid="curriculum-exercise-question-input"
-              value={exerciseQuestion}
-              onChange={(event) => setExerciseQuestion(event.target.value)}
-              className="min-h-28 resize-y"
-              placeholder="Exercise question"
-            />
-            <Textarea
-              data-testid="curriculum-exercise-solution-input"
-              value={exerciseSolution}
-              onChange={(event) => setExerciseSolution(event.target.value)}
-              className="min-h-32 resize-y"
-              placeholder="Step-by-step solution (Markdown and math supported)"
-            />
-            <p className="text-xs text-muted-foreground">Numerical problems are available for Physics chapters.</p>
-            <Button data-testid="curriculum-exercise-submit" type="submit" size="sm" variant="secondary" disabled={isSubmitting}>
-              Add exercise
-            </Button>
-          </form>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2" data-testid="curriculum-exercise-mode-tabs">
+              <button
+                type="button"
+                data-testid="curriculum-exercise-mode-add"
+                onClick={() => setActiveExerciseModeTab("add")}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                  activeExerciseModeTab === "add"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-foreground hover:border-primary/40"
+                }`}
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                data-testid="curriculum-exercise-mode-manage"
+                onClick={() => setActiveExerciseModeTab("manage")}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                  activeExerciseModeTab === "manage"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-foreground hover:border-primary/40"
+                }`}
+              >
+                Edit / Delete
+              </button>
+            </div>
+
+            {activeExerciseModeTab === "add" ? (
+              <form className="space-y-2" data-testid="curriculum-exercise-form" onSubmit={submitExercise}>
+                <p className="text-sm font-semibold text-foreground">Add Exercise</p>
+                <Select
+                  data-testid="curriculum-exercise-chapter-select"
+                  value={exerciseChapterId}
+                  onChange={(event) => setExerciseChapterId(event.target.value)}
+                >
+                  <option value="">Select chapter</option>
+                  {chapterOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+                <Select
+                  data-testid="curriculum-exercise-type-select"
+                  value={exerciseType}
+                  onChange={(event) => setExerciseType(event.target.value as ExerciseType)}
+                >
+                  {exerciseTypeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+                <Select
+                  data-testid="curriculum-exercise-difficulty-select"
+                  value={exerciseDifficulty}
+                  onChange={(event) => setExerciseDifficulty(event.target.value as "easy" | "medium" | "hard")}
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </Select>
+                <Input
+                  data-testid="curriculum-exercise-number-input"
+                  value={exerciseNumber}
+                  onChange={(event) => setExerciseNumber(event.target.value)}
+                  placeholder="Exercise number (e.g. Q1)"
+                />
+                <Textarea
+                  data-testid="curriculum-exercise-question-input"
+                  value={exerciseQuestion}
+                  onChange={(event) => setExerciseQuestion(event.target.value)}
+                  className="min-h-28 resize-y"
+                  placeholder="Exercise question"
+                />
+                <Textarea
+                  data-testid="curriculum-exercise-solution-input"
+                  value={exerciseSolution}
+                  onChange={(event) => setExerciseSolution(event.target.value)}
+                  className="min-h-32 resize-y"
+                  placeholder="Step-by-step solution (Markdown and math supported)"
+                />
+                <p className="text-xs text-muted-foreground">Numerical problems are available for Physics chapters.</p>
+                <Button
+                  data-testid="curriculum-exercise-submit"
+                  type="submit"
+                  size="sm"
+                  variant="secondary"
+                  disabled={isSubmitting}
+                >
+                  Add exercise
+                </Button>
+              </form>
+            ) : (
+              <div className="space-y-2 rounded-lg border border-border/60 bg-background/50 p-3" data-testid="curriculum-exercise-manage">
+                <p className="text-sm font-semibold text-foreground">Read / Update / Delete Exercises</p>
+                <p className="text-xs text-muted-foreground">
+                  {isExerciseListLoading
+                    ? "Loading exercises..."
+                    : `Loaded ${chapterExercises.length} exercise${chapterExercises.length === 1 ? "" : "s"} for selected chapter.`}
+                </p>
+                <Select
+                  data-testid="curriculum-exercise-manage-select"
+                  value={manageExerciseId}
+                  onChange={(event) => setManageExerciseId(event.target.value)}
+                  disabled={!exerciseChapterId || isExerciseListLoading}
+                >
+                  <option value="">Select exercise</option>
+                  {chapterExercises.map((exercise) => (
+                    <option key={exercise.id} value={exercise.id}>
+                      {exercise.exerciseNumber}
+                    </option>
+                  ))}
+                </Select>
+                <Select
+                  data-testid="curriculum-exercise-manage-type-select"
+                  value={manageExerciseType}
+                  onChange={(event) => setManageExerciseType(event.target.value as ExerciseType)}
+                  disabled={!manageExerciseId}
+                >
+                  {exerciseTypeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+                <Select
+                  data-testid="curriculum-exercise-manage-difficulty-select"
+                  value={manageExerciseDifficulty}
+                  onChange={(event) => setManageExerciseDifficulty(event.target.value as "easy" | "medium" | "hard")}
+                  disabled={!manageExerciseId}
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </Select>
+                <Input
+                  data-testid="curriculum-exercise-manage-number-input"
+                  value={manageExerciseNumber}
+                  onChange={(event) => setManageExerciseNumber(event.target.value)}
+                  placeholder="Exercise number"
+                  disabled={!manageExerciseId}
+                />
+                <Textarea
+                  data-testid="curriculum-exercise-manage-question-input"
+                  value={manageExerciseQuestion}
+                  onChange={(event) => setManageExerciseQuestion(event.target.value)}
+                  className="min-h-24 resize-y"
+                  placeholder="Exercise question"
+                  disabled={!manageExerciseId}
+                />
+                <Textarea
+                  data-testid="curriculum-exercise-manage-solution-input"
+                  value={manageExerciseSolution}
+                  onChange={(event) => setManageExerciseSolution(event.target.value)}
+                  className="min-h-24 resize-y"
+                  placeholder="Exercise solution"
+                  disabled={!manageExerciseId}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    data-testid="curriculum-exercise-manage-update"
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={!manageExerciseId || isSubmitting}
+                    onClick={updateExercise}
+                  >
+                    Update exercise
+                  </Button>
+                  <Button
+                    data-testid="curriculum-exercise-manage-delete"
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={!manageExerciseId || isSubmitting}
+                    onClick={deleteExercise}
+                  >
+                    Delete exercise
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         ) : null}
       </div>
 
