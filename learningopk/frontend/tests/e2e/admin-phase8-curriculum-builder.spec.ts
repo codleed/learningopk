@@ -545,7 +545,7 @@ test("admin add chapter imports markdown file into summary draft before submit",
   await expect(page.getByTestId("curriculum-chapter-summary-preview")).toContainText("Imported add-form markdown body.");
 
   await page.getByTestId("curriculum-chapter-submit").click();
-  await expect(page.getByText("Chapter added")).toBeVisible();
+  await expect(page.getByText("Chapter created")).toBeVisible();
 
   await page.getByTestId("curriculum-chapter-mode-edit").click();
   const chapterLabel = `${boardName} / ${className} / ${subjectName} / Chapter 1: ${chapterTitle}`;

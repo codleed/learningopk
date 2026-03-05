@@ -171,6 +171,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   const [isChapterSummaryPreviewVisible, setIsChapterSummaryPreviewVisible] = useState(false);
   const [isSummaryEditorPreviewVisible, setIsSummaryEditorPreviewVisible] = useState(false);
   const [expandedBoardIds, setExpandedBoardIds] = useState<Set<number>>(new Set());
+  const chapterMarkdownInputRef = useRef<HTMLInputElement | null>(null);
   const summaryEditorCodeMirrorRef = useRef<CodeMirrorMarkdownEditorHandle | null>(null);
   const summaryEditorLiveContentRef = useRef("");
   const summaryEditorSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -739,6 +740,9 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       setChapterNumber("1");
       setChapterTitle("");
       setChapterSummary("");
+      if (chapterMarkdownInputRef.current) {
+        chapterMarkdownInputRef.current.value = "";
+      }
       await refreshTree();
       pushToast({ title: "Chapter created", tone: "success" });
     } catch {
@@ -896,6 +900,45 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       pushToast({ title: "Could not delete exercise", tone: "error" });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const importChapterMarkdown = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      const importedMarkdown = await file.text();
+      if (importedMarkdown.trim().length === 0) {
+        pushToast({
+          title: "Markdown file is empty",
+          tone: "error"
+        });
+        return;
+      }
+
+      if (
+        chapterSummary.trim().length > 0 &&
+        !window.confirm("Importing a Markdown file will replace the current chapter summary draft. Continue?")
+      ) {
+        return;
+      }
+
+      setChapterSummary(importedMarkdown);
+      pushToast({
+        title: "Markdown imported into chapter form",
+        tone: "success"
+      });
+    } catch {
+      pushToast({
+        title: "Could not read Markdown file",
+        tone: "error"
+      });
+    } finally {
+      input.value = "";
     }
   };
 
@@ -1442,6 +1485,32 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                   className="min-h-48 resize-y"
                   placeholder="Write chapter summary in Markdown. Example: ![Diagram](https://...) and $$E=mc^2$$"
                 />
+                <div className="space-y-2 rounded-lg border border-border/60 bg-background/60 p-3">
+                  <p className="text-sm font-semibold text-foreground">Summary import</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      data-testid="curriculum-chapter-markdown-option"
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => chapterMarkdownInputRef.current?.click()}
+                      disabled={isSubmitting}
+                    >
+                      Upload .md file
+                    </Button>
+                  </div>
+                  <Input
+                    ref={chapterMarkdownInputRef}
+                    data-testid="curriculum-chapter-markdown-input"
+                    type="file"
+                    accept=".md,text/markdown,text/plain"
+                    onChange={importChapterMarkdown}
+                    disabled={isSubmitting}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Uploading a Markdown file loads it into the chapter summary field for review before you add the chapter.
+                  </p>
+                </div>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-xs text-muted-foreground">Supports Markdown, images, and math notation.</p>
                   <Button
