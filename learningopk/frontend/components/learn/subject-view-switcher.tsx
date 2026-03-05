@@ -56,12 +56,11 @@ export function SubjectViewSwitcher({ boardSlug, classSlug, subjectSlug, chapter
   }, [searchInput]);
 
   useEffect(() => {
-    if (!showGraph || activeView !== "graph" || graphState !== "idle") {
+    if (!showGraph || activeView !== "graph" || graphState !== "loading") {
       return;
     }
 
     let cancelled = false;
-    setGraphState("loading");
     void getSubjectGraph({
       board: boardSlug,
       grade: classSlug,
@@ -92,7 +91,7 @@ export function SubjectViewSwitcher({ boardSlug, classSlug, subjectSlug, chapter
     return () => {
       cancelled = true;
     };
-  }, [activeView, boardSlug, classSlug, showGraph, subjectSlug]);
+  }, [activeView, boardSlug, classSlug, graphState, showGraph, subjectSlug]);
 
   const chapterById = useMemo(() => new Map(graphNodes.map((chapter) => [chapter.id, chapter])), [graphNodes]);
 
@@ -115,6 +114,17 @@ export function SubjectViewSwitcher({ boardSlug, classSlug, subjectSlug, chapter
       return allowedNodeIds.has(edge.sourceChapterId) || allowedNodeIds.has(edge.targetChapterId);
     });
   }, [filteredGraphNodes, graphEdges, searchTerm]);
+
+  const handleViewChange = useCallback(
+    (nextView: "list" | "graph") => {
+      setActiveView(nextView);
+
+      if (nextView === "graph" && graphState === "idle") {
+        setGraphState("loading");
+      }
+    },
+    [graphState]
+  );
 
   const openChapter = useCallback(
     (chapterId: number) => {
@@ -154,7 +164,7 @@ export function SubjectViewSwitcher({ boardSlug, classSlug, subjectSlug, chapter
           size="sm"
           variant={activeView === "list" ? "primary" : "secondary"}
           data-testid="subject-view-tab-list"
-          onClick={() => setActiveView("list")}
+          onClick={() => handleViewChange("list")}
         >
           Chapter list
         </Button>
@@ -163,7 +173,7 @@ export function SubjectViewSwitcher({ boardSlug, classSlug, subjectSlug, chapter
           size="sm"
           variant={activeView === "graph" ? "primary" : "secondary"}
           data-testid="subject-view-tab-graph"
-          onClick={() => setActiveView("graph")}
+          onClick={() => handleViewChange("graph")}
         >
           Graph
         </Button>
