@@ -478,6 +478,83 @@ test("admin summary editor imports markdown file for review before save", async 
   expect(summaryAfterSavePayload.chapter.summary).toBe(importedSummary);
 });
 
+test("admin add chapter imports markdown file into summary draft before submit", async ({ page }) => {
+  await loginAsSeededAdmin(page);
+  await page.goto("/admin/content");
+
+  const suffix = Date.now().toString();
+  const boardName = `Add Import Board ${suffix}`;
+  const className = `8th ${suffix}`;
+  const subjectName = `Add Import English ${suffix}`;
+  const chapterTitle = `Poetry ${suffix}`;
+  const typedDraft = "Typed add-form draft that should survive cancel.";
+  const importedSummary = "# Imported add summary\n\nImported add-form markdown body.";
+
+  await page.getByTestId("curriculum-board-name-input").fill(boardName);
+  await page.getByTestId("curriculum-board-submit").click();
+
+  await page.getByTestId("curriculum-tab-class").click();
+  await page.getByTestId("curriculum-class-board-select").selectOption({ label: boardName });
+  await page.getByTestId("curriculum-class-name-input").fill(className);
+  await page.getByTestId("curriculum-class-submit").click();
+
+  await page.getByTestId("curriculum-tab-subject").click();
+  await page
+    .getByTestId("curriculum-subject-class-select")
+    .selectOption({ label: `${boardName} / ${className}` });
+  await page.getByTestId("curriculum-subject-name-input").fill(subjectName);
+  await page.getByTestId("curriculum-subject-submit").click();
+
+  await page.getByTestId("curriculum-tab-chapter").click();
+  await page
+    .getByTestId("curriculum-chapter-subject-select")
+    .selectOption({ label: `${boardName} / ${className} / ${subjectName}` });
+  await page.getByTestId("curriculum-chapter-number-input").fill("1");
+  await page.getByTestId("curriculum-chapter-title-input").fill(chapterTitle);
+
+  await expect(page.getByTestId("curriculum-chapter-markdown-option")).toBeVisible();
+  await page.getByTestId("curriculum-chapter-summary-input").fill(typedDraft);
+  await page.getByTestId("curriculum-chapter-summary-preview-toggle").click();
+  await expect(page.getByTestId("curriculum-chapter-summary-preview")).toContainText(typedDraft);
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("replace");
+    await dialog.dismiss();
+  });
+  await page.getByTestId("curriculum-chapter-markdown-input").setInputFiles({
+    name: "chapter-add-summary.md",
+    mimeType: "text/markdown",
+    buffer: Buffer.from(importedSummary)
+  });
+
+  await expect(page.getByTestId("curriculum-chapter-summary-input")).toHaveValue(typedDraft);
+  await expect(page.getByTestId("curriculum-chapter-summary-preview")).toContainText(typedDraft);
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("replace");
+    await dialog.accept();
+  });
+  await page.getByTestId("curriculum-chapter-markdown-input").setInputFiles({
+    name: "chapter-add-summary.md",
+    mimeType: "text/markdown",
+    buffer: Buffer.from(importedSummary)
+  });
+
+  await expect(page.getByTestId("curriculum-chapter-summary-input")).toHaveValue(importedSummary);
+  await expect(page.getByTestId("curriculum-chapter-summary-preview")).toContainText("Imported add summary");
+  await expect(page.getByTestId("curriculum-chapter-summary-preview")).toContainText("Imported add-form markdown body.");
+
+  await page.getByTestId("curriculum-chapter-submit").click();
+  await expect(page.getByText("Chapter added")).toBeVisible();
+
+  await page.getByTestId("curriculum-chapter-mode-edit").click();
+  const chapterLabel = `${boardName} / ${className} / ${subjectName} / Chapter 1: ${chapterTitle}`;
+  await page.getByTestId("curriculum-summary-editor-chapter-select").selectOption({ label: chapterLabel });
+  await page.getByTestId("curriculum-summary-editor-preview-toggle").click();
+  await expect(page.getByTestId("curriculum-summary-editor-preview")).toContainText("Imported add summary");
+  await expect(page.getByTestId("curriculum-summary-editor-preview")).toContainText("Imported add-form markdown body.");
+});
+
 test("admin can create board class subject chapter using curriculum builder", async ({ page }) => {
   await loginAsSeededAdmin(page);
   await page.goto("/admin/content");
