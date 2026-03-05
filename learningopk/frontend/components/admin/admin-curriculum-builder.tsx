@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 
 import {
   createAdminCurriculumBoard,
@@ -174,6 +174,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   const summaryEditorCodeMirrorRef = useRef<CodeMirrorMarkdownEditorHandle | null>(null);
   const summaryEditorLiveContentRef = useRef("");
   const summaryEditorSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const summaryEditorPersistedContentRef = useRef("");
+  const summaryEditorMarkdownInputRef = useRef<HTMLInputElement | null>(null);
   const summaryEditorUploadInputRef = useRef<HTMLInputElement | null>(null);
 
   const setSummaryEditorContentImmediate = (nextContent: string) => {
@@ -393,6 +395,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   useEffect(() => {
     if (!summaryEditorChapterId) {
       setSummaryEditorContentImmediate("");
+      summaryEditorPersistedContentRef.current = "";
       setSummaryEditorOutgoingLinks([]);
       setSummaryEditorBacklinks([]);
       return;
@@ -402,6 +405,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     const chapterId = Number(summaryEditorChapterId);
     if (!chapterId) {
       setSummaryEditorContentImmediate("");
+      summaryEditorPersistedContentRef.current = "";
       setSummaryEditorOutgoingLinks([]);
       setSummaryEditorBacklinks([]);
       return;
@@ -412,6 +416,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       .then(([summaryPayload, linksPayload]) => {
         if (!isCancelled) {
           setSummaryEditorContentImmediate(summaryPayload.chapter.summary);
+          summaryEditorPersistedContentRef.current = summaryPayload.chapter.summary;
           setSummaryEditorOutgoingLinks(linksPayload.links.outgoing);
           setSummaryEditorBacklinks(linksPayload.links.backlinks);
         }
@@ -419,6 +424,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       .catch(() => {
         if (!isCancelled) {
           setSummaryEditorContentImmediate("");
+          summaryEditorPersistedContentRef.current = "";
           setSummaryEditorOutgoingLinks([]);
           setSummaryEditorBacklinks([]);
           pushToast({
@@ -447,6 +453,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     if (!chapterOptions.some((option) => option.id === selectedId)) {
       setSummaryEditorChapterId("");
       setSummaryEditorContentImmediate("");
+      summaryEditorPersistedContentRef.current = "";
       setSummaryEditorOutgoingLinks([]);
       setSummaryEditorBacklinks([]);
     }
@@ -909,6 +916,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
         chapterId,
         summary
       });
+      summaryEditorPersistedContentRef.current = summary;
       await refreshSummaryLinks();
       await loadSummaryGraph();
       pushToast({
@@ -922,6 +930,44 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       });
     } finally {
       setIsSummarySaving(false);
+    }
+  };
+
+  const importSummaryMarkdown = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      const importedMarkdown = await file.text();
+      if (importedMarkdown.trim().length === 0) {
+        pushToast({
+          title: "Markdown file is empty",
+          tone: "error"
+        });
+        return;
+      }
+
+      const hasUnsavedChanges = summaryEditorLiveContentRef.current !== summaryEditorPersistedContentRef.current;
+      if (hasUnsavedChanges && !window.confirm("Importing a Markdown file will replace unsaved summary edits. Continue?")) {
+        return;
+      }
+
+      setSummaryEditorContentImmediate(importedMarkdown);
+      summaryEditorCodeMirrorRef.current?.focus();
+      pushToast({
+        title: "Markdown imported into editor",
+        tone: "success"
+      });
+    } catch {
+      pushToast({
+        title: "Could not read Markdown file",
+        tone: "error"
+      });
+    } finally {
+      input.value = "";
     }
   };
 
@@ -1489,6 +1535,43 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                       Delete chapter
                     </Button>
                   </div>
+                </div>
+
+                <div className="space-y-2 rounded-lg border border-border/60 bg-background/60 p-3">
+                  <p className="text-sm font-semibold text-foreground">Summary input options</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      data-testid="curriculum-summary-editor-paste-option"
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => summaryEditorCodeMirrorRef.current?.focus()}
+                      disabled={!summaryEditorChapterId || isSummaryLoading}
+                    >
+                      Paste markdown
+                    </Button>
+                    <Button
+                      data-testid="curriculum-summary-editor-markdown-option"
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => summaryEditorMarkdownInputRef.current?.click()}
+                      disabled={!summaryEditorChapterId || isSummaryLoading || isSummarySaving}
+                    >
+                      Upload .md file
+                    </Button>
+                  </div>
+                  <Input
+                    ref={summaryEditorMarkdownInputRef}
+                    data-testid="curriculum-summary-editor-markdown-input"
+                    type="file"
+                    accept=".md,text/markdown,text/plain"
+                    onChange={importSummaryMarkdown}
+                    disabled={!summaryEditorChapterId || isSummaryLoading || isSummarySaving}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Uploading a Markdown file loads it into the editor for review. Use Save summary to persist it.
+                  </p>
                 </div>
 
                 <CodeMirrorMarkdownEditor
