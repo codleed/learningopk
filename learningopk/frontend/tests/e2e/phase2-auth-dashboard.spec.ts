@@ -73,6 +73,27 @@ test("dashboard and forum show left rail for authenticated students", async ({ p
   await expect(page.getByRole("button", { name: "New Chat" })).toBeVisible();
 });
 
+test("left rail can collapse and expand on desktop", async ({ page }) => {
+  await registerAndOpenDashboard("phase2_left_rail_collapse", page);
+
+  const leftRail = page.getByTestId("left-rail");
+
+  await expect(leftRail).toHaveAttribute("data-collapsed", "false");
+  await expect(page.getByRole("button", { name: "Collapse sidebar" })).toBeVisible();
+  await expect(leftRail.getByText("Dashboard", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Collapse sidebar" }).click();
+
+  await expect(leftRail).toHaveAttribute("data-collapsed", "true");
+  await expect(page.getByRole("button", { name: "Expand sidebar" })).toBeVisible();
+  await expect(leftRail.getByText("Dashboard", { exact: true })).not.toBeVisible();
+
+  await page.getByRole("button", { name: "Expand sidebar" }).click();
+
+  await expect(leftRail).toHaveAttribute("data-collapsed", "false");
+  await expect(leftRail.getByText("Dashboard", { exact: true })).toBeVisible();
+});
+
 test("settings screen provides profile management and light/dark theme controls", async ({ page }) => {
   await registerAndOpenDashboard("phase2_settings", page);
 

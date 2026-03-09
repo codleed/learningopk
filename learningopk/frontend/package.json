@@ -25,6 +25,8 @@
     "better-auth": "^1.3.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "echarts": "^6.0.0",
+    "hummingbird": "^2.1.5",
     "katex": "^0.16.33",
     "lucide-react": "^0.575.0",
     "next": "16.1.6",
@@ -39,6 +41,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
+    "swiper": "^12.1.2",
     "tailwind-merge": "^3.5.0",
     "zod": "^4.1.12"
   },
