@@ -67,7 +67,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
     <AppShell
       session={session}
       currentPath={basePath}
-      contentClassName="max-w-[95rem] px-3 pb-10 pt-4 sm:px-5 lg:px-7"
+      contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6"
     >
       <ChapterProgressTracker chapterId={payload.chapter.id} />
       <ChapterStudyWorkspace

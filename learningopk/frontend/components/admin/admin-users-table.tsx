@@ -58,7 +58,7 @@ export function AdminUsersTable({
                 <span
                   className={[
                     "rounded-full px-2 py-1 text-xs font-semibold",
-                    user.role === "admin" ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-800"
+                    user.role === "admin" ? "bg-primary/15 text-primary" : "bg-secondary text-secondary-foreground"
                   ].join(" ")}
                 >
                   {user.role}
@@ -68,7 +68,7 @@ export function AdminUsersTable({
                 <span
                   className={[
                     "rounded-full px-2 py-1 text-xs font-semibold",
-                    userStatus === "suspended" ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-900"
+                    userStatus === "suspended" ? "bg-amber-500/15 text-amber-600 dark:text-amber-400" : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                   ].join(" ")}
                 >
                   {userStatus}

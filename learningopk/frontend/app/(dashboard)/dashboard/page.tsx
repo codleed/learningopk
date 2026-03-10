@@ -77,10 +77,10 @@ const filterLabelMap: Record<DashboardFilter, string> = {
 const courseIcons: Icon[] = [BookOpen, Pulse, CheckCircle, Student];
 
 const cardPalette = [
-  { bg: "bg-[#f4c9c4]", accent: "text-[#c0574d]" },
-  { bg: "bg-[#f5dcc0]", accent: "text-[#a87230]" },
-  { bg: "bg-[#c9e6cb]", accent: "text-[#3e7a42]" },
-  { bg: "bg-[#d9cff2]", accent: "text-[#6b52a3]" },
+  { bg: "bg-[var(--pastel-dusty-rose)]/70", accent: "text-foreground" },
+  { bg: "bg-[var(--pastel-warm-sand)]/70", accent: "text-foreground" },
+  { bg: "bg-[var(--pastel-sage)]/70", accent: "text-foreground" },
+  { bg: "bg-[var(--pastel-lavender)]/70", accent: "text-foreground" },
 ];
 
 const categoryLabels = [
@@ -378,18 +378,18 @@ export default async function DashboardPage({
   });
 
   const barColors = [
-    "bg-[#f4c9c4]",
-    "bg-[#f5dcc0]",
-    "bg-[#c9e6cb]",
-    "bg-[#d9cff2]",
-    "bg-[#f4c9c4]",
-    "bg-[#f5dcc0]",
-    "bg-[#c9e6cb]",
-    "bg-[#d9cff2]",
-    "bg-[#f4c9c4]",
-    "bg-[#f5dcc0]",
-    "bg-[#c9e6cb]",
-    "bg-[#d9cff2]",
+    "bg-[var(--pastel-dusty-rose)]",
+    "bg-[var(--pastel-warm-sand)]",
+    "bg-[var(--pastel-sage)]",
+    "bg-[var(--pastel-lavender)]",
+    "bg-[var(--pastel-dusty-rose)]",
+    "bg-[var(--pastel-warm-sand)]",
+    "bg-[var(--pastel-sage)]",
+    "bg-[var(--pastel-lavender)]",
+    "bg-[var(--pastel-dusty-rose)]",
+    "bg-[var(--pastel-warm-sand)]",
+    "bg-[var(--pastel-sage)]",
+    "bg-[var(--pastel-lavender)]",
   ];
 
   /* ================================================================ */
@@ -402,16 +402,14 @@ export default async function DashboardPage({
       currentPath="/dashboard"
       contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6"
     >
-      {/* Outer shell with soft beige/cream background */}
-      <div className="rounded-[1.6rem] bg-[#f5f0eb] p-4 sm:p-6 lg:p-8">
-        <StaggerContainer className="grid gap-6 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_370px]">
+      <StaggerContainer className="grid gap-6 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_370px]">
           {/* ====================================================== */}
           {/*  LEFT / MAIN COLUMN                                     */}
           {/* ====================================================== */}
           <div className="min-w-0 space-y-6">
             {/* ---- Hero Title ---- */}
             <MotionSection>
-              <h1 className="text-4xl font-semibold leading-[1.15] tracking-[-0.02em] text-[#1a1a1a] sm:text-5xl lg:text-[3.4rem]">
+              <h1 className="text-4xl font-semibold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-5xl lg:text-[3.4rem]">
                 Invest in your
                 <br />
                 education
@@ -432,8 +430,8 @@ export default async function DashboardPage({
                     className={cn(
                       "inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-colors",
                       i === 0
-                        ? "bg-[#1a1a1a] text-white"
-                        : "bg-white text-[#1a1a1a] hover:bg-[#e8e3de]",
+                        ? "bg-foreground text-background"
+                        : "bg-card text-foreground hover:bg-muted",
                     )}
                   >
                     {i === 0 && (
@@ -511,7 +509,7 @@ export default async function DashboardPage({
 
             {/* ---- Most Popular Section ---- */}
             <MotionSection>
-              <h2 className="mb-4 text-lg font-semibold text-[#1a1a1a]">
+              <h2 className="mb-4 text-lg font-semibold text-foreground">
                 Most popular
               </h2>
 
@@ -547,18 +545,18 @@ export default async function DashboardPage({
                               {/* Top row: icon + category + rating */}
                               <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-2">
-                                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/60">
+                                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-background/60">
                                     <SubjectIcon
-                                      className="h-4 w-4 text-[#1a1a1a]"
+                                      className="h-4 w-4 text-foreground"
                                       weight="fill"
                                       aria-hidden
                                     />
                                   </span>
-                                  <span className="text-xs font-semibold text-[#1a1a1a]/70">
+                                  <span className="text-xs font-semibold text-foreground/70">
                                     {categoryName}
                                   </span>
                                 </div>
-                                <span className="inline-flex items-center gap-1 rounded-full bg-white/60 px-2 py-1 text-xs font-bold text-[#1a1a1a]">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-background/60 px-2 py-1 text-xs font-bold text-foreground">
                                   <Star
                                     className="h-3 w-3 text-amber-500"
                                     weight="fill"
@@ -569,7 +567,7 @@ export default async function DashboardPage({
                               </div>
 
                               {/* Title */}
-                              <h3 className="mt-4 text-base font-semibold leading-snug text-[#1a1a1a]">
+                              <h3 className="mt-4 text-base font-semibold leading-snug text-foreground">
                                 {subject.subjectName}:{" "}
                                 {subject.boardName} Class{" "}
                                 {subject.grade}
@@ -577,14 +575,14 @@ export default async function DashboardPage({
 
                               {/* Bottom row: students + avatars */}
                               <div className="mt-4 flex items-center justify-between">
-                                <span className="text-xs font-medium text-[#1a1a1a]/60">
+                                <span className="text-xs font-medium text-foreground/60">
                                   {studentCount.toLocaleString()} students
                                 </span>
                                 <div className="flex -space-x-2">
                                   {[0, 1].map((j) => (
                                     <span
                                       key={j}
-                                      className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#1a1a1a]/10 text-[9px] font-bold text-[#1a1a1a]/60"
+                                      className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-foreground/10 text-[9px] font-bold text-foreground/60"
                                     >
                                       {getInitials(
                                         subject.subjectName,
@@ -609,7 +607,7 @@ export default async function DashboardPage({
                               palette.bg,
                             )}
                           >
-                            <p className="text-sm text-[#1a1a1a]/50">
+                            <p className="text-sm text-foreground/50">
                               No course data yet
                             </p>
                           </article>
@@ -622,7 +620,7 @@ export default async function DashboardPage({
             {/* ---- Featured Course Banner ---- */}
             {featuredSubject && (
               <MotionSection>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[#1a1a1a]/40">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-foreground/40">
                   Featured course
                 </p>
                 <Link
@@ -632,9 +630,12 @@ export default async function DashboardPage({
                   }
                   className="group block"
                 >
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#f4c9c4] via-[#f5dcc0] to-[#c9e6cb] p-6 transition-shadow group-hover:shadow-lg sm:p-8">
+                  <div
+                    className="relative overflow-hidden rounded-2xl p-6 transition-shadow group-hover:shadow-lg sm:p-8"
+                    style={{ background: "linear-gradient(to right, var(--pastel-dusty-rose), var(--pastel-warm-sand), var(--pastel-sage))" }}
+                  >
                     <div className="max-w-md">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-white/50 px-2.5 py-1 text-xs font-bold">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-background/50 px-2.5 py-1 text-xs font-bold text-foreground">
                         <Star
                           className="h-3 w-3 text-amber-500"
                           weight="fill"
@@ -645,22 +646,22 @@ export default async function DashboardPage({
                           (featuredSubject.bestQuizScorePercent % 6) / 10
                         ).toFixed(1)}
                       </span>
-                      <h3 className="mt-3 text-xl font-semibold text-[#1a1a1a] sm:text-2xl">
+                      <h3 className="mt-3 text-xl font-semibold text-foreground sm:text-2xl">
                         {featuredSubject.subjectName}
                       </h3>
-                      <p className="mt-1 text-sm text-[#1a1a1a]/60">
+                      <p className="mt-1 text-sm text-foreground/60">
                         {featuredSubject.boardName} · Class{" "}
                         {featuredSubject.grade}
                       </p>
                       <div className="mt-4 flex items-center gap-3">
-                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#1a1a1a] text-white">
+                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-background">
                           <Play
                             className="h-4 w-4"
                             weight="fill"
                             aria-hidden
                           />
                         </span>
-                        <span className="text-sm font-semibold text-[#1a1a1a]">
+                        <span className="text-sm font-semibold text-foreground">
                           Continue course
                         </span>
                       </div>
@@ -703,13 +704,13 @@ export default async function DashboardPage({
           <div className="space-y-5">
             {/* ---- Profile Card ---- */}
             <MotionSection>
-              <div className="rounded-2xl bg-white p-5">
+              <div className="rounded-2xl bg-card p-5">
                 {/* Top icons */}
                 <div className="flex items-center justify-between">
                   <DashboardNotificationsControl items={notificationItems} />
                   <Link href="/settings">
                     <Gear
-                      className="h-5 w-5 text-[#1a1a1a]/40 transition-colors hover:text-[#1a1a1a]"
+                      className="h-5 w-5 text-foreground/40 transition-colors hover:text-foreground"
                       weight="fill"
                       aria-hidden
                     />
@@ -718,60 +719,60 @@ export default async function DashboardPage({
 
                 {/* Avatar + name */}
                 <div className="mt-3 flex flex-col items-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#f5dcc0] text-xl font-bold text-[#1a1a1a]">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--pastel-warm-sand)] text-xl font-bold text-foreground">
                     {avatarInitials}
                   </div>
-                  <h2 className="mt-3 text-lg font-semibold text-[#1a1a1a]">
+                  <h2 className="mt-3 text-lg font-semibold text-foreground">
                     {displayName}
                   </h2>
                 </div>
 
                 {/* Friends row */}
-                <div className="mt-4 flex items-center justify-between rounded-xl bg-[#faf8f6] px-4 py-3">
+                <div className="mt-4 flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
                   <div className="flex items-center gap-2">
                     <Users
-                      className="h-4 w-4 text-[#1a1a1a]/50"
+                      className="h-4 w-4 text-foreground/50"
                       weight="fill"
                       aria-hidden
                     />
-                    <span className="text-sm font-bold text-[#1a1a1a]">
+                    <span className="text-sm font-bold text-foreground">
                       {friendsCount}
                     </span>
-                    <span className="text-sm text-[#1a1a1a]/50">Friends</span>
+                    <span className="text-sm text-foreground/50">Friends</span>
                   </div>
                   <div className="flex -space-x-1.5">
                     {[0, 1, 2].map((j) => (
                       <span
                         key={j}
-                        className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#1a1a1a]/10 text-[8px] font-bold text-[#1a1a1a]/50"
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-foreground/10 text-[8px] font-bold text-foreground/50"
                       >
                         {avatarInitials.charAt(j % avatarInitials.length) ||
                           "?"}
                       </span>
                     ))}
                   </div>
-                  <span className="text-xs text-[#1a1a1a]/30">›</span>
+                  <span className="text-xs text-foreground/30">›</span>
                 </div>
               </div>
             </MotionSection>
 
             {/* ---- Activity Widget ---- */}
             <MotionSection>
-              <div className="rounded-2xl bg-white p-5">
+              <div className="rounded-2xl bg-card p-5">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-[#1a1a1a]">
+                  <h3 className="text-sm font-semibold text-foreground">
                     Activity
                   </h3>
-                  <span className="rounded-full bg-[#faf8f6] px-3 py-1 text-xs font-medium text-[#1a1a1a]/60">
+                  <span className="rounded-full bg-muted/50 px-3 py-1 text-xs font-medium text-foreground/60">
                     Year ▾
                   </span>
                 </div>
 
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-[#1a1a1a]">
+                  <span className="text-2xl font-bold text-foreground">
                     {trackedHours}h
                   </span>
-                  <span className="text-sm text-[#1a1a1a]/50">
+                  <span className="text-sm text-foreground/50">
                     👍 Great result!
                   </span>
                 </div>
@@ -798,8 +799,8 @@ export default async function DashboardPage({
                       className={cn(
                         "flex-1 text-center text-[9px]",
                         i === 11
-                          ? "font-bold text-[#1a1a1a]"
-                          : "text-[#1a1a1a]/35",
+                          ? "font-bold text-foreground"
+                          : "text-foreground/35",
                       )}
                     >
                       {m}
@@ -811,7 +812,7 @@ export default async function DashboardPage({
 
             {/* ---- My Courses ---- */}
             <MotionSection>
-              <h3 className="mb-3 text-sm font-semibold text-[#1a1a1a]">
+              <h3 className="mb-3 text-sm font-semibold text-foreground">
                 My courses
               </h3>
               <div className="space-y-3">
@@ -843,19 +844,19 @@ export default async function DashboardPage({
                               )}
                             >
                               <div className="flex items-start gap-3">
-                                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/50">
+                                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background/50">
                                   <SubjectIcon
-                                    className="h-4 w-4 text-[#1a1a1a]"
+                                    className="h-4 w-4 text-foreground"
                                     weight="fill"
                                     aria-hidden
                                   />
                                 </span>
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center justify-between gap-2">
-                                    <span className="text-[10px] font-semibold text-[#1a1a1a]/60">
+                                    <span className="text-[10px] font-semibold text-foreground/60">
                                       {subject.subjectName}
                                     </span>
-                                    <span className="inline-flex items-center gap-0.5 text-xs font-bold text-[#1a1a1a]">
+                                    <span className="inline-flex items-center gap-0.5 text-xs font-bold text-foreground">
                                       <Star
                                         className="h-3 w-3 text-amber-500"
                                         weight="fill"
@@ -864,10 +865,10 @@ export default async function DashboardPage({
                                       {rating}
                                     </span>
                                   </div>
-                                  <h4 className="mt-1 text-sm font-semibold leading-snug text-[#1a1a1a]">
+                                  <h4 className="mt-1 text-sm font-semibold leading-snug text-foreground">
                                     {subject.subjectName}: {subject.boardName}
                                   </h4>
-                                  <p className="mt-1 text-[11px] text-[#1a1a1a]/50">
+                                  <p className="mt-1 text-[11px] text-foreground/50">
                                     {studentCount.toLocaleString()} students
                                   </p>
                                 </div>
@@ -885,7 +886,7 @@ export default async function DashboardPage({
                             cardPalette[i].bg,
                           )}
                         >
-                          <p className="text-sm text-[#1a1a1a]/50">
+                          <p className="text-sm text-foreground/50">
                             No course data yet
                           </p>
                         </article>
@@ -897,20 +898,20 @@ export default async function DashboardPage({
             {/* Recent Activity (compact) */}
             {summary && summary.recentActivity.length > 0 && (
               <MotionSection>
-                <div className="rounded-2xl bg-white p-4">
-                  <h3 className="text-sm font-semibold text-[#1a1a1a]">
+                <div className="rounded-2xl bg-card p-4">
+                  <h3 className="text-sm font-semibold text-foreground">
                     Recent Activity
                   </h3>
                   <div className="mt-3 space-y-2">
                     {summary.recentActivity.slice(0, 3).map((entry, index) => (
                       <div
                         key={`${entry.type}-${entry.occurredAt}-${index}`}
-                        className="rounded-xl bg-[#faf8f6] px-3 py-2"
+                        className="rounded-xl bg-muted/50 px-3 py-2"
                       >
-                        <p className="text-xs font-medium text-[#1a1a1a]/80">
+                        <p className="text-xs font-medium text-foreground/80">
                           {toActivityLabel(entry)}
                         </p>
-                        <p className="mt-0.5 text-[10px] text-[#1a1a1a]/40">
+                        <p className="mt-0.5 text-[10px] text-foreground/40">
                           {formatActivityTimestamp(entry.occurredAt)}
                         </p>
                       </div>
@@ -921,7 +922,6 @@ export default async function DashboardPage({
             )}
           </div>
         </StaggerContainer>
-      </div>
     </AppShell>
   );
 }

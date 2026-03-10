@@ -247,7 +247,7 @@ export function AIChatPanel({
               "break-words rounded-xl px-3 py-2 text-sm leading-relaxed [overflow-wrap:anywhere]",
               message.role === "user"
                 ? "ml-auto w-fit min-w-[4.5rem] max-w-[72%] bg-primary text-primary-foreground"
-                : "max-w-[90%] bg-zinc-100 text-foreground dark:bg-zinc-800"
+                : "max-w-[90%] bg-muted text-foreground"
             ].join(" ")}
           >
             {message.role === "assistant" ? (
@@ -314,7 +314,7 @@ export function AIChatPanel({
       <button
         type="button"
         aria-label="Close AI panel overlay"
-        className="fixed inset-0 z-40 bg-zinc-950/40"
+        className="fixed inset-0 z-40 bg-black/40"
         onClick={onClose}
       />
       <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-xl border-l border-border bg-card shadow-[var(--elevation-strong)]">

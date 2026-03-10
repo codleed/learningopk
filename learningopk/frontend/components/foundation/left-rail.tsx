@@ -48,8 +48,12 @@ const getInitials = (name: string): string =>
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 
-export function LeftRail({ session, currentPath = "/", isCollapsed, onToggle }: LeftRailProps) {
-
+export function LeftRail({
+  session,
+  currentPath = "/",
+  isCollapsed,
+  onToggle,
+}: LeftRailProps) {
   const displayName = useMemo(() => {
     const trimmedName = session.user.name?.trim();
     return trimmedName?.length ? trimmedName : "LearningoPK";
@@ -116,7 +120,7 @@ export function LeftRail({ session, currentPath = "/", isCollapsed, onToggle }: 
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-40 flex flex-col bg-[#f5f0eb] transition-[width] duration-300 ease-in-out overflow-y-auto",
+        "fixed inset-y-0 left-0 z-40 flex flex-col bg-sidebar transition-[width] duration-300 ease-in-out overflow-y-auto",
         isCollapsed ? "w-[4.5rem]" : "w-[15rem]",
       )}
       data-testid="left-rail"
@@ -136,7 +140,7 @@ export function LeftRail({ session, currentPath = "/", isCollapsed, onToggle }: 
           <Link
             href="/dashboard"
             aria-label="Home"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#1a1a1a] p-2 shadow-md transition hover:shadow-lg"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-foreground p-2 shadow-md transition hover:shadow-lg"
           >
             <Image
               src="/new_logo.png"
@@ -148,7 +152,7 @@ export function LeftRail({ session, currentPath = "/", isCollapsed, onToggle }: 
             />
           </Link>
           {!isCollapsed && (
-            <span className="truncate text-sm font-semibold text-[#1a1a1a]">
+            <span className="truncate text-sm font-semibold text-sidebar-foreground">
               {displayName}
             </span>
           )}
@@ -173,8 +177,8 @@ export function LeftRail({ session, currentPath = "/", isCollapsed, onToggle }: 
                     ? "w-11 justify-center mx-auto"
                     : "w-full gap-3 px-3",
                   isActive
-                    ? "bg-[#1a1a1a] text-white shadow-md"
-                    : "text-[#1a1a1a]/50 hover:bg-[#1a1a1a]/[0.06] hover:text-[#1a1a1a]",
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
+                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground",
                 )}
               >
                 <LinkIcon
@@ -195,7 +199,7 @@ export function LeftRail({ session, currentPath = "/", isCollapsed, onToggle }: 
         {/* Separator */}
         <div
           className={cn(
-            "my-3 h-px bg-[#1a1a1a]/10",
+            "my-3 h-px bg-sidebar-border",
             isCollapsed ? "mx-auto w-6" : "w-full",
           )}
         />
@@ -218,8 +222,8 @@ export function LeftRail({ session, currentPath = "/", isCollapsed, onToggle }: 
                     ? "w-11 justify-center mx-auto"
                     : "w-full gap-3 px-3",
                   isActive
-                    ? "bg-[#1a1a1a] text-white shadow-md"
-                    : "text-[#1a1a1a]/50 hover:bg-[#1a1a1a]/[0.06] hover:text-[#1a1a1a]",
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
+                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground",
                 )}
               >
                 <LinkIcon
@@ -246,10 +250,8 @@ export function LeftRail({ session, currentPath = "/", isCollapsed, onToggle }: 
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           onClick={onToggle}
           className={cn(
-            "flex h-11 items-center rounded-2xl text-[#1a1a1a]/40 transition-all duration-200 hover:bg-[#1a1a1a]/[0.06] hover:text-[#1a1a1a]",
-            isCollapsed
-              ? "w-11 justify-center mx-auto"
-              : "w-full gap-3 px-3",
+            "flex h-11 items-center rounded-2xl text-sidebar-foreground/40 transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+            isCollapsed ? "w-11 justify-center mx-auto" : "w-full gap-3 px-3",
           )}
         >
           {isCollapsed ? (
@@ -268,10 +270,8 @@ export function LeftRail({ session, currentPath = "/", isCollapsed, onToggle }: 
           icon={<SignOut className="h-5 w-5 shrink-0" aria-hidden />}
           hideLabel={isCollapsed}
           className={cn(
-            "mt-1 flex h-11 items-center rounded-2xl border-0 text-[#1a1a1a]/50 transition-all duration-200 hover:bg-[#1a1a1a]/[0.06] hover:text-[#1a1a1a]",
-            isCollapsed
-              ? "w-11 justify-center mx-auto"
-              : "w-full gap-3 px-3",
+            "mt-1 flex h-11 items-center rounded-2xl border-0 bg-transparent text-sidebar-foreground/50 transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+            isCollapsed ? "w-11 justify-center mx-auto" : "w-full gap-3 px-3",
           )}
         />
 
@@ -283,18 +283,20 @@ export function LeftRail({ session, currentPath = "/", isCollapsed, onToggle }: 
           className={cn(
             "mt-2 flex shrink-0 items-center transition",
             isCollapsed
-              ? "mx-auto h-10 w-10 justify-center rounded-full bg-[#f5dcc0] text-xs font-bold text-[#1a1a1a] hover:ring-2 hover:ring-[#1a1a1a]/20"
-              : "w-full gap-3 rounded-2xl px-3 py-2 hover:bg-[#1a1a1a]/[0.06]",
+              ? "mx-auto h-10 w-10 justify-center rounded-full bg-[var(--pastel-warm-sand)] text-xs font-bold text-sidebar-foreground hover:ring-2 hover:ring-sidebar-foreground/20"
+              : "w-full gap-3 rounded-2xl px-3 py-2 hover:bg-sidebar-accent",
           )}
         >
-          <span className={cn(
-            "flex shrink-0 items-center justify-center rounded-full bg-[#f5dcc0] text-xs font-bold text-[#1a1a1a]",
-            isCollapsed ? "h-10 w-10" : "h-9 w-9",
-          )}>
+          <span
+            className={cn(
+              "flex shrink-0 items-center justify-center rounded-full bg-[var(--pastel-warm-sand)] text-xs font-bold text-sidebar-foreground",
+              isCollapsed ? "h-10 w-10" : "h-9 w-9",
+            )}
+          >
             {avatarInitials}
           </span>
           {!isCollapsed && (
-            <span className="truncate text-sm font-medium text-[#1a1a1a]">
+            <span className="truncate text-sm font-medium text-sidebar-foreground">
               {displayName}
             </span>
           )}

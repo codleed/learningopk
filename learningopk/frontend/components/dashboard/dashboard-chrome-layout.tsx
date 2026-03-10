@@ -2,6 +2,10 @@ import type { ReactNode } from "react";
 
 import { AppShell } from "@/components/foundation/app-shell";
 import { DashboardSurface } from "@/components/foundation/dashboard-primitives";
+import {
+  StaggerContainer,
+  MotionSection,
+} from "@/components/dashboard/DashboardClient";
 import type { SessionPayload } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
@@ -26,19 +30,27 @@ export function DashboardChromeLayout({
     <AppShell
       session={session}
       currentPath={currentPath}
-      contentClassName="max-w-[95rem] px-3 pb-10 pt-4 sm:px-5 lg:px-7"
+      contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6"
     >
-      <DashboardSurface
-        as="section"
-        tone="shell"
-        data-testid="dashboard-chrome-shell"
-        className="overflow-visible p-3 sm:p-4 lg:p-5"
-      >
-        <div className={cn("relative min-w-0 space-y-4", contentClassName)}>
-          {header}
-          {children}
-        </div>
-      </DashboardSurface>
+      <div className="rounded-[1.6rem] bg-secondary p-4 sm:p-6 lg:p-8">
+        <StaggerContainer className="space-y-6">
+          <MotionSection>
+            {header}
+          </MotionSection>
+          <MotionSection>
+            <DashboardSurface
+              as="section"
+              tone="shell"
+              data-testid="dashboard-chrome-shell"
+              className="overflow-visible p-3 sm:p-4 lg:p-5"
+            >
+              <div className={cn("relative min-w-0 space-y-4", contentClassName)}>
+                {children}
+              </div>
+            </DashboardSurface>
+          </MotionSection>
+        </StaggerContainer>
+      </div>
     </AppShell>
   );
 }

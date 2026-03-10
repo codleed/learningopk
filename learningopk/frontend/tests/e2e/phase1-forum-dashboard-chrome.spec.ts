@@ -11,12 +11,28 @@ const registerAndOpenForum = async (baseEmail: string, page: Page) => {
   await page.getByLabel("Class").selectOption("9th");
   await page.getByLabel("Email").fill(`${baseEmail}_${timestamp}@example.com`);
   await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.getByLabel("Confirm Password").fill(password);
+  await page.getByLabel("Confirm Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
 
   await expect(page).toHaveURL(/\/dashboard$/);
   await page.goto("/forum");
   await expect(page).toHaveURL(/\/forum$/);
+};
+
+const getComputedColor = async (page: Page, cssColor: string) => {
+  return page.evaluate((color) => {
+    const sample = document.createElement("div");
+    sample.style.backgroundColor = color;
+    document.body.appendChild(sample);
+    const computed = getComputedStyle(sample).backgroundColor;
+    sample.remove();
+    return computed;
+  }, cssColor);
+};
+
+const getShellBackgroundColor = async (page: Page) => {
+  const shell = page.locator("main#main-content > div.rounded-\\[1\\.6rem\\]").first();
+  return shell.evaluate((element) => getComputedStyle(element).backgroundColor);
 };
 
 const assertNoHorizontalOverflow = async (page: Page) => {
@@ -51,6 +67,24 @@ test("forum keeps dashboard shell styling while showing authenticated left rail"
 
   await page.goto("/dashboard");
   await expect(page).toHaveURL(/\/dashboard$/);
+});
+
+test("forum shell background is theme-aware in dark mode", async ({ page }) => {
+  await registerAndOpenForum("phase1_forum_dark_shell", page);
+
+  await page.evaluate(() => {
+    window.localStorage.setItem("learningopk-theme", "dark");
+  });
+  await page.reload();
+  await expect
+    .poll(async () => page.evaluate(() => document.documentElement.classList.contains("dark")))
+    .toBe(true);
+
+  await expect(page.getByTestId("dashboard-chrome-shell")).toBeVisible();
+
+  const secondaryColor = await getComputedColor(page, "var(--secondary)");
+  const shellBackground = await getShellBackgroundColor(page);
+  expect(shellBackground).toBe(secondaryColor);
 });
 
 test.describe("forum mobile layout", () => {

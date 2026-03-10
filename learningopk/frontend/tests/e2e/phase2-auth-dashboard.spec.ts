@@ -11,11 +11,27 @@ const registerAndOpenDashboard = async (baseEmail: string, page: Page) => {
   await page.getByLabel("Class").selectOption("9th");
   await page.getByLabel("Email").fill(`${baseEmail}_${timestamp}@example.com`);
   await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.getByLabel("Confirm Password").fill(password);
+  await page.getByLabel("Confirm Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
 
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  await expect(page.getByLabel("Primary navigation")).toBeVisible();
+};
+
+const getComputedColor = async (page: Page, cssColor: string) => {
+  return page.evaluate((color) => {
+    const sample = document.createElement("div");
+    sample.style.backgroundColor = color;
+    document.body.appendChild(sample);
+    const computed = getComputedStyle(sample).backgroundColor;
+    sample.remove();
+    return computed;
+  }, cssColor);
+};
+
+const getShellBackgroundColor = async (page: Page) => {
+  const shell = page.locator("main#main-content > div.rounded-\\[1\\.6rem\\]").first();
+  return shell.evaluate((element) => getComputedStyle(element).backgroundColor);
 };
 
 test("forgot password surfaces backend failures instead of false success", async ({ page }) => {
@@ -184,5 +200,31 @@ test("bento auth shell presents standalone login and register pages", async ({ p
   await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
   await expect(page.getByText(/all rights reserved/i)).toBeVisible();
   await expect(page.getByLabel("Primary navigation")).toHaveCount(0);
+});
+
+test("learn screens keep shell background theme-aware in dark mode", async ({ page }) => {
+  await registerAndOpenDashboard("phase2_dark_learn_shell", page);
+
+  await page.evaluate(() => {
+    window.localStorage.setItem("learningopk-theme", "dark");
+  });
+  await page.reload();
+  await expect
+    .poll(async () => page.evaluate(() => document.documentElement.classList.contains("dark")))
+    .toBe(true);
+
+  await page.goto("/fbise/9th/physics");
+  await expect(page.getByRole("heading", { name: "Physics", exact: true })).toBeVisible();
+
+  const secondaryColor = await getComputedColor(page, "var(--secondary)");
+  const subjectShellBackground = await getShellBackgroundColor(page);
+  expect(subjectShellBackground).toBe(secondaryColor);
+
+  await page.getByRole("link", { name: "Open chapter" }).first().click();
+  await expect(page).toHaveURL(/\/fbise\/9th\/physics\/[^/]+/);
+  await expect(page.getByRole("heading", { name: /Chapter 1:/ })).toBeVisible();
+
+  const chapterShellBackground = await getShellBackgroundColor(page);
+  expect(chapterShellBackground).toBe(secondaryColor);
 });
 

@@ -4,6 +4,10 @@ import { z } from "zod";
 
 import { AppShell } from "@/components/foundation/app-shell";
 import { DashboardSection, DashboardSurface } from "@/components/foundation/dashboard-primitives";
+import {
+  StaggerContainer,
+  MotionSection,
+} from "@/components/dashboard/DashboardClient";
 import { SubjectHeader } from "@/components/learn/subject-header";
 import { SubjectViewSwitcher } from "@/components/learn/subject-view-switcher";
 import { getSubjectOverview } from "@/lib/learn-api";
@@ -47,31 +51,37 @@ export default async function SubjectPage({ params }: SubjectPageProps) {
     <AppShell
       session={session}
       currentPath={`/${payload.board.slug}/${payload.class.slug}/${payload.subject.slug}`}
-      contentClassName="max-w-[95rem] px-3 pb-10 pt-4 sm:px-5 lg:px-7"
+      contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6"
     >
-      <DashboardSurface as="section" tone="shell" className="space-y-4 p-4 sm:p-5">
-        <DashboardSurface as="div" tone="hero" className="p-1">
-          <SubjectHeader board={payload.board} className={payload.class.name} subject={payload.subject} />
-        </DashboardSurface>
+      <div className="rounded-[1.6rem] bg-secondary p-4 sm:p-6 lg:p-8">
+        <StaggerContainer className="space-y-6">
+          <MotionSection>
+            <SubjectHeader board={payload.board} className={payload.class.name} subject={payload.subject} />
+          </MotionSection>
 
-        <DashboardSection
-          title="Chapters"
-          actions={
-            <Link href="/dashboard" className="text-xs font-semibold uppercase tracking-[0.06em] text-primary underline underline-offset-4">
-              View dashboard
-            </Link>
-          }
-          contentClassName="space-y-3"
-        >
-          <SubjectViewSwitcher
-            boardSlug={payload.board.slug}
-            classSlug={payload.class.slug}
-            subjectSlug={payload.subject.slug}
-            chapters={payload.chapters}
-            showGraph={session?.user.role === "student"}
-          />
-        </DashboardSection>
-      </DashboardSurface>
+          <MotionSection>
+            <DashboardSurface as="section" tone="shell" className="space-y-4 p-4 sm:p-5">
+              <DashboardSection
+                title="Chapters"
+                actions={
+                  <Link href="/dashboard" className="text-xs font-semibold uppercase tracking-[0.06em] text-primary underline underline-offset-4">
+                    View dashboard
+                  </Link>
+                }
+                contentClassName="space-y-3"
+              >
+                <SubjectViewSwitcher
+                  boardSlug={payload.board.slug}
+                  classSlug={payload.class.slug}
+                  subjectSlug={payload.subject.slug}
+                  chapters={payload.chapters}
+                  showGraph={session?.user.role === "student"}
+                />
+              </DashboardSection>
+            </DashboardSurface>
+          </MotionSection>
+        </StaggerContainer>
+      </div>
     </AppShell>
   );
 }

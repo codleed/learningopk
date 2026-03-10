@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, JetBrains_Mono, Manrope } from "next/font/google";
+import { DM_Serif_Display, Source_Serif_4, JetBrains_Mono, Manrope } from "next/font/google";
 
 import { ToastProvider } from "@/components/ui/toast";
 import { themeInitScript } from "@/lib/theme";
@@ -12,8 +12,15 @@ const manrope = Manrope({
   display: "swap"
 });
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const dmSerifDisplay = DM_Serif_Display({
+  variable: "--font-dm-serif-display",
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap"
+});
+
+const sourceSerif4 = Source_Serif_4({
+  variable: "--font-source-serif-4",
   subsets: ["latin"],
   display: "swap"
 });
@@ -46,7 +53,10 @@ export default function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className={`${manrope.variable} ${fraunces.variable} ${jetBrainsMono.variable} antialiased`}
+        className={`${manrope.variable} ${dmSerifDisplay.variable} ${sourceSerif4.variable} ${jetBrainsMono.variable} antialiased`}
+        style={{
+          fontFamily: "var(--font-source-serif-4), Georgia, serif",
+        }}
       >
         <ToastProvider>{children}</ToastProvider>
       </body>
