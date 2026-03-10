@@ -32,25 +32,19 @@ export function DashboardChromeLayout({
       currentPath={currentPath}
       contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6"
     >
-      <div className="rounded-[1.6rem] bg-secondary p-4 sm:p-6 lg:p-8">
-        <StaggerContainer className="space-y-6">
-          <MotionSection>
-            {header}
-          </MotionSection>
-          <MotionSection>
-            <DashboardSurface
-              as="section"
-              tone="shell"
-              data-testid="dashboard-chrome-shell"
-              className="overflow-visible p-3 sm:p-4 lg:p-5"
-            >
-              <div className={cn("relative min-w-0 space-y-4", contentClassName)}>
-                {children}
-              </div>
-            </DashboardSurface>
-          </MotionSection>
-        </StaggerContainer>
-      </div>
+      <StaggerContainer className="space-y-6">
+        <MotionSection>{header}</MotionSection>
+        <MotionSection>
+          <DashboardSurface
+            as="section"
+            tone="shell"
+            data-testid="dashboard-chrome-shell"
+            className="overflow-visible p-3 sm:p-4 lg:p-5"
+          >
+            <div className={cn("relative min-w-0 space-y-4", contentClassName)}>{children}</div>
+          </DashboardSurface>
+        </MotionSection>
+      </StaggerContainer>
     </AppShell>
   );
 }
