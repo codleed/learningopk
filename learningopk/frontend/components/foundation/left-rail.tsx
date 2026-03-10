@@ -16,16 +16,17 @@ import {
 import type { Icon } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
-import { DashboardSurface } from "@/components/foundation/dashboard-primitives";
 import type { SessionPayload } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
 type LeftRailProps = {
   session: SessionPayload;
   currentPath?: string;
+  isCollapsed: boolean;
+  onToggle: () => void;
 };
 
 type RailLink = {
@@ -38,13 +39,23 @@ type RailLink = {
 const isPathPrefix = (currentPath: string, target: string): boolean =>
   currentPath === target || currentPath.startsWith(`${target}/`);
 
-export function LeftRail({ session, currentPath = "/" }: LeftRailProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+const getInitials = (name: string): string =>
+  name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 
-  const dashboardLabel = useMemo(() => {
+export function LeftRail({ session, currentPath = "/", isCollapsed, onToggle }: LeftRailProps) {
+
+  const displayName = useMemo(() => {
     const trimmedName = session.user.name?.trim();
     return trimmedName?.length ? trimmedName : "LearningoPK";
   }, [session.user.name]);
+
+  const avatarInitials = getInitials(displayName);
 
   const primaryLinks: RailLink[] = [
     {
@@ -88,7 +99,7 @@ export function LeftRail({ session, currentPath = "/" }: LeftRailProps) {
     });
   }
 
-  const dashboardStateLinks: RailLink[] = [
+  const secondaryLinks: RailLink[] = [
     {
       href: "/dashboard?rail=calendar",
       label: "Calendar",
@@ -105,55 +116,46 @@ export function LeftRail({ session, currentPath = "/" }: LeftRailProps) {
   return (
     <aside
       className={cn(
-        "min-w-0 lg:sticky lg:top-4 lg:self-start lg:transition-[width] lg:duration-300",
-        isCollapsed ? "lg:w-[5.75rem]" : "lg:w-[16.75rem]",
+        "fixed inset-y-0 left-0 z-40 flex flex-col bg-[#f5f0eb] transition-[width] duration-300 ease-in-out overflow-y-auto",
+        isCollapsed ? "w-[4.5rem]" : "w-[15rem]",
       )}
       data-testid="left-rail"
       data-collapsed={isCollapsed ? "true" : "false"}
     >
-      <DashboardSurface as="section" tone="rail" className={cn("py-4 transition-[padding] duration-300", isCollapsed ? "px-2 lg:px-2.5" : "px-3 sm:px-4")}>
-        <div className="relative mb-5">
-          <Link
-            href="/dashboard"
-            className={cn(
-              "flex items-center rounded-2xl border border-border bg-secondary/65 text-sm font-semibold text-foreground transition hover:border-primary/25",
-              isCollapsed ? "justify-center p-2.5 lg:px-2" : "gap-3 p-3",
-            )}
-            aria-label={isCollapsed ? dashboardLabel : undefined}
-          >
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(145deg,#2b3ca8_0%,#4d62db_100%)] p-2 shadow-[0_14px_24px_-16px_rgba(43,60,168,0.8)]">
-              <Image
-                src="/new_logo.png"
-                alt="LearningoPK logo"
-                width={28}
-                height={28}
-                className="h-7 w-7 rounded-lg object-cover"
-                priority
-              />
-            </span>
-            <span className={cn("min-w-0 text-base tracking-[-0.01em]", isCollapsed ? "lg:hidden" : "lg:inline")}>{dashboardLabel}</span>
-          </Link>
-
-          <button
-            type="button"
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            onClick={() => setIsCollapsed((previous) => !previous)}
-            className="absolute -right-2 top-1/2 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition hover:border-primary/35 hover:text-foreground lg:inline-flex"
-          >
-            {isCollapsed ? <CaretDoubleRight className="h-4 w-4" aria-hidden /> : <CaretDoubleLeft className="h-4 w-4" aria-hidden />}
-          </button>
-        </div>
-
-        <p className={cn("px-2 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground", isCollapsed ? "lg:sr-only" : "")}>
-          Menu
-        </p>
-        <nav
-          aria-label="Primary navigation"
+      <nav
+        aria-label="Primary navigation"
+        className="flex h-full flex-col items-start px-3 py-5"
+      >
+        {/* Logo row */}
+        <div
           className={cn(
-            "mt-2 flex min-w-0 gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0",
-            isCollapsed ? "lg:items-center" : "",
+            "mb-6 flex w-full items-center",
+            isCollapsed ? "justify-center" : "gap-3 px-1",
           )}
         >
+          <Link
+            href="/dashboard"
+            aria-label="Home"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#1a1a1a] p-2 shadow-md transition hover:shadow-lg"
+          >
+            <Image
+              src="/new_logo.png"
+              alt="LearningoPK logo"
+              width={28}
+              height={28}
+              className="h-6 w-6 rounded-md object-cover invert"
+              priority
+            />
+          </Link>
+          {!isCollapsed && (
+            <span className="truncate text-sm font-semibold text-[#1a1a1a]">
+              {displayName}
+            </span>
+          )}
+        </div>
+
+        {/* Primary nav */}
+        <div className="flex w-full flex-col gap-1">
           {primaryLinks.map((link) => {
             const isActive = link.isActive?.(currentPath) ?? false;
             const LinkIcon = link.icon;
@@ -164,65 +166,140 @@ export function LeftRail({ session, currentPath = "/" }: LeftRailProps) {
                 href={link.href}
                 aria-current={isActive ? "page" : undefined}
                 aria-label={isCollapsed ? link.label : undefined}
+                title={link.label}
                 className={cn(
-                  "inline-flex h-11 min-w-max items-center rounded-2xl border text-sm font-semibold transition",
-                  isCollapsed ? "gap-0 px-3 lg:h-12 lg:w-12 lg:min-w-0 lg:justify-center lg:px-0" : "gap-2.5 px-3.5",
+                  "flex h-11 items-center rounded-2xl transition-all duration-200",
+                  isCollapsed
+                    ? "w-11 justify-center mx-auto"
+                    : "w-full gap-3 px-3",
                   isActive
-                    ? "border-primary/45 bg-primary/10 text-foreground shadow-[0_14px_30px_-22px_rgba(53,67,184,0.6)]"
-                    : "border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-secondary/65 hover:text-foreground",
+                    ? "bg-[#1a1a1a] text-white shadow-md"
+                    : "text-[#1a1a1a]/50 hover:bg-[#1a1a1a]/[0.06] hover:text-[#1a1a1a]",
                 )}
               >
-                <span className={cn("inline-flex items-center justify-center rounded-xl", isCollapsed ? "h-8 w-8 bg-transparent" : "h-7 w-7 bg-background/75 dark:bg-card/80")}>
-                  <LinkIcon className="h-[18px] w-[18px]" weight={isActive ? "duotone" : "regular"} aria-hidden />
-                </span>
-                <span className={cn(isCollapsed ? "lg:hidden" : "lg:inline")}>{link.label}</span>
+                <LinkIcon
+                  className="h-5 w-5 shrink-0"
+                  weight={isActive ? "fill" : "regular"}
+                  aria-hidden
+                />
+                {!isCollapsed && (
+                  <span className="truncate text-sm font-medium">
+                    {link.label}
+                  </span>
+                )}
               </Link>
             );
           })}
-        </nav>
-
-        <div className="mt-4 border-t border-border pt-4">
-          <p className={cn("px-2 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground", isCollapsed ? "lg:sr-only" : "")}>
-            Dashboard Views
-          </p>
-          <div className={cn("mt-2 flex min-w-0 gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0", isCollapsed ? "lg:items-center" : "")}>
-            {dashboardStateLinks.map((link) => {
-              const LinkIcon = link.icon;
-              const isActive = link.isActive?.(currentPath) ?? false;
-
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  aria-label={isCollapsed ? link.label : undefined}
-                  className={cn(
-                    "inline-flex h-10 min-w-max items-center rounded-2xl border text-xs font-semibold uppercase tracking-[0.08em] transition",
-                    isCollapsed ? "gap-0 px-3 lg:h-11 lg:w-12 lg:min-w-0 lg:justify-center lg:px-0" : "gap-2 px-3",
-                    isActive
-                      ? "border-primary/45 bg-primary/10 text-primary"
-                      : "border-border bg-card text-muted-foreground hover:border-primary/25 hover:text-foreground",
-                  )}
-                >
-                  <LinkIcon className="h-3.5 w-3.5" weight={isActive ? "duotone" : "regular"} aria-hidden />
-                  <span className={cn(isCollapsed ? "lg:hidden" : "lg:inline")}>{link.label}</span>
-                </Link>
-              );
-            })}
-          </div>
         </div>
 
-        <div className="mt-4 border-t border-border pt-4">
-          <LogoutButton
-            ariaLabel="Log out shortcut"
-            icon={<SignOut className="h-[18px] w-[18px]" aria-hidden />}
-            hideLabel={isCollapsed}
-            className={cn(
-              "h-10 rounded-2xl border border-border bg-secondary/65 text-foreground hover:border-primary/25 hover:bg-secondary",
-              isCollapsed ? "w-full lg:h-11 lg:w-12 lg:justify-center lg:px-0" : "w-full",
-            )}
-          />
+        {/* Separator */}
+        <div
+          className={cn(
+            "my-3 h-px bg-[#1a1a1a]/10",
+            isCollapsed ? "mx-auto w-6" : "w-full",
+          )}
+        />
+
+        {/* Secondary nav */}
+        <div className="flex w-full flex-col gap-1">
+          {secondaryLinks.map((link) => {
+            const LinkIcon = link.icon;
+            const isActive = link.isActive?.(currentPath) ?? false;
+
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-label={isCollapsed ? link.label : undefined}
+                title={link.label}
+                className={cn(
+                  "flex h-11 items-center rounded-2xl transition-all duration-200",
+                  isCollapsed
+                    ? "w-11 justify-center mx-auto"
+                    : "w-full gap-3 px-3",
+                  isActive
+                    ? "bg-[#1a1a1a] text-white shadow-md"
+                    : "text-[#1a1a1a]/50 hover:bg-[#1a1a1a]/[0.06] hover:text-[#1a1a1a]",
+                )}
+              >
+                <LinkIcon
+                  className="h-5 w-5 shrink-0"
+                  weight={isActive ? "fill" : "regular"}
+                  aria-hidden
+                />
+                {!isCollapsed && (
+                  <span className="truncate text-sm font-medium">
+                    {link.label}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </div>
-      </DashboardSurface>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Collapse toggle */}
+        <button
+          type="button"
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          onClick={onToggle}
+          className={cn(
+            "flex h-11 items-center rounded-2xl text-[#1a1a1a]/40 transition-all duration-200 hover:bg-[#1a1a1a]/[0.06] hover:text-[#1a1a1a]",
+            isCollapsed
+              ? "w-11 justify-center mx-auto"
+              : "w-full gap-3 px-3",
+          )}
+        >
+          {isCollapsed ? (
+            <CaretDoubleRight className="h-5 w-5 shrink-0" aria-hidden />
+          ) : (
+            <CaretDoubleLeft className="h-5 w-5 shrink-0" aria-hidden />
+          )}
+          {!isCollapsed && (
+            <span className="truncate text-sm font-medium">Collapse</span>
+          )}
+        </button>
+
+        {/* Logout */}
+        <LogoutButton
+          ariaLabel="Log out"
+          icon={<SignOut className="h-5 w-5 shrink-0" aria-hidden />}
+          hideLabel={isCollapsed}
+          className={cn(
+            "mt-1 flex h-11 items-center rounded-2xl border-0 text-[#1a1a1a]/50 transition-all duration-200 hover:bg-[#1a1a1a]/[0.06] hover:text-[#1a1a1a]",
+            isCollapsed
+              ? "w-11 justify-center mx-auto"
+              : "w-full gap-3 px-3",
+          )}
+        />
+
+        {/* User avatar */}
+        <Link
+          href="/settings"
+          aria-label={`Profile: ${displayName}`}
+          title={displayName}
+          className={cn(
+            "mt-2 flex shrink-0 items-center transition",
+            isCollapsed
+              ? "mx-auto h-10 w-10 justify-center rounded-full bg-[#f5dcc0] text-xs font-bold text-[#1a1a1a] hover:ring-2 hover:ring-[#1a1a1a]/20"
+              : "w-full gap-3 rounded-2xl px-3 py-2 hover:bg-[#1a1a1a]/[0.06]",
+          )}
+        >
+          <span className={cn(
+            "flex shrink-0 items-center justify-center rounded-full bg-[#f5dcc0] text-xs font-bold text-[#1a1a1a]",
+            isCollapsed ? "h-10 w-10" : "h-9 w-9",
+          )}>
+            {avatarInitials}
+          </span>
+          {!isCollapsed && (
+            <span className="truncate text-sm font-medium text-[#1a1a1a]">
+              {displayName}
+            </span>
+          )}
+        </Link>
+      </nav>
     </aside>
   );
 }

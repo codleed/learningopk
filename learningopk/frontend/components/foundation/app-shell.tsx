@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { LeftRail } from "@/components/foundation/left-rail";
+import { AuthLayoutWrapper } from "@/components/foundation/auth-layout-wrapper";
 import type { SessionPayload } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +19,7 @@ export function AppShell({
   className,
   contentClassName
 }: AppShellProps) {
-  const shellContainerClassName = cn("mx-auto w-full max-w-[97rem] px-4 pb-14 pt-6 sm:px-6 lg:px-8", contentClassName);
+  const shellContainerClassName = cn("w-full max-w-[97rem] px-4 pb-14 pt-6 sm:px-6 lg:px-8", contentClassName);
 
   if (session) {
     return (
@@ -31,14 +31,13 @@ export function AppShell({
           Skip to content
         </a>
 
-        <div className={shellContainerClassName}>
-          <div className="flex min-w-0 flex-col gap-4 xl:gap-5 lg:flex-row lg:items-start">
-            <LeftRail session={session} currentPath={currentPath} />
-            <main id="main-content" className="min-w-0 flex-1">
-              {children}
-            </main>
-          </div>
-        </div>
+        <AuthLayoutWrapper
+          session={session}
+          currentPath={currentPath}
+          className={shellContainerClassName}
+        >
+          {children}
+        </AuthLayoutWrapper>
       </div>
     );
   }
@@ -51,7 +50,7 @@ export function AppShell({
       >
         Skip to content
       </a>
-      <main id="main-content" className={shellContainerClassName}>
+      <main id="main-content" className={cn("mx-auto", shellContainerClassName)}>
         {children}
       </main>
     </div>

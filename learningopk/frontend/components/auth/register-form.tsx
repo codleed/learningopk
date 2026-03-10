@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { BadgeCheck, Building2, ChevronDown, Eye, EyeOff, GraduationCap, LockKeyhole, Mail, User } from "lucide-react";
 import { z } from "zod";
 
+import { BentoAuthField } from "@/components/auth/bento-auth-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -53,6 +56,8 @@ export const RegisterForm = () => {
   const [profileOptions, setProfileOptions] = useState<z.infer<typeof registerProfileOptionsSchema> | null>(null);
   const [selectedBoard, setSelectedBoard] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -153,133 +158,217 @@ export const RegisterForm = () => {
   const passwordError = submitted && issueText.includes("password") ? errorMessage : null;
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4" noValidate>
-      <div className="space-y-1">
-        <label htmlFor="name" className="block text-sm font-medium text-foreground">
-          Name
-        </label>
-        <Input
-          id="name"
-          name="name"
-          type="text"
-          required
-          minLength={2}
-          autoComplete="name"
-          aria-invalid={nameError ? true : undefined}
-        />
-        {nameError ? <p className="text-xs text-rose-700">{nameError}</p> : null}
+    <form onSubmit={onSubmit} className="space-y-5" noValidate>
+      <BentoAuthField htmlFor="name" label="Full Name" error={nameError}>
+        <div className="relative">
+          <User aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#92a0b7]" />
+          <Input
+            id="name"
+            name="name"
+            type="text"
+            required
+            minLength={2}
+            autoComplete="name"
+            aria-invalid={nameError ? true : undefined}
+            aria-label="Name"
+            placeholder="e.g. Alex Johnson"
+            className="h-11 rounded-full border-[#dce3ee] bg-[#f8fbff] px-10 text-sm text-[#243757] shadow-none placeholder:text-[#6f7e97] focus:border-[#7ac943]/50"
+          />
+        </div>
+      </BentoAuthField>
+      <div className="grid gap-4 md:grid-cols-2">
+        <BentoAuthField htmlFor="class" label="Class" error={classError}>
+          <div className="relative">
+            <GraduationCap
+              aria-hidden
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#92a0b7]"
+            />
+            <Select
+              id="class"
+              name="class"
+              value={selectedClass}
+              onChange={(event) => setSelectedClass(event.target.value)}
+              required
+              disabled={!selectedBoard || classOptions.length === 0}
+              aria-invalid={classError ? true : undefined}
+              aria-label="Class"
+              className="h-11 appearance-none rounded-full border-[#dce3ee] bg-[#f8fbff] px-10 pr-10 text-sm text-[#243757] shadow-none focus:border-[#7ac943]/50"
+            >
+              <option value="">Select class</option>
+              {classOptions.map((option) => (
+                <option key={option.id} value={option.slug}>
+                  {option.name}
+                </option>
+              ))}
+            </Select>
+            <ChevronDown
+              aria-hidden
+              className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7ac943]"
+            />
+          </div>
+        </BentoAuthField>
+        <BentoAuthField htmlFor="degree" label="Degree" error={degreeError}>
+          <div className="relative">
+            <BadgeCheck
+              aria-hidden
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#92a0b7]"
+            />
+            <Input
+              id="degree"
+              name="degree"
+              type="text"
+              required
+              autoComplete="off"
+              aria-invalid={degreeError ? true : undefined}
+              placeholder="e.g. B.Sc Computer Science"
+              className="h-11 rounded-full border-[#dce3ee] bg-[#f8fbff] px-10 text-sm text-[#243757] shadow-none placeholder:text-[#6f7e97] focus:border-[#7ac943]/50"
+            />
+          </div>
+        </BentoAuthField>
       </div>
-      <div className="space-y-1">
-        <label htmlFor="class" className="block text-sm font-medium text-foreground">
-          Class
-        </label>
-        <Select
-          id="class"
-          name="class"
-          value={selectedClass}
-          onChange={(event) => setSelectedClass(event.target.value)}
-          required
-          disabled={!selectedBoard || classOptions.length === 0}
-          aria-invalid={classError ? true : undefined}
-        >
-          <option value="">Select class</option>
-          {classOptions.map((option) => (
-            <option key={option.id} value={option.slug}>
-              {option.name}
-            </option>
-          ))}
-        </Select>
-        {classError ? <p className="text-xs text-rose-700">{classError}</p> : null}
+      <BentoAuthField htmlFor="board" label="Education Board" error={boardError}>
+        <div className="relative">
+          <Building2
+            aria-hidden
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#92a0b7]"
+          />
+          <Select
+            id="board"
+            name="board"
+            value={selectedBoard}
+            onChange={(event) => {
+              setSelectedBoard(event.target.value);
+              setSelectedClass("");
+            }}
+            required
+            aria-invalid={boardError ? true : undefined}
+            aria-label="Board"
+            className="h-11 appearance-none rounded-full border-[#dce3ee] bg-[#f8fbff] px-10 pr-10 text-sm text-[#243757] shadow-none focus:border-[#7ac943]/50"
+          >
+            <option value="">Select board</option>
+            {(profileOptions?.boards ?? []).map((board) => (
+              <option key={board.id} value={board.slug}>
+                {board.name}
+              </option>
+            ))}
+          </Select>
+          <ChevronDown
+            aria-hidden
+            className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7ac943]"
+          />
+        </div>
+      </BentoAuthField>
+      <BentoAuthField htmlFor="email" label="Email Address" error={emailError}>
+        <div className="relative">
+          <Mail aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#92a0b7]" />
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+            aria-invalid={emailError ? true : undefined}
+            aria-label="Email"
+            placeholder="alex@example.com"
+            className="h-11 rounded-full border-[#dce3ee] bg-[#f8fbff] px-10 text-sm text-[#243757] shadow-none placeholder:text-[#6f7e97] focus:border-[#7ac943]/50"
+          />
+        </div>
+      </BentoAuthField>
+      <div className="grid gap-4 md:grid-cols-2">
+        <BentoAuthField htmlFor="password" label="Password" error={passwordError}>
+          <div className="relative">
+            <LockKeyhole
+              aria-hidden
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#92a0b7]"
+            />
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              required
+              minLength={8}
+              autoComplete="new-password"
+              aria-invalid={passwordError ? true : undefined}
+              className="h-11 rounded-full border-[#dce3ee] bg-[#f8fbff] px-10 pr-10 text-sm text-[#243757] shadow-none placeholder:text-[#6f7e97] focus:border-[#7ac943]/50"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((value) => !value)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#92a0b7] transition hover:text-[#243757]"
+            >
+              {showPassword ? <EyeOff aria-hidden className="h-4 w-4" /> : <Eye aria-hidden className="h-4 w-4" />}
+            </button>
+          </div>
+        </BentoAuthField>
+        <BentoAuthField htmlFor="confirmPassword" label="Confirm Password" error={null}>
+          <div className="relative">
+            <LockKeyhole
+              aria-hidden
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#92a0b7]"
+            />
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              required
+              minLength={8}
+              autoComplete="new-password"
+              aria-invalid={passwordError ? true : undefined}
+              className="h-11 rounded-full border-[#dce3ee] bg-[#f8fbff] px-10 pr-10 text-sm text-[#243757] shadow-none placeholder:text-[#6f7e97] focus:border-[#7ac943]/50"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+              onClick={() => setShowConfirmPassword((value) => !value)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#92a0b7] transition hover:text-[#243757]"
+            >
+              {showConfirmPassword ? (
+                <EyeOff aria-hidden className="h-4 w-4" />
+              ) : (
+                <Eye aria-hidden className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+        </BentoAuthField>
       </div>
-      <div className="space-y-1">
-        <label htmlFor="degree" className="block text-sm font-medium text-foreground">
-          Degree
-        </label>
-        <Input
-          id="degree"
-          name="degree"
-          type="text"
-          required
-          autoComplete="off"
-          aria-invalid={degreeError ? true : undefined}
-          placeholder="Matriculation"
-        />
-        {degreeError ? <p className="text-xs text-rose-700">{degreeError}</p> : null}
-      </div>
-      <div className="space-y-1">
-        <label htmlFor="board" className="block text-sm font-medium text-foreground">
-          Board
-        </label>
-        <Select
-          id="board"
-          name="board"
-          value={selectedBoard}
-          onChange={(event) => {
-            setSelectedBoard(event.target.value);
-            setSelectedClass("");
-          }}
-          required
-          aria-invalid={boardError ? true : undefined}
-        >
-          <option value="">Select board</option>
-          {(profileOptions?.boards ?? []).map((board) => (
-            <option key={board.id} value={board.slug}>
-              {board.name}
-            </option>
-          ))}
-        </Select>
-        {boardError ? <p className="text-xs text-rose-700">{boardError}</p> : null}
-      </div>
-      <div className="space-y-1">
-        <label htmlFor="email" className="block text-sm font-medium text-foreground">
-          Email
-        </label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-          aria-invalid={emailError ? true : undefined}
-        />
-        {emailError ? <p className="text-xs text-rose-700">{emailError}</p> : null}
-      </div>
-      <div className="space-y-1">
-        <label htmlFor="password" className="block text-sm font-medium text-foreground">
-          Password
-        </label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          required
-          minLength={8}
-          autoComplete="new-password"
-          aria-invalid={passwordError ? true : undefined}
-        />
-      </div>
-      <div className="space-y-1">
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground">
-          Confirm Password
-        </label>
-        <Input
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          required
-          minLength={8}
-          autoComplete="new-password"
-          aria-invalid={passwordError ? true : undefined}
-        />
-      </div>
-      {passwordError ? <p className="text-xs text-rose-700">{passwordError}</p> : null}
+      {passwordError ? <p className="text-sm text-rose-700">{passwordError}</p> : null}
       {optionsError ? <p className="text-xs text-rose-700">{optionsError}</p> : null}
       {errorMessage && !nameError && !classError && !degreeError && !boardError && !emailError && !passwordError ? (
-        <p className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">{errorMessage}</p>
+        <p className="rounded-[1.5rem] border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          {errorMessage}
+        </p>
       ) : null}
-      <Button type="submit" disabled={isPending || !!optionsError} width="full">
+      <label className="flex items-start gap-2.5 text-xs text-[#5f6f8f] sm:text-sm">
+        <input type="checkbox" className="mt-0.5 h-3.5 w-3.5 rounded-full border border-[#dce3ee] accent-[#7ac943]" />
+        <span>
+          I agree to the{" "}
+          <Link href="/terms-of-service" className="font-medium text-[#7ac943] transition hover:text-[#68b036]">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy-policy" className="font-medium text-[#7ac943] transition hover:text-[#68b036]">
+            Privacy Policy
+          </Link>
+          .
+        </span>
+      </label>
+      <Button
+        type="submit"
+        disabled={isPending || !!optionsError}
+        width="full"
+        className="h-11 rounded-full bg-[#7ac943] text-sm font-bold text-white shadow-[0_14px_24px_-18px_rgba(122,201,67,0.9)] hover:bg-[#68b036]"
+      >
         {isPending ? "Creating account..." : "Create account"}
       </Button>
+      <p className="pt-1 text-center text-sm text-[#5f6f8f]">
+        Already have an account?{" "}
+        <Link href="/login" className="font-bold text-[#7ac943] transition hover:text-[#68b036]">
+          Sign in
+        </Link>
+      </p>
     </form>
   );
 };

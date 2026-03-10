@@ -1,11 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { LockKeyhole } from "lucide-react";
 
-import { AppShell } from "@/components/foundation/app-shell";
-import { PageHeader } from "@/components/foundation/page-header";
-import { SectionCard } from "@/components/foundation/section-card";
+import { BentoAuthShell } from "@/components/auth/bento-auth-shell";
 import { LoginForm } from "@/components/auth/login-form";
-import { AuthTopNavbar } from "@/components/auth/auth-top-navbar";
 import { getServerSession } from "@/lib/session";
 
 export default async function LoginPage() {
@@ -15,38 +12,18 @@ export default async function LoginPage() {
   }
 
   return (
-    <AppShell currentPath="/login" session={session}>
-      <div className="space-y-6">
-        <AuthTopNavbar currentPath="/login" />
-
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <PageHeader
-            eyebrow="Student Access"
-            title="Welcome back"
-            subtitle="Sign in to continue chapter learning, quiz practice, and AI-guided tutoring."
-          />
-
-          <SectionCard
-            title="Log in"
-            description="Use your registered email and password."
-            className="h-fit"
-            contentClassName="space-y-4"
-          >
-            <LoginForm />
-            <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
-              <Link href="/forgot-password" className="font-medium text-foreground underline underline-offset-4">
-                Forgot password?
-              </Link>
-              <p>
-                New here?{" "}
-                <Link href="/register" className="font-semibold text-foreground underline underline-offset-4">
-                  Create account
-                </Link>
-              </p>
-            </div>
-          </SectionCard>
+    <BentoAuthShell
+      title="Welcome Back"
+      subtitle="Log in to continue your learning journey"
+      topLink={{ href: "/register", label: "Create account" }}
+      badge={
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#eef7e3] text-[#7ac943]">
+          <LockKeyhole aria-hidden className="h-6 w-6" strokeWidth={2.2} />
         </div>
-      </div>
-    </AppShell>
+      }
+      cardClassName="max-w-[37.5rem]"
+    >
+      <LoginForm />
+    </BentoAuthShell>
   );
 }
