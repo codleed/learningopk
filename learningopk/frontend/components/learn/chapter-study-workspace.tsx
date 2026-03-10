@@ -69,15 +69,14 @@ export function ChapterStudyWorkspace({
   const useSingleColumnLayout = isAiSidebarMaximized || isAiSidebarHidden;
 
   return (
-    <div className="rounded-[1.6rem] bg-secondary p-4 sm:p-6 lg:p-8">
-      <StaggerContainer
-        className={cn(
-          "grid gap-4 xl:items-start",
-          useSingleColumnLayout
-            ? "xl:grid-cols-[minmax(0,1fr)]"
-            : "xl:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)]",
-        )}
-      >
+    <StaggerContainer
+      className={cn(
+        "grid gap-4 xl:items-start",
+        useSingleColumnLayout
+          ? "xl:grid-cols-[minmax(0,1fr)]"
+          : "xl:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)]",
+      )}
+    >
         <MotionSection>
           <DashboardSurface
             as="section"
@@ -177,7 +176,6 @@ export function ChapterStudyWorkspace({
             </div>
           </MotionSection>
         ) : null}
-      </StaggerContainer>
-    </div>
+    </StaggerContainer>
   );
 }
