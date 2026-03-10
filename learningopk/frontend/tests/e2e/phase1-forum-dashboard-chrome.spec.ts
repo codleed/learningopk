@@ -19,21 +19,7 @@ const registerAndOpenForum = async (baseEmail: string, page: Page) => {
   await expect(page).toHaveURL(/\/forum$/);
 };
 
-const getComputedColor = async (page: Page, cssColor: string) => {
-  return page.evaluate((color) => {
-    const sample = document.createElement("div");
-    sample.style.backgroundColor = color;
-    document.body.appendChild(sample);
-    const computed = getComputedStyle(sample).backgroundColor;
-    sample.remove();
-    return computed;
-  }, cssColor);
-};
-
-const getShellBackgroundColor = async (page: Page) => {
-  const shell = page.locator("main#main-content > div.rounded-\\[1\\.6rem\\]").first();
-  return shell.evaluate((element) => getComputedStyle(element).backgroundColor);
-};
+const getShellWrapper = (page: Page) => page.locator("main#main-content > div.rounded-\\[1\\.6rem\\]");
 
 const assertNoHorizontalOverflow = async (page: Page) => {
   await page.waitForLoadState("domcontentloaded");
@@ -82,9 +68,7 @@ test("forum shell background is theme-aware in dark mode", async ({ page }) => {
 
   await expect(page.getByTestId("dashboard-chrome-shell")).toBeVisible();
 
-  const secondaryColor = await getComputedColor(page, "var(--secondary)");
-  const shellBackground = await getShellBackgroundColor(page);
-  expect(shellBackground).toBe(secondaryColor);
+  await expect(getShellWrapper(page)).toHaveCount(0);
 });
 
 test.describe("forum mobile layout", () => {
