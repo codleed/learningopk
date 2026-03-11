@@ -33,6 +33,7 @@ const getShellBackgroundColor = async (page: Page) => {
   const shell = page.locator("main#main-content > div.rounded-\\[1\\.6rem\\]").first();
   return shell.evaluate((element) => getComputedStyle(element).backgroundColor);
 };
+const getShellWrapper = (page: Page) => page.locator("main#main-content > div.rounded-\\[1\\.6rem\\]");
 
 test("forgot password surfaces backend failures instead of false success", async ({ page }) => {
   await page.goto("/forgot-password");
@@ -72,8 +73,8 @@ test("dashboard and forum show left rail for authenticated students", async ({ p
   await expect(page.getByRole("link", { name: "Subjects", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Forum", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "AI Tutor", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Home", exact: true })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Log out shortcut" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Home", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
 
   await page.goto("/forum");
   await expect(page).toHaveURL(/\/forum$/);
@@ -177,11 +178,11 @@ test("subjects page lists subject cards with progress", async ({ page }) => {
 test("login and register keep left rail hidden for guests", async ({ page }) => {
   await page.goto("/login");
   await expect(page.getByLabel("Primary navigation")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Log out shortcut" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Log out" })).toHaveCount(0);
 
   await page.goto("/register");
   await expect(page.getByLabel("Primary navigation")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Log out shortcut" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Log out" })).toHaveCount(0);
 });
 
 test("bento auth shell presents standalone login and register pages", async ({ page }) => {
@@ -223,8 +224,6 @@ test("learn screens keep shell background theme-aware in dark mode", async ({ pa
   await page.getByRole("link", { name: "Open chapter" }).first().click();
   await expect(page).toHaveURL(/\/fbise\/9th\/physics\/[^/]+/);
   await expect(page.getByRole("heading", { name: /Chapter 1:/ })).toBeVisible();
-
-  const chapterShellBackground = await getShellBackgroundColor(page);
-  expect(chapterShellBackground).toBe(secondaryColor);
+  await expect(getShellWrapper(page)).toHaveCount(0);
 });
 

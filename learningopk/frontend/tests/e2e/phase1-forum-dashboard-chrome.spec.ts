@@ -44,8 +44,8 @@ test("forum keeps dashboard shell styling while showing authenticated left rail"
   await expect(page.getByRole("link", { name: "Dashboard", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Subjects", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Forum", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Home", exact: true })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Log out shortcut" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Home", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
 
   await page.getByLabel("Search").fill("phase1-filter-check");
   await page.getByRole("button", { name: "Apply filters" }).click();
@@ -82,7 +82,7 @@ test.describe("forum mobile layout", () => {
     await expect(page.getByTestId("dashboard-chrome-shell")).toBeVisible();
     await expect(page.getByTestId("dashboard-chrome-header")).toBeVisible();
     await expect(page.getByLabel("Primary navigation")).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Log out shortcut" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Log out" })).toHaveCount(0);
 
     await page.getByLabel("Search").fill("mobile-phase1-check");
     await page.getByRole("button", { name: "Apply filters" }).click();
