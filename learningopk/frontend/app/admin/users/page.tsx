@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { AdminUsersPanel } from "@/components/admin/admin-users-panel";
+import { PageHeader } from "@/components/foundation/page-header";
 import { getAdminUsers } from "@/lib/admin-api";
 
 export default async function AdminUsersPage() {
@@ -22,23 +22,12 @@ export default async function AdminUsersPage() {
   }));
 
   return (
-    <div className="space-y-6 px-1">
-      <header className="border-b border-border/75 pb-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Admin Users</p>
-            <h1 className="text-3xl font-semibold leading-tight tracking-[-0.02em] text-foreground sm:text-4xl">
-              User Management
-            </h1>
-            <p className="max-w-3xl text-sm text-muted-foreground sm:text-base">
-              Search learners and admins with role-based filtering.
-            </p>
-          </div>
-          <Link href="/admin" className="pt-1 text-sm font-semibold text-primary underline underline-offset-4">
-            Back to admin
-          </Link>
-        </div>
-      </header>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Admin Users"
+        title="User Management"
+        subtitle="Search learners and admins with role-based filtering."
+      />
       <AdminUsersPanel initialEntries={usersPayload.entries} initialTotal={usersPayload.total} />
     </div>
   );

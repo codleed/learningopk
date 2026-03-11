@@ -5,6 +5,7 @@ import {
   CalendarBlank,
   CaretDoubleLeft,
   CaretDoubleRight,
+  CaretDown,
   ChartPieSlice,
   ChatCircleText,
   GearSix,
@@ -16,7 +17,7 @@ import {
 import type { Icon } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import type { SessionPayload } from "@/lib/session";
@@ -36,6 +37,11 @@ type RailLink = {
   isActive?: (currentPath: string) => boolean;
 };
 
+type SubmenuItem = {
+  href: string;
+  label: string;
+};
+
 const isPathPrefix = (currentPath: string, target: string): boolean =>
   currentPath === target || currentPath.startsWith(`${target}/`);
 
@@ -48,12 +54,30 @@ const getInitials = (name: string): string =>
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 
+const adminSubmenuItems: SubmenuItem[] = [
+  { href: "/admin", label: "Command Center" },
+  { href: "/admin/users", label: "Users" },
+  { href: "/admin/content", label: "Content" },
+  { href: "/admin/moderation", label: "Moderation" },
+  { href: "/admin/community", label: "Community" },
+  { href: "/admin/forum", label: "Forum" },
+  { href: "/admin/analytics", label: "Analytics" },
+  { href: "/admin/audit", label: "Audit" },
+  { href: "/admin/notifications", label: "Notifications" },
+  { href: "/admin/settings", label: "Settings" },
+];
+
 export function LeftRail({
   session,
   currentPath = "/",
   isCollapsed,
   onToggle,
 }: LeftRailProps) {
+  const [isAdminSubmenuOpen, setIsAdminSubmenuOpen] = useState(false);
+
+  const isAdmin = session.user.role === "admin";
+  const isOnAdminPage = isPathPrefix(currentPath, "/admin");
+
   const displayName = useMemo(() => {
     const trimmedName = session.user.name?.trim();
     return trimmedName?.length ? trimmedName : "LearningoPK";
@@ -94,15 +118,6 @@ export function LeftRail({
     },
   ];
 
-  if (session.user.role === "admin") {
-    primaryLinks.push({
-      href: "/admin",
-      label: "Admin",
-      icon: ShieldCheck,
-      isActive: (path) => isPathPrefix(path, "/admin"),
-    });
-  }
-
   const secondaryLinks: RailLink[] = [
     {
       href: "/dashboard?rail=calendar",
@@ -116,6 +131,118 @@ export function LeftRail({
       isActive: (path) => isPathPrefix(path, "/settings"),
     },
   ];
+
+  const renderPrimaryLink = (link: RailLink) => {
+    const isActive = link.isActive?.(currentPath) ?? false;
+    const LinkIcon = link.icon;
+
+    return (
+      <Link
+        key={link.href}
+        href={link.href}
+        aria-current={isActive ? "page" : undefined}
+        aria-label={isCollapsed ? link.label : undefined}
+        title={link.label}
+        className={cn(
+          "flex h-11 items-center rounded-2xl transition-all duration-200",
+          isCollapsed
+            ? "w-11 justify-center mx-auto"
+            : "w-full gap-3 px-3",
+          isActive
+            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
+            : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+        )}
+      >
+        <LinkIcon
+          className="h-5 w-5 shrink-0"
+          weight={isActive ? "fill" : "regular"}
+          aria-hidden
+        />
+        {!isCollapsed && (
+          <span className="truncate text-sm font-medium">
+            {link.label}
+          </span>
+        )}
+      </Link>
+    );
+  };
+
+  const renderAdminSubmenu = () => {
+    if (isCollapsed) {
+      return (
+        <Link
+          href="/admin"
+          aria-current={isOnAdminPage ? "page" : undefined}
+          title="Admin"
+          className={cn(
+            "flex h-11 w-11 justify-center mx-auto items-center rounded-2xl transition-all duration-200",
+            isOnAdminPage
+              ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
+              : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+          )}
+        >
+          <ShieldCheck className="h-5 w-5" weight={isOnAdminPage ? "fill" : "regular"} aria-hidden />
+        </Link>
+      );
+    }
+
+    return (
+      <div className="flex w-full flex-col gap-1">
+        <button
+          type="button"
+          onClick={() => setIsAdminSubmenuOpen(!isAdminSubmenuOpen)}
+          className={cn(
+            "flex h-11 items-center rounded-2xl transition-all duration-200 w-full gap-3 px-3",
+            isOnAdminPage
+              ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
+              : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+          )}
+        >
+          <ShieldCheck
+            className="h-5 w-5 shrink-0"
+            weight={isOnAdminPage ? "fill" : "regular"}
+            aria-hidden
+          />
+          <span className="flex-1 truncate text-left text-sm font-medium">Admin</span>
+          <CaretDown
+            className={cn(
+              "h-4 w-4 shrink-0 transition-transform duration-200",
+              isAdminSubmenuOpen && "rotate-180",
+            )}
+            aria-hidden
+          />
+        </button>
+
+        <div
+          className={cn(
+            "overflow-hidden transition-all duration-200",
+            isAdminSubmenuOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0",
+          )}
+        >
+          <div className="flex flex-col gap-1 py-1 pl-4">
+            {adminSubmenuItems.map((item) => {
+              const isItemActive = currentPath === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isItemActive ? "page" : undefined}
+                  className={cn(
+                    "flex h-9 items-center rounded-2xl px-3 text-sm font-medium transition-all duration-200",
+                    isItemActive
+                      ? "bg-sidebar-accent text-sidebar-foreground"
+                      : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <aside
@@ -160,40 +287,9 @@ export function LeftRail({
 
         {/* Primary nav */}
         <div className="flex w-full flex-col gap-1">
-          {primaryLinks.map((link) => {
-            const isActive = link.isActive?.(currentPath) ?? false;
-            const LinkIcon = link.icon;
+          {primaryLinks.map(renderPrimaryLink)}
 
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-current={isActive ? "page" : undefined}
-                aria-label={isCollapsed ? link.label : undefined}
-                title={link.label}
-                className={cn(
-                  "flex h-11 items-center rounded-2xl transition-all duration-200",
-                  isCollapsed
-                    ? "w-11 justify-center mx-auto"
-                    : "w-full gap-3 px-3",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
-                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                )}
-              >
-                <LinkIcon
-                  className="h-5 w-5 shrink-0"
-                  weight={isActive ? "fill" : "regular"}
-                  aria-hidden
-                />
-                {!isCollapsed && (
-                  <span className="truncate text-sm font-medium">
-                    {link.label}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+          {isAdmin && renderAdminSubmenu()}
         </div>
 
         {/* Separator */}

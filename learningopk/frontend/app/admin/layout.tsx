@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { AdminGuard, isAdminSession } from "@/components/admin/admin-guard";
-import { AdminShell } from "@/components/admin/admin-shell";
+import { AppShell } from "@/components/foundation/app-shell";
 import { getServerSession } from "@/lib/session";
 
 type AdminLayoutProps = {
@@ -17,7 +17,9 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <AdminGuard session={session}>
-      <AdminShell session={session}>{children}</AdminShell>
+      <AppShell session={session} currentPath="/admin">
+        {children}
+      </AppShell>
     </AdminGuard>
   );
 }
