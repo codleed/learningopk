@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { BentoAuthShell } from "@/components/auth/bento-auth-shell";
+import { AuthLayout } from "@/components/auth/auth-layout";
 import { RegisterForm } from "@/components/auth/register-form";
 import { getServerSession } from "@/lib/session";
 
@@ -11,13 +11,12 @@ export default async function RegisterPage() {
   }
 
   return (
-    <BentoAuthShell
-      title="Create your student account"
-      subtitle="Join our learning community and start your journey today."
-      topLink={{ href: "/login", label: "Log in" }}
-      cardClassName="max-w-[50rem] px-6 py-8 sm:px-14 sm:py-12"
+    <AuthLayout
+      title="Create your account"
+      subtitle="Join LearningoPK and start your learning journey today"
+      topLink={{ href: "/login", label: "Sign in" }}
     >
       <RegisterForm />
-    </BentoAuthShell>
+    </AuthLayout>
   );
 }

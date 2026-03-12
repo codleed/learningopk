@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import { LockKeyhole, ArrowLeft, CheckCircle } from "lucide-react";
 import { z } from "zod";
 
+import { PasswordInput } from "@/components/auth/password-input";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 type ResetPasswordFormProps = {
   token: string | null;
@@ -82,8 +83,6 @@ const initialErrorMessageByType: Record<Exclude<ResetPasswordFormProps["initialE
 };
 
 export function ResetPasswordForm({ token, initialError }: ResetPasswordFormProps) {
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(
     initialError ? initialErrorMessageByType[initialError] : null
   );
@@ -99,7 +98,11 @@ export function ResetPasswordForm({ token, initialError }: ResetPasswordFormProp
       return;
     }
 
-    const parsed = resetPasswordSchema.safeParse({ newPassword, confirmPassword });
+    const formData = new FormData(event.currentTarget);
+    const parsed = resetPasswordSchema.safeParse({
+      newPassword: String(formData.get("newPassword") ?? ""),
+      confirmPassword: String(formData.get("confirmPassword") ?? "")
+    });
     if (!parsed.success) {
       setErrorMessage(parsed.error.issues[0]?.message ?? "Enter a valid new password.");
       return;
@@ -118,14 +121,17 @@ export function ResetPasswordForm({ token, initialError }: ResetPasswordFormProp
 
   if (isSuccess) {
     return (
-      <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-4">
-        <h2 className="text-base font-semibold text-emerald-900">Password reset complete</h2>
-        <p className="mt-1 text-sm text-emerald-800">
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+          <CheckCircle className="h-6 w-6 text-emerald-600" />
+        </div>
+        <h2 className="text-lg font-semibold text-emerald-900">Password reset complete</h2>
+        <p className="mt-2 text-sm text-emerald-700">
           Your password has been updated. Continue to login with your new credentials.
         </p>
         <Link
           href="/login"
-          className="mt-4 inline-flex h-10 items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-semibold text-foreground transition hover:border-primary/40 hover:bg-accent/50"
+          className="mt-6 inline-flex h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition-colors hover:border-[#7ac943]/50 hover:bg-slate-50"
         >
           Return to sign in
         </Link>
@@ -134,47 +140,62 @@ export function ResetPasswordForm({ token, initialError }: ResetPasswordFormProp
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4" noValidate>
-      <label htmlFor="new-password" className="space-y-1">
-        <span className="block text-sm font-medium text-foreground">New password</span>
-        <Input
-          id="new-password"
-          name="newPassword"
-          type="password"
-          value={newPassword}
-          onChange={(event) => setNewPassword(event.target.value)}
-          required
-          autoComplete="new-password"
-          disabled={isPending || !token}
-          aria-invalid={errorMessage ? true : undefined}
-        />
-      </label>
-      <label htmlFor="confirm-password" className="space-y-1">
-        <span className="block text-sm font-medium text-foreground">Confirm password</span>
-        <Input
-          id="confirm-password"
-          name="confirmPassword"
-          type="password"
-          value={confirmPassword}
-          onChange={(event) => setConfirmPassword(event.target.value)}
-          required
-          autoComplete="new-password"
-          disabled={isPending || !token}
-          aria-invalid={errorMessage ? true : undefined}
-        />
-      </label>
-      {errorMessage ? <p className="text-xs text-rose-700">{errorMessage}</p> : null}
-      <Button type="submit" width="full" disabled={isPending || !token}>
+    <form onSubmit={onSubmit} className="space-y-5" noValidate>
+      <PasswordInput
+        name="newPassword"
+        label="New Password"
+        icon={LockKeyhole}
+        iconPosition="left"
+        required
+        minLength={8}
+        autoComplete="new-password"
+        disabled={isPending || !token}
+        aria-invalid={errorMessage ? true : undefined}
+        placeholder="••••••••"
+        className="h-12 rounded-lg border-slate-200 bg-white px-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20"
+      />
+      <PasswordInput
+        name="confirmPassword"
+        label="Confirm Password"
+        icon={LockKeyhole}
+        iconPosition="left"
+        required
+        minLength={8}
+        autoComplete="new-password"
+        disabled={isPending || !token}
+        aria-invalid={errorMessage ? true : undefined}
+        placeholder="••••••••"
+        className="h-12 rounded-lg border-slate-200 bg-white px-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20"
+      />
+      {errorMessage ? <p className="text-sm font-medium text-red-500">{errorMessage}</p> : null}
+      <Button 
+        type="submit" 
+        width="full" 
+        size="lg"
+        disabled={isPending || !token}
+        className="h-12 rounded-lg bg-[#7ac943] text-base font-semibold text-white shadow-sm hover:bg-[#68b036]"
+      >
         {isPending ? "Resetting..." : "Reset password"}
       </Button>
       {!token ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-center text-sm text-slate-600">
           Need a new link?{" "}
-          <Link href="/forgot-password" className="font-semibold text-foreground underline underline-offset-4">
+          <Link href="/forgot-password" className="font-semibold text-[#7ac943] transition hover:text-[#68b036]">
             Request password reset
           </Link>
         </p>
       ) : null}
+      {token && (
+        <div className="flex items-center justify-center">
+          <Link
+            href="/login"
+            className="flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-[#7ac943]"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to sign in
+          </Link>
+        </div>
+      )}
     </form>
   );
 }

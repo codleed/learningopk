@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
+import { LockKeyhole, Mail } from "lucide-react";
 import { z } from "zod";
 
-import { BentoAuthField } from "@/components/auth/bento-auth-field";
+import { FormField } from "@/components/auth/form-field";
+import { PasswordInput } from "@/components/auth/password-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
@@ -21,7 +22,6 @@ export const LoginForm = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -64,9 +64,9 @@ export const LoginForm = () => {
 
   return (
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
-      <BentoAuthField htmlFor="email" label="Email Address" error={emailError}>
+      <FormField htmlFor="email" label="Email Address" error={emailError}>
         <div className="relative">
-          <Mail aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#92a0b7]" />
+          <Mail aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
           <Input
             id="email"
             name="email"
@@ -76,56 +76,38 @@ export const LoginForm = () => {
             aria-invalid={emailError ? true : undefined}
             aria-label="Email"
             placeholder="name@example.com"
-            className="h-11 rounded-full border-[#d7e6c8] bg-[#fffdfc] px-10 text-sm text-[#243757] shadow-none placeholder:text-[#97a4ba] focus:border-[#7ac943]/50"
+            className="h-12 rounded-lg border-slate-200 bg-white px-10 text-base text-slate-900 placeholder:text-slate-400 focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20"
           />
         </div>
-      </BentoAuthField>
-      <BentoAuthField
-        htmlFor="password"
+      </FormField>
+      <PasswordInput
+        name="password"
         label="Password"
+        icon={LockKeyhole}
+        iconPosition="left"
+        required
+        minLength={8}
+        autoComplete="current-password"
+        aria-invalid={passwordError ? true : undefined}
+        placeholder="••••••••"
+        error={passwordError}
         action={
-          <Link href="/forgot-password" className="text-xs font-medium text-[#7ac943] transition hover:text-[#68b036] sm:text-sm">
+          <Link href="/forgot-password" className="text-sm font-medium text-[#7ac943] transition hover:text-[#68b036]">
             Forgot password?
           </Link>
         }
-        error={passwordError}
-      >
-        <div className="relative">
-          <LockKeyhole
-            aria-hidden
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#92a0b7]"
-          />
-          <Input
-            id="password"
-            name="password"
-            type={showPassword ? "text" : "password"}
-            required
-            minLength={8}
-            autoComplete="current-password"
-            aria-invalid={passwordError ? true : undefined}
-            placeholder="••••••••"
-            className="h-11 rounded-full border-[#d7e6c8] bg-[#fffdfc] px-10 pr-10 text-sm text-[#243757] shadow-none placeholder:text-[#97a4ba] focus:border-[#7ac943]/50"
-          />
-          <button
-            type="button"
-            aria-label={showPassword ? "Hide password" : "Show password"}
-            onClick={() => setShowPassword((value) => !value)}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#92a0b7] transition hover:text-[#243757]"
-          >
-            {showPassword ? <EyeOff aria-hidden className="h-4 w-4" /> : <Eye aria-hidden className="h-4 w-4" />}
-          </button>
-        </div>
-      </BentoAuthField>
+        className="h-12 rounded-lg border-slate-200 bg-white px-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20"
+      />
       {errorMessage && !emailError && !passwordError ? (
-        <p className="rounded-[1.5rem] border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {errorMessage}
         </p>
       ) : null}
-      <label className="flex items-center gap-2.5 text-sm text-[#314261]">
+      <label className="flex items-center gap-2.5 text-sm text-slate-600">
         <input
           type="checkbox"
           name="rememberMe"
-          className="h-3.5 w-3.5 rounded-full border border-[#cfe2bd] accent-[#7ac943]"
+          className="h-4 w-4 rounded border-slate-300 text-[#7ac943] focus:ring-[#7ac943]/50"
         />
         <span>Remember me for 30 days</span>
       </label>
@@ -133,13 +115,14 @@ export const LoginForm = () => {
         type="submit"
         disabled={isPending}
         width="full"
-        className="h-11 rounded-full bg-[#7ac943] text-sm font-bold text-white shadow-[0_14px_24px_-18px_rgba(122,201,67,0.9)] hover:bg-[#68b036]"
+        size="lg"
+        className="h-12 rounded-lg bg-[#7ac943] text-base font-semibold text-white shadow-sm hover:bg-[#68b036]"
       >
-        {isPending ? "Logging In..." : "Log In"}
+        {isPending ? "Signing In..." : "Sign In"}
       </Button>
-      <p className="pt-1 text-center text-sm text-[#314261]">
+      <p className="text-center text-sm text-slate-600">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="font-bold text-[#7ac943] transition hover:text-[#68b036]">
+        <Link href="/register" className="font-semibold text-[#7ac943] transition hover:text-[#68b036]">
           Create account
         </Link>
       </p>
