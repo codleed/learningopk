@@ -3,20 +3,42 @@
 import { type HTMLAttributes, type ReactNode } from "react";
 import { motion } from "framer-motion";
 
+export type PastelAccent = 
+  | "dustyRose" 
+  | "sage" 
+  | "slateBlue" 
+  | "warmSand" 
+  | "lavender" 
+  | "peach"
+  | "none";
+
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
+  pastelAccent?: PastelAccent;
   noPadding?: boolean;
 }
+
+const pastelGradients: Record<PastelAccent, string> = {
+  dustyRose: "linear-gradient(135deg, rgba(212,165,165,0.15) 0%, rgba(212,165,165,0.05) 100%)",
+  sage: "linear-gradient(135deg, rgba(165,196,165,0.15) 0%, rgba(165,196,165,0.05) 100%)",
+  slateBlue: "linear-gradient(135deg, rgba(165,180,196,0.15) 0%, rgba(165,180,196,0.05) 100%)",
+  warmSand: "linear-gradient(135deg, rgba(212,196,165,0.15) 0%, rgba(212,196,165,0.05) 100%)",
+  lavender: "linear-gradient(135deg, rgba(196,165,212,0.15) 0%, rgba(196,165,212,0.05) 100%)",
+  peach: "linear-gradient(135deg, rgba(212,184,165,0.15) 0%, rgba(212,184,165,0.05) 100%)",
+  none: "transparent",
+};
 
 export function Card({
   children,
   className = "",
   style,
+  pastelAccent = "none",
   noPadding = false,
   ...props
 }: CardProps) {
   const cardStyle: React.CSSProperties = {
-    background: "var(--card)",
+    background: `var(--card-gradient, var(--card))`,
+    backgroundImage: pastelGradients[pastelAccent],
     color: "var(--card-foreground)",
     border: "1px solid var(--border)",
     padding: noPadding ? "0" : "var(--space-4)",
