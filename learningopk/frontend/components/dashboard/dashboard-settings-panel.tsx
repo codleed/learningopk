@@ -1,12 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 
-import { DashboardCard, DashboardSection } from "@/components/foundation/dashboard-primitives";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DashboardSection } from "@/components/foundation/dashboard-primitives";
 import { useToast } from "@/components/ui/toast";
 import { authClient } from "@/lib/auth-client";
 import { uploadProfileImage } from "@/lib/profile-api";
@@ -171,112 +170,140 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
   };
 
   return (
-    <DashboardSection
-      title="Settings"
-      subtitle="Manage your profile details and display theme."
-      contentClassName="grid gap-4 xl:grid-cols-2"
-    >
-      <DashboardCard className="p-4 sm:p-5">
-        <h3 className="text-lg font-semibold text-foreground">Profile management</h3>
-        <p className="mt-1 text-sm text-muted-foreground">Update your photo, name, class, degree, and board.</p>
+    <div className="bg-background">
+      <DashboardSection
+        title="Settings"
+        subtitle="Manage your profile details and display theme."
+        contentClassName="grid gap-4 xl:grid-cols-2"
+      >
+        <div className="rounded-[1.8rem] border border-border bg-card px-4 py-5 sm:px-6 sm:py-7">
+          <h3 className="font-heading text-xl font-extrabold tracking-[-0.04em] text-foreground">Profile management</h3>
+          <p className="mt-2 text-sm text-muted-foreground">Update your photo, name, class, degree, and board.</p>
 
-        <div className="mt-4 rounded-xl border border-border/70 bg-card/70 p-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-border bg-muted text-sm font-semibold text-muted-foreground">
-              {previewImageUrl ? (
-                <img src={previewImageUrl} alt="Profile preview" className="h-full w-full object-cover" />
-              ) : (
-                <span>{avatarInitials || "U"}</span>
-              )}
-            </div>
-
-            <div className="flex-1 space-y-2">
-              <label htmlFor="settings-profile-image" className="text-sm font-medium text-foreground">
-                Profile picture
-              </label>
-              <Input
-                id="settings-profile-image"
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                onChange={onProfileImageSelect}
-              />
-              <Button
-                type="button"
-                onClick={onProfileImageUpload}
-                disabled={isUploadingProfileImage || !selectedProfileImage}
-                size="sm"
-              >
-                {isUploadingProfileImage ? "Uploading..." : "Upload picture"}
-              </Button>
-            </div>
-          </div>
-          {profileImageError ? <p className="mt-2 text-sm text-destructive">{profileImageError}</p> : null}
-        </div>
-
-        <form className="mt-4 space-y-3" onSubmit={onProfileSubmit} noValidate>
-          <div className="space-y-1">
-            <label htmlFor="settings-name" className="text-sm font-medium text-foreground">
-              Name
-            </label>
-            <Input id="settings-name" name="name" defaultValue={initialProfile.name} autoComplete="name" />
-          </div>
-
-          <div className="space-y-1">
-            <label htmlFor="settings-class" className="text-sm font-medium text-foreground">
-              Class
-            </label>
-            <Input id="settings-class" name="class" defaultValue={initialProfile.studentClass} />
-          </div>
-
-          <div className="space-y-1">
-            <label htmlFor="settings-degree" className="text-sm font-medium text-foreground">
-              Degree
-            </label>
-            <Input id="settings-degree" name="degree" defaultValue={initialProfile.degree} />
-          </div>
-
-          <div className="space-y-1">
-            <label htmlFor="settings-board" className="text-sm font-medium text-foreground">
-              Board
-            </label>
-            <Input id="settings-board" name="board" defaultValue={initialProfile.board} />
-          </div>
-
-          {profileError ? <p className="text-sm text-destructive">{profileError}</p> : null}
-
-          <Button type="submit" disabled={isSavingProfile}>
-            {isSavingProfile ? "Saving profile..." : "Save profile"}
-          </Button>
-        </form>
-      </DashboardCard>
-
-      <DashboardCard className="p-4 sm:p-5">
-        <h3 className="text-lg font-semibold text-foreground">Theme</h3>
-        <p className="mt-1 text-sm text-muted-foreground">Choose between light and dark interface themes.</p>
-        <div className="mt-4 grid grid-cols-2 gap-2" role="group" aria-label="Theme options">
-          {(["light", "dark"] as const).map((theme) => {
-            const isActive = activeTheme === theme;
-            const label = theme === "light" ? "Light theme" : "Dark theme";
-
-            return (
-              <button
-                key={theme}
-                type="button"
-                onClick={() => onThemeChange(theme)}
-                aria-pressed={isActive}
-                className={cn(
-                  "rounded-xl border px-3 py-2 text-sm font-semibold transition",
-                  isActive
-                    ? "border-primary/50 bg-primary/10 text-foreground"
-                    : "border-border bg-card text-muted-foreground hover:border-primary/35 hover:text-foreground"
+          <div className="mt-5 rounded-[1.2rem] border border-border bg-secondary p-4">
+            <div className="flex items-center gap-4">
+              <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-muted text-sm font-semibold text-muted-foreground">
+                {previewImageUrl ? (
+                  <Image src={previewImageUrl} alt="Profile preview" fill unoptimized className="object-cover" />
+                ) : (
+                  <span>{avatarInitials || "U"}</span>
                 )}
-              >
-                {label}
-              </button>
-            );
-          })}
+              </div>
+
+              <div className="flex-1 space-y-2">
+                <label htmlFor="settings-profile-image" className="text-sm font-bold tracking-[-0.02em] text-foreground">
+                  Profile picture
+                </label>
+                <input
+                  id="settings-profile-image"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={onProfileImageSelect}
+                  className="flex h-9 w-full text-xs text-muted-foreground file:mr-3 file:inline-flex file:h-9 file:px-3 file:rounded-lg file:border-0 file:bg-secondary file:text-sm file:font-semibold file:text-foreground hover:file:bg-muted transition-colors cursor-pointer"
+                />
+                <button
+                  type="button"
+                  onClick={onProfileImageUpload}
+                  disabled={isUploadingProfileImage || !selectedProfileImage}
+                  className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-semibold text-foreground transition-all duration-200 hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isUploadingProfileImage ? "Uploading..." : "Upload picture"}
+                </button>
+              </div>
+            </div>
+            {profileImageError ? <p className="mt-2 text-sm font-medium text-destructive">{profileImageError}</p> : null}
+          </div>
+
+          <form className="mt-5 space-y-4" onSubmit={onProfileSubmit} noValidate>
+            <div className="space-y-2">
+              <label htmlFor="settings-name" className="text-sm font-bold tracking-[-0.02em] text-foreground">
+                Name
+              </label>
+              <input
+                id="settings-name"
+                name="name"
+                defaultValue={initialProfile.name}
+                autoComplete="name"
+                className="flex h-11 w-full rounded-xl border border-border bg-card px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="settings-class" className="text-sm font-bold tracking-[-0.02em] text-foreground">
+                Class
+              </label>
+              <input
+                id="settings-class"
+                name="class"
+                defaultValue={initialProfile.studentClass}
+                className="flex h-11 w-full rounded-xl border border-border bg-card px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="settings-degree" className="text-sm font-bold tracking-[-0.02em] text-foreground">
+                Degree
+              </label>
+              <input
+                id="settings-degree"
+                name="degree"
+                defaultValue={initialProfile.degree}
+                className="flex h-11 w-full rounded-xl border border-border bg-card px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="settings-board" className="text-sm font-bold tracking-[-0.02em] text-foreground">
+                Board
+              </label>
+              <input
+                id="settings-board"
+                name="board"
+                defaultValue={initialProfile.board}
+                className="flex h-11 w-full rounded-xl border border-border bg-card px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+              />
+            </div>
+
+            {profileError ? <p className="text-sm font-medium text-destructive">{profileError}</p> : null}
+
+            <button
+              type="submit"
+              disabled={isSavingProfile}
+              className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-primary font-bold text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed sm:w-auto sm:px-8"
+            >
+              {isSavingProfile ? "Saving profile..." : "Save profile"}
+            </button>
+          </form>
         </div>
-      </DashboardCard>
-    </DashboardSection>
+
+        <div className="rounded-[1.8rem] border border-border bg-card px-4 py-5 sm:px-6 sm:py-7">
+          <h3 className="font-heading text-xl font-extrabold tracking-[-0.04em] text-foreground">Theme</h3>
+          <p className="mt-2 text-sm text-muted-foreground">Choose between light and dark interface themes.</p>
+          <div className="mt-5 grid grid-cols-2 gap-3" role="group" aria-label="Theme options">
+            {(["light", "dark"] as const).map((theme) => {
+              const isActive = activeTheme === theme;
+              const label = theme === "light" ? "Light theme" : "Dark theme";
+
+              return (
+                <button
+                  key={theme}
+                  type="button"
+                  onClick={() => onThemeChange(theme)}
+                  aria-pressed={isActive}
+                  className={cn(
+                    "rounded-xl border px-3 py-2 text-sm font-semibold transition",
+                    isActive
+                      ? "border-primary bg-primary/10 text-foreground shadow-md"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/50"
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </DashboardSection>
+    </div>
   );
 }
