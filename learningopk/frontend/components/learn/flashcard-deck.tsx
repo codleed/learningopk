@@ -151,7 +151,7 @@ export function FlashcardDeck({ chapterId, flashcards, storageKey }: FlashcardDe
           </p>
         </div>
         <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${stats.progressPercent}%` }} />
+          <div className="h-full rounded-full bg-[var(--primary)] transition-all" style={{ width: `${stats.progressPercent}%` }} />
         </div>
       </div>
 

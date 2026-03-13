@@ -17,7 +17,7 @@ export function WeeklyTrend({ points }: WeeklyTrendProps) {
             <div key={point.label} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-2">
               <span className="text-[10px] font-semibold text-muted-foreground">{point.estimatedHours}h</span>
               <span
-                className="w-full rounded-md bg-primary/80"
+                className="w-full rounded-md bg-[var(--primary)]/80"
                 style={{ height: `${heightPercent}%` }}
                 title={`${point.label}: ${point.estimatedHours} estimated hours (${point.activityCount} events)`}
               />

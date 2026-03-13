@@ -191,7 +191,7 @@ export const RegisterForm = () => {
               disabled={!selectedBoard || classOptions.length === 0}
               aria-invalid={classError ? true : undefined}
               aria-label="Class"
-              className="h-12 appearance-none rounded-lg border border-input bg-card px-10 pr-10 text-base text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="h-12 appearance-none rounded-lg border border-input bg-card px-10 pr-10 text-base text-foreground focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20"
             >
               <option value="">Select class</option>
               {classOptions.map((option) => (
@@ -242,7 +242,7 @@ export const RegisterForm = () => {
             required
             aria-invalid={boardError ? true : undefined}
             aria-label="Board"
-            className="h-12 appearance-none rounded-lg border border-input bg-card px-10 pr-10 text-base text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-12 appearance-none rounded-lg border border-input bg-card px-10 pr-10 text-base text-foreground focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20"
           >
             <option value="">Select board</option>
             {(profileOptions?.boards ?? []).map((board) => (
@@ -305,14 +305,14 @@ export const RegisterForm = () => {
         </p>
       ) : null}
       <label className="flex items-start gap-2.5 text-sm text-muted-foreground">
-        <input type="checkbox" className="mt-0.5 h-4 w-4 rounded border-input text-primary focus:ring-primary/50" />
+        <input type="checkbox" className="mt-0.5 h-4 w-4 rounded border-input text-[var(--primary)] focus:ring-[var(--primary)]/50" />
         <span>
           I agree to the{" "}
-          <Link href="/terms-of-service" className="font-medium text-primary transition hover:text-primary-hover">
+          <Link href="/terms-of-service" className="font-medium text-[var(--primary)] transition hover:text-[var(--primary-hover)]">
             Terms of Service
           </Link>{" "}
           and{" "}
-          <Link href="/privacy-policy" className="font-medium text-primary transition hover:text-primary-hover">
+          <Link href="/privacy-policy" className="font-medium text-[var(--primary)] transition hover:text-[var(--primary-hover)]">
             Privacy Policy
           </Link>
           .
@@ -328,7 +328,7 @@ export const RegisterForm = () => {
       </Button>
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-primary transition hover:text-primary-hover">
+        <Link href="/login" className="font-semibold text-[var(--primary)] transition hover:text-[var(--primary-hover)]">
           Sign in
         </Link>
       </p>

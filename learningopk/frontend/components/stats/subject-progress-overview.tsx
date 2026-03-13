@@ -57,7 +57,7 @@ export function SubjectProgressOverview({ subjects, weakSubjectSlugs }: SubjectP
               <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Chapter completion</p>
               <p className="mt-1 text-lg font-medium text-foreground">{subject.chaptersVisitedPercent}%</p>
               <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
-                <span className="block h-full rounded-full bg-primary" style={{ width: `${subject.chaptersVisitedPercent}%` }} />
+                <span className="block h-full rounded-full bg-[var(--primary)]" style={{ width: `${subject.chaptersVisitedPercent}%` }} />
               </div>
             </div>
 

@@ -379,13 +379,13 @@ export function LeftRail({
           className={cn(
             "mt-2 flex shrink-0 items-center transition",
             isCollapsed
-              ? "mx-auto h-10 w-10 justify-center rounded-full bg-[var(--pastel-warm-sand)] text-xs font-bold text-sidebar-foreground hover:ring-2 hover:ring-sidebar-foreground/20"
+              ? "mx-auto h-10 w-10 justify-center rounded-full bg-[var(--primary)]/20 text-xs font-bold text-[var(--primary)] hover:ring-2 hover:ring-[var(--primary)]/20"
               : "w-full gap-3 rounded-2xl px-3 py-2 hover:bg-sidebar-accent",
           )}
         >
           <span
             className={cn(
-              "flex shrink-0 items-center justify-center rounded-full bg-[var(--pastel-warm-sand)] text-xs font-bold text-sidebar-foreground",
+              "flex shrink-0 items-center justify-center rounded-full bg-[var(--primary)]/20 text-xs font-bold text-[var(--primary)]",
               isCollapsed ? "h-10 w-10" : "h-9 w-9",
             )}
           >

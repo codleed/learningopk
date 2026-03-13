@@ -30,10 +30,10 @@ const resolveSubjectIcon = (subjectSlug: string): string =>
   subjectIconBySlug[subjectSlug] ?? "/subjects/science.svg";
 
 const cardPalette = [
-  { bg: "bg-[var(--pastel-dusty-rose)]/70", accent: "text-foreground" },
-  { bg: "bg-[var(--pastel-warm-sand)]/70", accent: "text-foreground" },
-  { bg: "bg-[var(--pastel-sage)]/70", accent: "text-foreground" },
-  { bg: "bg-[var(--pastel-lavender)]/70", accent: "text-foreground" },
+  { bg: "bg-[var(--primary)]/10", accent: "text-[var(--primary)]", border: "border-[var(--primary)]/20" },
+  { bg: "bg-[var(--primary)]/15", accent: "text-[var(--primary)]", border: "border-[var(--primary)]/25" },
+  { bg: "bg-[var(--success)]/10", accent: "text-[var(--success)]", border: "border-[var(--success)]/20" },
+  { bg: "bg-[var(--info)]/10", accent: "text-[var(--info)]", border: "border-[var(--info)]/20" },
 ];
 
 export default async function SubjectsPage() {
@@ -171,13 +171,13 @@ export default async function SubjectsPage() {
                               alt={`${subject.name} icon`}
                               width={64}
                               height={64}
-                              className="h-16 w-16 shrink-0 rounded-xl border border-white/40 bg-white/50 p-1"
+                              className="h-16 w-16 shrink-0 rounded-xl border border-[var(--border)] bg-[var(--card)] p-1"
                             />
                             <div className="min-w-0 flex-1">
-                              <h2 className="text-lg font-semibold text-[#1a1a1a]">
+                              <h2 className="text-lg font-semibold text-foreground">
                                 {subject.name}
                               </h2>
-                              <p className="mt-0.5 text-xs font-semibold uppercase tracking-[0.08em] text-[#1a1a1a]/60">
+                              <p className="mt-0.5 text-xs font-semibold uppercase tracking-[0.08em] text-foreground/60">
                                 {subject.boardName} | Class {subject.className}
                               </p>
                             </div>
@@ -185,10 +185,10 @@ export default async function SubjectsPage() {
 
                           <div className="mt-4">
                             <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-[#1a1a1a]/70">
+                              <span className="text-sm font-medium text-foreground/70">
                                 {subject.progress}% complete
                               </span>
-                              <span className="inline-flex items-center gap-1 rounded-full bg-white/50 px-2 py-0.5 text-xs font-bold text-[#1a1a1a]">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--card)] px-2 py-0.5 text-xs font-bold text-foreground">
                                 <Star
                                   className="h-3 w-3 text-amber-500"
                                   weight="fill"
@@ -203,14 +203,14 @@ export default async function SubjectsPage() {
                               aria-valuemin={0}
                               aria-valuemax={100}
                               aria-valuenow={subject.progress}
-                              className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/50"
+                              className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[var(--muted)]"
                             >
                               <span
-                                className="block h-full rounded-full bg-[#1a1a1a]/20"
+                                className="block h-full rounded-full bg-[var(--primary)]"
                                 style={{ width: `${Math.max(subject.progress, 4)}%` }}
                               />
                             </div>
-                            <p className="mt-3 text-sm font-semibold text-[#1a1a1a]">
+                            <p className="mt-3 text-sm font-semibold text-foreground">
                               Open chapters →
                             </p>
                           </div>

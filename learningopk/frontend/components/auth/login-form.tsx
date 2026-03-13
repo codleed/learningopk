@@ -92,7 +92,7 @@ export const LoginForm = () => {
         placeholder="••••••••"
         error={passwordError}
         action={
-          <Link href="/forgot-password" className="text-sm font-medium text-primary transition hover:text-primary-hover">
+          <Link href="/forgot-password" className="text-sm font-medium text-[var(--primary)] transition hover:text-[var(--primary-hover)]">
             Forgot password?
           </Link>
         }
@@ -106,7 +106,7 @@ export const LoginForm = () => {
         <input
           type="checkbox"
           name="rememberMe"
-          className="h-4 w-4 rounded border-input text-primary focus:ring-primary/50"
+          className="h-4 w-4 rounded border-input text-[var(--primary)] focus:ring-[var(--primary)]/50"
         />
         <span>Remember me for 30 days</span>
       </label>
@@ -120,7 +120,7 @@ export const LoginForm = () => {
       </Button>
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="font-semibold text-primary transition hover:text-primary-hover">
+        <Link href="/register" className="font-semibold text-[var(--primary)] transition hover:text-[var(--primary-hover)]">
           Create account
         </Link>
       </p>

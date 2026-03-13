@@ -33,7 +33,7 @@ export function CommunityThreadHealthTable({ rows }: CommunityThreadHealthTableP
               <td className="px-3 py-2 text-foreground">
                 <Link
                   href={`/forum/${row.threadId}`}
-                  className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
+                  className="font-medium text-foreground underline underline-offset-4 hover:text-[var(--primary)]"
                 >
                   {row.title}
                 </Link>

@@ -44,8 +44,8 @@ export function Tabs({ items, activeKey, ariaLabel = "Section tabs", className }
             className={cn(
               "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition",
               isActive
-                ? "border-primary bg-primary text-primary-foreground shadow-[var(--elevation-soft)]"
-                : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-accent/50"
+                ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)] shadow-[var(--elevation-soft)]"
+                : "border-border bg-card text-foreground hover:border-[var(--primary)]/40 hover:bg-accent/50"
             )}
             aria-current={isActive ? "page" : undefined}
           >

@@ -35,7 +35,7 @@ export function ForumThreadCard({ thread }: ForumThreadCardProps) {
     <Link
       href={`/forum/${thread.id}`}
       prefetch={false}
-      className="surface-card block rounded-xl border border-border p-5 transition hover:-translate-y-0.5 hover:border-primary/45"
+      className="surface-card block rounded-xl border border-border p-5 transition hover:-translate-y-0.5 hover:border-[var(--primary)]/45"
     >
       <div className="flex flex-wrap items-center gap-2 text-xs">
         {thread.isPinned ? <Badge variant="info">Pinned</Badge> : null}

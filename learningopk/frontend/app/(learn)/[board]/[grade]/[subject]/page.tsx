@@ -53,7 +53,7 @@ export default async function SubjectPage({ params }: SubjectPageProps) {
       currentPath={`/${payload.board.slug}/${payload.class.slug}/${payload.subject.slug}`}
       contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6"
     >
-      <div className="rounded-[1.6rem] bg-secondary p-4 sm:p-6 lg:p-8">
+      <div className="rounded-[1.6rem] bg-[var(--secondary)] p-4 sm:p-6 lg:p-8">
         <StaggerContainer className="space-y-6">
           <MotionSection>
             <SubjectHeader board={payload.board} className={payload.class.name} subject={payload.subject} />
@@ -64,7 +64,7 @@ export default async function SubjectPage({ params }: SubjectPageProps) {
               <DashboardSection
                 title="Chapters"
                 actions={
-                  <Link href="/dashboard" className="text-xs font-semibold uppercase tracking-[0.06em] text-primary underline underline-offset-4">
+                  <Link href="/dashboard" className="text-xs font-semibold uppercase tracking-[0.06em] text-[var(--primary)] underline underline-offset-4">
                     View dashboard
                   </Link>
                 }

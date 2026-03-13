@@ -6,6 +6,16 @@ const frontendDir = dirname(fileURLToPath(import.meta.url));
 const nextConfig: NextConfig = {
   turbopack: {
     root: join(frontendDir, "..")
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "9000",
+        pathname: "/**"
+      }
+    ]
   }
 };
 

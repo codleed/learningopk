@@ -171,7 +171,7 @@ export function MarkdownMathRenderer({ content, className, forceWrap = false }: 
           blockquote: ({ children, ...props }) => (
             <blockquote
               {...props}
-              className="my-4 border-l-4 border-primary/45 bg-muted/35 px-4 py-2 italic text-foreground/90"
+              className="my-4 border-l-4 border-[var(--primary)]/45 bg-muted/35 px-4 py-2 italic text-foreground/90"
             >
               {children}
             </blockquote>
@@ -209,7 +209,7 @@ export function MarkdownMathRenderer({ content, className, forceWrap = false }: 
               {...props}
               target="_blank"
               rel="noreferrer"
-              className="font-medium text-primary underline decoration-primary/50 underline-offset-2 hover:decoration-primary"
+              className="font-medium text-[var(--primary)] underline decoration-[var(--primary)]/50 underline-offset-2 hover:decoration-[var(--primary)]"
             >
               {children}
             </a>

@@ -246,7 +246,7 @@ export function AIChatPanel({
             className={[
               "break-words rounded-xl px-3 py-2 text-sm leading-relaxed [overflow-wrap:anywhere]",
               message.role === "user"
-                ? "ml-auto w-fit min-w-[4.5rem] max-w-[72%] bg-primary text-primary-foreground"
+                ? "ml-auto w-fit min-w-[4.5rem] max-w-[72%] bg-[var(--primary)] text-[var(--primary-foreground)]"
                 : "max-w-[90%] bg-muted text-foreground"
             ].join(" ")}
           >

@@ -103,7 +103,7 @@ export function ChapterStudyWorkspace({
                   guidance, revise flashcards, and attempt quiz.
                 </p>
                 <Link
-                  className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary underline underline-offset-4"
+                  className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--primary)] underline underline-offset-4"
                   href={`/${boardSlug}/${classSlug}/${subjectSlug}`}
                 >
                   ← Back to subject

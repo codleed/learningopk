@@ -20,7 +20,7 @@ export function DashboardNotificationsControl({ items, className }: DashboardNot
         aria-label="Notifications"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((previous) => !previous)}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card text-muted-foreground shadow-[0_10px_20px_-20px_rgba(29,40,89,0.85)] transition hover:border-primary/25 hover:text-foreground"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card text-muted-foreground shadow-[0_10px_20px_-20px_rgba(29,40,89,0.85)] transition hover:border-[var(--primary)]/25 hover:text-foreground"
       >
         <BellRinging className="h-4 w-4" weight="duotone" aria-hidden />
       </button>

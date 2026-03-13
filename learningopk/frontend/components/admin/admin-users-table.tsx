@@ -58,7 +58,7 @@ export function AdminUsersTable({
                 <span
                   className={[
                     "rounded-full px-2 py-1 text-xs font-semibold",
-                    user.role === "admin" ? "bg-primary/15 text-primary" : "bg-secondary text-secondary-foreground"
+                    user.role === "admin" ? "bg-[var(--primary)]/15 text-[var(--primary)]" : "bg-secondary text-secondary-foreground"
                   ].join(" ")}
                 >
                   {user.role}

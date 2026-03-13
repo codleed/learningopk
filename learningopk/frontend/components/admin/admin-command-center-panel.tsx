@@ -110,7 +110,7 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
             <DashboardCard data-testid="admin-overview-kpi-open-flags" className="p-3.5">
               <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Open moderation flags</p>
               <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">{payload.kpis.openModerationFlags}</p>
-              <Link href="/admin/moderation" className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4">
+              <Link href="/admin/moderation" className="mt-2 inline-block text-sm font-semibold text-[var(--primary)] underline underline-offset-4">
                 View moderation queue
               </Link>
             </DashboardCard>
@@ -118,7 +118,7 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
             <DashboardCard data-testid="admin-overview-kpi-suspended-users" className="p-3.5">
               <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Suspended users</p>
               <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">{payload.kpis.suspendedUsers}</p>
-              <Link href="/admin/users" className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4">
+              <Link href="/admin/users" className="mt-2 inline-block text-sm font-semibold text-[var(--primary)] underline underline-offset-4">
                 View user lifecycle
               </Link>
             </DashboardCard>
@@ -129,7 +129,7 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
               <Link
                 href="/admin/audit?status=failed"
                 data-testid="admin-overview-kpi-failed-actions-link"
-                className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4"
+                className="mt-2 inline-block text-sm font-semibold text-[var(--primary)] underline underline-offset-4"
               >
                 Investigate failures
               </Link>
@@ -138,7 +138,7 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
             <DashboardCard data-testid="admin-overview-kpi-notifications" className="p-3.5">
               <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Notifications sent</p>
               <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">{payload.kpis.notificationsSentInWindow}</p>
-              <Link href="/admin/notifications" className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4">
+              <Link href="/admin/notifications" className="mt-2 inline-block text-sm font-semibold text-[var(--primary)] underline underline-offset-4">
                 View notifications log
               </Link>
             </DashboardCard>
@@ -176,7 +176,7 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
                       <Link
                         data-testid="admin-overview-activity-link"
                         href={activityScopeHref(entry.scope)}
-                        className="text-sm font-semibold text-primary underline underline-offset-4"
+                        className="text-sm font-semibold text-[var(--primary)] underline underline-offset-4"
                       >
                         Open scope
                       </Link>

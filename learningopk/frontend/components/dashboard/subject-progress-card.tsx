@@ -31,8 +31,8 @@ export function SubjectProgressCard({ subject }: SubjectProgressCardProps) {
       </div>
       <div className="mt-4 space-y-2 text-sm text-foreground/95">
         <p>Chapters visited: {subject.chaptersVisitedPercent}%</p>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-primary" style={{ width: `${subject.chaptersVisitedPercent}%` }} />
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div className="h-full rounded-full bg-[var(--primary)]" style={{ width: `${subject.chaptersVisitedPercent}%` }} />
         </div>
         <p>Best quiz score: {subject.bestQuizScorePercent}%</p>
         <p>Last active: {subject.lastActiveAt ? formatDate(subject.lastActiveAt) : "No activity yet"}</p>

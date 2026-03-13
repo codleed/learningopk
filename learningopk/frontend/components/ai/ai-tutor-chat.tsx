@@ -351,7 +351,7 @@ export function AITutorChat() {
         <div className="surface-card flex h-[72vh] min-h-[34rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border xl:h-[calc(100vh-2.5rem)]">
           <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary">General Tutor</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--primary)]">General Tutor</p>
               <h2 className="text-lg font-semibold text-foreground">Always-on AI study assistant</h2>
             </div>
             <Button
@@ -374,7 +374,7 @@ export function AITutorChat() {
 
               {!isLoadingSessionMessages && messages.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-border bg-card p-6">
-                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">
                     <Sparkles className="h-5 w-5" aria-hidden="true" />
                   </div>
                   <h3 className="text-base font-semibold text-foreground">Start learning with AI Tutor</h3>
@@ -390,7 +390,7 @@ export function AITutorChat() {
                   className={[
                     "break-words rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-[var(--elevation-soft)] [overflow-wrap:anywhere]",
                     message.role === "user"
-                      ? "ml-auto w-fit min-w-[4.5rem] max-w-[72%] bg-primary text-primary-foreground"
+                      ? "ml-auto w-fit min-w-[4.5rem] max-w-[72%] bg-[var(--primary)] text-[var(--primary-foreground)]"
                       : "max-w-[88%] border border-border bg-card text-foreground"
                   ].join(" ")}
                 >
@@ -479,8 +479,8 @@ export function AITutorChat() {
                     className={cn(
                       "w-full rounded-xl border px-3 py-2 text-left transition",
                       isActive
-                        ? "border-primary/45 bg-primary/10 text-foreground"
-                        : "border-border bg-card text-muted-foreground hover:border-primary/35 hover:text-foreground"
+                        ? "border-[var(--primary)]/45 bg-[var(--primary)]/10 text-foreground"
+                        : "border-border bg-card text-muted-foreground hover:border-[var(--primary)]/35 hover:text-foreground"
                     )}
                   >
                     <p className="truncate text-sm font-medium">{session.title}</p>

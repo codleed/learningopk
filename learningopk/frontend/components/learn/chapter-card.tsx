@@ -14,7 +14,7 @@ export function ChapterCard({ chapter, href }: ChapterCardProps) {
   return (
     <Link
       href={href}
-      className="surface-card group block rounded-2xl border border-border p-5 transition hover:-translate-y-0.5 hover:border-primary/45"
+      className="surface-card group block rounded-2xl border border-border p-5 transition hover:-translate-y-0.5 hover:border-[var(--primary)]/45"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -27,7 +27,7 @@ export function ChapterCard({ chapter, href }: ChapterCardProps) {
           {chapter.isPublished ? "Published" : "Hidden"}
         </Badge>
       </div>
-      <p className="mt-4 text-sm font-medium text-primary group-hover:underline">Open chapter</p>
+      <p className="mt-4 text-sm font-medium text-[var(--primary)] group-hover:underline">Open chapter</p>
     </Link>
   );
 }

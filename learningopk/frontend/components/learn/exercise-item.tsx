@@ -15,7 +15,7 @@ type ExerciseItemProps = {
 export function ExerciseItem({ exercise, onExpanded, onAskAi }: ExerciseItemProps) {
   return (
     <details
-      className="group rounded-xl border border-border bg-card p-4 open:border-primary/45 open:shadow-[var(--elevation-soft)]"
+      className="group rounded-xl border border-border bg-card p-4 open:border-[var(--primary)]/45 open:shadow-[var(--elevation-soft)]"
       onToggle={(event) => {
         if (event.currentTarget.open) {
           onExpanded();

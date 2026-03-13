@@ -232,7 +232,7 @@ export function SubjectViewSwitcher({ boardSlug, classSlug, subjectSlug, chapter
                     type="button"
                     onClick={() => openChapter(node.id)}
                     data-testid={`subject-graph-node-link-${node.slug}`}
-                    className="rounded-md border border-border/70 px-2 py-1 text-xs text-foreground transition hover:border-primary/60"
+                    className="rounded-md border border-border/70 px-2 py-1 text-xs text-foreground transition hover:border-[var(--primary)]/60"
                   >
                     {node.title}
                     {node.completed ? " - Completed" : node.visited ? " - Visited" : ""}

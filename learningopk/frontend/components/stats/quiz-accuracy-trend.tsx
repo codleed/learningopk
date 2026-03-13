@@ -38,7 +38,7 @@ export function QuizAccuracyTrend({ points }: QuizAccuracyTrendProps) {
     <div>
       <div className="rounded-xl border border-border bg-muted/35 p-3">
         <svg viewBox="0 0 100 100" role="img" aria-label="Quiz accuracy moving average trend" className="h-28 w-full">
-          <polyline points={toPolylinePoints(points)} fill="none" stroke="currentColor" strokeWidth="3" className="text-primary" />
+          <polyline points={toPolylinePoints(points)} fill="none" stroke="currentColor" strokeWidth="3" className="text-[var(--primary)]" />
         </svg>
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">

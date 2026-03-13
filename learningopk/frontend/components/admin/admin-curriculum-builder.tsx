@@ -1133,8 +1133,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
             onClick={() => setActiveFormTab("board")}
             className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
               activeFormTab === "board"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:border-primary/40"
+                ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
             }`}
           >
             Add Board
@@ -1145,8 +1145,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
             onClick={() => setActiveFormTab("class")}
             className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
               activeFormTab === "class"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:border-primary/40"
+                ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
             }`}
           >
             Add Class
@@ -1157,8 +1157,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
             onClick={() => setActiveFormTab("subject")}
             className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
               activeFormTab === "subject"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:border-primary/40"
+                ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
             }`}
           >
             Add Subject
@@ -1169,8 +1169,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
             onClick={() => setActiveFormTab("chapter")}
             className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
               activeFormTab === "chapter"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:border-primary/40"
+                ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
             }`}
           >
             Chapter
@@ -1181,8 +1181,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
             onClick={() => setActiveFormTab("exercise")}
             className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
               activeFormTab === "exercise"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:border-primary/40"
+                ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
             }`}
           >
             Add Exercise
@@ -1198,8 +1198,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 onClick={() => setActiveBoardModeTab("add")}
                 className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                   activeBoardModeTab === "add"
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-foreground hover:border-primary/40"
+                    ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                    : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
                 }`}
               >
                 Add
@@ -1210,8 +1210,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 onClick={() => setActiveBoardModeTab("manage")}
                 className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                   activeBoardModeTab === "manage"
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-foreground hover:border-primary/40"
+                    ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                    : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
                 }`}
               >
                 Edit / Delete
@@ -1288,8 +1288,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 onClick={() => setActiveClassModeTab("add")}
                 className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                   activeClassModeTab === "add"
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-foreground hover:border-primary/40"
+                    ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                    : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
                 }`}
               >
                 Add
@@ -1300,8 +1300,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 onClick={() => setActiveClassModeTab("manage")}
                 className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                   activeClassModeTab === "manage"
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-foreground hover:border-primary/40"
+                    ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                    : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
                 }`}
               >
                 Edit / Delete
@@ -1429,8 +1429,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 onClick={() => setActiveChapterModeTab("add")}
                 className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                   activeChapterModeTab === "add"
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-foreground hover:border-primary/40"
+                    ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                    : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
                 }`}
               >
                 Add New
@@ -1441,8 +1441,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 onClick={() => setActiveChapterModeTab("edit")}
                 className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                   activeChapterModeTab === "edit"
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-foreground hover:border-primary/40"
+                    ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                    : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
                 }`}
               >
                 Edit Chapter
@@ -1667,7 +1667,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                         <button
                           key={suggestion}
                           type="button"
-                          className="rounded-md border border-border/70 bg-background px-2 py-1 text-xs text-foreground transition hover:border-primary/60"
+                          className="rounded-md border border-border/70 bg-background px-2 py-1 text-xs text-foreground transition hover:border-[var(--primary)]/60"
                           onClick={() => applyWikiLinkSuggestion(suggestion)}
                         >
                           {suggestion}
@@ -1823,7 +1823,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                           key={node.id}
                           type="button"
                           data-testid={`curriculum-summary-graph-node-button-${node.id}`}
-                          className="rounded-md border border-border/70 px-2 py-1 text-xs text-foreground transition hover:border-primary/60"
+                          className="rounded-md border border-border/70 px-2 py-1 text-xs text-foreground transition hover:border-[var(--primary)]/60"
                           onClick={() => setSummaryEditorChapterId(String(node.id))}
                         >
                           {node.title}
@@ -1860,8 +1860,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 onClick={() => setActiveExerciseModeTab("add")}
                 className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                   activeExerciseModeTab === "add"
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-foreground hover:border-primary/40"
+                    ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                    : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
                 }`}
               >
                 Add
@@ -1872,8 +1872,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 onClick={() => setActiveExerciseModeTab("manage")}
                 className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                   activeExerciseModeTab === "manage"
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-foreground hover:border-primary/40"
+                    ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                    : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
                 }`}
               >
                 Edit / Delete

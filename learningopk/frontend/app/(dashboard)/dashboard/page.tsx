@@ -77,10 +77,10 @@ const filterLabelMap: Record<DashboardFilter, string> = {
 const courseIcons: Icon[] = [BookOpen, Pulse, CheckCircle, Student];
 
 const cardPalette = [
-  { bg: "bg-[var(--pastel-dusty-rose)]/70", accent: "text-foreground" },
-  { bg: "bg-[var(--pastel-warm-sand)]/70", accent: "text-foreground" },
-  { bg: "bg-[var(--pastel-sage)]/70", accent: "text-foreground" },
-  { bg: "bg-[var(--pastel-lavender)]/70", accent: "text-foreground" },
+  { bg: "bg-[var(--primary)]/10", accent: "text-[var(--primary)]", border: "border-[var(--primary)]/20" },
+  { bg: "bg-[var(--primary)]/15", accent: "text-[var(--primary)]", border: "border-[var(--primary)]/25" },
+  { bg: "bg-[var(--success)]/10", accent: "text-[var(--success)]", border: "border-[var(--success)]/20" },
+  { bg: "bg-[var(--info)]/10", accent: "text-[var(--info)]", border: "border-[var(--info)]/20" },
 ];
 
 const categoryLabels = [
@@ -378,18 +378,18 @@ export default async function DashboardPage({
   });
 
   const barColors = [
-    "bg-[var(--pastel-dusty-rose)]",
-    "bg-[var(--pastel-warm-sand)]",
-    "bg-[var(--pastel-sage)]",
-    "bg-[var(--pastel-lavender)]",
-    "bg-[var(--pastel-dusty-rose)]",
-    "bg-[var(--pastel-warm-sand)]",
-    "bg-[var(--pastel-sage)]",
-    "bg-[var(--pastel-lavender)]",
-    "bg-[var(--pastel-dusty-rose)]",
-    "bg-[var(--pastel-warm-sand)]",
-    "bg-[var(--pastel-sage)]",
-    "bg-[var(--pastel-lavender)]",
+    "bg-[var(--primary)]/60",
+    "bg-[var(--primary)]/70",
+    "bg-[var(--primary)]/80",
+    "bg-[var(--primary)]/60",
+    "bg-[var(--primary)]/70",
+    "bg-[var(--primary)]/80",
+    "bg-[var(--primary)]/60",
+    "bg-[var(--primary)]/70",
+    "bg-[var(--primary)]/80",
+    "bg-[var(--primary)]/60",
+    "bg-[var(--primary)]/70",
+    "bg-[var(--primary)]/80",
   ];
 
   /* ================================================================ */
@@ -632,7 +632,7 @@ export default async function DashboardPage({
                 >
                   <div
                     className="relative overflow-hidden rounded-2xl p-6 transition-shadow group-hover:shadow-lg sm:p-8"
-                    style={{ background: "linear-gradient(to right, var(--pastel-dusty-rose), var(--pastel-warm-sand), var(--pastel-sage))" }}
+                    style={{ background: "linear-gradient(135deg, var(--primary)/20 0%, var(--primary)/10 50%, var(--success)/10 100%)" }}
                   >
                     <div className="max-w-md">
                       <span className="inline-flex items-center gap-1 rounded-full bg-background/50 px-2.5 py-1 text-xs font-bold text-foreground">
@@ -719,7 +719,7 @@ export default async function DashboardPage({
 
                 {/* Avatar + name */}
                 <div className="mt-3 flex flex-col items-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--pastel-warm-sand)] text-xl font-bold text-foreground">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--primary)]/20 text-xl font-bold text-[var(--primary)]">
                     {avatarInitials}
                   </div>
                   <h2 className="mt-3 text-lg font-semibold text-foreground">

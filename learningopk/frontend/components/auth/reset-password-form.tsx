@@ -131,7 +131,7 @@ export function ResetPasswordForm({ token, initialError }: ResetPasswordFormProp
         </p>
         <Link
           href="/login"
-          className="mt-6 inline-flex h-11 items-center justify-center rounded-lg border border-border bg-card px-6 text-sm font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-accent"
+          className="mt-6 inline-flex h-11 items-center justify-center rounded-lg border border-border bg-card px-6 text-sm font-semibold text-foreground transition-colors hover:border-[var(--primary)]/50 hover:bg-accent"
         >
           Return to sign in
         </Link>
@@ -177,7 +177,7 @@ export function ResetPasswordForm({ token, initialError }: ResetPasswordFormProp
       {!token ? (
         <p className="text-center text-sm text-muted-foreground">
           Need a new link?{" "}
-          <Link href="/forgot-password" className="font-semibold text-primary transition hover:text-primary-hover">
+          <Link href="/forgot-password" className="font-semibold text-[var(--primary)] transition hover:text-[var(--primary-hover)]">
             Request password reset
           </Link>
         </p>
@@ -186,7 +186,7 @@ export function ResetPasswordForm({ token, initialError }: ResetPasswordFormProp
         <div className="flex items-center justify-center">
           <Link
             href="/login"
-            className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-[var(--primary)]"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to sign in

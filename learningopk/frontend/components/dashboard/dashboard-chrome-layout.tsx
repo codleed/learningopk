@@ -68,7 +68,7 @@ export function DashboardChromeHeader({ title, subtitle, eyebrow, actions, class
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-[12rem]">
           {eyebrow ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.07em] text-primary">{eyebrow}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.07em] text-[var(--primary)]">{eyebrow}</p>
           ) : null}
           <h1 className="mt-1 text-3xl font-medium tracking-tight text-foreground sm:text-4xl">{title}</h1>
           {subtitle ? <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{subtitle}</p> : null}

@@ -10,7 +10,7 @@ const dashboardSurfaceToneClassNames = {
   panel: "border-b border-border/70",
   card: "border-b border-border/60",
   toolbarButton:
-    "rounded-full border border-primary/35 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-primary transition hover:border-primary/55 hover:bg-primary/15"
+    "rounded-full border border-[var(--primary)]/35 bg-[var(--primary)]/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--primary)] transition hover:border-[var(--primary)]/55 hover:bg-[var(--primary)]/15"
 } as const;
 
 export type DashboardSurfaceTone = keyof typeof dashboardSurfaceToneClassNames;

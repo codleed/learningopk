@@ -49,7 +49,7 @@ export function AuthTopNavbar({ currentPath, className }: AuthTopNavbarProps) {
               className={cn(
                 "rounded-full px-3 py-1.5 text-sm font-semibold transition-colors",
                 currentPath === link.href
-                  ? "bg-primary/10 text-primary shadow-sm"
+                  ? "bg-[var(--primary)]/10 text-[var(--primary)] shadow-sm"
                   : "text-muted-foreground hover:bg-accent hover:text-foreground"
               )}
             >

@@ -46,7 +46,7 @@ export function AuthLayout({
           {topLink ? (
             <Link
               href={topLink.href}
-              className="text-sm font-semibold text-muted-foreground transition-colors hover:text-primary"
+              className="text-sm font-semibold text-muted-foreground transition-colors hover:text-[var(--primary)]"
             >
               {topLink.label}
             </Link>

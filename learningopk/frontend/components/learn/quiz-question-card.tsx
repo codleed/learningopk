@@ -47,8 +47,8 @@ export function QuizQuestionCard({ question, selectedAnswer, locked, onSelect }:
               className={[
                 "rounded-lg border px-3 py-2 text-left text-sm transition",
                 isSelected
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-foreground hover:border-primary/45",
+                  ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                  : "border-border bg-card text-foreground hover:border-[var(--primary)]/45",
                 locked ? "cursor-not-allowed opacity-60" : ""
               ].join(" ")}
             >
