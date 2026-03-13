@@ -121,17 +121,17 @@ export function ResetPasswordForm({ token, initialError }: ResetPasswordFormProp
 
   if (isSuccess) {
     return (
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-          <CheckCircle className="h-6 w-6 text-emerald-600" />
+      <div className="rounded-xl border border-success/20 bg-success/10 p-6 text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success/20">
+          <CheckCircle className="h-6 w-6 text-success" />
         </div>
-        <h2 className="text-lg font-semibold text-emerald-900">Password reset complete</h2>
-        <p className="mt-2 text-sm text-emerald-700">
+        <h2 className="text-lg font-semibold text-foreground">Password reset complete</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
           Your password has been updated. Continue to login with your new credentials.
         </p>
         <Link
           href="/login"
-          className="mt-6 inline-flex h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition-colors hover:border-[#7ac943]/50 hover:bg-slate-50"
+          className="mt-6 inline-flex h-11 items-center justify-center rounded-lg border border-border bg-card px-6 text-sm font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-accent"
         >
           Return to sign in
         </Link>
@@ -152,7 +152,6 @@ export function ResetPasswordForm({ token, initialError }: ResetPasswordFormProp
         disabled={isPending || !token}
         aria-invalid={errorMessage ? true : undefined}
         placeholder="••••••••"
-        className="h-12 rounded-lg border-slate-200 bg-white px-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20"
       />
       <PasswordInput
         name="confirmPassword"
@@ -165,22 +164,20 @@ export function ResetPasswordForm({ token, initialError }: ResetPasswordFormProp
         disabled={isPending || !token}
         aria-invalid={errorMessage ? true : undefined}
         placeholder="••••••••"
-        className="h-12 rounded-lg border-slate-200 bg-white px-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20"
       />
-      {errorMessage ? <p className="text-sm font-medium text-red-500">{errorMessage}</p> : null}
+      {errorMessage ? <p className="text-sm font-medium text-destructive">{errorMessage}</p> : null}
       <Button 
         type="submit" 
         width="full" 
         size="lg"
         disabled={isPending || !token}
-        className="h-12 rounded-lg bg-[#7ac943] text-base font-semibold text-white shadow-sm hover:bg-[#68b036]"
       >
         {isPending ? "Resetting..." : "Reset password"}
       </Button>
       {!token ? (
-        <p className="text-center text-sm text-slate-600">
+        <p className="text-center text-sm text-muted-foreground">
           Need a new link?{" "}
-          <Link href="/forgot-password" className="font-semibold text-[#7ac943] transition hover:text-[#68b036]">
+          <Link href="/forgot-password" className="font-semibold text-primary transition hover:text-primary-hover">
             Request password reset
           </Link>
         </p>
@@ -189,7 +186,7 @@ export function ResetPasswordForm({ token, initialError }: ResetPasswordFormProp
         <div className="flex items-center justify-center">
           <Link
             href="/login"
-            className="flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-[#7ac943]"
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to sign in

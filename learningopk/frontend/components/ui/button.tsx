@@ -4,22 +4,22 @@ import type { ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-55",
+  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-55 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
   {
     variants: {
       variant: {
         primary:
-          "bg-primary px-4 py-2.5 text-primary-foreground shadow-[var(--elevation-soft)] hover:bg-primary/92",
+          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
         secondary:
-          "border border-border bg-card px-4 py-2.5 text-foreground hover:border-primary/40 hover:bg-accent/50",
-        ghost: "px-3 py-2 text-foreground hover:bg-accent/55",
+          "border border-border bg-card text-foreground hover:border-primary/40 hover:bg-accent/50",
+        ghost: "text-foreground hover:bg-accent/55",
         danger:
-          "bg-destructive px-4 py-2.5 text-white shadow-[var(--elevation-soft)] hover:bg-destructive/92"
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm"
       },
       size: {
         sm: "h-8 rounded-md px-3 text-xs",
         md: "h-10 px-4",
-        lg: "h-11 px-5 text-base"
+        lg: "h-12 px-6 text-base"
       },
       width: {
         auto: "w-auto",
@@ -39,4 +39,3 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & VariantProps
 export function Button({ className, variant, size, width, type = "button", ...props }: ButtonProps) {
   return <button type={type} className={cn(buttonVariants({ variant, size, width }), className)} {...props} />;
 }
-

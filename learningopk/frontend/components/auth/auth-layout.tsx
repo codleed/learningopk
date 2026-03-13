@@ -25,13 +25,13 @@ export function AuthLayout({
   topLink,
 }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-slate-100">
+      <header className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link
             href="/"
-            className="inline-flex items-center gap-2.5 font-display text-xl font-extrabold tracking-[-0.03em] text-slate-900"
+            className="inline-flex items-center gap-2.5 font-heading text-xl font-extrabold tracking-tight text-foreground"
           >
             <Image
               src="/new_logo.png"
@@ -46,7 +46,7 @@ export function AuthLayout({
           {topLink ? (
             <Link
               href={topLink.href}
-              className="text-sm font-semibold text-slate-600 transition-colors hover:text-[#7ac943]"
+              className="text-sm font-semibold text-muted-foreground transition-colors hover:text-primary"
             >
               {topLink.label}
             </Link>
@@ -58,7 +58,7 @@ export function AuthLayout({
       <main className="flex">
         {/* Hero Illustration Panel - Desktop */}
         {showHero && (
-          <div className="hidden lg:flex lg:w-1/2 xl:w-[45%] relative bg-gradient-to-br from-slate-50 to-slate-100">
+          <div className="hidden lg:flex lg:w-1/2 xl:w-[45%] relative bg-gradient-to-br from-secondary to-secondary/50">
             <HeroIllustration />
           </div>
         )}
@@ -74,12 +74,12 @@ export function AuthLayout({
             )}
 
             {/* Auth Card */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+            <div className="bg-card rounded-2xl border border-border shadow-sm p-8">
               <div className="text-center mb-8">
-                <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+                <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
                   {title}
                 </h1>
-                <p className="mt-2 text-sm sm:text-base text-slate-500">
+                <p className="mt-2 text-sm sm:text-base text-muted-foreground">
                   {subtitle}
                 </p>
               </div>

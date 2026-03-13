@@ -40,7 +40,7 @@ export function PasswordInput({
         {Icon && iconPosition === "left" && (
           <Icon
             aria-hidden
-            className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
           />
         )}
         <Input
@@ -54,7 +54,7 @@ export function PasswordInput({
           type="button"
           aria-label={showPassword ? "Hide password" : "Show password"}
           onClick={() => setShowPassword((value) => !value)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
         >
           {showPassword ? (
             <EyeOff aria-hidden className="h-5 w-5" />

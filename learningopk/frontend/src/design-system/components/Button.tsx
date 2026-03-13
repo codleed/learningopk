@@ -3,7 +3,7 @@
 import { type ButtonHTMLAttributes, type ReactNode } from "react";
 import { motion } from "framer-motion";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 export type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -25,7 +25,7 @@ const sizeStyles: Record<ButtonSize, React.CSSProperties> = {
     minHeight: "2.5rem",
   },
   lg: {
-    padding: "0.625rem 1.25rem",
+    padding: "0.75rem 1.5rem",
     fontSize: "1rem",
     minHeight: "3rem",
   },
@@ -46,6 +46,11 @@ const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
     backgroundColor: "transparent",
     color: "var(--foreground)",
     border: "2px solid transparent",
+  },
+  danger: {
+    backgroundColor: "var(--destructive)",
+    color: "var(--destructive-foreground)",
+    border: "2px solid var(--destructive)",
   },
 };
 
@@ -69,14 +74,9 @@ export function Button({
     justifyContent: "center",
     gap: "0.5rem",
     width: fullWidth ? "100%" : "auto",
-    borderRadius: "12px",
-    backdropFilter: "blur(12px)",
-    WebkitBackdropFilter: "blur(12px)",
-    background: variant === "primary" 
-      ? "linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 80%, black) 100%)"
-      : variantStyles[variant].backgroundColor,
+    borderRadius: "8px",
     transition: "all 0.2s ease",
-    boxShadow: variant === "primary" ? "0 4px 12px rgba(0,0,0,0.15)" : "none",
+    boxShadow: variant === "primary" ? "var(--shadow-md)" : "none",
     ...sizeStyles[size],
     ...variantStyles[variant],
     ...style,
@@ -87,7 +87,7 @@ export function Button({
       className={className}
       style={baseStyle}
       disabled={disabled}
-      whileTap={{ scale: disabled ? 1 : 0.97 }}
+      whileTap={{ scale: disabled ? 1 : 0.98 }}
       transition={{ duration: 0.1, ease: "easeOut" }}
       {...(props as React.ComponentProps<typeof motion.button>)}
     >

@@ -16,14 +16,14 @@ const sizeStyles: Record<InputSize, React.CSSProperties> = {
     minHeight: "2rem",
   },
   md: {
-    padding: "0.5rem 0.75rem",
-    fontSize: "0.875rem",
-    minHeight: "2.5rem",
-  },
-  lg: {
     padding: "0.625rem 1rem",
     fontSize: "1rem",
     minHeight: "3rem",
+  },
+  lg: {
+    padding: "0.75rem 1.25rem",
+    fontSize: "1.125rem",
+    minHeight: "3.5rem",
   },
 };
 
@@ -32,15 +32,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const baseStyle: React.CSSProperties = {
       fontFamily: "var(--font-body)",
       width: "100%",
-      backgroundColor: "rgba(255,255,255,0.6)",
+      backgroundColor: "var(--card)",
       color: "var(--foreground)",
       border: `2px solid ${error ? "var(--destructive)" : "var(--input)"}`,
       outline: "none",
       boxShadow: "none",
       transition: "all 0.2s ease",
-      borderRadius: "12px",
-      backdropFilter: "blur(12px)",
-      WebkitBackdropFilter: "blur(12px)",
+      borderRadius: "8px",
       ...sizeStyles[size],
       ...style,
     };
@@ -68,18 +66,16 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const baseStyle: React.CSSProperties = {
       fontFamily: "var(--font-body)",
       width: "100%",
-      backgroundColor: "rgba(255,255,255,0.6)",
+      backgroundColor: "var(--card)",
       color: "var(--foreground)",
       border: `2px solid ${error ? "var(--destructive)" : "var(--input)"}`,
       padding: "0.75rem",
-      fontSize: "0.875rem",
+      fontSize: "1rem",
       minHeight: "6rem",
       resize: "vertical",
       outline: "none",
       transition: "all 0.2s ease",
-      borderRadius: "12px",
-      backdropFilter: "blur(12px)",
-      WebkitBackdropFilter: "blur(12px)",
+      borderRadius: "8px",
       ...style,
     };
 

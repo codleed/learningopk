@@ -22,11 +22,11 @@ export function FormField({
   className,
 }: FormFieldProps) {
   return (
-    <div className={cn("space-y-1.5", className)}>
+    <div className={cn("space-y-2", className)}>
       <div className="flex items-center justify-between">
         <label
           htmlFor={htmlFor}
-          className="text-sm font-medium text-slate-700"
+          className="text-sm font-medium text-foreground"
         >
           {label}
         </label>
@@ -34,7 +34,7 @@ export function FormField({
       </div>
       {children}
       {error ? (
-        <p className="text-xs font-medium text-red-500">{error}</p>
+        <p className="text-xs font-medium text-destructive">{error}</p>
       ) : null}
     </div>
   );

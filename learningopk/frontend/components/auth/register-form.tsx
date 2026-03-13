@@ -160,7 +160,7 @@ export const RegisterForm = () => {
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
       <FormField htmlFor="name" label="Full Name" error={nameError}>
         <div className="relative">
-          <User aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <User aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="name"
             name="name"
@@ -171,7 +171,7 @@ export const RegisterForm = () => {
             aria-invalid={nameError ? true : undefined}
             aria-label="Name"
             placeholder="e.g. Alex Johnson"
-            className="h-12 rounded-lg border-slate-200 bg-white px-10 text-base text-slate-900 placeholder:text-slate-400 focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20"
+            className="pl-10"
           />
         </div>
       </FormField>
@@ -180,7 +180,7 @@ export const RegisterForm = () => {
           <div className="relative">
             <GraduationCap
               aria-hidden
-              className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+              className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
             />
             <Select
               id="class"
@@ -191,7 +191,7 @@ export const RegisterForm = () => {
               disabled={!selectedBoard || classOptions.length === 0}
               aria-invalid={classError ? true : undefined}
               aria-label="Class"
-              className="h-12 appearance-none rounded-lg border-slate-200 bg-white px-10 pr-10 text-base text-slate-900 focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20"
+              className="h-12 appearance-none rounded-lg border border-input bg-card px-10 pr-10 text-base text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               <option value="">Select class</option>
               {classOptions.map((option) => (
@@ -202,7 +202,7 @@ export const RegisterForm = () => {
             </Select>
             <ChevronDown
               aria-hidden
-              className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+              className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
             />
           </div>
         </FormField>
@@ -210,7 +210,7 @@ export const RegisterForm = () => {
           <div className="relative">
             <BadgeCheck
               aria-hidden
-              className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+              className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
             />
             <Input
               id="degree"
@@ -220,7 +220,7 @@ export const RegisterForm = () => {
               autoComplete="off"
               aria-invalid={degreeError ? true : undefined}
               placeholder="e.g. B.Sc Computer Science"
-              className="h-12 rounded-lg border-slate-200 bg-white px-10 text-base text-slate-900 placeholder:text-slate-400 focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20"
+              className="pl-10"
             />
           </div>
         </FormField>
@@ -229,7 +229,7 @@ export const RegisterForm = () => {
         <div className="relative">
           <Building2
             aria-hidden
-            className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
           />
           <Select
             id="board"
@@ -242,7 +242,7 @@ export const RegisterForm = () => {
             required
             aria-invalid={boardError ? true : undefined}
             aria-label="Board"
-            className="h-12 appearance-none rounded-lg border-slate-200 bg-white px-10 pr-10 text-base text-slate-900 focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20"
+            className="h-12 appearance-none rounded-lg border border-input bg-card px-10 pr-10 text-base text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           >
             <option value="">Select board</option>
             {(profileOptions?.boards ?? []).map((board) => (
@@ -253,13 +253,13 @@ export const RegisterForm = () => {
           </Select>
           <ChevronDown
             aria-hidden
-            className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
           />
         </div>
       </FormField>
       <FormField htmlFor="email" label="Email Address" error={emailError}>
         <div className="relative">
-          <Mail aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <Mail aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="email"
             name="email"
@@ -269,7 +269,7 @@ export const RegisterForm = () => {
             aria-invalid={emailError ? true : undefined}
             aria-label="Email"
             placeholder="alex@example.com"
-            className="h-12 rounded-lg border-slate-200 bg-white px-10 text-base text-slate-900 placeholder:text-slate-400 focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20"
+            className="pl-10"
           />
         </div>
       </FormField>
@@ -284,7 +284,6 @@ export const RegisterForm = () => {
           autoComplete="new-password"
           aria-invalid={passwordError ? true : undefined}
           placeholder="••••••••"
-          className="h-12 rounded-lg border-slate-200 bg-white px-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20"
         />
         <PasswordInput
           name="confirmPassword"
@@ -296,25 +295,24 @@ export const RegisterForm = () => {
           autoComplete="new-password"
           aria-invalid={passwordError ? true : undefined}
           placeholder="••••••••"
-          className="h-12 rounded-lg border-slate-200 bg-white px-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20"
         />
       </div>
-      {passwordError ? <p className="text-sm text-red-500">{passwordError}</p> : null}
-      {optionsError ? <p className="text-xs text-red-500">{optionsError}</p> : null}
+      {passwordError ? <p className="text-sm text-destructive">{passwordError}</p> : null}
+      {optionsError ? <p className="text-xs text-destructive">{optionsError}</p> : null}
       {errorMessage && !nameError && !classError && !degreeError && !boardError && !emailError && !passwordError ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        <p className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {errorMessage}
         </p>
       ) : null}
-      <label className="flex items-start gap-2.5 text-sm text-slate-600">
-        <input type="checkbox" className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#7ac943] focus:ring-[#7ac943]/50" />
+      <label className="flex items-start gap-2.5 text-sm text-muted-foreground">
+        <input type="checkbox" className="mt-0.5 h-4 w-4 rounded border-input text-primary focus:ring-primary/50" />
         <span>
           I agree to the{" "}
-          <Link href="/terms-of-service" className="font-medium text-[#7ac943] transition hover:text-[#68b036]">
+          <Link href="/terms-of-service" className="font-medium text-primary transition hover:text-primary-hover">
             Terms of Service
           </Link>{" "}
           and{" "}
-          <Link href="/privacy-policy" className="font-medium text-[#7ac943] transition hover:text-[#68b036]">
+          <Link href="/privacy-policy" className="font-medium text-primary transition hover:text-primary-hover">
             Privacy Policy
           </Link>
           .
@@ -325,13 +323,12 @@ export const RegisterForm = () => {
         disabled={isPending || !!optionsError}
         width="full"
         size="lg"
-        className="h-12 rounded-lg bg-[#7ac943] text-base font-semibold text-white shadow-sm hover:bg-[#68b036]"
       >
         {isPending ? "Creating account..." : "Create account"}
       </Button>
-      <p className="text-center text-sm text-slate-600">
+      <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-[#7ac943] transition hover:text-[#68b036]">
+        <Link href="/login" className="font-semibold text-primary transition hover:text-primary-hover">
           Sign in
         </Link>
       </p>

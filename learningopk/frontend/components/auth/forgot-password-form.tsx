@@ -87,12 +87,12 @@ export function ForgotPasswordForm() {
 
   if (isSuccess) {
     return (
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-          <CheckCircle className="h-6 w-6 text-emerald-600" />
+      <div className="rounded-xl border border-success/20 bg-success/10 p-6 text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success/20">
+          <CheckCircle className="h-6 w-6 text-success" />
         </div>
-        <h2 className="text-lg font-semibold text-emerald-900">Check your inbox</h2>
-        <p className="mt-2 text-sm text-emerald-700">
+        <h2 className="text-lg font-semibold text-foreground">Check your inbox</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
           If an account exists for <span className="font-semibold">{email}</span>, reset instructions have been sent.
         </p>
         <Button
@@ -114,7 +114,7 @@ export function ForgotPasswordForm() {
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
       <FormField htmlFor="email" label="Email Address" error={errorMessage}>
         <div className="relative">
-          <Mail aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <Mail aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="email"
             name="email"
@@ -126,7 +126,7 @@ export function ForgotPasswordForm() {
             disabled={isPending}
             aria-invalid={errorMessage ? true : undefined}
             placeholder="name@example.com"
-            className="h-12 rounded-lg border-slate-200 bg-white px-10 text-base text-slate-900 placeholder:text-slate-400 focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20"
+            className="pl-10"
           />
         </div>
       </FormField>
@@ -135,14 +135,13 @@ export function ForgotPasswordForm() {
         width="full" 
         size="lg"
         disabled={isPending}
-        className="h-12 rounded-lg bg-[#7ac943] text-base font-semibold text-white shadow-sm hover:bg-[#68b036]"
       >
         {isPending ? "Sending..." : "Send reset instructions"}
       </Button>
       <div className="flex items-center justify-center">
         <Link
           href="/login"
-          className="flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-[#7ac943]"
+          className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to sign in

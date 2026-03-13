@@ -44,9 +44,9 @@ export function ThemeProvider({
       root.style.setProperty(key, value);
     });
     root.setAttribute("data-theme", themeMode);
-    
+
     if (themeMode === "dark") {
-      root.style.setProperty("--card-gradient", "linear-gradient(135deg, rgba(30,27,24,0.9) 0%, rgba(20,18,16,0.95) 100%)");
+      root.style.setProperty("--card-gradient", "linear-gradient(135deg, rgba(30,41,59,0.95) 0%, rgba(15,23,42,0.95) 100%)");
     } else {
       root.style.setProperty("--card-gradient", "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%)");
     }
