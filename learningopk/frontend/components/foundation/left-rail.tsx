@@ -20,6 +20,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
+import { ThemeToggleCompact } from "@/components/ui/theme-toggle";
 import type { SessionPayload } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
@@ -120,7 +121,7 @@ export function LeftRail({
 
   const secondaryLinks: RailLink[] = [
     {
-      href: "/dashboard?rail=calendar",
+      href: "/calendar",
       label: "Calendar",
       icon: CalendarBlank,
     },
@@ -339,6 +340,13 @@ export function LeftRail({
 
         {/* Spacer */}
         <div className="flex-1" />
+
+        {/* Theme Toggle */}
+        <div className={cn(
+          isCollapsed ? "mx-auto" : "px-3"
+        )}>
+          <ThemeToggleCompact />
+        </div>
 
         {/* Collapse toggle */}
         <button

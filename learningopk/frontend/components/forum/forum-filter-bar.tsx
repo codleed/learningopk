@@ -1,11 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Plus } from "lucide-react";
+import { Filter, Plus } from "lucide-react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type { ForumFiltersResponse } from "@/lib/forum-api";
+import { cn } from "@/lib/utils";
 
 type ForumFilterBarProps = {
   filters: ForumFiltersResponse;
@@ -21,12 +25,22 @@ type ForumFilterBarProps = {
   };
 };
 
+type QuickFilter = "all" | "solved" | "unsolved";
+
+const quickFilters: { key: QuickFilter; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "solved", label: "Solved" },
+  { key: "unsolved", label: "Unsolved" },
+];
+
 export function ForumFilterBar({
   filters,
   topContent,
   createThreadHref,
   selected,
 }: ForumFilterBarProps) {
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
   const filteredSubjects = filters.subjects.filter((subject) => {
     if (selected.board) {
       const board = filters.boards.find(
@@ -43,6 +57,7 @@ export function ForumFilterBar({
 
     return true;
   });
+
   const filteredClasses = filters.classes.filter((entry) => {
     if (!selected.board) {
       return true;
@@ -60,108 +75,146 @@ export function ForumFilterBar({
     return chapter.subjectId === selected.subjectId;
   });
 
+  const hasActiveFilters = selected.board || selected.grade || selected.subjectId || selected.q;
+
   return (
     <section className="surface-card rounded-xl border border-border p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-semibold text-foreground">
-          Search and filter threads
+          Forum Threads
         </h2>
-      </div>
-      {topContent ? <div className="mb-4">{topContent}</div> : null}
-      <form method="GET" className="grid gap-3 md:grid-cols-6">
-        <label className="space-y-1 text-sm text-foreground md:col-span-2">
-          <span>Search</span>
-          <Input
-            name="q"
-            defaultValue={selected.q ?? ""}
-            placeholder="Search title and body"
-          />
-        </label>
-
-        <label className="space-y-1 text-sm text-foreground">
-          <span>Board</span>
-          <Select name="board" defaultValue={selected.board ?? ""}>
-            <option value="">All boards</option>
-            {filters.boards.map((board) => (
-              <option key={board.id} value={board.slug}>
-                {board.name}
-              </option>
-            ))}
-          </Select>
-        </label>
-
-        <label className="space-y-1 text-sm text-foreground">
-          <span>Class</span>
-          <Select name="grade" defaultValue={selected.grade ?? ""}>
-            <option value="">All classes</option>
-            {filteredClasses.map((entry) => (
-              <option key={entry.id} value={entry.slug}>
-                {entry.name}
-              </option>
-            ))}
-          </Select>
-        </label>
-
-        <label className="space-y-1 text-sm text-foreground">
-          <span>Subject</span>
-          <Select
-            name="subjectId"
-            defaultValue={selected.subjectId ? String(selected.subjectId) : ""}
-          >
-            <option value="">All subjects</option>
-            {filteredSubjects.map((subject) => (
-              <option key={subject.id} value={String(subject.id)}>
-                {subject.name}
-                {subject.className ? ` (${subject.className})` : ""}
-              </option>
-            ))}
-          </Select>
-        </label>
-
-        <label className="space-y-1 text-sm text-foreground">
-          <span>Chapter</span>
-          <Select
-            name="chapterId"
-            defaultValue={selected.chapterId ? String(selected.chapterId) : ""}
-          >
-            <option value="">All chapters</option>
-            {filteredChapters.map((chapter) => (
-              <option key={chapter.id} value={String(chapter.id)}>
-                Chapter {chapter.chapterNumber}: {chapter.title}
-              </option>
-            ))}
-          </Select>
-        </label>
-
-        <label className="space-y-1 text-sm text-foreground">
-          <span>Status</span>
-          <Select name="solved" defaultValue={selected.solved}>
-            <option value="all">All threads</option>
-            <option value="solved">Solved</option>
-            <option value="unsolved">Unsolved</option>
-          </Select>
-        </label>
-
-        <div className="flex items-center gap-3 md:col-span-6">
-          <Button type="submit" size="sm">
-            Apply filters
-          </Button>
-          <Link href="/forum">
-            <Button type="button" size="sm" variant="ghost">
-              Reset
-            </Button>
-          </Link>
-
-          {createThreadHref ? (
+        <div className="flex items-center gap-2">
+          {createThreadHref && (
             <Link href={createThreadHref}>
-              <Button type="button" size="sm" variant="secondary">
+              <Button type="button" size="sm">
                 <Plus className="h-4 w-4" aria-hidden="true" />
-                Create thread
+                <span className="hidden sm:inline">New Thread</span>
               </Button>
             </Link>
-          ) : null}
+          )}
         </div>
-      </form>
+      </div>
+
+      {topContent ? <div className="mb-4">{topContent}</div> : null}
+
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <form method="GET" className="flex-1 min-w-[200px]">
+            <Input
+              name="q"
+              defaultValue={selected.q ?? ""}
+              placeholder="Search threads..."
+              className="w-full"
+            />
+          </form>
+
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-1">
+            {quickFilters.map((filter) => (
+              <Link
+                key={filter.key}
+                href={`/forum?solved=${filter.key}${selected.q ? `&q=${selected.q}` : ""}`}
+                className={cn(
+                  "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                  (selected.solved === filter.key || (selected.solved === "all" && filter.key === "all"))
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {filter.label}
+              </Link>
+            ))}
+          </div>
+
+          <Button
+            type="button"
+            variant={showAdvanced || hasActiveFilters ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+          >
+            <Filter className="h-4 w-4" aria-hidden />
+            <span className="hidden sm:inline">Filters</span>
+            {hasActiveFilters && (
+              <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--primary)] text-xs font-bold text-primary-foreground">
+                {(selected.board ? 1 : 0) + (selected.grade ? 1 : 0) + (selected.subjectId ? 1 : 0)}
+              </span>
+            )}
+          </Button>
+        </div>
+
+        {showAdvanced && (
+          <form method="GET" className="grid gap-3 md:grid-cols-4 animate-fade-in">
+            <input type="hidden" name="solved" value={selected.solved} />
+
+            <label className="space-y-1 text-sm">
+              <span className="text-muted-foreground">Board</span>
+              <Select name="board" defaultValue={selected.board ?? ""} className="w-full">
+                <option value="">All boards</option>
+                {filters.boards.map((board) => (
+                  <option key={board.id} value={board.slug}>
+                    {board.name}
+                  </option>
+                ))}
+              </Select>
+            </label>
+
+            <label className="space-y-1 text-sm">
+              <span className="text-muted-foreground">Class</span>
+              <Select name="grade" defaultValue={selected.grade ?? ""} className="w-full">
+                <option value="">All classes</option>
+                {filteredClasses.map((entry) => (
+                  <option key={entry.id} value={entry.slug}>
+                    {entry.name}
+                  </option>
+                ))}
+              </Select>
+            </label>
+
+            <label className="space-y-1 text-sm">
+              <span className="text-muted-foreground">Subject</span>
+              <Select
+                name="subjectId"
+                defaultValue={selected.subjectId ? String(selected.subjectId) : ""}
+                className="w-full"
+              >
+                <option value="">All subjects</option>
+                {filteredSubjects.map((subject) => (
+                  <option key={subject.id} value={String(subject.id)}>
+                    {subject.name}
+                    {subject.className ? ` (${subject.className})` : ""}
+                  </option>
+                ))}
+              </Select>
+            </label>
+
+            <label className="space-y-1 text-sm">
+              <span className="text-muted-foreground">Chapter</span>
+              <Select
+                name="chapterId"
+                defaultValue={selected.chapterId ? String(selected.chapterId) : ""}
+                className="w-full"
+              >
+                <option value="">All chapters</option>
+                {filteredChapters.map((chapter) => (
+                  <option key={chapter.id} value={String(chapter.id)}>
+                    Chapter {chapter.chapterNumber}: {chapter.title}
+                  </option>
+                ))}
+              </Select>
+            </label>
+
+            <div className="flex items-end gap-2 md:col-span-4">
+              <Button type="submit" size="sm">
+                Apply Filters
+              </Button>
+              <Link href="/forum">
+                <Button type="button" size="sm" variant="ghost">
+                  Reset
+                </Button>
+              </Link>
+            </div>
+          </form>
+        )}
+      </div>
     </section>
   );
 }

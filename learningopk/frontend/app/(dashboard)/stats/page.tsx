@@ -12,6 +12,7 @@ import {
   StaggerContainer,
   MotionSection,
 } from "@/components/dashboard/DashboardClient";
+import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
 import { ErrorState } from "@/components/ui/states";
 import { getDashboardSummary } from "@/lib/progress-api";
 import { getServerSession } from "@/lib/session";
@@ -57,6 +58,13 @@ export default async function StatsPage() {
       <StaggerContainer className="space-y-6">
           <MotionSection>
             <DashboardSurface as="header" tone="hero" className="px-5 py-6 sm:px-7">
+              <Breadcrumbs
+                items={[
+                  { label: "Dashboard", href: "/dashboard" },
+                  { label: "Stats" },
+                ]}
+                className="mb-3"
+              />
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--primary)]">Analytics</p>
               <h1 className="mt-2 text-3xl font-medium text-foreground sm:text-4xl">Stats</h1>
               <p className="mt-2 text-sm text-muted-foreground">

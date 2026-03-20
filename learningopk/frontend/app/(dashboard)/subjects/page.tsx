@@ -10,6 +10,7 @@ import {
   MotionSection,
   MotionCard,
 } from "@/components/dashboard/DashboardClient";
+import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { getForumFilters } from "@/lib/forum-api";
 import { getDashboardSummary } from "@/lib/progress-api";
@@ -122,6 +123,13 @@ export default async function SubjectsPage() {
     >
       <StaggerContainer className="space-y-8">
           <MotionSection>
+            <Breadcrumbs
+              items={[
+                { label: "Dashboard", href: "/dashboard" },
+                { label: "Subjects" },
+              ]}
+              className="mb-4"
+            />
             <h1 className="text-4xl font-semibold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-5xl lg:text-[3.4rem]">
               Your Subjects
             </h1>

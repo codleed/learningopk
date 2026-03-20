@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { DashboardChromeHeader, DashboardChromeLayout } from "@/components/dashboard/dashboard-chrome-layout";
 import { DashboardSurface } from "@/components/foundation/dashboard-primitives";
+import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
 import { ForumFilterBar } from "@/components/forum/forum-filter-bar";
 import { ForumThreadFeed } from "@/components/forum/forum-thread-feed";
 import { ForumThreadForm } from "@/components/forum/forum-thread-form";
@@ -145,11 +146,20 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
         session={session}
         currentPath="/forum"
         header={
-          <DashboardChromeHeader
-            eyebrow="Community"
-            title="Forum"
-            subtitle="Ask questions, share hints, and help other students learn faster."
-          />
+          <>
+            <Breadcrumbs
+              items={[
+                { label: "Dashboard", href: "/dashboard" },
+                { label: "Forum" },
+              ]}
+              className="mb-3"
+            />
+            <DashboardChromeHeader
+              eyebrow="Community"
+              title="Forum"
+              subtitle="Ask questions, share hints, and help other students learn faster."
+            />
+          </>
         }
       >
         <DashboardSurface as="section" tone="panel" className="p-4 sm:p-5">
@@ -209,11 +219,20 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
       session={session}
       currentPath="/forum"
       header={
-        <DashboardChromeHeader
-          eyebrow="Community"
-          title="Forum"
-          subtitle="Ask questions, share hints, and help other students learn faster."
-        />
+        <>
+          <Breadcrumbs
+            items={[
+              { label: "Dashboard", href: "/dashboard" },
+              { label: "Forum" },
+            ]}
+            className="mb-3"
+          />
+          <DashboardChromeHeader
+            eyebrow="Community"
+            title="Forum"
+            subtitle="Ask questions, share hints, and help other students learn faster."
+          />
+        </>
       }
     >
       {isComposeMode ? (

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ReactNode } from "react";
 
 import { HeroIllustration } from "./hero-illustration";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 type AuthLayoutProps = {
   children: ReactNode;
@@ -28,7 +29,7 @@ export function AuthLayout({
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <Link
             href="/"
             className="inline-flex items-center gap-2.5 font-heading text-xl font-extrabold tracking-tight text-foreground"
@@ -43,14 +44,17 @@ export function AuthLayout({
             />
             <span>LearningoPK</span>
           </Link>
-          {topLink ? (
-            <Link
-              href={topLink.href}
-              className="text-sm font-semibold text-muted-foreground transition-colors hover:text-[var(--primary)]"
-            >
-              {topLink.label}
-            </Link>
-          ) : null}
+          <div className="flex items-center gap-4">
+            <ThemeToggle showLabels={false} />
+            {topLink ? (
+              <Link
+                href={topLink.href}
+                className="text-sm font-semibold text-muted-foreground transition-colors hover:text-[var(--primary)]"
+              >
+                {topLink.label}
+              </Link>
+            ) : null}
+          </div>
         </div>
       </header>
 

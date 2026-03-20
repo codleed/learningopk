@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 
 import { AppShell } from "@/components/foundation/app-shell";
+import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
 import { SectionCard } from "@/components/foundation/section-card";
 import { ForumReplyForm } from "@/components/forum/forum-reply-form";
 import { ForumReplyList } from "@/components/forum/forum-reply-list";
@@ -43,11 +44,14 @@ export default async function ForumThreadDetailPage({ params }: ForumThreadDetai
   return (
     <AppShell session={session} currentPath="/forum">
       <div className="space-y-6">
-        <p className="text-sm text-muted-foreground">
-          <Link href="/forum" className="font-medium text-foreground underline underline-offset-4">
-            Back to forum
-          </Link>
-        </p>
+        <Breadcrumbs
+          items={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Forum", href: "/forum" },
+            { label: thread.title.length > 50 ? `${thread.title.slice(0, 50)}...` : thread.title },
+          ]}
+          className="mb-2"
+        />
 
         <ForumThreadHeader thread={thread} />
 

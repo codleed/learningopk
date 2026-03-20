@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 
 import { AppShell } from "@/components/foundation/app-shell";
+import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
 import { ChapterProgressTracker } from "@/components/learn/chapter-progress-tracker";
 import { ChapterStudyWorkspace } from "@/components/learn/chapter-study-workspace";
 import { getChapterDetail } from "@/lib/learn-api";
@@ -51,6 +52,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
   }
 
   const basePath = `/${payload.board.slug}/${payload.class.slug}/${payload.subject.slug}/${payload.chapter.slug}`;
+  const subjectPath = `/${payload.board.slug}/${payload.class.slug}/${payload.subject.slug}`;
   const tabs = [
     { key: "summary", label: "Summary", href: `${basePath}?tab=summary` },
     { key: "exercises", label: "Exercises", href: `${basePath}?tab=exercises` },
@@ -69,6 +71,15 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
       currentPath={basePath}
       contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6"
     >
+      <Breadcrumbs
+        items={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Subjects", href: "/subjects" },
+          { label: payload.subject.name, href: subjectPath },
+          { label: `Chapter ${payload.chapter.chapterNumber}` },
+        ]}
+        className="mb-4"
+      />
       <ChapterProgressTracker chapterId={payload.chapter.id} />
       <ChapterStudyWorkspace
         boardName={payload.board.name}

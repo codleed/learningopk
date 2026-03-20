@@ -8,6 +8,7 @@ import {
   StaggerContainer,
   MotionSection,
 } from "@/components/dashboard/DashboardClient";
+import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
 import { SubjectHeader } from "@/components/learn/subject-header";
 import { SubjectViewSwitcher } from "@/components/learn/subject-view-switcher";
 import { getSubjectOverview } from "@/lib/learn-api";
@@ -56,6 +57,14 @@ export default async function SubjectPage({ params }: SubjectPageProps) {
       <div className="rounded-[1.6rem] bg-[var(--secondary)] p-4 sm:p-6 lg:p-8">
         <StaggerContainer className="space-y-6">
           <MotionSection>
+            <Breadcrumbs
+              items={[
+                { label: "Dashboard", href: "/dashboard" },
+                { label: "Subjects", href: "/subjects" },
+                { label: payload.subject.name },
+              ]}
+              className="mb-4"
+            />
             <SubjectHeader board={payload.board} className={payload.class.name} subject={payload.subject} />
           </MotionSection>
 

@@ -5,6 +5,7 @@ import {
   StaggerContainer,
   MotionSection,
 } from "@/components/dashboard/DashboardClient";
+import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
 import { AITutorChat } from "@/components/ai/ai-tutor-chat";
 import { getServerSession } from "@/lib/session";
 
@@ -22,6 +23,13 @@ export default async function AITutorPage() {
     >
       <StaggerContainer className="space-y-6">
           <MotionSection>
+            <Breadcrumbs
+              items={[
+                { label: "Dashboard", href: "/dashboard" },
+                { label: "AI Tutor" },
+              ]}
+              className="mb-4"
+            />
             <AITutorChat />
           </MotionSection>
         </StaggerContainer>
