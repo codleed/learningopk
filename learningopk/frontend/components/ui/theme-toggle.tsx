@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Moon, Sun, CircleHalf } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 type ThemeMode = "light" | "dark" | "system";
@@ -25,7 +25,7 @@ const themeConfig = {
     ariaLabel: "Switch to dark theme",
   },
   system: {
-    icon: Monitor,
+    icon: CircleHalf,
     label: "System",
     ariaLabel: "Switch to system theme",
   },
@@ -194,8 +194,10 @@ export function ThemeToggle({
 
 export function ThemeToggleCompact({
   className,
+  isCollapsed = false,
 }: {
   className?: string;
+  isCollapsed?: boolean;
 }) {
   const [mode, setMode] = useState<ThemeMode>(() => {
     if (typeof window !== "undefined") {
@@ -218,19 +220,16 @@ export function ThemeToggleCompact({
     <button
       onClick={toggleTheme}
       className={cn(
-        "flex h-10 w-10 items-center justify-center rounded-xl border border-border",
-        "bg-white/80 backdrop-blur-sm shadow-sm",
-        "dark:bg-card/50 dark:backdrop-blur-sm",
-        "text-foreground transition-all duration-200",
-        "hover:border-[var(--primary)]/40 hover:bg-accent/50",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "flex items-center rounded-xl text-[var(--sidebar-utility-default-text)] transition-all duration-150 hover:bg-[var(--sidebar-utility-hover-bg)] hover:text-[var(--sidebar-utility-hover-text)]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sidebar)]",
+        isCollapsed
+          ? "h-11 w-11 justify-center"
+          : "h-10 w-full justify-center gap-3 px-3",
         className
       )}
       aria-label={`Current theme: ${currentConfig.label}. Click to change.`}
     >
-      <span className="transition-transform duration-200 hover:scale-110">
-        <Icon className="h-5 w-5" aria-hidden />
-      </span>
+      <Icon className="h-5 w-5 shrink-0 transition-transform duration-150 hover:scale-110" weight="regular" aria-hidden />
     </button>
   );
 }

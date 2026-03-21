@@ -15,6 +15,7 @@ type LogoutButtonProps = {
   icon?: ReactNode;
   hideLabel?: boolean;
   className?: string;
+  labelClassName?: string;
 };
 
 export const LogoutButton = ({
@@ -23,7 +24,8 @@ export const LogoutButton = ({
   ariaLabel,
   icon,
   hideLabel = false,
-  className
+  className,
+  labelClassName
 }: LogoutButtonProps = {}) => {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
@@ -44,10 +46,20 @@ export const LogoutButton = ({
       size="sm"
       variant="secondary"
       aria-label={ariaLabel}
-      className={cn(className)}
+      className={cn(
+        "h-10 w-full justify-start px-3 border-0 bg-transparent shadow-none",
+        hideLabel && "justify-center px-0",
+        className
+      )}
     >
       {icon ? <span className="inline-flex items-center justify-center text-current">{icon}</span> : null}
-      {hideLabel ? <span className="sr-only">{isPending ? pendingLabel : label}</span> : isPending ? pendingLabel : label}
+      {hideLabel ? (
+        <span className="sr-only">{isPending ? pendingLabel : label}</span>
+      ) : (
+        <span className={cn("ml-3 truncate text-sm font-medium", labelClassName)}>
+          {isPending ? pendingLabel : label}
+        </span>
+      )}
     </Button>
   );
 };

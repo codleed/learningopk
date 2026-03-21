@@ -1,50 +1,35 @@
 "use client";
 
 import {
-  Books,
-  CalendarBlank,
+  SignOut,
   CaretDoubleLeft,
   CaretDoubleRight,
-  CaretDown,
-  ChartPieSlice,
-  ChatCircleText,
-  GearSix,
-  HouseLine,
-  Robot,
-  ShieldCheck,
-  SignOut,
 } from "@phosphor-icons/react";
-import type { Icon } from "@phosphor-icons/react";
+import type { LucideIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { ThemeToggleCompact } from "@/components/ui/theme-toggle";
 import type { SessionPayload } from "@/lib/session";
 import { cn } from "@/lib/utils";
+import { RoleToggle } from "./left-rail/role-toggle";
+import type { ViewMode, NavItem as NavItemType } from "./left-rail/left-rail-types";
+import {
+  studentNavItems,
+  adminNavSections,
+  isNavItemActive,
+} from "./left-rail/left-rail-config";
 
 type LeftRailProps = {
   session: SessionPayload;
   currentPath?: string;
   isCollapsed: boolean;
   onToggle: () => void;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
 };
-
-type RailLink = {
-  href: string;
-  label: string;
-  icon: Icon;
-  isActive?: (currentPath: string) => boolean;
-};
-
-type SubmenuItem = {
-  href: string;
-  label: string;
-};
-
-const isPathPrefix = (currentPath: string, target: string): boolean =>
-  currentPath === target || currentPath.startsWith(`${target}/`);
 
 const getInitials = (name: string): string =>
   name
@@ -55,357 +40,255 @@ const getInitials = (name: string): string =>
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 
-const adminSubmenuItems: SubmenuItem[] = [
-  { href: "/admin", label: "Command Center" },
-  { href: "/admin/users", label: "Users" },
-  { href: "/admin/content", label: "Content" },
-  { href: "/admin/moderation", label: "Moderation" },
-  { href: "/admin/community", label: "Community" },
-  { href: "/admin/forum", label: "Forum" },
-  { href: "/admin/analytics", label: "Analytics" },
-  { href: "/admin/audit", label: "Audit" },
-  { href: "/admin/notifications", label: "Notifications" },
-  { href: "/admin/settings", label: "Settings" },
-];
+interface NavItemProps {
+  item: NavItemType;
+  isActive: boolean;
+  isCollapsed: boolean;
+  variant: ViewMode;
+}
+
+function NavItem({ item, isActive, isCollapsed, variant }: NavItemProps) {
+  const LinkIcon = item.icon as LucideIcon;
+  const isStudentVariant = variant === "student";
+
+  const baseClasses = `
+    group relative flex items-center rounded-xl transition-all duration-150
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sidebar)]
+  `;
+
+  return (
+    <Link
+      href={item.href}
+      aria-current={isActive ? "page" : undefined}
+      title={isCollapsed ? item.label : undefined}
+      className={cn(
+        baseClasses,
+        isCollapsed
+          ? "h-11 w-11 justify-center mx-auto"
+          : isStudentVariant
+            ? "h-11 w-full gap-3 px-3"
+            : "h-8 w-full gap-2.5 px-3",
+        isStudentVariant
+          ? isActive
+            ? "bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)] shadow-[var(--sidebar-nav-active-shadow)] sidebar-active-glow"
+            : "text-[var(--sidebar-nav-default-text)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-nav-hover-text)]"
+          : isActive
+            ? "bg-[var(--sidebar-admin-active-bg)] text-[var(--sidebar-admin-active-text)] shadow-[var(--sidebar-admin-active-shadow)] admin-active-glow"
+            : "text-[var(--sidebar-admin-default-text)] hover:bg-[var(--sidebar-admin-hover-bg)] hover:text-[var(--sidebar-admin-hover-text)]"
+      )}
+    >
+      <LinkIcon
+        className={cn(
+          "shrink-0 transition-all duration-150",
+          isCollapsed ? "h-5 w-5" : isStudentVariant ? "h-5 w-5" : "h-[18px] w-[18px]"
+        )}
+        strokeWidth={isActive ? 2.5 : 2}
+        aria-hidden
+      />
+      {!isCollapsed && (
+        <span
+          className={cn(
+            "truncate transition-colors duration-150",
+            isStudentVariant ? "text-sm font-medium" : "text-[13px] font-medium leading-tight"
+          )}
+        >
+          {item.label}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 export function LeftRail({
   session,
   currentPath = "/",
   isCollapsed,
   onToggle,
+  viewMode,
+  onViewModeChange,
 }: LeftRailProps) {
-  const [isAdminSubmenuOpen, setIsAdminSubmenuOpen] = useState(false);
-
   const isAdmin = session.user.role === "admin";
-  const isOnAdminPage = isPathPrefix(currentPath, "/admin");
 
   const displayName = useMemo(() => {
     const trimmedName = session.user.name?.trim();
     return trimmedName?.length ? trimmedName : "LearningoPK";
   }, [session.user.name]);
 
+  const truncatedName = useMemo(() => {
+    return displayName.length > 20 ? displayName.slice(0, 20) + "..." : displayName;
+  }, [displayName]);
+
   const avatarInitials = getInitials(displayName);
 
-  const primaryLinks: RailLink[] = [
-    {
-      href: "/dashboard",
-      label: "Dashboard",
-      icon: HouseLine,
-      isActive: (path) => isPathPrefix(path, "/dashboard"),
-    },
-    {
-      href: "/subjects",
-      label: "Subjects",
-      icon: Books,
-      isActive: (path) => isPathPrefix(path, "/subjects"),
-    },
-    {
-      href: "/stats",
-      label: "Stats",
-      icon: ChartPieSlice,
-      isActive: (path) => isPathPrefix(path, "/stats"),
-    },
-    {
-      href: "/forum",
-      label: "Forum",
-      icon: ChatCircleText,
-      isActive: (path) => isPathPrefix(path, "/forum"),
-    },
-    {
-      href: "/ai-tutor",
-      label: "AI Tutor",
-      icon: Robot,
-      isActive: (path) => isPathPrefix(path, "/ai-tutor"),
-    },
-  ];
-
-  const secondaryLinks: RailLink[] = [
-    {
-      href: "/calendar",
-      label: "Calendar",
-      icon: CalendarBlank,
-    },
-    {
-      href: "/settings",
-      label: "Settings",
-      icon: GearSix,
-      isActive: (path) => isPathPrefix(path, "/settings"),
-    },
-  ];
-
-  const renderPrimaryLink = (link: RailLink) => {
-    const isActive = link.isActive?.(currentPath) ?? false;
-    const LinkIcon = link.icon;
-
-    return (
-      <Link
-        key={link.href}
-        href={link.href}
-        aria-current={isActive ? "page" : undefined}
-        aria-label={isCollapsed ? link.label : undefined}
-        title={link.label}
-        className={cn(
-          "flex h-11 items-center rounded-2xl transition-all duration-200",
-          isCollapsed
-            ? "w-11 justify-center mx-auto"
-            : "w-full gap-3 px-3",
-          isActive
-            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
-            : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-        )}
-      >
-        <LinkIcon
-          className="h-5 w-5 shrink-0"
-          weight={isActive ? "fill" : "regular"}
-          aria-hidden
+  const renderStudentNav = () => (
+    <div className="flex w-full flex-col gap-1">
+      {studentNavItems.map((item) => (
+        <NavItem
+          key={item.href}
+          item={item}
+          isActive={isNavItemActive(currentPath, item)}
+          isCollapsed={isCollapsed}
+          variant="student"
         />
-        {!isCollapsed && (
-          <span className="truncate text-sm font-medium">
-            {link.label}
-          </span>
-        )}
-      </Link>
-    );
-  };
+      ))}
+    </div>
+  );
 
-  const renderAdminSubmenu = () => {
-    if (isCollapsed) {
-      return (
-        <Link
-          href="/admin"
-          aria-current={isOnAdminPage ? "page" : undefined}
-          title="Admin"
-          className={cn(
-            "flex h-11 w-11 justify-center mx-auto items-center rounded-2xl transition-all duration-200",
-            isOnAdminPage
-              ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
-              : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+  const renderAdminNav = () => (
+    <div className="flex w-full flex-col gap-1">
+      {adminNavSections.map((section, sectionIndex) => (
+        <div key={section.label}>
+          {sectionIndex > 0 && (
+            <div
+              className={cn(
+                "my-3 h-px bg-[var(--sidebar-border)]",
+                isCollapsed ? "mx-auto w-8 opacity-30" : "w-full opacity-50"
+              )}
+            />
           )}
-        >
-          <ShieldCheck className="h-5 w-5" weight={isOnAdminPage ? "fill" : "regular"} aria-hidden />
-        </Link>
-      );
-    }
-
-    return (
-      <div className="flex w-full flex-col gap-1">
-        <button
-          type="button"
-          onClick={() => setIsAdminSubmenuOpen(!isAdminSubmenuOpen)}
-          className={cn(
-            "flex h-11 items-center rounded-2xl transition-all duration-200 w-full gap-3 px-3",
-            isOnAdminPage
-              ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
-              : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+          {!isCollapsed && section.label && (
+            <div className="mb-1 mt-3 px-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--sidebar-admin-default-text)] opacity-70">
+              {section.label}
+            </div>
           )}
-        >
-          <ShieldCheck
-            className="h-5 w-5 shrink-0"
-            weight={isOnAdminPage ? "fill" : "regular"}
-            aria-hidden
-          />
-          <span className="flex-1 truncate text-left text-sm font-medium">Admin</span>
-          <CaretDown
-            className={cn(
-              "h-4 w-4 shrink-0 transition-transform duration-200",
-              isAdminSubmenuOpen && "rotate-180",
-            )}
-            aria-hidden
-          />
-        </button>
-
-        <div
-          className={cn(
-            "overflow-hidden transition-all duration-200",
-            isAdminSubmenuOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0",
-          )}
-        >
-          <div className="flex flex-col gap-1 py-1 pl-4">
-            {adminSubmenuItems.map((item) => {
-              const isItemActive = currentPath === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={isItemActive ? "page" : undefined}
-                  className={cn(
-                    "flex h-9 items-center rounded-2xl px-3 text-sm font-medium transition-all duration-200",
-                    isItemActive
-                      ? "bg-sidebar-accent text-sidebar-foreground"
-                      : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
+          {section.items.map((item) => (
+            <NavItem
+              key={item.href}
+              item={item}
+              isActive={isNavItemActive(currentPath, item)}
+              isCollapsed={isCollapsed}
+              variant="admin"
+            />
+          ))}
         </div>
-      </div>
-    );
-  };
+      ))}
+    </div>
+  );
 
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-40 flex flex-col bg-sidebar transition-[width] duration-300 ease-in-out overflow-y-auto",
-        isCollapsed ? "w-[4.5rem]" : "w-[15rem]",
+        "fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] transition-[width] duration-350 ease-in-out",
+        "shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_10px_20px_-5px_rgba(0,0,0,0.08)]",
+        isCollapsed ? "w-[72px]" : "w-[280px]"
       )}
       data-testid="left-rail"
       data-collapsed={isCollapsed ? "true" : "false"}
+      data-view-mode={viewMode}
     >
-      <nav
-        aria-label="Primary navigation"
-        className="flex h-full flex-col items-start px-3 py-5"
-      >
-        {/* Logo row */}
+      <div className="flex flex-1 flex-col px-[var(--sidebar-padding-x)] py-[var(--sidebar-padding-top)]">
         <div
           className={cn(
-            "mb-6 flex w-full items-center",
-            isCollapsed ? "justify-center" : "gap-3 px-1",
+            "mb-4 flex items-center",
+            isCollapsed ? "justify-center" : "gap-3"
           )}
         >
           <Link
             href="/dashboard"
-            aria-label="Home"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-foreground p-2 shadow-md transition hover:shadow-lg"
+            aria-label="LearningoPK Home"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--foreground)] p-2 shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105"
           >
             <Image
               src="/new_logo.png"
               alt="LearningoPK logo"
               width={28}
               height={28}
-              className="h-6 w-6 rounded-md object-cover invert"
+              className="h-7 w-7 rounded-lg object-cover invert"
               priority
             />
           </Link>
           {!isCollapsed && (
-            <span className="truncate text-sm font-semibold text-sidebar-foreground">
-              {displayName}
-            </span>
+            <div className="flex flex-col min-w-0">
+              <span className="truncate text-base font-semibold text-[var(--sidebar-brand-text)] tracking-tight">
+                LearningoPK
+              </span>
+              <span className="truncate text-xs text-[var(--sidebar-brand-text-muted)]">
+                Welcome back
+              </span>
+            </div>
           )}
         </div>
 
-        {/* Primary nav */}
-        <div className="flex w-full flex-col gap-1">
-          {primaryLinks.map(renderPrimaryLink)}
+        {isAdmin && !isCollapsed && (
+          <RoleToggle
+            currentMode={viewMode}
+            onModeChange={onViewModeChange}
+            isCollapsed={isCollapsed}
+          />
+        )}
 
-          {isAdmin && renderAdminSubmenu()}
+        <div className="flex-1">
+          {viewMode === "student" ? renderStudentNav() : renderAdminNav()}
         </div>
+      </div>
 
-        {/* Separator */}
-        <div
-          className={cn(
-            "my-3 h-px bg-sidebar-border",
-            isCollapsed ? "mx-auto w-6" : "w-full",
-          )}
-        />
+      <div className="shrink-0 px-[var(--sidebar-padding-x)] py-4 space-y-1">
+        <ThemeToggleCompact isCollapsed={isCollapsed} />
 
-        {/* Secondary nav */}
-        <div className="flex w-full flex-col gap-1">
-          {secondaryLinks.map((link) => {
-            const LinkIcon = link.icon;
-            const isActive = link.isActive?.(currentPath) ?? false;
-
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-label={isCollapsed ? link.label : undefined}
-                title={link.label}
-                className={cn(
-                  "flex h-11 items-center rounded-2xl transition-all duration-200",
-                  isCollapsed
-                    ? "w-11 justify-center mx-auto"
-                    : "w-full gap-3 px-3",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
-                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                )}
-              >
-                <LinkIcon
-                  className="h-5 w-5 shrink-0"
-                  weight={isActive ? "fill" : "regular"}
-                  aria-hidden
-                />
-                {!isCollapsed && (
-                  <span className="truncate text-sm font-medium">
-                    {link.label}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* Theme Toggle */}
-        <div className={cn(
-          isCollapsed ? "mx-auto" : "px-3"
-        )}>
-          <ThemeToggleCompact />
-        </div>
-
-        {/* Collapse toggle */}
         <button
           type="button"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           onClick={onToggle}
           className={cn(
-            "flex h-11 items-center rounded-2xl text-sidebar-foreground/40 transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-            isCollapsed ? "w-11 justify-center mx-auto" : "w-full gap-3 px-3",
+            "group flex h-10 w-full items-center rounded-xl text-[var(--sidebar-utility-default-text)] transition-all duration-150 hover:bg-[var(--sidebar-utility-hover-bg)] hover:text-[var(--sidebar-utility-hover-text)]",
+            isCollapsed ? "justify-center" : "gap-3 px-3"
           )}
         >
           {isCollapsed ? (
             <CaretDoubleRight className="h-5 w-5 shrink-0" aria-hidden />
           ) : (
-            <CaretDoubleLeft className="h-5 w-5 shrink-0" aria-hidden />
-          )}
-          {!isCollapsed && (
-            <span className="truncate text-sm font-medium">Collapse</span>
+            <>
+              <CaretDoubleLeft className="h-5 w-5 shrink-0" aria-hidden />
+              <span className="truncate text-sm font-medium">Collapse</span>
+            </>
           )}
         </button>
 
-        {/* Logout */}
         <LogoutButton
-          ariaLabel="Log out"
-          icon={<SignOut className="h-5 w-5 shrink-0" aria-hidden />}
+          ariaLabel="Sign out"
+          icon={
+            <SignOut
+              className="h-5 w-5 shrink-0 transition-colors duration-150"
+              aria-hidden
+            />
+          }
           hideLabel={isCollapsed}
           className={cn(
-            "mt-1 flex h-11 items-center rounded-2xl border-0 bg-transparent text-sidebar-foreground/50 transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-            isCollapsed ? "w-11 justify-center mx-auto" : "w-full gap-3 px-3",
+            "group flex h-10 w-full items-center rounded-xl border-0 bg-transparent transition-all duration-150",
+            isCollapsed ? "justify-center text-[var(--sidebar-utility-default-text)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8" : "gap-3 px-3 text-[var(--sidebar-utility-default-text)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8"
           )}
+          labelClassName="truncate text-sm font-medium transition-colors duration-150"
         />
 
-        {/* User avatar */}
         <Link
           href="/settings"
           aria-label={`Profile: ${displayName}`}
-          title={displayName}
+          title={isCollapsed ? displayName : undefined}
           className={cn(
-            "mt-2 flex shrink-0 items-center transition",
+            "group flex items-center rounded-2xl border border-[var(--sidebar-profile-border)] bg-[var(--sidebar-profile-bg)] p-3 transition-all duration-150 hover:border-[var(--sidebar-border)] hover:bg-[var(--sidebar-nav-hover-bg)]",
             isCollapsed
-              ? "mx-auto h-10 w-10 justify-center rounded-full bg-[var(--primary)]/20 text-xs font-bold text-[var(--primary)] hover:ring-2 hover:ring-[var(--primary)]/20"
-              : "w-full gap-3 rounded-2xl px-3 py-2 hover:bg-sidebar-accent",
+              ? "justify-center p-2"
+              : "gap-3"
           )}
         >
-          <span
-            className={cn(
-              "flex shrink-0 items-center justify-center rounded-full bg-[var(--primary)]/20 text-xs font-bold text-[var(--primary)]",
-              isCollapsed ? "h-10 w-10" : "h-9 w-9",
-            )}
-          >
+          <div className={cn(
+            "flex shrink-0 items-center justify-center rounded-full bg-[var(--sidebar-profile-avatar-bg)] text-[var(--sidebar-profile-avatar-text)] font-bold transition-all duration-150 group-hover:scale-105",
+            isCollapsed ? "h-10 w-10 text-sm" : "h-10 w-10 text-sm"
+          )}>
             {avatarInitials}
-          </span>
+          </div>
           {!isCollapsed && (
-            <span className="truncate text-sm font-medium text-sidebar-foreground">
-              {displayName}
-            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-[var(--sidebar-profile-text)]">
+                {truncatedName}
+              </p>
+              <p className="truncate text-xs text-[var(--sidebar-profile-text-muted)]">
+                View Profile
+              </p>
+            </div>
           )}
         </Link>
-      </nav>
+      </div>
     </aside>
   );
 }
