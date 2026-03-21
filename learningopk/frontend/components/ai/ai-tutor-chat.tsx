@@ -1,13 +1,24 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { 
+  Sparkles, 
+  History, 
+  ArrowUp, 
+  Loader2, 
+  X, 
+  Plus, 
+  ChevronDown,
+  AlertCircle
+} from "lucide-react";
 
-import { DashboardChromeHeader } from "@/components/dashboard/dashboard-chrome-layout";
 import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+
+// ============================================================================
+// Types
+// ============================================================================
 
 type ChatRole = "user" | "assistant";
 
@@ -48,10 +59,26 @@ type AIChatErrorResponse = {
   sessionId?: string;
 };
 
+// ============================================================================
+// Constants
+// ============================================================================
+
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
+
 const createMessageId = (): string => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+const DEFAULT_SUGGESTIONS = [
+  "Explain a concept in simple terms",
+  "Help me study for my exam",
+  "Create a study schedule",
+  "Quiz me on a topic"
+];
+
+// ============================================================================
+// Utilities
+// ============================================================================
 
 const formatRelativeTimestamp = (value: string): string => {
   const target = new Date(value).getTime();
@@ -96,29 +123,381 @@ const formatAssistantError = (payload: AIChatErrorResponse | null, fallback: str
   return `${payload.error ?? fallback}${reasonSuffix}${retrySuffix}`;
 };
 
+// ============================================================================
+// Sub-Components
+// ============================================================================
+
+interface StreamingIndicatorProps {
+  className?: string;
+}
+
+function StreamingIndicator({ className }: StreamingIndicatorProps) {
+  return (
+    <div className={cn("flex items-center gap-1 px-1", className)}>
+      <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-muted-foreground" />
+      <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-muted-foreground [animation-delay:0.16s]" />
+      <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-muted-foreground [animation-delay:0.32s]" />
+    </div>
+  );
+}
+
+interface MessageBubbleProps {
+  message: ChatMessage;
+  isStreaming?: boolean;
+  showAvatar?: boolean;
+}
+
+function MessageBubble({ message, isStreaming, showAvatar }: MessageBubbleProps) {
+  const isUser = message.role === "user";
+  const isEmpty = !message.content;
+
+  return (
+    <article
+      className={cn(
+        "animate-message-in",
+        isUser
+          ? "ml-auto max-w-[80%] rounded-2xl rounded-br-sm bg-primary px-4 py-3 text-[15px] text-primary-foreground"
+          : "mr-auto max-w-[85%] rounded-2xl rounded-bl-sm border border-border bg-card px-4 py-3 text-[15px] text-foreground"
+      )}
+      aria-label={`${isUser ? "You" : "AI Tutor"}: ${message.content.slice(0, 50)}...`}
+    >
+      {!isUser && showAvatar && (
+        <div className="mb-2 flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+          </div>
+        </div>
+      )}
+      
+      {isUser ? (
+        <div className="break-words [overflow-wrap:anywhere]">{message.content}</div>
+      ) : isEmpty || isStreaming ? (
+        <StreamingIndicator />
+      ) : (
+        <div className="[overflow-wrap:anywhere] [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
+          <MarkdownMathRenderer
+            content={message.content}
+            forceWrap
+            className="text-[15px] leading-relaxed [&_.katex-display]:overflow-x-visible"
+          />
+        </div>
+      )}
+    </article>
+  );
+}
+
+interface EmptyStateProps {
+  suggestions: string[];
+  onSuggestionClick: (text: string) => void;
+}
+
+function EmptyState({ suggestions, onSuggestionClick }: EmptyStateProps) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center px-4 py-12">
+      {/* Icon */}
+      <Sparkles className="mb-4 h-12 w-12 text-primary opacity-90" />
+      
+      {/* Title */}
+      <h2 className="mb-3 text-center font-[family-name:var(--font-heading)] text-2xl font-semibold text-foreground">
+        How can I help you?
+      </h2>
+      
+      {/* Subtitle */}
+      <p className="mb-8 max-w-[360px] text-center text-[15px] text-muted-foreground">
+        Ask about concepts, create study plans, or get exam preparation tips.
+      </p>
+      
+      {/* Suggestion chips */}
+      <div className="grid w-full max-w-[560px] grid-cols-1 gap-3 sm:grid-cols-2">
+        {suggestions.map((suggestion) => (
+          <button
+            key={suggestion}
+            type="button"
+            onClick={() => onSuggestionClick(suggestion)}
+            className="w-full rounded-3xl border border-border bg-card px-4 py-3 
+                       text-left text-sm font-medium text-foreground shadow-sm
+                       transition-all duration-150
+                       hover:-translate-y-0.5 hover:border-primary/50 hover:bg-primary/5 hover:shadow-md
+                       active:translate-y-0 active:shadow-sm"
+          >
+            {suggestion}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface ScrollToBottomButtonProps {
+  isVisible: boolean;
+  onClick: () => void;
+}
+
+function ScrollToBottomButton({ isVisible, onClick }: ScrollToBottomButtonProps) {
+  if (!isVisible) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="animate-scroll-btn fixed bottom-24 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 
+                 rounded-full border border-border bg-card px-4 py-2 shadow-md
+                 transition-all duration-200 hover:scale-105 active:scale-100"
+      aria-label="Scroll to latest messages"
+    >
+      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+      <span className="text-[13px] font-medium text-muted-foreground">New messages</span>
+    </button>
+  );
+}
+
+interface SessionSidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+  sessions: ChatSession[];
+  activeSessionId: string | null;
+  onSelectSession: (id: string) => void;
+  onNewChat: () => void;
+  isLoading: boolean;
+}
+
+function SessionSidebar({
+  isOpen,
+  onClose,
+  sessions,
+  activeSessionId,
+  onSelectSession,
+  onNewChat,
+  isLoading
+}: SessionSidebarProps) {
+  // Group sessions by date
+  const groupedSessions = useMemo(() => {
+    const groups: { today: ChatSession[]; yesterday: ChatSession[]; older: ChatSession[] } = {
+      today: [],
+      yesterday: [],
+      older: []
+    };
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+
+    sessions.forEach((session) => {
+      const sessionDate = new Date(session.lastMessageAt);
+      if (sessionDate >= today) {
+        groups.today.push(session);
+      } else if (sessionDate >= yesterday) {
+        groups.yesterday.push(session);
+      } else {
+        groups.older.push(session);
+      }
+    });
+
+    return groups;
+  }, [sessions]);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm transition-opacity duration-300"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      
+      {/* Sidebar */}
+      <aside
+        className="animate-sidebar-in fixed right-0 top-0 z-50 flex h-full w-[280px] flex-col border-l border-border bg-card shadow-[-8px_0_24px_rgba(0,0,0,0.08)]"
+        aria-label="Chat history"
+      >
+        {/* Header */}
+        <div className="flex h-14 items-center justify-between border-b border-border px-4">
+          <h2 className="text-base font-semibold text-foreground">Chat History</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-2 transition-colors hover:bg-accent"
+            aria-label="Close history"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* New Chat button */}
+        <div className="border-b border-border p-4">
+          <button
+            type="button"
+            onClick={() => {
+              onNewChat();
+              onClose();
+            }}
+            className="flex w-full items-center justify-center gap-2 rounded-xl 
+                       bg-primary px-4 py-3 text-sm font-medium text-primary-foreground
+                       transition-colors hover:bg-[var(--primary-hover)]"
+          >
+            <Plus className="h-4 w-4" />
+            New Chat
+          </button>
+        </div>
+
+        {/* Session list */}
+        <div className="flex-1 overflow-y-auto px-3 pb-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : sessions.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-sm text-muted-foreground">No conversations yet</p>
+              <p className="mt-1 text-xs text-muted-foreground">Start a new chat to see it here.</p>
+            </div>
+          ) : (
+            <>
+              {groupedSessions.today.length > 0 && (
+                <div className="mb-4 mt-4">
+                  <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Today
+                  </p>
+                  {groupedSessions.today.map((session) => (
+                    <SessionItem
+                      key={session.id}
+                      session={session}
+                      isActive={session.id === activeSessionId}
+                      onClick={() => {
+                        onSelectSession(session.id);
+                        onClose();
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {groupedSessions.yesterday.length > 0 && (
+                <div className="mb-4">
+                  <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Yesterday
+                  </p>
+                  {groupedSessions.yesterday.map((session) => (
+                    <SessionItem
+                      key={session.id}
+                      session={session}
+                      isActive={session.id === activeSessionId}
+                      onClick={() => {
+                        onSelectSession(session.id);
+                        onClose();
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {groupedSessions.older.length > 0 && (
+                <div>
+                  <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Previous 7 Days
+                  </p>
+                  {groupedSessions.older.map((session) => (
+                    <SessionItem
+                      key={session.id}
+                      session={session}
+                      isActive={session.id === activeSessionId}
+                      onClick={() => {
+                        onSelectSession(session.id);
+                        onClose();
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </aside>
+    </>
+  );
+}
+
+interface SessionItemProps {
+  session: ChatSession;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+function SessionItem({ session, isActive, onClick }: SessionItemProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "mb-1 w-full rounded-lg px-3 py-2.5 text-left transition-colors",
+        isActive
+          ? "bg-primary/10 border-l-2 border-primary text-foreground"
+          : "hover:bg-accent text-muted-foreground hover:text-foreground"
+      )}
+    >
+      <p className="truncate text-sm font-medium text-foreground">{session.title}</p>
+      <p className="mt-0.5 text-xs text-muted-foreground">
+        {formatRelativeTimestamp(session.lastMessageAt)}
+      </p>
+    </button>
+  );
+}
+
+// ============================================================================
+// Main Component
+// ============================================================================
+
 export function AITutorChat() {
+  // ---------------------------------------------------------------------------
+  // State
+  // ---------------------------------------------------------------------------
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [isHistoryVisible, setIsHistoryVisible] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoadingHistoryList, setIsLoadingHistoryList] = useState(true);
   const [isLoadingSessionMessages, setIsLoadingSessionMessages] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const endOfMessagesRef = useRef<HTMLDivElement | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
+  // ---------------------------------------------------------------------------
+  // Refs
+  // ---------------------------------------------------------------------------
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // ---------------------------------------------------------------------------
+  // Derived values
+  // ---------------------------------------------------------------------------
   const placeholder = useMemo(() => {
-    if (messages.length > 0) {
-      return "Ask a follow-up question...";
-    }
-    return "Ask anything about studies, concepts, exams, or practice strategy...";
+    return messages.length > 0
+      ? "Ask a follow-up question..."
+      : "Ask anything about your studies...";
   }, [messages.length]);
 
-  useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages]);
+  const hasMessages = messages.length > 0;
 
+  // ---------------------------------------------------------------------------
+  // API Functions
+  // ---------------------------------------------------------------------------
   const fetchSessions = useCallback(async (): Promise<ChatSession[]> => {
     const response = await fetch(`${backendUrl}/api/ai/sessions`, {
       method: "GET",
@@ -178,6 +557,11 @@ export function AITutorChat() {
     [fetchSessions]
   );
 
+  // ---------------------------------------------------------------------------
+  // Effects
+  // ---------------------------------------------------------------------------
+
+  // Initial load
   useEffect(() => {
     let isCancelled = false;
 
@@ -218,20 +602,82 @@ export function AITutorChat() {
     };
   }, [fetchSessions, loadSessionMessages]);
 
-  const startFreshChat = () => {
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    if (messages.length > 0 && !showScrollButton) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messages, showScrollButton]);
+
+  // Handle scroll position for scroll-to-bottom button
+  const handleScroll = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    
+    setShowScrollButton(distanceFromBottom > 200);
+  }, []);
+
+  // Focus textarea on mount
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // Actions
+  // ---------------------------------------------------------------------------
+
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    setShowScrollButton(false);
+  }, []);
+
+  const startFreshChat = useCallback(() => {
     setMessages([]);
     setSessionId(null);
     setInputValue("");
     setError(null);
-  };
+    textareaRef.current?.focus();
+  }, []);
 
-  const onSelectSession = async (targetSessionId: string) => {
-    if (isSending || targetSessionId === sessionId) {
-      return;
+  const onSelectSession = useCallback(
+    async (targetSessionId: string) => {
+      if (isSending || targetSessionId === sessionId) {
+        return;
+      }
+
+      await loadSessionMessages(targetSessionId);
+      textareaRef.current?.focus();
+    },
+    [isSending, sessionId, loadSessionMessages]
+  );
+
+  const adjustTextareaHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
     }
+  }, []);
 
-    await loadSessionMessages(targetSessionId);
-  };
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setInputValue(e.target.value);
+      adjustTextareaHeight();
+    },
+    [adjustTextareaHeight]
+  );
+
+  const handleSuggestionClick = useCallback(
+    (text: string) => {
+      setInputValue(text);
+      adjustTextareaHeight();
+      textareaRef.current?.focus();
+    },
+    [adjustTextareaHeight]
+  );
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -242,6 +688,7 @@ export function AITutorChat() {
     }
 
     setIsSending(true);
+    setIsStreaming(true);
     setError(null);
 
     const userMessage: ChatMessage = {
@@ -264,6 +711,11 @@ export function AITutorChat() {
 
     setMessages((previous) => [...previous, userMessage, pendingAssistantMessage]);
     setInputValue("");
+    
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
 
     try {
       const response = await fetch(`${backendUrl}/api/ai/chat`, {
@@ -331,167 +783,186 @@ export function AITutorChat() {
       setError("Unable to reach AI service. Please try again.");
     } finally {
       setIsSending(false);
+      setIsStreaming(false);
+      textareaRef.current?.focus();
     }
   };
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        const form = e.currentTarget.form;
+        if (form) {
+          form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+        }
+      }
+      if (e.key === "Escape" && isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+    },
+    [isSidebarOpen]
+  );
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
+
   return (
-    <section
-      className={cn(
-        "grid min-w-0 gap-4 xl:items-start",
-        isHistoryVisible ? "xl:grid-cols-[minmax(0,1fr)_19rem]" : "xl:grid-cols-[minmax(0,1fr)]"
-      )}
-    >
-      <div className="min-w-0 space-y-4">
-        <DashboardChromeHeader
-          eyebrow="AI"
-          title="AI Tutor"
-          subtitle="Get general learning support, concept clarity, and exam-focused study guidance."
-        />
+    <div className="flex h-screen h-dvh flex-col bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-sm md:h-16">
+        {/* Left: Logo and title */}
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-primary" aria-hidden="true" />
+          <span className="font-[family-name:var(--font-heading)] text-base font-semibold text-foreground">
+            AI Tutor
+          </span>
+        </div>
 
-        <div className="surface-card flex h-[72vh] min-h-[34rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border xl:h-[calc(100vh-2.5rem)]">
-          <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--primary)]">General Tutor</p>
-              <h2 className="text-lg font-semibold text-foreground">Always-on AI study assistant</h2>
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => setIsHistoryVisible((previous) => !previous)}
-              aria-pressed={isHistoryVisible}
-              aria-label={isHistoryVisible ? "Hide chat history" : "Show chat history"}
-            >
-              {isHistoryVisible ? "Hide History" : "Show History"}
-            </Button>
-          </header>
+        {/* Right: Actions */}
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSidebarOpen(true)}
+            className="gap-2 text-muted-foreground hover:text-foreground"
+            aria-label="Open chat history"
+          >
+            <History className="h-4 w-4" />
+            <span className="hidden sm:inline">History</span>
+          </Button>
+        </div>
+      </header>
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            <div className="flex-1 space-y-4 overflow-y-auto bg-muted/10 px-5 py-5">
-              {isLoadingSessionMessages ? (
-                <p className="text-sm text-muted-foreground">Loading conversation...</p>
-              ) : null}
-
-              {!isLoadingSessionMessages && messages.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border bg-card p-6">
-                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">
-                    <Sparkles className="h-5 w-5" aria-hidden="true" />
-                  </div>
-                  <h3 className="text-base font-semibold text-foreground">Start learning with AI Tutor</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Ask for concept explanations, practice plans, quiz revision tips, or step-by-step guidance.
-                  </p>
-                </div>
-              ) : null}
-
-              {messages.map((message) => (
-                <article
-                  key={message.id}
-                  className={[
-                    "break-words rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-[var(--elevation-soft)] [overflow-wrap:anywhere]",
-                    message.role === "user"
-                      ? "ml-auto w-fit min-w-[4.5rem] max-w-[72%] bg-[var(--primary)] text-[var(--primary-foreground)]"
-                      : "max-w-[88%] border border-border bg-card text-foreground"
-                  ].join(" ")}
-                >
-                  {message.role === "assistant" ? (
-                    message.content ? (
-                      <MarkdownMathRenderer
-                        content={message.content}
-                        forceWrap
-                        className="text-sm [&_.katex-display]:overflow-x-visible [&_p:first-child]:mt-0 [&_p:last-child]:mb-0"
-                      />
-                    ) : (
-                      "Thinking..."
-                    )
-                  ) : (
-                    message.content
-                  )}
-                </article>
-              ))}
-
-              {error ? (
-                <p className="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">{error}</p>
-              ) : null}
-
-              <div ref={endOfMessagesRef} />
-            </div>
-
-            <form onSubmit={onSubmit} className="border-t border-border bg-card px-5 py-4">
-              <label
-                htmlFor="ai-tutor-input"
-                className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground"
-              >
-                Ask AI tutor
-              </label>
-              <Textarea
-                id="ai-tutor-input"
-                value={inputValue}
-                onChange={(event) => setInputValue(event.target.value)}
-                rows={3}
-                disabled={isSending}
-                placeholder={placeholder}
-                className="resize-none"
-              />
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <p className="text-xs text-muted-foreground">
-                  {isSending ? "Streaming response..." : "Clear, concise, exam-focused help."}
-                </p>
-                <Button type="submit" disabled={isSending || inputValue.trim().length === 0}>
-                  {isSending ? "Sending..." : "Send"}
-                </Button>
+      {/* Main content area */}
+      <div className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col px-4">
+        {/* Messages area */}
+        <div
+          ref={messagesContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto"
+          role="log"
+          aria-label="Conversation"
+          aria-live="polite"
+        >
+          {isLoadingSessionMessages ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="text-sm">Loading conversation...</span>
               </div>
-            </form>
-          </div>
+            </div>
+          ) : !hasMessages ? (
+            <EmptyState suggestions={DEFAULT_SUGGESTIONS} onSuggestionClick={handleSuggestionClick} />
+          ) : (
+            <div className="space-y-4 pb-8 pt-4">
+              {/* Top padding for first message */}
+              <div className="h-4" />
+
+              {messages.map((message, index) => {
+                const prevMessage = messages[index - 1];
+                const shouldShowAvatar = message.role === "assistant" && 
+                  (index === 0 || prevMessage?.role === "user");
+                const isConsecutiveSameRole = prevMessage?.role === message.role;
+
+                return (
+                  <div
+                    key={message.id}
+                    className={cn(
+                      isConsecutiveSameRole ? "mt-2" : "mt-6"
+                    )}
+                  >
+                    <MessageBubble
+                      message={message}
+                      isStreaming={isStreaming && message.id === messages[messages.length - 1]?.id}
+                      showAvatar={shouldShowAvatar}
+                    />
+                  </div>
+                );
+              })}
+
+              {/* Error display */}
+              {error && (
+                <div className="mx-auto max-w-[85%] rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
+                    <p className="flex-1 text-sm text-destructive">{error}</p>
+                    <button
+                      type="button"
+                      onClick={() => setError(null)}
+                      className="text-sm font-medium text-destructive underline-offset-4 hover:underline"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
+
+        {/* Scroll to bottom button */}
+        <ScrollToBottomButton isVisible={showScrollButton && hasMessages} onClick={scrollToBottom} />
+
+        {/* Input area */}
+        <div className="sticky bottom-0 bg-gradient-to-t from-background via-background to-background/80 pb-4 pt-2">
+          <form onSubmit={onSubmit} className="relative">
+            <div
+              className="flex items-end rounded-2xl border border-border bg-card 
+                          px-1 py-1 shadow-[0_4px_24px_rgba(0,0,0,0.08)]
+                          focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/20
+                          transition-all duration-150"
+            >
+              <textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder={placeholder}
+                rows={1}
+                disabled={isSending}
+                className="flex-1 resize-none rounded-xl bg-transparent px-3 py-2.5 text-[15px] 
+                           outline-none placeholder:text-muted-foreground
+                           disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ minHeight: "44px", maxHeight: "184px" }}
+                aria-label="Message input"
+              />
+              <button
+                type="submit"
+                disabled={!inputValue.trim() || isSending}
+                className="m-1 flex h-9 w-9 shrink-0 items-center justify-center 
+                           rounded-full bg-primary text-primary-foreground shadow-sm
+                           transition-all duration-150
+                           disabled:cursor-not-allowed disabled:opacity-50
+                           hover:bg-[var(--primary-hover)] hover:shadow-md
+                           active:scale-95"
+                aria-label="Send message"
+              >
+                {isSending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ArrowUp className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 
-      <div className="xl:sticky xl:top-4 xl:self-start">
-        {isHistoryVisible ? (
-          <aside
-            aria-label="Chat history sidebar"
-            className="surface-card flex min-h-[18rem] w-full flex-col overflow-hidden rounded-2xl border border-border bg-card/90 xl:h-[calc(100vh-2.5rem)] xl:w-[19rem]"
-          >
-            <div className="border-b border-border px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">History</p>
-            </div>
-
-            <div className="border-b border-border px-3 py-3">
-              <Button type="button" variant="secondary" size="sm" width="full" onClick={startFreshChat} disabled={isSending}>
-                New Chat
-              </Button>
-            </div>
-            <div className="flex-1 space-y-2 overflow-y-auto px-2 py-2">
-              {isLoadingHistoryList ? <p className="px-2 py-1 text-xs text-muted-foreground">Loading history...</p> : null}
-
-              {!isLoadingHistoryList && sessions.length === 0 ? (
-                <p className="px-2 py-1 text-xs text-muted-foreground">No previous chats yet.</p>
-              ) : null}
-
-              {sessions.map((session) => {
-                const isActive = session.id === sessionId;
-                return (
-                  <button
-                    key={session.id}
-                    type="button"
-                    onClick={() => void onSelectSession(session.id)}
-                    disabled={isSending || isLoadingSessionMessages}
-                    className={cn(
-                      "w-full rounded-xl border px-3 py-2 text-left transition",
-                      isActive
-                        ? "border-[var(--primary)]/45 bg-[var(--primary)]/10 text-foreground"
-                        : "border-border bg-card text-muted-foreground hover:border-[var(--primary)]/35 hover:text-foreground"
-                    )}
-                  >
-                    <p className="truncate text-sm font-medium">{session.title}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{formatRelativeTimestamp(session.lastMessageAt)}</p>
-                  </button>
-                );
-              })}
-            </div>
-          </aside>
-        ) : null}
-      </div>
-    </section>
+      {/* Sidebar */}
+      <SessionSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        sessions={sessions}
+        activeSessionId={sessionId}
+        onSelectSession={onSelectSession}
+        onNewChat={startFreshChat}
+        isLoading={isLoadingHistoryList}
+      />
+    </div>
   );
 }
