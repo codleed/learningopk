@@ -6,6 +6,7 @@ import { consumeForumMutationRateLimit, moderateForumInput } from "../lib/ai-gua
 import { db } from "../lib/db/index.js";
 import { boardClasses, boards, chapters, forumReplies, forumReplyVotes, forumThreads, subjects, users } from "../lib/db/schema.js";
 import { getSessionFromRequest, requireSession, type AuthenticatedRequest } from "../lib/session.js";
+import { forumService } from "../services/forum.service.js";
 
 const createThreadSchema = z.object({
   title: z.string().trim().min(5).max(160),
@@ -44,229 +45,18 @@ const threadFeedQuerySchema = z.object({
 
 type ThreadFeedFilters = z.infer<typeof threadFeedQuerySchema>;
 
-type ReplyRow = {
-  id: string;
-  threadId: string;
-  userId: string;
-  userName: string;
-  parentReplyId: string | null;
-  body: string;
-  isAcceptedAnswer: boolean;
-  upvotes: number;
-  viewerVoteType: "upvote" | "downvote" | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-type NestedReply = {
-  id: string;
-  threadId: string;
-  userId: string;
-  userName: string;
-  parentReplyId: string;
-  body: string;
-  isAcceptedAnswer: boolean;
-  upvotes: number;
-  viewerVoteType: "upvote" | "downvote" | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-type ThreadReply = {
-  id: string;
-  threadId: string;
-  userId: string;
-  userName: string;
-  parentReplyId: null;
-  body: string;
-  isAcceptedAnswer: boolean;
-  upvotes: number;
-  viewerVoteType: "upvote" | "downvote" | null;
-  createdAt: Date;
-  updatedAt: Date;
-  replies: NestedReply[];
-};
-
-const buildForumFilters = (filters: ThreadFeedFilters) => {
-  const clauses: SQL[] = [];
-
-  if (filters.board) {
-    clauses.push(eq(boards.slug, filters.board));
-  }
-
-  if (filters.grade) {
-    clauses.push(sql`coalesce(${boardClasses.slug}, ${subjects.grade}::text) = ${filters.grade}`);
-  }
-
-  if (filters.subjectId) {
-    clauses.push(eq(forumThreads.subjectId, filters.subjectId));
-  }
-
-  if (filters.chapterId) {
-    clauses.push(eq(forumThreads.chapterId, filters.chapterId));
-  }
-
-  if (filters.q) {
-    clauses.push(
-      sql`to_tsvector('english', coalesce(${forumThreads.title}, '') || ' ' || coalesce(${forumThreads.body}, '')) @@ plainto_tsquery('english', ${filters.q})`
-    );
-  }
-
-  if (filters.solved === "solved") {
-    clauses.push(eq(forumThreads.isSolved, true));
-  }
-
-  if (filters.solved === "unsolved") {
-    clauses.push(eq(forumThreads.isSolved, false));
-  }
-
-  return clauses.length > 0 ? and(...clauses) : undefined;
-};
-
-const shapeThreadReplies = (replyRows: ReplyRow[]): ThreadReply[] => {
-  const topLevelReplies: ThreadReply[] = [];
-  const topLevelById = new Map<string, ThreadReply>();
-
-  for (const row of replyRows) {
-    if (row.parentReplyId === null) {
-      const topLevelReply: ThreadReply = {
-        id: row.id,
-        threadId: row.threadId,
-        userId: row.userId,
-        userName: row.userName,
-        parentReplyId: null,
-        body: row.body,
-        isAcceptedAnswer: row.isAcceptedAnswer,
-        upvotes: row.upvotes,
-        viewerVoteType: row.viewerVoteType,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-        replies: []
-      };
-      topLevelById.set(row.id, topLevelReply);
-      topLevelReplies.push(topLevelReply);
-    }
-  }
-
-  for (const row of replyRows) {
-    if (!row.parentReplyId) {
-      continue;
-    }
-
-    const parent = topLevelById.get(row.parentReplyId);
-    if (!parent) {
-      continue;
-    }
-
-    parent.replies.push({
-      id: row.id,
-      threadId: row.threadId,
-      userId: row.userId,
-      userName: row.userName,
-      parentReplyId: row.parentReplyId,
-      body: row.body,
-      isAcceptedAnswer: row.isAcceptedAnswer,
-      upvotes: row.upvotes,
-      viewerVoteType: row.viewerVoteType,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt
-    });
-  }
-
-  return topLevelReplies;
-};
-
-const resolveThreadSubjectId = async (input: { subjectId?: number; chapterId?: number }) => {
-  let resolvedSubjectId = input.subjectId ?? null;
-
-  if (input.chapterId) {
-    const chapterRows = await db
-      .select({
-        id: chapters.id,
-        subjectId: chapters.subjectId
-      })
-      .from(chapters)
-      .where(eq(chapters.id, input.chapterId))
-      .limit(1);
-    const chapterRow = chapterRows[0];
-
-    if (!chapterRow) {
-      return {
-        error: {
-          status: 404,
-          body: { error: "Chapter not found." }
-        } as const
-      };
-    }
-
-    if (resolvedSubjectId && resolvedSubjectId !== chapterRow.subjectId) {
-      return {
-        error: {
-          status: 400,
-          body: { error: "subjectId must match the selected chapter subject." }
-        } as const
-      };
-    }
-
-    resolvedSubjectId = resolvedSubjectId ?? chapterRow.subjectId;
-  }
-
-  if (resolvedSubjectId) {
-    const subjectRows = await db
-      .select({
-        id: subjects.id
-      })
-      .from(subjects)
-      .where(eq(subjects.id, resolvedSubjectId))
-      .limit(1);
-
-    if (subjectRows.length === 0) {
-      return {
-        error: {
-          status: 404,
-          body: { error: "Subject not found." }
-        } as const
-      };
-    }
-  }
-
-  return {
-    subjectId: resolvedSubjectId
-  } as const;
-};
-
 export const forumRouter = Router();
 
 const applyForumMutationRateLimit = async (res: Response, userId: string): Promise<boolean> => {
-  let rateLimit: Awaited<ReturnType<typeof consumeForumMutationRateLimit>>;
-  try {
-    rateLimit = await consumeForumMutationRateLimit(userId);
-  } catch (error) {
-    console.error("Forum mutation rate limit check failed:", error);
-    res.status(503).json({
-      error: "Forum mutation rate limiting is temporarily unavailable."
-    });
-    return false;
-  }
-
-  res.setHeader("x-ratelimit-limit", String(rateLimit.limit));
-  res.setHeader("x-ratelimit-remaining", String(rateLimit.remaining));
-  res.setHeader("x-ratelimit-reset", String(rateLimit.resetSeconds));
-
-  if (!rateLimit.allowed) {
-    res.setHeader("retry-after", String(rateLimit.resetSeconds));
-    res.status(429).json({
-      error: "Forum mutation rate limit exceeded.",
-      retryAfterSeconds: rateLimit.resetSeconds
-    });
-    return false;
-  }
-
-  return true;
+  return forumService.checkMutationRateLimit(res, userId);
 };
 
 forumRouter.get("/filters", async (_req, res) => {
-  const boardRows = await db
+  const { boards: boardRows, subjects: subjectRows, chapters: chapterRows, classes: classRows } = await forumService.getFilters
+    ? { boards: [], subjects: [], chapters: [], classes: [] }
+    : { boards: [], subjects: [], chapters: [], classes: [] };
+
+  const filters = await db
     .select({
       id: boards.id,
       name: boards.name,
@@ -275,7 +65,7 @@ forumRouter.get("/filters", async (_req, res) => {
     .from(boards)
     .orderBy(asc(boards.name));
 
-  const subjectRows = await db
+  const subjectRowsData = await db
     .select({
       id: subjects.id,
       name: subjects.name,
@@ -290,7 +80,7 @@ forumRouter.get("/filters", async (_req, res) => {
     .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
     .orderBy(asc(subjects.boardId), asc(sql`coalesce(${boardClasses.name}, ${subjects.grade}::text)`), asc(subjects.name));
 
-  const chapterRows = await db
+  const chapterRowsData = await db
     .select({
       id: chapters.id,
       title: chapters.title,
@@ -302,19 +92,21 @@ forumRouter.get("/filters", async (_req, res) => {
     .where(eq(chapters.isPublished, true))
     .orderBy(asc(chapters.subjectId), asc(chapters.chapterNumber));
 
+  const classRowsData = await db
+    .select({
+      id: boardClasses.id,
+      boardId: boardClasses.boardId,
+      name: boardClasses.name,
+      slug: boardClasses.slug
+    })
+    .from(boardClasses)
+    .orderBy(asc(boardClasses.boardId), asc(boardClasses.name));
+
   res.status(200).json({
-    boards: boardRows,
-    classes: await db
-      .select({
-        id: boardClasses.id,
-        boardId: boardClasses.boardId,
-        name: boardClasses.name,
-        slug: boardClasses.slug
-      })
-      .from(boardClasses)
-      .orderBy(asc(boardClasses.boardId), asc(boardClasses.name)),
-    subjects: subjectRows,
-    chapters: chapterRows
+    boards: filters,
+    classes: classRowsData,
+    subjects: subjectRowsData,
+    chapters: chapterRowsData
   });
 });
 
@@ -339,6 +131,8 @@ forumRouter.get("/threads", async (req, res) => {
   const orderByClauses = filters.q
     ? [desc(relevanceScoreSql), desc(forumThreads.isPinned), desc(forumThreads.createdAt)]
     : [desc(forumThreads.isPinned), desc(forumThreads.createdAt)];
+
+  const whereClause = forumService.buildFilters(filters);
 
   const threadRows = await db
     .select({
@@ -371,7 +165,7 @@ forumRouter.get("/threads", async (req, res) => {
     .leftJoin(subjects, eq(forumThreads.subjectId, subjects.id))
     .leftJoin(boards, eq(subjects.boardId, boards.id))
     .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
-    .where(buildForumFilters(filters))
+    .where(whereClause)
     .orderBy(...orderByClauses)
     .limit(filters.limit)
     .offset(filters.offset);
@@ -488,7 +282,7 @@ forumRouter.get("/threads/:threadId", async (req, res) => {
   res.status(200).json({
     thread: {
       ...thread,
-      replies: shapeThreadReplies(replyRowsWithVotes),
+      replies: forumService.shapeThreadReplies(replyRowsWithVotes),
       replyCount: replyRowsWithVotes.length
     }
   });
@@ -512,68 +306,32 @@ forumRouter.post("/threads", requireSession, async (req, res) => {
     return;
   }
 
-  const moderation = moderateForumInput(`${title}\n${body}`);
-  if (moderation.blocked) {
-    res.status(422).json({
-      error: "Forum content blocked by safety checks.",
-      reason: moderation.reason
-    });
-    return;
-  }
-
-  const subjectResolution = await resolveThreadSubjectId({
-    ...(parsed.data.subjectId ? { subjectId: parsed.data.subjectId } : {}),
-    ...(chapterId ? { chapterId } : {})
-  });
-
-  if ("error" in subjectResolution) {
-    res.status(subjectResolution.error.status).json(subjectResolution.error.body);
-    return;
-  }
-
-  const insertedRows = await db
-    .insert(forumThreads)
-    .values({
-      userId,
+  try {
+    const result = await forumService.createThread({
       title,
       body,
-      subjectId: subjectResolution.subjectId,
-      chapterId: chapterId ?? null
-    })
-    .returning({
-      id: forumThreads.id,
-      title: forumThreads.title,
-      body: forumThreads.body,
-      userId: forumThreads.userId,
-      subjectId: forumThreads.subjectId,
-      chapterId: forumThreads.chapterId,
-      isPinned: forumThreads.isPinned,
-      isSolved: forumThreads.isSolved,
-      views: forumThreads.views,
-      createdAt: forumThreads.createdAt,
-      updatedAt: forumThreads.updatedAt
+      userId,
+      chapterId,
+      subjectId: parsed.data.subjectId
     });
 
-  const insertedThread = insertedRows[0];
-  if (!insertedThread) {
-    res.status(500).json({
-      error: "Unable to create thread."
+    res.status(201).json({
+      thread: {
+        ...result.thread,
+        userName: authedReq.session.user.name
+      }
     });
-    return;
-  }
-
-  res.status(201).json({
-    thread: {
-      ...insertedThread,
-      userName: authedReq.session.user.name,
-      boardSlug: null,
-      boardName: null,
-      grade: null,
-      className: null,
-      subjectName: null,
-      replyCount: 0
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    if (message.includes("blocked by safety checks")) {
+      res.status(422).json({
+        error: "Forum content blocked by safety checks.",
+        reason: message
+      });
+      return;
     }
-  });
+    res.status(500).json({ error: message });
+  }
 });
 
 forumRouter.post("/threads/:threadId/replies", requireSession, async (req, res) => {
@@ -603,99 +361,34 @@ forumRouter.post("/threads/:threadId/replies", requireSession, async (req, res) 
     return;
   }
 
-  const moderation = moderateForumInput(parsed.data.body);
-  if (moderation.blocked) {
-    res.status(422).json({
-      error: "Forum content blocked by safety checks.",
-      reason: moderation.reason
-    });
-    return;
-  }
-
-  const threadRows = await db
-    .select({
-      id: forumThreads.id
-    })
-    .from(forumThreads)
-    .where(eq(forumThreads.id, threadId))
-    .limit(1);
-
-  if (threadRows.length === 0) {
-    res.status(404).json({
-      error: "Thread not found"
-    });
-    return;
-  }
-
-  const parentReplyId = parsed.data.parentReplyId ?? null;
-  if (parentReplyId) {
-    const parentReplyRows = await db
-      .select({
-        id: forumReplies.id,
-        threadId: forumReplies.threadId,
-        parentReplyId: forumReplies.parentReplyId
-      })
-      .from(forumReplies)
-      .where(eq(forumReplies.id, parentReplyId))
-      .limit(1);
-    const parentReply = parentReplyRows[0];
-
-    if (!parentReply) {
-      res.status(404).json({
-        error: "Parent reply not found"
-      });
-      return;
-    }
-
-    if (parentReply.threadId !== threadId) {
-      res.status(400).json({
-        error: "Parent reply does not belong to this thread."
-      });
-      return;
-    }
-
-    if (parentReply.parentReplyId) {
-      res.status(400).json({
-        error: "Only one level of nested replies is allowed."
-      });
-      return;
-    }
-  }
-
-  const insertedRows = await db
-    .insert(forumReplies)
-    .values({
+  try {
+    const result = await forumService.createReply({
+      body: parsed.data.body,
+      parentReplyId: parsed.data.parentReplyId,
       threadId,
-      userId,
-      parentReplyId,
-      body: parsed.data.body
-    })
-    .returning({
-      id: forumReplies.id,
-      threadId: forumReplies.threadId,
-      userId: forumReplies.userId,
-      parentReplyId: forumReplies.parentReplyId,
-      body: forumReplies.body,
-      isAcceptedAnswer: forumReplies.isAcceptedAnswer,
-      upvotes: forumReplies.upvotes,
-      createdAt: forumReplies.createdAt,
-      updatedAt: forumReplies.updatedAt
-    });
+      userId
+    }, authedReq.session.user.name);
 
-  const insertedReply = insertedRows[0];
-  if (!insertedReply) {
-    res.status(500).json({
-      error: "Unable to create reply."
-    });
-    return;
-  }
-
-  res.status(201).json({
-    reply: {
-      ...insertedReply,
-      userName: authedReq.session.user.name
+    res.status(201).json(result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    if (message.includes("blocked by safety checks")) {
+      res.status(422).json({
+        error: "Forum content blocked by safety checks.",
+        reason: message
+      });
+      return;
     }
-  });
+    if (message.includes("not found")) {
+      res.status(404).json({ error: message });
+      return;
+    }
+    if (message.includes("does not belong") || message.includes("Only one level")) {
+      res.status(400).json({ error: message });
+      return;
+    }
+    res.status(500).json({ error: message });
+  }
 });
 
 forumRouter.post("/replies/:replyId/vote", requireSession, async (req, res) => {
@@ -725,80 +418,17 @@ forumRouter.post("/replies/:replyId/vote", requireSession, async (req, res) => {
     return;
   }
 
-  const replyRows = await db
-    .select({
-      id: forumReplies.id
-    })
-    .from(forumReplies)
-    .where(eq(forumReplies.id, replyId))
-    .limit(1);
-
-  if (replyRows.length === 0) {
-    res.status(404).json({
-      error: "Reply not found"
-    });
-    return;
-  }
-
-  const updatedUpvotes = await db.transaction(async (tx) => {
-    const existingVotes = await tx
-      .select({
-        id: forumReplyVotes.id,
-        voteType: forumReplyVotes.voteType
-      })
-      .from(forumReplyVotes)
-      .where(and(eq(forumReplyVotes.userId, userId), eq(forumReplyVotes.replyId, replyId)))
-      .limit(1);
-    const existingVote = existingVotes[0];
-
-    let delta = 0;
-    if (!existingVote) {
-      await tx.insert(forumReplyVotes).values({
-        userId,
-        replyId,
-        voteType
-      });
-      delta = voteType === "upvote" ? 1 : -1;
-    } else if (existingVote.voteType !== voteType) {
-      await tx.update(forumReplyVotes).set({ voteType }).where(eq(forumReplyVotes.id, existingVote.id));
-      delta = voteType === "upvote" ? 2 : -2;
+  try {
+    const result = await forumService.voteReply({ replyId, voteType, userId });
+    res.status(200).json(result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    if (message.includes("not found")) {
+      res.status(404).json({ error: message });
+      return;
     }
-
-    if (delta !== 0) {
-      const updatedReplyRows = await tx
-        .update(forumReplies)
-        .set({
-          upvotes: sql`${forumReplies.upvotes} + ${delta}`
-        })
-        .where(eq(forumReplies.id, replyId))
-        .returning({
-          upvotes: forumReplies.upvotes
-        });
-      return updatedReplyRows[0]?.upvotes ?? null;
-    }
-
-    const sameVoteReplyRows = await tx
-      .select({
-        upvotes: forumReplies.upvotes
-      })
-      .from(forumReplies)
-      .where(eq(forumReplies.id, replyId))
-      .limit(1);
-    return sameVoteReplyRows[0]?.upvotes ?? null;
-  });
-
-  if (updatedUpvotes === null) {
-    res.status(500).json({
-      error: "Unable to update vote."
-    });
-    return;
+    res.status(500).json({ error: message });
   }
-
-  res.status(200).json({
-    replyId,
-    voteType,
-    upvotes: updatedUpvotes
-  });
 });
 
 forumRouter.post("/replies/:replyId/accept", requireSession, async (req, res) => {
@@ -818,59 +448,19 @@ forumRouter.post("/replies/:replyId/accept", requireSession, async (req, res) =>
     return;
   }
 
-  const replyRows = await db
-    .select({
-      replyId: forumReplies.id,
-      threadId: forumReplies.threadId,
-      threadAuthorId: forumThreads.userId
-    })
-    .from(forumReplies)
-    .innerJoin(forumThreads, eq(forumReplies.threadId, forumThreads.id))
-    .where(eq(forumReplies.id, replyId))
-    .limit(1);
-
-  const reply = replyRows[0];
-  if (!reply) {
-    res.status(404).json({
-      error: "Reply not found"
-    });
-    return;
+  try {
+    const result = await forumService.acceptReply(replyId, userId);
+    res.status(200).json(result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    if (message.includes("not found")) {
+      res.status(404).json({ error: message });
+      return;
+    }
+    if (message.includes("Only the thread author")) {
+      res.status(403).json({ error: message });
+      return;
+    }
+    res.status(500).json({ error: message });
   }
-
-  if (reply.threadAuthorId !== userId) {
-    res.status(403).json({
-      error: "Only the thread author can mark an accepted answer."
-    });
-    return;
-  }
-
-  await db.transaction(async (tx) => {
-    await tx
-      .update(forumReplies)
-      .set({
-        isAcceptedAnswer: false
-      })
-      .where(eq(forumReplies.threadId, reply.threadId));
-
-    await tx
-      .update(forumReplies)
-      .set({
-        isAcceptedAnswer: true
-      })
-      .where(eq(forumReplies.id, replyId));
-
-    await tx
-      .update(forumThreads)
-      .set({
-        isSolved: true
-      })
-      .where(eq(forumThreads.id, reply.threadId));
-  });
-
-  res.status(200).json({
-    replyId,
-    threadId: reply.threadId,
-    isAcceptedAnswer: true,
-    isSolved: true
-  });
 });
