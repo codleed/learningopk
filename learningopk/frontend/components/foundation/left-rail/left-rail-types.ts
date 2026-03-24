@@ -25,8 +25,6 @@ export interface LeftRailProps {
     };
   };
   currentPath?: string;
-  isCollapsed: boolean;
-  onToggle: () => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
 }
@@ -34,13 +32,12 @@ export interface LeftRailProps {
 export interface RoleToggleProps {
   currentMode: ViewMode;
   onModeChange: (mode: ViewMode) => void;
-  isCollapsed: boolean;
 }
 
 export interface NavItemComponentProps {
   item: NavItem;
   isActive: boolean;
-  isCollapsed: boolean;
+  isExpanded: boolean;
   variant: ViewMode;
   currentPath: string;
 }

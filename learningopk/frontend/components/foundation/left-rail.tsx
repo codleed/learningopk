@@ -1,14 +1,10 @@
 "use client";
 
-import {
-  SignOut,
-  CaretDoubleLeft,
-  CaretDoubleRight,
-} from "@phosphor-icons/react";
+import { SignOut } from "@phosphor-icons/react";
 import type { LucideIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { ThemeToggleCompact } from "@/components/ui/theme-toggle";
@@ -22,11 +18,12 @@ import {
   isNavItemActive,
 } from "./left-rail/left-rail-config";
 
+const RAIL_COLLAPSED_WIDTH = 72;
+const RAIL_EXPANDED_WIDTH = 280;
+
 type LeftRailProps = {
   session: SessionPayload;
   currentPath?: string;
-  isCollapsed: boolean;
-  onToggle: () => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
 };
@@ -43,11 +40,11 @@ const getInitials = (name: string): string =>
 interface NavItemProps {
   item: NavItemType;
   isActive: boolean;
-  isCollapsed: boolean;
+  isExpanded: boolean;
   variant: ViewMode;
 }
 
-function NavItem({ item, isActive, isCollapsed, variant }: NavItemProps) {
+function NavItem({ item, isActive, isExpanded, variant }: NavItemProps) {
   const LinkIcon = item.icon as LucideIcon;
   const isStudentVariant = variant === "student";
 
@@ -60,10 +57,10 @@ function NavItem({ item, isActive, isCollapsed, variant }: NavItemProps) {
     <Link
       href={item.href}
       aria-current={isActive ? "page" : undefined}
-      title={isCollapsed ? item.label : undefined}
+      title={!isExpanded ? item.label : undefined}
       className={cn(
         baseClasses,
-        isCollapsed
+        !isExpanded
           ? "h-11 w-11 justify-center mx-auto"
           : isStudentVariant
             ? "h-11 w-full gap-3 px-3"
@@ -80,12 +77,12 @@ function NavItem({ item, isActive, isCollapsed, variant }: NavItemProps) {
       <LinkIcon
         className={cn(
           "shrink-0 transition-all duration-150",
-          isCollapsed ? "h-5 w-5" : isStudentVariant ? "h-5 w-5" : "h-[18px] w-[18px]"
+          !isExpanded ? "h-5 w-5" : isStudentVariant ? "h-5 w-5" : "h-[18px] w-[18px]"
         )}
         strokeWidth={isActive ? 2.5 : 2}
         aria-hidden
       />
-      {!isCollapsed && (
+      {isExpanded && (
         <span
           className={cn(
             "truncate transition-colors duration-150",
@@ -102,12 +99,17 @@ function NavItem({ item, isActive, isCollapsed, variant }: NavItemProps) {
 export function LeftRail({
   session,
   currentPath = "/",
-  isCollapsed,
-  onToggle,
   viewMode,
   onViewModeChange,
 }: LeftRailProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const isAdmin = session.user.role === "admin";
+
+  const handleMouseEnter = useCallback(() => setIsExpanded(true), []);
+  const handleMouseLeave = useCallback(() => setIsExpanded(false), []);
+
+  const handleFocusIn = useCallback(() => setIsExpanded(true), []);
+  const handleFocusOut = useCallback(() => setIsExpanded(false), []);
 
   const displayName = useMemo(() => {
     const trimmedName = session.user.name?.trim();
@@ -120,6 +122,8 @@ export function LeftRail({
 
   const avatarInitials = getInitials(displayName);
 
+  const currentWidth = isExpanded ? RAIL_EXPANDED_WIDTH : RAIL_COLLAPSED_WIDTH;
+
   const renderStudentNav = () => (
     <div className="flex w-full flex-col gap-1">
       {studentNavItems.map((item) => (
@@ -127,7 +131,7 @@ export function LeftRail({
           key={item.href}
           item={item}
           isActive={isNavItemActive(currentPath, item)}
-          isCollapsed={isCollapsed}
+          isExpanded={isExpanded}
           variant="student"
         />
       ))}
@@ -142,11 +146,11 @@ export function LeftRail({
             <div
               className={cn(
                 "my-3 h-px bg-[var(--sidebar-border)]",
-                isCollapsed ? "mx-auto w-8 opacity-30" : "w-full opacity-50"
+                !isExpanded ? "mx-auto w-8 opacity-30" : "w-full opacity-50"
               )}
             />
           )}
-          {!isCollapsed && section.label && (
+          {isExpanded && section.label && (
             <div className="mb-1 mt-3 px-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--sidebar-admin-default-text)] opacity-70">
               {section.label}
             </div>
@@ -156,7 +160,7 @@ export function LeftRail({
               key={item.href}
               item={item}
               isActive={isNavItemActive(currentPath, item)}
-              isCollapsed={isCollapsed}
+              isExpanded={isExpanded}
               variant="admin"
             />
           ))}
@@ -166,129 +170,118 @@ export function LeftRail({
   );
 
   return (
-    <aside
-      className={cn(
-        "fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] transition-[width] duration-350 ease-in-out",
-        "shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_10px_20px_-5px_rgba(0,0,0,0.08)]",
-        isCollapsed ? "w-[72px]" : "w-[280px]"
-      )}
-      data-testid="left-rail"
-      data-collapsed={isCollapsed ? "true" : "false"}
-      data-view-mode={viewMode}
+    <div
+      className="left-rail-container fixed inset-y-0 left-0 z-40 flex"
+      style={{ width: currentWidth, transition: "width 350ms ease-in-out" }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onFocusCapture={handleFocusIn}
+      onBlurCapture={handleFocusOut}
     >
-      <div className="flex flex-1 flex-col px-[var(--sidebar-padding-x)] py-[var(--sidebar-padding-top)]">
-        <div
-          className={cn(
-            "mb-4 flex items-center",
-            isCollapsed ? "justify-center" : "gap-3"
-          )}
-        >
-          <Link
-            href="/dashboard"
-            aria-label="LearningoPK Home"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--foreground)] p-2 shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105"
-          >
-            <Image
-              src="/new_logo.png"
-              alt="LearningoPK logo"
-              width={28}
-              height={28}
-              className="h-7 w-7 rounded-lg object-cover invert"
-              priority
-            />
-          </Link>
-          {!isCollapsed && (
-            <div className="flex flex-col min-w-0">
-              <span className="truncate text-base font-semibold text-[var(--sidebar-brand-text)] tracking-tight">
-                LearningoPK
-              </span>
-              <span className="truncate text-xs text-[var(--sidebar-brand-text-muted)]">
-                Welcome back
-              </span>
-            </div>
-          )}
-        </div>
-
-        {isAdmin && !isCollapsed && (
-          <RoleToggle
-            currentMode={viewMode}
-            onModeChange={onViewModeChange}
-            isCollapsed={isCollapsed}
-          />
+      <aside
+        className={cn(
+          "flex flex-col border-r border-[var(--sidebar-border)] bg-[var(--sidebar-bg)]",
+          "shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_10px_20px_-5px_rgba(0,0,0,0.08)]",
+          "h-full w-full"
         )}
-
-        <div className="flex-1">
-          {viewMode === "student" ? renderStudentNav() : renderAdminNav()}
-        </div>
-      </div>
-
-      <div className="shrink-0 px-[var(--sidebar-padding-x)] py-4 space-y-1">
-        <ThemeToggleCompact isCollapsed={isCollapsed} />
-
-        <button
-          type="button"
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          onClick={onToggle}
-          className={cn(
-            "group flex h-10 w-full items-center rounded-xl text-[var(--sidebar-utility-default-text)] transition-all duration-150 hover:bg-[var(--sidebar-utility-hover-bg)] hover:text-[var(--sidebar-utility-hover-text)]",
-            isCollapsed ? "justify-center" : "gap-3 px-3"
-          )}
-        >
-          {isCollapsed ? (
-            <CaretDoubleRight className="h-5 w-5 shrink-0" aria-hidden />
-          ) : (
-            <>
-              <CaretDoubleLeft className="h-5 w-5 shrink-0" aria-hidden />
-              <span className="truncate text-sm font-medium">Collapse</span>
-            </>
-          )}
-        </button>
-
-        <LogoutButton
-          ariaLabel="Sign out"
-          icon={
-            <SignOut
-              className="h-5 w-5 shrink-0 transition-colors duration-150"
-              aria-hidden
-            />
-          }
-          hideLabel={isCollapsed}
-          className={cn(
-            "group flex h-10 w-full items-center rounded-xl border-0 bg-transparent transition-all duration-150",
-            isCollapsed ? "justify-center text-[var(--sidebar-utility-default-text)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8" : "gap-3 px-3 text-[var(--sidebar-utility-default-text)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8"
-          )}
-          labelClassName="truncate text-sm font-medium transition-colors duration-150"
-        />
-
-        <Link
-          href="/settings"
-          aria-label={`Profile: ${displayName}`}
-          title={isCollapsed ? displayName : undefined}
-          className={cn(
-            "group flex items-center rounded-2xl border border-[var(--sidebar-profile-border)] bg-[var(--sidebar-profile-bg)] p-3 transition-all duration-150 hover:border-[var(--sidebar-border)] hover:bg-[var(--sidebar-nav-hover-bg)]",
-            isCollapsed
-              ? "justify-center p-2"
-              : "gap-3"
-          )}
-        >
-          <div className={cn(
-            "flex shrink-0 items-center justify-center rounded-full bg-[var(--sidebar-profile-avatar-bg)] text-[var(--sidebar-profile-avatar-text)] font-bold transition-all duration-150 group-hover:scale-105",
-            isCollapsed ? "h-10 w-10 text-sm" : "h-10 w-10 text-sm"
-          )}>
-            {avatarInitials}
+        data-testid="left-rail"
+        data-expanded={isExpanded ? "true" : "false"}
+        data-view-mode={viewMode}
+      >
+        <div className="flex flex-1 flex-col px-[var(--sidebar-padding-x)] py-[var(--sidebar-padding-top)]">
+          <div
+            className={cn(
+              "mb-4 flex items-center",
+              !isExpanded ? "justify-center" : "gap-3"
+            )}
+          >
+            <Link
+              href="/dashboard"
+              aria-label="LearningoPK Home"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--foreground)] p-2 shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105"
+            >
+              <Image
+                src="/new_logo.png"
+                alt="LearningoPK logo"
+                width={28}
+                height={28}
+                className="h-7 w-7 rounded-lg object-cover invert"
+                priority
+              />
+            </Link>
+            {isExpanded && (
+              <div className="flex flex-col min-w-0">
+                <span className="truncate text-base font-semibold text-[var(--sidebar-brand-text)] tracking-tight">
+                  LearningoPK
+                </span>
+                <span className="truncate text-xs text-[var(--sidebar-brand-text-muted)]">
+                  Welcome back
+                </span>
+              </div>
+            )}
           </div>
-          {!isCollapsed && (
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-[var(--sidebar-profile-text)]">
-                {truncatedName}
-              </p>
-              <p className="truncate text-xs text-[var(--sidebar-profile-text-muted)]">
-                View Profile
-              </p>
-            </div>
+
+          {isAdmin && isExpanded && (
+            <RoleToggle
+              currentMode={viewMode}
+              onModeChange={onViewModeChange}
+            />
           )}
-        </Link>
-      </div>
-    </aside>
+
+          <div className="flex-1">
+            {viewMode === "student" ? renderStudentNav() : renderAdminNav()}
+          </div>
+        </div>
+
+        <div className="shrink-0 px-[var(--sidebar-padding-x)] py-4 space-y-1">
+          <ThemeToggleCompact isCollapsed={!isExpanded} />
+
+          <LogoutButton
+            ariaLabel="Sign out"
+            icon={
+              <SignOut
+                className="h-5 w-5 shrink-0 transition-colors duration-150"
+                aria-hidden
+              />
+            }
+            hideLabel={!isExpanded}
+            className={cn(
+              "group flex h-10 w-full items-center rounded-xl border-0 bg-transparent transition-all duration-150",
+              !isExpanded ? "justify-center text-[var(--sidebar-utility-default-text)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8" : "gap-3 px-3 text-[var(--sidebar-utility-default-text)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8"
+            )}
+            labelClassName="truncate text-sm font-medium transition-colors duration-150"
+          />
+
+          <Link
+            href="/settings"
+            aria-label={`Profile: ${displayName}`}
+            title={!isExpanded ? displayName : undefined}
+            className={cn(
+              "group flex items-center rounded-2xl border border-[var(--sidebar-profile-border)] bg-[var(--sidebar-profile-bg)] p-3 transition-all duration-150 hover:border-[var(--sidebar-border)] hover:bg-[var(--sidebar-nav-hover-bg)]",
+              !isExpanded
+                ? "justify-center p-2"
+                : "gap-3"
+            )}
+          >
+            <div className={cn(
+              "flex shrink-0 items-center justify-center rounded-full bg-[var(--sidebar-profile-avatar-bg)] text-[var(--sidebar-profile-avatar-text)] font-bold transition-all duration-150 group-hover:scale-105",
+              !isExpanded ? "h-10 w-10 text-sm" : "h-10 w-10 text-sm"
+            )}>
+              {avatarInitials}
+            </div>
+            {isExpanded && (
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-[var(--sidebar-profile-text)]">
+                  {truncatedName}
+                </p>
+                <p className="truncate text-xs text-[var(--sidebar-profile-text-muted)]">
+                  View Profile
+                </p>
+              </div>
+            )}
+          </Link>
+        </div>
+      </aside>
+    </div>
   );
 }

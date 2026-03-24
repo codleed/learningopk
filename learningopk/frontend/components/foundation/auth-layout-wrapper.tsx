@@ -15,18 +15,8 @@ type AuthLayoutWrapperProps = {
   className?: string;
 };
 
-const RAIL_COLLAPSED_WIDTH = "72px";
-const RAIL_EXPANDED_WIDTH = "280px";
-const RAIL_STORAGE_KEY = "learningo-sidebar-collapsed";
+const RAIL_WIDTH = "72px";
 const VIEW_MODE_STORAGE_KEY = "learningo-view-mode";
-
-function getInitialCollapsedState(): boolean {
-  if (typeof window === "undefined") return true;
-  if (typeof localStorage === "undefined") return true;
-  const stored = localStorage.getItem(RAIL_STORAGE_KEY);
-  if (stored === null) return true;
-  return stored === "true";
-}
 
 function getInitialViewMode(isAdmin: boolean): ViewMode {
   if (!isAdmin) return "student";
@@ -37,35 +27,21 @@ function getInitialViewMode(isAdmin: boolean): ViewMode {
   return "admin";
 }
 
-function getInitialHydratedState(): boolean {
-  return typeof window !== "undefined";
-}
-
 export function AuthLayoutWrapper({
   children,
   session,
   currentPath,
   className,
 }: AuthLayoutWrapperProps) {
-  const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsedState);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const isAdmin = session.user.role === "admin";
     return isAdmin ? "admin" : "student";
   });
-  const isHydrated = getInitialHydratedState();
   const isAdmin = session.user.role === "admin";
 
   useEffect(() => {
     setViewMode(getInitialViewMode(isAdmin));
   }, [isAdmin]);
-
-  const handleToggle = useCallback(() => {
-    setIsCollapsed((prev) => {
-      const newValue = !prev;
-      localStorage.setItem(RAIL_STORAGE_KEY, String(newValue));
-      return newValue;
-    });
-  }, []);
 
   const handleViewModeChange = useCallback((mode: ViewMode) => {
     setViewMode(mode);
@@ -74,15 +50,11 @@ export function AuthLayoutWrapper({
     }
   }, []);
 
-  const sidebarWidth = isHydrated && !isCollapsed ? RAIL_EXPANDED_WIDTH : RAIL_COLLAPSED_WIDTH;
-
   return (
     <div className="flex min-h-screen overflow-x-hidden">
       <LeftRail
         session={session}
         currentPath={currentPath}
-        isCollapsed={!isHydrated ? true : isCollapsed}
-        onToggle={handleToggle}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
       />
@@ -92,7 +64,7 @@ export function AuthLayoutWrapper({
           "flex-1 min-w-0 transition-[margin] duration-350 ease-in-out",
           className
         )}
-        style={{ marginLeft: sidebarWidth }}
+        style={{ marginLeft: RAIL_WIDTH }}
       >
         {children}
       </main>

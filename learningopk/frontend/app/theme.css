@@ -387,3 +387,27 @@
   background: var(--sidebar-foreground);
   opacity: 0.3;
 }
+
+/* === Touch Device: Always Expanded Sidebar === */
+/* On touch devices (no hover capability), always show expanded sidebar */
+@media (hover: none) and (pointer: coarse) {
+  .left-rail-container {
+    width: var(--sidebar-width-expanded, 280px) !important;
+  }
+  
+  #main-content {
+    margin-left: var(--sidebar-width-expanded, 280px) !important;
+  }
+}
+
+/* === Keyboard Navigation Focus === */
+/* When sidebar or its children have focus, keep expanded */
+.left-rail-container:focus-within {
+  width: var(--sidebar-width-expanded, 280px);
+}
+
+/* Ensure main content adjusts when sidebar is focused */
+.left-rail-container:focus-within ~ #main-content,
+.left-rail-container:focus-within + #main-content {
+  margin-left: var(--sidebar-width-expanded, 280px);
+}

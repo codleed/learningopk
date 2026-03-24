@@ -7,12 +7,7 @@ import type { RoleToggleProps } from "./left-rail-types";
 export function RoleToggle({
   currentMode,
   onModeChange,
-  isCollapsed,
 }: RoleToggleProps) {
-  if (isCollapsed) {
-    return null;
-  }
-
   return (
     <div
       role="tablist"
