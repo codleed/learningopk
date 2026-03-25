@@ -13,6 +13,7 @@ import {
   ScrollText,
   Bell,
   Settings,
+  UserPlus,
 } from "lucide-react";
 
 import type { NavItem, NavSection } from "./left-rail-types";
@@ -37,6 +38,16 @@ export const studentNavItems: NavItem[] = [
     href: "/subjects",
     label: "Subjects",
     icon: BookOpen,
+  },
+  {
+    href: "/friends",
+    label: "Friends",
+    icon: UserPlus,
+  },
+  {
+    href: "/messages",
+    label: "Messages",
+    icon: MessageCircle,
   },
   {
     href: "/ai-tutor",

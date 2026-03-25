@@ -11,7 +11,16 @@ export const SUPPORTED_IMAGE_MIME_TYPES = [
   "image/gif"
 ] as const;
 
+export const SUPPORTED_DOCUMENT_MIME_TYPES = ["application/pdf", "text/plain"] as const;
+
+export const ALL_SUPPORTED_ATTACHMENT_MIME_TYPES = [
+  ...SUPPORTED_IMAGE_MIME_TYPES,
+  ...SUPPORTED_DOCUMENT_MIME_TYPES
+] as const;
+
 export type SupportedImageMimeType = (typeof SUPPORTED_IMAGE_MIME_TYPES)[number];
+export type SupportedDocumentMimeType = (typeof SUPPORTED_DOCUMENT_MIME_TYPES)[number];
+export type SupportedAttachmentMimeType = (typeof ALL_SUPPORTED_ATTACHMENT_MIME_TYPES)[number];
 
 const IMAGE_EXTENSION_BY_MIME_TYPE: Record<SupportedImageMimeType, "jpg" | "png" | "webp" | "gif"> = {
   "image/jpeg": "jpg",
@@ -20,7 +29,12 @@ const IMAGE_EXTENSION_BY_MIME_TYPE: Record<SupportedImageMimeType, "jpg" | "png"
   "image/gif": "gif"
 };
 
-const minioClient = new Client({
+const DOCUMENT_EXTENSION_BY_MIME_TYPE: Record<SupportedDocumentMimeType, "pdf" | "txt"> = {
+  "application/pdf": "pdf",
+  "text/plain": "txt"
+};
+
+export const minioClient = new Client({
   endPoint: env.MINIO_ENDPOINT,
   port: Number(env.MINIO_PORT),
   useSSL: env.MINIO_USE_SSL === "true",
@@ -35,6 +49,16 @@ const sanitizePathSegment = (value: string) => value.trim().replace(/[^a-zA-Z0-9
 
 export const fileExtensionFromMimeType = (mimeType: string): "jpg" | "png" | "webp" | "gif" | null => {
   return IMAGE_EXTENSION_BY_MIME_TYPE[mimeType as SupportedImageMimeType] ?? null;
+};
+
+export const documentExtensionFromMimeType = (mimeType: string): "pdf" | "txt" | null => {
+  return DOCUMENT_EXTENSION_BY_MIME_TYPE[mimeType as SupportedDocumentMimeType] ?? null;
+};
+
+export const getFileExtensionFromMimeType = (mimeType: string): string | null => {
+  const ext = fileExtensionFromMimeType(mimeType);
+  if (ext) return ext;
+  return documentExtensionFromMimeType(mimeType) ?? null;
 };
 
 export const buildProfileImageObjectKey = ({
@@ -61,6 +85,18 @@ export const buildChapterSummaryObjectKey = ({
   objectId?: string;
 }): string => {
   return `chapter-summaries/${chapterId}/${sanitizePathSegment(userId)}/${sanitizePathSegment(objectId)}.${fileExtension}`;
+};
+
+export const buildChatAttachmentObjectKey = ({
+  conversationId,
+  attachmentId,
+  fileExtension
+}: {
+  conversationId: string;
+  attachmentId: string;
+  fileExtension: string;
+}): string => {
+  return `attachments/chat/${sanitizePathSegment(conversationId)}/${sanitizePathSegment(attachmentId)}.${fileExtension}`;
 };
 
 export const buildPublicObjectUrl = ({
@@ -165,4 +201,66 @@ export const deleteObjectIfExists = async ({
   } catch {
     // Object replacement should not fail the primary request if cleanup misses.
   }
+};
+
+export const generatePresignedUploadUrl = async ({
+  objectKey,
+  mimeType,
+  expiresSeconds = 3600,
+  bucket = env.MINIO_BUCKET
+}: {
+  objectKey: string;
+  mimeType: SupportedAttachmentMimeType;
+  expiresSeconds?: number;
+  bucket?: string;
+}): Promise<{ uploadUrl: string; objectKey: string }> => {
+  await ensureMediaBucket(bucket);
+
+  const url = await minioClient.presignedPutObject(bucket, objectKey, expiresSeconds);
+
+  return {
+    uploadUrl: url,
+    objectKey
+  };
+};
+
+export const generatePresignedDownloadUrl = async ({
+  objectKey,
+  expiresSeconds = 3600,
+  bucket = env.MINIO_BUCKET
+}: {
+  objectKey: string;
+  expiresSeconds?: number;
+  bucket?: string;
+}): Promise<string> => {
+  return minioClient.presignedGetObject(bucket, objectKey, expiresSeconds);
+};
+
+export const uploadBuffer = async ({
+  objectKey,
+  buffer,
+  mimeType,
+  bucket = env.MINIO_BUCKET
+}: {
+  objectKey: string;
+  buffer: Buffer;
+  mimeType: SupportedAttachmentMimeType;
+  bucket?: string;
+}): Promise<{ objectKey: string; objectUrl: string }> => {
+  await ensureMediaBucket(bucket);
+
+  const metadata: Record<string, string> = {
+    "Content-Type": mimeType
+  };
+
+  if (SUPPORTED_IMAGE_MIME_TYPES.includes(mimeType as SupportedImageMimeType)) {
+    metadata["Cache-Control"] = "public, max-age=31536000, immutable";
+  }
+
+  await minioClient.putObject(bucket, objectKey, buffer, buffer.length, metadata);
+
+  return {
+    objectKey,
+    objectUrl: buildPublicObjectUrl({ bucket, objectKey })
+  };
 };

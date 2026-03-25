@@ -16,6 +16,20 @@ import {
 
 export const userRoleEnum = pgEnum("user_role", ["student", "admin"]);
 export const gradeEnum = pgEnum("grade", ["9", "10"]);
+export const friendRequestStatusEnum = pgEnum("friend_request_status", ["pending", "accepted", "declined"]);
+export const messageTypeEnum = pgEnum("message_type", ["text", "image", "file"]);
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "friend_request",
+  "friend_accepted",
+  "friend_declined",
+  "friend_removed",
+  "message",
+  "message_deleted"
+]);
+export const whoCanFindMeEnum = pgEnum("who_can_find_me", ["everyone", "friends_of_friends", "nobody"]);
+export const whoCanSendRequestEnum = pgEnum("who_can_send_request", ["everyone", "friends_of_friends"]);
+export const profileVisibilityEnum = pgEnum("profile_visibility", ["everyone", "friends_only", "nobody"]);
+export const whoCanMessageMeEnum = pgEnum("who_can_message_me", ["everyone", "friends_only", "nobody"]);
 export const difficultyEnum = pgEnum("difficulty", ["easy", "medium", "hard"]);
 export const exerciseTypeEnum = pgEnum("exercise_type", ["mcq", "short", "long", "numerical"]);
 export const quizTypeEnum = pgEnum("quiz_type", ["chapter_quiz", "mock_exam"]);
@@ -43,11 +57,15 @@ export const users = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
+  avatarUrl: text("avatar_url"),
   class: text("student_class"),
   degree: text("degree"),
   board: text("board"),
+  instituteId: integer("institute_id"),
   role: userRoleEnum("role").notNull().default("student"),
   status: userStatusEnum("status").notNull().default("active"),
+  isOnline: boolean("is_online").notNull().default(false),
+  lastSeen: timestamp("last_seen", { withTimezone: true, mode: "date" }),
   suspendedAt: timestamp("suspended_at", { withTimezone: true, mode: "date" }),
   suspendedReason: text("suspended_reason"),
   suspendedBy: text("suspended_by").references((): AnyPgColumn => users.id, { onDelete: "set null" }),
@@ -499,3 +517,189 @@ export const mockExams = pgTable("mock_exams", {
   durationMinutes: integer("duration_minutes").notNull(),
   totalMarks: integer("total_marks").notNull()
 });
+
+export const institutes = pgTable("institutes", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+});
+
+export const privacySettings = pgTable(
+  "privacy_settings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    whoCanFindMe: whoCanFindMeEnum("who_can_find_me").notNull().default("everyone"),
+    whoCanSendRequest: whoCanSendRequestEnum("who_can_send_request").notNull().default("everyone"),
+    showOnlineStatus: boolean("show_online_status").notNull().default(true),
+    showLastSeen: boolean("show_last_seen").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [uniqueIndex("privacy_settings_user_id_idx").on(table.userId)]
+);
+
+export const blockedUsers = pgTable(
+  "blocked_users",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    blockerId: text("blocker_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    blockedId: text("blocked_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    uniqueIndex("blocked_users_blocker_blocked_idx").on(table.blockerId, table.blockedId),
+    index("blocked_users_blocker_idx").on(table.blockerId),
+    index("blocked_users_blocked_idx").on(table.blockedId)
+  ]
+);
+
+export const friendRequests = pgTable(
+  "friend_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    senderId: text("sender_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    receiverId: text("receiver_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: friendRequestStatusEnum("status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    uniqueIndex("friend_requests_sender_receiver_idx").on(table.senderId, table.receiverId),
+    index("friend_requests_sender_idx").on(table.senderId),
+    index("friend_requests_receiver_idx").on(table.receiverId),
+    index("friend_requests_status_idx").on(table.status)
+  ]
+);
+
+export const friendships = pgTable(
+  "friendships",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    friendId: text("friend_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    uniqueIndex("friendships_user_friend_idx").on(table.userId, table.friendId),
+    index("friendships_user_idx").on(table.userId),
+    index("friendships_friend_idx").on(table.friendId)
+  ]
+);
+
+export const conversations = pgTable(
+  "conversations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    participantOneId: text("participant_one_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    participantTwoId: text("participant_two_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    uniqueIndex("conversations_participants_idx").on(table.participantOneId, table.participantTwoId),
+    index("conversations_participant_one_idx").on(table.participantOneId),
+    index("conversations_participant_two_idx").on(table.participantTwoId)
+  ]
+);
+
+export const messages = pgTable(
+  "messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    senderId: text("sender_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    content: text("content").notNull(),
+    messageType: messageTypeEnum("message_type").notNull().default("text"),
+    mediaUrl: text("media_url"),
+    mediaMimeType: text("media_mime_type"),
+    fileSize: integer("file_size"),
+    readAt: timestamp("read_at", { withTimezone: true, mode: "date" }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "date" }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    index("messages_conversation_idx").on(table.conversationId),
+    index("messages_sender_idx").on(table.senderId),
+    index("messages_created_idx").on(table.createdAt)
+  ]
+);
+
+export const messageReadReceipts = pgTable(
+  "message_read_receipts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    messageId: uuid("message_id")
+      .notNull()
+      .references(() => messages.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    readAt: timestamp("read_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [uniqueIndex("message_read_receipts_message_user_idx").on(table.messageId, table.userId)]
+);
+
+export const attachments = pgTable(
+  "attachments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    messageId: uuid("message_id")
+      .notNull()
+      .references(() => messages.id, { onDelete: "cascade" }),
+    objectKey: text("object_key").notNull(),
+    mediaUrl: text("media_url").notNull(),
+    mediaMimeType: text("media_mime_type").notNull(),
+    fileName: text("file_name").notNull(),
+    fileSize: integer("file_size").notNull(),
+    thumbnailObjectKey: text("thumbnail_object_key"),
+    thumbnailUrl: text("thumbnail_url"),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    index("attachments_message_idx").on(table.messageId),
+    uniqueIndex("attachments_message_id_idx").on(table.messageId)
+  ]
+);
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: notificationTypeEnum("type").notNull(),
+    referenceId: text("reference_id"),
+    isRead: boolean("is_read").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    index("notifications_user_idx").on(table.userId),
+    index("notifications_user_created_idx").on(table.userId, table.createdAt),
+    index("notifications_user_unread_idx").on(table.userId, table.isRead)
+  ]
+);

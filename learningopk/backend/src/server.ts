@@ -1,32 +1,48 @@
 import cors from "cors";
 import express from "express";
+import cookieParser from "cookie-parser";
 import { pathToFileURL } from "node:url";
+import { createServer } from "node:http";
 
 import { env } from "./lib/env.js";
+import { setupWebSocket } from "./lib/websocket.js";
+import { csrfProtection } from "./lib/csrf.js";
 import { adminRouter } from "./routes/admin.js";
 import { aiChatRouter } from "./routes/ai-chat.js";
 import { authRouter } from "./routes/auth.js";
+import { blockRouter } from "./routes/block.js";
+import { chatRouter } from "./routes/chat.js";
+import { friendRouter } from "./routes/friends.js";
 import { forumRouter } from "./routes/forum.js";
 import { healthRouter } from "./routes/health.js";
 import { learnRouter } from "./routes/learn.js";
 import { chapterMediaRouter } from "./routes/chapter-media.js";
+import { notificationRouter } from "./routes/notifications.js";
+import { privacyRouter } from "./routes/privacy.js";
 import { profileRouter } from "./routes/profile.js";
 import { progressRouter } from "./routes/progress.js";
 import { quizRouter } from "./routes/quiz.js";
+import { userSearchRouter } from "./routes/user-search.js";
 
 export const createApp = () => {
   const app = express();
+  const httpServer = createServer(app);
 
+  const io = setupWebSocket(httpServer);
+
+  app.use(cookieParser());
   app.use(
     cors({
       origin: env.FRONTEND_ORIGIN,
       credentials: true,
-      exposedHeaders: ["x-ai-session-id", "x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset"]
+      exposedHeaders: ["x-ai-session-id", "x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"]
     })
   );
 
   app.use("/api/auth", authRouter);
   app.use(express.json());
+
+  app.use(csrfProtection);
 
   app.use("/api/health", healthRouter);
   app.use("/api/learn", learnRouter);
@@ -38,18 +54,25 @@ export const createApp = () => {
   app.use("/api/users", profileRouter);
   app.use("/api/admin/content", chapterMediaRouter);
 
+  app.use("/api/users/search", userSearchRouter);
+  app.use("/api/users", blockRouter);
+  app.use("/api/users", privacyRouter);
+  app.use("/api/friends", friendRouter);
+  app.use("/api/chats", chatRouter);
+  app.use("/api/notifications", notificationRouter);
+
   app.get("/api/ready", (_req, res) => {
     res.status(200).json({ ok: true });
   });
 
-  return app;
+  return { app, httpServer, io };
 };
 
 const isDirectRun = process.argv[1] ? import.meta.url === pathToFileURL(process.argv[1]).href : false;
 
 if (isDirectRun) {
-  const app = createApp();
-  app.listen(Number(env.PORT), () => {
+  const { httpServer } = createApp();
+  httpServer.listen(Number(env.PORT), () => {
     console.log(`Backend listening on http://localhost:${env.PORT}`);
   });
 }
