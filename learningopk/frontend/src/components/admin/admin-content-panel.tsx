@@ -74,6 +74,12 @@ export function AdminContentPanel({
 
   return (
     <div className="space-y-5">
+      {/*
+       * @deprecated AdminCurriculumBuilder is deprecated and should be migrated to the new
+       * dedicated pages (boards, classes, subjects, chapters). This component still exists
+       * for backward compatibility as it contains exercise management functionality that
+       * hasn't been migrated yet.
+       */}
       <SectionCard
         title="Curriculum Builder"
         description="Create board, class, subject, and chapter hierarchy in one flow."

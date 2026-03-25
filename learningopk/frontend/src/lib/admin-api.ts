@@ -2,20 +2,6 @@ import { z } from "zod";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
-const adminChapterSchema = z.object({
-  id: z.number().int().positive(),
-  chapterNumber: z.number().int().positive(),
-  title: z.string(),
-  subjectName: z.string(),
-  className: z.string(),
-  boardName: z.string(),
-  isPublished: z.boolean()
-});
-
-const adminContentChaptersResponseSchema = z.object({
-  chapters: z.array(adminChapterSchema)
-});
-
 const adminCurriculumChapterSchema = z.object({
   id: z.number().int().positive(),
   chapterNumber: z.number().int().positive(),
@@ -189,15 +175,6 @@ const adminChapterGraphResponseSchema = z.object({
     ),
     unresolvedEdgeCount: z.number().int().nonnegative()
   })
-});
-
-const adminChapterRenameResponseSchema = z.object({
-  chapter: z.object({
-    id: z.number().int().positive(),
-    title: z.string(),
-    slug: z.string()
-  }),
-  timestamp: z.string().datetime()
 });
 
 const adminChapterSummaryMediaUploadResponseSchema = z.object({
@@ -458,7 +435,6 @@ const adminSettingUpdateResponseSchema = z.object({
   setting: adminSettingSchema
 });
 
-export type AdminChapterResponse = z.infer<typeof adminChapterSchema>;
 export type AdminCurriculumBoard = z.infer<typeof adminCurriculumBoardSchema>;
 export type AdminCurriculumClass = z.infer<typeof adminCurriculumClassSchema>;
 export type AdminCurriculumSubject = z.infer<typeof adminCurriculumSubjectSchema>;
@@ -476,7 +452,6 @@ export type AdminChapterSummaryUpdateResponse = z.infer<typeof adminChapterSumma
 export type AdminChapterLinksResponse = z.infer<typeof adminChapterLinksResponseSchema>;
 export type AdminChapterLinkSuggestionsResponse = z.infer<typeof adminChapterLinkSuggestionsResponseSchema>;
 export type AdminChapterGraphResponse = z.infer<typeof adminChapterGraphResponseSchema>;
-export type AdminChapterRenameResponse = z.infer<typeof adminChapterRenameResponseSchema>;
 export type AdminChapterSummaryMediaUploadResponse = z.infer<typeof adminChapterSummaryMediaUploadResponseSchema>;
 export type AdminCurriculumExerciseCreateResponse = z.infer<typeof adminCurriculumExerciseCreateResponseSchema>;
 export type AdminCurriculumExerciseRead = z.infer<typeof adminCurriculumExerciseReadSchema>;
@@ -538,16 +513,6 @@ const fetchAdminJson = async <T>({
   }
 
   return schema.parse((await response.json()) as unknown);
-};
-
-export const getAdminContentChapters = async (cookieHeader: string): Promise<AdminChapterResponse[]> => {
-  const payload = await fetchAdminJson({
-    path: "/api/admin/content/chapters",
-    schema: adminContentChaptersResponseSchema,
-    cookieHeader
-  });
-
-  return payload.chapters;
 };
 
 export const getAdminCurriculumTree = async (cookieHeader?: string): Promise<AdminCurriculumBoard[]> => {
@@ -754,26 +719,6 @@ export const getAdminChapterGraph = async ({
   return fetchAdminJson({
     path: `/api/admin/content/chapters/graph?${searchParams.toString()}`,
     schema: adminChapterGraphResponseSchema
-  });
-};
-
-export const renameAdminChapter = async ({
-  chapterId,
-  title,
-  slug
-}: {
-  chapterId: number;
-  title: string;
-  slug: string;
-}): Promise<AdminChapterRenameResponse> => {
-  return fetchAdminJson({
-    path: `/api/admin/content/chapters/${chapterId}/rename`,
-    schema: adminChapterRenameResponseSchema,
-    method: "POST",
-    body: {
-      title,
-      slug
-    }
   });
 };
 
