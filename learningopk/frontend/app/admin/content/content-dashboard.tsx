@@ -1,22 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { BookOpen, GraduationCap, Book, FileText, Plus, Clock } from "lucide-react";
 
 import {
-  AdminBreadcrumb,
   AdminPageHeader,
   AdminStatsStrip,
   AdminEntityTree,
-  AdminQuickActions
+  AdminQuickActions,
+  AdminEntityDetailPanel,
 } from "@/components/admin";
 import type { AdminCurriculumBoard, AdminAuditLogResponseEntry } from "@/lib/admin-api";
 
+type EntityType = "board" | "class" | "subject" | "chapter";
+
 type SelectedEntity = {
   id: number;
-  type: "board" | "class" | "subject" | "chapter";
+  type: EntityType;
   name: string;
+  childCount?: number;
+  children?: Array<{
+    id: number;
+    type: "class" | "subject" | "chapter";
+    name: string;
+    subtitle?: string;
+  }>;
 };
 
 type ContentDashboardProps = {
@@ -49,43 +58,157 @@ export function ContentDashboard({ boards, auditLogs }: ContentDashboardProps) {
       label: "Add Board",
       description: "Create a new board to organize content",
       href: "/admin/boards/add",
-      icon: <BookOpen className="h-5 w-5" />
+      icon: <BookOpen className="h-5 w-5" />,
     },
     {
       label: "Add Class",
       description: "Add a class level within a board",
       href: "/admin/classes/add",
-      icon: <GraduationCap className="h-5 w-5" />
+      icon: <GraduationCap className="h-5 w-5" />,
     },
     {
       label: "Add Subject",
       description: "Create a subject within a class",
       href: "/admin/subjects/add",
-      icon: <Book className="h-5 w-5" />
+      icon: <Book className="h-5 w-5" />,
     },
     {
       label: "Add Chapter",
       description: "Add chapters to a subject",
       href: "/admin/chapters/add",
-      icon: <FileText className="h-5 w-5" />
-    }
+      icon: <FileText className="h-5 w-5" />,
+    },
   ];
 
-  const handleSelect = (entity: { id: number; type: "board" | "class" | "subject" | "chapter"; name: string }) => {
-    setSelectedEntity(entity);
+  // Compute the full entity data with children
+  const handleSelect = (entity: { id: number; type: EntityType; name: string }) => {
+    const { id, type } = entity;
+
+    // Find the entity path and children
+    let children: SelectedEntity["children"] = undefined;
+    let childCount = 0;
+
+    for (const board of boards) {
+      if (type === "board" && board.id === id) {
+        children = board.classes.map((c) => ({
+          id: c.id,
+          type: "class" as const,
+          name: c.name,
+        }));
+        childCount = board.classes.length;
+        break;
+      }
+
+      for (const boardClass of board.classes) {
+        if (type === "class" && boardClass.id === id) {
+          children = boardClass.subjects.map((s) => ({
+            id: s.id,
+            type: "subject" as const,
+            name: s.name,
+          }));
+          childCount = boardClass.subjects.length;
+          break;
+        }
+
+        for (const subject of boardClass.subjects) {
+          if (type === "subject" && subject.id === id) {
+            children = subject.chapters.map((ch) => ({
+              id: ch.id,
+              type: "chapter" as const,
+              name: `Chapter ${ch.chapterNumber}: ${ch.title}`,
+              subtitle: ch.isPublished ? "Published" : "Draft",
+            }));
+            childCount = subject.chapters.length;
+            break;
+          }
+
+          for (const chapter of subject.chapters) {
+            if (type === "chapter" && chapter.id === id) {
+              childCount = 0;
+              children = undefined;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    setSelectedEntity({
+      id,
+      type: entity.type,
+      name: entity.name,
+      childCount,
+      children,
+    });
+  };
+
+  const handleDelete = (entity: { id: number; type: string; name: string }) => {
+    // TODO: Implement actual deletion via API
+    console.log("Delete entity:", entity);
+    // Refresh after deletion
+    handleRefresh();
+  };
+
+  const handleRefresh = () => {
+    // TODO: Implement actual refresh via router refresh or API call
+    console.log("Refresh requested");
   };
 
   const stats = [
     { label: "Boards", value: boardCount, icon: <BookOpen className="h-5 w-5" /> },
     { label: "Classes", value: classCount, icon: <GraduationCap className="h-5 w-5" /> },
     { label: "Subjects", value: subjectCount, icon: <Book className="h-5 w-5" /> },
-    { label: "Chapters", value: chapterCount, icon: <FileText className="h-5 w-5" /> }
+    { label: "Chapters", value: chapterCount, icon: <FileText className="h-5 w-5" /> },
   ];
+
+  // Compute breadcrumb for the detail panel
+  const detailBreadcrumb = useMemo(() => {
+    if (!selectedEntity) return [{ label: "Content" }];
+
+    const segments = [{ label: "Content" }];
+
+    for (const board of boards) {
+      if (selectedEntity.type === "board" && board.id === selectedEntity.id) {
+        segments.push({ label: board.name });
+        break;
+      }
+
+      for (const boardClass of board.classes) {
+        if (selectedEntity.type === "class" && boardClass.id === selectedEntity.id) {
+          segments.push({ label: board.name });
+          segments.push({ label: boardClass.name });
+          break;
+        }
+
+        for (const subject of boardClass.subjects) {
+          if (selectedEntity.type === "subject" && subject.id === selectedEntity.id) {
+            segments.push({ label: board.name });
+            segments.push({ label: boardClass.name });
+            segments.push({ label: subject.name });
+            break;
+          }
+
+          for (const chapter of subject.chapters) {
+            if (selectedEntity.type === "chapter" && chapter.id === selectedEntity.id) {
+              segments.push({ label: board.name });
+              segments.push({ label: boardClass.name });
+              segments.push({ label: subject.name });
+              segments.push({ label: chapter.title });
+              break;
+            }
+          }
+          if (segments.length > 3) break;
+        }
+        if (segments.length > 2) break;
+      }
+      if (segments.length > 1) break;
+    }
+
+    return segments;
+  }, [selectedEntity, boards]);
 
   return (
     <div className="space-y-6">
-      <AdminBreadcrumb segments={[{ label: "Admin", href: "/admin" }, { label: "Content" }]} />
-
       <AdminPageHeader
         title="Content Management"
         subtitle="Manage boards, classes, subjects, and chapters"
@@ -114,7 +237,7 @@ export function ContentDashboard({ boards, auditLogs }: ContentDashboardProps) {
         <div
           className="grid gap-[var(--space-6)]"
           style={{
-            gridTemplateColumns: "300px 1fr"
+            gridTemplateColumns: "300px 1fr",
           }}
         >
           {/* Left sidebar - Entity Tree */}
@@ -135,18 +258,13 @@ export function ContentDashboard({ boards, auditLogs }: ContentDashboardProps) {
               <AdminQuickActions actions={quickActions} />
             </section>
 
-            {/* Selected Entity Display */}
-            {selectedEntity && (
-              <section className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-[var(--space-6)]">
-                <h3 className="mb-2 font-heading text-sm font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
-                  Selected
-                </h3>
-                <p className="text-[var(--foreground)]">
-                  {selectedEntity.type.charAt(0).toUpperCase() + selectedEntity.type.slice(1)}:{" "}
-                  <span className="font-medium">{selectedEntity.name}</span>
-                </p>
-              </section>
-            )}
+            {/* Entity Detail Panel */}
+            <AdminEntityDetailPanel
+              entity={selectedEntity}
+              breadcrumbSegments={detailBreadcrumb}
+              onDelete={handleDelete}
+              onRefresh={handleRefresh}
+            />
 
             {/* Recent Audit Log */}
             <section>

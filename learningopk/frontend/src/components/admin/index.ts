@@ -6,3 +6,4 @@ export { AdminActionButton } from "./action-button";
 export { AdminStatsStrip } from "./stats-strip";
 export { AdminQuickActions } from "./quick-actions";
 export { AdminEntityTree } from "./entity-tree";
+export { AdminEntityDetailPanel } from "./entity-detail-panel";
