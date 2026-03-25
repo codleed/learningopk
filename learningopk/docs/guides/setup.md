@@ -5,7 +5,7 @@ exactly as described.
 
 ## docker-compose.yml
 
-Create this file at project root to spin up Postgres and Redis with one
+Create this file at project root to spin up Postgres, Redis, and MinIO with one
 command:
 
 - version: \'3.8\'
@@ -16,7 +16,14 @@ command:
 
 - services: redis --- image: redis:7-alpine, port: 6379:6379
 
-- volumes: postgres_data and redis_data for persistence across
+- services: minio --- image: minio/minio:latest, ports: 9000:9000 (API),
+  9001:9001 (console), env: MINIO_ROOT_USER=minioadmin,
+  MINIO_ROOT_PASSWORD=minioadmin123
+
+- services: minio-init --- image: minio/mc:latest, creates bucket
+  learningo-media on startup
+
+- volumes: postgres_data, redis_data, and minio_data for persistence across
   restarts
 
 ## frontend/.env.local
@@ -36,7 +43,15 @@ The AI coder must create this file for the Express backend app
 - BETTER_AUTH_SECRET=generate-a-random-32-char-string-here
 - BETTER_AUTH_URL=http://localhost:3001
 - FRONTEND_ORIGIN=http://localhost:3000
+- MINIO_ENDPOINT=localhost
+- MINIO_PORT=9000
+- MINIO_USE_SSL=false
+- MINIO_ACCESS_KEY=minioadmin
+- MINIO_SECRET_KEY=minioadmin123
+- MINIO_BUCKET=learningo-media
+- MINIO_PUBLIC_URL=http://localhost:9000
 - MISTRAL_API_KEY=get-free-key-from-console.mistral.ai
+- PORT=3001
 
 ## package.json Scripts
 

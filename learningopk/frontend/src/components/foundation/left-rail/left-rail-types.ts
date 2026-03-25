@@ -7,6 +7,7 @@ export interface NavItem {
   label: string;
   icon: LucideIcon;
   matchers?: string[];
+  badge?: number;
 }
 
 export interface NavSection {

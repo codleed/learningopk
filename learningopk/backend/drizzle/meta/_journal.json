@@ -71,6 +71,13 @@
       "when": 1772569800000,
       "tag": "0009_chapter_summary_links",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1772640000000,
+      "tag": "0010_social_features",
+      "breakpoints": true
     }
   ]
 }

@@ -13,6 +13,8 @@ import {
   ScrollText,
   Bell,
   Settings,
+  Search,
+  UserPlus,
 } from "lucide-react";
 
 import type { NavItem, NavSection } from "./left-rail-types";
@@ -37,6 +39,18 @@ export const studentNavItems: NavItem[] = [
     href: "/subjects",
     label: "Subjects",
     icon: BookOpen,
+  },
+  {
+    href: "/friends",
+    label: "Find Friends",
+    icon: Search,
+    matchers: ["/friends", "/friends/search"],
+  },
+  {
+    href: "/messages",
+    label: "Chat",
+    icon: MessagesSquare,
+    matchers: ["/messages", "/messages/"],
   },
   {
     href: "/ai-tutor",
