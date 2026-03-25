@@ -13,6 +13,7 @@ import {
   ScrollText,
   Bell,
   Settings,
+  Search,
   UserPlus,
 } from "lucide-react";
 
@@ -41,13 +42,15 @@ export const studentNavItems: NavItem[] = [
   },
   {
     href: "/friends",
-    label: "Friends",
-    icon: UserPlus,
+    label: "Find Friends",
+    icon: Search,
+    matchers: ["/friends", "/friends/search"],
   },
   {
     href: "/messages",
-    label: "Messages",
-    icon: MessageCircle,
+    label: "Chat",
+    icon: MessagesSquare,
+    matchers: ["/messages", "/messages/"],
   },
   {
     href: "/ai-tutor",

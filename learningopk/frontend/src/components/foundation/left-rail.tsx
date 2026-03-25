@@ -47,6 +47,7 @@ interface NavItemProps {
 function NavItem({ item, isActive, isExpanded, variant }: NavItemProps) {
   const LinkIcon = item.icon as LucideIcon;
   const isStudentVariant = variant === "student";
+  const hasBadge = item.badge && item.badge > 0;
 
   const baseClasses = `
     group relative flex items-center rounded-xl transition-all duration-150
@@ -74,14 +75,27 @@ function NavItem({ item, isActive, isExpanded, variant }: NavItemProps) {
             : "text-[var(--sidebar-admin-default-text)] hover:bg-[var(--sidebar-admin-hover-bg)] hover:text-[var(--sidebar-admin-hover-text)]"
       )}
     >
-      <LinkIcon
-        className={cn(
-          "shrink-0 transition-all duration-150",
-          !isExpanded ? "h-5 w-5" : isStudentVariant ? "h-5 w-5" : "h-[18px] w-[18px]"
+      <div className="relative">
+        <LinkIcon
+          className={cn(
+            "shrink-0 transition-all duration-150",
+            !isExpanded ? "h-5 w-5" : isStudentVariant ? "h-5 w-5" : "h-[18px] w-[18px]"
+          )}
+          strokeWidth={isActive ? 2.5 : 2}
+          aria-hidden
+        />
+        {hasBadge && (
+          <span
+            className={cn(
+              "absolute -top-1 -right-1 flex items-center justify-center rounded-full bg-[var(--destructive)] text-[10px] font-bold text-white",
+              !isExpanded ? "h-4 w-4 min-w-[16px] min-h-[16px]" : "h-4 w-4 min-w-[16px] min-h-[16px] px-1"
+            )}
+            style={{ fontSize: "10px", minWidth: "16px", minHeight: "16px" }}
+          >
+            {item.badge && item.badge > 99 ? "99+" : item.badge}
+          </span>
         )}
-        strokeWidth={isActive ? 2.5 : 2}
-        aria-hidden
-      />
+      </div>
       {isExpanded && (
         <span
           className={cn(
