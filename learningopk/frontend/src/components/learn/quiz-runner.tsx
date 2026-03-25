@@ -63,6 +63,7 @@ export function QuizRunner({ quiz }: QuizRunnerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [announcementText, setAnnouncementText] = useState("");
 
   const currentQuestion = quiz.questions[currentIndex];
   const answeredCount = Object.keys(answers).length;
@@ -117,6 +118,9 @@ export function QuizRunner({ quiz }: QuizRunnerProps) {
         return;
       }
 
+      const correctCount = parsedResponse.data.questionResults.filter((q) => q.isCorrect).length;
+      const totalCount = parsedResponse.data.questionResults.length;
+      setAnnouncementText(`Quiz complete! You got ${correctCount} out of ${totalCount} questions correct.`);
       setResult(parsedResponse.data);
     } catch {
       setSubmitError("Unable to submit quiz right now. Please try again.");
@@ -133,6 +137,7 @@ export function QuizRunner({ quiz }: QuizRunnerProps) {
     setRemainingSeconds(quiz.durationMinutes * 60);
     setStartedAtMs(Date.now());
     setIsSubmitting(false);
+    setAnnouncementText("");
   };
 
   useEffect(() => {
@@ -213,8 +218,12 @@ export function QuizRunner({ quiz }: QuizRunnerProps) {
           ) : null}
           {submitError ? <p className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">{submitError}</p> : null}
 
+          <div aria-live="polite" aria-atomic="true" className="sr-only">
+            {announcementText}
+          </div>
           <QuizQuestionCard
             question={currentQuestion}
+            questionNumber={currentIndex + 1}
             selectedAnswer={answers[String(currentQuestion.id)]}
             locked={isTimeUp}
             onSelect={(option) => selectAnswer(currentQuestion.id, option)}

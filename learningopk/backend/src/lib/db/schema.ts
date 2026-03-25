@@ -499,3 +499,8 @@ export const mockExams = pgTable("mock_exams", {
   durationMinutes: integer("duration_minutes").notNull(),
   totalMarks: integer("total_marks").notNull()
 });
+
+export const institutes = pgTable("institutes", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull()
+});

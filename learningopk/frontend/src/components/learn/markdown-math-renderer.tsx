@@ -1,9 +1,13 @@
+"use client";
+
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import type { CSSProperties } from "react";
+import { useEffect, useRef } from "react";
+import { latexToSpokenForm, isComplexEquation, generateEquationDescription } from "@/lib/latex-to-speech";
 
 type MarkdownMathRendererProps = {
   content: string;
@@ -104,9 +108,29 @@ export function MarkdownMathRenderer({ content, className, forceWrap = false }: 
       normalizeBareLatexLines(normalizeLegacyBracketedMath(normalizeEscapedMathDelimiters(content)))
     )
   );
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const katexElements = container.querySelectorAll(".katex");
+    katexElements.forEach((el) => {
+      const latex = el.getAttribute("data-tex") || "";
+      const spokenForm = latexToSpokenForm(latex);
+      el.setAttribute("role", "img");
+      el.setAttribute("aria-label", spokenForm);
+
+      if (isComplexEquation(latex)) {
+        const description = generateEquationDescription(latex);
+        el.setAttribute("aria-description", description);
+      }
+    });
+  }, [normalizedContent]);
 
   return (
     <div
+      ref={containerRef}
       className={[
         "max-w-none text-foreground/95",
         forceWrap ? "break-words [overflow-wrap:anywhere] [&_*]:break-words [&_*]:[overflow-wrap:anywhere]" : "",

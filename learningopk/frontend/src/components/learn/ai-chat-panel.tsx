@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Maximize2, Minimize2 } from "lucide-react";
 
 import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
@@ -69,6 +69,80 @@ export function AIChatPanel({
   const [inputValue, setInputValue] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const messageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const focusedMessageIndex = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (isOpen && layout === "overlay") {
+      document.getElementById("ai-chat-input")?.focus();
+    }
+  }, [isOpen, layout]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const panel = document.getElementById("ai-chat-panel");
+    if (!panel) return;
+
+    const focusableElements = panel.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstEl = focusableElements[0] as HTMLElement;
+    const lastEl = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+    const handleTabKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      if (e.shiftKey) {
+        if (document.activeElement === firstEl) {
+          e.preventDefault();
+          lastEl?.focus();
+        }
+      } else {
+        if (document.activeElement === lastEl) {
+          e.preventDefault();
+          firstEl?.focus();
+        }
+      }
+    };
+
+    panel.addEventListener("keydown", handleTabKey);
+    return () => panel.removeEventListener("keydown", handleTabKey);
+  }, [isOpen]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape" && layout === "overlay" && onClose) {
+      onClose();
+      const trigger = document.querySelector("[data-ai-chat-trigger]") as HTMLElement;
+      trigger?.focus();
+    }
+
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      const messageElements = messageRefs.current.filter(Boolean);
+      if (messageElements.length === 0) return;
+
+      if (e.key === "ArrowDown") {
+        if (focusedMessageIndex.current === null || focusedMessageIndex.current >= messageElements.length - 1) {
+          focusedMessageIndex.current = 0;
+        } else {
+          focusedMessageIndex.current!++;
+        }
+      } else {
+        if (focusedMessageIndex.current === null || focusedMessageIndex.current <= 0) {
+          focusedMessageIndex.current = messageElements.length - 1;
+        } else {
+          focusedMessageIndex.current!--;
+        }
+      }
+
+      const nextIndex = focusedMessageIndex.current;
+      if (nextIndex !== null && messageElements[nextIndex]) {
+        e.preventDefault();
+        messageElements[nextIndex]?.focus();
+      }
+    }
+  };
 
   useEffect(() => {
     if (!initialPrompt || !panelIsVisible) {
@@ -233,18 +307,26 @@ export function AIChatPanel({
         </div>
       </header>
 
-      <div className={cn("space-y-3 px-3 py-3", usePanelLevelScroll ? "" : "min-h-0 flex-1 overflow-y-auto")}>
+      <div
+        ref={containerRef}
+        onKeyDown={handleKeyDown}
+        className={cn("space-y-3 px-3 py-3", usePanelLevelScroll ? "" : "min-h-0 flex-1 overflow-y-auto")}
+      >
         {messages.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
             Ask a question and the tutor will guide you step-by-step before revealing the final method.
           </div>
         ) : null}
 
-        {messages.map((message) => (
+        {messages.map((message, idx) => (
           <div
             key={message.id}
+            ref={(el) => { messageRefs.current[idx] = el; }}
+            tabIndex={0}
+            role="article"
+            aria-label={`${message.role} message: ${message.content.substring(0, 50)}${message.content.length > 50 ? "..." : ""}`}
             className={[
-              "break-words rounded-xl px-3 py-2 text-sm leading-relaxed [overflow-wrap:anywhere]",
+              "break-words rounded-xl px-3 py-2 text-sm leading-relaxed [overflow-wrap:anywhere] focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2",
               message.role === "user"
                 ? "ml-auto w-fit min-w-[4.5rem] max-w-[72%] bg-[var(--primary)] text-[var(--primary-foreground)]"
                 : "max-w-[90%] bg-muted text-foreground"
@@ -297,6 +379,7 @@ export function AIChatPanel({
   if (layout === "sidebar") {
     return (
       <aside
+        id="ai-chat-panel"
         className={cn(
           "flex w-full flex-col rounded-2xl border border-border bg-card shadow-[var(--elevation-card)] xl:h-[calc(100vh-2.5rem)] xl:min-h-[calc(100vh-2.5rem)]",
           isSidebarMaximized
@@ -317,7 +400,7 @@ export function AIChatPanel({
         className="fixed inset-0 z-40 bg-black/40"
         onClick={onClose}
       />
-      <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-xl border-l border-border bg-card shadow-[var(--elevation-strong)]">
+      <aside id="ai-chat-panel" className="fixed inset-y-0 right-0 z-50 w-full max-w-xl border-l border-border bg-card shadow-[var(--elevation-strong)]">
         {panelBody}
       </aside>
     </>

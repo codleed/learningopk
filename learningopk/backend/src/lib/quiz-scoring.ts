@@ -10,7 +10,7 @@ export type QuizQuestionForScoring = {
   optionC: string;
   optionD: string;
   correctOption: QuizOption;
-  explanation: string;
+  explanation: string | null;
   marks: number;
 };
 
@@ -24,7 +24,7 @@ export type QuizQuestionResult = {
   selectedOption: QuizOption | null;
   correctOption: QuizOption;
   isCorrect: boolean;
-  explanation: string;
+  explanation: string | null;
   marks: number;
   awardedMarks: number;
 };

@@ -13,6 +13,13 @@ import { chapterMediaRouter } from "./routes/chapter-media.js";
 import { profileRouter } from "./routes/profile.js";
 import { progressRouter } from "./routes/progress.js";
 import { quizRouter } from "./routes/quiz.js";
+import { createAnalyticsWorker } from "./workers/analytics.worker.js";
+import { createEmailWorker } from "./workers/email.worker.js";
+import { createCleanupWorker } from "./workers/cleanup.worker.js";
+
+createAnalyticsWorker();
+createEmailWorker();
+createCleanupWorker();
 
 export const createApp = () => {
   const app = express();

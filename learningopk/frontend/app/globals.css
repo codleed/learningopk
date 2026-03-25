@@ -235,4 +235,9 @@
   .animate-sidebar-out {
     animation: none;
   }
+
+  .katex {
+    animation: none;
+    transition: none;
+  }
 }

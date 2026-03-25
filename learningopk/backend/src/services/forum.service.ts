@@ -6,27 +6,27 @@ import { boardClasses, boards, chapters, forumReplies, forumReplyVotes, forumThr
 import type { Response } from "express";
 
 export interface ThreadFeedFilters {
-  board?: string;
-  grade?: string;
-  subjectId?: number;
-  chapterId?: number;
-  q?: string;
-  solved?: "all" | "solved" | "unsolved";
-  limit?: number;
-  offset?: number;
+  board?: string | undefined;
+  grade?: string | undefined;
+  subjectId?: number | undefined;
+  chapterId?: number | undefined;
+  q?: string | undefined;
+  solved?: "all" | "solved" | "unsolved" | undefined;
+  limit?: number | undefined;
+  offset?: number | undefined;
 }
 
 export interface CreateThreadInput {
   title: string;
   body: string;
-  subjectId?: number;
-  chapterId?: number;
+  subjectId?: number | undefined;
+  chapterId?: number | undefined;
   userId: string;
 }
 
 export interface CreateReplyInput {
   body: string;
-  parentReplyId?: string;
+  parentReplyId?: string | undefined;
   threadId: string;
   userId: string;
 }

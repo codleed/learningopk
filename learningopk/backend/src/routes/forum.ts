@@ -52,10 +52,6 @@ const applyForumMutationRateLimit = async (res: Response, userId: string): Promi
 };
 
 forumRouter.get("/filters", async (_req, res) => {
-  const { boards: boardRows, subjects: subjectRows, chapters: chapterRows, classes: classRows } = await forumService.getFilters
-    ? { boards: [], subjects: [], chapters: [], classes: [] }
-    : { boards: [], subjects: [], chapters: [], classes: [] };
-
   const filters = await db
     .select({
       id: boards.id,

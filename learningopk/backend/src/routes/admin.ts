@@ -25,6 +25,7 @@ import {
 } from "../lib/db/schema.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { extractWikiLinks, normalizeWikiLinkTarget } from "../lib/wiki-links.js";
+import { allQueues, jobRegistry } from "../lib/queue.js";
 
 const chapterParamsSchema = z.object({
   id: z.coerce.number().int().positive()
@@ -3917,4 +3918,58 @@ adminRouter.get("/settings/audit-logs", requireSession, async (req, res) => {
 
 adminRouter.get("/audit-logs", requireSession, async (req, res) => {
   await handleAggregatedAuditLogRead(req as AuthenticatedRequest, res);
+});
+
+adminRouter.get("/jobs/stats", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const stats = await Promise.all(
+    jobRegistry.map(async (def) => {
+      const [waiting, active, completed, failed] = await Promise.all([
+        def.queue.getWaitingCount(),
+        def.queue.getActiveCount(),
+        def.queue.getCompletedCount(),
+        def.queue.getFailedCount(),
+      ]);
+      return {
+        name: def.name,
+        queue: def.queue.name,
+        counts: { waiting, active, completed, failed },
+      };
+    })
+  );
+  res.json({ jobs: stats });
+});
+
+adminRouter.post("/jobs/:queueName/:jobId/retry", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const { queueName, jobId } = req.params;
+  
+  if (Array.isArray(jobId) || !jobId) {
+    res.status(400).json({ error: "Invalid job ID" });
+    return;
+  }
+
+  const queue = allQueues.find((q) => q.name === queueName);
+
+  if (!queue) {
+    res.status(404).json({ error: "Queue not found" });
+    return;
+  }
+
+  const job = await queue.getJob(jobId);
+  if (!job) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+
+  await job.retry();
+  res.json({ success: true, jobId });
 });

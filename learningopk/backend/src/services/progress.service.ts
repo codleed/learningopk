@@ -35,10 +35,22 @@ export interface SubjectAggregate {
 
 export class ProgressService {
   async recordProgressEvent(input: ProgressEventInput) {
-    const snapshot = await applyProgressEvent({
-      ...input,
-      occurredAt: input.occurredAt ?? new Date()
-    });
+    const snapshot = await applyProgressEvent(
+      input.eventType === "quiz_submit"
+        ? {
+            eventType: "quiz_submit",
+            userId: input.userId,
+            chapterId: input.chapterId,
+            score: input.score ?? 0,
+            occurredAt: input.occurredAt ?? new Date()
+          }
+        : {
+            eventType: input.eventType,
+            userId: input.userId,
+            chapterId: input.chapterId,
+            occurredAt: input.occurredAt ?? new Date()
+          }
+    );
 
     return {
       eventType: input.eventType,

@@ -66,7 +66,7 @@ export function errorResponse(
   code?: string,
   details?: unknown
 ): ApiResponse<null> {
-  return { error: message, code, details };
+  return { error: message, ...(code !== undefined && { code }), ...(details !== undefined && { details }) };
 }
 
 /**

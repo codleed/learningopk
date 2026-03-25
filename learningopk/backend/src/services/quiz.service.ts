@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
 import { quizAttempts, quizQuestions, quizzes } from "../lib/db/schema.js";
+import type { QuizOption, QuizQuestionForScoring } from "../lib/quiz-scoring.js";
 import { getInvalidAnswerQuestionIds, scoreQuizSubmission } from "../lib/quiz-scoring.js";
 import { applyProgressEvent } from "../lib/progress.js";
 
@@ -12,7 +13,7 @@ export interface QuizQuestionRow {
   optionB: string;
   optionC: string;
   optionD: string;
-  correctOption: string;
+  correctOption: QuizOption;
   explanation: string | null;
   marks: number;
 }
@@ -20,12 +21,12 @@ export interface QuizQuestionRow {
 export interface QuizSubmissionInput {
   quizId: number;
   answers: Record<string, "a" | "b" | "c" | "d">;
-  startedAt?: string;
+  startedAt?: string | undefined;
   userId: string;
 }
 
 export interface QuizSubmissionResult {
-  attemptId: number;
+  attemptId: string;
   quizId: number;
   quizType: string;
   score: number;
@@ -35,8 +36,8 @@ export interface QuizSubmissionResult {
   completedAt: string;
   questionResults: Array<{
     questionId: number;
-    selectedOption: "a" | "b" | "c" | "d";
-    correctOption: string;
+    selectedOption: "a" | "b" | "c" | "d" | null;
+    correctOption: "a" | "b" | "c" | "d";
     isCorrect: boolean;
     marks: number;
     explanation: string | null;
