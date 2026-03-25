@@ -7,3 +7,6 @@ export { AdminStatsStrip } from "./stats-strip";
 export { AdminQuickActions } from "./quick-actions";
 export { AdminEntityTree } from "./entity-tree";
 export { AdminEntityDetailPanel } from "./entity-detail-panel";
+export { ContentTabs } from "./content-tabs";
+export { ContentStatsStrip } from "./content-stats-strip";
+export { ContentListTable } from "./content-list-table";
