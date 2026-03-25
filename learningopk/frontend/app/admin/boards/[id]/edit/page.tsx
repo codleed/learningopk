@@ -1,4 +1,4 @@
-import { cookies } from "next/navigation";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { getAdminCurriculumTree } from "@/lib/admin-api";

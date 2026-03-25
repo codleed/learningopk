@@ -2,7 +2,7 @@ import { forwardRef, type InputHTMLAttributes } from "react";
 
 import { cn } from "@/lib/utils";
 
-type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
+export type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
   label?: string;
   hint?: string;
 };
