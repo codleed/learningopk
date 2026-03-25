@@ -1,46 +1,29 @@
-import Link from "next/link";
 import { cookies } from "next/headers";
 
-import { AdminContentPanel } from "@/components/admin/admin-content-panel";
-import { PageHeader } from "@/components/foundation/page-header";
-import { getAdminContentAuditLogs, getAdminContentChapters, getAdminCurriculumTree } from "@/lib/admin-api";
+import { ContentDashboard } from "./content-dashboard";
+import { getAdminContentAuditLogs, getAdminCurriculumTree } from "@/lib/admin-api";
 
 export default async function AdminContentPage() {
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
   const curriculumBoards = await getAdminCurriculumTree(cookieHeader).catch(() => []);
-  const chapters = await getAdminContentChapters(cookieHeader).catch(() => []);
   const contentAuditLogs = await getAdminContentAuditLogs({
     page: 1,
-    pageSize: 10,
+    pageSize: 5,
     cookieHeader
   }).catch(() => ({
     entries: [],
     total: 0,
     page: 1,
-    pageSize: 10,
+    pageSize: 5,
     hasMore: false
   }));
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="Admin Content"
-        title="Chapter Publishing"
-        subtitle="Manage chapter visibility and log moderation attempts."
-        actions={
-          <Link href="/admin" className="text-sm font-medium text-foreground underline underline-offset-4">
-            Back to admin
-          </Link>
-        }
-      />
-      <AdminContentPanel
-        chapters={chapters}
-        curriculumBoards={curriculumBoards}
-        initialAuditEntries={contentAuditLogs.entries}
-        initialAuditTotal={contentAuditLogs.total}
-      />
-    </div>
+    <ContentDashboard
+      boards={curriculumBoards}
+      auditLogs={contentAuditLogs.entries}
+    />
   );
 }
