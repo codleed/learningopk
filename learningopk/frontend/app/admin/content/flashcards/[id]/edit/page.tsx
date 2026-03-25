@@ -1,0 +1,148 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { AlertCircle, ArrowLeft } from "lucide-react";
+
+import { AdminBreadcrumb } from "@/components/admin/breadcrumb";
+import { AdminPageHeader } from "@/components/admin/page-header";
+import { AdminFormCard } from "@/components/admin/form-card";
+import { AdminActionButton } from "@/components/admin/action-button";
+
+interface EditFlashCardsPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function EditFlashCardsPage({ params }: EditFlashCardsPageProps) {
+  const { id } = await params;
+  const deckId = parseInt(id, 10);
+
+  if (isNaN(deckId)) {
+    notFound();
+  }
+
+  return (
+    <div className="space-y-6">
+      <AdminBreadcrumb
+        segments={[
+          { label: "Admin", href: "/admin" },
+          { label: "Content", href: "/admin/content" },
+          { label: "Flash Cards", href: "/admin/content/flashcards" },
+          { label: `Edit Flash Cards #${deckId}` },
+        ]}
+      />
+
+      <AdminPageHeader
+        title={`Edit Flash Cards #${deckId}`}
+        subtitle="Coming Soon"
+      />
+
+      <AdminFormCard>
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <div className="rounded-full bg-amber-100 p-4 mb-4">
+            <AlertCircle className="h-8 w-8 text-amber-600" aria-hidden />
+          </div>
+          
+          <h3 className="font-heading text-lg font-semibold text-[var(--foreground)] mb-2">
+            Flash Card Management Not Available
+          </h3>
+          
+          <p className="text-sm text-[var(--muted-foreground)] max-w-md mb-6">
+            The Flash Card API is not yet available. Backend API support is needed to enable flash card editing.
+          </p>
+
+          <div className="w-full max-w-md rounded-lg border border-amber-200 bg-amber-50 p-4 mb-6 text-left">
+            <h4 className="text-sm font-medium text-amber-800 mb-2">
+              Flash Card Deck #{deckId}
+            </h4>
+            <p className="text-xs text-amber-700 mb-3">
+              This is a placeholder for flash card editing. The full form will appear here once the Flash Card API is implemented.
+            </p>
+            <ul className="space-y-1 text-xs text-amber-700">
+              <li><code className="bg-amber-100 px-1 rounded">GET /api/flashcards/{deckId}</code> - Fetch deck</li>
+              <li><code className="bg-amber-100 px-1 rounded">PUT /api/flashcards/{deckId}</code> - Update deck</li>
+              <li><code className="bg-amber-100 px-1 rounded">DELETE /api/flashcards/{deckId}</code> - Delete deck</li>
+            </ul>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link href="/admin/content/flashcards">
+              <AdminActionButton variant="secondary" type="button">
+                <ArrowLeft className="h-4 w-4 mr-2" aria-hidden />
+                Back to Flash Cards
+              </AdminActionButton>
+            </Link>
+          </div>
+        </div>
+      </AdminFormCard>
+
+      {/* Placeholder Form UI (visual reference) */}
+      <AdminFormCard title="Flash Card Edit Form Preview">
+        <div className="space-y-6 opacity-50 pointer-events-none select-none">
+          {/* Chapter Select */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[var(--foreground)]">
+              Chapter <span className="text-red-600">*</span>
+            </label>
+            <div className="w-full rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm text-[var(--muted-foreground)]">
+              Chapter selection (API needed)
+            </div>
+          </div>
+
+          {/* Deck Title */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[var(--foreground)]">
+              Deck Title <span className="text-red-600">*</span>
+            </label>
+            <div className="w-full rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm text-[var(--muted-foreground)]">
+              Deck title input (API needed)
+            </div>
+          </div>
+
+          {/* Cards Preview */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-heading text-base font-semibold text-[var(--foreground)]">
+                Cards (0)
+              </h3>
+              <button
+                disabled
+                className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-1.5 text-sm font-medium text-[var(--muted-foreground)] cursor-not-allowed"
+              >
+                + Add Card
+              </button>
+            </div>
+
+            <div className="rounded-lg border border-dashed border-[var(--border)] p-6 text-center">
+              <p className="text-sm text-[var(--muted-foreground)]">
+                Card editor will appear here once API is available
+              </p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              disabled
+              className="inline-flex items-center rounded-md bg-[var(--muted)] px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] cursor-not-allowed"
+            >
+              Save Changes
+            </button>
+            <button
+              disabled
+              className="inline-flex items-center rounded-md border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <div className="ml-auto">
+              <button
+                disabled
+                className="inline-flex items-center rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 cursor-not-allowed"
+              >
+                Delete Flash Cards
+              </button>
+            </div>
+          </div>
+        </div>
+      </AdminFormCard>
+    </div>
+  );
+}
