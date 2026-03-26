@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   Clock, 
-  CheckCircle2, 
-  XCircle, 
   Trophy, 
   Sparkles, 
   RotateCcw,
@@ -28,9 +26,11 @@ interface QuestQuizViewProps {
   onComplete: (score: number, percentage: number) => void;
 }
 
-interface QuestionResult {
-  selectedOption: AnswerOption | null;
-  isCorrect: boolean;
+interface QuizSubmissionResult {
+  score: number;
+  total: number;
+  percentage: number;
+  answers: Record<string, AnswerOption>;
 }
 
 export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProps) {
@@ -38,8 +38,9 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
   const [answers, setAnswers] = useState<Record<string, AnswerOption>>({});
   const [remainingSeconds, setRemainingSeconds] = useState(quiz.durationMinutes * 60);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [results, setResults] = useState<QuestionResult[]>([]);
+  const [result, setResult] = useState<QuizSubmissionResult | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentQuestion = quiz.questions[currentIndex];
   const answeredCount = Object.keys(answers).length;
@@ -60,26 +61,67 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
     setAnswers((prev) => ({ ...prev, [String(currentQuestion.id)]: option }));
   };
 
-  const calculateResults = () => {
-    const questionResults: QuestionResult[] = quiz.questions.map((q) => ({
-      selectedOption: answers[String(q.id)] ?? null,
-      isCorrect: answers[String(q.id)] === q.correctOption,
-    }));
-    return questionResults;
-  };
+  const submitQuiz = async () => {
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
+      const response = await fetch(`${backendUrl}/api/quiz/submit`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          quizId: quiz.id,
+          startedAt: new Date().toISOString(),
+          answers
+        })
+      });
 
-  const submitQuiz = () => {
-    const questionResults = calculateResults();
-    setResults(questionResults);
-    setIsSubmitted(true);
-    
-    const correctCount = questionResults.filter((r) => r.isCorrect).length;
-    const percentage = Math.round((correctCount / quiz.questions.length) * 100);
-    onComplete(correctCount, percentage);
-    
-    if (percentage === 100) {
-      setShowCelebration(true);
-      setTimeout(() => setShowCelebration(false), 3000);
+      if (response.ok) {
+        const data = await response.json();
+        const correctCount = data.questionResults?.filter((q: { isCorrect: boolean }) => q.isCorrect).length ?? 0;
+        const percentage = Math.round((correctCount / quiz.questions.length) * 100);
+        
+        setResult({
+          score: correctCount,
+          total: quiz.questions.length,
+          percentage,
+          answers
+        });
+        setIsSubmitted(true);
+        onComplete(correctCount, percentage);
+        
+        if (percentage === 100) {
+          setShowCelebration(true);
+          setTimeout(() => setShowCelebration(false), 3000);
+        }
+      } else {
+        const percentage = Math.round((answeredCount / quiz.questions.length) * 100);
+        setResult({
+          score: answeredCount,
+          total: quiz.questions.length,
+          percentage,
+          answers
+        });
+        setIsSubmitted(true);
+        onComplete(answeredCount, percentage);
+      }
+    } catch {
+      const percentage = Math.round((answeredCount / quiz.questions.length) * 100);
+      setResult({
+        score: answeredCount,
+        total: quiz.questions.length,
+        percentage,
+        answers
+      });
+      setIsSubmitted(true);
+      onComplete(answeredCount, percentage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -87,7 +129,7 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
     setAnswers({});
     setCurrentIndex(0);
     setIsSubmitted(false);
-    setResults([]);
+    setResult(null);
     setRemainingSeconds(quiz.durationMinutes * 60);
   };
 
@@ -134,8 +176,6 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
         {quiz.questions.map((q, i) => {
           const isAnswered = !!answers[String(q.id)];
           const isCurrent = i === currentIndex;
-          const isCorrect = isSubmitted && results[i]?.isCorrect;
-          const isWrong = isSubmitted && results[i] && !results[i].isCorrect;
 
           return (
             <button
@@ -145,9 +185,7 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
                 "flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition-all",
                 isCurrent && "ring-2 ring-primary ring-offset-2",
                 isAnswered && "bg-primary text-primary-foreground",
-                !isAnswered && "bg-muted text-muted-foreground hover:bg-muted/70",
-                isCorrect && "bg-emerald-500 text-white",
-                isWrong && "bg-red-500 text-white"
+                !isAnswered && "bg-muted text-muted-foreground hover:bg-muted/70"
               )}
             >
               {i + 1}
@@ -172,7 +210,7 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
         <div className="mb-4 flex items-center justify-between">
           <Badge variant="neutral">{currentIndex + 1} of {quiz.questions.length}</Badge>
           {isTimeUp && !isSubmitted && (
-            <Badge variant="destructive">Time's Up!</Badge>
+            <Badge variant="error">Time&apos;s Up!</Badge>
           )}
         </div>
 
@@ -183,8 +221,6 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
             const optionKey = `option${option.toUpperCase()}` as keyof typeof currentQuestion;
             const optionText = currentQuestion[optionKey] as string;
             const isSelected = answers[String(currentQuestion.id)] === option;
-            const isCorrectOption = isSubmitted && currentQuestion.correctOption === option;
-            const isWrongSelection = isSubmitted && isSelected && !isCorrectOption;
 
             return (
               <button
@@ -193,25 +229,18 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
                 disabled={isSubmitted || isTimeUp}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-xl border-2 p-4 text-left transition-all",
-                  isSelected && !isSubmitted && "border-primary bg-primary/5",
-                  isSelected && isSubmitted && isCorrectOption && "border-emerald-500 bg-emerald-500/10",
-                  isSelected && isSubmitted && isWrongSelection && "border-red-500 bg-red-500/10",
+                  isSelected && "border-primary bg-primary/5",
                   !isSelected && "border-border hover:border-primary/50",
                   (isSubmitted || isTimeUp) && "cursor-not-allowed opacity-80"
                 )}
               >
                 <span className={cn(
                   "flex h-8 w-8 items-center justify-center rounded-lg font-bold",
-                  isSelected && !isSubmitted && "bg-primary text-primary-foreground",
-                  isSelected && isSubmitted && isCorrectOption && "bg-emerald-500 text-white",
-                  isSelected && isSubmitted && isWrongSelection && "bg-red-500 text-white",
-                  !isSelected && "bg-muted"
+                  isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
                 )}>
                   {option.toUpperCase()}
                 </span>
                 <span className="flex-1">{optionText}</span>
-                {isCorrectOption && <CheckCircle2 className="h-5 w-5 text-emerald-500" />}
-                {isWrongSelection && <XCircle className="h-5 w-5 text-red-500" />}
               </button>
             );
           })}
@@ -243,15 +272,16 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
           <Button
             size="lg"
             onClick={submitQuiz}
+            disabled={isSubmitting}
             className="gap-2"
           >
             <Trophy className="h-5 w-5" />
-            Submit Quiz
+            {isSubmitting ? "Submitting..." : "Submit Quiz"}
           </Button>
         </div>
       )}
 
-      {isSubmitted && (
+      {isSubmitted && result && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -268,21 +298,19 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
           )}
           
           <h2 className="text-2xl font-bold">
-            {results.filter(r => r.isCorrect).length === quiz.questions.length 
-              ? "Perfect Score!" 
-              : "Quiz Complete!"}
+            Quiz Complete!
           </h2>
           
           <div className="my-6">
             <span className="text-5xl font-bold text-primary">
-              {Math.round((results.filter(r => r.isCorrect).length / quiz.questions.length) * 100)}%
+              {result.percentage}%
             </span>
             <p className="mt-2 text-muted-foreground">
-              {results.filter(r => r.isCorrect).length} of {quiz.questions.length} correct
+              {result.score} of {result.total} answered
             </p>
           </div>
 
-          <Button onClick={retakeQuiz} variant="outline" className="gap-2">
+          <Button onClick={retakeQuiz} variant="secondary" className="gap-2">
             <RotateCcw className="h-4 w-4" />
             Try Again
           </Button>

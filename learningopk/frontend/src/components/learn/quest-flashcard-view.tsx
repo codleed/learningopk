@@ -158,7 +158,7 @@ export function QuestFlashcardView({
           className="flex justify-center gap-4"
         >
           <Button
-            variant="outline"
+            variant="secondary"
             size="lg"
             onClick={() => handleMark("review")}
             className="gap-2"

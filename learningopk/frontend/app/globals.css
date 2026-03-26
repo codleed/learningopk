@@ -59,7 +59,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-source-serif-4), Georgia, serif;
+    font-family: var(--font-plus-jakarta-sans), sans-serif;
     background-color: var(--background);
     background-image: none;
     min-height: 100vh;
@@ -70,7 +70,7 @@
   h2,
   h3,
   h4 {
-    font-family: var(--font-dm-serif-display), Georgia, serif;
+    font-family: var(--font-montserrat), sans-serif;
     letter-spacing: -0.015em;
   }
 
@@ -248,6 +248,62 @@
 
 .animate-toggle-bounce {
   animation: toggle-bounce 2s ease-out;
+}
+
+/* Refined scrollbar utilities */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Refined focus ring */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+/* Subtle hover lift */
+.hover-lift {
+  @apply transition-all duration-200;
+}
+
+.hover-lift:hover {
+  @apply -translate-y-0.5 shadow-md;
+}
+
+/* Text balance for headings */
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 @media (prefers-reduced-motion: reduce) {

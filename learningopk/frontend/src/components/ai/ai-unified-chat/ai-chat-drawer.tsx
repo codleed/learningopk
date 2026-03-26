@@ -1,40 +1,26 @@
 'use client';
 
 import { useState } from 'react';
-import { Lightbulb, HelpCircle, Brain, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAIChatContext } from './ai-chat-context';
 import { AIChatHeader } from './components/ai-chat-header';
 import { AIChatMessages } from './components/ai-chat-messages';
 import { AIChatInput } from './components/ai-chat-input';
 import { AIChatEmptyState } from './components/ai-chat-empty-state';
-import type { AIContext } from './types';
 
 type AIChatDrawerProps = {
-  context?: AIContext | null;
   onClose: () => void;
   className?: string;
 };
 
-const SUGGESTIONS = [
-  { icon: Lightbulb, title: 'Explain', description: 'Get clarity', prompt: 'Explain this concept:' },
-  { icon: HelpCircle, title: 'Help', description: 'Get guidance', prompt: 'Help me with:' },
-  { icon: Brain, title: 'Quiz', description: 'Test yourself', prompt: 'Quiz me on:' },
-  { icon: BookOpen, title: 'Summarize', description: 'Get key points', prompt: 'Summarize:' },
-];
-
-export function AIChatDrawer({ context, onClose, className }: AIChatDrawerProps) {
+export function AIChatDrawer({ onClose, className }: AIChatDrawerProps) {
   const {
     messages,
-    sessionId,
     isStreaming,
     isSending,
     error,
-    isHistoryOpen,
     isVisible,
     sendMessage,
-    startNewSession,
-    toggleHistory,
     clearError,
   } = useAIChatContext();
   
@@ -92,18 +78,12 @@ export function AIChatDrawer({ context, onClose, className }: AIChatDrawerProps)
         
         <div className="flex h-[calc(85dvh-2rem)] flex-col">
           <AIChatHeader
-            context={context ?? null}
-            sessionId={sessionId}
-            isHistoryOpen={isHistoryOpen}
             variant="drawer"
-            onToggleHistory={toggleHistory}
-            onNewSession={startNewSession}
             onClose={onClose}
           />
           
           {messages.length === 0 ? (
             <AIChatEmptyState
-              suggestions={SUGGESTIONS}
               onSuggestionClick={handleSuggestionClick}
               className="flex-1"
             />

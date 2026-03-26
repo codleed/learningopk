@@ -37,6 +37,7 @@ type ChapterStudyWorkspaceProps = {
   boardSlug: string;
   classSlug: string;
   subjectSlug: string;
+  chapterSlug: string;
   activeTab: ChapterTab;
   tabs: TabItem[];
   chapterId: number;
@@ -64,6 +65,7 @@ export function ChapterStudyWorkspace({
   boardSlug,
   classSlug,
   subjectSlug,
+  chapterSlug,
   activeTab,
   tabs,
   chapterId,
@@ -148,7 +150,7 @@ export function ChapterStudyWorkspace({
                 >
                   <QuestTabBar
                     activeTab={activeTab}
-                    baseHref={`/${boardSlug}/${classSlug}/${subjectSlug}`}
+                    baseHref={`/${boardSlug}/${classSlug}/${subjectSlug}/${chapterSlug}`}
                     status={{
                       summary: chapterProgress?.summaryRead ?? false,
                       exercises: chapterProgress?.exercisesCompleted?.length ?? 0,

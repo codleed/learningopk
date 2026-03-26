@@ -88,6 +88,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
         boardSlug={payload.board.slug}
         classSlug={payload.class.slug}
         subjectSlug={payload.subject.slug}
+        chapterSlug={payload.chapter.slug}
         activeTab={activeTab}
         tabs={tabs}
         chapterId={payload.chapter.id}

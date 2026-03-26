@@ -4,6 +4,7 @@ import { AIChatProvider, useAIChatContext } from './ai-chat-context';
 import { AIChatSidebar } from './ai-chat-sidebar';
 import { AIChatDrawer } from './ai-chat-drawer';
 import { AIChatToggleButton } from './ai-chat-toggle-button';
+import { useAIContextSync } from './hooks/use-ai-context';
 import type { AIContext } from './types';
 
 type AIUnifiedChatProps = {
@@ -12,18 +13,16 @@ type AIUnifiedChatProps = {
 
 function AIUnifiedChatInner({ context }: { context?: AIContext | null }) {
   const { toggleVisibility } = useAIChatContext();
+
+  useAIContextSync(context ?? null);
   
   return (
     <>
       <AIChatToggleButton />
       
-      <div className="hidden xl:block">
-        <AIChatSidebar context={context ?? null} />
-      </div>
+      <AIChatSidebar onHide={toggleVisibility} />
       
-      <div className="xl:hidden">
-        <AIChatDrawer context={context ?? null} onClose={toggleVisibility} />
-      </div>
+      <AIChatDrawer onClose={toggleVisibility} />
     </>
   );
 }
