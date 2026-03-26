@@ -243,6 +243,94 @@
   }
 }
 
+/* AI Chat Animations */
+
+/* Drawer slide-up */
+@keyframes slide-in-from-bottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Fade in */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Message appear */
+@keyframes message-in {
+  from { 
+    opacity: 0; 
+    transform: translateY(12px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+/* Streaming dots */
+@keyframes streaming {
+  0%, 60%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  30% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+}
+
+/* Scroll button appear */
+@keyframes scroll-btn-appear {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Apply animations */
+.animate-in {
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: forwards;
+}
+
+.fade-in {
+  animation-name: fade-in;
+}
+
+.slide-in-from-bottom {
+  animation-name: slide-in-from-bottom;
+}
+
+.animate-message-in {
+  animation: message-in 200ms ease-out forwards;
+}
+
+.animate-streaming {
+  animation: streaming 1.4s ease-in-out infinite;
+}
+
+.animate-scroll-btn {
+  animation: scroll-btn-appear 200ms ease-out forwards;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-in,
+  .animate-message-in,
+  .animate-streaming,
+  .animate-scroll-btn,
+  .animate-toggle-bounce {
+    animation: none !important;
+  }
+}
+
 /* AI Chat Toggle Animation */
 @keyframes toggle-bounce {
   0%, 100% { transform: scale(1); }
