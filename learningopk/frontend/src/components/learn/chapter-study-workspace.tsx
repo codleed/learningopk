@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 import {
@@ -16,7 +16,7 @@ import { Tabs, type TabItem } from "@/components/foundation/tabs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-import { AIChatPanel } from "./ai-chat-panel";
+
 import { ChapterStudyContentWithAi } from "./chapter-study-content-with-ai";
 import { AIUnifiedChat } from "@/components/ai/ai-unified-chat";
 import type { AIContext } from "@/components/ai/ai-unified-chat/types";
@@ -65,10 +65,8 @@ export function ChapterStudyWorkspace({
   const [prompt, setPrompt] = useState<string | null>(
     autoOpenAi ? "Guide me through this chapter using hints first." : null,
   );
-  const [isAiSidebarMaximized, setIsAiSidebarMaximized] = useState(false);
   const [isAiSidebarHidden, setIsAiSidebarHidden] = useState(false);
-  const panelPrompt = useMemo(() => prompt ?? undefined, [prompt]);
-  const useSingleColumnLayout = isAiSidebarMaximized || isAiSidebarHidden;
+  const useSingleColumnLayout = isAiSidebarHidden;
 
   const aiContext: AIContext | null = {
     chapterId,
@@ -93,10 +91,7 @@ export function ChapterStudyWorkspace({
           <DashboardSurface
             as="section"
             tone="shell"
-            className={cn(
-              "overflow-visible space-y-4 p-4 sm:p-5",
-              isAiSidebarMaximized ? "xl:hidden" : "",
-            )}
+            className="overflow-visible space-y-4 p-4 sm:p-5"
           >
             <MotionSection>
               <DashboardSurface
@@ -171,25 +166,10 @@ export function ChapterStudyWorkspace({
         {!isAiSidebarHidden ? (
           <MotionSection>
             <div className="xl:sticky xl:top-4 xl:self-start">
-              <AIChatPanel
-                chapterId={chapterId}
-                chapterTitle={chapterTitle}
-                initialPrompt={panelPrompt}
-                layout="sidebar"
-                isSidebarMaximized={isAiSidebarMaximized}
-                onToggleSidebarMaximized={() => {
-                  setIsAiSidebarMaximized((previous) => !previous);
-                }}
-                onHideSidebar={() => {
-                  setIsAiSidebarHidden(true);
-                  setIsAiSidebarMaximized(false);
-                }}
-              />
+              <AIUnifiedChat context={aiContext} />
             </div>
           </MotionSection>
         ) : null}
-
-        <AIUnifiedChat context={aiContext} />
     </StaggerContainer>
   );
 }
