@@ -269,7 +269,7 @@ type PersistAuditLogInput = {
   actorName: string;
 };
 
-const persistAuditLog = async (input: PersistAuditLogInput): Promise<void> => {
+export const persistAuditLog = async (input: PersistAuditLogInput): Promise<void> => {
   await db.insert(adminAuditLogs).values({
     scope: input.scope,
     action: input.action,

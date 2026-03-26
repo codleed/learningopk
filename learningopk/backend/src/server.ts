@@ -6,6 +6,7 @@ import { env } from "./lib/env.js";
 import { adminRouter } from "./routes/admin.js";
 import { aiChatRouter } from "./routes/ai-chat.js";
 import { authRouter } from "./routes/auth.js";
+import { backupRouter } from "./routes/backup.js";
 import { forumRouter } from "./routes/forum.js";
 import { healthRouter } from "./routes/health.js";
 import { learnRouter } from "./routes/learn.js";
@@ -39,6 +40,7 @@ export const createApp = () => {
   app.use("/api/learn", learnRouter);
   app.use("/api/ai", aiChatRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/admin/backup", backupRouter);
   app.use("/api/forum", forumRouter);
   app.use("/api/quiz", quizRouter);
   app.use("/api/progress", progressRouter);

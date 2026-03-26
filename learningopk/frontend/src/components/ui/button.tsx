@@ -34,8 +34,19 @@ export const buttonVariants = cva(
   }
 );
 
-export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants>;
+export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants> & {
+  asChild?: boolean;
+};
 
-export function Button({ className, variant, size, width, type = "button", ...props }: ButtonProps) {
-  return <button type={type} className={cn(buttonVariants({ variant, size, width }), className)} {...props} />;
+export function Button({ className, variant, size, width, type = "button", asChild = false, children, ...props }: ButtonProps) {
+  const Comp = asChild ? "span" : "button";
+  return (
+    <Comp 
+      type={type} 
+      className={cn(buttonVariants({ variant, size, width }), className)} 
+      {...props}
+    >
+      {children}
+    </Comp>
+  );
 }

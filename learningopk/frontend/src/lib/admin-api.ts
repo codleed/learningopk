@@ -1160,3 +1160,104 @@ export const updateAdminSetting = async ({
     body: { value }
   });
 };
+
+const backupStatusResponseSchema = z.object({
+  backupDir: z.string(),
+  dbName: z.string(),
+  backups: z.array(z.object({
+    id: z.string(),
+    filename: z.string(),
+    size: z.number(),
+    createdAt: z.string(),
+    tables: z.array(z.string()),
+    includesData: z.boolean()
+  })),
+  canBackup: z.boolean(),
+  canRestore: z.boolean()
+});
+
+export type BackupStatusResponse = z.infer<typeof backupStatusResponseSchema>;
+
+export async function getBackupStatus(): Promise<BackupStatusResponse> {
+  const response = await fetch("/api/admin/backup/status", {
+    credentials: "include"
+  });
+  
+  if (!response.ok) {
+    throw new Error("Failed to get backup status");
+  }
+  
+  const data = await response.json();
+  return backupStatusResponseSchema.parse(data);
+}
+
+const createBackupRequestSchema = z.object({
+  includeData: z.boolean().optional().default(true),
+  compression: z.enum(["none", "gzip", "zip"]).optional().default("gzip")
+});
+
+const createBackupResponseSchema = z.object({
+  success: z.boolean(),
+  backup: z.object({
+    id: z.string(),
+    filename: z.string(),
+    size: z.number(),
+    createdAt: z.string(),
+    tables: z.array(z.string()),
+    includesData: z.boolean()
+  })
+});
+
+export type CreateBackupResponse = z.infer<typeof createBackupResponseSchema>;
+
+export async function createBackup(params: {
+  includeData?: boolean;
+  compression?: "none" | "gzip" | "zip";
+}): Promise<CreateBackupResponse> {
+  const response = await fetch("/api/admin/backup/create", {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "content-type": "application/json"
+    },
+    body: JSON.stringify(createBackupRequestSchema.parse(params))
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Failed to create backup" }));
+    throw new Error(error.error || "Failed to create backup");
+  }
+  
+  return createBackupResponseSchema.parse(await response.json());
+}
+
+export async function deleteBackup(filename: string): Promise<void> {
+  const response = await fetch(`/api/admin/backup/${encodeURIComponent(filename)}`, {
+    method: "DELETE",
+    credentials: "include"
+  });
+  
+  if (!response.ok) {
+    throw new Error("Failed to delete backup");
+  }
+}
+
+export async function restoreBackup(filename: string): Promise<void> {
+  const response = await fetch("/api/admin/backup/restore", {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({ filename, confirmRestore: true })
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Failed to restore backup" }));
+    throw new Error(error.error || "Failed to restore backup");
+  }
+}
+
+export function getBackupDownloadUrl(filename: string): string {
+  return `/api/admin/backup/download/${encodeURIComponent(filename)}`;
+}

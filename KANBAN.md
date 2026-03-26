@@ -32,6 +32,83 @@ _No tasks in progress yet. Pick from Todo below._
 
 ## 🔵 Todo
 
+### Phase 0 — Infrastructure Scaling (Critical 🔴)
+
+---
+
+#### TASK-51A 🔴
+
+**Title:** PostgreSQL Connection Pooling (PgBouncer)
+**Phase:** 0 — Infrastructure Scaling
+**Priority:** Critical
+**Depends on:** TASK-02
+**Files:** `docker-compose.yml`, `pgbouncer.ini`
+
+**Acceptance Criteria:**
+
+- [ ] Add PgBouncer container to docker-compose.yml
+- [ ] Configure transaction-mode pooling: `pool_mode = transaction`
+- [ ] Set `max_client_connections = 500`, `default_pool_size = 25`
+- [ ] Update backend DATABASE_URL to point to PgBouncer (port 6432)
+- [ ] Verify connection pooling works under load (simulate 100+ concurrent connections)
+
+---
+
+#### TASK-51B 🔴
+
+**Title:** Redis Content Caching Layer
+**Phase:** 0 — Infrastructure Scaling
+**Priority:** Critical
+**Depends on:** TASK-04
+**Files:** `backend/src/lib/cache/cache.service.ts`
+
+**Acceptance Criteria:**
+
+- [ ] Create `CacheService` with typed keys, JSON serialization, TTL management
+- [ ] Cache subject listings: TTL 1 hour, invalidate on content publish
+- [ ] Cache chapter content: TTL 30 minutes
+- [ ] Cache forum threads: TTL 5 minutes
+- [ ] Do NOT cache: quiz questions, progress data, AI responses (security/real-time)
+- [ ] Add cache invalidation hooks on content mutations via repository pattern
+
+---
+
+#### TASK-51C 🔴
+
+**Title:** Nginx Load Balancing + Rate Limiting
+**Phase:** 0 — Infrastructure Scaling
+**Priority:** Critical
+**Depends on:** TASK-02
+**Files:** `infra/nginx.conf`
+
+**Acceptance Criteria:**
+
+- [ ] Configure Nginx reverse proxy with upstream backend cluster (2-3 instances)
+- [ ] Implement rate limiting: 100 req/user/minute, 1000 req/IP/minute
+- [ ] Add basic JWT validation for authenticated routes
+- [ ] Configure health checks (`/api/health`) for backend instances
+- [ ] Enable gzip compression and optimize buffers
+
+---
+
+#### TASK-51D 🔴
+
+**Title:** Repository Pattern Consolidation
+**Phase:** 0 — Infrastructure Scaling
+**Priority:** Critical
+**Depends on:** TASK-04
+**Files:** `backend/src/repositories/*.ts`, `backend/src/services/*.ts`
+
+**Acceptance Criteria:**
+
+- [ ] Audit: ensure ALL database access goes through repositories
+- [ ] Remove direct `db.select()` calls from services
+- [ ] Each repository scoped to single bounded context (learn, quiz, forum, progress, ai-chat)
+- [ ] Add cache-through pattern to repositories (check Redis before DB query)
+- [ ] Repository unit tests with mocked database
+
+---
+
 ### Phase 6 — Mock Exams (High 🟠)
 
 ---

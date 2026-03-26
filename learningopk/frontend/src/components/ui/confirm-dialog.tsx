@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -13,7 +13,8 @@ type ConfirmDialogProps = {
   danger?: boolean;
   isPending?: boolean;
   onConfirm: () => void;
-  onCancel: () => void;
+  onCancel?: () => void;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export function ConfirmDialog({
@@ -25,24 +26,43 @@ export function ConfirmDialog({
   danger = false,
   isPending = false,
   onConfirm,
-  onCancel
+  onCancel,
+  onOpenChange
 }: ConfirmDialogProps) {
+  const [isOpen, setIsOpen] = useState(open);
+
   useEffect(() => {
-    if (!open) {
+    setIsOpen(open);
+  }, [open]);
+
+  const handleCancel = () => {
+    setIsOpen(false);
+    onOpenChange?.(false);
+    onCancel?.();
+  };
+
+  const handleConfirm = () => {
+    onConfirm();
+    setIsOpen(false);
+    onOpenChange?.(false);
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
       return;
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onCancel();
+        handleCancel();
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onCancel, open]);
+  }, [isOpen]);
 
-  if (!open) {
+  if (!isOpen) {
     return null;
   }
 
@@ -59,10 +79,10 @@ export function ConfirmDialog({
         </h2>
         {description ? <p className="mt-2 text-sm text-muted-foreground">{description}</p> : null}
         <div className="mt-6 flex flex-wrap justify-end gap-2">
-          <Button variant="secondary" onClick={onCancel} disabled={isPending}>
+          <Button variant="secondary" onClick={handleCancel} disabled={isPending}>
             {cancelLabel}
           </Button>
-          <Button variant={danger ? "danger" : "primary"} onClick={onConfirm} disabled={isPending}>
+          <Button variant={danger ? "danger" : "primary"} onClick={handleConfirm} disabled={isPending}>
             {isPending ? "Please wait..." : confirmLabel}
           </Button>
         </div>

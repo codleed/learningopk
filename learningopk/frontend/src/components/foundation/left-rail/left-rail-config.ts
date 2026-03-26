@@ -13,6 +13,7 @@ import {
   ScrollText,
   Bell,
   Settings,
+  Database,
 } from "lucide-react";
 
 import type { NavItem, NavSection } from "./left-rail-types";
@@ -23,6 +24,10 @@ export const isPathPrefix = (currentPath: string, target: string): boolean =>
 export const isNavItemActive = (currentPath: string, item: NavItem): boolean => {
   if (item.matchers) {
     return item.matchers.some((m) => isPathPrefix(currentPath, m));
+  }
+  // Exact match for top-level routes whose href is a prefix of siblings
+  if (item.exact) {
+    return currentPath === item.href;
   }
   return isPathPrefix(currentPath, item.href);
 };
@@ -60,6 +65,7 @@ export const adminCommandItems: NavItem[] = [
     href: "/admin",
     label: "Command Center",
     icon: LayoutDashboard,
+    exact: true,
   },
   {
     href: "/admin/users",
@@ -103,6 +109,11 @@ export const adminOperationsItems: NavItem[] = [
     href: "/admin/notifications",
     label: "Notifications",
     icon: Bell,
+  },
+  {
+    href: "/admin/backup",
+    label: "Backup & Restore",
+    icon: Database,
   },
   {
     href: "/admin/settings",

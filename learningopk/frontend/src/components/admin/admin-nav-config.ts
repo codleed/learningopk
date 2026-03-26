@@ -3,6 +3,7 @@ import {
   BarChart3,
   Bell,
   BookOpenCheck,
+  Database,
   Flag,
   LayoutDashboard,
   MessagesSquare,
@@ -32,6 +33,7 @@ export const adminNavItems = [
   { href: "/admin/audit", label: "Audit Trail", icon: ScrollText },
   { href: "/admin/analytics", label: "Analytics & Reporting", icon: BarChart3 },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
+  { href: "/admin/backup", label: "Backup & Restore", icon: Database },
   { href: "/admin/settings", label: "System Settings", icon: Settings }
 ] satisfies readonly AdminNavItem[];
 
