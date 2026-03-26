@@ -14,7 +14,7 @@ type AIChatMessagesProps = {
 
 function StreamingIndicator({ className }: { className?: string }) {
   return (
-    <div className={cn('flex items-center gap-1 px-1', className)}>
+    <div className={cn('flex items-center gap-1 px-1', className)} aria-label="AI is typing" role="status">
       <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-muted-foreground" />
       <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-muted-foreground [animation-delay:0.16s]" />
       <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-muted-foreground [animation-delay:0.32s]" />
@@ -42,7 +42,9 @@ function MessageBubble({
           ? 'ml-auto max-w-[80%] rounded-2xl rounded-br-sm bg-primary px-4 py-3 text-[15px] text-primary-foreground'
           : 'mr-auto max-w-[85%] rounded-2xl rounded-bl-sm border border-border bg-card px-4 py-3 text-[15px] text-foreground'
       )}
-      aria-label={`${isUser ? 'You' : 'AI Tutor'}: ${message.content.slice(0, 50)}...`}
+      aria-label={message.content 
+  ? `${isUser ? 'You' : 'AI Tutor'}: ${message.content.slice(0, 50)}…`
+  : `${isUser ? 'You' : 'AI Tutor'}`}
     >
       {!isUser && showAvatar && (
         <div className="mb-2 flex items-center gap-2">
