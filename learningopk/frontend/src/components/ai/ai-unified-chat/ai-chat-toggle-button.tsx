@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAIChatContext } from './ai-chat-context';
@@ -8,19 +8,29 @@ import { useAIChatContext } from './ai-chat-context';
 export function AIChatToggleButton() {
   const { isVisible, toggleVisibility, isFirstVisit, dismissFirstVisit } = useAIChatContext();
   const [showBounce, setShowBounce] = useState(isFirstVisit);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
     if (isFirstVisit) {
-      const timer = setTimeout(() => {
+      timerRef.current = setTimeout(() => {
         setShowBounce(false);
       }, 3000);
-      return () => clearTimeout(timer);
     }
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
   }, [isFirstVisit]);
   
   const handleClick = () => {
     if (isFirstVisit) {
       dismissFirstVisit();
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      setShowBounce(false);
     }
     toggleVisibility();
   };

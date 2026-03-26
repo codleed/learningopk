@@ -232,7 +232,8 @@
   .animate-message-in,
   .animate-scroll-btn,
   .animate-sidebar-in,
-  .animate-sidebar-out {
+  .animate-sidebar-out,
+  .animate-toggle-bounce {
     animation: none;
   }
 
