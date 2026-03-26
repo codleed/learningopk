@@ -1,6 +1,6 @@
 'use client';
 
-import { AIChatProvider } from './ai-chat-context';
+import { AIChatProvider, useAIChatContext } from './ai-chat-context';
 import { AIChatSidebar } from './ai-chat-sidebar';
 import { AIChatDrawer } from './ai-chat-drawer';
 import { AIChatToggleButton } from './ai-chat-toggle-button';
@@ -10,9 +10,11 @@ type AIUnifiedChatProps = {
   context?: AIContext | null;
 };
 
-export function AIUnifiedChat({ context }: AIUnifiedChatProps) {
+function AIUnifiedChatInner({ context }: { context?: AIContext | null }) {
+  const { toggleVisibility } = useAIChatContext();
+  
   return (
-    <AIChatProvider initialContext={context}>
+    <>
       <AIChatToggleButton />
       
       <div className="hidden xl:block">
@@ -20,8 +22,16 @@ export function AIUnifiedChat({ context }: AIUnifiedChatProps) {
       </div>
       
       <div className="xl:hidden">
-        <AIChatDrawer context={context ?? null} onClose={() => {}} />
+        <AIChatDrawer context={context ?? null} onClose={toggleVisibility} />
       </div>
+    </>
+  );
+}
+
+export function AIUnifiedChat({ context }: AIUnifiedChatProps) {
+  return (
+    <AIChatProvider initialContext={context}>
+      <AIUnifiedChatInner context={context} />
     </AIChatProvider>
   );
 }
