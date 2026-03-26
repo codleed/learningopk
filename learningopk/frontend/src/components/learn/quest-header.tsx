@@ -1,11 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { ChevronLeft, Star, Trophy } from "lucide-react";
+import { Star, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 import { ProgressRing } from "@/components/gamification/progress-ring";
 import { StreakCounter } from "@/components/gamification/streak-counter";
-import { cn } from "@/lib/utils";
 import type { GamificationState } from "@/lib/gamification-types";
 
 interface QuestHeaderProps {
@@ -38,15 +36,7 @@ export function QuestHeader({
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
       
       <div className="relative">
-        <div className="flex items-center justify-between mb-4">
-          <Link
-            href={`/${boardSlug}/${classSlug}/${subjectSlug}`}
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            <span>{subjectName}</span>
-          </Link>
-          
+        <div className="flex items-center justify-end mb-4">
           <StreakCounter streak={streak} />
         </div>
 
