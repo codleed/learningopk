@@ -1,10 +1,10 @@
 "use client";
 
-import { SignOut } from "@phosphor-icons/react";
+import { SignOut, List, X } from "@phosphor-icons/react";
 import type { LucideIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { ThemeToggleCompact } from "@/components/ui/theme-toggle";
@@ -26,6 +26,8 @@ type LeftRailProps = {
   currentPath?: string;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  isMobileOpen?: boolean;
+  onMobileToggle?: () => void;
 };
 
 const getInitials = (name: string): string =>
@@ -42,9 +44,10 @@ interface NavItemProps {
   isActive: boolean;
   isExpanded: boolean;
   variant: ViewMode;
+  onNavigate?: () => void;
 }
 
-function NavItem({ item, isActive, isExpanded, variant }: NavItemProps) {
+function NavItem({ item, isActive, isExpanded, variant, onNavigate }: NavItemProps) {
   const LinkIcon = item.icon as LucideIcon;
   const isStudentVariant = variant === "student";
 
@@ -58,6 +61,7 @@ function NavItem({ item, isActive, isExpanded, variant }: NavItemProps) {
       href={item.href}
       aria-current={isActive ? "page" : undefined}
       title={!isExpanded ? item.label : undefined}
+      onClick={onNavigate}
       className={cn(
         baseClasses,
         !isExpanded
@@ -101,15 +105,56 @@ export function LeftRail({
   currentPath = "/",
   viewMode,
   onViewModeChange,
+  isMobileOpen: externalMobileOpen,
+  onMobileToggle,
 }: LeftRailProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [internalMobileOpen, setInternalMobileOpen] = useState(false);
   const isAdmin = session.user.role === "admin";
 
-  const handleMouseEnter = useCallback(() => setIsExpanded(true), []);
-  const handleMouseLeave = useCallback(() => setIsExpanded(false), []);
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
-  const handleFocusIn = useCallback(() => setIsExpanded(true), []);
-  const handleFocusOut = useCallback(() => setIsExpanded(false), []);
+  const isMobileOpen = externalMobileOpen ?? internalMobileOpen;
+  const setIsMobileOpen = externalMobileOpen !== undefined 
+    ? (() => onMobileToggle?.()) 
+    : setInternalMobileOpen;
+
+  // Close mobile sidebar on Escape key
+  useEffect(() => {
+    if (!isMobile || !isMobileOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsMobileOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isMobile, isMobileOpen]);
+
+  // On mobile: always collapsed (72px), no hover expansion
+  // On desktop: use isExpanded state with hover
+  const actualExpanded = isMobile ? false : isExpanded;
+
+  const handleMouseEnter = useCallback(() => {
+    if (!isMobile) setIsExpanded(true);
+  }, [isMobile]);
+  const handleMouseLeave = useCallback(() => {
+    if (!isMobile) setIsExpanded(false);
+  }, [isMobile]);
+  const handleFocusIn = useCallback(() => {
+    if (!isMobile) setIsExpanded(true);
+  }, [isMobile]);
+  const handleFocusOut = useCallback(() => {
+    if (!isMobile) setIsExpanded(false);
+  }, [isMobile]);
 
   const displayName = useMemo(() => {
     const trimmedName = session.user.name?.trim();
@@ -122,7 +167,12 @@ export function LeftRail({
 
   const avatarInitials = getInitials(displayName);
 
-  const currentWidth = isExpanded ? RAIL_EXPANDED_WIDTH : RAIL_COLLAPSED_WIDTH;
+  const currentWidth = actualExpanded ? RAIL_EXPANDED_WIDTH : RAIL_COLLAPSED_WIDTH;
+
+  // Close mobile sidebar on navigation
+  const handleMobileNavClose = useCallback(() => {
+    if (isMobile) setIsMobileOpen(false);
+  }, [isMobile]);
 
   const renderStudentNav = () => (
     <div className="flex w-full flex-col gap-1">
@@ -131,8 +181,9 @@ export function LeftRail({
           key={item.href}
           item={item}
           isActive={isNavItemActive(currentPath, item)}
-          isExpanded={isExpanded}
+          isExpanded={actualExpanded}
           variant="student"
+          onNavigate={handleMobileNavClose}
         />
       ))}
     </div>
@@ -146,11 +197,11 @@ export function LeftRail({
             <div
               className={cn(
                 "my-3 h-px bg-[var(--sidebar-border)]",
-                !isExpanded ? "mx-auto w-8 opacity-30" : "w-full opacity-50"
+                !actualExpanded ? "mx-auto w-8 opacity-30" : "w-full opacity-50"
               )}
             />
           )}
-          {isExpanded && section.label && (
+          {actualExpanded && section.label && (
             <div className="mb-1 mt-3 px-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--sidebar-admin-default-text)] opacity-70">
               {section.label}
             </div>
@@ -160,8 +211,9 @@ export function LeftRail({
               key={item.href}
               item={item}
               isActive={isNavItemActive(currentPath, item)}
-              isExpanded={isExpanded}
+              isExpanded={actualExpanded}
               variant="admin"
+              onNavigate={handleMobileNavClose}
             />
           ))}
         </div>
@@ -170,36 +222,70 @@ export function LeftRail({
   );
 
   return (
-    <div
-      className="left-rail-container fixed inset-y-0 left-0 z-40 flex"
-      style={{ width: currentWidth, transition: "width 350ms ease-in-out" }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onFocusCapture={handleFocusIn}
-      onBlurCapture={handleFocusOut}
-    >
-      <aside
+    <>
+      {/* Mobile backdrop */}
+      {isMobile && isMobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      
+      {/* Left rail container - fixed on mobile, responsive on desktop */}
+      <div
         className={cn(
-          "flex flex-col border-r border-[var(--sidebar-border)] bg-[var(--sidebar-bg)]",
-          "shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_10px_20px_-5px_rgba(0,0,0,0.08)]",
-          "h-full w-full"
+          "left-rail-container fixed inset-y-0 left-0 z-40 flex",
+          isMobile ? (
+            isMobileOpen ? "translate-x-0" : "-translate-x-full"
+          ) : (
+            // Desktop: controlled by isExpanded state (set on hover via React)
+            isExpanded ? "w-[280px]" : "w-[72px]"
+          ),
+          isMobile
+            ? "transition-transform duration-300 ease-in-out"
+            : "transition-[width] duration-300 ease-in-out"
         )}
-        data-testid="left-rail"
-        data-expanded={isExpanded ? "true" : "false"}
-        data-view-mode={viewMode}
+        aria-expanded={isMobile ? isMobileOpen : isExpanded}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onFocusCapture={handleFocusIn}
+        onBlurCapture={handleFocusOut}
       >
-        <div className="flex flex-1 flex-col px-[var(--sidebar-padding-x)] py-[var(--sidebar-padding-top)]">
-          <div
-            className={cn(
-              "mb-4 flex items-center",
-              !isExpanded ? "justify-center" : "gap-3"
-            )}
-          >
-            <Link
-              href="/dashboard"
-              aria-label="LearningoPK Home"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--foreground)] p-2 shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105"
+        <aside
+          role="navigation"
+          aria-label="Main sidebar"
+          className={cn(
+            "flex flex-col border-r border-[var(--sidebar-border)] bg-[var(--sidebar-bg)]",
+            "shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_10px_20px_-5px_rgba(0,0,0,0.08)]",
+            "h-full w-full"
+          )}
+          data-testid="left-rail"
+          data-expanded={actualExpanded ? "true" : "false"}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          <div className="flex flex-1 flex-col px-[var(--sidebar-padding-x)] py-[var(--sidebar-padding-top)]">
+            <div
+              className={cn(
+                "mb-4 flex items-center relative",
+                !actualExpanded ? "justify-center" : "gap-3"
+              )}
             >
+              {isMobile && isMobileOpen && (
+                <button
+                  onClick={() => setIsMobileOpen(false)}
+                  className="absolute right-2 top-2 rounded-lg p-1.5 text-[var(--sidebar-nav-default-text)] hover:bg-[var(--sidebar-nav-hover-bg)] md:hidden"
+                  aria-label="Close sidebar"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+              <Link
+                href="/dashboard"
+                aria-label="LearningoPK Home"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--foreground)] p-2 shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105"
+              >
               <Image
                 src="/new_logo.png"
                 alt="LearningoPK logo"
@@ -209,7 +295,7 @@ export function LeftRail({
                 priority
               />
             </Link>
-            {isExpanded && (
+            {actualExpanded && (
               <div className="flex flex-col min-w-0">
                 <span className="truncate text-base font-semibold text-[var(--sidebar-brand-text)] tracking-tight">
                   LearningoPK
@@ -221,7 +307,7 @@ export function LeftRail({
             )}
           </div>
 
-          {isAdmin && isExpanded && (
+          {isAdmin && actualExpanded && (
             <RoleToggle
               currentMode={viewMode}
               onModeChange={onViewModeChange}
@@ -234,7 +320,7 @@ export function LeftRail({
         </div>
 
         <div className="shrink-0 px-[var(--sidebar-padding-x)] py-4 space-y-1">
-          <ThemeToggleCompact isCollapsed={!isExpanded} />
+          <ThemeToggleCompact isCollapsed={!actualExpanded} />
 
           <LogoutButton
             ariaLabel="Sign out"
@@ -244,10 +330,10 @@ export function LeftRail({
                 aria-hidden
               />
             }
-            hideLabel={!isExpanded}
+            hideLabel={!actualExpanded}
             className={cn(
               "group flex h-10 w-full items-center rounded-xl border-0 bg-transparent transition-all duration-150",
-              !isExpanded ? "justify-center text-[var(--sidebar-utility-default-text)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8" : "gap-3 px-3 text-[var(--sidebar-utility-default-text)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8"
+              !actualExpanded ? "justify-center text-[var(--sidebar-utility-default-text)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8" : "gap-3 px-3 text-[var(--sidebar-utility-default-text)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8"
             )}
             labelClassName="truncate text-sm font-medium transition-colors duration-150"
           />
@@ -255,21 +341,21 @@ export function LeftRail({
           <Link
             href="/settings"
             aria-label={`Profile: ${displayName}`}
-            title={!isExpanded ? displayName : undefined}
+            title={!actualExpanded ? displayName : undefined}
             className={cn(
               "group flex items-center rounded-2xl border border-[var(--sidebar-profile-border)] bg-[var(--sidebar-profile-bg)] p-3 transition-all duration-150 hover:border-[var(--sidebar-border)] hover:bg-[var(--sidebar-nav-hover-bg)]",
-              !isExpanded
+              !actualExpanded
                 ? "justify-center p-2"
                 : "gap-3"
             )}
           >
             <div className={cn(
               "flex shrink-0 items-center justify-center rounded-full bg-[var(--sidebar-profile-avatar-bg)] text-[var(--sidebar-profile-avatar-text)] font-bold transition-all duration-150 group-hover:scale-105",
-              !isExpanded ? "h-10 w-10 text-sm" : "h-10 w-10 text-sm"
+              !actualExpanded ? "h-10 w-10 text-sm" : "h-10 w-10 text-sm"
             )}>
               {avatarInitials}
             </div>
-            {isExpanded && (
+            {actualExpanded && (
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-[var(--sidebar-profile-text)]">
                   {truncatedName}
@@ -281,7 +367,8 @@ export function LeftRail({
             )}
           </Link>
         </div>
-      </aside>
-    </div>
+          </aside>
+      </div>
+    </>
   );
 }

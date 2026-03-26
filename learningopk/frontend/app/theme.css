@@ -388,6 +388,11 @@
   opacity: 0.3;
 }
 
+/* === Left Rail Layout === */
+#main-content {
+  margin-left: var(--sidebar-width-collapsed, 72px) !important;
+}
+
 /* === Touch Device: Always Expanded Sidebar === */
 /* On touch devices (no hover capability), always show expanded sidebar */
 @media (hover: none) and (pointer: coarse) {
