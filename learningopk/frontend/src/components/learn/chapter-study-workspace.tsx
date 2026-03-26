@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 
 import { AIChatPanel } from "./ai-chat-panel";
 import { ChapterStudyContentWithAi } from "./chapter-study-content-with-ai";
+import { AIUnifiedChat } from "@/components/ai/ai-unified-chat";
+import type { AIContext } from "@/components/ai/ai-unified-chat/types";
 
 type ChapterTab = "summary" | "exercises" | "flashcards" | "quiz";
 
@@ -67,6 +69,16 @@ export function ChapterStudyWorkspace({
   const [isAiSidebarHidden, setIsAiSidebarHidden] = useState(false);
   const panelPrompt = useMemo(() => prompt ?? undefined, [prompt]);
   const useSingleColumnLayout = isAiSidebarMaximized || isAiSidebarHidden;
+
+  const aiContext: AIContext | null = {
+    chapterId,
+    chapterTitle,
+    chapterNumber,
+    subjectName,
+    boardName,
+    className,
+    currentTab: activeTab,
+  };
 
   return (
     <StaggerContainer
@@ -176,6 +188,8 @@ export function ChapterStudyWorkspace({
             </div>
           </MotionSection>
         ) : null}
+
+        <AIUnifiedChat context={aiContext} />
     </StaggerContainer>
   );
 }
