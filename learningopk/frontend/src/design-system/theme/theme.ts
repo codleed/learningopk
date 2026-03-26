@@ -71,8 +71,8 @@ export const themeTokens = {
   },
   typography: {
     fontFamily: {
-      heading: '"DM Serif Display", Georgia, serif',
-      body: '"Source Serif 4", Georgia, serif',
+      heading: '"Montserrat", sans-serif',
+      body: '"Plus Jakarta Sans", sans-serif',
       mono: '"JetBrains Mono", monospace',
     },
     fontSize: {

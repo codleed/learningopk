@@ -1,31 +1,24 @@
 import type { Metadata } from "next";
-import { DM_Serif_Display, Source_Serif_4, JetBrains_Mono, Manrope } from "next/font/google";
+import { Montserrat, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 
 import { ToastProvider } from "@/components/ui/toast";
 import { themeInitScript } from "@/lib/theme";
 
 import "./globals.css";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
   display: "swap"
 });
 
-const dmSerifDisplay = DM_Serif_Display({
-  variable: "--font-dm-serif-display",
-  weight: "400",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta-sans",
   subsets: ["latin"],
   display: "swap"
 });
 
-const sourceSerif4 = Source_Serif_4({
-  variable: "--font-source-serif-4",
-  subsets: ["latin"],
-  display: "swap"
-});
-
-const jetBrainsMono = JetBrains_Mono({
+const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
   display: "swap"
@@ -53,9 +46,9 @@ export default function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className={`${manrope.variable} ${dmSerifDisplay.variable} ${sourceSerif4.variable} ${jetBrainsMono.variable} antialiased`}
+        className={`${montserrat.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} antialiased`}
         style={{
-          fontFamily: "var(--font-source-serif-4), Georgia, serif",
+          fontFamily: "var(--font-plus-jakarta-sans), sans-serif",
         }}
       >
         <ToastProvider>{children}</ToastProvider>

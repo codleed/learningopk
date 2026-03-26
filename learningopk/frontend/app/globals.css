@@ -59,7 +59,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-source-serif-4), Georgia, serif;
+    font-family: var(--font-plus-jakarta-sans), sans-serif;
     background-color: var(--background);
     background-image: none;
     min-height: 100vh;
@@ -70,7 +70,7 @@
   h2,
   h3,
   h4 {
-    font-family: var(--font-dm-serif-display), Georgia, serif;
+    font-family: var(--font-montserrat), sans-serif;
     letter-spacing: -0.015em;
   }
 
@@ -113,12 +113,8 @@
 }
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes pulse-soft {
@@ -130,29 +126,6 @@
   }
 }
 
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out forwards;
-}
-
-.animate-fade-in {
-  animation: fade-in 0.2s ease-out forwards;
-}
-
-.animate-pulse-soft {
-  animation: pulse-soft 2s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-slide-up,
-  .animate-fade-in,
-  .animate-pulse-soft {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* Streaming dots animation */
 @keyframes streaming-dot {
   0%, 60%, 100% {
     transform: scale(1);
@@ -164,31 +137,21 @@
   }
 }
 
-.animate-streaming {
-  animation: streaming-dot 1.2s ease-in-out infinite;
-}
-
-/* Message enter animation */
 @keyframes message-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
+  from { 
+    opacity: 0; 
+    transform: translateY(12px); 
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
   }
 }
 
-.animate-message-in {
-  animation: message-in 300ms ease-out forwards;
-}
-
-/* Scroll to bottom button animation */
-@keyframes scroll-btn-in {
+@keyframes scroll-btn-appear {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(8px);
+    transform: translateX(-50%) translateY(12px);
   }
   to {
     opacity: 1;
@@ -196,11 +159,6 @@
   }
 }
 
-.animate-scroll-btn {
-  animation: scroll-btn-in 200ms ease-out forwards;
-}
-
-/* Sidebar slide animations */
 @keyframes sidebar-slide-in {
   from {
     transform: translateX(100%);
@@ -219,6 +177,53 @@
   }
 }
 
+@keyframes slide-in-from-bottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes streaming {
+  0%, 60%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  30% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+}
+
+@keyframes toggle-bounce {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(1); }
+  75% { transform: scale(1.05); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out forwards;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+.animate-streaming {
+  animation: streaming 1.4s ease-in-out infinite;
+}
+
+.animate-message-in {
+  animation: message-in 200ms ease-out forwards;
+}
+
+.animate-scroll-btn {
+  animation: scroll-btn-appear 200ms ease-out forwards;
+}
+
 .animate-sidebar-in {
   animation: sidebar-slide-in 250ms ease-out forwards;
 }
@@ -227,13 +232,92 @@
   animation: sidebar-slide-out 200ms ease-in forwards;
 }
 
+.animate-in {
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: forwards;
+}
+
+.fade-in {
+  animation-name: fade-in;
+}
+
+.slide-in-from-bottom {
+  animation-name: slide-in-from-bottom;
+}
+
+.animate-toggle-bounce {
+  animation: toggle-bounce 2s ease-out;
+}
+
+/* Refined scrollbar utilities */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Refined focus ring */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+/* Subtle hover lift */
+.hover-lift {
+  @apply transition-all duration-200;
+}
+
+.hover-lift:hover {
+  @apply -translate-y-0.5 shadow-md;
+}
+
+/* Text balance for headings */
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .animate-slide-up,
+  .animate-fade-in,
+  .animate-pulse-soft,
   .animate-streaming,
   .animate-message-in,
   .animate-scroll-btn,
   .animate-sidebar-in,
-  .animate-sidebar-out {
-    animation: none;
+  .animate-sidebar-out,
+  .animate-in,
+  .animate-toggle-bounce {
+    animation: none !important;
   }
 
   .katex {

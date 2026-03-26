@@ -1,11 +1,17 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { 
+  Sparkles, 
+  Maximize2, 
+  Minimize2,
+  ArrowUp,
+  ChevronDown,
+  Loader2
+} from "lucide-react";
 
 import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 type ChatRole = "user" | "assistant";
@@ -51,6 +57,145 @@ const formatAssistantError = (payload: AIChatErrorResponse | null, fallback: str
   return `${payload.error ?? fallback}${reasonSuffix}${retrySuffix}`;
 };
 
+const DEFAULT_SUGGESTIONS = [
+  "Explain a concept in simple terms",
+  "Help me with this exercise",
+  "Quiz me on this topic",
+  "Summarize the key points"
+];
+
+// ============================================================================
+// Sub-Components
+// ============================================================================
+
+interface StreamingIndicatorProps {
+  className?: string;
+}
+
+function StreamingIndicator({ className }: StreamingIndicatorProps) {
+  return (
+    <div className={cn("flex items-center gap-1 px-1", className)}>
+      <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-muted-foreground" />
+      <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-muted-foreground [animation-delay:0.16s]" />
+      <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-muted-foreground [animation-delay:0.32s]" />
+    </div>
+  );
+}
+
+interface MessageBubbleProps {
+  message: ChatMessage;
+  isStreaming?: boolean;
+  showAvatar?: boolean;
+}
+
+function MessageBubble({ message, isStreaming, showAvatar }: MessageBubbleProps) {
+  const isUser = message.role === "user";
+  const isEmpty = !message.content;
+
+  return (
+    <article
+      className={cn(
+        "animate-message-in",
+        isUser
+          ? "ml-auto max-w-[80%] rounded-2xl rounded-br-sm bg-primary px-4 py-3 text-[15px] text-primary-foreground"
+          : "mr-auto max-w-[85%] rounded-2xl rounded-bl-sm border border-border bg-card px-4 py-3 text-[15px] text-foreground"
+      )}
+      aria-label={`${isUser ? "You" : "AI Tutor"}: ${message.content.slice(0, 50)}...`}
+    >
+      {!isUser && showAvatar && (
+        <div className="mb-2 flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+          </div>
+        </div>
+      )}
+      
+      {isUser ? (
+        <div className="break-words [overflow-wrap:anywhere]">{message.content}</div>
+      ) : isEmpty || isStreaming ? (
+        <StreamingIndicator />
+      ) : (
+        <div className="[overflow-wrap:anywhere] [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
+          <MarkdownMathRenderer
+            content={message.content}
+            forceWrap
+            className="text-[15px] leading-relaxed [&_.katex-display]:overflow-x-visible"
+          />
+        </div>
+      )}
+    </article>
+  );
+}
+
+interface EmptyStateProps {
+  suggestions: string[];
+  onSuggestionClick: (text: string) => void;
+}
+
+function EmptyState({ suggestions, onSuggestionClick }: EmptyStateProps) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center px-4 py-12">
+      {/* Icon */}
+      <Sparkles className="mb-4 h-12 w-12 text-primary opacity-90" />
+      
+      {/* Title */}
+      <h2 className="mb-3 text-center font-[family-name:var(--font-heading)] text-2xl font-semibold text-foreground">
+        How can I help you?
+      </h2>
+      
+      {/* Subtitle */}
+      <p className="mb-8 max-w-[360px] text-center text-[15px] text-muted-foreground">
+        Ask about concepts, get help with exercises, or test your knowledge.
+      </p>
+      
+      {/* Suggestion chips */}
+      <div className="grid w-full max-w-[560px] grid-cols-1 gap-3 sm:grid-cols-2">
+        {suggestions.map((suggestion) => (
+          <button
+            key={suggestion}
+            type="button"
+            onClick={() => onSuggestionClick(suggestion)}
+            className="w-full rounded-3xl border border-border bg-card px-4 py-3 
+                       text-left text-sm font-medium text-foreground shadow-sm
+                       transition-all duration-150
+                       hover:-translate-y-0.5 hover:border-primary/50 hover:bg-primary/5 hover:shadow-md
+                       active:translate-y-0 active:shadow-sm"
+          >
+            {suggestion}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface ScrollToBottomButtonProps {
+  isVisible: boolean;
+  onClick: () => void;
+}
+
+function ScrollToBottomButton({ isVisible, onClick }: ScrollToBottomButtonProps) {
+  if (!isVisible) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="animate-scroll-btn fixed bottom-24 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 
+                 rounded-full border border-border bg-card px-4 py-2 shadow-md
+                 transition-all duration-200 hover:scale-105 active:scale-100"
+      aria-label="Scroll to latest messages"
+    >
+      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+      <span className="text-[13px] font-medium text-muted-foreground">New messages</span>
+    </button>
+  );
+}
+
+// ============================================================================
+// Main Component
+// ============================================================================
+
 export function AIChatPanel({
   chapterId,
   chapterTitle,
@@ -68,11 +213,46 @@ export function AIChatPanel({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
   const messageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const focusedMessageIndex = useRef<number | null>(null);
+
+  const hasMessages = messages.length > 0;
+
+  const placeholder = useMemo(() => {
+    return messages.length > 0
+      ? "Ask a follow-up question..."
+      : "Ask your first question...";
+  }, [messages.length]);
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    if (messages.length > 0 && !showScrollButton) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messages, showScrollButton]);
+
+  // Handle scroll position for scroll-to-bottom button
+  const handleScroll = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    
+    setShowScrollButton(distanceFromBottom > 200);
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    setShowScrollButton(false);
+  }, []);
 
   useEffect(() => {
     if (isOpen && layout === "overlay") {
@@ -151,19 +331,50 @@ export function AIChatPanel({
     setInputValue(initialPrompt);
   }, [initialPrompt, panelIsVisible]);
 
-  const placeholderMessage = useMemo(() => {
-    if (messages.length > 0) {
-      return "Ask a follow-up question...";
-    }
-    return "Ask your first question...";
-  }, [messages.length]);
-
   const startFreshSession = () => {
     setSessionId(null);
     setMessages([]);
     setInputValue("");
     setError(null);
   };
+
+  const adjustTextareaHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
+    }
+  }, []);
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setInputValue(e.target.value);
+      adjustTextareaHeight();
+    },
+    [adjustTextareaHeight]
+  );
+
+  const handleSuggestionClick = useCallback(
+    (text: string) => {
+      setInputValue(text);
+      adjustTextareaHeight();
+      textareaRef.current?.focus();
+    },
+    [adjustTextareaHeight]
+  );
+
+  const handleTextareaKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        const form = e.currentTarget.form;
+        if (form) {
+          form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+        }
+      }
+    },
+    []
+  );
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -173,6 +384,7 @@ export function AIChatPanel({
     }
 
     setIsSending(true);
+    setIsStreaming(true);
     setError(null);
 
     const userMessage: ChatMessage = {
@@ -195,6 +407,11 @@ export function AIChatPanel({
 
     setMessages((previous) => [...previous, userMessage, pendingAssistantMessage]);
     setInputValue("");
+    
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
 
     try {
       const response = await fetch(`${backendUrl}/api/ai/chat`, {
@@ -260,6 +477,7 @@ export function AIChatPanel({
       setError("Unable to reach AI service. Please try again.");
     } finally {
       setIsSending(false);
+      setIsStreaming(false);
     }
   };
 
@@ -310,69 +528,101 @@ export function AIChatPanel({
       <div
         ref={containerRef}
         onKeyDown={handleKeyDown}
+        onScroll={handleScroll}
         className={cn("space-y-3 px-3 py-3", usePanelLevelScroll ? "" : "min-h-0 flex-1 overflow-y-auto")}
+        role="log"
+        aria-label="Conversation"
+        aria-live="polite"
       >
         {messages.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-            Ask a question and the tutor will guide you step-by-step before revealing the final method.
-          </div>
-        ) : null}
+          <EmptyState suggestions={DEFAULT_SUGGESTIONS} onSuggestionClick={handleSuggestionClick} />
+        ) : (
+          <>
+            {messages.map((message, index) => {
+              const prevMessage = messages[index - 1];
+              const shouldShowAvatar = message.role === "assistant" && 
+                (index === 0 || prevMessage?.role === "user");
+              const isConsecutiveSameRole = prevMessage?.role === message.role;
+              const isMessageStreaming = isStreaming && message.id === messages[messages.length - 1]?.id;
 
-        {messages.map((message, idx) => (
-          <div
-            key={message.id}
-            ref={(el) => { messageRefs.current[idx] = el; }}
-            tabIndex={0}
-            role="article"
-            aria-label={`${message.role} message: ${message.content.substring(0, 50)}${message.content.length > 50 ? "..." : ""}`}
-            className={[
-              "break-words rounded-xl px-3 py-2 text-sm leading-relaxed [overflow-wrap:anywhere] focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2",
-              message.role === "user"
-                ? "ml-auto w-fit min-w-[4.5rem] max-w-[72%] bg-[var(--primary)] text-[var(--primary-foreground)]"
-                : "max-w-[90%] bg-muted text-foreground"
-            ].join(" ")}
-          >
-            {message.role === "assistant" ? (
-              message.content ? (
-                <MarkdownMathRenderer
-                  content={message.content}
-                  forceWrap
-                  className="text-sm [&_.katex-display]:overflow-x-visible [&_p:first-child]:mt-0 [&_p:last-child]:mb-0"
-                />
-              ) : (
-                "Thinking..."
-              )
-            ) : (
-              message.content
-            )}
-          </div>
-        ))}
+              return (
+                <div
+                  key={message.id}
+                  ref={(el) => { messageRefs.current[index] = el; }}
+                  className={cn(
+                    isConsecutiveSameRole ? "mt-1" : "mt-4"
+                  )}
+                >
+                  <MessageBubble
+                    message={message}
+                    isStreaming={isMessageStreaming}
+                    showAvatar={shouldShowAvatar}
+                  />
+                </div>
+              );
+            })}
 
-        {error ? <p className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">{error}</p> : null}
+            {error ? (
+              <div className="mx-auto max-w-[85%] rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3">
+                <p className="text-sm text-destructive">{error}</p>
+              </div>
+            ) : null}
+          </>
+        )}
+
+        <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={onSubmit} className="border-t border-border p-3">
-        <label htmlFor="ai-chat-input" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Ask AI tutor
-        </label>
-        <Textarea
-          id="ai-chat-input"
-          value={inputValue}
-          onChange={(event) => setInputValue(event.target.value)}
-          rows={2}
-          disabled={isSending}
-          placeholder={placeholderMessage}
-          className="resize-none"
-        />
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground">
-            {isSending ? "Streaming response..." : "Responses are Socratic and concise."}
-          </p>
-          <Button type="submit" disabled={isSending || inputValue.trim().length === 0}>
-            {isSending ? "Sending..." : "Send"}
-          </Button>
-        </div>
-      </form>
+      {/* Scroll to bottom button */}
+      <ScrollToBottomButton isVisible={showScrollButton && hasMessages} onClick={scrollToBottom} />
+
+      {/* Input area */}
+      <div className="border-t border-border p-3">
+        <form onSubmit={onSubmit} className="relative">
+          <div
+            className="flex items-end rounded-2xl border border-border bg-card 
+                        px-1 py-1 shadow-[0_4px_24px_rgba(0,0,0,0.08)]
+                        focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/20
+                        transition-all duration-150"
+          >
+            <textarea
+              ref={textareaRef}
+              id="ai-chat-input"
+              value={inputValue}
+              onChange={handleInputChange}
+              onKeyDown={handleTextareaKeyDown}
+              placeholder={placeholder}
+              rows={1}
+              disabled={isSending}
+              className="flex-1 resize-none rounded-xl bg-transparent px-3 py-2.5 text-[15px] 
+                         outline-none placeholder:text-muted-foreground
+                         disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ minHeight: "44px", maxHeight: "184px" }}
+              aria-label="Message input"
+            />
+            <button
+              type="submit"
+              disabled={!inputValue.trim() || isSending}
+              className="m-1 flex h-9 w-9 shrink-0 items-center justify-center 
+                         rounded-full bg-primary text-primary-foreground shadow-sm
+                         transition-all duration-150
+                         disabled:cursor-not-allowed disabled:opacity-50
+                         hover:bg-[var(--primary-hover)] hover:shadow-md
+                         active:scale-95"
+              aria-label="Send message"
+            >
+              {isSending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ArrowUp className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+        </form>
+        <p className="mt-2 text-xs text-muted-foreground">
+          {isSending ? "Streaming response..." : "Responses are Socratic and concise."}
+        </p>
+      </div>
     </div>
   );
 

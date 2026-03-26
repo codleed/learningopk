@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import type { ReactNode } from "react";
 
+import { List } from "@phosphor-icons/react";
 import { LeftRail } from "@/components/foundation/left-rail";
 import type { SessionPayload } from "@/lib/session";
 import type { ViewMode } from "@/components/foundation/left-rail/left-rail-types";
@@ -15,7 +16,6 @@ type AuthLayoutWrapperProps = {
   className?: string;
 };
 
-const RAIL_WIDTH = "72px";
 const VIEW_MODE_STORAGE_KEY = "learningo-view-mode";
 
 function getInitialViewMode(isAdmin: boolean): ViewMode {
@@ -52,19 +52,21 @@ export function AuthLayoutWrapper({
 
   return (
     <div className="flex min-h-screen overflow-x-hidden">
+      {/* Left Rail */}
       <LeftRail
         session={session}
         currentPath={currentPath}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
       />
+      
+      {/* Main content */}
       <main
         id="main-content"
         className={cn(
-          "flex-1 min-w-0 transition-[margin] duration-350 ease-in-out",
+          "flex-1 min-w-0 pb-16 pl-4 pr-4 md:pb-4",
           className
         )}
-        style={{ marginLeft: RAIL_WIDTH }}
       >
         {children}
       </main>
