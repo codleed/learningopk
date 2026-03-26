@@ -241,3 +241,15 @@
     transition: none;
   }
 }
+
+/* AI Chat Toggle Animation */
+@keyframes toggle-bounce {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(1); }
+  75% { transform: scale(1.05); }
+}
+
+.animate-toggle-bounce {
+  animation: toggle-bounce 2s ease-out;
+}

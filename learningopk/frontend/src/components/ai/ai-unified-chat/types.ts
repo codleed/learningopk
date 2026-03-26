@@ -55,6 +55,7 @@ export type AIChatActions = {
   toggleHistory: () => void;
   clearError: () => void;
   updateContext: (context: Partial<AIContext>) => void;
+  dismissFirstVisit: () => void;
 };
 
 export type AIChatContextValue = AIChatState & AIChatActions;

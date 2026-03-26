@@ -108,6 +108,7 @@ export function AIChatProvider({ children, initialContext = null }: AIChatProvid
     toggleExpanded,
     toggleHistory,
     clearError: chat.clearError,
+    dismissFirstVisit: persistence.dismissFirstVisit,
   }), [
     chat.messages,
     chat.sessionId,
@@ -129,6 +130,7 @@ export function AIChatProvider({ children, initialContext = null }: AIChatProvid
     toggleVisibility,
     toggleExpanded,
     toggleHistory,
+    persistence.dismissFirstVisit,
   ]);
   
   return (
