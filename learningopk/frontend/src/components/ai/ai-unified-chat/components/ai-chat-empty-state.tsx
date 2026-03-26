@@ -45,7 +45,7 @@ const DEFAULT_SUGGESTIONS: Suggestion[] = [
 
 export function AIChatEmptyState({ 
   suggestions = DEFAULT_SUGGESTIONS, 
-  onSuggestionClick,
+  onSuggestionClick = () => {},
   className 
 }: AIChatEmptyStateProps) {
   return (
