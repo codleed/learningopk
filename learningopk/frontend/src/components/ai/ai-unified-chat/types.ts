@@ -39,6 +39,7 @@ export type AIChatState = {
   isVisible: boolean;
   isExpanded: boolean;
   isHistoryOpen: boolean;
+  isFirstVisit: boolean;
   
   sessions: ChatSession[];
   activeSessionId: string | null;
