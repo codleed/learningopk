@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,17 @@ interface XpToastProps {
 }
 
 export function XpToast({ notifications, onDismiss }: XpToastProps) {
+  useEffect(() => {
+    if (notifications.length === 0) return;
+    
+    const latest = notifications[notifications.length - 1];
+    const timer = setTimeout(() => {
+      onDismiss(latest.timestamp);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [notifications, onDismiss]);
+
   return (
     <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
       <AnimatePresence mode="popLayout">
