@@ -32,7 +32,11 @@ export function useAIPersistence() {
   const setVisibility = useCallback((value: boolean) => {
     setIsVisible(value);
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.visibility, String(value));
+      try {
+        localStorage.setItem(STORAGE_KEYS.visibility, String(value));
+      } catch {
+        // Storage unavailable - state change is still valid
+      }
     }
   }, []);
 
@@ -40,7 +44,11 @@ export function useAIPersistence() {
   const setExpanded = useCallback((value: boolean) => {
     setIsExpanded(value);
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.expanded, String(value));
+      try {
+        localStorage.setItem(STORAGE_KEYS.expanded, String(value));
+      } catch {
+        // Storage unavailable - state change is still valid
+      }
     }
   }, []);
 
@@ -48,7 +56,11 @@ export function useAIPersistence() {
   const dismissFirstVisit = useCallback(() => {
     setIsFirstVisit(false);
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.firstVisit, 'false');
+      try {
+        localStorage.setItem(STORAGE_KEYS.firstVisit, 'false');
+      } catch {
+        // Storage unavailable - state change is still valid
+      }
     }
   }, []);
 
