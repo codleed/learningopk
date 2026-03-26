@@ -76,7 +76,7 @@ export function updateStreak(): GamificationState {
     saveGamificationState(newState);
     return newState;
   } else {
-    const newState = { ...state, currentStreak: 1, lastActivityDate: today };
+    const newState = { ...state, currentStreak: 1, longestStreak: state.longestStreak, lastActivityDate: today };
     saveGamificationState(newState);
     return newState;
   }
