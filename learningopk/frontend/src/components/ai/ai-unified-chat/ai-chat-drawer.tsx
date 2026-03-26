@@ -83,6 +83,8 @@ export function AIChatDrawer({ context, onClose, className }: AIChatDrawerProps)
         onKeyDown={handleKeyDown}
         role="dialog"
         aria-label="AI Chat Drawer"
+        aria-modal="true"
+        tabIndex={-1}
       >
         <div className="flex justify-center pt-3 pb-2">
           <div className="h-1 w-10 rounded-full bg-border" />
