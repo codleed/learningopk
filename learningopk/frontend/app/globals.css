@@ -113,12 +113,8 @@
 }
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes pulse-soft {
@@ -130,29 +126,6 @@
   }
 }
 
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out forwards;
-}
-
-.animate-fade-in {
-  animation: fade-in 0.2s ease-out forwards;
-}
-
-.animate-pulse-soft {
-  animation: pulse-soft 2s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-slide-up,
-  .animate-fade-in,
-  .animate-pulse-soft {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* Streaming dots animation */
 @keyframes streaming-dot {
   0%, 60%, 100% {
     transform: scale(1);
@@ -164,31 +137,21 @@
   }
 }
 
-.animate-streaming {
-  animation: streaming-dot 1.2s ease-in-out infinite;
-}
-
-/* Message enter animation */
 @keyframes message-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
+  from { 
+    opacity: 0; 
+    transform: translateY(12px); 
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
   }
 }
 
-.animate-message-in {
-  animation: message-in 300ms ease-out forwards;
-}
-
-/* Scroll to bottom button animation */
-@keyframes scroll-btn-in {
+@keyframes scroll-btn-appear {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(8px);
+    transform: translateX(-50%) translateY(12px);
   }
   to {
     opacity: 1;
@@ -196,11 +159,6 @@
   }
 }
 
-.animate-scroll-btn {
-  animation: scroll-btn-in 200ms ease-out forwards;
-}
-
-/* Sidebar slide animations */
 @keyframes sidebar-slide-in {
   from {
     transform: translateX(100%);
@@ -219,57 +177,11 @@
   }
 }
 
-.animate-sidebar-in {
-  animation: sidebar-slide-in 250ms ease-out forwards;
-}
-
-.animate-sidebar-out {
-  animation: sidebar-slide-out 200ms ease-in forwards;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-streaming,
-  .animate-message-in,
-  .animate-scroll-btn,
-  .animate-sidebar-in,
-  .animate-sidebar-out,
-  .animate-toggle-bounce {
-    animation: none;
-  }
-
-  .katex {
-    animation: none;
-    transition: none;
-  }
-}
-
-/* AI Chat Animations */
-
-/* Drawer slide-up */
 @keyframes slide-in-from-bottom {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
 
-/* Fade in */
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* Message appear */
-@keyframes message-in {
-  from { 
-    opacity: 0; 
-    transform: translateY(12px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
-}
-
-/* Streaming dots */
 @keyframes streaming {
   0%, 60%, 100% {
     transform: scale(1);
@@ -281,19 +193,45 @@
   }
 }
 
-/* Scroll button appear */
-@keyframes scroll-btn-appear {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
+@keyframes toggle-bounce {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(1); }
+  75% { transform: scale(1.05); }
 }
 
-/* Apply animations */
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out forwards;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+.animate-streaming {
+  animation: streaming 1.4s ease-in-out infinite;
+}
+
+.animate-message-in {
+  animation: message-in 200ms ease-out forwards;
+}
+
+.animate-scroll-btn {
+  animation: scroll-btn-appear 200ms ease-out forwards;
+}
+
+.animate-sidebar-in {
+  animation: sidebar-slide-in 250ms ease-out forwards;
+}
+
+.animate-sidebar-out {
+  animation: sidebar-slide-out 200ms ease-in forwards;
+}
+
 .animate-in {
   animation-duration: 200ms;
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -308,37 +246,26 @@
   animation-name: slide-in-from-bottom;
 }
 
-.animate-message-in {
-  animation: message-in 200ms ease-out forwards;
+.animate-toggle-bounce {
+  animation: toggle-bounce 2s ease-out;
 }
 
-.animate-streaming {
-  animation: streaming 1.4s ease-in-out infinite;
-}
-
-.animate-scroll-btn {
-  animation: scroll-btn-appear 200ms ease-out forwards;
-}
-
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .animate-in,
-  .animate-message-in,
+  .animate-slide-up,
+  .animate-fade-in,
+  .animate-pulse-soft,
   .animate-streaming,
+  .animate-message-in,
   .animate-scroll-btn,
+  .animate-sidebar-in,
+  .animate-sidebar-out,
+  .animate-in,
   .animate-toggle-bounce {
     animation: none !important;
   }
-}
 
-/* AI Chat Toggle Animation */
-@keyframes toggle-bounce {
-  0%, 100% { transform: scale(1); }
-  25% { transform: scale(1.1); }
-  50% { transform: scale(1); }
-  75% { transform: scale(1.05); }
-}
-
-.animate-toggle-bounce {
-  animation: toggle-bounce 2s ease-out;
+  .katex {
+    animation: none;
+    transition: none;
+  }
 }
