@@ -41,12 +41,12 @@ export function AIChatInput({
   
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key === 'Enter' && !e.shiftKey && value.trim()) {
         e.preventDefault();
         onSubmit();
       }
     },
-    [onSubmit]
+    [onSubmit, value]
   );
   
   const handleSubmit = (e: FormEvent) => {
