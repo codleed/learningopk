@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import { Download, Share2, CheckCircle2, XCircle } from "lucide-react";
 
@@ -14,8 +14,6 @@ type ShareableResultCardProps = {
   chapterTitle?: string;
 };
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-
 export function ShareableResultCard({
   result,
   subjectName,
@@ -23,8 +21,12 @@ export function ShareableResultCard({
   chapterTitle,
 }: ShareableResultCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const isDownloadingRef = useRef(false);
+  const isSharingRef = useRef(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+
+  const appUrl = useMemo(() => process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000", []);
 
   const isMockExam = result.quizType === "mock_exam";
   const passed = result.percentage >= 70;
@@ -39,8 +41,9 @@ export function ShareableResultCard({
   const displayChapterNumber = chapterNumber || result.sectionScores?.[0]?.chapterNumber;
 
   const handleDownload = useCallback(async () => {
-    if (!cardRef.current || isDownloading) return;
+    if (!cardRef.current || isDownloadingRef.current) return;
 
+    isDownloadingRef.current = true;
     setIsDownloading(true);
     try {
       const dataUrl = await toPng(cardRef.current, {
@@ -56,13 +59,15 @@ export function ShareableResultCard({
     } catch (error) {
       console.error("Failed to download result card:", error);
     } finally {
+      isDownloadingRef.current = false;
       setIsDownloading(false);
     }
-  }, [result.attemptId, isDownloading]);
+  }, [result.attemptId]);
 
   const handleWhatsAppShare = useCallback(() => {
-    if (isSharing) return;
+    if (isSharingRef.current) return;
 
+    isSharingRef.current = true;
     setIsSharing(true);
     try {
       const scoreText = `I scored ${result.score}/${result.totalMarks} (${result.percentage}%) in ${subjectName} ${displayTitle} on Learningo!`;
@@ -72,9 +77,10 @@ export function ShareableResultCard({
     } catch (error) {
       console.error("Failed to share to WhatsApp:", error);
     } finally {
+      isSharingRef.current = false;
       setIsSharing(false);
     }
-  }, [result.score, result.totalMarks, result.percentage, subjectName, displayTitle, isSharing]);
+  }, [result.score, result.totalMarks, result.percentage, subjectName, displayTitle, appUrl]);
 
   return (
     <div className="space-y-4">
