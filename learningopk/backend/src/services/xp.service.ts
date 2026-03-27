@@ -2,6 +2,7 @@ import { eq, sql } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
 import { users } from "../lib/db/schema.js";
+import { QUIZ_PASS_THRESHOLD_PERCENT } from "../lib/constants.js";
 
 // XP point values for different actions
 export const XP_VALUES = {
@@ -204,13 +205,13 @@ export class XpService {
   }
 
   /**
-   * Award XP for quiz pass (only if passed with 70%+)
+   * Award XP for quiz pass (only if passed with pass threshold+)
    */
   async awardQuizPassXp(userId: string, score: number, totalMarks: number): Promise<XpAwardResult | null> {
     const percentage = (score / totalMarks) * 100;
 
-    // Only award XP if passed (70% or higher)
-    if (percentage < 70) {
+    // Only award XP if passed (pass threshold or higher)
+    if (percentage < QUIZ_PASS_THRESHOLD_PERCENT) {
       return null;
     }
 

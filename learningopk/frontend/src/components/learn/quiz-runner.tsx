@@ -275,7 +275,7 @@ export function QuizRunner({ quiz }: QuizRunnerProps) {
           </div>
           <div className="w-48 shrink-0">
             <QuestionNavigator
-              totalQuestions={quiz.questions.length}
+              questions={quiz.questions}
               currentIndex={currentIndex}
               answers={answers}
               onSelectQuestion={setCurrentIndex}
