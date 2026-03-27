@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
-import { quizAttempts, quizQuestions, quizzes } from "../lib/db/schema.js";
+import { chapters, quizAttempts, quizQuestions, quizzes } from "../lib/db/schema.js";
 
 export class QuizRepository {
   async findQuizById(quizId: number) {
@@ -21,6 +21,8 @@ export class QuizRepository {
     return db
       .select({
         id: quizQuestions.id,
+        quizId: quizQuestions.quizId,
+        chapterId: quizQuestions.chapterId,
         question: quizQuestions.question,
         optionA: quizQuestions.optionA,
         optionB: quizQuestions.optionB,
@@ -28,9 +30,12 @@ export class QuizRepository {
         optionD: quizQuestions.optionD,
         correctOption: quizQuestions.correctOption,
         explanation: quizQuestions.explanation,
-        marks: quizQuestions.marks
+        marks: quizQuestions.marks,
+        chapterTitle: chapters.title,
+        chapterNumber: chapters.chapterNumber
       })
       .from(quizQuestions)
+      .leftJoin(chapters, eq(quizQuestions.chapterId, chapters.id))
       .where(eq(quizQuestions.quizId, quizId));
   }
 
