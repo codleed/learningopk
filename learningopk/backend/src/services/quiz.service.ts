@@ -3,6 +3,7 @@ import type { QuizOption } from "../lib/quiz-scoring.js";
 import { getInvalidAnswerQuestionIds, scoreQuizSubmission } from "../lib/quiz-scoring.js";
 import { applyProgressEvent } from "../lib/progress.js";
 import { xpService } from "./xp.service.js";
+import { QUIZ_PASS_THRESHOLD_PERCENT } from "../lib/constants.js";
 
 export interface QuizQuestionRow {
   id: number;
@@ -175,12 +176,12 @@ export class QuizService {
       return a.chapterNumber - b.chapterNumber;
     });
 
-    // Identify weak areas (chapters with < 70% correct)
+    // Identify weak areas (chapters with < pass threshold correct)
     const weakAreas: WeakArea[] = [];
     for (const section of sectionScores) {
       if (section.questionCount > 0 && section.chapterId !== null) {
         const correctPercentage = (section.correctCount / section.questionCount) * 100;
-        if (correctPercentage < 70) {
+        if (correctPercentage < QUIZ_PASS_THRESHOLD_PERCENT) {
           weakAreas.push({
             chapterId: section.chapterId,
             chapterTitle: section.chapterTitle ?? "Unknown Chapter",
@@ -223,7 +224,7 @@ export class QuizService {
 
     const timeSpentSeconds = Math.max(0, Math.floor((completedAt.getTime() - normalizedStartedAt.getTime()) / 1000));
 
-    // Award XP if passed (70%+)
+    // Award XP if passed (pass threshold+)
     let xpResult: {
       xpAwarded: number;
       newXp: number;
@@ -232,7 +233,7 @@ export class QuizService {
       leveledUp: boolean;
     } | null = null;
     let xpFailed = false;
-    const passed = percentage >= 70;
+    const passed = percentage >= QUIZ_PASS_THRESHOLD_PERCENT;
     if (passed) {
       try {
         const xpAwardResult = await xpService.awardQuizPassXp(userId, score, totalMarks);

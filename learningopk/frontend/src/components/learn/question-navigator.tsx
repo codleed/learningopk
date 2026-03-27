@@ -6,8 +6,12 @@ import { Button } from "@/components/ui/button";
 
 type AnswerOption = "a" | "b" | "c" | "d";
 
+type QuizQuestion = {
+  id: number;
+};
+
 type QuestionNavigatorProps = {
-  totalQuestions: number;
+  questions: QuizQuestion[];
   currentIndex: number;
   answers: Record<string, AnswerOption>;
   onSelectQuestion: (index: number) => void;
@@ -15,26 +19,32 @@ type QuestionNavigatorProps = {
 };
 
 export function QuestionNavigator({
-  totalQuestions,
+  questions,
   currentIndex,
   answers,
   onSelectQuestion,
   isLocked
 }: QuestionNavigatorProps) {
+  const totalQuestions = questions.length;
+  
   const questionStatuses = useMemo(() => {
     const statuses: Array<"answered" | "unanswered" | "current"> = [];
     for (let i = 0; i < totalQuestions; i++) {
-      const questionId = String(i + 1);
+      const questionId = questions[i]?.id;
+      if (questionId === undefined) {
+        statuses.push("unanswered");
+        continue;
+      }
       if (i === currentIndex) {
         statuses.push("current");
-      } else if (answers[questionId]) {
+      } else if (answers[String(questionId)]) {
         statuses.push("answered");
       } else {
         statuses.push("unanswered");
       }
     }
     return statuses;
-  }, [totalQuestions, currentIndex, answers]);
+  }, [questions, totalQuestions, currentIndex, answers]);
 
   const answeredCount = Object.keys(answers).length;
   const unansweredCount = totalQuestions - answeredCount;

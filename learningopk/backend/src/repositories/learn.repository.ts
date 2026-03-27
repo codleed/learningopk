@@ -3,6 +3,7 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "../lib/db/index.js";
 import { boardClasses, boards, chapters, exercises, flashcards, mockExams, quizQuestions, quizzes, subjects } from "../lib/db/schema.js";
 import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
+import { quizRepository } from "./quiz.repository.js";
 
 export class LearnRepository {
   async findAllSubjects() {
@@ -149,36 +150,60 @@ export class LearnRepository {
   }
 
   async findQuizByChapter(chapterId: number) {
-    // For mock exams, use duration from mock_exams table (120 min) instead of quizzes table (90 min)
-    return db
+    // Get quiz by chapter ID and enhance with mock exam duration
+    const quizzesData = await db
       .select({
         id: quizzes.id,
+        chapterId: quizzes.chapterId,
         title: quizzes.title,
-        durationMinutes: sql`COALESCE(${mockExams.durationMinutes}, ${quizzes.durationMinutes})`,
+        durationMinutes: quizzes.durationMinutes,
         totalMarks: quizzes.totalMarks,
         type: quizzes.type
       })
       .from(quizzes)
-      .leftJoin(mockExams, eq(mockExams.quizId, quizzes.id))
       .where(eq(quizzes.chapterId, chapterId))
       .orderBy(asc(quizzes.id))
       .limit(1);
+
+    const quiz = quizzesData[0];
+    if (!quiz) {
+      return [];
+    }
+
+    // Check if there's a mock exam with custom duration
+    const mockExamData = await db
+      .select({
+        durationMinutes: mockExams.durationMinutes
+      })
+      .from(mockExams)
+      .where(eq(mockExams.quizId, quiz.id))
+      .limit(1);
+
+    const mockExam = mockExamData[0];
+    // For mock exams, use duration from mock_exams table (120 min) instead of quizzes table (90 min)
+    const durationMinutes = mockExam?.durationMinutes ?? quiz.durationMinutes;
+
+    return [{
+      id: quiz.id,
+      title: quiz.title,
+      durationMinutes,
+      totalMarks: quiz.totalMarks,
+      type: quiz.type
+    }];
   }
 
   async findQuizQuestions(quizId: number) {
-    return db
-      .select({
-        id: quizQuestions.id,
-        question: quizQuestions.question,
-        optionA: quizQuestions.optionA,
-        optionB: quizQuestions.optionB,
-        optionC: quizQuestions.optionC,
-        optionD: quizQuestions.optionD,
-        marks: quizQuestions.marks
-      })
-      .from(quizQuestions)
-      .where(eq(quizQuestions.quizId, quizId))
-      .orderBy(asc(quizQuestions.id));
+    // Use QuizRepository for quiz questions to avoid duplication
+    const questions = await quizRepository.findQuestionsByQuizId(quizId);
+    return questions.map(q => ({
+      id: q.id,
+      question: q.question,
+      optionA: q.optionA,
+      optionB: q.optionB,
+      optionC: q.optionC,
+      optionD: q.optionD,
+      marks: q.marks
+    }));
   }
 }
 
