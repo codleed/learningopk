@@ -1,7 +1,7 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
-import { boardClasses, boards, chapters, exercises, flashcards, quizQuestions, quizzes, subjects } from "../lib/db/schema.js";
+import { boardClasses, boards, chapters, exercises, flashcards, mockExams, quizQuestions, quizzes, subjects } from "../lib/db/schema.js";
 import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
 
 export class LearnRepository {
@@ -149,15 +149,17 @@ export class LearnRepository {
   }
 
   async findQuizByChapter(chapterId: number) {
+    // For mock exams, use duration from mock_exams table (120 min) instead of quizzes table (90 min)
     return db
       .select({
         id: quizzes.id,
         title: quizzes.title,
-        durationMinutes: quizzes.durationMinutes,
+        durationMinutes: sql`COALESCE(${mockExams.durationMinutes}, ${quizzes.durationMinutes})`,
         totalMarks: quizzes.totalMarks,
         type: quizzes.type
       })
       .from(quizzes)
+      .leftJoin(mockExams, eq(mockExams.quizId, quizzes.id))
       .where(eq(quizzes.chapterId, chapterId))
       .orderBy(asc(quizzes.id))
       .limit(1);
