@@ -12,6 +12,8 @@ import { QuizQuestionCard } from "./quiz-question-card";
 import { QuizQuestionReviewList } from "./quiz-question-review-list";
 import { QuizResultSummary } from "./quiz-result-summary";
 import { QuizTimer } from "./quiz-timer";
+import { QuestionNavigator } from "./question-navigator";
+import { MockExamResultDetails } from "./mock-exam-result-details";
 
 type Quiz = NonNullable<ChapterDetailResponse["quiz"]>;
 type AnswerOption = "a" | "b" | "c" | "d";
@@ -33,6 +35,8 @@ const submitQuizResponseSchema = z.object({
       optionB: z.string(),
       optionC: z.string(),
       optionD: z.string(),
+      chapterId: z.number().int().positive().nullable(),
+      chapterTitle: z.string().nullable(),
       selectedOption: z.enum(["a", "b", "c", "d"]).nullable(),
       correctOption: z.enum(["a", "b", "c", "d"]),
       isCorrect: z.boolean(),
@@ -40,7 +44,28 @@ const submitQuizResponseSchema = z.object({
       marks: z.number().int().positive(),
       awardedMarks: z.number().int().nonnegative()
     })
-  )
+  ),
+  sectionScores: z.array(
+    z.object({
+      chapterId: z.number().int().nullable(),
+      chapterTitle: z.string().nullable(),
+      chapterNumber: z.number().int().nullable(),
+      score: z.number().int(),
+      totalMarks: z.number().int(),
+      questionCount: z.number().int(),
+      correctCount: z.number().int()
+    })
+  ).optional(),
+  weakAreas: z.array(
+    z.object({
+      chapterId: z.number().int(),
+      chapterTitle: z.string(),
+      chapterNumber: z.number().int(),
+      correctPercentage: z.number(),
+      wrongQuestionCount: z.number().int(),
+      totalQuestions: z.number().int()
+    })
+  ).optional()
 });
 
 export type QuizResult = z.infer<typeof submitQuizResponseSchema>;
@@ -183,7 +208,80 @@ export function QuizRunner({ quiz }: QuizRunnerProps) {
       {result ? (
         <div className="space-y-4">
           <QuizResultSummary result={result} onRetake={startRetake} />
+          {isMockExam && result.sectionScores && result.sectionScores.length > 0 && (
+            <MockExamResultDetails
+              sectionScores={result.sectionScores}
+              weakAreas={result.weakAreas}
+            />
+          )}
           <QuizQuestionReviewList result={result} />
+        </div>
+      ) : isMockExam && quiz.questions.length > 20 ? (
+        // Mock exam with more than 20 questions shows navigator sidebar
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <section className="surface-card space-y-4 rounded-xl border border-border bg-card p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-foreground">Question {questionProgressLabel}</p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setCurrentIndex((previous) => Math.max(0, previous - 1))}
+                    disabled={currentIndex === 0}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setCurrentIndex((previous) => Math.min(quiz.questions.length - 1, previous + 1))}
+                    disabled={currentIndex === quiz.questions.length - 1}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+
+              {isTimeUp ? (
+                <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  Time is up. Answer selection is locked, submit your attempt to view results.
+                </p>
+              ) : null}
+              {submitError ? <p className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">{submitError}</p> : null}
+
+              <div aria-live="polite" aria-atomic="true" className="sr-only">
+                {announcementText}
+              </div>
+              <QuizQuestionCard
+                question={currentQuestion}
+                questionNumber={currentIndex + 1}
+                selectedAnswer={answers[String(currentQuestion.id)]}
+                locked={isTimeUp}
+                onSelect={(option) => selectAnswer(currentQuestion.id, option)}
+              />
+
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-3">
+                <p className="text-xs text-muted-foreground">
+                  Mock exam rule: feedback is shown only after final submission.
+                </p>
+                <Button type="button" onClick={submitQuiz} disabled={isSubmitting}>
+                  {isSubmitting ? "Submitting..." : isTimeUp ? "Submit Time-Up Attempt" : "Submit Quiz"}
+                </Button>
+              </div>
+            </section>
+          </div>
+          <div className="w-48 shrink-0">
+            <QuestionNavigator
+              totalQuestions={quiz.questions.length}
+              currentIndex={currentIndex}
+              answers={answers}
+              onSelectQuestion={setCurrentIndex}
+              isLocked={isTimeUp}
+            />
+          </div>
         </div>
       ) : (
         <section className="surface-card space-y-4 rounded-xl border border-border bg-card p-4">
