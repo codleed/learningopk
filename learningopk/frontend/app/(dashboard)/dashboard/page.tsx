@@ -17,6 +17,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { DashboardNotificationsControl } from "@/components/dashboard/dashboard-notifications-control";
+import { StatsCards } from "@/components/dashboard/StatsCards";
 import {
   StaggerContainer,
   MotionSection,
@@ -415,6 +416,18 @@ export default async function DashboardPage({
                 education
               </h1>
             </MotionSection>
+
+            {/* ---- XP, Level, Streak Stats ---- */}
+            {summary && (
+              <MotionSection>
+                <StatsCards
+                  streakDays={summary.streakDays}
+                  longestStreakDays={summary.longestStreakDays}
+                  xp={summary.xp}
+                  streakFreeze={summary.streakFreeze}
+                />
+              </MotionSection>
+            )}
 
             {/* ---- Category Chips ---- */}
             <MotionSection>

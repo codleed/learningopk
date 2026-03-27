@@ -137,6 +137,17 @@ export class ProgressRepository {
       .orderBy(asc(quizzes.id));
   }
 
+  async findQuizTotalMarksByChapter(chapterId: number) {
+    return db
+      .select({
+        chapterId: quizzes.chapterId,
+        totalMarks: quizzes.totalMarks
+      })
+      .from(quizzes)
+      .where(and(eq(quizzes.chapterId, chapterId), eq(quizzes.type, "chapter_quiz")))
+      .limit(1);
+  }
+
   async findSubjectProgress(userId: string) {
     return db
       .select({
