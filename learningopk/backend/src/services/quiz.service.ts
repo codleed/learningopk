@@ -2,6 +2,7 @@ import { quizRepository } from "../repositories/quiz.repository.js";
 import type { QuizOption } from "../lib/quiz-scoring.js";
 import { getInvalidAnswerQuestionIds, scoreQuizSubmission } from "../lib/quiz-scoring.js";
 import { applyProgressEvent } from "../lib/progress.js";
+import { xpService } from "./xp.service.js";
 
 export interface QuizQuestionRow {
   id: number;
@@ -29,6 +30,7 @@ export interface QuizSubmissionResult {
   score: number;
   totalMarks: number;
   percentage: number;
+  passed: boolean;
   timeSpentSeconds: number;
   completedAt: string;
   questionResults: Array<{
@@ -39,6 +41,13 @@ export interface QuizSubmissionResult {
     marks: number;
     explanation: string | null;
   }>;
+  xp: {
+    xpAwarded: number;
+    newXp: number;
+    level: number;
+    levelName: string;
+    leveledUp: boolean;
+  } | null;
 }
 
 export class QuizService {
@@ -104,6 +113,32 @@ export class QuizService {
 
     const timeSpentSeconds = Math.max(0, Math.floor((completedAt.getTime() - normalizedStartedAt.getTime()) / 1000));
 
+    // Award XP if passed (70%+)
+    let xpResult: {
+      xpAwarded: number;
+      newXp: number;
+      level: number;
+      levelName: string;
+      leveledUp: boolean;
+    } | null = null;
+    const passed = percentage >= 70;
+    if (passed) {
+      try {
+        const xpAwardResult = await xpService.awardQuizPassXp(userId, score, totalMarks);
+        if (xpAwardResult) {
+          xpResult = {
+            xpAwarded: xpAwardResult.xpAwarded,
+            newXp: xpAwardResult.newXp,
+            level: xpAwardResult.level,
+            levelName: xpAwardResult.levelName,
+            leveledUp: xpAwardResult.leveledUp
+          };
+        }
+      } catch (error) {
+        console.error("Failed to award XP for quiz:", error);
+      }
+    }
+
     return {
       attemptId: insertedAttempt.id,
       quizId,
@@ -111,9 +146,11 @@ export class QuizService {
       score,
       totalMarks,
       percentage,
+      passed,
       timeSpentSeconds,
       completedAt: insertedAttempt.completedAt.toISOString(),
-      questionResults
+      questionResults,
+      xp: xpResult
     };
   }
 }

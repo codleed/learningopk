@@ -3,6 +3,7 @@ import { and, asc, eq, sql, type SQL } from "drizzle-orm";
 import { consumeForumMutationRateLimit, moderateForumInput } from "../lib/ai-guardrails.js";
 import { boardClasses, boards, chapters, forumReplies, forumReplyVotes, forumThreads, subjects } from "../lib/db/schema.js";
 import { forumRepository } from "../repositories/forum.repository.js";
+import { xpService } from "./xp.service.js";
 import type { Response } from "express";
 
 export interface ThreadFeedFilters {
@@ -322,8 +323,29 @@ export class ForumService {
     });
   }
 
-  async acceptReply(replyId: string, userId: string): Promise<{ replyId: string; threadId: string; isAcceptedAnswer: boolean; isSolved: boolean }> {
-    return forumRepository.acceptReply({ replyId, userId });
+  async acceptReply(replyId: string, userId: string): Promise<{ replyId: string; threadId: string; isAcceptedAnswer: boolean; isSolved: boolean; replyAuthorId?: string; xpAwarded?: boolean; xp?: { xpAwarded: number; newXp: number; level: number; levelName: string; leveledUp: boolean } }> {
+    const result = await forumRepository.acceptReply({ replyId, userId });
+
+    // Award XP if this is a new acceptance
+    if (result.xpAwarded && result.replyAuthorId) {
+      try {
+        const xpResult = await xpService.awardForumAnswerAcceptedXp(result.replyAuthorId);
+        return {
+          ...result,
+          xp: {
+            xpAwarded: xpResult.xpAwarded,
+            newXp: xpResult.newXp,
+            level: xpResult.level,
+            levelName: xpResult.levelName,
+            leveledUp: xpResult.leveledUp
+          }
+        };
+      } catch (error) {
+        console.error("Failed to award XP for accepted forum answer:", error);
+      }
+    }
+
+    return result;
   }
 }
 

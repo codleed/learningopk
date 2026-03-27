@@ -65,7 +65,21 @@ const dashboardSummarySchema = z.object({
       count: z.number().int().nonnegative(),
       level: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4)])
     })
-  )
+  ),
+  xp: z
+    .object({
+      xp: z.number().int().nonnegative(),
+      level: z.number().int().min(0).max(4),
+      levelName: z.string(),
+      xpToNextLevel: z.number().int().nonnegative()
+    })
+    .nullable(),
+  streakFreeze: z
+    .object({
+      canUseStreakFreeze: z.boolean(),
+      nextFreezeAvailableAt: z.string().datetime().nullable()
+    })
+    .nullable()
 });
 
 export type DashboardSummaryResponse = z.infer<typeof dashboardSummarySchema>;

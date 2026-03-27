@@ -9,6 +9,7 @@ import {
 } from "../lib/progress-metrics.js";
 import { applyProgressEvent } from "../lib/progress.js";
 import { progressRepository } from "../repositories/progress.repository.js";
+import { xpService, XP_VALUES } from "./xp.service.js";
 
 export interface ProgressEventInput {
   eventType: "chapter_visit" | "exercise_view" | "flashcard_complete" | "quiz_submit";
@@ -16,6 +17,25 @@ export interface ProgressEventInput {
   userId: string;
   score?: number;
   occurredAt?: Date;
+}
+
+export interface ProgressEventResult {
+  eventType: string;
+  progress: {
+    chapterId: number;
+    visitedAt: string;
+    exercisesViewed: number;
+    flashcardsCompleted: boolean;
+    quizBestScore: number;
+    quizAttemptsCount: number;
+  };
+  xp: {
+    xpAwarded: number;
+    newXp: number;
+    level: number;
+    levelName: string;
+    leveledUp: boolean;
+  } | null;
 }
 
 export interface SubjectAggregate {
@@ -31,7 +51,7 @@ export interface SubjectAggregate {
 }
 
 export class ProgressService {
-  async recordProgressEvent(input: ProgressEventInput) {
+  async recordProgressEvent(input: ProgressEventInput): Promise<ProgressEventResult> {
     const snapshot = await applyProgressEvent(
       input.eventType === "quiz_submit"
         ? {
@@ -49,6 +69,50 @@ export class ProgressService {
           }
     );
 
+    // Award XP based on event type
+    // Note: quiz_submit XP is handled by quiz service to avoid double awards
+    let xpResult: {
+      xpAwarded: number;
+      newXp: number;
+      level: number;
+      levelName: string;
+      leveledUp: boolean;
+    } | null = null;
+    try {
+      if (input.eventType === "chapter_visit") {
+        const result = await xpService.awardChapterVisitXp(input.userId);
+        xpResult = {
+          xpAwarded: result.xpAwarded,
+          newXp: result.newXp,
+          level: result.level,
+          levelName: result.levelName,
+          leveledUp: result.leveledUp
+        };
+      } else if (input.eventType === "exercise_view") {
+        const result = await xpService.awardExerciseViewXp(input.userId);
+        xpResult = {
+          xpAwarded: result.xpAwarded,
+          newXp: result.newXp,
+          level: result.level,
+          levelName: result.levelName,
+          leveledUp: result.leveledUp
+        };
+      } else if (input.eventType === "flashcard_complete") {
+        const result = await xpService.awardFlashcardCompleteXp(input.userId);
+        xpResult = {
+          xpAwarded: result.xpAwarded,
+          newXp: result.newXp,
+          level: result.level,
+          levelName: result.levelName,
+          leveledUp: result.leveledUp
+        };
+      }
+      // Note: quiz_submit XP is awarded in quiz.service.ts to avoid double awards
+    } catch (error) {
+      // Log XP award error but don't fail the progress event
+      console.error("Failed to award XP:", error);
+    }
+
     return {
       eventType: input.eventType,
       progress: {
@@ -58,7 +122,8 @@ export class ProgressService {
         flashcardsCompleted: snapshot.flashcardsCompleted,
         quizBestScore: snapshot.quizBestScore,
         quizAttemptsCount: snapshot.quizAttemptsCount
-      }
+      },
+      xp: xpResult
     };
   }
 
@@ -125,6 +190,26 @@ export class ProgressService {
       lastActiveAt: entry.lastActiveAt ? entry.lastActiveAt.toISOString() : null
     }));
 
+    // Get XP and level info
+    let xpInfo = null;
+    try {
+      xpInfo = await xpService.getUserXpInfo(userId);
+    } catch (error) {
+      console.error("Failed to get XP info:", error);
+    }
+
+    // Check streak freeze availability
+    let streakFreezeInfo = null;
+    try {
+      const freezeStatus = await xpService.checkStreakFreeze(userId);
+      streakFreezeInfo = {
+        canUseStreakFreeze: freezeStatus.canUseStreakFreeze,
+        nextFreezeAvailableAt: freezeStatus.nextFreezeAvailableAt?.toISOString() ?? null
+      };
+    } catch (error) {
+      console.error("Failed to get streak freeze info:", error);
+    }
+
     return {
       studentName,
       streakDays,
@@ -142,7 +227,14 @@ export class ProgressService {
         percentage: scoreToPercent(row.score, row.totalMarks)
       })),
       weeklyActivity,
-      dailyActivity: activityCalendar
+      dailyActivity: activityCalendar,
+      xp: xpInfo ? {
+        xp: xpInfo.xp,
+        level: xpInfo.level,
+        levelName: xpInfo.levelName,
+        xpToNextLevel: xpInfo.xpToNextLevel
+      } : null,
+      streakFreeze: streakFreezeInfo
     };
   }
 

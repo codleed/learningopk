@@ -258,8 +258,10 @@ export class ForumRepository {
     const replyRows = await db
       .select({
         replyId: forumReplies.id,
+        replyAuthorId: forumReplies.userId,
         threadId: forumReplies.threadId,
-        threadAuthorId: forumThreads.userId
+        threadAuthorId: forumThreads.userId,
+        isAcceptedAnswer: forumReplies.isAcceptedAnswer
       })
       .from(forumReplies)
       .innerJoin(forumThreads, eq(forumReplies.threadId, forumThreads.id))
@@ -274,6 +276,9 @@ export class ForumRepository {
     if (reply.threadAuthorId !== params.userId) {
       throw new Error("Only the thread author can mark an accepted answer.");
     }
+
+    // Check if already accepted - don't award XP again
+    const wasAlreadyAccepted = reply.isAcceptedAnswer;
 
     await db.transaction(async (tx) => {
       await tx
@@ -302,7 +307,9 @@ export class ForumRepository {
       replyId: params.replyId,
       threadId: reply.threadId,
       isAcceptedAnswer: true,
-      isSolved: true
+      isSolved: true,
+      replyAuthorId: reply.replyAuthorId,
+      xpAwarded: !wasAlreadyAccepted // Only award XP if this is a new acceptance
     };
   }
 
