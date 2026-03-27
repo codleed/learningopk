@@ -20,7 +20,7 @@ services:
     image: edoburu/pgbouncer:latest
     container_name: learningopk_pgbouncer
     ports:
-      - "6432:5432"
+      - "6432:6432"
     environment:
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
@@ -105,7 +105,7 @@ services:
     ports:
       - "3001:3001"
     environment:
-      DATABASE_URL: postgresql://postgres:password@pgbouncer:5432/learningo
+      DATABASE_URL: postgresql://postgres:password@pgbouncer:6432/learningo
       REDIS_URL: redis://redis:6379
       BETTER_AUTH_SECRET: yOocWXqo7cx5Zde53GtGcCn4Q6qoNszeoQ8aLGLze1k=
       BETTER_AUTH_URL: http://nginx:80

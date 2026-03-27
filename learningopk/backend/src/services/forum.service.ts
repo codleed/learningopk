@@ -1,8 +1,8 @@
-import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
+import { and, asc, eq, sql, type SQL } from "drizzle-orm";
 
 import { consumeForumMutationRateLimit, moderateForumInput } from "../lib/ai-guardrails.js";
-import { db } from "../lib/db/index.js";
-import { boardClasses, boards, chapters, forumReplies, forumReplyVotes, forumThreads, subjects, users } from "../lib/db/schema.js";
+import { boardClasses, boards, chapters, forumReplies, forumReplyVotes, forumThreads, subjects } from "../lib/db/schema.js";
+import { forumRepository } from "../repositories/forum.repository.js";
 import type { Response } from "express";
 
 export interface ThreadFeedFilters {
@@ -172,14 +172,7 @@ export class ForumService {
     let resolvedSubjectId = input.subjectId ?? null;
 
     if (input.chapterId) {
-      const chapterRows = await db
-        .select({
-          id: chapters.id,
-          subjectId: chapters.subjectId
-        })
-        .from(chapters)
-        .where(eq(chapters.id, input.chapterId))
-        .limit(1);
+      const chapterRows = await forumRepository.findChapterById(input.chapterId);
       const chapterRow = chapterRows[0];
 
       if (!chapterRow) {
@@ -204,13 +197,7 @@ export class ForumService {
     }
 
     if (resolvedSubjectId) {
-      const subjectRows = await db
-        .select({
-          id: subjects.id
-        })
-        .from(subjects)
-        .where(eq(subjects.id, resolvedSubjectId))
-        .limit(1);
+      const subjectRows = await forumRepository.findSubjectById(resolvedSubjectId);
 
       if (subjectRows.length === 0) {
         return {
@@ -270,46 +257,15 @@ export class ForumService {
       throw new Error(subjectResolution.error.body.error);
     }
 
-    const insertedRows = await db
-      .insert(forumThreads)
-      .values({
-        userId,
-        title,
-        body,
-        subjectId: subjectResolution.subjectId,
-        chapterId: chapterId ?? null
-      })
-      .returning({
-        id: forumThreads.id,
-        title: forumThreads.title,
-        body: forumThreads.body,
-        userId: forumThreads.userId,
-        subjectId: forumThreads.subjectId,
-        chapterId: forumThreads.chapterId,
-        isPinned: forumThreads.isPinned,
-        isSolved: forumThreads.isSolved,
-        views: forumThreads.views,
-        createdAt: forumThreads.createdAt,
-        updatedAt: forumThreads.updatedAt
-      });
+    const result = await forumRepository.createThread({
+      userId,
+      title,
+      body,
+      subjectId: subjectResolution.subjectId,
+      chapterId: chapterId ?? null
+    });
 
-    const insertedThread = insertedRows[0];
-    if (!insertedThread) {
-      throw new Error("Unable to create thread.");
-    }
-
-    return {
-      thread: {
-        ...insertedThread,
-        userName: null,
-        boardSlug: null,
-        boardName: null,
-        grade: null,
-        className: null,
-        subjectName: null,
-        replyCount: 0
-      }
-    };
+    return result;
   }
 
   async createReply(input: CreateReplyInput, userName: string): Promise<{ reply: Record<string, unknown> }> {
@@ -320,27 +276,14 @@ export class ForumService {
       throw new Error("Forum content blocked by safety checks.");
     }
 
-    const threadRows = await db
-      .select({ id: forumThreads.id })
-      .from(forumThreads)
-      .where(eq(forumThreads.id, threadId))
-      .limit(1);
-
+    const threadRows = await forumRepository.findThreadByIdForReply(threadId);
     if (threadRows.length === 0) {
       throw new Error("Thread not found");
     }
 
     const resolvedParentId = parentReplyId ?? null;
     if (parentReplyId) {
-      const parentReplyRows = await db
-        .select({
-          id: forumReplies.id,
-          threadId: forumReplies.threadId,
-          parentReplyId: forumReplies.parentReplyId
-        })
-        .from(forumReplies)
-        .where(eq(forumReplies.id, parentReplyId))
-        .limit(1);
+      const parentReplyRows = await forumRepository.findReplyParent(parentReplyId);
       const parentReply = parentReplyRows[0];
 
       if (!parentReply) {
@@ -356,156 +299,31 @@ export class ForumService {
       }
     }
 
-    const insertedRows = await db
-      .insert(forumReplies)
-      .values({
-        threadId,
-        userId,
-        parentReplyId: resolvedParentId,
-        body
-      })
-      .returning({
-        id: forumReplies.id,
-        threadId: forumReplies.threadId,
-        userId: forumReplies.userId,
-        parentReplyId: forumReplies.parentReplyId,
-        body: forumReplies.body,
-        isAcceptedAnswer: forumReplies.isAcceptedAnswer,
-        upvotes: forumReplies.upvotes,
-        createdAt: forumReplies.createdAt,
-        updatedAt: forumReplies.updatedAt
-      });
-
-    const insertedReply = insertedRows[0];
-    if (!insertedReply) {
-      throw new Error("Unable to create reply.");
-    }
+    const result = await forumRepository.createReply({
+      userId,
+      body,
+      parentReplyId: resolvedParentId,
+      threadId
+    });
 
     return {
       reply: {
-        ...insertedReply,
+        ...result.reply,
         userName
       }
     };
   }
 
   async voteReply(input: VoteInput): Promise<{ replyId: string; voteType: string; upvotes: number }> {
-    const { replyId, voteType, userId } = input;
-
-    const replyRows = await db
-      .select({ id: forumReplies.id })
-      .from(forumReplies)
-      .where(eq(forumReplies.id, replyId))
-      .limit(1);
-
-    if (replyRows.length === 0) {
-      throw new Error("Reply not found");
-    }
-
-    const updatedUpvotes = await db.transaction(async (tx) => {
-      const existingVotes = await tx
-        .select({
-          id: forumReplyVotes.id,
-          voteType: forumReplyVotes.voteType
-        })
-        .from(forumReplyVotes)
-        .where(and(eq(forumReplyVotes.userId, userId), eq(forumReplyVotes.replyId, replyId)))
-        .limit(1);
-      const existingVote = existingVotes[0];
-
-      let delta = 0;
-      if (!existingVote) {
-        await tx.insert(forumReplyVotes).values({
-          userId,
-          replyId,
-          voteType
-        });
-        delta = voteType === "upvote" ? 1 : -1;
-      } else if (existingVote.voteType !== voteType) {
-        await tx.update(forumReplyVotes).set({ voteType }).where(eq(forumReplyVotes.id, existingVote.id));
-        delta = voteType === "upvote" ? 2 : -2;
-      }
-
-      if (delta !== 0) {
-        const updatedReplyRows = await tx
-          .update(forumReplies)
-          .set({
-            upvotes: sql`${forumReplies.upvotes} + ${delta}`
-          })
-          .where(eq(forumReplies.id, replyId))
-          .returning({
-            upvotes: forumReplies.upvotes
-          });
-        return updatedReplyRows[0]?.upvotes ?? null;
-      }
-
-      const sameVoteReplyRows = await tx
-        .select({
-          upvotes: forumReplies.upvotes
-        })
-        .from(forumReplies)
-        .where(eq(forumReplies.id, replyId))
-        .limit(1);
-      return sameVoteReplyRows[0]?.upvotes ?? null;
+    return forumRepository.voteReply({
+      replyId: input.replyId,
+      userId: input.userId,
+      voteType: input.voteType
     });
-
-    if (updatedUpvotes === null) {
-      throw new Error("Unable to update vote.");
-    }
-
-    return { replyId, voteType, upvotes: updatedUpvotes };
   }
 
   async acceptReply(replyId: string, userId: string): Promise<{ replyId: string; threadId: string; isAcceptedAnswer: boolean; isSolved: boolean }> {
-    const replyRows = await db
-      .select({
-        replyId: forumReplies.id,
-        threadId: forumReplies.threadId,
-        threadAuthorId: forumThreads.userId
-      })
-      .from(forumReplies)
-      .innerJoin(forumThreads, eq(forumReplies.threadId, forumThreads.id))
-      .where(eq(forumReplies.id, replyId))
-      .limit(1);
-
-    const reply = replyRows[0];
-    if (!reply) {
-      throw new Error("Reply not found");
-    }
-
-    if (reply.threadAuthorId !== userId) {
-      throw new Error("Only the thread author can mark an accepted answer.");
-    }
-
-    await db.transaction(async (tx) => {
-      await tx
-        .update(forumReplies)
-        .set({
-          isAcceptedAnswer: false
-        })
-        .where(eq(forumReplies.threadId, reply.threadId));
-
-      await tx
-        .update(forumReplies)
-        .set({
-          isAcceptedAnswer: true
-        })
-        .where(eq(forumReplies.id, replyId));
-
-      await tx
-        .update(forumThreads)
-        .set({
-          isSolved: true
-        })
-        .where(eq(forumThreads.id, reply.threadId));
-    });
-
-    return {
-      replyId,
-      threadId: reply.threadId,
-      isAcceptedAnswer: true,
-      isSolved: true
-    };
+    return forumRepository.acceptReply({ replyId, userId });
   }
 }
 
