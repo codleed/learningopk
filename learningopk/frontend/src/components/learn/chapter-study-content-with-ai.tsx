@@ -14,7 +14,9 @@ type ChapterStudyContentWithAiProps = {
   activeTab: ChapterTab;
   chapterId: number;
   chapterTitle: string;
+  chapterNumber?: number;
   summary: string;
+  subjectName?: string;
   exercises: ChapterDetailResponse["exercises"];
   flashcards: ChapterDetailResponse["flashcards"];
   quiz: ChapterDetailResponse["quiz"];
@@ -27,7 +29,9 @@ export function ChapterStudyContentWithAi({
   activeTab,
   chapterId,
   chapterTitle,
+  chapterNumber,
   summary,
+  subjectName,
   exercises,
   flashcards,
   quiz,
@@ -60,7 +64,7 @@ export function ChapterStudyContentWithAi({
 
       {activeTab === "quiz" ? (
         quiz ? (
-          <QuizRunner quiz={quiz} />
+          <QuizRunner quiz={quiz} subjectName={subjectName} chapterNumber={chapterNumber} chapterTitle={chapterTitle} />
         ) : (
           <EmptyState
             title="Quiz unavailable"

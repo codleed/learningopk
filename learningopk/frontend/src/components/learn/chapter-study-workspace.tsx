@@ -173,7 +173,9 @@ export function ChapterStudyWorkspace({
                   activeTab={activeTab}
                   chapterId={chapterId}
                   chapterTitle={chapterTitle}
+                  chapterNumber={chapterNumber}
                   summary={chapterSummary}
+                  subjectName={subjectName}
                   exercises={exercises}
                   flashcards={flashcards}
                   quiz={quiz}
