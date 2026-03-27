@@ -768,6 +768,38 @@ _Completed tasks are moved here by the coding agent._
 
 ---
 
+### Phase 0 — Infrastructure Scaling (Critical 🔴)
+
+#### TASK-51A ✅
+
+**Title:** PostgreSQL Connection Pooling (PgBouncer)
+**Phase:** 0 — Infrastructure Scaling
+**Priority:** Critical
+**Evidence:** `docker-compose.yml` added pgbouncer service (edoburu/pgbouncer:latest) with transaction-mode pooling, max_client_conn=500, default_pool_size=25; `backend/.env` updated DATABASE_URL to port 6432
+
+#### TASK-51B ✅
+
+**Title:** Redis Content Caching Layer
+**Phase:** 0 — Infrastructure Scaling
+**Priority:** Critical
+**Evidence:** `backend/src/lib/cache/cache.service.ts` with typed keys, JSON serialization, TTL management (subjects: 1hr, chapters: 30min, forum: 5min); no cache for quiz questions/progress/AI; cache invalidation via repository pattern
+
+#### TASK-51C ✅
+
+**Title:** Nginx Load Balancing + Rate Limiting
+**Phase:** 0 — Infrastructure Scaling
+**Priority:** Critical
+**Evidence:** `infra/nginx.conf` with upstream backend, rate limiting (100r/m user, 1000r/m IP), JWT pass-through, health check endpoint, gzip compression and buffer optimizations; `docker-compose.yml` added nginx service
+
+#### TASK-51D ✅
+
+**Title:** Repository Pattern Consolidation
+**Phase:** 0 — Infrastructure Scaling
+**Priority:** Critical
+**Evidence:** `backend/src/repositories/*.ts` all services refactored to use repos; `backend/src/services/` removed; direct db.select() removed from services; cache-through pattern added to repositories; `backend/src/tests/unit/repositories/` added with passing tests
+
+---
+
 ## 📋 Notes for Coding Agent
 
 ### Commit message format

@@ -16,6 +16,31 @@ services:
       timeout: 5s
       retries: 20
 
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: learningopk_pgbouncer
+    ports:
+      - "6432:5432"
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: learningo
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: password
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 500
+      DEFAULT_POOL_SIZE: 25
+      MIN_POOL_SIZE: 10
+      RESERVE_POOL_SIZE: 5
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgbouncer -c show version"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7-alpine
     container_name: learningopk_redis
@@ -56,6 +81,54 @@ services:
       mc mb --ignore-existing local/learningo-media &&
       mc anonymous set-json /policies/public-read.json local/learningo-media
       "
+
+  nginx:
+    image: nginx:alpine
+    container_name: learningopk_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./infra/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: learningopk_backend
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://postgres:password@pgbouncer:5432/learningo
+      REDIS_URL: redis://redis:6379
+      BETTER_AUTH_SECRET: yOocWXqo7cx5Zde53GtGcCn4Q6qoNszeoQ8aLGLze1k=
+      BETTER_AUTH_URL: http://nginx:80
+      FRONTEND_ORIGIN: http://localhost:3000
+      MISTRAL_API_KEY: 0MC0Dro56V7KOnEpeQMhanSXr1XK37l8
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: false
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      MINIO_BUCKET: learningo-media
+      MINIO_PUBLIC_URL: http://localhost:9000
+      PORT: 3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
   postgres_data:

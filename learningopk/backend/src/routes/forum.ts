@@ -1,11 +1,10 @@
-import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
+import { inArray, type SQL } from "drizzle-orm";
 import { Router, type Response } from "express";
 import { z } from "zod";
 
-import { consumeForumMutationRateLimit, moderateForumInput } from "../lib/ai-guardrails.js";
-import { db } from "../lib/db/index.js";
-import { boardClasses, boards, chapters, forumReplies, forumReplyVotes, forumThreads, subjects, users } from "../lib/db/schema.js";
+import { consumeForumMutationRateLimit } from "../lib/ai-guardrails.js";
 import { getSessionFromRequest, requireSession, type AuthenticatedRequest } from "../lib/session.js";
+import { forumRepository } from "../repositories/forum.repository.js";
 import { forumService } from "../services/forum.service.js";
 
 const createThreadSchema = z.object({
@@ -52,57 +51,13 @@ const applyForumMutationRateLimit = async (res: Response, userId: string): Promi
 };
 
 forumRouter.get("/filters", async (_req, res) => {
-  const filters = await db
-    .select({
-      id: boards.id,
-      name: boards.name,
-      slug: boards.slug
-    })
-    .from(boards)
-    .orderBy(asc(boards.name));
-
-  const subjectRowsData = await db
-    .select({
-      id: subjects.id,
-      name: subjects.name,
-      slug: subjects.slug,
-      grade: subjects.grade,
-      className: sql<string | null>`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
-      classSlug: sql<string | null>`coalesce(${boardClasses.slug}, ${subjects.grade}::text)`,
-      boardClassId: subjects.boardClassId,
-      boardId: subjects.boardId
-    })
-    .from(subjects)
-    .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
-    .orderBy(asc(subjects.boardId), asc(sql`coalesce(${boardClasses.name}, ${subjects.grade}::text)`), asc(subjects.name));
-
-  const chapterRowsData = await db
-    .select({
-      id: chapters.id,
-      title: chapters.title,
-      slug: chapters.slug,
-      chapterNumber: chapters.chapterNumber,
-      subjectId: chapters.subjectId
-    })
-    .from(chapters)
-    .where(eq(chapters.isPublished, true))
-    .orderBy(asc(chapters.subjectId), asc(chapters.chapterNumber));
-
-  const classRowsData = await db
-    .select({
-      id: boardClasses.id,
-      boardId: boardClasses.boardId,
-      name: boardClasses.name,
-      slug: boardClasses.slug
-    })
-    .from(boardClasses)
-    .orderBy(asc(boardClasses.boardId), asc(boardClasses.name));
+  const filtersData = await forumRepository.findFilters();
 
   res.status(200).json({
-    boards: filters,
-    classes: classRowsData,
-    subjects: subjectRowsData,
-    chapters: chapterRowsData
+    boards: filtersData.boards,
+    classes: filtersData.classes,
+    subjects: filtersData.subjects,
+    chapters: filtersData.chapters
   });
 });
 
@@ -117,54 +72,9 @@ forumRouter.get("/threads", async (req, res) => {
   }
 
   const filters = parsed.data;
-  const relevanceScoreSql = filters.q
-    ? sql<number>`ts_rank(
-        to_tsvector('english', coalesce(${forumThreads.title}, '') || ' ' || coalesce(${forumThreads.body}, '')),
-        plainto_tsquery('english', ${filters.q})
-      )`
-    : sql<number>`0`;
-
-  const orderByClauses = filters.q
-    ? [desc(relevanceScoreSql), desc(forumThreads.isPinned), desc(forumThreads.createdAt)]
-    : [desc(forumThreads.isPinned), desc(forumThreads.createdAt)];
-
   const whereClause = forumService.buildFilters(filters);
 
-  const threadRows = await db
-    .select({
-      id: forumThreads.id,
-      title: forumThreads.title,
-      body: forumThreads.body,
-      userId: forumThreads.userId,
-      userName: users.name,
-      subjectId: forumThreads.subjectId,
-      chapterId: forumThreads.chapterId,
-      isPinned: forumThreads.isPinned,
-      isSolved: forumThreads.isSolved,
-      views: forumThreads.views,
-      createdAt: forumThreads.createdAt,
-      updatedAt: forumThreads.updatedAt,
-      boardSlug: boards.slug,
-      boardName: boards.name,
-      grade: sql<string | null>`coalesce(${boardClasses.slug}, ${subjects.grade}::text)`,
-      className: sql<string | null>`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
-      subjectName: subjects.name,
-      relevance: relevanceScoreSql,
-      replyCount: sql<number>`(
-        select count(*)::int
-        from forum_replies
-        where forum_replies.thread_id = ${forumThreads.id}
-      )`
-    })
-    .from(forumThreads)
-    .innerJoin(users, eq(forumThreads.userId, users.id))
-    .leftJoin(subjects, eq(forumThreads.subjectId, subjects.id))
-    .leftJoin(boards, eq(subjects.boardId, boards.id))
-    .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
-    .where(whereClause)
-    .orderBy(...orderByClauses)
-    .limit(filters.limit)
-    .offset(filters.offset);
+  const threadRows = await forumRepository.findThreads(whereClause, filters.limit, filters.offset, filters.q);
 
   res.status(200).json({
     threads: threadRows
@@ -185,50 +95,9 @@ forumRouter.get("/threads/:threadId", async (req, res) => {
   const session = await getSessionFromRequest(req);
   const viewerUserId = session?.user.id ?? null;
 
-  const updatedRows = await db
-    .update(forumThreads)
-    .set({
-      views: sql`${forumThreads.views} + 1`
-    })
-    .where(eq(forumThreads.id, threadId))
-    .returning({
-      id: forumThreads.id
-    });
+  await forumRepository.incrementThreadViews(threadId);
 
-  if (updatedRows.length === 0) {
-    res.status(404).json({
-      error: "Thread not found"
-    });
-    return;
-  }
-
-  const threadRows = await db
-    .select({
-      id: forumThreads.id,
-      title: forumThreads.title,
-      body: forumThreads.body,
-      userId: forumThreads.userId,
-      userName: users.name,
-      subjectId: forumThreads.subjectId,
-      chapterId: forumThreads.chapterId,
-      isPinned: forumThreads.isPinned,
-      isSolved: forumThreads.isSolved,
-      views: forumThreads.views,
-      createdAt: forumThreads.createdAt,
-      updatedAt: forumThreads.updatedAt,
-      boardSlug: boards.slug,
-      boardName: boards.name,
-      grade: sql<string | null>`coalesce(${boardClasses.slug}, ${subjects.grade}::text)`,
-      className: sql<string | null>`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
-      subjectName: subjects.name
-    })
-    .from(forumThreads)
-    .innerJoin(users, eq(forumThreads.userId, users.id))
-    .leftJoin(subjects, eq(forumThreads.subjectId, subjects.id))
-    .leftJoin(boards, eq(subjects.boardId, boards.id))
-    .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
-    .where(eq(forumThreads.id, threadId))
-    .limit(1);
+  const threadRows = await forumRepository.findThreadById(threadId);
 
   const thread = threadRows[0];
   if (!thread) {
@@ -238,35 +107,12 @@ forumRouter.get("/threads/:threadId", async (req, res) => {
     return;
   }
 
-  const replyRows = await db
-    .select({
-      id: forumReplies.id,
-      threadId: forumReplies.threadId,
-      userId: forumReplies.userId,
-      userName: users.name,
-      parentReplyId: forumReplies.parentReplyId,
-      body: forumReplies.body,
-      isAcceptedAnswer: forumReplies.isAcceptedAnswer,
-      upvotes: forumReplies.upvotes,
-      viewerVoteType: sql<"upvote" | "downvote" | null>`null`,
-      createdAt: forumReplies.createdAt,
-      updatedAt: forumReplies.updatedAt
-    })
-    .from(forumReplies)
-    .innerJoin(users, eq(forumReplies.userId, users.id))
-    .where(eq(forumReplies.threadId, threadId))
-    .orderBy(asc(forumReplies.createdAt), asc(forumReplies.id));
+  const replyRows = await forumRepository.findRepliesByThreadId(threadId);
 
   let voteByReplyId = new Map<string, "upvote" | "downvote">();
   if (viewerUserId && replyRows.length > 0) {
-    const viewerVotes = await db
-      .select({
-        replyId: forumReplyVotes.replyId,
-        voteType: forumReplyVotes.voteType
-      })
-      .from(forumReplyVotes)
-      .where(and(eq(forumReplyVotes.userId, viewerUserId), inArray(forumReplyVotes.replyId, replyRows.map((row) => row.id))));
-
+    const replyIds = replyRows.map((row) => row.id);
+    const viewerVotes = await forumRepository.findVotesByUserAndReplies(viewerUserId, replyIds);
     voteByReplyId = new Map(viewerVotes.map((vote) => [vote.replyId, vote.voteType]));
   }
 

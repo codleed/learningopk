@@ -1,7 +1,3 @@
-import { and, asc, desc, eq } from "drizzle-orm";
-
-import { db } from "../lib/db/index.js";
-import { boards, chapters, quizAttempts, quizzes, subjects, userProgress } from "../lib/db/schema.js";
 import {
   buildActivityCalendarSeries,
   buildDailyActivitySeries,
@@ -12,6 +8,7 @@ import {
   toDateKey
 } from "../lib/progress-metrics.js";
 import { applyProgressEvent } from "../lib/progress.js";
+import { progressRepository } from "../repositories/progress.repository.js";
 
 export interface ProgressEventInput {
   eventType: "chapter_visit" | "exercise_view" | "flashcard_complete" | "quiz_submit";
@@ -66,14 +63,7 @@ export class ProgressService {
   }
 
   async getDashboard(userId: string, studentName: string) {
-    const chapterQuizRows = await db
-      .select({
-        chapterId: quizzes.chapterId,
-        totalMarks: quizzes.totalMarks
-      })
-      .from(quizzes)
-      .where(eq(quizzes.type, "chapter_quiz"))
-      .orderBy(asc(quizzes.id));
+    const chapterQuizRows = await progressRepository.findChapterQuizTotalMarks();
 
     const chapterTotalMarks = new Map<number, number>();
     for (const row of chapterQuizRows) {
@@ -82,86 +72,19 @@ export class ProgressService {
       }
     }
 
-    const subjectProgressRows = await db
-      .select({
-        subjectId: subjects.id,
-        subjectSlug: subjects.slug,
-        subjectName: subjects.name,
-        grade: subjects.grade,
-        boardName: boards.name,
-        chapterId: chapters.id,
-        visitedAt: userProgress.visitedAt,
-        quizBestScore: userProgress.quizBestScore
-      })
-      .from(subjects)
-      .innerJoin(boards, eq(subjects.boardId, boards.id))
-      .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
-      .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
-      .orderBy(asc(subjects.name), asc(chapters.chapterNumber));
+    const subjectProgressRows = await progressRepository.findSubjectProgress(userId);
 
     const subjectAggregates = this.aggregateSubjectProgress(subjectProgressRows, chapterTotalMarks);
 
-    const progressActivityRows = await db
-      .select({
-        activityAt: userProgress.visitedAt,
-        exercisesViewed: userProgress.exercisesViewed,
-        quizAttemptsCount: userProgress.quizAttemptsCount
-      })
-      .from(userProgress)
-      .where(eq(userProgress.userId, userId));
+    const progressActivityRows = await progressRepository.findProgressByUserId(userId);
 
     const { streakDays, longestStreakDays, weeklyActivity, activityCalendar } = this.calculateActivityMetrics(progressActivityRows);
 
-    const recentChapterVisitRows = await db
-      .select({
-        visitedAt: userProgress.visitedAt,
-        subjectSlug: subjects.slug,
-        subjectName: subjects.name,
-        chapterSlug: chapters.slug,
-        chapterTitle: chapters.title
-      })
-      .from(userProgress)
-      .innerJoin(chapters, eq(userProgress.chapterId, chapters.id))
-      .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
-      .where(eq(userProgress.userId, userId))
-      .orderBy(desc(userProgress.visitedAt))
-      .limit(5);
+    const recentChapterVisitRows = await progressRepository.findRecentChapterVisits(userId, 5);
 
-    const recentQuizRows = await db
-      .select({
-        completedAt: quizAttempts.completedAt,
-        score: quizAttempts.score,
-        totalMarks: quizAttempts.totalMarks,
-        subjectSlug: subjects.slug,
-        subjectName: subjects.name,
-        chapterSlug: chapters.slug,
-        chapterTitle: chapters.title
-      })
-      .from(quizAttempts)
-      .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
-      .innerJoin(chapters, eq(quizzes.chapterId, chapters.id))
-      .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
-      .where(eq(quizAttempts.userId, userId))
-      .orderBy(desc(quizAttempts.completedAt))
-      .limit(5);
+    const recentQuizRows = await progressRepository.findRecentQuizAttempts(userId, 5);
 
-    const quizHistoryRows = await db
-      .select({
-        completedAt: quizAttempts.completedAt,
-        score: quizAttempts.score,
-        totalMarks: quizAttempts.totalMarks,
-        subjectSlug: subjects.slug,
-        subjectName: subjects.name,
-        chapterSlug: chapters.slug,
-        chapterTitle: chapters.title
-      })
-      .from(quizAttempts)
-      .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
-      .innerJoin(chapters, eq(quizzes.chapterId, chapters.id))
-      .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
-      .where(eq(quizAttempts.userId, userId))
-      .orderBy(desc(quizAttempts.completedAt))
-      .limit(20);
+    const quizHistoryRows = await progressRepository.findQuizHistory(userId, 20);
 
     const recentActivity = [
       ...recentChapterVisitRows.map((row) => ({
@@ -224,50 +147,16 @@ export class ProgressService {
   }
 
   async getSubjectDashboard(userId: string, subjectSlug: string) {
-    const subjectRows = await db
-      .select({
-        subjectId: subjects.id,
-        subjectSlug: subjects.slug,
-        subjectName: subjects.name,
-        grade: subjects.grade,
-        boardName: boards.name
-      })
-      .from(subjects)
-      .innerJoin(boards, eq(subjects.boardId, boards.id))
-      .where(eq(subjects.slug, subjectSlug))
-      .orderBy(asc(subjects.id))
-      .limit(1);
+    const subjectRows = await progressRepository.findSubjectBySlug(subjectSlug);
 
     const subjectRow = subjectRows[0];
     if (!subjectRow) {
       return null;
     }
 
-    const chapterRows = await db
-      .select({
-        chapterId: chapters.id,
-        chapterNumber: chapters.chapterNumber,
-        chapterTitle: chapters.title,
-        chapterSlug: chapters.slug,
-        visitedAt: userProgress.visitedAt,
-        exercisesViewed: userProgress.exercisesViewed,
-        quizAttemptsCount: userProgress.quizAttemptsCount,
-        quizBestScore: userProgress.quizBestScore
-      })
-      .from(chapters)
-      .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
-      .where(and(eq(chapters.subjectId, subjectRow.subjectId), eq(chapters.isPublished, true)))
-      .orderBy(asc(chapters.chapterNumber));
+    const chapterRows = await progressRepository.findChaptersBySubject(subjectRow.subjectId, userId);
 
-    const chapterQuizRows = await db
-      .select({
-        chapterId: quizzes.chapterId,
-        totalMarks: quizzes.totalMarks
-      })
-      .from(quizzes)
-      .innerJoin(chapters, eq(quizzes.chapterId, chapters.id))
-      .where(and(eq(chapters.subjectId, subjectRow.subjectId), eq(quizzes.type, "chapter_quiz")))
-      .orderBy(asc(quizzes.id));
+    const chapterQuizRows = await progressRepository.findQuizTotalMarksBySubject(subjectRow.subjectId);
 
     const chapterTotalMarks = new Map<number, number>();
     for (const row of chapterQuizRows) {
