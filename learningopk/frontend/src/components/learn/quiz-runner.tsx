@@ -82,8 +82,6 @@ type QuizRunnerProps = {
   chapterTitle?: string;
 };
 
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
-
 export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle }: QuizRunnerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerOption>>({});
@@ -93,6 +91,8 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle }: Q
   const [result, setResult] = useState<QuizResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [announcementText, setAnnouncementText] = useState("");
+
+  const backendUrl = useMemo(() => process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001", []);
 
   const currentQuestion = quiz.questions[currentIndex];
   const answeredCount = Object.keys(answers).length;
