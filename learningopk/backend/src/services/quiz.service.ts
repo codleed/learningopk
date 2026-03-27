@@ -1,8 +1,5 @@
-import { eq } from "drizzle-orm";
-
-import { db } from "../lib/db/index.js";
-import { quizAttempts, quizQuestions, quizzes } from "../lib/db/schema.js";
-import type { QuizOption, QuizQuestionForScoring } from "../lib/quiz-scoring.js";
+import { quizRepository } from "../repositories/quiz.repository.js";
+import type { QuizOption } from "../lib/quiz-scoring.js";
 import { getInvalidAnswerQuestionIds, scoreQuizSubmission } from "../lib/quiz-scoring.js";
 import { applyProgressEvent } from "../lib/progress.js";
 
@@ -46,35 +43,12 @@ export interface QuizSubmissionResult {
 
 export class QuizService {
   async getQuizById(quizId: number) {
-    const quizRows = await db
-      .select({
-        id: quizzes.id,
-        chapterId: quizzes.chapterId,
-        totalMarks: quizzes.totalMarks,
-        type: quizzes.type
-      })
-      .from(quizzes)
-      .where(eq(quizzes.id, quizId))
-      .limit(1);
-
+    const quizRows = await quizRepository.findQuizById(quizId);
     return quizRows[0] ?? null;
   }
 
   async getQuizQuestions(quizId: number): Promise<QuizQuestionRow[]> {
-    return db
-      .select({
-        id: quizQuestions.id,
-        question: quizQuestions.question,
-        optionA: quizQuestions.optionA,
-        optionB: quizQuestions.optionB,
-        optionC: quizQuestions.optionC,
-        optionD: quizQuestions.optionD,
-        correctOption: quizQuestions.correctOption,
-        explanation: quizQuestions.explanation,
-        marks: quizQuestions.marks
-      })
-      .from(quizQuestions)
-      .where(eq(quizQuestions.quizId, quizId));
+    return quizRepository.findQuestionsByQuizId(quizId);
   }
 
   async submitQuiz(input: QuizSubmissionInput): Promise<QuizSubmissionResult> {
@@ -105,21 +79,15 @@ export class QuizService {
     const startedAtDate = startedAt ? new Date(startedAt) : completedAt;
     const normalizedStartedAt = !Number.isNaN(startedAtDate.getTime()) && startedAtDate <= completedAt ? startedAtDate : completedAt;
 
-    const insertedAttemptRows = await db
-      .insert(quizAttempts)
-      .values({
-        userId,
-        quizId,
-        answers,
-        score,
-        totalMarks,
-        startedAt: normalizedStartedAt,
-        completedAt
-      })
-      .returning({
-        id: quizAttempts.id,
-        completedAt: quizAttempts.completedAt
-      });
+    const insertedAttemptRows = await quizRepository.createAttempt({
+      userId,
+      quizId,
+      answers,
+      score,
+      totalMarks,
+      startedAt: normalizedStartedAt,
+      completedAt
+    });
 
     const insertedAttempt = insertedAttemptRows[0];
     if (!insertedAttempt) {

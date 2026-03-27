@@ -2,7 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
-import { learnService } from "../services/learn.service.js";
+import { learnRepository } from "../repositories/learn.repository.js";
+import { listSubjectChapterGraph } from "../lib/chapter-graph.js";
 
 const paramsSchema = z.object({
   board: z.string().trim().regex(/^[a-z0-9-]+$/),
@@ -27,14 +28,15 @@ learnRouter.get("/:board/:grade/:subject", async (req, res) => {
   }
 
   const grade = parsed.data.grade;
-  const subjectRow = await learnService.getSubjectByRoute(parsed.data);
+  const subjectRows = await learnRepository.findSubjectByRoute(parsed.data);
+  const subjectRow = subjectRows[0] ?? null;
 
   if (!subjectRow) {
     res.status(404).json({ error: "Subject not found" });
     return;
   }
 
-  const chapterRows = await learnService.getChaptersBySubject(subjectRow.subjectId);
+  const chapterRows = await learnRepository.findChaptersBySubject(subjectRow.subjectId);
 
   res.status(200).json({
     board: {
@@ -83,7 +85,8 @@ learnRouter.get("/:board/:grade/:subject/graph", requireSession, async (req, res
     }
   }
 
-  const subjectRow = await learnService.getSubjectByRoute(parsed.data);
+  const subjectRows = await learnRepository.findSubjectByRoute(parsed.data);
+  const subjectRow = subjectRows[0] ?? null;
   if (!subjectRow) {
     res.status(404).json({
       error: "Subject not found"
@@ -91,7 +94,7 @@ learnRouter.get("/:board/:grade/:subject/graph", requireSession, async (req, res
     return;
   }
 
-  const graph = await learnService.getSubjectChapterGraph(subjectRow.subjectId, authedReq.session.user.id);
+  const graph = await listSubjectChapterGraph({ subjectId: subjectRow.subjectId, userId: authedReq.session.user.id });
 
   res.status(200).json({
     graph
@@ -110,17 +113,25 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
 
   const { board, grade, subject, chapter } = parsed.data;
 
-  const chapterRow = await learnService.getChapterDetail({ board, grade, subject, chapter });
+  const chapterRows = await learnRepository.findChapterBySlug({ board, grade, subject, chapter });
+  const chapterRow = chapterRows[0] ?? null;
   if (!chapterRow) {
     res.status(404).json({ error: "Chapter not found" });
     return;
   }
 
-  const [chapterExercises, chapterFlashcards, quiz] = await Promise.all([
-    learnService.getChapterExercises(chapterRow.chapterId),
-    learnService.getChapterFlashcards(chapterRow.chapterId),
-    learnService.getChapterQuiz(chapterRow.chapterId)
+  const [chapterExercises, chapterFlashcards, quizRows] = await Promise.all([
+    learnRepository.findExercisesByChapter(chapterRow.chapterId),
+    learnRepository.findFlashcardsByChapter(chapterRow.chapterId),
+    learnRepository.findQuizByChapter(chapterRow.chapterId)
   ]);
+
+  const quizRow = quizRows[0] ?? null;
+  let quiz = null;
+  if (quizRow) {
+    const quizQuestions = await learnRepository.findQuizQuestions(quizRow.id);
+    quiz = { ...quizRow, questions: quizQuestions };
+  }
 
   res.status(200).json({
     board: {
@@ -146,6 +157,6 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
     },
     exercises: chapterExercises,
     flashcards: chapterFlashcards,
-    quiz: quiz ?? null
+    quiz: quiz
   });
 });

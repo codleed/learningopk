@@ -125,6 +125,36 @@ export class ProgressRepository {
       .orderBy(desc(quizAttempts.completedAt))
       .limit(limit);
   }
+
+  async findChapterQuizTotalMarks() {
+    return db
+      .select({
+        chapterId: quizzes.chapterId,
+        totalMarks: quizzes.totalMarks
+      })
+      .from(quizzes)
+      .where(eq(quizzes.type, "chapter_quiz"))
+      .orderBy(asc(quizzes.id));
+  }
+
+  async findSubjectProgress(userId: string) {
+    return db
+      .select({
+        subjectId: subjects.id,
+        subjectSlug: subjects.slug,
+        subjectName: subjects.name,
+        grade: subjects.grade,
+        boardName: boards.name,
+        chapterId: chapters.id,
+        visitedAt: userProgress.visitedAt,
+        quizBestScore: userProgress.quizBestScore
+      })
+      .from(subjects)
+      .innerJoin(boards, eq(subjects.boardId, boards.id))
+      .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
+      .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+      .orderBy(asc(subjects.name), asc(chapters.chapterNumber));
+  }
 }
 
 export const progressRepository = new ProgressRepository();

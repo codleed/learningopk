@@ -1,24 +1,12 @@
 import { Router } from "express";
-import { db } from "../lib/db/index.js";
-import { subjects } from "../lib/db/schema.js";
-import { asc } from "drizzle-orm";
+
+import { learnRepository } from "../repositories/learn.repository.js";
 
 export const subjectsRouter = Router();
 
 subjectsRouter.get("/", async (_req, res) => {
   try {
-    const allSubjects = await db
-      .select({
-        id: subjects.id,
-        boardId: subjects.boardId,
-        grade: subjects.grade,
-        name: subjects.name,
-        slug: subjects.slug,
-        icon: subjects.icon,
-        description: subjects.description,
-      })
-      .from(subjects)
-      .orderBy(asc(subjects.name));
+    const allSubjects = await learnRepository.findAllSubjects();
 
     res.json({ subjects: allSubjects });
   } catch (error) {

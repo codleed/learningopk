@@ -2,8 +2,39 @@ import { and, asc, eq, sql } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
 import { boardClasses, boards, chapters, exercises, flashcards, quizQuestions, quizzes, subjects } from "../lib/db/schema.js";
+import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
 
 export class LearnRepository {
+  async findAllSubjects() {
+    const cacheKey = CacheKeys.subjectList();
+    const cached = await cacheService.get<Array<{
+      id: number;
+      boardId: number;
+      grade: string | null;
+      name: string;
+      slug: string;
+      icon: string | null;
+      description: string | null;
+    }>>(cacheKey);
+    if (cached) return cached;
+
+    const result = await db
+      .select({
+        id: subjects.id,
+        boardId: subjects.boardId,
+        grade: subjects.grade,
+        name: subjects.name,
+        slug: subjects.slug,
+        icon: subjects.icon,
+        description: subjects.description
+      })
+      .from(subjects)
+      .orderBy(asc(subjects.name));
+
+    await cacheService.set(cacheKey, result, { ttlSeconds: 3600 });
+    return result;
+  }
+
   async findSubjectByRoute(params: { board: string; grade: string; subject: string }) {
     return db
       .select({
@@ -31,7 +62,17 @@ export class LearnRepository {
   }
 
   async findChaptersBySubject(subjectId: number, isPublished = true) {
-    return db
+    const cacheKey = CacheKeys.chapterList(subjectId);
+    const cached = await cacheService.get<Array<{
+      id: number;
+      chapterNumber: number;
+      title: string;
+      slug: string;
+      isPublished: boolean;
+    }>>(cacheKey);
+    if (cached) return cached;
+
+    const result = await db
       .select({
         id: chapters.id,
         chapterNumber: chapters.chapterNumber,
@@ -42,6 +83,9 @@ export class LearnRepository {
       .from(chapters)
       .where(and(eq(chapters.subjectId, subjectId), isPublished ? eq(chapters.isPublished, true) : undefined))
       .orderBy(asc(chapters.chapterNumber));
+
+    await cacheService.set(cacheKey, result, { ttlSeconds: 3600 });
+    return result;
   }
 
   async findChapterBySlug(params: { board: string; grade: string; subject: string; chapter: string }) {
