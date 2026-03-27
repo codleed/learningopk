@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
 import { users } from "../lib/db/schema.js";
@@ -127,13 +127,19 @@ export class XpService {
 
   /**
    * Award XP to a user and update their level
+   * Uses atomic increment to prevent race conditions
    */
   async awardXp(
     userId: string,
     xpAmount: number,
     reason: string
   ): Promise<XpAwardResult> {
-    // Get current user data
+    // Validate XP amount
+    if (typeof xpAmount !== "number" || xpAmount < 0) {
+      throw new Error("XP amount must be a non-negative number");
+    }
+
+    // Get current user data for level calculation
     const userRows = await db
       .select({
         xp: users.xp,
@@ -157,11 +163,11 @@ export class XpService {
     const { level: newLevel, name: newLevelName } = this.calculateLevel(newXp);
     const leveledUp = newLevel > previousLevel;
 
-    // Update user XP and level
+    // Update user XP and level using atomic increment to prevent race conditions
     await db
       .update(users)
       .set({
-        xp: newXp,
+        xp: sql`${users.xp} + ${xpAmount}`,
         level: newLevel
       })
       .where(eq(users.id, userId));
