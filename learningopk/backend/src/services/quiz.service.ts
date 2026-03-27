@@ -200,6 +200,7 @@ export class QuizService {
     const insertedAttemptRows = await quizRepository.createAttempt({
       userId,
       quizId,
+      type: quizRow.type,
       answers,
       score,
       totalMarks,

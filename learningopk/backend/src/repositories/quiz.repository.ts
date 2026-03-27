@@ -42,6 +42,7 @@ export class QuizRepository {
   async createAttempt(data: {
     userId: string;
     quizId: number;
+    type: "chapter_quiz" | "mock_exam";
     answers: Record<string, "a" | "b" | "c" | "d">;
     score: number;
     totalMarks: number;

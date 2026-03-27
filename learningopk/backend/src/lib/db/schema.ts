@@ -307,6 +307,7 @@ export const quizAttempts = pgTable("quiz_attempts", {
   quizId: integer("quiz_id")
     .notNull()
     .references(() => quizzes.id, { onDelete: "cascade" }),
+  type: quizTypeEnum("type").notNull().default("chapter_quiz"),
   answers: jsonb("answers").$type<Record<string, string>>().notNull(),
   score: integer("score").notNull(),
   totalMarks: integer("total_marks").notNull(),
