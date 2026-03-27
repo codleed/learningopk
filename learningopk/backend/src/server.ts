@@ -13,6 +13,7 @@ import { chapterMediaRouter } from "./routes/chapter-media.js";
 import { profileRouter } from "./routes/profile.js";
 import { progressRouter } from "./routes/progress.js";
 import { quizRouter } from "./routes/quiz.js";
+import { mockExamsRouter } from "./routes/mock-exams.js";
 import { createAnalyticsWorker } from "./workers/analytics.worker.js";
 import { createEmailWorker } from "./workers/email.worker.js";
 import { createCleanupWorker } from "./workers/cleanup.worker.js";
@@ -41,6 +42,7 @@ export const createApp = () => {
   app.use("/api/admin", adminRouter);
   app.use("/api/forum", forumRouter);
   app.use("/api/quiz", quizRouter);
+  app.use("/api/mock-exams", mockExamsRouter);
   app.use("/api/progress", progressRouter);
   app.use("/api/users", profileRouter);
   app.use("/api/admin/content", chapterMediaRouter);

@@ -13,6 +13,7 @@ import {
   ScrollText,
   Bell,
   Settings,
+  Files,
 } from "lucide-react";
 
 import type { NavItem, NavSection } from "./left-rail-types";
@@ -37,6 +38,11 @@ export const studentNavItems: NavItem[] = [
     href: "/subjects",
     label: "Subjects",
     icon: BookOpen,
+  },
+  {
+    href: "/past-papers",
+    label: "Past Papers",
+    icon: Files,
   },
   {
     href: "/ai-tutor",
