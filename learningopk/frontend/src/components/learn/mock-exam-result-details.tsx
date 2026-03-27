@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { PERFORMANCE_EXCELLENT_THRESHOLD, PERFORMANCE_PASS_THRESHOLD } from "@/lib/quiz-constants";
 
 type SectionScore = {
   chapterId: number | null;
@@ -52,7 +53,7 @@ export function MockExamResultDetails({ sectionScores, weakAreas }: MockExamResu
                     </p>
                   </div>
                     <Badge 
-                    variant={percentage >= 70 ? "success" : percentage >= 50 ? "warning" : "error"}
+                    variant={percentage >= PERFORMANCE_EXCELLENT_THRESHOLD ? "success" : percentage >= PERFORMANCE_PASS_THRESHOLD ? "warning" : "error"}
                   >
                     {percentage}%
                   </Badge>
@@ -60,7 +61,7 @@ export function MockExamResultDetails({ sectionScores, weakAreas }: MockExamResu
                 <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
                   <div 
                     className={`h-full transition-all ${
-                      percentage >= 70 ? "bg-emerald-500" : percentage >= 50 ? "bg-amber-500" : "bg-rose-500"
+                      percentage >= PERFORMANCE_EXCELLENT_THRESHOLD ? "bg-emerald-500" : percentage >= PERFORMANCE_PASS_THRESHOLD ? "bg-amber-500" : "bg-rose-500"
                     }`}
                     style={{ width: `${percentage}%` }}
                   />

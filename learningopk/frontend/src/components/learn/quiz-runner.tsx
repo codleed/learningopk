@@ -14,6 +14,7 @@ import { QuizResultSummary } from "./quiz-result-summary";
 import { QuizTimer } from "./quiz-timer";
 import { QuestionNavigator } from "./question-navigator";
 import { MockExamResultDetails } from "./mock-exam-result-details";
+import { QUIZ_NAVIGATOR_THRESHOLD, TIMER_INTERVAL_MS } from "@/lib/quiz-constants";
 
 type Quiz = NonNullable<ChapterDetailResponse["quiz"]>;
 type AnswerOption = "a" | "b" | "c" | "d";
@@ -172,7 +173,7 @@ export function QuizRunner({ quiz }: QuizRunnerProps) {
 
     const intervalId = window.setInterval(() => {
       setRemainingSeconds((previous) => Math.max(0, previous - 1));
-    }, 1000);
+    }, TIMER_INTERVAL_MS);
 
     return () => window.clearInterval(intervalId);
   }, [result, isSubmitting, remainingSeconds]);
@@ -216,7 +217,7 @@ export function QuizRunner({ quiz }: QuizRunnerProps) {
           )}
           <QuizQuestionReviewList result={result} />
         </div>
-      ) : isMockExam && quiz.questions.length > 20 ? (
+      ) : isMockExam && quiz.questions.length > QUIZ_NAVIGATOR_THRESHOLD ? (
         // Mock exam with more than 20 questions shows navigator sidebar
         <div className="flex gap-4">
           <div className="flex-1">
