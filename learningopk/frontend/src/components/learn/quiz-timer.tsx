@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { TIMER_WARNING_SECONDS, TIMER_CRITICAL_SECONDS } from "@/lib/quiz-constants";
 
 type QuizTimerProps = {
   remainingSeconds: number;
@@ -19,8 +20,8 @@ const formatTimeLeft = (seconds: number): string => {
 };
 
 export function QuizTimer({ remainingSeconds, expired }: QuizTimerProps) {
-  const isWarning = remainingSeconds <= 300 && remainingSeconds > 60;
-  const isCritical = remainingSeconds <= 60 && remainingSeconds > 0;
+  const isWarning = remainingSeconds <= TIMER_WARNING_SECONDS && remainingSeconds > TIMER_CRITICAL_SECONDS;
+  const isCritical = remainingSeconds <= TIMER_CRITICAL_SECONDS && remainingSeconds > 0;
 
   const announcement = useMemo(() => {
     if (remainingSeconds === 300) return "5 minutes remaining";
@@ -56,8 +57,8 @@ export function QuizTimer({ remainingSeconds, expired }: QuizTimerProps) {
 }
 
 export function QuizTimerCompact({ remainingSeconds, expired }: QuizTimerProps) {
-  const isWarning = remainingSeconds <= 300 && remainingSeconds > 60;
-  const isCritical = remainingSeconds <= 60 && remainingSeconds > 0;
+  const isWarning = remainingSeconds <= TIMER_WARNING_SECONDS && remainingSeconds > TIMER_CRITICAL_SECONDS;
+  const isCritical = remainingSeconds <= TIMER_CRITICAL_SECONDS && remainingSeconds > 0;
 
   return (
     <div
