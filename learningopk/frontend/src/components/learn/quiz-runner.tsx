@@ -77,11 +77,14 @@ type QuizSubmitErrorResponse = {
 
 type QuizRunnerProps = {
   quiz: Quiz;
+  subjectName?: string;
+  chapterNumber?: number;
+  chapterTitle?: string;
 };
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
-export function QuizRunner({ quiz }: QuizRunnerProps) {
+export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle }: QuizRunnerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerOption>>({});
   const [remainingSeconds, setRemainingSeconds] = useState(quiz.durationMinutes * 60);
@@ -208,7 +211,7 @@ export function QuizRunner({ quiz }: QuizRunnerProps) {
 
       {result ? (
         <div className="space-y-4">
-          <QuizResultSummary result={result} onRetake={startRetake} />
+          <QuizResultSummary result={result} onRetake={startRetake} subjectName={subjectName} chapterNumber={chapterNumber} chapterTitle={chapterTitle} />
           {isMockExam && result.sectionScores && result.sectionScores.length > 0 && (
             <MockExamResultDetails
               sectionScores={result.sectionScores}
