@@ -36,6 +36,7 @@ export interface ProgressEventResult {
     levelName: string;
     leveledUp: boolean;
   } | null;
+  xpFailed?: boolean;
 }
 
 export interface SubjectAggregate {
@@ -78,6 +79,7 @@ export class ProgressService {
       levelName: string;
       leveledUp: boolean;
     } | null = null;
+    let xpFailed = false;
     try {
       if (input.eventType === "chapter_visit") {
         const result = await xpService.awardChapterVisitXp(input.userId);
@@ -111,6 +113,7 @@ export class ProgressService {
     } catch (error) {
       // Log XP award error but don't fail the progress event
       console.error("Failed to award XP:", error);
+      xpFailed = true;
     }
 
     return {
@@ -123,7 +126,8 @@ export class ProgressService {
         quizBestScore: snapshot.quizBestScore,
         quizAttemptsCount: snapshot.quizAttemptsCount
       },
-      xp: xpResult
+      xp: xpResult,
+      xpFailed
     };
   }
 

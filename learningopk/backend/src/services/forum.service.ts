@@ -323,7 +323,7 @@ export class ForumService {
     });
   }
 
-  async acceptReply(replyId: string, userId: string): Promise<{ replyId: string; threadId: string; isAcceptedAnswer: boolean; isSolved: boolean; replyAuthorId?: string; xpAwarded?: boolean; xp?: { xpAwarded: number; newXp: number; level: number; levelName: string; leveledUp: boolean } }> {
+  async acceptReply(replyId: string, userId: string): Promise<{ replyId: string; threadId: string; isAcceptedAnswer: boolean; isSolved: boolean; replyAuthorId?: string; xpAwarded?: boolean; xp?: { xpAwarded: number; newXp: number; level: number; levelName: string; leveledUp: boolean }; xpFailed?: boolean }> {
     const result = await forumRepository.acceptReply({ replyId, userId });
 
     // Award XP if this is a new acceptance
@@ -342,6 +342,10 @@ export class ForumService {
         };
       } catch (error) {
         console.error("Failed to award XP for accepted forum answer:", error);
+        return {
+          ...result,
+          xpFailed: true
+        };
       }
     }
 

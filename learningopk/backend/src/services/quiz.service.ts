@@ -48,6 +48,7 @@ export interface QuizSubmissionResult {
     levelName: string;
     leveledUp: boolean;
   } | null;
+  xpFailed?: boolean;
 }
 
 export class QuizService {
@@ -121,6 +122,7 @@ export class QuizService {
       levelName: string;
       leveledUp: boolean;
     } | null = null;
+    let xpFailed = false;
     const passed = percentage >= 70;
     if (passed) {
       try {
@@ -136,6 +138,7 @@ export class QuizService {
         }
       } catch (error) {
         console.error("Failed to award XP for quiz:", error);
+        xpFailed = true;
       }
     }
 
@@ -150,7 +153,8 @@ export class QuizService {
       timeSpentSeconds,
       completedAt: insertedAttempt.completedAt.toISOString(),
       questionResults,
-      xp: xpResult
+      xp: xpResult,
+      xpFailed
     };
   }
 }
