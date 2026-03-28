@@ -178,10 +178,17 @@ mockExamsRouter.get("/:id/questions", requireSession, async (req, res) => {
       return;
     }
 
-    // First get the quizId for this mock exam
+    const authedReq = req as AuthenticatedRequest;
+    const userId = authedReq.session.user.id;
+
+    // First get the mock exam with quizId and ensure it's a mock_exam type
     const examRows = await db
-      .select({ quizId: mockExams.quizId })
+      .select({
+        quizId: mockExams.quizId,
+        quizType: quizzes.type
+      })
       .from(mockExams)
+      .innerJoin(quizzes, eq(mockExams.quizId, quizzes.id))
       .where(eq(mockExams.id, parsed.data.id))
       .limit(1);
 
@@ -196,8 +203,36 @@ mockExamsRouter.get("/:id/questions", requireSession, async (req, res) => {
       return;
     }
 
-    // Get quiz questions
+    // Verify this is a mock_exam type quiz
+    if (firstExam.quizType !== "mock_exam") {
+      res.status(404).json({ error: "Mock exam not found" });
+      return;
+    }
+
+    // Check if user has completed this mock exam
     const quizId = firstExam.quizId;
+    const attemptCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(quizAttempts)
+      .where(
+        and(
+          eq(quizAttempts.userId, userId),
+          eq(quizAttempts.quizId, quizId),
+          eq(quizAttempts.type, "mock_exam"),
+          sql`${quizAttempts.completedAt} IS NOT NULL`
+        )
+      );
+
+    const hasCompletedAttempt = (attemptCount[0]?.count ?? 0) > 0;
+    if (!hasCompletedAttempt) {
+      res.status(403).json({
+        error: "Solutions only available after completing the exam",
+        code: "EXAM_NOT_COMPLETED"
+      });
+      return;
+    }
+
+    // Get quiz questions
     const questionRows = await db
       .select({
         id: quizQuestions.id,

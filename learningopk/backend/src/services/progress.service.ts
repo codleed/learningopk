@@ -45,6 +45,7 @@ export interface SubjectAggregate {
   subjectName: string;
   grade: "9" | "10";
   boardName: string;
+  boardSlug: string;
   totalChapters: number;
   visitedChapters: number;
   bestQuizScorePercent: number;
@@ -189,6 +190,7 @@ export class ProgressService {
       subjectName: entry.subjectName,
       grade: entry.grade,
       boardName: entry.boardName,
+      boardSlug: entry.boardSlug,
       chaptersVisitedPercent: entry.totalChapters > 0 ? Math.round((entry.visitedChapters / entry.totalChapters) * 100) : 0,
       bestQuizScorePercent: entry.bestQuizScorePercent,
       lastActiveAt: entry.lastActiveAt ? entry.lastActiveAt.toISOString() : null
@@ -242,8 +244,8 @@ export class ProgressService {
     };
   }
 
-  async getSubjectDashboard(userId: string, subjectSlug: string) {
-    const subjectRows = await progressRepository.findSubjectBySlug(subjectSlug);
+  async getSubjectDashboard(userId: string, boardSlug: string, grade: "9" | "10", subjectSlug: string) {
+    const subjectRows = await progressRepository.findSubjectBySlug(boardSlug, grade, subjectSlug);
 
     const subjectRow = subjectRows[0];
     if (!subjectRow) {
@@ -305,6 +307,7 @@ export class ProgressService {
       subjectName: string;
       grade: string | null;
       boardName: string;
+      boardSlug: string;
       chapterId: number;
       visitedAt: Date | null;
       quizBestScore: number | null;
@@ -327,6 +330,7 @@ export class ProgressService {
           subjectName: row.subjectName,
           grade: (row.grade ?? "9") as "9" | "10",
           boardName: row.boardName,
+          boardSlug: row.boardSlug,
           totalChapters: 1,
           visitedChapters: visitedAt ? 1 : 0,
           bestQuizScorePercent: quizPercent,

@@ -1,10 +1,10 @@
 # LearningoPK API Contract Document
 
 ## Date
-2026-03-25
+2026-03-28 (Updated for Phase 11 Consistency)
 
 ## Auditor
-Backend Architecture Review
+Software Architecture Review - Phase 11
 
 ---
 
@@ -16,147 +16,61 @@ Backend Architecture Review
 
 ---
 
-## Response Shape Conventions
+## Auth Routes (`/api/auth`)
 
-### Success Response
-```json
-{
-  "data": { ... }
-}
-```
-OR direct return (inconsistent - see Issues)
-
-### Error Response
-```json
-{
-  "error": "Error message",
-  "details": { ... }  // Optional, from Zod validation
-}
-```
-
-### Pagination Response
-```json
-{
-  "items": [...],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 100,
-    "totalPages": 5
-  }
-}
-```
-
----
-
-## Issues Found
-
-### 1. Inconsistent Response Shapes
-Some endpoints return `{ data }` wrapper, others return directly:
-
-```ts
-// friends.ts - returns directly
-res.json({ friends, pagination });
-
-// forum.ts - returns { threads: [...] } wrapper
-res.status(200).json({ threads: threadRows });
-
-// learn.ts - returns chapter detail directly
-res.status(200).json({ board, grade, class, subject, chapter, exercises, ... });
-```
-
-**Recommendation**: Standardize on `{ data: ... }` wrapper for all responses.
-
-### 2. Missing Error Response Standardization
-Errors should follow consistent shape:
-```json
-{
-  "error": "Human-readable message",
-  "code": "MACHINE_READABLE_CODE",  // For client handling
-  "details": { ... }  // Optional validation details
-}
-```
-
-### 3. Over-Fetching in Forum Thread List
-`GET /forum/threads/:threadId` returns ALL replies in single request:
-- No pagination for replies
-- Replies can be hundreds for active threads
-- `replyCount` is redundant since replies are loaded
-
-**Recommendation**: Add pagination to replies or use cursor-based loading.
-
-### 4. N+1 Query Pattern in Forum
-`GET /forum/threads/:threadId` makes separate query for votes:
-```sql
--- Query 1: Get thread + replies
--- Query 2: Get viewer votes for ALL replies (if viewerUserId exists)
-```
-With 100 replies, this is 101 queries.
-
-**Recommendation**: Join votes in initial query.
-
----
-
-## Auth Flow
-
-### Session-Based Auth (better-auth)
-```
-Client → POST /api/auth/login { email, password }
-       ← Set-Cookie: session=<token>
-
-Client → Subsequent requests include Cookie
-       ← 401 if session expired/invalid
-```
-
-### Protected Routes
-All routes requiring authentication use `requireSession` middleware:
-- `/api/friends/*` - all endpoints
-- `/api/forum/*` - POST endpoints (GET is public)
-- `/api/chat/*` - all endpoints
-- `/api/progress/*` - all endpoints
-- `/api/notifications/*` - all endpoints
-- `/api/learn/*/graph` - requires session
-
-### Role-Based Access
-```ts
-// Example from learn.ts
-if (authedReq.session.user.role === "student") {
-  if (authedReq.session.user.board !== board) {
-    res.status(403).json({ error: "Forbidden" });
-  }
-}
-```
-
----
-
-## Endpoint Inventory
-
-### Auth Routes (`/api/auth`)
+Better Auth provides a comprehensive authentication system. The following endpoints are available:
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/auth/login` | No | Login with email/password |
-| POST | `/auth/register` | No | Register new user |
-| POST | `/auth/logout` | Yes | Logout current session |
-| GET | `/auth/session` | Yes | Get current session |
+| POST | `/auth/sign-up/email` | No | Register new user with email/password |
+| POST | `/auth/sign-in/email` | No | Login with email/password |
+| POST | `/auth/sign-out` | Yes | Logout current session |
+| GET | `/auth/get-session` | Yes | Get current session |
+
+**Note**: Password reset functionality (`/auth/request-password-reset`, `/auth/reset-password`) is **not currently enabled**. Users who forget passwords must contact support.
 
 **Request/Response Contracts:**
 
 ```ts
-// POST /auth/login
-Request: { email: string, password: string }
-Success 200: { user: { id, email, name, role, board?, class? }, session: {...} }
-Error 400: { error: "Invalid credentials" }
+// POST /auth/sign-up/email
+Request: { 
+  name: string,
+  email: string,
+  password: string (min 8 chars),
+  class: string,
+  board: string,
+  degree?: string
+}
+Success 200/201: { 
+  user: { id, name, email, class, board, degree, role?, createdAt, updatedAt },
+  session: {...}
+}
 
-// POST /auth/register  
-Request: { email: string, password: string, name: string, board: string, class: string }
-Success 201: { user: {...}, session: {...} }
-Error 400: { error: "Email already exists", details: {...} }
+// POST /auth/sign-in/email
+Request: { email: string, password: string }
+Success 200: { user: {...}, session: {...} }
+Error 401: { error: "Invalid credentials" }
+
+// POST /auth/sign-out
+Success 200: { message: "Signed out" }
+
+// GET /auth/get-session
+Success 200: { session: {...} | null }
 ```
 
----
+**Supported Features:**
+- Email/password authentication
+- Session-based auth with secure cookies
+- Remember me functionality (session duration controlled by `rememberMe` parameter)
+- User additional fields: `class`, `board`, `degree`, `role`
 
-### Friends Routes (`/api/friends`)
+**Not Yet Implemented:**
+- Password reset via email (planned for future phase)
+- Email verification (not required for current product stage)
+- Social login providers
+- Two-factor authentication
+
+---
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|

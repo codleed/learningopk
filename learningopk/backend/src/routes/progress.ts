@@ -24,8 +24,10 @@ export const progressEventSchema = z.discriminatedUnion("eventType", [
     score: z.number().int().nonnegative()
   })
 ]);
-export const subjectParamSchema = z.object({
-  subject: z.string().trim().regex(/^[a-z0-9-]+$/)
+export const subjectDashboardParamSchema = z.object({
+  boardSlug: z.string().trim().regex(/^[a-z0-9-]+$/),
+  grade: z.enum(["9", "10"]),
+  subjectSlug: z.string().trim().regex(/^[a-z0-9-]+$/)
 });
 
 export const progressRouter = Router();
@@ -68,11 +70,11 @@ progressRouter.get("/dashboard", requireSession, async (req, res) => {
   }
 });
 
-progressRouter.get("/dashboard/:subject", requireSession, async (req, res) => {
-  const params = subjectParamSchema.safeParse(req.params);
+progressRouter.get("/dashboard/:boardSlug/:grade/:subjectSlug", requireSession, async (req, res) => {
+  const params = subjectDashboardParamSchema.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({
-      error: "Invalid subject route parameter",
+      error: "Invalid subject route parameters",
       details: params.error.flatten()
     });
     return;
@@ -82,7 +84,12 @@ progressRouter.get("/dashboard/:subject", requireSession, async (req, res) => {
   const userId = authedReq.session.user.id;
 
   try {
-    const subjectDashboard = await progressService.getSubjectDashboard(userId, params.data.subject);
+    const subjectDashboard = await progressService.getSubjectDashboard(
+      userId,
+      params.data.boardSlug,
+      params.data.grade,
+      params.data.subjectSlug
+    );
     if (!subjectDashboard) {
       res.status(404).json({ error: "Subject not found" });
       return;

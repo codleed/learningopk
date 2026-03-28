@@ -9,17 +9,8 @@ import { ForumThreadFeed } from "@/components/forum/forum-thread-feed";
 import { ForumThreadForm } from "@/components/forum/forum-thread-form";
 import { ErrorState } from "@/components/ui/states";
 import { getForumFilters, getForumThreads } from "@/lib/forum-api";
+import { buildForumHref, forumSearchParamsSchema } from "@/lib/forum-utils";
 import { getServerSession } from "@/lib/session";
-
-const forumSearchParamsSchema = z.object({
-  q: z.string().trim().min(1).max(160).optional(),
-  board: z.string().trim().regex(/^[a-z0-9-]+$/).optional(),
-  grade: z.string().trim().regex(/^[a-z0-9-]+$/).optional(),
-  subjectId: z.string().regex(/^\d+$/).optional(),
-  chapterId: z.string().regex(/^\d+$/).optional(),
-  solved: z.enum(["all", "solved", "unsolved"]).optional().default("all"),
-  compose: z.enum(["1"]).optional()
-});
 
 type ForumFeedPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -31,42 +22,6 @@ const getFirstValue = (value: string | string[] | undefined): string | undefined
   }
 
   return value;
-};
-
-const buildForumHref = (query: {
-  q?: string;
-  board?: string;
-  grade?: string;
-  subjectId?: number;
-  chapterId?: number;
-  solved?: "all" | "solved" | "unsolved";
-  compose?: "1";
-}) => {
-  const params = new URLSearchParams();
-  if (query.q) {
-    params.set("q", query.q);
-  }
-  if (query.board) {
-    params.set("board", query.board);
-  }
-  if (query.grade) {
-    params.set("grade", query.grade);
-  }
-  if (query.subjectId) {
-    params.set("subjectId", String(query.subjectId));
-  }
-  if (query.chapterId) {
-    params.set("chapterId", String(query.chapterId));
-  }
-  if (query.solved && query.solved !== "all") {
-    params.set("solved", query.solved);
-  }
-  if (query.compose) {
-    params.set("compose", query.compose);
-  }
-
-  const queryString = params.toString();
-  return queryString.length > 0 ? `/forum?${queryString}` : "/forum";
 };
 
 export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps) {

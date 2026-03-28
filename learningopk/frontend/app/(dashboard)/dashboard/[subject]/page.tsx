@@ -10,7 +10,7 @@ import { getServerSession } from "@/lib/session";
 import { getSubjectProgress } from "@/lib/progress-api";
 
 type SubjectProgressPageProps = {
-  params: Promise<{ subject: string }>;
+  params: Promise<{ boardSlug: string; grade: "9" | "10"; subjectSlug: string }>;
 };
 
 export default async function SubjectProgressPage({ params }: SubjectProgressPageProps) {
@@ -21,7 +21,9 @@ export default async function SubjectProgressPage({ params }: SubjectProgressPag
 
   const parsedParams = z
     .object({
-      subject: z.string().trim().regex(/^[a-z0-9-]+$/)
+      boardSlug: z.string().trim().regex(/^[a-z0-9-]+$/),
+      grade: z.enum(["9", "10"]),
+      subjectSlug: z.string().trim().regex(/^[a-z0-9-]+$/)
     })
     .safeParse(await params);
 
@@ -30,7 +32,8 @@ export default async function SubjectProgressPage({ params }: SubjectProgressPag
   }
 
   const cookieStore = await cookies();
-  const progress = await getSubjectProgress(parsedParams.data.subject, cookieStore.toString());
+  const { boardSlug, grade, subjectSlug } = parsedParams.data;
+  const progress = await getSubjectProgress(boardSlug, grade, subjectSlug, cookieStore.toString());
   if (!progress) {
     notFound();
   }
@@ -38,7 +41,7 @@ export default async function SubjectProgressPage({ params }: SubjectProgressPag
   return (
     <AppShell
       session={session}
-      currentPath={`/dashboard/${progress.subject.slug}`}
+      currentPath={`/dashboard/${progress.subject.boardSlug}/${progress.subject.grade}/${progress.subject.slug}`}
       contentClassName="max-w-[95rem] px-3 pb-10 pt-4 sm:px-5 lg:px-7"
     >
       <DashboardSurface as="section" tone="shell" className="space-y-4 p-4 sm:p-5">

@@ -12,7 +12,7 @@ export class ProgressRepository {
       .limit(1);
   }
 
-  async findSubjectBySlug(slug: string) {
+  async findSubjectBySlug(boardSlug: string, grade: "9" | "10", subjectSlug: string) {
     return db
       .select({
         subjectId: subjects.id,
@@ -23,7 +23,13 @@ export class ProgressRepository {
       })
       .from(subjects)
       .innerJoin(boards, eq(subjects.boardId, boards.id))
-      .where(eq(subjects.slug, slug))
+      .where(
+        and(
+          eq(boards.slug, boardSlug),
+          eq(subjects.grade, grade),
+          eq(subjects.slug, subjectSlug)
+        )
+      )
       .orderBy(asc(subjects.id))
       .limit(1);
   }
@@ -156,6 +162,7 @@ export class ProgressRepository {
         subjectName: subjects.name,
         grade: subjects.grade,
         boardName: boards.name,
+        boardSlug: boards.slug,
         chapterId: chapters.id,
         visitedAt: userProgress.visitedAt,
         quizBestScore: userProgress.quizBestScore

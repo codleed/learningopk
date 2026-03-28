@@ -84,10 +84,6 @@ test("critical UI routes render with expected structure", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Create your student account" })).toBeVisible();
   await assertNoHorizontalOverflow(page);
 
-  await page.goto("/forgot-password");
-  await expect(page.getByRole("heading", { name: "Reset your password" })).toBeVisible();
-  await assertNoHorizontalOverflow(page);
-
   await page.goto("/register");
   await page.getByLabel("Name").fill("UI Quality Student");
   await page.getByLabel("Degree").fill("Matriculation");

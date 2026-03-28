@@ -2,9 +2,17 @@ import { and, asc, eq, sql, type SQL } from "drizzle-orm";
 
 import { consumeForumMutationRateLimit, moderateForumInput } from "../lib/ai-guardrails.js";
 import { boardClasses, boards, chapters, forumReplies, forumReplyVotes, forumThreads, subjects } from "../lib/db/schema.js";
+import { db } from "../lib/db/index.js";
 import { forumRepository } from "../repositories/forum.repository.js";
 import { xpService } from "./xp.service.js";
 import type { Response } from "express";
+import {
+  ForbiddenError,
+  NotFoundError,
+  ServiceUnavailableError,
+  ValidationError,
+  isHttpError
+} from "../lib/errors/index.js";
 
 export interface ThreadFeedFilters {
   board?: string | undefined;
@@ -169,7 +177,7 @@ export class ForumService {
     return topLevelReplies;
   }
 
-  async resolveThreadSubjectId(input: { subjectId?: number; chapterId?: number }): Promise<{ subjectId: number | null } | { error: { status: number; body: { error: string } } }> {
+  async resolveThreadSubjectId(input: { subjectId?: number; chapterId?: number }): Promise<{ subjectId: number }> {
     let resolvedSubjectId = input.subjectId ?? null;
 
     if (input.chapterId) {
@@ -177,21 +185,16 @@ export class ForumService {
       const chapterRow = chapterRows[0];
 
       if (!chapterRow) {
-        return {
-          error: {
-            status: 404,
-            body: { error: "Chapter not found." }
-          }
-        };
+        throw new NotFoundError("Chapter not found.");
+      }
+
+      // Validate chapter is published
+      if (!chapterRow.isPublished) {
+        throw new ValidationError("Cannot create thread in an unpublished chapter.");
       }
 
       if (resolvedSubjectId && resolvedSubjectId !== chapterRow.subjectId) {
-        return {
-          error: {
-            status: 400,
-            body: { error: "subjectId must match the selected chapter subject." }
-          }
-        };
+        throw new ValidationError("subjectId must match the selected chapter subject.");
       }
 
       resolvedSubjectId = resolvedSubjectId ?? chapterRow.subjectId;
@@ -201,44 +204,32 @@ export class ForumService {
       const subjectRows = await forumRepository.findSubjectById(resolvedSubjectId);
 
       if (subjectRows.length === 0) {
-        return {
-          error: {
-            status: 404,
-            body: { error: "Subject not found." }
-          }
-        };
+        throw new NotFoundError("Subject not found.");
       }
+    }
+
+    if (resolvedSubjectId === null) {
+      throw new ValidationError("Either subjectId or chapterId must be provided.");
     }
 
     return { subjectId: resolvedSubjectId };
   }
 
-  async checkMutationRateLimit(res: Response, userId: string): Promise<boolean> {
+  async checkMutationRateLimit(userId: string): Promise<{ allowed: boolean; limit: number; remaining: number; resetSeconds: number }> {
     let rateLimit: Awaited<ReturnType<typeof consumeForumMutationRateLimit>>;
     try {
       rateLimit = await consumeForumMutationRateLimit(userId);
     } catch (error) {
       console.error("Forum mutation rate limit check failed:", error);
-      res.status(503).json({
-        error: "Forum mutation rate limiting is temporarily unavailable."
-      });
-      return false;
+      throw new ServiceUnavailableError("Forum mutation rate limiting is temporarily unavailable.");
     }
 
-    res.setHeader("x-ratelimit-limit", String(rateLimit.limit));
-    res.setHeader("x-ratelimit-remaining", String(rateLimit.remaining));
-    res.setHeader("x-ratelimit-reset", String(rateLimit.resetSeconds));
-
-    if (!rateLimit.allowed) {
-      res.setHeader("retry-after", String(rateLimit.resetSeconds));
-      res.status(429).json({
-        error: "Forum mutation rate limit exceeded.",
-        retryAfterSeconds: rateLimit.resetSeconds
-      });
-      return false;
-    }
-
-    return true;
+    return {
+      allowed: rateLimit.allowed,
+      limit: rateLimit.limit,
+      remaining: rateLimit.remaining,
+      resetSeconds: rateLimit.resetSeconds
+    };
   }
 
   async createThread(input: CreateThreadInput): Promise<{ thread: Record<string, unknown> }> {
@@ -246,17 +237,13 @@ export class ForumService {
 
     const moderation = moderateForumInput(`${title}\n${body}`);
     if (moderation.blocked) {
-      throw new Error(`Forum content blocked by safety checks.`);
+      throw new ModerationError("Forum content blocked by safety checks.", moderation.reason);
     }
 
     const subjectResolution = await this.resolveThreadSubjectId({
       ...(input.subjectId ? { subjectId: input.subjectId } : {}),
       ...(chapterId ? { chapterId } : {})
     });
-
-    if ("error" in subjectResolution) {
-      throw new Error(subjectResolution.error.body.error);
-    }
 
     const result = await forumRepository.createThread({
       userId,
@@ -274,12 +261,12 @@ export class ForumService {
 
     const moderation = moderateForumInput(body);
     if (moderation.blocked) {
-      throw new Error("Forum content blocked by safety checks.");
+      throw new ModerationError("Forum content blocked by safety checks.", moderation.reason);
     }
 
     const threadRows = await forumRepository.findThreadByIdForReply(threadId);
     if (threadRows.length === 0) {
-      throw new Error("Thread not found");
+      throw new NotFoundError("Thread not found.");
     }
 
     const resolvedParentId = parentReplyId ?? null;
@@ -288,15 +275,15 @@ export class ForumService {
       const parentReply = parentReplyRows[0];
 
       if (!parentReply) {
-        throw new Error("Parent reply not found");
+        throw new NotFoundError("Parent reply not found.");
       }
 
       if (parentReply.threadId !== threadId) {
-        throw new Error("Parent reply does not belong to this thread.");
+        throw new ValidationError("Parent reply does not belong to this thread.");
       }
 
       if (parentReply.parentReplyId) {
-        throw new Error("Only one level of nested replies is allowed.");
+        throw new ValidationError("Only one level of nested replies is allowed.");
       }
     }
 
@@ -316,40 +303,73 @@ export class ForumService {
   }
 
   async voteReply(input: VoteInput): Promise<{ replyId: string; voteType: string; upvotes: number }> {
-    return forumRepository.voteReply({
-      replyId: input.replyId,
-      userId: input.userId,
-      voteType: input.voteType
-    });
-  }
-
-  async acceptReply(replyId: string, userId: string): Promise<{ replyId: string; threadId: string; isAcceptedAnswer: boolean; isSolved: boolean; replyAuthorId?: string; xpAwarded?: boolean; xp?: { xpAwarded: number; newXp: number; level: number; levelName: string; leveledUp: boolean }; xpFailed?: boolean }> {
-    const result = await forumRepository.acceptReply({ replyId, userId });
-
-    // Award XP if this is a new acceptance
-    if (result.xpAwarded && result.replyAuthorId) {
-      try {
-        const xpResult = await xpService.awardForumAnswerAcceptedXp(result.replyAuthorId);
-        return {
-          ...result,
-          xp: {
-            xpAwarded: xpResult.xpAwarded,
-            newXp: xpResult.newXp,
-            level: xpResult.level,
-            levelName: xpResult.levelName,
-            leveledUp: xpResult.leveledUp
-          }
-        };
-      } catch (error) {
-        console.error("Failed to award XP for accepted forum answer:", error);
-        return {
-          ...result,
-          xpFailed: true
-        };
-      }
+    const replyRows = await forumRepository.findReplyById(input.replyId);
+    if (replyRows.length === 0) {
+      throw new NotFoundError("Reply not found.");
     }
 
-    return result;
+    try {
+      return await forumRepository.voteReply({
+        replyId: input.replyId,
+        userId: input.userId,
+        voteType: input.voteType
+      });
+    } catch (error) {
+      if (isHttpError(error)) {
+        throw error;
+      }
+      throw new Error("Unable to update vote.");
+    }
+  }
+
+  async acceptReply(replyId: string, userId: string): Promise<{ 
+    replyId: string; 
+    threadId: string; 
+    isAcceptedAnswer: boolean; 
+    isSolved: boolean; 
+    replyAuthorId?: string; 
+    xpAwarded?: boolean; 
+    xp?: { xpAwarded: number; newXp: number; level: number; levelName: string; leveledUp: boolean };
+    xpFailed?: boolean 
+  }> {
+    try {
+      const result = await forumRepository.acceptReply({ replyId, userId });
+
+      // Award XP if this is a new acceptance
+      if (result.xpAwarded && result.replyAuthorId) {
+        try {
+          const xpResult = await xpService.awardForumAnswerAcceptedXp(result.replyAuthorId);
+          return {
+            ...result,
+            xp: {
+              xpAwarded: xpResult.xpAwarded,
+              newXp: xpResult.newXp,
+              level: xpResult.level,
+              levelName: xpResult.levelName,
+              leveledUp: xpResult.leveledUp
+            }
+          };
+        } catch (error) {
+          console.error("Failed to award XP for accepted forum answer:", error);
+          return {
+            ...result,
+            xpFailed: true
+          };
+        }
+      }
+
+      return result;
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes("not found")) {
+          throw new NotFoundError(error.message);
+        }
+        if (error.message.includes("Only the thread author")) {
+          throw new ForbiddenError(error.message);
+        }
+      }
+      throw error;
+    }
   }
 }
 

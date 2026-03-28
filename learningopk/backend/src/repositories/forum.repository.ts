@@ -3,6 +3,7 @@ import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { db } from "../lib/db/index.js";
 import { boardClasses, boards, chapters, forumReplies, forumReplyVotes, forumThreads, subjects, users } from "../lib/db/schema.js";
 import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
+import { ServiceUnavailableError } from "../lib/errors/index.js";
 
 export class ForumRepository {
   async findFilters() {
@@ -248,7 +249,7 @@ export class ForumRepository {
     });
 
     if (updatedUpvotes === null) {
-      throw new Error("Unable to update vote.");
+      throw new HttpError(500, "Unable to update vote.");
     }
 
     return { replyId: params.replyId, voteType: params.voteType, upvotes: updatedUpvotes };
@@ -270,11 +271,11 @@ export class ForumRepository {
 
     const reply = replyRows[0];
     if (!reply) {
-      throw new Error("Reply not found");
+      throw new HttpError(404, "Reply not found.");
     }
 
     if (reply.threadAuthorId !== params.userId) {
-      throw new Error("Only the thread author can mark an accepted answer.");
+      throw new HttpError(403, "Only the thread author can mark an accepted answer.");
     }
 
     // Check if already accepted - don't award XP again
@@ -409,7 +410,8 @@ export class ForumRepository {
     return db
       .select({
         id: chapters.id,
-        subjectId: chapters.subjectId
+        subjectId: chapters.subjectId,
+        isPublished: chapters.isPublished
       })
       .from(chapters)
       .where(eq(chapters.id, chapterId))

@@ -20,7 +20,12 @@ export const proxy = async (request: NextRequest) => {
     });
 
     if (!response.ok) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      if (response.status === 401 || response.status === 403) {
+        // Unauthenticated or forbidden - redirect to login
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+      // Auth service or backend error - show service unavailable
+      return new NextResponse("Authentication service unavailable. Please try again later.", { status: 503 });
     }
 
     const payload = (await response.json()) as { session?: unknown };
@@ -29,8 +34,10 @@ export const proxy = async (request: NextRequest) => {
     }
 
     return NextResponse.next();
-  } catch {
-    return NextResponse.redirect(new URL("/login", request.url));
+  } catch (error) {
+    console.error("Proxy auth check failed:", error);
+    // Network error or backend unreachable
+    return new NextResponse("Authentication service unreachable. Please check your connection.", { status: 503 });
   }
 };
 

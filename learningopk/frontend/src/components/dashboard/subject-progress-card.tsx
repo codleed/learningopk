@@ -25,7 +25,7 @@ export function SubjectProgressCard({ subject }: SubjectProgressCardProps) {
             {subject.boardName} Grade {subject.grade}
           </p>
         </div>
-        <Link href={`/dashboard/${subject.subjectSlug}`} className="text-xs font-semibold text-foreground underline underline-offset-4">
+        <Link href={`/dashboard/${subject.boardSlug}/${subject.grade}/${subject.subjectSlug}`} className="text-xs font-semibold text-foreground underline underline-offset-4">
           View details
         </Link>
       </div>

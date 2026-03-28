@@ -8,6 +8,7 @@ const subjectSummarySchema = z.object({
   subjectName: z.string(),
   grade: z.enum(["9", "10"]),
   boardName: z.string(),
+  boardSlug: z.string(),
   chaptersVisitedPercent: z.number().int().min(0).max(100),
   bestQuizScorePercent: z.number().int().min(0).max(100),
   lastActiveAt: z.string().datetime().nullable()
@@ -90,7 +91,8 @@ const subjectProgressResponseSchema = z.object({
     slug: z.string(),
     name: z.string(),
     grade: z.enum(["9", "10"]),
-    boardName: z.string()
+    boardName: z.string(),
+    boardSlug: z.string()
   }),
   overallSubjectScorePercent: z.number().int().min(0).max(100),
   chapters: z.array(
@@ -126,8 +128,8 @@ export const getDashboardSummary = async (cookieHeader: string): Promise<Dashboa
   return dashboardSummarySchema.parse((await response.json()) as unknown);
 };
 
-export const getSubjectProgress = async (subject: string, cookieHeader: string): Promise<SubjectProgressResponse | null> => {
-  const response = await fetch(`${backendUrl}/api/progress/dashboard/${subject}`, {
+export const getSubjectProgress = async (boardSlug: string, grade: "9" | "10", subjectSlug: string, cookieHeader: string): Promise<SubjectProgressResponse | null> => {
+  const response = await fetch(`${backendUrl}/api/progress/dashboard/${boardSlug}/${grade}/${subjectSlug}`, {
     method: "GET",
     cache: "no-store",
     headers: {

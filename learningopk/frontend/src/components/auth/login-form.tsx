@@ -70,6 +70,7 @@ export const LoginForm = () => {
           <Input
             id="email"
             name="email"
+            data-testid="login-email-input"
             type="email"
             required
             autoComplete="email"
@@ -82,6 +83,7 @@ export const LoginForm = () => {
       </FormField>
       <PasswordInput
         name="password"
+        data-testid="login-password-input"
         label="Password"
         icon={LockKeyhole}
         iconPosition="left"
@@ -91,26 +93,14 @@ export const LoginForm = () => {
         aria-invalid={passwordError ? true : undefined}
         placeholder="••••••••"
         error={passwordError}
-        action={
-          <Link href="/forgot-password" className="text-sm font-medium text-[var(--primary)] transition hover:text-[var(--primary-hover)]">
-            Forgot password?
-          </Link>
-        }
       />
       {errorMessage && !emailError && !passwordError ? (
         <p className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {errorMessage}
         </p>
       ) : null}
-      <label className="flex items-center gap-2.5 text-sm text-muted-foreground">
-        <input
-          type="checkbox"
-          name="rememberMe"
-          className="h-4 w-4 rounded border-input text-[var(--primary)] focus:ring-[var(--primary)]/50"
-        />
-        <span>Remember me for 30 days</span>
-      </label>
       <Button
+        data-testid="login-submit-button"
         type="submit"
         disabled={isPending}
         width="full"

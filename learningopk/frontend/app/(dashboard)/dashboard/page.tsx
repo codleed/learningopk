@@ -839,22 +839,22 @@ export default async function DashboardPage({
                         4.5 +
                         (subject.bestQuizScorePercent % 6) / 10
                       ).toFixed(1);
-                      const studentCount =
-                        1000 +
-                        subject.chaptersVisitedPercent * 80 +
-                        index * 1200;
+                        const studentCount =
+                          1000 +
+                          subject.chaptersVisitedPercent * 80 +
+                          index * 1200;
 
-                      return (
-                        <MotionCard key={subject.subjectId}>
-                          <Link
-                            href={`/dashboard/${subject.subjectSlug}`}
-                            className="block"
-                          >
-                            <article
-                              className={cn(
-                                "rounded-2xl p-4 transition-shadow hover:shadow-md",
-                                palette.bg,
-                              )}
+                        return (
+                          <MotionCard key={subject.subjectId}>
+                            <Link
+                              href={`/dashboard/${subject.boardSlug}/${subject.grade}/${subject.subjectSlug}`}
+                              className="block"
+                            >
+                              <article
+                                className={cn(
+                                  "rounded-2xl p-4 transition-shadow hover:shadow-md",
+                                  palette.bg,
+                                )}
                             >
                               <div className="flex items-start gap-3">
                                 <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background/50">

@@ -38,9 +38,16 @@ export function MockExamSolutionsClient({ examId }: MockExamSolutionsClientProps
         ]);
         setExam(examData);
         setQuestions(questionsData);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to load mock exam solutions:", err);
-        setError("Failed to load solutions. Please try again.");
+        const errorMessage = err?.message || "Failed to load solutions. Please try again.";
+
+        // Check for access denied (403) - solutions only available after completion
+        if (errorMessage.includes("403") || errorMessage.includes("EXAM_NOT_COMPLETED")) {
+          setError("Solutions are only available after you complete the exam. Please attempt the mock exam first.");
+        } else {
+          setError(errorMessage);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -61,12 +68,25 @@ export function MockExamSolutionsClient({ examId }: MockExamSolutionsClientProps
   }
 
   if (error || !exam) {
+    const isAccessDenied = error?.includes("Solutions are only available after you complete");
+
     return (
       <div className="text-center py-12">
         <p className="text-destructive mb-4">{error || "Exam not found"}</p>
-        <Link href="/past-papers">
-          <Button variant="outline">Back to Past Papers</Button>
-        </Link>
+        {isAccessDenied && exam ? (
+          <div className="space-y-4">
+            <p className="text-muted-foreground">
+              Complete the exam to view solutions and check your answers.
+            </p>
+            <Link href={`/past-papers/${examId}/attempt`}>
+              <Button>Attempt Exam</Button>
+            </Link>
+          </div>
+        ) : (
+          <Link href="/past-papers">
+            <Button variant="outline">Back to Past Papers</Button>
+          </Link>
+        )}
       </div>
     );
   }

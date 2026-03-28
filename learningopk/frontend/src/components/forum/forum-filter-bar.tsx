@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type { ForumFiltersResponse } from "@/lib/forum-api";
+import { buildForumHref } from "@/lib/forum-utils";
 import { cn } from "@/lib/utils";
 
 type ForumFilterBarProps = {
@@ -206,7 +207,7 @@ export function ForumFilterBar({
               <Button type="submit" size="sm">
                 Apply Filters
               </Button>
-              <Link href="/forum">
+              <Link href={buildForumHref({ q: selected.q })}>
                 <Button type="button" size="sm" variant="ghost">
                   Reset
                 </Button>

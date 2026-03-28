@@ -79,47 +79,18 @@ const registerStudent = async (page: Page, name: string) => {
   await expect(page).toHaveURL(/\/dashboard$/);
 };
 
-test("reset-password route handles missing token, weak password errors, and success flow", async ({ page }) => {
+test("password reset feature removed from UI", async ({ page }) => {
+  // Login page should NOT show "Forgot password?" link
+  await page.goto("/login");
+  const forgotLink = page.getByText("Forgot password?");
+  await expect(forgotLink).not.toBeVisible();
+
+  // Reset password and forgot password routes should 404 or redirect to error
   await page.goto("/reset-password");
-  await expect(page.getByRole("heading", { name: "Set a new password" })).toBeVisible();
-  await expect(page.getByText("Reset token is missing. Request a new reset link from forgot password.")).toBeVisible();
+  await expect(page).toHaveURL(/\/(404|not-found|error)$/);
 
-  await page.goto("/reset-password?error=INVALID_TOKEN");
-  await expect(page.getByText("Reset link is invalid or expired. Request a new password reset link.")).toBeVisible();
-
-  await page.route("**/api/auth/reset-password**", async (route) => {
-    await route.fulfill({
-      status: 400,
-      contentType: "application/json",
-      body: JSON.stringify({
-        message: "PASSWORD_TOO_SHORT"
-      })
-    });
-  });
-
-  await page.goto("/reset-password?token=phase3-token");
-  await page.getByLabel("New password").fill("short");
-  await page.getByLabel("Confirm password").fill("short");
-  await page.getByRole("button", { name: "Reset password" }).click();
-  await expect(page.getByText("Password must be at least 8 characters.")).toBeVisible();
-
-  await page.unroute("**/api/auth/reset-password**");
-  await page.route("**/api/auth/reset-password**", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        status: true
-      })
-    });
-  });
-
-  await page.getByLabel("New password").fill("StrongerPass123");
-  await page.getByLabel("Confirm password").fill("StrongerPass123");
-  await page.getByRole("button", { name: "Reset password" }).click();
-
-  await expect(page.getByRole("heading", { name: "Password reset complete" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Return to sign in" })).toBeVisible();
+  await page.goto("/forgot-password");
+  await expect(page).toHaveURL(/\/(404|not-found|error)$/);
 });
 
 test("unified dashboard/learn routes preserve links, tabs, and actions", async ({ page }) => {

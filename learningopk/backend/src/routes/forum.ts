@@ -2,10 +2,12 @@ import { inArray, type SQL } from "drizzle-orm";
 import { Router, type Response } from "express";
 import { z } from "zod";
 
-import { consumeForumMutationRateLimit } from "../lib/ai-guardrails.js";
+import { consumeForumMutationRateLimit, moderateForumInput } from "../lib/ai-guardrails.js";
 import { getSessionFromRequest, requireSession, type AuthenticatedRequest } from "../lib/session.js";
+import { errorResponse, successResponse } from "../lib/response.js";
 import { forumRepository } from "../repositories/forum.repository.js";
 import { forumService } from "../services/forum.service.js";
+import { isHttpError } from "../lib/errors/index.js";
 
 const createThreadSchema = z.object({
   title: z.string().trim().min(5).max(160),
@@ -47,7 +49,20 @@ type ThreadFeedFilters = z.infer<typeof threadFeedQuerySchema>;
 export const forumRouter = Router();
 
 const applyForumMutationRateLimit = async (res: Response, userId: string): Promise<boolean> => {
-  return forumService.checkMutationRateLimit(res, userId);
+  try {
+    const rateLimit = await forumService.checkMutationRateLimit(userId);
+    res.setHeader("x-ratelimit-limit", String(rateLimit.limit));
+    res.setHeader("x-ratelimit-remaining", String(rateLimit.remaining));
+    res.setHeader("x-ratelimit-reset", String(rateLimit.resetSeconds));
+    return rateLimit.allowed;
+  } catch (error) {
+    if (isHttpError(error)) {
+      res.status(error.status).json(error.toResponse());
+    } else {
+      res.status(503).json(errorResponse("Rate limit service unavailable.", "RATE_LIMIT_SERVICE_UNAVAILABLE"));
+    }
+    return false;
+  }
 };
 
 forumRouter.get("/filters", async (_req, res) => {
@@ -84,26 +99,39 @@ forumRouter.get("/threads", async (req, res) => {
 forumRouter.get("/threads/:threadId", async (req, res) => {
   const parsedParams = threadParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
-    res.status(400).json({
-      error: "Invalid thread identifier",
-      details: parsedParams.error.flatten()
-    });
+    res.status(400).json(errorResponse("Invalid thread identifier", "VALIDATION_ERROR", parsedParams.error.flatten()));
     return;
   }
 
   const { threadId } = parsedParams.data;
-  const session = await getSessionFromRequest(req);
-  const viewerUserId = session?.user.id ?? null;
+  let viewerUserId: string | null = null;
 
-  await forumRepository.incrementThreadViews(threadId);
+  try {
+    const session = await getSessionFromRequest(req);
+    viewerUserId = session?.user.id ?? null;
+  } catch (error) {
+    // If auth service is unavailable, we can still show the thread (public content) but without personalized info
+    // However, per trust boundaries, we should indicate service degradation but not fail the request entirely for public endpoint.
+    // We could choose to return 503 if session is required for this endpoint, but it's not. So we continue without viewerUserId.
+    console.warn("Auth service unavailable for thread view, proceeding without personalized data:", error);
+  }
+
+  // Only increment view count if explicitly requested via query param
+  // This prevents inflated counts from SSR, refreshes, and bot requests
+  if (req.query.trackView === "true") {
+    try {
+      await forumRepository.incrementThreadViews(threadId);
+    } catch (error) {
+      console.error("Failed to increment thread views:", error);
+      // Do not fail the request if view increment fails
+    }
+  }
 
   const threadRows = await forumRepository.findThreadById(threadId);
 
   const thread = threadRows[0];
   if (!thread) {
-    res.status(404).json({
-      error: "Thread not found"
-    });
+    res.status(404).json(errorResponse("Thread not found", "NOT_FOUND"));
     return;
   }
 
@@ -112,8 +140,13 @@ forumRouter.get("/threads/:threadId", async (req, res) => {
   let voteByReplyId = new Map<string, "upvote" | "downvote">();
   if (viewerUserId && replyRows.length > 0) {
     const replyIds = replyRows.map((row) => row.id);
-    const viewerVotes = await forumRepository.findVotesByUserAndReplies(viewerUserId, replyIds);
-    voteByReplyId = new Map(viewerVotes.map((vote) => [vote.replyId, vote.voteType]));
+    try {
+      const viewerVotes = await forumRepository.findVotesByUserAndReplies(viewerUserId, replyIds);
+      voteByReplyId = new Map(viewerVotes.map((vote) => [vote.replyId, vote.voteType]));
+    } catch (error) {
+      // If vote lookup fails (e.g., DB issue), continue without personalized vote info
+      console.warn("Failed to fetch user votes for thread replies:", error);
+    }
   }
 
   const replyRowsWithVotes = replyRows.map((row) => ({
@@ -132,73 +165,61 @@ forumRouter.get("/threads/:threadId", async (req, res) => {
 
 forumRouter.post("/threads", requireSession, async (req, res) => {
   const parsed = createThreadSchema.safeParse(req.body);
-
   if (!parsed.success) {
-    res.status(400).json({
-      error: "Invalid forum thread payload",
-      details: parsed.error.flatten()
-    });
+    res.status(400).json(errorResponse("Invalid forum thread payload", "VALIDATION_ERROR", parsed.error.flatten()));
     return;
   }
 
   const authedReq = req as AuthenticatedRequest;
   const userId = authedReq.session.user.id;
-  const { title, body, chapterId } = parsed.data;
+
+  // Check rate limit first
   if (!(await applyForumMutationRateLimit(res, userId))) {
-    return;
+    return; // Rate limit response already sent by helper if failed
   }
 
   try {
     const result = await forumService.createThread({
-      title,
-      body,
+      title: parsed.data.title,
+      body: parsed.data.body,
       userId,
-      chapterId,
+      chapterId: parsed.data.chapterId,
       subjectId: parsed.data.subjectId
     });
 
-    res.status(201).json({
+    res.status(201).json(successResponse({
       thread: {
         ...result.thread,
         userName: authedReq.session.user.name
       }
-    });
+    }));
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    if (message.includes("blocked by safety checks")) {
-      res.status(422).json({
-        error: "Forum content blocked by safety checks.",
-        reason: message
-      });
-      return;
+    if (isHttpError(error)) {
+      res.status(error.status).json(error.toResponse());
+    } else {
+      console.error("Unexpected error in createThread:", error);
+      res.status(500).json(errorResponse("Internal server error", "INTERNAL_ERROR"));
     }
-    res.status(500).json({ error: message });
   }
 });
 
 forumRouter.post("/threads/:threadId/replies", requireSession, async (req, res) => {
   const parsedParams = threadParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
-    res.status(400).json({
-      error: "Invalid thread identifier",
-      details: parsedParams.error.flatten()
-    });
+    res.status(400).json(errorResponse("Invalid thread identifier", "VALIDATION_ERROR", parsedParams.error.flatten()));
     return;
   }
 
   const parsed = replySchema.safeParse(req.body);
-
   if (!parsed.success) {
-    res.status(400).json({
-      error: "Invalid forum reply payload",
-      details: parsed.error.flatten()
-    });
+    res.status(400).json(errorResponse("Invalid forum reply payload", "VALIDATION_ERROR", parsed.error.flatten()));
     return;
   }
 
   const { threadId } = parsedParams.data;
   const authedReq = req as AuthenticatedRequest;
   const userId = authedReq.session.user.id;
+
   if (!(await applyForumMutationRateLimit(res, userId))) {
     return;
   }
@@ -211,44 +232,27 @@ forumRouter.post("/threads/:threadId/replies", requireSession, async (req, res) 
       userId
     }, authedReq.session.user.name);
 
-    res.status(201).json(result);
+    res.status(201).json(successResponse(result));
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    if (message.includes("blocked by safety checks")) {
-      res.status(422).json({
-        error: "Forum content blocked by safety checks.",
-        reason: message
-      });
-      return;
+    if (isHttpError(error)) {
+      res.status(error.status).json(error.toResponse());
+    } else {
+      console.error("Unexpected error in createReply:", error);
+      res.status(500).json(errorResponse("Internal server error", "INTERNAL_ERROR"));
     }
-    if (message.includes("not found")) {
-      res.status(404).json({ error: message });
-      return;
-    }
-    if (message.includes("does not belong") || message.includes("Only one level")) {
-      res.status(400).json({ error: message });
-      return;
-    }
-    res.status(500).json({ error: message });
   }
 });
 
 forumRouter.post("/replies/:replyId/vote", requireSession, async (req, res) => {
   const parsedParams = replyParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
-    res.status(400).json({
-      error: "Invalid reply identifier",
-      details: parsedParams.error.flatten()
-    });
+    res.status(400).json(errorResponse("Invalid reply identifier", "VALIDATION_ERROR", parsedParams.error.flatten()));
     return;
   }
 
   const parsedBody = replyVoteSchema.safeParse(req.body);
   if (!parsedBody.success) {
-    res.status(400).json({
-      error: "Invalid vote payload",
-      details: parsedBody.error.flatten()
-    });
+    res.status(400).json(errorResponse("Invalid vote payload", "VALIDATION_ERROR", parsedBody.error.flatten()));
     return;
   }
 
@@ -256,53 +260,48 @@ forumRouter.post("/replies/:replyId/vote", requireSession, async (req, res) => {
   const { voteType } = parsedBody.data;
   const authedReq = req as AuthenticatedRequest;
   const userId = authedReq.session.user.id;
+
   if (!(await applyForumMutationRateLimit(res, userId))) {
     return;
   }
 
   try {
     const result = await forumService.voteReply({ replyId, voteType, userId });
-    res.status(200).json(result);
+    res.status(200).json(successResponse(result));
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    if (message.includes("not found")) {
-      res.status(404).json({ error: message });
-      return;
+    if (isHttpError(error)) {
+      res.status(error.status).json(error.toResponse());
+    } else {
+      console.error("Unexpected error in voteReply:", error);
+      res.status(500).json(errorResponse("Internal server error", "INTERNAL_ERROR"));
     }
-    res.status(500).json({ error: message });
   }
 });
 
 forumRouter.post("/replies/:replyId/accept", requireSession, async (req, res) => {
   const parsedParams = replyParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
-    res.status(400).json({
-      error: "Invalid reply identifier",
-      details: parsedParams.error.flatten()
-    });
+    res.status(400).json(errorResponse("Invalid reply identifier", "VALIDATION_ERROR", parsedParams.error.flatten()));
     return;
   }
 
   const { replyId } = parsedParams.data;
   const authedReq = req as AuthenticatedRequest;
   const userId = authedReq.session.user.id;
+
   if (!(await applyForumMutationRateLimit(res, userId))) {
     return;
   }
 
   try {
     const result = await forumService.acceptReply(replyId, userId);
-    res.status(200).json(result);
+    res.status(200).json(successResponse(result));
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    if (message.includes("not found")) {
-      res.status(404).json({ error: message });
-      return;
+    if (isHttpError(error)) {
+      res.status(error.status).json(error.toResponse());
+    } else {
+      console.error("Unexpected error in acceptReply:", error);
+      res.status(500).json(errorResponse("Internal server error", "INTERNAL_ERROR"));
     }
-    if (message.includes("Only the thread author")) {
-      res.status(403).json({ error: message });
-      return;
-    }
-    res.status(500).json({ error: message });
   }
 });
