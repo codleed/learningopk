@@ -32,6 +32,187 @@ _No tasks in progress yet. Pick from Todo below._
 
 ## 🔵 Todo
 
+### Phase 11 — Code Review Follow-Ups (High 🟠 / Medium 🔵)
+
+---
+
+#### TASK-53 🟠
+
+**Title:** Decouple backend app creation from worker and Redis side effects
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Depends on:** TASK-39
+**Acceptance Criteria:**
+
+- [ ] Importing `backend/src/server.ts` does not start BullMQ workers or long-lived Redis side effects
+- [ ] `createApp()` can be used by scripts and tests without background worker startup
+- [ ] Worker startup is moved behind explicit runtime/bootstrap wiring
+- [ ] `pnpm --filter backend auth:verify` exits cleanly in local verification
+- [ ] Auth and integration tests no longer depend on queue startup to run
+
+---
+
+#### TASK-54 🟠
+
+**Title:** Separate auth outage handling from unauthenticated redirects
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Depends on:** TASK-05
+**Acceptance Criteria:**
+
+- [ ] Protected SSR pages distinguish backend/auth unavailability from a genuinely missing session
+- [ ] `frontend/src/lib/session.ts` stops collapsing every fetch failure into `null`
+- [ ] `frontend/proxy.ts` has an explicit strategy for auth-service failure versus logged-out users
+- [ ] Protected pages show a service-unavailable/degraded state when the backend is down
+- [ ] Coverage exists for protected-page behavior during auth/backend outages
+
+---
+
+#### TASK-55 🟠
+
+**Title:** Decouple signup and student routing from forum filter metadata
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Depends on:** TASK-08, TASK-19
+**Acceptance Criteria:**
+
+- [ ] Registration no longer depends on `/api/forum/filters` for board/class options
+- [ ] `/subjects` no longer fails solely because forum filters are unavailable
+- [ ] Legacy `/dashboard/[subject]` and `/dashboard/[subject]/[chapter]` redirects resolve via curriculum/learn data, not forum metadata
+- [ ] Student navigation routes remain available when forum filter data is degraded
+- [ ] Tests cover signup and student-route behavior when forum metadata endpoints fail
+
+---
+
+#### TASK-56 🔵
+
+**Title:** Resolve password reset contract mismatch
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Depends on:** TASK-05
+**Acceptance Criteria:**
+
+- [ ] Password reset is either fully enabled end-to-end or removed/disabled from the live auth UI
+- [ ] `/forgot-password` and `/reset-password` behavior matches the actual backend capability
+- [ ] No success-path UI is shipped for an unavailable backend flow
+- [ ] Playwright coverage reflects the real product contract instead of mocked-only success
+- [ ] Auth docs describe the current password reset status accurately
+
+---
+
+#### TASK-57 🔵
+
+**Title:** Repair auth review drift in tests, docs, and dead auth UI
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Depends on:** TASK-05, TASK-06
+**Acceptance Criteria:**
+
+- [ ] `docs/redesign/api-contracts.md` matches the actual Better Auth endpoints in code
+- [ ] Auth Playwright coverage is updated for the current auth layout and passes reliably
+- [ ] `auth-resilience.spec.ts` verifies the intended network-failure path instead of failing on locator ambiguity
+- [ ] Outdated Bento auth assertions are removed or rewritten to match the current auth UI
+- [ ] The “Remember me” control is either wired to real behavior or removed from the login form
+
+---
+
+#### TASK-58 🟠
+
+**Title:** Fix SSR personalization gaps and formalize student route protection matrix
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Depends on:** TASK-18, TASK-20
+**Acceptance Criteria:**
+
+- [ ] SSR forum thread detail requests forward cookies when personalized reply state is expected
+- [ ] Authenticated users see correct initial `viewerVoteType` state on first forum thread render
+- [ ] A documented route matrix exists for which student routes are public, proxy-protected, or page-gated
+- [ ] Student route protection is made consistent or intentionally documented where it differs
+- [ ] Automated coverage exists for SSR personalized forum state and route protection expectations
+
+---
+
+#### TASK-59 🟠
+
+**Title:** Lock mock exam solutions behind actual exam completion
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Depends on:** TASK-21
+**Acceptance Criteria:**
+
+- [ ] `/api/mock-exams/:id/questions` checks that the requesting user has a qualifying attempt for that mock exam before returning answers
+- [ ] Direct navigation to `/past-papers/[id]/solutions` does not reveal answer keys to merely authenticated users
+- [ ] Frontend and backend enforce the same rule for when solutions are viewable
+- [ ] Unauthorized solution access returns a clear 403/404 contract instead of exposing answers
+- [ ] Automated coverage exists for both attempted and unattempted solution access
+
+---
+
+#### TASK-60 🟠
+
+**Title:** Replace ambiguous subject-slug progress routing with scoped subject identity
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Depends on:** TASK-17, TASK-18
+**Acceptance Criteria:**
+
+- [ ] Subject progress routes no longer rely on bare `subjectSlug` when the schema allows duplicate slugs across board/class scopes
+- [ ] Backend subject progress lookup is scoped by a unique subject identity or route tuple
+- [ ] Dashboard subject links resolve to the correct subject across multiple board/class contexts
+- [ ] Progress pages cannot silently load the wrong subject due to `limit(1)` slug selection
+- [ ] Automated coverage exists for duplicate-slug scenarios across board/class combinations
+
+---
+
+#### TASK-61 🔵
+
+**Title:** Fix forum thread validation contracts and preserve accurate error statuses
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Depends on:** TASK-19
+**Acceptance Criteria:**
+
+- [ ] Invalid forum thread payloads involving missing subjects, missing chapters, or mismatched `subjectId`/`chapterId` return intentional 400/404 responses instead of generic 500s
+- [ ] Forum thread creation preserves structured validation errors from the service layer through the route layer
+- [ ] Forum thread creation rejects unpublished chapter attachments instead of accepting IDs that are hidden from published forum filters
+- [ ] Forum create-thread behavior is covered for nonexistent chapters and subject/chapter mismatch cases
+- [ ] Forum create-thread behavior is covered for unpublished chapter rejection
+- [ ] The forum create-thread API contract is documented by tests rather than relying on string-matched exception handling
+
+---
+
+#### TASK-62 🔵
+
+**Title:** Preserve forum filter state across search, solved toggles, and advanced filters
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Depends on:** TASK-18
+**Acceptance Criteria:**
+
+- [ ] Forum search keeps the active solved, board, class, subject, and chapter filters unless the user changes them
+- [ ] Solved/unsolved quick filters preserve the current board/class/subject/chapter query state
+- [ ] Applying advanced forum filters preserves the active search query when present
+- [ ] Forum E2E coverage verifies combined filter interactions instead of only isolated controls
+- [ ] Forum Playwright assertions use the current UI contract for search and thread-composer entry points
+
+---
+
+#### TASK-63 🔵
+
+**Title:** Harden forum mutation UX and prevent inflated thread view metrics
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Depends on:** TASK-18, TASK-19
+**Acceptance Criteria:**
+
+- [ ] Forum thread/reply/vote/accept actions handle fetch rejection paths without leaving the UI stuck in a pending state
+- [ ] Forum mutations surface a clear user-facing error when the backend is unreachable
+- [ ] Posting, voting, or accepting a reply does not inflate thread view counts purely because the page refreshes server components
+- [ ] Thread-view counting semantics are made explicit in code and verified by automated coverage
+- [ ] Forum mutation failure and post-mutation detail refresh behavior are covered by tests
+
+---
+
 ### Phase 8 — Growth Features (Medium 🔵)
 
 ---
