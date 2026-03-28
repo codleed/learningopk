@@ -32,7 +32,7 @@
     "hummingbird": "^2.1.5",
     "katex": "^0.16.33",
     "lucide-react": "^0.575.0",
-    "next": "16.1.6",
+    "next": "16.1.7",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-activity-calendar": "^3.1.1",
