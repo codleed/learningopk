@@ -170,7 +170,7 @@ mockExamsRouter.get("/:id/attempts", requireSession, async (req, res) => {
 });
 
 // Get quiz questions with correct answers (for view solutions)
-mockExamsRouter.get("/:id/questions", async (req, res) => {
+mockExamsRouter.get("/:id/questions", requireSession, async (req, res) => {
   try {
     const parsed = mockExamParamsSchema.safeParse(req.params);
     if (!parsed.success) {
