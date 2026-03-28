@@ -150,6 +150,8 @@ export const getMockExamAttempts = async (id: number): Promise<QuizAttempt[]> =>
 
 export const getQuizQuestions = async (mockExamId: number): Promise<QuizQuestion[]> => {
   const url = `${backendUrl}/api/mock-exams/${mockExamId}/questions`;
-  const response = await fetchJson(url, z.object({ questions: z.array(quizQuestionSchema) }));
+  const response = await fetchJson(url, z.object({ questions: z.array(quizQuestionSchema) }), {
+    includeCredentials: true
+  });
   return response.questions;
 };
