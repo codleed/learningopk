@@ -60,10 +60,19 @@ export function PastPapersClient() {
         setIsLoadingExams(true);
         const filterParams: MockExamFilters = {};
 
-        if (selectedBoard) filterParams.boardId = parseInt(selectedBoard);
+        if (selectedBoard) {
+          const boardId = parseInt(selectedBoard);
+          if (!isNaN(boardId) && boardId > 0) filterParams.boardId = boardId;
+        }
         if (selectedGrade) filterParams.grade = selectedGrade as "9" | "10";
-        if (selectedSubject) filterParams.subjectId = parseInt(selectedSubject);
-        if (selectedYear) filterParams.year = parseInt(selectedYear);
+        if (selectedSubject) {
+          const subjectId = parseInt(selectedSubject);
+          if (!isNaN(subjectId) && subjectId > 0) filterParams.subjectId = subjectId;
+        }
+        if (selectedYear) {
+          const year = parseInt(selectedYear);
+          if (!isNaN(year) && year > 0) filterParams.year = year;
+        }
 
         const examList = await getMockExams(filterParams);
         setExams(examList);

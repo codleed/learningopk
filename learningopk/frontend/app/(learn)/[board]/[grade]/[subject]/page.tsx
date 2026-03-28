@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
 import { AppShell } from "@/components/foundation/app-shell";
@@ -26,9 +26,17 @@ type SubjectPageProps = {
     grade: string;
     subject: string;
   }>;
+  searchParams: Promise<{ mockExamId?: string }>;
 };
 
-export default async function SubjectPage({ params }: SubjectPageProps) {
+export default async function SubjectPage({ params, searchParams }: SubjectPageProps) {
+  const query = await searchParams;
+  if (query.mockExamId) {
+    const examId = parseInt(query.mockExamId, 10);
+    if (!isNaN(examId) && examId > 0) {
+      redirect(`/past-papers/${examId}/solutions`);
+    }
+  }
   const session = await getServerSession();
   const routeParams = routeParamsSchema.safeParse(await params);
   if (!routeParams.success) {
