@@ -1,2 +1,7 @@
 // Quiz constants
 export const QUIZ_PASS_THRESHOLD_PERCENT = 70;
+export const QUIZ_PASS_THRESHOLD_WEAK_AREA = 50;
+export const QUIZ_NAVIGATOR_THRESHOLD = 20;
+export const TIMER_INTERVAL_MS = 1000;
+export const TIMER_WARNING_SECONDS = 300;
+export const TIMER_CRITICAL_SECONDS = 60;

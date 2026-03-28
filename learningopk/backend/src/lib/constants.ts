@@ -1,2 +1,2 @@
-// Quiz constants
-export const QUIZ_PASS_THRESHOLD_PERCENT = 70;
+// Quiz constants - re-export from shared
+export { QUIZ_PASS_THRESHOLD_PERCENT } from "@learningopk/shared/constants";
