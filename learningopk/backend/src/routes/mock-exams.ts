@@ -146,6 +146,7 @@ mockExamsRouter.get("/:id/attempts", requireSession, async (req, res) => {
       return;
     }
 
+    // Get attempts for this quiz
     const quizId = firstExam.quizId;
     const attemptRows = await db
       .select({
