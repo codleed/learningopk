@@ -32,82 +32,6 @@ _No tasks in progress yet. Pick from Todo below._
 
 ## 🔵 Todo
 
-### Phase 6 — Mock Exams (High 🟠)
-
----
-
-#### TASK-21 🟠
-
-**Title:** Mock exam flow
-**Phase:** 6 — Mock Exams
-**Priority:** High
-**Depends on:** TASK-12
-**Files:** `components/quiz/MockExam.tsx`, `app/(learn)/mock-exam/[examId]/page.tsx`
-**Acceptance Criteria:**
-
-- [ ] Exam mode: no per-question feedback until full submission
-- [ ] 60–75 questions, 2–3 hour countdown timer
-- [ ] Question navigator sidebar: jump to any question, see answered/unanswered status
-- [ ] On submit: detailed result report — section-wise scores, time spent estimate, weak areas
-- [ ] Weak area recommendation: list chapters to revise based on wrong answers
-- [ ] Saves attempt to `quiz_attempts` with `type: mock_exam`
-
----
-
-### Phase 7 — Engagement Features (High 🟠)
-
----
-
-#### TASK-22 🟠
-
-**Title:** XP system + study streaks
-**Phase:** 7 — Engagement
-**Priority:** High
-**Depends on:** TASK-17
-**Acceptance Criteria:**
-
-- [ ] XP awarded: chapter visit (+5), exercise expand (+2), flashcard complete (+10), quiz pass (+25), forum answer accepted (+15)
-- [ ] XP and level stored on `users` table (add `xp` integer, `level` integer columns)
-- [ ] Level thresholds: Fresher (0), Student (100), Scholar (300), Topper (600), Board Topper (1000)
-- [ ] Streak freeze: one allowed per week — stored on `users` table
-- [ ] XP gain toast notification on every award
-- [ ] Streak shown on dashboard with flame icon (CSS, no emoji)
-
----
-
-#### TASK-23 🟠
-
-**Title:** Shareable result card (score image)
-**Phase:** 7 — Engagement
-**Priority:** High
-**Depends on:** TASK-12
-**File:** `app/api/share/result/route.ts`
-**Acceptance Criteria:**
-
-- [ ] After quiz/mock exam, "Share Result" button visible
-- [ ] Generates a styled HTML card rendered to PNG using `html-to-image` or `@vercel/og`
-- [ ] Card shows: score, subject, chapter/exam name, platform branding, date
-- [ ] Download button saves PNG locally
-- [ ] WhatsApp share link pre-fills message with score + platform URL
-
----
-
-#### TASK-24 🟠
-
-**Title:** Past papers archive page
-**Phase:** 7 — Engagement
-**Priority:** High
-**Depends on:** TASK-07
-**File:** `app/(learn)/past-papers/page.tsx`
-**Acceptance Criteria:**
-
-- [ ] Lists all mock exams filtered by: board, grade, subject, year
-- [ ] Each entry shows: year, subject, board, total marks, duration, "Attempt" button
-- [ ] Solved papers also have "View Solutions" (read-only, no timer)
-- [ ] Year range: 2015–2024
-
----
-
 ### Phase 8 — Growth Features (Medium 🔵)
 
 ---
@@ -722,6 +646,42 @@ _Completed tasks are moved here by the coding agent._
 **Phase:** 5 — Forum
 **Priority:** High
 **Evidence:** `frontend/app/forum/[threadId]/page.tsx` with markdown rendering, upvotes, accepted answer, nested replies
+
+---
+
+### Phase 6 — Mock Exams (High 🟠)
+
+#### TASK-21 ✅
+
+**Title:** Mock exam flow
+**Phase:** 6 — Mock Exams
+**Priority:** High
+**Evidence:** Exam mode with 60-75 questions, 2-3 hour timer, question navigator sidebar, section-wise scores, weak area recommendations, saves to quiz_attempts with type: mock_exam
+
+---
+
+### Phase 7 — Engagement Features (High 🟠)
+
+#### TASK-22 ✅
+
+**Title:** XP system + study streaks
+**Phase:** 7 — Engagement
+**Priority:** High
+**Evidence:** XP awards (+5 chapter, +2 exercise, +10 flashcard, +25 quiz, +15 forum), 5-level system (Fresher→Board Topper), streak freeze, toast notifications, dashboard streak display with flame icon
+
+#### TASK-23 ✅
+
+**Title:** Shareable result card (score image)
+**Phase:** 7 — Engagement
+**Priority:** High
+**Evidence:** "Share Result" button on quiz results, html-to-image PNG generation, card shows score/subject/chapter/platform/date, download button, WhatsApp share pre-fill
+
+#### TASK-24 ✅
+
+**Title:** Past papers archive page
+**Phase:** 7 — Engagement
+**Priority:** High
+**Evidence:** Filter by board/grade/subject/year (2015-2024), exam cards with marks/duration/Attempt button, View Solutions for solved papers
 
 ---
 
