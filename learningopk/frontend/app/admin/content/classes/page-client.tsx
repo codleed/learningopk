@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { AdminPageHeader, ContentTabs, ContentStatsStrip, ContentListTable } from "@/components/admin";
 import type { AdminCurriculumBoard } from "@/lib/admin-api";
+import { deleteAdminCurriculumClass } from "@/lib/admin-api";
 
 type ClassesPageClientProps = {
   initialBoards: AdminCurriculumBoard[];
@@ -29,6 +30,8 @@ type ClassRow = {
 
 export function ClassesPageClient({ initialBoards, stats }: ClassesPageClientProps) {
   // Flatten classes with board context
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
   const [classes] = useState<ClassRow[]>(
     initialBoards.flatMap((board) =>
       board.classes.map((cls) => ({
@@ -48,8 +51,16 @@ export function ClassesPageClient({ initialBoards, stats }: ClassesPageClientPro
         `Are you sure you want to delete "${cls.name}"? This will also delete all subjects and chapters under it. This action cannot be undone.`
       )
     ) {
-      // TODO: Call delete API
-      console.log("Delete class:", cls.id);
+      setDeletingId(cls.id);
+      try {
+        await deleteAdminCurriculumClass(cls.id);
+        alert("Class deleted successfully.");
+        window.location.reload();
+      } catch {
+        alert("Failed to delete class. Please try again.");
+      } finally {
+        setDeletingId(null);
+      }
     }
   };
 
@@ -102,10 +113,10 @@ export function ClassesPageClient({ initialBoards, stats }: ClassesPageClientPro
             items={classes}
             columns={columns}
             onEdit={(cls) => {
-              window.location.href = `/admin/content/classes/${cls.id}/edit`;
+              window.location.href = `/admin/classes/${cls.id}/edit`;
             }}
             onDelete={handleDelete}
-            addHref="/admin/content/classes/add"
+            addHref="/admin/classes/add"
             addLabel="+ Add Class"
             emptyMessage="No classes found. Create your first class to get started."
             getItemId={(cls) => cls.id}
