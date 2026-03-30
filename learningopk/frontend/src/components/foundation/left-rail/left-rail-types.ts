@@ -32,6 +32,7 @@ export interface LeftRailProps {
 export interface RoleToggleProps {
   currentMode: ViewMode;
   onModeChange: (mode: ViewMode) => void;
+  isExpanded?: boolean;
 }
 
 export interface NavItemComponentProps {

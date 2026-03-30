@@ -199,12 +199,13 @@ export function ThemeToggleCompact({
   className?: string;
   isCollapsed?: boolean;
 }) {
-  const [mode, setMode] = useState<ThemeMode>(() => {
-    if (typeof window !== "undefined") {
-      return getStoredTheme();
-    }
-    return "system";
-  });
+  const [mode, setMode] = useState<ThemeMode>("system");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMode(getStoredTheme());
+    setMounted(true);
+  }, []);
 
   const toggleTheme = useCallback(() => {
     const nextMode: ThemeMode = mode === "light" ? "dark" : mode === "dark" ? "system" : "light";

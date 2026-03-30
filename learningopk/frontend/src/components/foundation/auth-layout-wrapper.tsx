@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect } from "react";
 import type { ReactNode } from "react";
 
-import { List } from "@phosphor-icons/react";
 import { LeftRail } from "@/components/foundation/left-rail";
 import type { SessionPayload } from "@/lib/session";
 import type { ViewMode } from "@/components/foundation/left-rail/left-rail-types";
