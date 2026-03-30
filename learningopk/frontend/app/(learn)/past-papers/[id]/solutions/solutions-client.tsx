@@ -84,7 +84,7 @@ export function MockExamSolutionsClient({ examId }: MockExamSolutionsClientProps
           </div>
         ) : (
           <Link href="/past-papers">
-            <Button variant="outline">Back to Past Papers</Button>
+            <Button variant="secondary">Back to Past Papers</Button>
           </Link>
         )}
       </div>

@@ -28,8 +28,8 @@ export const proxy = async (request: NextRequest) => {
       return new NextResponse("Authentication service unavailable. Please try again later.", { status: 503 });
     }
 
-    const payload = (await response.json()) as { session?: unknown };
-    if (!payload.session) {
+    const payload = (await response.json()) as { session?: unknown } | null;
+    if (!payload?.session) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 

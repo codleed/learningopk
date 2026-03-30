@@ -7,7 +7,35 @@ import type { RoleToggleProps } from "./left-rail-types";
 export function RoleToggle({
   currentMode,
   onModeChange,
+  isExpanded = true,
 }: RoleToggleProps) {
+  if (!isExpanded) {
+    const Icon = currentMode === "admin" ? ShieldCheck : GraduationCap;
+    const nextMode: "admin" | "student" = currentMode === "admin" ? "student" : "admin";
+    const NextIcon = nextMode === "admin" ? ShieldCheck : GraduationCap;
+
+    return (
+      <button
+        onClick={() => onModeChange(nextMode)}
+        className={cn(
+          "relative flex h-11 w-11 items-center justify-center rounded-xl",
+          "bg-[var(--role-toggle-bg)]",
+          "border border-[var(--role-toggle-border)]",
+          "text-[var(--role-toggle-tab-default-text)]",
+          "hover:text-[var(--foreground)]",
+          "transition-all duration-150",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-ring)]"
+        )}
+        aria-label={`Switch to ${nextMode} view`}
+      >
+        <Icon className="h-5 w-5 shrink-0" strokeWidth={2} />
+        <div className="absolute bottom-1 right-1">
+          <NextIcon className="h-3 w-3 shrink-0 opacity-50" strokeWidth={2} />
+        </div>
+      </button>
+    );
+  }
+
   return (
     <div
       role="tablist"

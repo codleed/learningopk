@@ -338,37 +338,6 @@
                     radial-gradient(at 0% 100%, rgba(122, 201, 67, 0.15) 0px, transparent 50%);
 }
 
-/* === Sidebar Animations === */
-@keyframes sidebar-glow-pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
-}
-
-.sidebar-active-glow::before,
-.admin-active-glow::before {
-  content: '';
-  position: absolute;
-  inset: -3px;
-  border-radius: inherit;
-  z-index: -1;
-  animation: sidebar-glow-pulse 2s ease-in-out infinite;
-  pointer-events: none;
-  filter: blur(8px);
-}
-
-.sidebar-active-glow::before {
-  background: var(--sidebar-nav-active-glow);
-}
-
-.admin-active-glow::before {
-  background: var(--sidebar-admin-active-glow);
-}
-
-.dark .sidebar-active-glow::before,
-.dark .admin-active-glow::before {
-  animation-duration: 3s;
-}
-
 /* Sidebar scrollbar styling */
 .sidebar-scroll::-webkit-scrollbar {
   width: 6px;
