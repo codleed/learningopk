@@ -11,6 +11,12 @@ import {
   AdminQuickActions,
   AdminEntityDetailPanel,
 } from "@/components/admin";
+import {
+  deleteAdminCurriculumBoard,
+  deleteAdminCurriculumClass,
+  deleteAdminCurriculumSubject,
+  deleteAdminCurriculumChapter,
+} from "@/lib/admin-api";
 import type { AdminCurriculumBoard, AdminAuditLogResponseEntry } from "@/lib/admin-api";
 
 type EntityType = "board" | "class" | "subject" | "chapter";
@@ -142,11 +148,30 @@ export function ContentDashboard({ boards, auditLogs }: ContentDashboardProps) {
     });
   };
 
-  const handleDelete = (entity: { id: number; type: string; name: string }) => {
-    // TODO: Implement actual deletion via API
-    console.log("Delete entity:", entity);
-    // Refresh after deletion
-    handleRefresh();
+  const handleDelete = async (entity: { id: number; type: string; name: string }) => {
+    if (!window.confirm(`Are you sure you want to delete "${entity.name}"?`)) {
+      return;
+    }
+
+    try {
+      switch (entity.type) {
+        case "board":
+          await deleteAdminCurriculumBoard(entity.id);
+          break;
+        case "class":
+          await deleteAdminCurriculumClass(entity.id);
+          break;
+        case "subject":
+          await deleteAdminCurriculumSubject(entity.id);
+          break;
+        case "chapter":
+          await deleteAdminCurriculumChapter(entity.id);
+          break;
+      }
+      handleRefresh();
+    } catch (error) {
+      window.alert(`Failed to delete ${entity.type}: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
   };
 
   const handleRefresh = () => {

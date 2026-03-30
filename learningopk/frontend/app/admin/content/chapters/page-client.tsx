@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { AdminPageHeader, ContentTabs, ContentStatsStrip, ContentListTable } from "@/components/admin";
 import type { AdminCurriculumBoard } from "@/lib/admin-api";
+import { deleteAdminCurriculumChapter } from "@/lib/admin-api";
 
 type ChaptersPageClientProps = {
   initialBoards: AdminCurriculumBoard[];
@@ -34,6 +35,7 @@ type ChapterRow = {
 
 export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientProps) {
   // Flatten chapters with full context
+  const [isDeleting, setIsDeleting] = useState(false);
   const [chapters] = useState<ChapterRow[]>(
     initialBoards.flatMap((board) =>
       board.classes.flatMap((cls) =>
@@ -62,8 +64,16 @@ export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientP
         `Are you sure you want to delete "Chapter ${chapter.chapterNumber}: ${chapter.title}"? This action cannot be undone.`
       )
     ) {
-      // TODO: Call delete API
-      console.log("Delete chapter:", chapter.id);
+      setIsDeleting(true);
+      try {
+        await deleteAdminCurriculumChapter(chapter.id);
+        alert("Chapter deleted successfully.");
+        window.location.reload();
+      } catch {
+        alert("Failed to delete chapter. Please try again.");
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -124,10 +134,10 @@ export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientP
             items={chapters}
             columns={columns}
             onEdit={(chapter) => {
-              window.location.href = `/admin/content/chapters/${chapter.id}/edit`;
+              window.location.href = `/admin/chapters/${chapter.id}/edit`;
             }}
             onDelete={handleDelete}
-            addHref="/admin/content/chapters/add"
+            addHref="/admin/chapters/add"
             addLabel="+ Add Chapter"
             emptyMessage="No chapters found. Create your first chapter to get started."
             getItemId={(chapter) => chapter.id}
