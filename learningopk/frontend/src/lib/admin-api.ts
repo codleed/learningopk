@@ -205,6 +205,8 @@ const adminCurriculumExerciseCreateResponseSchema = z.object({
     exerciseNumber: z.string(),
     question: z.string(),
     solution: z.string(),
+    problemMarkdown: z.string().nullable().optional(),
+    solutionCode: z.string().nullable().optional(),
     difficulty: z.enum(["easy", "medium", "hard"]),
     type: z.enum(["mcq", "short", "long", "numerical"])
   })
@@ -218,6 +220,8 @@ const adminCurriculumExerciseReadSchema = z.object({
   exerciseNumber: z.string(),
   question: z.string(),
   solution: z.string(),
+  problemMarkdown: z.string().nullable().optional(),
+  solutionCode: z.string().nullable().optional(),
   difficulty: z.enum(["easy", "medium", "hard"]),
   type: z.enum(["mcq", "short", "long", "numerical"])
 });
@@ -233,10 +237,119 @@ const adminCurriculumExerciseMutationResponseSchema = z.object({
     exerciseNumber: z.string(),
     question: z.string(),
     solution: z.string(),
+    problemMarkdown: z.string().nullable().optional(),
+    solutionCode: z.string().nullable().optional(),
     difficulty: z.enum(["easy", "medium", "hard"]),
     type: z.enum(["mcq", "short", "long", "numerical"])
   }),
   timestamp: z.string().datetime()
+});
+
+// Quiz Schemas
+const quizUpsertBodySchema = z.object({
+  chapterId: z.number().int().positive(),
+  title: z.string().trim().min(1),
+  durationMinutes: z.number().int().positive().optional().default(30),
+  type: z.enum(["chapter_quiz", "mock_exam"]).optional().default("chapter_quiz")
+});
+
+const quizResponseSchema = z.object({
+  id: z.number(),
+  chapterId: z.number(),
+  title: z.string(),
+  durationMinutes: z.number(),
+  totalMarks: z.number().int().min(0),
+  type: z.enum(["chapter_quiz", "mock_exam"]),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional()
+});
+
+const quizQuestionCreateSchema = z.object({
+  quizId: z.number().int().positive(),
+  question: z.string().trim().min(1),
+  optionA: z.string().trim().min(1),
+  optionB: z.string().trim().min(1),
+  optionC: z.string().trim().min(1),
+  optionD: z.string().trim().min(1),
+  correctOption: z.enum(["a", "b", "c", "d"]),
+  explanation: z.string().trim().min(1),
+  marks: z.number().int().positive().optional().default(1)
+});
+
+const quizQuestionResponseSchema = z.object({
+  id: z.number(),
+  quizId: z.number(),
+  chapterId: z.number(),
+  question: z.string(),
+  optionA: z.string(),
+  optionB: z.string(),
+  optionC: z.string(),
+  optionD: z.string(),
+  correctOption: z.enum(["a", "b", "c", "d"]),
+  explanation: z.string(),
+  marks: z.number(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional()
+});
+
+const quizQuestionUpdateSchema = quizQuestionCreateSchema.partial();
+
+const quizUpsertResponseSchema = z.object({
+  data: quizResponseSchema,
+  created: z.boolean()
+});
+
+const quizUpdateResponseSchema = z.object({
+  data: quizResponseSchema
+});
+
+const quizQuestionMutationResponseSchema = z.object({
+  data: quizQuestionResponseSchema
+});
+
+// Flashcard Schemas
+const flashcardCreateSchema = z.object({
+  chapterId: z.number().int().positive(),
+  front: z.string().trim().min(1),
+  back: z.string().trim().min(1),
+  orderIndex: z.number().int().min(0).optional()
+});
+
+const flashcardUpdateSchema = z.object({
+  front: z.string().trim().min(1).optional(),
+  back: z.string().trim().min(1).optional(),
+  orderIndex: z.number().int().min(0).optional()
+});
+
+const flashcardResponseSchema = z.object({
+  id: z.number(),
+  chapterId: z.number(),
+  front: z.string(),
+  back: z.string(),
+  orderIndex: z.number().int().min(0).nullable(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional()
+});
+
+const flashcardCreateResponseSchema = z.object({
+  data: flashcardResponseSchema
+});
+
+const flashcardMutationResponseSchema = z.object({
+  data: flashcardResponseSchema
+});
+
+const flashcardReorderSchema = z.object({
+  chapterId: z.number().int().positive(),
+  flashcardIds: z.array(z.number().int().positive())
+});
+
+const flashcardReorderResponseSchema = z.object({
+  success: z.boolean(),
+  updated: z.array(z.object({
+    id: z.number(),
+    orderIndex: z.number()
+  }))
 });
 
 const adminAuditLogEntrySchema = z.object({
@@ -488,6 +601,21 @@ export type AdminNotificationCreateResponse = z.infer<typeof adminNotificationCr
 export type AdminSetting = z.infer<typeof adminSettingSchema>;
 export type AdminSettingsResponse = z.infer<typeof adminSettingsResponseSchema>;
 export type AdminSettingUpdateResponse = z.infer<typeof adminSettingUpdateResponseSchema>;
+export type QuizUpsertBody = z.infer<typeof quizUpsertBodySchema>;
+export type QuizResponse = z.infer<typeof quizResponseSchema>;
+export type QuizQuestionCreate = z.infer<typeof quizQuestionCreateSchema>;
+export type QuizQuestionUpdate = z.infer<typeof quizQuestionUpdateSchema>;
+export type QuizQuestionResponse = z.infer<typeof quizQuestionResponseSchema>;
+export type QuizUpsertResponse = z.infer<typeof quizUpsertResponseSchema>;
+export type QuizUpdateResponse = z.infer<typeof quizUpdateResponseSchema>;
+export type QuizQuestionMutationResponse = z.infer<typeof quizQuestionMutationResponseSchema>;
+export type FlashcardCreate = z.infer<typeof flashcardCreateSchema>;
+export type FlashcardUpdate = z.infer<typeof flashcardUpdateSchema>;
+export type FlashcardResponse = z.infer<typeof flashcardResponseSchema>;
+export type FlashcardCreateResponse = z.infer<typeof flashcardCreateResponseSchema>;
+export type FlashcardMutationResponse = z.infer<typeof flashcardMutationResponseSchema>;
+export type FlashcardReorder = z.infer<typeof flashcardReorderSchema>;
+export type FlashcardReorderResponse = z.infer<typeof flashcardReorderResponseSchema>;
 
 const fetchAdminJson = async <T>({
   path,
@@ -779,12 +907,23 @@ export const createAdminCurriculumExercise = async (input: {
   solution: string;
   difficulty?: "easy" | "medium" | "hard";
   type?: "mcq" | "short" | "long" | "numerical";
+  problemMarkdown?: string;
+  solutionCode?: string;
 }): Promise<AdminCurriculumExerciseCreateResponse> => {
   return fetchAdminJson({
     path: "/api/admin/content/exercises",
     schema: adminCurriculumExerciseCreateResponseSchema,
     method: "POST",
-    body: input
+    body: {
+      chapterId: input.chapterId,
+      exerciseNumber: input.exerciseNumber,
+      question: input.question,
+      solution: input.solution,
+      difficulty: input.difficulty,
+      type: input.type,
+      ...(input.problemMarkdown && { problemMarkdown: input.problemMarkdown }),
+      ...(input.solutionCode && { solutionCode: input.solutionCode }),
+    }
   });
 };
 
@@ -1176,5 +1315,186 @@ export const updateAdminSetting = async ({
     schema: adminSettingUpdateResponseSchema,
     method: "POST",
     body: { value }
+  });
+};
+
+// Quiz Functions
+export const upsertAdminQuiz = async (input: {
+  chapterId: number;
+  title: string;
+  durationMinutes?: number;
+  type?: "chapter_quiz" | "mock_exam";
+}): Promise<QuizUpsertResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/content/quizzes",
+    schema: quizUpsertResponseSchema,
+    method: "POST",
+    body: input
+  });
+};
+
+export const getAdminQuiz = async (chapterId: number): Promise<QuizResponse | null> => {
+  const searchParams = new URLSearchParams({
+    chapterId: String(chapterId)
+  });
+  const searchParamsStr = searchParams.toString();
+  const response = await fetchAdminJson({
+    path: `/api/admin/content/quizzes?${searchParamsStr}`,
+    schema: z.object({ data: quizResponseSchema.nullable() })
+  });
+  return response.data;
+};
+
+export const updateAdminQuiz = async ({
+  id,
+  input
+}: {
+  id: number;
+  input: {
+    title?: string;
+    durationMinutes?: number;
+    type?: "chapter_quiz" | "mock_exam";
+  };
+}): Promise<QuizUpdateResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/quizzes/${id}/update`,
+    schema: quizUpdateResponseSchema,
+    method: "POST",
+    body: input
+  });
+};
+
+export const deleteAdminQuiz = async (id: number): Promise<void> => {
+  await fetchAdminJson({
+    path: `/api/admin/content/quizzes/${id}/delete`,
+    schema: z.object({ success: z.boolean() }),
+    method: "POST"
+  });
+};
+
+export const createAdminQuizQuestion = async (input: {
+  quizId: number;
+  question: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctOption: "a" | "b" | "c" | "d";
+  explanation: string;
+  marks?: number;
+}): Promise<QuizQuestionMutationResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/content/quiz-questions",
+    schema: quizQuestionMutationResponseSchema,
+    method: "POST",
+    body: input
+  });
+};
+
+export const getAdminQuizQuestions = async (quizId: number): Promise<QuizQuestionResponse[]> => {
+  const searchParams = new URLSearchParams({
+    quizId: String(quizId)
+  });
+  const response = await fetchAdminJson({
+    path: `/api/admin/content/quiz-questions?${searchParams.toString()}`,
+    schema: z.object({ data: z.array(quizQuestionResponseSchema) })
+  });
+  return response.data;
+};
+
+export const updateAdminQuizQuestion = async ({
+  id,
+  input
+}: {
+  id: number;
+  input: {
+    question?: string;
+    optionA?: string;
+    optionB?: string;
+    optionC?: string;
+    optionD?: string;
+    correctOption?: "a" | "b" | "c" | "d";
+    explanation?: string;
+    marks?: number;
+  };
+}): Promise<QuizQuestionMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/quiz-questions/${id}/update`,
+    schema: quizQuestionMutationResponseSchema,
+    method: "POST",
+    body: input
+  });
+};
+
+export const deleteAdminQuizQuestion = async (id: number): Promise<void> => {
+  await fetchAdminJson({
+    path: `/api/admin/content/quiz-questions/${id}/delete`,
+    schema: z.object({ success: z.boolean() }),
+    method: "POST"
+  });
+};
+
+// Flashcard Functions
+export const createAdminFlashcard = async (input: {
+  chapterId: number;
+  front: string;
+  back: string;
+  orderIndex?: number;
+}): Promise<FlashcardCreateResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/content/flashcards",
+    schema: flashcardCreateResponseSchema,
+    method: "POST",
+    body: input
+  });
+};
+
+export const getAdminFlashcards = async (chapterId: number): Promise<FlashcardResponse[]> => {
+  const searchParams = new URLSearchParams({
+    chapterId: String(chapterId)
+  });
+  const response = await fetchAdminJson({
+    path: `/api/admin/content/flashcards?${searchParams.toString()}`,
+    schema: z.object({ data: z.array(flashcardResponseSchema), total: z.number() })
+  });
+  return response.data;
+};
+
+export const updateAdminFlashcard = async ({
+  id,
+  input
+}: {
+  id: number;
+  input: {
+    front?: string;
+    back?: string;
+    orderIndex?: number;
+  };
+}): Promise<FlashcardMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/flashcards/${id}/update`,
+    schema: flashcardMutationResponseSchema,
+    method: "POST",
+    body: input
+  });
+};
+
+export const deleteAdminFlashcard = async (id: number): Promise<void> => {
+  await fetchAdminJson({
+    path: `/api/admin/content/flashcards/${id}/delete`,
+    schema: z.object({ success: z.boolean() }),
+    method: "POST"
+  });
+};
+
+export const reorderAdminFlashcards = async (input: {
+  chapterId: number;
+  flashcardIds: number[];
+}): Promise<FlashcardReorderResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/content/flashcards/reorder",
+    schema: flashcardReorderResponseSchema,
+    method: "POST",
+    body: input
   });
 };

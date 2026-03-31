@@ -15,9 +15,11 @@ import {
   chapterTitleAliases,
   chapters,
   exercises,
+  flashcards,
   forumThreads,
   moderationFlags,
   quizAttempts,
+  quizQuestions,
   quizzes,
   subjects,
   userProgress,
@@ -109,25 +111,164 @@ const curriculumChapterUpdateBodySchema = z.object({
   slug: z.string().trim().min(1)
 });
 
-const curriculumExerciseCreateBodySchema = z.object({
-  chapterId: z.coerce.number().int().positive(),
-  exerciseNumber: z.string().trim().min(1),
-  question: z.string().trim().min(1),
-  solution: z.string().trim().min(1),
-  difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
-  type: z.enum(["mcq", "short", "long", "numerical"]).optional().default("short")
-});
+export const curriculumExerciseCreateBodySchema = z
+  .object({
+    chapterId: z.coerce.number().int().positive(),
+    exerciseNumber: z.string().trim().min(1),
+    question: z.string().trim().min(1),
+    solution: z.string().trim().min(1),
+    difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
+    type: z.enum(["mcq", "short", "long", "numerical"]).optional().default("short"),
+    problemMarkdown: z.string().trim().optional(),
+    solutionCode: z.string().trim().optional()
+  })
+  .refine(
+    (data) => {
+      if (data.type === "numerical") {
+        return (
+          data.problemMarkdown !== undefined && data.problemMarkdown.trim().length > 0
+        );
+      }
+      return true;
+    },
+    {
+      message: "problemMarkdown is required when type is 'numerical'",
+      path: ["problemMarkdown"]
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.type === "numerical") {
+        return data.solutionCode !== undefined && data.solutionCode.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: "solutionCode is required when type is 'numerical'",
+      path: ["solutionCode"]
+    }
+  );
 
-const curriculumExerciseUpdateBodySchema = z.object({
-  exerciseNumber: z.string().trim().min(1),
-  question: z.string().trim().min(1),
-  solution: z.string().trim().min(1),
-  difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
-  type: z.enum(["mcq", "short", "long", "numerical"]).optional().default("short")
-});
+export const curriculumExerciseUpdateBodySchema = z
+  .object({
+    exerciseNumber: z.string().trim().min(1),
+    question: z.string().trim().min(1),
+    solution: z.string().trim().min(1),
+    difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
+    type: z.enum(["mcq", "short", "long", "numerical"]).optional().default("short"),
+    problemMarkdown: z.string().trim().optional(),
+    solutionCode: z.string().trim().optional()
+  })
+  .refine(
+    (data) => {
+      if (data.type === "numerical") {
+        return (
+          data.problemMarkdown !== undefined && data.problemMarkdown.trim().length > 0
+        );
+      }
+      return true;
+    },
+    {
+      message: "problemMarkdown is required when type is 'numerical'",
+      path: ["problemMarkdown"]
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.type === "numerical") {
+        return data.solutionCode !== undefined && data.solutionCode.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: "solutionCode is required when type is 'numerical'",
+      path: ["solutionCode"]
+    }
+  );
 
 const curriculumExerciseListQuerySchema = z.object({
   chapterId: z.coerce.number().int().positive().optional()
+});
+
+// Quiz schemas
+const quizUpsertBodySchema = z.object({
+  chapterId: z.coerce.number().int().positive(),
+  title: z.string().trim().min(1),
+  durationMinutes: z.coerce.number().int().positive().optional().default(30),
+  type: z.enum(["chapter_quiz", "mock_exam"]).optional().default("chapter_quiz")
+});
+
+const quizUpdateBodySchema = z.object({
+  title: z.string().trim().min(1),
+  durationMinutes: z.coerce.number().int().positive().optional(),
+  type: z.enum(["chapter_quiz", "mock_exam"]).optional()
+});
+
+const quizQuerySchema = z.object({
+  chapterId: z.coerce.number().int().positive().optional()
+});
+
+const quizParamsSchema = z.object({
+  id: z.coerce.number().int().positive()
+});
+
+// Quiz question schemas
+const quizQuestionCreateBodySchema = z.object({
+  quizId: z.coerce.number().int().positive(),
+  chapterId: z.coerce.number().int().positive().optional(),
+  question: z.string().trim().min(1),
+  optionA: z.string().trim().min(1),
+  optionB: z.string().trim().min(1),
+  optionC: z.string().trim().min(1),
+  optionD: z.string().trim().min(1),
+  correctOption: z.enum(["a", "b", "c", "d"]),
+  explanation: z.string().trim().min(1),
+  marks: z.coerce.number().int().positive().optional().default(1)
+});
+
+const quizQuestionUpdateBodySchema = z.object({
+  question: z.string().trim().min(1),
+  optionA: z.string().trim().min(1),
+  optionB: z.string().trim().min(1),
+  optionC: z.string().trim().min(1),
+  optionD: z.string().trim().min(1),
+  correctOption: z.enum(["a", "b", "c", "d"]),
+  explanation: z.string().trim().min(1),
+  marks: z.coerce.number().int().positive().optional().default(1)
+});
+
+const quizQuestionListQuerySchema = z.object({
+  quizId: z.coerce.number().int().positive()
+});
+
+const quizQuestionParamsSchema = z.object({
+  id: z.coerce.number().int().positive()
+});
+
+// Flashcard schemas
+const flashcardCreateBodySchema = z.object({
+  chapterId: z.coerce.number().int().positive(),
+  front: z.string().trim().min(1),
+  back: z.string().trim().min(1),
+  orderIndex: z.coerce.number().int().min(0).optional()
+});
+
+const flashcardUpdateBodySchema = z.object({
+  front: z.string().trim().min(1).optional(),
+  back: z.string().trim().min(1).optional()
+});
+
+const flashcardListQuerySchema = z.object({
+  chapterId: z.coerce.number().int().positive()
+});
+
+const flashcardParamsSchema = z.object({
+  id: z.coerce.number().int().positive()
+});
+
+const flashcardReorderBodySchema = z.object({
+  chapterId: z.coerce.number().int().positive(),
+  orderedIds: z.array(z.coerce.number().int().positive()).min(1)
 });
 
 const adminAuditScopeValues = ["content", "forum", "moderation", "notifications", "settings", "users"] as const;
@@ -2373,7 +2514,9 @@ adminRouter.post("/content/exercises", requireSession, async (req, res) => {
         question: parsedBody.data.question.trim(),
         solution: parsedBody.data.solution.trim(),
         difficulty: parsedBody.data.difficulty,
-        type: parsedBody.data.type
+        type: parsedBody.data.type,
+        problemMarkdown: parsedBody.data.problemMarkdown?.trim() || null,
+        solutionCode: parsedBody.data.solutionCode?.trim() || null
       })
       .returning({
         id: exercises.id,
@@ -2382,7 +2525,9 @@ adminRouter.post("/content/exercises", requireSession, async (req, res) => {
         question: exercises.question,
         solution: exercises.solution,
         difficulty: exercises.difficulty,
-        type: exercises.type
+        type: exercises.type,
+        problemMarkdown: exercises.problemMarkdown,
+        solutionCode: exercises.solutionCode
       });
 
     const exercise = insertedRows[0];
@@ -3199,6 +3344,8 @@ adminRouter.post("/content/exercises/:id/update", requireSession, async (req, re
       solution: exercises.solution,
       difficulty: exercises.difficulty,
       type: exercises.type,
+      problemMarkdown: exercises.problemMarkdown,
+      solutionCode: exercises.solutionCode,
       chapterTitle: chapters.title,
       subjectName: subjects.name
     })
@@ -3242,6 +3389,11 @@ adminRouter.post("/content/exercises/:id/update", requireSession, async (req, re
   }
 
   try {
+    // Determine if we need to clear problemMarkdown/solutionCode
+    // If changing FROM 'numerical' to another type, clear these fields
+    const isChangingFromNumerical =
+      exercise.type === "numerical" && parsedBody.data.type !== "numerical";
+
     const updatedRows = await db
       .update(exercises)
       .set({
@@ -3249,7 +3401,14 @@ adminRouter.post("/content/exercises/:id/update", requireSession, async (req, re
         question: parsedBody.data.question.trim(),
         solution: parsedBody.data.solution.trim(),
         difficulty: parsedBody.data.difficulty,
-        type: parsedBody.data.type
+        type: parsedBody.data.type,
+        // Clear if changing away from numerical, otherwise set to new values
+        problemMarkdown: isChangingFromNumerical
+          ? null
+          : (parsedBody.data.problemMarkdown?.trim() || null),
+        solutionCode: isChangingFromNumerical
+          ? null
+          : (parsedBody.data.solutionCode?.trim() || null)
       })
       .where(eq(exercises.id, exercise.id))
       .returning({
@@ -3259,7 +3418,9 @@ adminRouter.post("/content/exercises/:id/update", requireSession, async (req, re
         question: exercises.question,
         solution: exercises.solution,
         difficulty: exercises.difficulty,
-        type: exercises.type
+        type: exercises.type,
+        problemMarkdown: exercises.problemMarkdown,
+        solutionCode: exercises.solutionCode
       });
     const updatedExercise = updatedRows[0];
     if (!updatedExercise) {
@@ -3384,6 +3545,1101 @@ adminRouter.post("/content/exercises/:id/delete", requireSession, async (req, re
       type: exercise.type
     },
     timestamp: new Date().toISOString()
+  });
+});
+
+// ==================== QUIZ CRUD ====================
+
+/**
+ * POST /api/admin/content/quizzes - Upsert quiz (create or update)
+ * Creates a new quiz if one doesn't exist for the chapter, otherwise updates the existing one.
+ * Enforces ONE quiz per chapter via upsert pattern.
+ */
+adminRouter.post("/content/quizzes", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedBody = quizUpsertBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid quiz payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+
+  // Check if quiz exists for this chapterId
+  const existingQuizRows = await db
+    .select({
+      id: quizzes.id,
+      chapterId: quizzes.chapterId,
+      title: quizzes.title,
+      durationMinutes: quizzes.durationMinutes,
+      totalMarks: quizzes.totalMarks,
+      type: quizzes.type
+    })
+    .from(quizzes)
+    .where(eq(quizzes.chapterId, parsedBody.data.chapterId))
+    .limit(1);
+
+  const existingQuiz = existingQuizRows[0];
+
+  if (existingQuiz) {
+    // UPDATE existing quiz
+    const updatedRows = await db
+      .update(quizzes)
+      .set({
+        title: parsedBody.data.title.trim(),
+        durationMinutes: parsedBody.data.durationMinutes ?? existingQuiz.durationMinutes,
+        type: parsedBody.data.type
+      })
+      .where(eq(quizzes.id, existingQuiz.id))
+      .returning({
+        id: quizzes.id,
+        chapterId: quizzes.chapterId,
+        title: quizzes.title,
+        durationMinutes: quizzes.durationMinutes,
+        totalMarks: quizzes.totalMarks,
+        type: quizzes.type
+      });
+
+    const updatedQuiz = updatedRows[0];
+    if (!updatedQuiz) {
+      await persistAuditLog({
+        scope: "content",
+        action: "Upsert quiz",
+        target: `Chapter #${parsedBody.data.chapterId}`,
+        status: "failed",
+        message: "Quiz update failed",
+        actorId,
+        actorName
+      });
+      res.status(500).json({ error: "Failed to update quiz" });
+      return;
+    }
+
+    await persistAuditLog({
+      scope: "content",
+      action: "Update quiz",
+      target: `Quiz #${updatedQuiz.id} - ${updatedQuiz.title}`,
+      status: "success",
+      message: "Updated existing quiz via upsert",
+      actorId,
+      actorName
+    });
+
+    res.status(200).json({
+      data: updatedQuiz,
+      created: false
+    });
+  } else {
+    // CREATE new quiz
+    const insertedRows = await db
+      .insert(quizzes)
+      .values({
+        chapterId: parsedBody.data.chapterId,
+        title: parsedBody.data.title.trim(),
+        durationMinutes: parsedBody.data.durationMinutes ?? 30,
+        totalMarks: 0, // Initial totalMarks is 0, will be updated when questions are added
+        type: parsedBody.data.type ?? "chapter_quiz"
+      })
+      .returning({
+        id: quizzes.id,
+        chapterId: quizzes.chapterId,
+        title: quizzes.title,
+        durationMinutes: quizzes.durationMinutes,
+        totalMarks: quizzes.totalMarks,
+        type: quizzes.type
+      });
+
+    const newQuiz = insertedRows[0];
+    if (!newQuiz) {
+      await persistAuditLog({
+        scope: "content",
+        action: "Upsert quiz",
+        target: `Chapter #${parsedBody.data.chapterId}`,
+        status: "failed",
+        message: "Quiz creation failed",
+        actorId,
+        actorName
+      });
+      res.status(500).json({ error: "Failed to create quiz" });
+      return;
+    }
+
+    await persistAuditLog({
+      scope: "content",
+      action: "Create quiz",
+      target: `Quiz #${newQuiz.id} - ${newQuiz.title}`,
+      status: "success",
+      message: "Created new quiz via upsert",
+      actorId,
+      actorName
+    });
+
+    res.status(201).json({
+      data: newQuiz,
+      created: true
+    });
+  }
+});
+
+/**
+ * GET /api/admin/content/quizzes?chapterId=N - Get quiz by chapter
+ */
+adminRouter.get("/content/quizzes", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedQuery = quizQuerySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid quiz query",
+      details: parsedQuery.error.flatten()
+    });
+    return;
+  }
+
+  if (!parsedQuery.data.chapterId) {
+    res.status(400).json({
+      error: "chapterId is required"
+    });
+    return;
+  }
+
+  const quizRows = await db
+    .select({
+      id: quizzes.id,
+      chapterId: quizzes.chapterId,
+      title: quizzes.title,
+      durationMinutes: quizzes.durationMinutes,
+      totalMarks: quizzes.totalMarks,
+      type: quizzes.type
+    })
+    .from(quizzes)
+    .where(eq(quizzes.chapterId, parsedQuery.data.chapterId))
+    .limit(1);
+
+  const quiz = quizRows[0] ?? null;
+
+  res.status(200).json({
+    data: quiz
+  });
+});
+
+/**
+ * POST /api/admin/content/quizzes/:id/update - Update quiz metadata
+ */
+adminRouter.post("/content/quizzes/:id/update", requireSession, async (req, res) => {
+  const parsedParams = quizParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid quiz identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const parsedBody = quizUpdateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid quiz payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Update quiz";
+  const fallbackTarget = `Quiz #${parsedParams.data.id}`;
+
+  const quizRows = await db
+    .select({
+      id: quizzes.id,
+      chapterId: quizzes.chapterId,
+      title: quizzes.title,
+      durationMinutes: quizzes.durationMinutes,
+      totalMarks: quizzes.totalMarks,
+      type: quizzes.type
+    })
+    .from(quizzes)
+    .where(eq(quizzes.id, parsedParams.data.id))
+    .limit(1);
+
+  const quiz = quizRows[0];
+  if (!quiz) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Quiz not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({ error: "Quiz not found" });
+    return;
+  }
+
+  const updatedRows = await db
+    .update(quizzes)
+    .set({
+      title: parsedBody.data.title.trim(),
+      ...(parsedBody.data.durationMinutes !== undefined && { durationMinutes: parsedBody.data.durationMinutes }),
+      ...(parsedBody.data.type !== undefined && { type: parsedBody.data.type })
+    })
+    .where(eq(quizzes.id, quiz.id))
+    .returning({
+      id: quizzes.id,
+      chapterId: quizzes.chapterId,
+      title: quizzes.title,
+      durationMinutes: quizzes.durationMinutes,
+      totalMarks: quizzes.totalMarks,
+      type: quizzes.type
+    });
+
+  const updatedQuiz = updatedRows[0];
+  if (!updatedQuiz) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `Quiz #${quiz.id}`,
+      status: "failed",
+      message: "Quiz not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({ error: "Quiz not found" });
+    return;
+  }
+
+  await persistAuditLog({
+    scope: "content",
+    action,
+    target: `Quiz #${updatedQuiz.id} - ${updatedQuiz.title}`,
+    status: "success",
+    message: "Updated quiz metadata",
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    data: updatedQuiz
+  });
+});
+
+/**
+ * POST /api/admin/content/quizzes/:id/delete - Delete quiz (cascade via FK)
+ */
+adminRouter.post("/content/quizzes/:id/delete", requireSession, async (req, res) => {
+  const parsedParams = quizParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid quiz identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Delete quiz";
+  const fallbackTarget = `Quiz #${parsedParams.data.id}`;
+
+  const quizRows = await db
+    .select({
+      id: quizzes.id,
+      chapterId: quizzes.chapterId,
+      title: quizzes.title,
+      durationMinutes: quizzes.durationMinutes,
+      totalMarks: quizzes.totalMarks,
+      type: quizzes.type
+    })
+    .from(quizzes)
+    .where(eq(quizzes.id, parsedParams.data.id))
+    .limit(1);
+
+  const quiz = quizRows[0];
+  if (!quiz) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Quiz not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({ error: "Quiz not found" });
+    return;
+  }
+
+  await db.delete(quizzes).where(eq(quizzes.id, quiz.id));
+
+  await persistAuditLog({
+    scope: "content",
+    action,
+    target: `Quiz #${quiz.id} - ${quiz.title}`,
+    status: "success",
+    message: "Deleted quiz (questions cascade via FK)",
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    success: true,
+    deletedId: quiz.id
+  });
+});
+
+// ==================== FLASHCARD CRUD ====================
+
+/**
+ * POST /api/admin/content/flashcards - Create flashcard
+ * If orderIndex not provided, appends to end of chapter's flashcards
+ */
+adminRouter.post("/content/flashcards", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedBody = flashcardCreateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid flashcard payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+
+  // Determine orderIndex: if not provided, append to end
+  let orderIndex = parsedBody.data.orderIndex;
+  if (orderIndex === undefined) {
+    const maxOrderResult = await db
+      .select({
+        maxOrder: sql<number>`coalesce(max(${flashcards.orderIndex}), -1)::int`
+      })
+      .from(flashcards)
+      .where(eq(flashcards.chapterId, parsedBody.data.chapterId));
+    orderIndex = (maxOrderResult[0]?.maxOrder ?? -1) + 1;
+  }
+
+  const insertedRows = await db
+    .insert(flashcards)
+    .values({
+      chapterId: parsedBody.data.chapterId,
+      front: parsedBody.data.front.trim(),
+      back: parsedBody.data.back.trim(),
+      orderIndex
+    })
+    .returning({
+      id: flashcards.id,
+      chapterId: flashcards.chapterId,
+      front: flashcards.front,
+      back: flashcards.back,
+      orderIndex: flashcards.orderIndex
+    });
+
+  const newFlashcard = insertedRows[0];
+  if (!newFlashcard) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create flashcard",
+      target: `Chapter #${parsedBody.data.chapterId}`,
+      status: "failed",
+      message: "Flashcard creation failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({ error: "Failed to create flashcard" });
+    return;
+  }
+
+  await persistAuditLog({
+    scope: "content",
+    action: "Create flashcard",
+    target: `Flashcard #${newFlashcard.id}`,
+    status: "success",
+    message: `Created flashcard for chapter ${newFlashcard.chapterId}`,
+    actorId,
+    actorName
+  });
+
+  res.status(201).json({
+    data: newFlashcard
+  });
+});
+
+/**
+ * GET /api/admin/content/flashcards?chapterId=N - List flashcards for chapter
+ * Ordered by orderIndex ASC
+ */
+adminRouter.get("/content/flashcards", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedQuery = flashcardListQuerySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid flashcard query",
+      details: parsedQuery.error.flatten()
+    });
+    return;
+  }
+
+  if (!parsedQuery.data.chapterId) {
+    res.status(400).json({
+      error: "chapterId is required"
+    });
+    return;
+  }
+
+  const flashcardRows = await db
+    .select({
+      id: flashcards.id,
+      chapterId: flashcards.chapterId,
+      front: flashcards.front,
+      back: flashcards.back,
+      orderIndex: flashcards.orderIndex
+    })
+    .from(flashcards)
+    .where(eq(flashcards.chapterId, parsedQuery.data.chapterId))
+    .orderBy(asc(flashcards.orderIndex));
+
+  res.status(200).json({
+    data: flashcardRows,
+    total: flashcardRows.length
+  });
+});
+
+/**
+ * POST /api/admin/content/flashcards/:id/update - Update flashcard
+ */
+adminRouter.post("/content/flashcards/:id/update", requireSession, async (req, res) => {
+  const parsedParams = flashcardParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid flashcard identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const parsedBody = flashcardUpdateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid flashcard payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+
+  // Check if flashcard exists
+  const flashcardRows = await db
+    .select({
+      id: flashcards.id,
+      chapterId: flashcards.chapterId,
+      front: flashcards.front,
+      back: flashcards.back,
+      orderIndex: flashcards.orderIndex
+    })
+    .from(flashcards)
+    .where(eq(flashcards.id, parsedParams.data.id))
+    .limit(1);
+
+  const existingFlashcard = flashcardRows[0];
+  if (!existingFlashcard) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Update flashcard",
+      target: `Flashcard #${parsedParams.data.id}`,
+      status: "failed",
+      message: "Flashcard not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({ error: "Flashcard not found" });
+    return;
+  }
+
+  const updatedRows = await db
+    .update(flashcards)
+    .set({
+      ...(parsedBody.data.front !== undefined && { front: parsedBody.data.front.trim() }),
+      ...(parsedBody.data.back !== undefined && { back: parsedBody.data.back.trim() })
+    })
+    .where(eq(flashcards.id, existingFlashcard.id))
+    .returning({
+      id: flashcards.id,
+      chapterId: flashcards.chapterId,
+      front: flashcards.front,
+      back: flashcards.back,
+      orderIndex: flashcards.orderIndex
+    });
+
+  const updatedFlashcard = updatedRows[0];
+  if (!updatedFlashcard) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Update flashcard",
+      target: `Flashcard #${existingFlashcard.id}`,
+      status: "failed",
+      message: "Flashcard update failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({ error: "Failed to update flashcard" });
+    return;
+  }
+
+  await persistAuditLog({
+    scope: "content",
+    action: "Update flashcard",
+    target: `Flashcard #${updatedFlashcard.id}`,
+    status: "success",
+    message: `Updated flashcard for chapter ${updatedFlashcard.chapterId}`,
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    data: updatedFlashcard
+  });
+});
+
+/**
+ * POST /api/admin/content/flashcards/:id/delete - Delete flashcard
+ */
+adminRouter.post("/content/flashcards/:id/delete", requireSession, async (req, res) => {
+  const parsedParams = flashcardParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid flashcard identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+
+  const flashcardRows = await db
+    .select({
+      id: flashcards.id,
+      chapterId: flashcards.chapterId
+    })
+    .from(flashcards)
+    .where(eq(flashcards.id, parsedParams.data.id))
+    .limit(1);
+
+  const flashcard = flashcardRows[0];
+  if (!flashcard) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Delete flashcard",
+      target: `Flashcard #${parsedParams.data.id}`,
+      status: "failed",
+      message: "Flashcard not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({ error: "Flashcard not found" });
+    return;
+  }
+
+  await db.delete(flashcards).where(eq(flashcards.id, flashcard.id));
+
+  await persistAuditLog({
+    scope: "content",
+    action: "Delete flashcard",
+    target: `Flashcard #${flashcard.id} from chapter ${flashcard.chapterId}`,
+    status: "success",
+    message: "Deleted flashcard",
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    success: true,
+    deletedId: flashcard.id
+  });
+});
+
+/**
+ * POST /api/admin/content/flashcards/reorder - Reorder flashcards
+ * Validates that orderedIds contains ALL flashcard IDs for the chapter
+ * Normalizes orderIndex to 0, 1, 2, 3...
+ */
+adminRouter.post("/content/flashcards/reorder", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedBody = flashcardReorderBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid reorder payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const { chapterId, orderedIds } = parsedBody.data;
+
+  // Fetch all existing flashcards for this chapter
+  const existingFlashcards = await db
+    .select({ id: flashcards.id })
+    .from(flashcards)
+    .where(eq(flashcards.chapterId, chapterId));
+
+  const existingIds = new Set(existingFlashcards.map((f) => f.id));
+  const providedIds = new Set(orderedIds);
+
+  // Validate no duplicates in orderedIds
+  if (new Set(orderedIds).size !== orderedIds.length) {
+    res.status(400).json({
+      error: "orderedIds contains duplicate values"
+    });
+    return;
+  }
+
+  // Validate that orderedIds contains ALL flashcards for this chapter
+  if (existingIds.size !== providedIds.size || ![...existingIds].every((id) => providedIds.has(id))) {
+    res.status(400).json({
+      error: "orderedIds must contain exactly all flashcard IDs for the chapter",
+      details: {
+        existingIds: [...existingIds],
+        providedIds
+      }
+    });
+    return;
+  }
+
+  // Update orderIndex for each flashcard
+  const updatedFlashcards: { id: number; orderIndex: number }[] = [];
+  for (let i = 0; i < orderedIds.length; i++) {
+    const flashcardId = orderedIds[i]!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+    const newOrderIndex = i;
+
+    await db
+      .update(flashcards)
+      .set({ orderIndex: newOrderIndex })
+      .where(eq(flashcards.id, flashcardId));
+
+    updatedFlashcards.push({ id: flashcardId, orderIndex: newOrderIndex });
+  }
+
+  await persistAuditLog({
+    scope: "content",
+    action: "Reorder flashcards",
+    target: `Chapter #${chapterId}`,
+    status: "success",
+    message: `Reordered ${updatedFlashcards.length} flashcards`,
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    success: true,
+    updated: updatedFlashcards
+  });
+});
+
+// ==================== QUIZ QUESTIONS CRUD ====================
+
+/**
+ * Helper to recalculate and update quiz totalMarks based on its questions
+ */
+const recalculateQuizTotalMarks = async (quizId: number): Promise<number> => {
+  const questionMarksResult = await db
+    .select({
+      total: sql<number>`coalesce(sum(${quizQuestions.marks}), 0)::int`
+    })
+    .from(quizQuestions)
+    .where(eq(quizQuestions.quizId, quizId));
+
+  const totalMarks = questionMarksResult[0]?.total ?? 0;
+
+  await db
+    .update(quizzes)
+    .set({ totalMarks })
+    .where(eq(quizzes.id, quizId));
+
+  return totalMarks;
+};
+
+/**
+ * POST /api/admin/content/quiz-questions - Add question to quiz
+ */
+adminRouter.post("/content/quiz-questions", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedBody = quizQuestionCreateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid quiz question payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+
+  // Verify quiz exists
+  const quizRows = await db
+    .select({
+      id: quizzes.id,
+      title: quizzes.title,
+      chapterId: quizzes.chapterId
+    })
+    .from(quizzes)
+    .where(eq(quizzes.id, parsedBody.data.quizId))
+    .limit(1);
+
+  const quiz = quizRows[0];
+  if (!quiz) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Add quiz question",
+      target: `Quiz #${parsedBody.data.quizId}`,
+      status: "failed",
+      message: "Quiz not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({ error: "Quiz not found" });
+    return;
+  }
+
+  const insertedRows = await db
+    .insert(quizQuestions)
+    .values({
+      quizId: parsedBody.data.quizId,
+      chapterId: parsedBody.data.chapterId ?? quiz.chapterId,
+      question: parsedBody.data.question.trim(),
+      optionA: parsedBody.data.optionA.trim(),
+      optionB: parsedBody.data.optionB.trim(),
+      optionC: parsedBody.data.optionC.trim(),
+      optionD: parsedBody.data.optionD.trim(),
+      correctOption: parsedBody.data.correctOption,
+      explanation: parsedBody.data.explanation.trim(),
+      marks: parsedBody.data.marks ?? 1
+    })
+    .returning({
+      id: quizQuestions.id,
+      quizId: quizQuestions.quizId,
+      chapterId: quizQuestions.chapterId,
+      question: quizQuestions.question,
+      optionA: quizQuestions.optionA,
+      optionB: quizQuestions.optionB,
+      optionC: quizQuestions.optionC,
+      optionD: quizQuestions.optionD,
+      correctOption: quizQuestions.correctOption,
+      explanation: quizQuestions.explanation,
+      marks: quizQuestions.marks
+    });
+
+  const newQuestion = insertedRows[0];
+  if (!newQuestion) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Add quiz question",
+      target: `Quiz #${quiz.id}`,
+      status: "failed",
+      message: "Failed to add quiz question",
+      actorId,
+      actorName
+    });
+    res.status(500).json({ error: "Failed to add quiz question" });
+    return;
+  }
+
+  // Recalculate quiz totalMarks
+  const newTotalMarks = await recalculateQuizTotalMarks(quiz.id);
+
+  await persistAuditLog({
+    scope: "content",
+    action: "Add quiz question",
+    target: `Quiz #${quiz.id} - ${quiz.title}`,
+    status: "success",
+    message: `Added question to quiz (new total marks: ${newTotalMarks})`,
+    actorId,
+    actorName
+  });
+
+  res.status(201).json({
+    data: newQuestion
+  });
+});
+
+/**
+ * GET /api/admin/content/quiz-questions?quizId=N - List questions for a quiz
+ */
+adminRouter.get("/content/quiz-questions", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedQuery = quizQuestionListQuerySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid quiz question query",
+      details: parsedQuery.error.flatten()
+    });
+    return;
+  }
+
+  const questionRows = await db
+    .select({
+      id: quizQuestions.id,
+      quizId: quizQuestions.quizId,
+      chapterId: quizQuestions.chapterId,
+      question: quizQuestions.question,
+      optionA: quizQuestions.optionA,
+      optionB: quizQuestions.optionB,
+      optionC: quizQuestions.optionC,
+      optionD: quizQuestions.optionD,
+      correctOption: quizQuestions.correctOption,
+      explanation: quizQuestions.explanation,
+      marks: quizQuestions.marks
+    })
+    .from(quizQuestions)
+    .where(eq(quizQuestions.quizId, parsedQuery.data.quizId))
+    .orderBy(asc(quizQuestions.id));
+
+  res.status(200).json({
+    data: questionRows
+  });
+});
+
+/**
+ * POST /api/admin/content/quiz-questions/:id/update - Update question
+ */
+adminRouter.post("/content/quiz-questions/:id/update", requireSession, async (req, res) => {
+  const parsedParams = quizQuestionParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid quiz question identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const parsedBody = quizQuestionUpdateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid quiz question payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Update quiz question";
+  const fallbackTarget = `Quiz Question #${parsedParams.data.id}`;
+
+  const questionRows = await db
+    .select({
+      id: quizQuestions.id,
+      quizId: quizQuestions.quizId,
+      question: quizQuestions.question
+    })
+    .from(quizQuestions)
+    .where(eq(quizQuestions.id, parsedParams.data.id))
+    .limit(1);
+
+  const question = questionRows[0];
+  if (!question) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Quiz question not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({ error: "Quiz question not found" });
+    return;
+  }
+
+  const updatedRows = await db
+    .update(quizQuestions)
+    .set({
+      question: parsedBody.data.question.trim(),
+      optionA: parsedBody.data.optionA.trim(),
+      optionB: parsedBody.data.optionB.trim(),
+      optionC: parsedBody.data.optionC.trim(),
+      optionD: parsedBody.data.optionD.trim(),
+      correctOption: parsedBody.data.correctOption,
+      explanation: parsedBody.data.explanation.trim(),
+      marks: parsedBody.data.marks ?? 1
+    })
+    .where(eq(quizQuestions.id, question.id))
+    .returning({
+      id: quizQuestions.id,
+      quizId: quizQuestions.quizId,
+      chapterId: quizQuestions.chapterId,
+      question: quizQuestions.question,
+      optionA: quizQuestions.optionA,
+      optionB: quizQuestions.optionB,
+      optionC: quizQuestions.optionC,
+      optionD: quizQuestions.optionD,
+      correctOption: quizQuestions.correctOption,
+      explanation: quizQuestions.explanation,
+      marks: quizQuestions.marks
+    });
+
+  const updatedQuestion = updatedRows[0];
+  if (!updatedQuestion) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Quiz question not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({ error: "Quiz question not found" });
+    return;
+  }
+
+  // Recalculate quiz totalMarks
+  await recalculateQuizTotalMarks(question.quizId);
+
+  await persistAuditLog({
+    scope: "content",
+    action,
+    target: `Quiz Question #${updatedQuestion.id}`,
+    status: "success",
+    message: "Updated quiz question",
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    data: updatedQuestion
+  });
+});
+
+/**
+ * POST /api/admin/content/quiz-questions/:id/delete - Delete question
+ */
+adminRouter.post("/content/quiz-questions/:id/delete", requireSession, async (req, res) => {
+  const parsedParams = quizQuestionParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid quiz question identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Delete quiz question";
+  const fallbackTarget = `Quiz Question #${parsedParams.data.id}`;
+
+  const questionRows = await db
+    .select({
+      id: quizQuestions.id,
+      quizId: quizQuestions.quizId,
+      question: quizQuestions.question
+    })
+    .from(quizQuestions)
+    .where(eq(quizQuestions.id, parsedParams.data.id))
+    .limit(1);
+
+  const question = questionRows[0];
+  if (!question) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Quiz question not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({ error: "Quiz question not found" });
+    return;
+  }
+
+  await db.delete(quizQuestions).where(eq(quizQuestions.id, question.id));
+
+  // Recalculate quiz totalMarks after deletion
+  await recalculateQuizTotalMarks(question.quizId);
+
+  await persistAuditLog({
+    scope: "content",
+    action,
+    target: `Quiz Question #${question.id}`,
+    status: "success",
+    message: "Deleted quiz question",
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    success: true,
+    deletedId: question.id
   });
 });
 

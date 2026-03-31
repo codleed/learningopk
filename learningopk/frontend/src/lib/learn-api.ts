@@ -87,7 +87,7 @@ const chapterDetailResponseSchema = z.object({
       id: z.number().int().positive(),
       front: z.string(),
       back: z.string(),
-      orderIndex: z.number().int().positive()
+      orderIndex: z.number().int().min(0)
     })
   ),
   quiz: z
@@ -95,7 +95,7 @@ const chapterDetailResponseSchema = z.object({
       id: z.number().int().positive(),
       title: z.string(),
       durationMinutes: z.number().int().positive(),
-      totalMarks: z.number().int().positive(),
+      totalMarks: z.number().int().min(0),
       type: z.enum(["chapter_quiz", "mock_exam"]),
       questions: z.array(
         z.object({

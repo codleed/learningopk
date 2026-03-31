@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { progressEventSchema, subjectParamSchema } from "../../routes/progress.js";
+import { progressEventSchema, subjectDashboardParamSchema } from "../../routes/progress.js";
 import { submitQuizSchema } from "../../routes/quiz.js";
 
 test("submitQuizSchema accepts a valid quiz submission payload", () => {
@@ -52,16 +52,20 @@ test("progressEventSchema rejects quiz_submit with negative score", () => {
   assert.equal(parsed.success, false);
 });
 
-test("subjectParamSchema accepts lowercase slug route params", () => {
-  const parsed = subjectParamSchema.safeParse({
-    subject: "mathematics-grade-9"
+test("subjectDashboardParamSchema accepts lowercase slug route params", () => {
+  const parsed = subjectDashboardParamSchema.safeParse({
+    boardSlug: "punjab-board",
+    grade: "9",
+    subjectSlug: "mathematics"
   });
   assert.equal(parsed.success, true);
 });
 
-test("subjectParamSchema rejects invalid slug characters", () => {
-  const parsed = subjectParamSchema.safeParse({
-    subject: "Mathematics Grade 9"
+test("subjectDashboardParamSchema rejects invalid slug characters", () => {
+  const parsed = subjectDashboardParamSchema.safeParse({
+    boardSlug: "Punjab Board",
+    grade: "9",
+    subjectSlug: "mathematics"
   });
   assert.equal(parsed.success, false);
 });

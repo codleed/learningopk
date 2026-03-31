@@ -2,14 +2,13 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Settings } from "lucide-react";
+import Link from "next/link";
 
 import { AdminPageHeader, ContentTabs, ContentStatsStrip, ContentListTable } from "@/components/admin";
 import { ChapterPublishToggle } from "@/components/admin/chapter-publish-toggle";
 import { Button } from "@/components/ui/button";
-import { getAdminCurriculumTree, type AdminCurriculumBoard } from "@/lib/admin-api";
-import type { AdminCurriculumBoard } from "@/lib/admin-api";
-import { deleteAdminCurriculumChapter } from "@/lib/admin-api";
+import { getAdminCurriculumTree, deleteAdminCurriculumChapter, type AdminCurriculumBoard } from "@/lib/admin-api";
 
 type ChaptersPageClientProps = {
   initialBoards: AdminCurriculumBoard[];
@@ -41,9 +40,6 @@ type ChapterRow = {
 export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientProps) {
   const router = useRouter();
   const [chapters, setChapters] = useState<ChapterRow[]>(
-  // Flatten chapters with full context
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [chapters] = useState<ChapterRow[]>(
     initialBoards.flatMap((board) =>
       board.classes.flatMap((cls) =>
         cls.subjects.flatMap((subject) =>
@@ -64,6 +60,7 @@ export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientP
       )
     )
   );
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const refreshData = useCallback(async () => {
@@ -199,14 +196,23 @@ export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientP
             emptyMessage="No chapters found. Create your first chapter to get started."
             getItemId={(chapter) => chapter.id}
             renderCustomAction={(chapter) => (
-              <ChapterPublishToggle
-                chapterId={chapter.id}
-                chapterLabel={`Chapter ${chapter.chapterNumber}: ${chapter.title}`}
-                isPublished={chapter.isPublished}
-                onComplete={(result) => {
-                  handlePublishComplete(chapter.id, result.nextPublished);
-                }}
-              />
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/admin/content/chapters/${chapter.id}/manage`}
+                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
+                >
+                  <Settings className="h-3 w-3" aria-hidden />
+                  Manage Content
+                </Link>
+                <ChapterPublishToggle
+                  chapterId={chapter.id}
+                  chapterLabel={`Chapter ${chapter.chapterNumber}: ${chapter.title}`}
+                  isPublished={chapter.isPublished}
+                  onComplete={(result) => {
+                    handlePublishComplete(chapter.id, result.nextPublished);
+                  }}
+                />
+              </div>
             )}
           />
         </div>

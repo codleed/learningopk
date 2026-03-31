@@ -257,7 +257,9 @@ export const exercises = pgTable(
     solution: text("solution").notNull(),
     difficulty: difficultyEnum("difficulty").notNull().default("medium"),
     type: exerciseTypeEnum("type").notNull().default("short"),
-    sourceId: uuid("source_id").references(() => contentSources.id, { onDelete: "set null" })
+    sourceId: uuid("source_id").references(() => contentSources.id, { onDelete: "set null" }),
+    problemMarkdown: text("problem_markdown"),
+    solutionCode: text("solution_code")
   },
   (table) => [uniqueIndex("exercises_chapter_exercise_number_idx").on(table.chapterId, table.exerciseNumber)]
 );
