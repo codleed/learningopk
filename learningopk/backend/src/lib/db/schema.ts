@@ -133,7 +133,7 @@ export const subjects = pgTable(
       .notNull()
       .references(() => boards.id, { onDelete: "cascade" }),
     grade: gradeEnum("grade"),
-    boardClassId: integer("board_class_id").references(() => boardClasses.id, { onDelete: "set null" }),
+    boardClassId: integer("board_class_id").references(() => boardClasses.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     icon: text("icon"),

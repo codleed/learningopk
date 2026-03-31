@@ -18,6 +18,9 @@ type ContentListTableProps<T> = {
   onDelete?: (item: T) => void;
   editHref?: (item: T) => string;
   deleteHref?: (item: T) => string;
+  onPublish?: (item: T) => void;
+  publishLabel?: string;
+  renderCustomAction?: (item: T) => React.ReactNode;
   addHref: string;
   addLabel?: string;
   emptyMessage?: string;
@@ -39,6 +42,9 @@ export function ContentListTable<T>({
   onDelete,
   editHref,
   deleteHref,
+  onPublish,
+  publishLabel,
+  renderCustomAction,
   addHref,
   addLabel = `Add ${title.replace(/s$/, '')}`,
   emptyMessage = `No ${title.toLowerCase()} found.`,
@@ -95,7 +101,7 @@ export function ContentListTable<T>({
                     {col.header}
                   </th>
                 ))}
-                {(onEdit || editHref || onDelete || deleteHref) && (
+                {(onEdit || editHref || onDelete || deleteHref || onPublish) && (
                   <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
                     Actions
                   </th>
@@ -115,44 +121,59 @@ export function ContentListTable<T>({
                         {col.render(item)}
                       </td>
                     ))}
-                    {(onEdit || editHref || onDelete || deleteHref) && (
+                    {(onEdit || editHref || onDelete || deleteHref || onPublish || renderCustomAction) && (
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {editHref ? (
-                            <Link
-                              href={editHref(item)}
-                              className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
-                            >
-                              <Pencil className="h-3 w-3" aria-hidden />
-                              Edit
-                            </Link>
-                          ) : onEdit ? (
-                            <button
-                              onClick={() => onEdit(item)}
-                              className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
-                            >
-                              <Pencil className="h-3 w-3" aria-hidden />
-                              Edit
-                            </button>
-                          ) : null}
+                          {renderCustomAction ? (
+                            renderCustomAction(item)
+                          ) : (
+                            <>
+                              {editHref ? (
+                                <Link
+                                  href={editHref(item)}
+                                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
+                                >
+                                  <Pencil className="h-3 w-3" aria-hidden />
+                                  Edit
+                                </Link>
+                              ) : onEdit ? (
+                                <button
+                                  onClick={() => onEdit(item)}
+                                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
+                                >
+                                  <Pencil className="h-3 w-3" aria-hidden />
+                                  Edit
+                                </button>
+                              ) : null}
 
-                          {deleteHref ? (
-                            <Link
-                              href={deleteHref(item)}
-                              className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
-                            >
-                              <Trash2 className="h-3 w-3" aria-hidden />
-                              Delete
-                            </Link>
-                          ) : onDelete ? (
-                            <button
-                              onClick={() => onDelete(item)}
-                              className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
-                            >
-                              <Trash2 className="h-3 w-3" aria-hidden />
-                              Delete
-                            </button>
-                          ) : null}
+                              {onPublish ? (
+                                <button
+                                  onClick={() => onPublish(item)}
+                                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
+                                >
+                                  {publishLabel || "Publish"}
+                                </button>
+                              ) : null}
+
+                              {deleteHref ? (
+                                <Link
+                                  href={deleteHref(item)}
+                                  className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
+                                >
+                                  <Trash2 className="h-3 w-3" aria-hidden />
+                                  Delete
+                                </Link>
+                              ) : onDelete ? (
+                                <button
+                                  onClick={() => onDelete(item)}
+                                  className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
+                                >
+                                  <Trash2 className="h-3 w-3" aria-hidden />
+                                  Delete
+                                </button>
+                              ) : null}
+                            </>
+                          )}
                         </div>
                       </td>
                     )}

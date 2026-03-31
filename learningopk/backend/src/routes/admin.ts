@@ -2620,7 +2620,25 @@ adminRouter.post("/content/boards/:id/delete", requireSession, async (req, res) 
     return;
   }
 
-  await db.delete(boards).where(eq(boards.id, board.id));
+  try {
+    await db.transaction(async (tx) => {
+      await tx.delete(subjects).where(eq(subjects.boardId, board.id));
+      await tx.delete(boardClasses).where(eq(boardClasses.boardId, board.id));
+      await tx.delete(boards).where(eq(boards.id, board.id));
+    });
+  } catch (error) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: board.name,
+      status: "failed",
+      message: error instanceof Error ? error.message : "Board delete failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({ error: "Failed to delete board" });
+    return;
+  }
 
   await persistAuditLog({
     scope: "content",
@@ -2805,10 +2823,24 @@ adminRouter.post("/content/classes/:id/delete", requireSession, async (req, res)
     return;
   }
 
-  await db.transaction(async (tx) => {
-    await tx.delete(subjects).where(eq(subjects.boardClassId, boardClass.id));
-    await tx.delete(boardClasses).where(eq(boardClasses.id, boardClass.id));
-  });
+  try {
+    await db.transaction(async (tx) => {
+      await tx.delete(subjects).where(eq(subjects.boardClassId, boardClass.id));
+      await tx.delete(boardClasses).where(eq(boardClasses.id, boardClass.id));
+    });
+  } catch (error) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${boardClass.boardName} / ${boardClass.name}`,
+      status: "failed",
+      message: error instanceof Error ? error.message : "Class delete failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({ error: "Failed to delete class" });
+    return;
+  }
 
   await persistAuditLog({
     scope: "content",
@@ -2826,6 +2858,93 @@ adminRouter.post("/content/classes/:id/delete", requireSession, async (req, res)
       boardId: boardClass.boardId,
       name: boardClass.name,
       slug: boardClass.slug
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+adminRouter.post("/content/subjects/:id/delete", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid subject identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Delete subject";
+  const fallbackTarget = `Subject #${parsedParams.data.id}`;
+
+  const subjectRows = await db
+    .select({
+      id: subjects.id,
+      name: subjects.name,
+      slug: subjects.slug,
+      boardClassId: subjects.boardClassId,
+      className: boardClasses.name,
+      boardName: boards.name
+    })
+    .from(subjects)
+    .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
+    .innerJoin(boards, eq(subjects.boardId, boards.id))
+    .where(eq(subjects.id, parsedParams.data.id))
+    .limit(1);
+  const subject = subjectRows[0];
+  if (!subject) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Subject not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Subject not found"
+    });
+    return;
+  }
+
+  try {
+    await db.delete(subjects).where(eq(subjects.id, subject.id));
+  } catch (error) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${subject.boardName} / ${subject.className || "unassigned"} / ${subject.name}`,
+      status: "failed",
+      message: error instanceof Error ? error.message : "Subject delete failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({ error: "Failed to delete subject" });
+    return;
+  }
+
+  await persistAuditLog({
+    scope: "content",
+    action,
+    target: `${subject.boardName} / ${subject.className || "unassigned"} / ${subject.name}`,
+    status: "success",
+    message: `Deleted subject ${subject.slug}`,
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    subject: {
+      id: subject.id,
+      name: subject.name,
+      slug: subject.slug
     },
     timestamp: new Date().toISOString()
   });

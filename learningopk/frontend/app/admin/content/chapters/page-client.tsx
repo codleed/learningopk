@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { RefreshCw } from "lucide-react";
 
 import { AdminPageHeader, ContentTabs, ContentStatsStrip, ContentListTable } from "@/components/admin";
+import { ChapterPublishToggle } from "@/components/admin/chapter-publish-toggle";
+import { Button } from "@/components/ui/button";
+import { getAdminCurriculumTree, type AdminCurriculumBoard } from "@/lib/admin-api";
 import type { AdminCurriculumBoard } from "@/lib/admin-api";
 import { deleteAdminCurriculumChapter } from "@/lib/admin-api";
 
@@ -34,6 +39,8 @@ type ChapterRow = {
 };
 
 export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientProps) {
+  const router = useRouter();
+  const [chapters, setChapters] = useState<ChapterRow[]>(
   // Flatten chapters with full context
   const [isDeleting, setIsDeleting] = useState(false);
   const [chapters] = useState<ChapterRow[]>(
@@ -57,6 +64,45 @@ export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientP
       )
     )
   );
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const refreshData = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const boards = await getAdminCurriculumTree();
+      setChapters(
+        boards.flatMap((board) =>
+          board.classes.flatMap((cls) =>
+            cls.subjects.flatMap((subject) =>
+              subject.chapters.map((chapter) => ({
+                id: chapter.id,
+                title: chapter.title,
+                chapterNumber: chapter.chapterNumber,
+                slug: chapter.slug,
+                boardId: board.id,
+                boardName: board.name,
+                classId: cls.id,
+                className: cls.name,
+                subjectId: subject.id,
+                subjectName: subject.name,
+                isPublished: chapter.isPublished,
+              }))
+            )
+          )
+        )
+      );
+    } catch (error) {
+      console.error("Failed to refresh chapters:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  const handlePublishComplete = (chapterId: number, nextPublished: boolean) => {
+    setChapters((prev) =>
+      prev.map((ch) => (ch.id === chapterId ? { ...ch, isPublished: nextPublished } : ch))
+    );
+  };
 
   const handleDelete = async (chapter: ChapterRow) => {
     if (
@@ -121,6 +167,17 @@ export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientP
       <AdminPageHeader
         title="Content Management"
         subtitle="Manage boards, classes, subjects, chapters, exercises, quizzes, and flash cards"
+        actions={
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={refreshData}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+            {isRefreshing ? "Refreshing..." : "Refresh"}
+          </Button>
+        }
       />
 
       <ContentStatsStrip stats={stats} />
@@ -141,6 +198,16 @@ export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientP
             addLabel="+ Add Chapter"
             emptyMessage="No chapters found. Create your first chapter to get started."
             getItemId={(chapter) => chapter.id}
+            renderCustomAction={(chapter) => (
+              <ChapterPublishToggle
+                chapterId={chapter.id}
+                chapterLabel={`Chapter ${chapter.chapterNumber}: ${chapter.title}`}
+                isPublished={chapter.isPublished}
+                onComplete={(result) => {
+                  handlePublishComplete(chapter.id, result.nextPublished);
+                }}
+              />
+            )}
           />
         </div>
       </div>

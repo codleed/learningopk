@@ -34,10 +34,10 @@ export function ContentDashboard({ boards, auditLogs, stats }: ContentDashboardP
 
   // Quick actions per tab
   const quickActions = [
-    { label: "Add Board", href: "/admin/content/boards/add", icon: <BookOpen className="h-5 w-5" /> },
-    { label: "Add Class", href: "/admin/content/classes/add", icon: <GraduationCap className="h-5 w-5" /> },
-    { label: "Add Subject", href: "/admin/content/subjects/add", icon: <Book className="h-5 w-5" /> },
-    { label: "Add Chapter", href: "/admin/content/chapters/add", icon: <FileText className="h-5 w-5" /> },
+    { label: "Add Board", href: "/admin/boards/add", icon: <BookOpen className="h-5 w-5" /> },
+    { label: "Add Class", href: "/admin/classes/add", icon: <GraduationCap className="h-5 w-5" /> },
+    { label: "Add Subject", href: "/admin/subjects/add", icon: <Book className="h-5 w-5" /> },
+    { label: "Add Chapter", href: "/admin/chapters/add", icon: <FileText className="h-5 w-5" /> },
     { label: "Add Exercise", href: "/admin/content/exercises/add", icon: <Brain className="h-5 w-5" /> },
     { label: "Add Quiz", href: "/admin/content/quizzes/add", icon: <ClipboardList className="h-5 w-5" /> },
     { label: "Add Flash Cards", href: "/admin/content/flashcards/add", icon: <Layers className="h-5 w-5" /> },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -12,13 +12,14 @@ import {
   AdminActionButton,
 } from "@/components/admin";
 import { Select } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   createAdminCurriculumChapter,
   type AdminCurriculumBoard,
 } from "@/lib/admin-api";
 import { useToast } from "@/components/ui/toast";
 import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
+import { CodeMirrorMarkdownEditor } from "@/components/admin/codemirror-markdown-editor";
 
 const toSlug = (value: string) =>
   value
@@ -43,8 +44,8 @@ interface SubjectOption {
 export function AddChapterForm({ boards }: AddChapterFormProps) {
   const router = useRouter();
   const { pushToast } = useToast();
+  const markdownInputRef = useRef<HTMLInputElement>(null);
 
-  // Flatten boards > classes > subjects for subject options
   const subjectOptions: SubjectOption[] = boards.flatMap((board) =>
     board.classes.flatMap((boardClass) =>
       boardClass.subjects.map((subject) => ({
@@ -65,7 +66,6 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
   const [summary, setSummary] = useState<string>("");
   const [showPreview, setShowPreview] = useState<boolean>(false);
 
-  // Errors
   const [subjectError, setSubjectError] = useState<string>("");
   const [chapterNumberError, setChapterNumberError] = useState<string>("");
   const [titleError, setTitleError] = useState<string>("");
@@ -133,13 +133,42 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
     }
   };
 
-  const handleSummaryBlur = () => {
-    if (!summary.trim()) {
-      setSummaryError("Summary is required");
-    } else if (summary.length > 10000) {
-      setSummaryError("Summary must be 10000 characters or less");
-    } else {
-      setSummaryError("");
+  const handleMarkdownFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      const importedMarkdown = await file.text();
+      if (importedMarkdown.trim().length === 0) {
+        pushToast({
+          title: "Markdown file is empty",
+          tone: "error"
+        });
+        return;
+      }
+
+      if (
+        summary.trim().length > 0 &&
+        !window.confirm("Importing a Markdown file will replace the current summary. Continue?")
+      ) {
+        return;
+      }
+
+      setSummary(importedMarkdown);
+      pushToast({
+        title: "Markdown imported successfully",
+        tone: "success"
+      });
+    } catch {
+      pushToast({
+        title: "Could not read Markdown file",
+        tone: "error"
+      });
+    } finally {
+      input.value = "";
     }
   };
 
@@ -175,9 +204,6 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
 
     if (!summary.trim()) {
       setSummaryError("Summary is required");
-      hasError = true;
-    } else if (summary.length > 10000) {
-      setSummaryError("Summary must be 10000 characters or less");
       hasError = true;
     }
 
@@ -309,10 +335,10 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
             label="Summary"
             required
             error={summaryError}
-            hint="Enter chapter summary in markdown..."
+            hint="Supports Markdown, images, and math notation."
           >
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setShowPreview(!showPreview)}
@@ -320,6 +346,20 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
                 >
                   {showPreview ? "Edit" : "Preview"}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => markdownInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-accent/50"
+                >
+                  Upload .md file
+                </button>
+                <Input
+                  ref={markdownInputRef}
+                  type="file"
+                  accept=".md,text/markdown,text/plain"
+                  onChange={handleMarkdownFileUpload}
+                  className="hidden"
+                />
               </div>
               {showPreview ? (
                 <div className="min-h-48 rounded-lg border border-[var(--border)] bg-card p-4">
@@ -330,15 +370,12 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
                   )}
                 </div>
               ) : (
-                <Textarea
-                  id="chapter-summary"
+                <CodeMirrorMarkdownEditor
                   value={summary}
-                  onChange={(e) => handleSummaryChange(e.target.value)}
-                  onBlur={handleSummaryBlur}
-                  placeholder="Enter chapter summary in markdown..."
-                  rows={8}
-                  aria-invalid={!!summaryError}
-                  aria-describedby={summaryError ? "chapter-summary-error" : undefined}
+                  onChange={handleSummaryChange}
+                  placeholderText="Write chapter summary in markdown..."
+                  className="min-h-64"
+                  testId="add-chapter-summary-editor"
                 />
               )}
             </div>
