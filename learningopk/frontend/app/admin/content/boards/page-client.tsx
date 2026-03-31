@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { AdminPageHeader, ContentTabs, ContentStatsStrip, ContentListTable } from "@/components/admin";
 import type { AdminCurriculumBoard } from "@/lib/admin-api";
+import { deleteAdminCurriculumBoard } from "@/lib/admin-api";
 
 type BoardsPageClientProps = {
   initialBoards: AdminCurriculumBoard[];
@@ -40,6 +41,7 @@ export function BoardsPageClient({ initialBoards, stats }: BoardsPageClientProps
       ),
     }))
   );
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async (board: BoardRow) => {
     if (
@@ -47,8 +49,16 @@ export function BoardsPageClient({ initialBoards, stats }: BoardsPageClientProps
         `Are you sure you want to delete "${board.name}"? This will also delete all classes, subjects, and chapters under it. This action cannot be undone.`
       )
     ) {
-      // TODO: Call delete API
-      console.log("Delete board:", board.id);
+      setIsDeleting(true);
+      try {
+        await deleteAdminCurriculumBoard(board.id);
+        alert("Board deleted successfully.");
+        window.location.reload();
+      } catch (error) {
+        alert("Failed to delete board. Please try again.");
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 

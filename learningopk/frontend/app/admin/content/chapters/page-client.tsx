@@ -8,6 +8,8 @@ import { AdminPageHeader, ContentTabs, ContentStatsStrip, ContentListTable } fro
 import { ChapterPublishToggle } from "@/components/admin/chapter-publish-toggle";
 import { Button } from "@/components/ui/button";
 import { getAdminCurriculumTree, type AdminCurriculumBoard } from "@/lib/admin-api";
+import type { AdminCurriculumBoard } from "@/lib/admin-api";
+import { deleteAdminCurriculumChapter } from "@/lib/admin-api";
 
 type ChaptersPageClientProps = {
   initialBoards: AdminCurriculumBoard[];
@@ -39,6 +41,9 @@ type ChapterRow = {
 export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientProps) {
   const router = useRouter();
   const [chapters, setChapters] = useState<ChapterRow[]>(
+  // Flatten chapters with full context
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [chapters] = useState<ChapterRow[]>(
     initialBoards.flatMap((board) =>
       board.classes.flatMap((cls) =>
         cls.subjects.flatMap((subject) =>
@@ -105,8 +110,16 @@ export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientP
         `Are you sure you want to delete "Chapter ${chapter.chapterNumber}: ${chapter.title}"? This action cannot be undone.`
       )
     ) {
-      // TODO: Call delete API
-      console.log("Delete chapter:", chapter.id);
+      setIsDeleting(true);
+      try {
+        await deleteAdminCurriculumChapter(chapter.id);
+        alert("Chapter deleted successfully.");
+        window.location.reload();
+      } catch {
+        alert("Failed to delete chapter. Please try again.");
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 

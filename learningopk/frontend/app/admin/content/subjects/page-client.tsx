@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { AdminPageHeader, ContentTabs, ContentStatsStrip, ContentListTable } from "@/components/admin";
+import { deleteAdminCurriculumSubject } from "@/lib/admin-api";
 import type { AdminCurriculumBoard } from "@/lib/admin-api";
 
 type SubjectsPageClientProps = {
@@ -46,14 +47,24 @@ export function SubjectsPageClient({ initialBoards, stats }: SubjectsPageClientP
     )
   );
 
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleDelete = async (subject: SubjectRow) => {
     if (
       window.confirm(
         `Are you sure you want to delete "${subject.name}"? This will also delete all chapters under it. This action cannot be undone.`
       )
     ) {
-      // TODO: Call delete API
-      console.log("Delete subject:", subject.id);
+      setIsDeleting(true);
+      try {
+        await deleteAdminCurriculumSubject(subject.id);
+        alert("Subject deleted successfully.");
+        window.location.reload();
+      } catch (error) {
+        alert("Failed to delete subject. Please try again.");
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
