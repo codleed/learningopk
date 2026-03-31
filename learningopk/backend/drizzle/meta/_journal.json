@@ -85,6 +85,13 @@
       "when": 1774685583337,
       "tag": "0011_lucky_black_bird",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1774976355659,
+      "tag": "0012_flaky_rictor",
+      "breakpoints": true
     }
   ]
 }
