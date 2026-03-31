@@ -102,10 +102,10 @@ export function ClassesPageClient({ initialBoards, stats }: ClassesPageClientPro
             items={classes}
             columns={columns}
             onEdit={(cls) => {
-              window.location.href = `/admin/content/classes/${cls.id}/edit`;
+              window.location.href = `/admin/classes/${cls.id}/edit`;
             }}
             onDelete={handleDelete}
-            addHref="/admin/content/classes/add"
+            addHref="/admin/classes/add"
             addLabel="+ Add Class"
             emptyMessage="No classes found. Create your first class to get started."
             getItemId={(cls) => cls.id}

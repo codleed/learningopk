@@ -12,6 +12,7 @@ import {
   deleteAdminCurriculumChapter,
   deleteAdminCurriculumClass,
   deleteAdminCurriculumExercise,
+  deleteAdminCurriculumSubject,
   getAdminChapterGraph,
   getAdminChapterLinks,
   getAdminChapterSummary,
@@ -126,6 +127,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   const [subjectBoardClassId, setSubjectBoardClassId] = useState("");
   const [subjectName, setSubjectName] = useState("");
   const [subjectDescription, setSubjectDescription] = useState("");
+  const [manageSubjectId, setManageSubjectId] = useState("");
+  const [manageSubjectName, setManageSubjectName] = useState("");
   const [chapterSubjectId, setChapterSubjectId] = useState("");
   const [chapterNumber, setChapterNumber] = useState("1");
   const [chapterTitle, setChapterTitle] = useState("");
@@ -165,6 +168,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   const [manageExerciseSolution, setManageExerciseSolution] = useState("");
   const [activeBoardModeTab, setActiveBoardModeTab] = useState<EntityModeTab>("add");
   const [activeClassModeTab, setActiveClassModeTab] = useState<EntityModeTab>("add");
+  const [activeSubjectModeTab, setActiveSubjectModeTab] = useState<EntityModeTab>("add");
   const [activeExerciseModeTab, setActiveExerciseModeTab] = useState<EntityModeTab>("add");
   const [activeFormTab, setActiveFormTab] = useState<CurriculumFormTab>("board");
   const [activeChapterModeTab, setActiveChapterModeTab] = useState<ChapterModeTab>("add");
@@ -714,6 +718,30 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       pushToast({ title: "Subject created", tone: "success" });
     } catch {
       pushToast({ title: "Could not create subject", tone: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const deleteSubject = async () => {
+    const subjectId = Number(manageSubjectId);
+    if (!subjectId) {
+      pushToast({ title: "Select a subject first", tone: "error" });
+      return;
+    }
+    if (!window.confirm("Delete this subject and all related chapters?")) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await deleteAdminCurriculumSubject(subjectId);
+      setManageSubjectId("");
+      setManageSubjectName("");
+      await refreshTree();
+      pushToast({ title: "Subject deleted", tone: "success" });
+    } catch {
+      pushToast({ title: "Could not delete subject", tone: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -1388,36 +1416,95 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
         ) : null}
 
         {activeFormTab === "subject" ? (
-          <form className="space-y-2" data-testid="curriculum-subject-form" onSubmit={submitSubject}>
-            <p className="text-sm font-semibold text-foreground">Add Subject</p>
-            <Select
-              data-testid="curriculum-subject-class-select"
-              value={subjectBoardClassId}
-              onChange={(event) => setSubjectBoardClassId(event.target.value)}
-            >
-              <option value="">Select class</option>
-              {classOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-            <Input
-              data-testid="curriculum-subject-name-input"
-              value={subjectName}
-              onChange={(event) => setSubjectName(event.target.value)}
-              placeholder="Subject name (e.g. Physics)"
-            />
-            <Input
-              data-testid="curriculum-subject-description-input"
-              value={subjectDescription}
-              onChange={(event) => setSubjectDescription(event.target.value)}
-              placeholder="Description (optional)"
-            />
-            <Button data-testid="curriculum-subject-submit" type="submit" size="sm" variant="secondary" disabled={isSubmitting}>
-              Add subject
-            </Button>
-          </form>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2" data-testid="curriculum-subject-mode-tabs">
+              <button
+                type="button"
+                data-testid="curriculum-subject-mode-add"
+                onClick={() => setActiveSubjectModeTab("add")}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                  activeSubjectModeTab === "add"
+                    ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                    : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
+                }`}
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                data-testid="curriculum-subject-mode-manage"
+                onClick={() => setActiveSubjectModeTab("manage")}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                  activeSubjectModeTab === "manage"
+                    ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
+                    : "border-border bg-card text-foreground hover:border-[var(--primary)]/40"
+                }`}
+              >
+                Manage
+              </button>
+            </div>
+
+            {activeSubjectModeTab === "add" ? (
+              <form className="space-y-2" data-testid="curriculum-subject-form" onSubmit={submitSubject}>
+                <p className="text-sm font-semibold text-foreground">Add Subject</p>
+                <Select
+                  data-testid="curriculum-subject-class-select"
+                  value={subjectBoardClassId}
+                  onChange={(event) => setSubjectBoardClassId(event.target.value)}
+                >
+                  <option value="">Select class</option>
+                  {classOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+                <Input
+                  data-testid="curriculum-subject-name-input"
+                  value={subjectName}
+                  onChange={(event) => setSubjectName(event.target.value)}
+                  placeholder="Subject name (e.g. Physics)"
+                />
+                <Input
+                  data-testid="curriculum-subject-description-input"
+                  value={subjectDescription}
+                  onChange={(event) => setSubjectDescription(event.target.value)}
+                  placeholder="Description (optional)"
+                />
+                <Button data-testid="curriculum-subject-submit" type="submit" size="sm" variant="secondary" disabled={isSubmitting}>
+                  Add subject
+                </Button>
+              </form>
+            ) : (
+              <div className="space-y-2 rounded-lg border border-border/60 bg-background/50 p-3" data-testid="curriculum-subject-manage">
+                <p className="text-sm font-semibold text-foreground">Delete Subject</p>
+                <Select
+                  data-testid="curriculum-subject-manage-select"
+                  value={manageSubjectId}
+                  onChange={(event) => setManageSubjectId(event.target.value)}
+                >
+                  <option value="">Select subject</option>
+                  {subjectOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    data-testid="curriculum-subject-manage-delete"
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={isSubmitting}
+                    onClick={deleteSubject}
+                  >
+                    Delete subject
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         ) : null}
 
         {activeFormTab === "chapter" ? (

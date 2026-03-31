@@ -101,10 +101,10 @@ export function SubjectsPageClient({ initialBoards, stats }: SubjectsPageClientP
             items={subjects}
             columns={columns}
             onEdit={(subject) => {
-              window.location.href = `/admin/content/subjects/${subject.id}/edit`;
+              window.location.href = `/admin/subjects/${subject.id}/edit`;
             }}
             onDelete={handleDelete}
-            addHref="/admin/content/subjects/add"
+            addHref="/admin/subjects/add"
             addLabel="+ Add Subject"
             emptyMessage="No subjects found. Create your first subject to get started."
             getItemId={(subject) => subject.id}

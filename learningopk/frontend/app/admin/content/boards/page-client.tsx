@@ -101,10 +101,10 @@ export function BoardsPageClient({ initialBoards, stats }: BoardsPageClientProps
             items={boards}
             columns={columns}
             onEdit={(board) => {
-              window.location.href = `/admin/content/boards/${board.id}/edit`;
+              window.location.href = `/admin/boards/${board.id}/edit`;
             }}
             onDelete={handleDelete}
-            addHref="/admin/content/boards/add"
+            addHref="/admin/boards/add"
             addLabel="+ Add Board"
             emptyMessage="No boards found. Create your first board to get started."
             getItemId={(board) => board.id}

@@ -84,6 +84,15 @@ const adminCurriculumSubjectCreateResponseSchema = z.object({
   })
 });
 
+const adminCurriculumSubjectMutationResponseSchema = z.object({
+  subject: z.object({
+    id: z.number().int().positive(),
+    name: z.string(),
+    slug: z.string()
+  }),
+  timestamp: z.string().datetime()
+});
+
 const adminCurriculumChapterCreateResponseSchema = z.object({
   chapter: z.object({
     id: z.number().int().positive(),
@@ -445,6 +454,7 @@ export type AdminCurriculumBoardMutationResponse = z.infer<typeof adminCurriculu
 export type AdminCurriculumClassCreateResponse = z.infer<typeof adminCurriculumClassCreateResponseSchema>;
 export type AdminCurriculumClassMutationResponse = z.infer<typeof adminCurriculumClassMutationResponseSchema>;
 export type AdminCurriculumSubjectCreateResponse = z.infer<typeof adminCurriculumSubjectCreateResponseSchema>;
+export type AdminCurriculumSubjectMutationResponse = z.infer<typeof adminCurriculumSubjectMutationResponseSchema>;
 export type AdminCurriculumChapterCreateResponse = z.infer<typeof adminCurriculumChapterCreateResponseSchema>;
 export type AdminCurriculumChapterMutationResponse = z.infer<typeof adminCurriculumChapterMutationResponseSchema>;
 export type AdminChapterSummaryResponse = z.infer<typeof adminChapterSummaryResponseSchema>;
@@ -612,6 +622,14 @@ export const createAdminCurriculumSubject = async (input: {
     schema: adminCurriculumSubjectCreateResponseSchema,
     method: "POST",
     body: input
+  });
+};
+
+export const deleteAdminCurriculumSubject = async (subjectId: number): Promise<AdminCurriculumSubjectMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/subjects/${subjectId}/delete`,
+    schema: adminCurriculumSubjectMutationResponseSchema,
+    method: "POST"
   });
 };
 

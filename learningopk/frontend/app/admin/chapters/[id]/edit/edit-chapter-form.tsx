@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -10,6 +10,7 @@ import {
   AdminFormField,
   AdminActionButton,
 } from "@/components/admin";
+import { Input } from "@/components/ui/input";
 import {
   updateAdminCurriculumChapter,
   updateAdminChapterSummary,
@@ -44,25 +45,21 @@ type TabType = "metadata" | "summary";
 export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProps) {
   const router = useRouter();
   const { pushToast } = useToast();
+  const markdownInputRef = useRef<HTMLInputElement>(null);
 
-  // Metadata state
   const [chapterNumber, setChapterNumber] = useState<string>(String(chapter.chapterNumber));
   const [title, setTitle] = useState<string>(chapter.title);
   const [slug, setSlug] = useState<string>(chapter.slug);
 
-  // Summary state
   const [summary, setSummary] = useState<string>(initialSummary);
   const [showPreview, setShowPreview] = useState<boolean>(false);
 
-  // Tab state
   const [activeTab, setActiveTab] = useState<TabType>("metadata");
 
-  // Errors
   const [chapterNumberError, setChapterNumberError] = useState<string>("");
   const [titleError, setTitleError] = useState<string>("");
   const [summaryError, setSummaryError] = useState<string>("");
 
-  // Loading states
   const [isSavingMetadata, setIsSavingMetadata] = useState(false);
   const [isSavingSummary, setIsSavingSummary] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -171,12 +168,8 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
   };
 
   const handleSaveSummary = async () => {
-    // Validate
     if (!summary.trim()) {
       setSummaryError("Summary is required");
-      return;
-    } else if (summary.length > 10000) {
-      setSummaryError("Summary must be 10000 characters or less");
       return;
     }
 
@@ -200,6 +193,45 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
       });
     } finally {
       setIsSavingSummary(false);
+    }
+  };
+
+  const handleMarkdownFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      const importedMarkdown = await file.text();
+      if (importedMarkdown.trim().length === 0) {
+        pushToast({
+          title: "Markdown file is empty",
+          tone: "error"
+        });
+        return;
+      }
+
+      if (
+        summary.trim().length > 0 &&
+        !window.confirm("Importing a Markdown file will replace the current summary. Continue?")
+      ) {
+        return;
+      }
+
+      setSummary(importedMarkdown);
+      pushToast({
+        title: "Markdown imported successfully",
+        tone: "success"
+      });
+    } catch {
+      pushToast({
+        title: "Could not read Markdown file",
+        tone: "error"
+      });
+    } finally {
+      input.value = "";
     }
   };
 
@@ -360,8 +392,8 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
       {activeTab === "summary" && (
         <AdminFormCard>
           <div className="space-y-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setShowPreview(!showPreview)}
@@ -369,6 +401,20 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
                 >
                   {showPreview ? "Edit" : "Preview"}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => markdownInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-accent/50"
+                >
+                  Upload .md file
+                </button>
+                <Input
+                  ref={markdownInputRef}
+                  type="file"
+                  accept=".md,text/markdown,text/plain"
+                  onChange={handleMarkdownFileUpload}
+                  className="hidden"
+                />
               </div>
 
               {showPreview ? (
