@@ -38,9 +38,9 @@ export function MockExamSolutionsClient({ examId }: MockExamSolutionsClientProps
         ]);
         setExam(examData);
         setQuestions(questionsData);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Failed to load mock exam solutions:", err);
-        const errorMessage = err?.message || "Failed to load solutions. Please try again.";
+        const errorMessage = err instanceof Error ? err.message : "Failed to load solutions. Please try again.";
 
         // Check for access denied (403) - solutions only available after completion
         if (errorMessage.includes("403") || errorMessage.includes("EXAM_NOT_COMPLETED")) {
@@ -84,7 +84,7 @@ export function MockExamSolutionsClient({ examId }: MockExamSolutionsClientProps
           </div>
         ) : (
           <Link href="/past-papers">
-            <Button variant="outline">Back to Past Papers</Button>
+            <Button variant="secondary">Back to Past Papers</Button>
           </Link>
         )}
       </div>
