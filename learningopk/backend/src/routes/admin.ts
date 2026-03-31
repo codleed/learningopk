@@ -4255,18 +4255,35 @@ adminRouter.post("/content/flashcards/reorder", requireSession, async (req, res)
     return;
   }
 
-  // Update orderIndex for each flashcard
+  // Update orderIndex for each flashcard in a transaction
   const updatedFlashcards: { id: number; orderIndex: number }[] = [];
-  for (let i = 0; i < orderedIds.length; i++) {
-    const flashcardId = orderedIds[i]!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-    const newOrderIndex = i;
 
-    await db
-      .update(flashcards)
-      .set({ orderIndex: newOrderIndex })
-      .where(eq(flashcards.id, flashcardId));
+  try {
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < orderedIds.length; i++) {
+        const flashcardId = orderedIds[i]!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+        const newOrderIndex = i;
 
-    updatedFlashcards.push({ id: flashcardId, orderIndex: newOrderIndex });
+        await tx
+          .update(flashcards)
+          .set({ orderIndex: newOrderIndex })
+          .where(eq(flashcards.id, flashcardId));
+
+        updatedFlashcards.push({ id: flashcardId, orderIndex: newOrderIndex });
+      }
+    });
+  } catch (error) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Reorder flashcards",
+      target: `Chapter #${chapterId}`,
+      status: "failed",
+      message: error instanceof Error ? error.message : "Reorder failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({ error: "Failed to reorder flashcards" });
+    return;
   }
 
   await persistAuditLog({
