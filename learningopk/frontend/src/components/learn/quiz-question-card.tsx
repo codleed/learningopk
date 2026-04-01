@@ -1,6 +1,12 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { Check, X } from "lucide-react";
+
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 import { cn } from "@/lib/utils";
-import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { ContentRenderer } from "@/components/common/content-renderer";
+import { Card } from "@/components/ui/card";
 
 type Quiz = NonNullable<ChapterDetailResponse["quiz"]>;
 type QuizQuestion = Quiz["questions"][number];
@@ -12,6 +18,9 @@ type QuizQuestionCardProps = {
   selectedAnswer: AnswerOption | undefined;
   locked: boolean;
   onSelect: (option: AnswerOption) => void;
+  /** Post-submit: show correct/incorrect feedback */
+  showFeedback?: boolean;
+  correctAnswer?: AnswerOption;
 };
 
 const answerOptionEntries: Array<{ key: AnswerOption; label: string }> = [
@@ -34,7 +43,15 @@ const getOptionText = (question: QuizQuestion, option: AnswerOption): string => 
   }
 };
 
-export function QuizQuestionCard({ question, questionNumber, selectedAnswer, locked, onSelect }: QuizQuestionCardProps) {
+export function QuizQuestionCard({
+  question,
+  questionNumber,
+  selectedAnswer,
+  locked,
+  onSelect,
+  showFeedback = false,
+  correctAnswer,
+}: QuizQuestionCardProps) {
   const handleKeyDown = (event: React.KeyboardEvent<HTMLFieldSetElement>) => {
     if (locked || !selectedAnswer) return;
 
@@ -59,31 +76,56 @@ export function QuizQuestionCard({ question, questionNumber, selectedAnswer, loc
   };
 
   return (
-    <article className="space-y-4">
-      <div className="space-y-3">
-        <div className="text-sm font-medium text-foreground">
-          <span>Question {questionNumber}: </span>
-          <MarkdownRenderer content={question.question} />
+    <article className="space-y-5">
+      {/* Question text */}
+      <Card variant="elevated" className="p-5">
+        <div className="flex items-start gap-3">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-primary text-xs font-bold text-white">
+            {questionNumber}
+          </span>
+          <div className="min-w-0 flex-1 text-sm font-medium text-text-primary leading-relaxed">
+            <ContentRenderer content={question.question} variant="compact" />
+          </div>
         </div>
-        <fieldset onKeyDown={handleKeyDown} disabled={locked}>
-          <legend className="sr-only">Options for question {questionNumber}</legend>
-          <div
-            role="radiogroup"
-            aria-label={`Options for question ${questionNumber}`}
-            className="grid gap-2"
-          >
-          {answerOptionEntries.map((option) => {
+      </Card>
+
+      {/* Answer options */}
+      <fieldset onKeyDown={handleKeyDown} disabled={locked}>
+        <legend className="sr-only">Options for question {questionNumber}</legend>
+        <div
+          role="radiogroup"
+          aria-label={`Options for question ${questionNumber}`}
+          className="grid gap-2.5"
+        >
+          {answerOptionEntries.map((option, index) => {
             const isSelected = selectedAnswer === option.key;
+            const isCorrectOption = showFeedback && correctAnswer === option.key;
+            const isWrongSelected = showFeedback && isSelected && correctAnswer !== option.key;
+            const isCorrectSelected = showFeedback && isSelected && correctAnswer === option.key;
+
             return (
-              <label
+              <motion.label
                 key={option.key}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05, duration: 0.25, ease: "easeOut" }}
                 className={cn(
-                  "flex cursor-pointer items-center rounded-lg border px-3 py-2 text-sm transition",
-                  "text-left",
-                  isSelected
-                    ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
-                    : "border-border bg-card text-foreground hover:border-[var(--primary)]/45",
-                  locked ? "cursor-not-allowed opacity-60" : ""
+                  "group relative flex cursor-pointer items-start gap-3 rounded-xl border-2 px-4 py-3.5 text-sm transition-all duration-150",
+                  "focus-within:ring-2 focus-within:ring-accent-primary/30 focus-within:ring-offset-1",
+                  /* Default state */
+                  !isSelected && !showFeedback && "border-border-default bg-bg-surface hover:border-border-strong hover:bg-bg-elevated",
+                  /* Selected (pre-submit) */
+                  isSelected && !showFeedback && "border-accent-primary bg-accent-primary-light",
+                  /* Post-submit: correct answer selected */
+                  isCorrectSelected && "border-accent-success bg-accent-success-light",
+                  /* Post-submit: wrong answer selected */
+                  isWrongSelected && "border-accent-danger bg-accent-danger-light",
+                  /* Post-submit: highlight correct answer if wrong was selected */
+                  isCorrectOption && !isSelected && "border-accent-success bg-accent-success-light",
+                  /* Post-submit: non-relevant options */
+                  showFeedback && !isCorrectOption && !isSelected && "border-border-default bg-bg-surface opacity-50",
+                  /* Locked */
+                  locked && !showFeedback && "cursor-not-allowed opacity-60"
                 )}
               >
                 <input
@@ -95,25 +137,38 @@ export function QuizQuestionCard({ question, questionNumber, selectedAnswer, loc
                   disabled={locked}
                   className="sr-only"
                 />
+
+                {/* Option letter indicator */}
                 <span
                   className={cn(
-                    "mr-2 flex h-5 w-5 items-center justify-center rounded-full border text-xs font-semibold transition",
-                    isSelected
-                      ? "border-[var(--primary-foreground)] bg-[var(--primary-foreground)] text-[var(--primary)]"
-                      : "border-[var(--foreground)]/30 bg-transparent text-[var(--foreground)]/30",
-                    !locked && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2"
+                    "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-all duration-150",
+                    !isSelected && !showFeedback && "border border-border-default bg-bg-subtle text-text-secondary group-hover:border-border-strong",
+                    isSelected && !showFeedback && "bg-accent-primary text-white",
+                    isCorrectSelected && "bg-accent-success text-white",
+                    isWrongSelected && "bg-accent-danger text-white",
+                    isCorrectOption && !isSelected && "bg-accent-success text-white",
+                    showFeedback && !isCorrectOption && !isSelected && "border border-border-default bg-bg-subtle text-text-secondary"
                   )}
                   aria-hidden="true"
                 >
-                  {option.label}
+                  {isCorrectSelected || (isCorrectOption && !isSelected) ? (
+                    <Check className="h-3.5 w-3.5" />
+                  ) : isWrongSelected ? (
+                    <X className="h-3.5 w-3.5" />
+                  ) : (
+                    option.label
+                  )}
                 </span>
-                <span className="flex-1"><MarkdownRenderer content={getOptionText(question, option.key)} /></span>
-              </label>
+
+                {/* Option text */}
+                <span className="flex-1 pt-0.5 text-text-primary leading-relaxed">
+                  <ContentRenderer content={getOptionText(question, option.key)} variant="compact" />
+                </span>
+              </motion.label>
             );
           })}
-          </div>
-        </fieldset>
-      </div>
+        </div>
+      </fieldset>
     </article>
   );
 }

@@ -2,12 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { motion, AnimatePresence } from "framer-motion";
+import { Eye, Pencil, Send, Bold, Italic, Code } from "lucide-react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { ContentRenderer } from "@/components/common/content-renderer";
+import { Tabs, TabList, TabTrigger, TabContent } from "@/components/ui/tabs";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
@@ -25,9 +27,13 @@ type ForumReplyFormProps = {
 export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: ForumReplyFormProps) => {
   const router = useRouter();
   const [body, setBody] = useState("");
-  const [previewEnabled, setPreviewEnabled] = useState(false);
+  const [activeTab, setActiveTab] = useState("write");
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const insertMarkdown = (prefix: string, suffix: string) => {
+    setBody((current) => `${current}${prefix}text${suffix}`);
+  };
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -71,55 +77,112 @@ export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: For
     }
 
     setBody("");
-    setPreviewEnabled(false);
+    setActiveTab("write");
     router.refresh();
   };
 
   return (
     <form
       onSubmit={onSubmit}
-      className={[
-        "surface-card space-y-3 rounded-xl border border-border p-4",
-        compact ? "mt-3" : "mt-6"
-      ].join(" ")}
+      className={compact
+        ? "mt-3 rounded-lg border border-dashed border-border-default bg-bg-subtle/30 p-3"
+        : "rounded-xl border border-border-default bg-bg-surface p-4"
+      }
     >
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">{parentReplyId ? "Reply to answer" : "Post a reply"}</h3>
-        <Button
-          type="button"
-          onClick={() => setPreviewEnabled((current) => !current)}
-          variant="ghost"
-          size="sm"
-        >
-          {previewEnabled ? "Edit" : "Preview"}
-        </Button>
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="font-display text-sm font-bold text-text-primary">
+          {parentReplyId ? "Reply to this answer" : "Post a reply"}
+        </h3>
       </div>
 
-      {previewEnabled ? (
-        <div className="min-h-24 rounded-md border border-border bg-muted/45 p-3">
-          {body.trim().length > 0 ? (
-            <div className="prose prose-zinc max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="mb-2 flex items-center justify-between">
+          <TabList variant="pills">
+            <TabTrigger value="write" variant="pills" layoutId={`reply-tab-${parentReplyId ?? "root"}`}>
+              <Pencil className="h-3 w-3" aria-hidden="true" />
+              Write
+            </TabTrigger>
+            <TabTrigger value="preview" variant="pills" layoutId={`reply-tab-${parentReplyId ?? "root"}`}>
+              <Eye className="h-3 w-3" aria-hidden="true" />
+              Preview
+            </TabTrigger>
+          </TabList>
+
+          {/* Markdown toolbar (only visible in write mode) */}
+          {activeTab === "write" ? (
+            <div className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => insertMarkdown("**", "**")}
+                className="rounded p-1 text-text-muted transition-colors hover:bg-bg-subtle hover:text-text-primary"
+                aria-label="Bold"
+              >
+                <Bold className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => insertMarkdown("*", "*")}
+                className="rounded p-1 text-text-muted transition-colors hover:bg-bg-subtle hover:text-text-primary"
+                aria-label="Italic"
+              >
+                <Italic className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => insertMarkdown("`", "`")}
+                className="rounded p-1 text-text-muted transition-colors hover:bg-bg-subtle hover:text-text-primary"
+                aria-label="Inline code"
+              >
+                <Code className="h-3.5 w-3.5" />
+              </button>
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">Nothing to preview yet.</p>
-          )}
+          ) : null}
         </div>
-      ) : (
-        <Textarea
-          value={body}
-          onChange={(event) => setBody(event.target.value)}
-          rows={compact ? 3 : 5}
-          required
-          placeholder={parentReplyId ? "Add a nested reply..." : "Share your answer..."}
-        />
-      )}
 
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+        <TabContent value="write">
+          <Textarea
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            rows={compact ? 3 : 5}
+            required
+            placeholder={parentReplyId ? "Add a nested reply..." : "Share your answer or thoughts..."}
+            autoResize
+            maxRows={compact ? 8 : 15}
+          />
+        </TabContent>
 
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "Posting..." : "Post reply"}
-      </Button>
+        <TabContent value="preview">
+          <div className="min-h-[80px] rounded-lg border border-border-default bg-bg-base p-4">
+            {body.trim().length > 0 ? (
+              <ContentRenderer content={body} variant="compact" />
+            ) : (
+              <p className="text-sm text-text-muted">Nothing to preview yet.</p>
+            )}
+          </div>
+        </TabContent>
+      </Tabs>
+
+      {/* Error display */}
+      <AnimatePresence>
+        {error ? (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-2 overflow-hidden"
+          >
+            <div className="rounded-lg border border-accent-danger/20 bg-accent-danger-light px-3 py-2">
+              <p className="text-xs text-accent-danger">{error}</p>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      <div className="mt-3 flex items-center justify-end">
+        <Button type="submit" size="sm" variant="primary" loading={isPending} iconLeft={<Send />}>
+          {isPending ? "Posting..." : "Submit Reply"}
+        </Button>
+      </div>
     </form>
   );
 };

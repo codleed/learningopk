@@ -1,11 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
-
-import { getResolvedTheme, type AppTheme } from "@/lib/theme";
-
-const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type ChapterGraphNode = {
   id: number;
@@ -27,52 +22,68 @@ type ChapterLinkGraphProps = {
   testId?: string;
 };
 
-type RenderableGraphNode = {
+type PositionedNode = {
   id: number;
-  label: string;
-  color: string;
+  title: string;
+  isPublished: boolean;
+  x: number;
+  y: number;
 };
 
-type RenderableGraphLink = {
-  source: number;
-  target: number;
+type ResolvedEdge = {
+  sourceChapterId: number;
+  targetChapterId: number;
+  isResolved: boolean;
 };
 
-type GraphThemeStyle = {
-  background: string;
-  labelColor: string;
-  linkColor: string;
-  linkWidth: number;
-  publishedNode: string;
-  unpublishedNode: string;
-  activeNode: string;
-};
+const NODE_RADIUS = 6;
+const LABEL_OFFSET_X = 12;
+const LABEL_FONT_SIZE = 11;
+const PADDING = 48;
 
-const GRAPH_THEME_STYLE: Record<AppTheme, GraphThemeStyle> = {
-  light: {
-    background: "rgb(243, 244, 246)",
-    labelColor: "rgb(31, 41, 55)",
-    linkColor: "rgb(77, 124, 15)",
-    linkWidth: 2.2,
-    publishedNode: "rgb(30, 41, 59)",
-    unpublishedNode: "rgb(120, 53, 15)",
-    activeNode: "rgb(8, 145, 178)"
-  },
-  dark: {
-    background: "rgb(17, 24, 39)",
-    labelColor: "rgb(226, 232, 240)",
-    linkColor: "rgb(132, 204, 22)",
-    linkWidth: 2.2,
-    publishedNode: "rgb(226, 232, 240)",
-    unpublishedNode: "rgb(253, 230, 138)",
-    activeNode: "rgb(125, 211, 252)"
+/**
+ * Compute a circular layout for nodes, centered within the given dimensions.
+ * Single node is placed at center; two nodes are placed side-by-side.
+ */
+function computeCircularLayout(
+  nodes: ChapterGraphNode[],
+  width: number,
+  height: number,
+): PositionedNode[] {
+  const cx = width / 2;
+  const cy = height / 2;
+  const count = nodes.length;
+
+  if (count === 0) return [];
+
+  if (count === 1) {
+    return [{ ...nodes[0]!, x: cx, y: cy }];
   }
-};
 
-export function ChapterLinkGraph({ nodes, edges, activeChapterId, onOpenChapter, testId }: ChapterLinkGraphProps) {
+  const radiusX = (width - PADDING * 2) / 2;
+  const radiusY = (height - PADDING * 2) / 2;
+  const radius = Math.min(radiusX, radiusY);
+
+  return nodes.map((node, i) => {
+    const angle = (2 * Math.PI * i) / count - Math.PI / 2;
+    return {
+      ...node,
+      x: cx + radius * Math.cos(angle),
+      y: cy + radius * Math.sin(angle),
+    };
+  });
+}
+
+export function ChapterLinkGraph({
+  nodes,
+  edges,
+  activeChapterId,
+  onOpenChapter,
+  testId,
+}: ChapterLinkGraphProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ width: 720, height: 360 });
-  const [theme, setTheme] = useState<AppTheme>(() => getResolvedTheme());
+  const [hoveredNodeId, setHoveredNodeId] = useState<number | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -84,7 +95,7 @@ export function ChapterLinkGraph({ nodes, edges, activeChapterId, onOpenChapter,
       const width = Math.max(360, Math.floor(container.clientWidth));
       setSize({
         width,
-        height: Math.max(280, Math.floor(width * 0.52))
+        height: Math.max(280, Math.floor(width * 0.52)),
       });
     };
     updateSize();
@@ -99,92 +110,153 @@ export function ChapterLinkGraph({ nodes, edges, activeChapterId, onOpenChapter,
     };
   }, []);
 
-  useEffect(() => {
-    if (typeof document === "undefined") {
-      return;
+  const positionedNodes = useMemo(
+    () => computeCircularLayout(nodes, size.width, size.height),
+    [nodes, size.width, size.height],
+  );
+
+  const nodePositionMap = useMemo(() => {
+    const map = new Map<number, PositionedNode>();
+    for (const node of positionedNodes) {
+      map.set(node.id, node);
     }
+    return map;
+  }, [positionedNodes]);
 
-    const root = document.documentElement;
-    const syncTheme = () => {
-      setTheme(root.classList.contains("dark") ? "dark" : "light");
-    };
-    syncTheme();
+  const resolvedEdges = useMemo(
+    () =>
+      edges.filter(
+        (edge): edge is ResolvedEdge => edge.targetChapterId !== null,
+      ),
+    [edges],
+  );
 
-    const observer = new MutationObserver(syncTheme);
-    observer.observe(root, {
-      attributes: true,
-      attributeFilter: ["class"]
-    });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  const graphThemeStyle = GRAPH_THEME_STYLE[theme];
-
-  const graphData = useMemo(
-    () => ({
-      nodes: nodes.map<RenderableGraphNode>((node) => ({
-        id: node.id,
-        label: node.title,
-        color:
-          activeChapterId === node.id
-            ? graphThemeStyle.activeNode
-            : node.isPublished
-              ? graphThemeStyle.publishedNode
-              : graphThemeStyle.unpublishedNode
-      })),
-      links: edges
-        .filter((edge): edge is ChapterGraphEdge & { targetChapterId: number } => edge.targetChapterId !== null)
-        .map<RenderableGraphLink>((edge) => ({
-          source: edge.sourceChapterId,
-          target: edge.targetChapterId
-        }))
-    }),
-    [activeChapterId, edges, graphThemeStyle, nodes]
+  const handleNodeClick = useCallback(
+    (nodeId: number) => {
+      onOpenChapter(nodeId);
+    },
+    [onOpenChapter],
   );
 
   return (
     <div
       ref={containerRef}
       data-testid={testId}
-      data-graph-theme={theme}
-      data-graph-background={graphThemeStyle.background}
-      data-graph-link-color={graphThemeStyle.linkColor}
-      data-graph-link-width={String(graphThemeStyle.linkWidth)}
       className="w-full overflow-hidden rounded-lg border border-border/60 bg-background p-1"
-      style={{ backgroundColor: graphThemeStyle.background }}
     >
-      <ForceGraph2D
+      <svg
         width={size.width}
         height={size.height}
-        graphData={graphData}
-        backgroundColor={graphThemeStyle.background}
-        nodeRelSize={4}
-        linkColor={() => graphThemeStyle.linkColor}
-        linkWidth={graphThemeStyle.linkWidth}
-        cooldownTicks={80}
-        onNodeClick={(node) => {
-          const id = Number((node as { id: number }).id);
-          if (Number.isFinite(id)) {
-            onOpenChapter(id);
-          }
-        }}
-        nodeCanvasObject={(node, context, globalScale) => {
-          const renderableNode = node as RenderableGraphNode;
-          const label = renderableNode.label;
-          const fontSize = 12 / globalScale;
-          context.fillStyle = renderableNode.color;
-          context.beginPath();
-          context.arc(node.x ?? 0, node.y ?? 0, 4.5, 0, 2 * Math.PI, false);
-          context.fill();
+        viewBox={`0 0 ${size.width} ${size.height}`}
+        className="block select-none"
+        style={{ background: "var(--bg-elevated)" }}
+      >
+        {/* Edges */}
+        {resolvedEdges.map((edge) => {
+          const source = nodePositionMap.get(edge.sourceChapterId);
+          const target = nodePositionMap.get(edge.targetChapterId);
+          if (!source || !target) return null;
 
-          context.font = `${fontSize}px sans-serif`;
-          context.fillStyle = graphThemeStyle.labelColor;
-          context.fillText(label, (node.x ?? 0) + 7, (node.y ?? 0) + 3);
-        }}
-      />
+          return (
+            <line
+              key={`${edge.sourceChapterId}-${edge.targetChapterId}`}
+              x1={source.x}
+              y1={source.y}
+              x2={target.x}
+              y2={target.y}
+              stroke={
+                edge.isResolved
+                  ? "var(--accent-success)"
+                  : "var(--border-strong)"
+              }
+              strokeWidth={edge.isResolved ? 2.2 : 1.5}
+              strokeOpacity={edge.isResolved ? 0.8 : 0.5}
+            />
+          );
+        })}
+
+        {/* Nodes */}
+        {positionedNodes.map((node) => {
+          const isActive = activeChapterId === node.id;
+          const isHovered = hoveredNodeId === node.id;
+
+          let fillColor: string;
+          if (isActive) {
+            fillColor = "var(--accent-info)";
+          } else if (!node.isPublished) {
+            fillColor = "var(--accent-warning)";
+          } else {
+            fillColor = "var(--text-primary)";
+          }
+
+          return (
+            <g
+              key={node.id}
+              className="cursor-pointer"
+              onClick={() => handleNodeClick(node.id)}
+              onMouseEnter={() => setHoveredNodeId(node.id)}
+              onMouseLeave={() => setHoveredNodeId(null)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleNodeClick(node.id);
+                }
+              }}
+            >
+              {/* Hit area (larger invisible circle for easier clicking) */}
+              <circle
+                cx={node.x}
+                cy={node.y}
+                r={NODE_RADIUS * 3}
+                fill="transparent"
+              />
+
+              {/* Active ring */}
+              {isActive && (
+                <circle
+                  cx={node.x}
+                  cy={node.y}
+                  r={NODE_RADIUS + 4}
+                  fill="none"
+                  stroke="var(--accent-info)"
+                  strokeWidth={1.5}
+                  strokeOpacity={0.4}
+                />
+              )}
+
+              {/* Node circle */}
+              <circle
+                cx={node.x}
+                cy={node.y}
+                r={isHovered ? NODE_RADIUS + 1.5 : NODE_RADIUS}
+                fill={fillColor}
+                style={{
+                  transition: "r 150ms ease-out, opacity 150ms ease-out",
+                }}
+                opacity={isHovered ? 1 : 0.9}
+              />
+
+              {/* Label */}
+              <text
+                x={node.x + LABEL_OFFSET_X}
+                y={node.y + LABEL_FONT_SIZE * 0.35}
+                fill="var(--text-primary)"
+                fontSize={LABEL_FONT_SIZE}
+                fontFamily="var(--font-body)"
+                opacity={isHovered || isActive ? 1 : 0.75}
+                style={{
+                  transition: "opacity 150ms ease-out",
+                  pointerEvents: "none",
+                }}
+              >
+                {node.title}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 }

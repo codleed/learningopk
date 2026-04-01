@@ -1,7 +1,6 @@
 "use client";
 
-import { List, SignOut, X } from "@phosphor-icons/react";
-import type { LucideIcon } from "lucide-react";
+import { Menu, LogOut, X, type LucideIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
@@ -238,7 +237,7 @@ export function LeftRail({
           aria-label="Open navigation menu"
           aria-expanded={isMobileOpen}
         >
-          <List className="h-5 w-5 text-[var(--sidebar-nav-default-text)]" weight="bold" />
+          <Menu className="h-5 w-5 text-[var(--sidebar-nav-default-text)]" />
         </button>
       )}
 
@@ -291,7 +290,7 @@ export function LeftRail({
                   className="absolute right-2 top-2 rounded-lg p-1.5 text-[var(--sidebar-nav-default-text)] hover:bg-[var(--sidebar-nav-hover-bg)]"
                   aria-label="Close sidebar"
                 >
-                  <X className="h-5 w-5" weight="bold" />
+                  <X className="h-5 w-5" />
                 </button>
               )}
               <Link
@@ -344,7 +343,7 @@ export function LeftRail({
             <LogoutButton
               ariaLabel="Sign out"
               icon={
-                <SignOut
+                <LogOut
                   className="h-5 w-5 shrink-0 transition-colors duration-150"
                   aria-hidden
                 />

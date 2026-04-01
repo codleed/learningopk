@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { Star } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight } from "lucide-react";
 
 import { AppShell } from "@/components/foundation/app-shell";
 import {
@@ -10,7 +10,10 @@ import {
   MotionSection,
   MotionCard,
 } from "@/components/dashboard/DashboardClient";
-import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
+import { PageHeader } from "@/components/common/page-header";
+import { BoardBadge } from "@/components/common/board-badge";
+import { ProgressRing } from "@/components/common/progress-ring";
+import { Card, CardBody } from "@/components/ui/card";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { getForumFilters } from "@/lib/forum-api";
 import { getDashboardSummary } from "@/lib/progress-api";
@@ -29,13 +32,6 @@ const subjectIconBySlug: Record<string, string> = {
 
 const resolveSubjectIcon = (subjectSlug: string): string =>
   subjectIconBySlug[subjectSlug] ?? "/subjects/science.svg";
-
-const cardPalette = [
-  { bg: "bg-[var(--primary)]/10", accent: "text-[var(--primary)]", border: "border-[var(--primary)]/20" },
-  { bg: "bg-[var(--primary)]/15", accent: "text-[var(--primary)]", border: "border-[var(--primary)]/25" },
-  { bg: "bg-[var(--success)]/10", accent: "text-[var(--success)]", border: "border-[var(--success)]/20" },
-  { bg: "bg-[var(--info)]/10", accent: "text-[var(--info)]", border: "border-[var(--info)]/20" },
-];
 
 export default async function SubjectsPage() {
   const session = await getServerSession();
@@ -122,115 +118,136 @@ export default async function SubjectsPage() {
       contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6"
     >
       <StaggerContainer className="space-y-8">
+        {/* Header */}
+        <MotionSection>
+          <PageHeader
+            title="Subjects"
+            subtitle="Browse and access chapters from your enrolled subjects."
+            breadcrumbs={[
+              { label: "Dashboard", href: "/dashboard" },
+              { label: "Subjects" },
+            ]}
+          />
+        </MotionSection>
+
+        {/* Error state */}
+        {filtersResult.error ? (
           <MotionSection>
-            <Breadcrumbs
-              items={[
-                { label: "Dashboard", href: "/dashboard" },
-                { label: "Subjects" },
-              ]}
-              className="mb-4"
+            <ErrorState
+              title="Subjects are temporarily unavailable"
+              description={`${filtersResult.error} Ensure backend is running on http://localhost:3001.`}
             />
-            <h1 className="text-4xl font-semibold leading-[1.15] tracking-[-0.02em] text-foreground sm:text-5xl lg:text-[3.4rem]">
-              Your Subjects
-            </h1>
-            <p className="mt-3 text-sm text-foreground/60">
-              Browse and access chapters from your enrolled subjects.
-            </p>
           </MotionSection>
+        ) : null}
 
-          {filtersResult.error ? (
-            <MotionSection>
-              <ErrorState
-                title="Subjects are temporarily unavailable"
-                description={`${filtersResult.error} Ensure backend is running on http://localhost:3001.`}
-              />
-            </MotionSection>
-          ) : null}
+        {/* Empty state */}
+        {filtersResult.error === null && subjects.length === 0 ? (
+          <MotionSection>
+            <EmptyState
+              title="No subjects available"
+              description="Seed or publish content, then refresh to load subject cards from the database."
+            />
+          </MotionSection>
+        ) : null}
 
-          {filtersResult.error === null && subjects.length === 0 ? (
-            <MotionSection>
-              <EmptyState
-                title="No subjects available"
-                description="Seed or publish content, then refresh to load subject cards from the database."
-              />
-            </MotionSection>
-          ) : null}
+        {/* Subject grid */}
+        {filtersResult.error === null && subjects.length > 0 ? (
+          <MotionSection>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {subjects.map((subject) => (
+                <MotionCard key={subject.id}>
+                  <Link
+                    href={`/${subject.boardSlug}/${subject.classSlug}/${subject.slug}`}
+                    className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40 focus-visible:ring-offset-2 rounded-xl"
+                  >
+                    <Card
+                      variant="default"
+                      className="group relative overflow-hidden"
+                    >
+                      {/* Decorative accent line */}
+                      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-accent-primary/60 via-accent-primary/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
-          {filtersResult.error === null && subjects.length > 0 ? (
-            <MotionSection>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {subjects.map((subject, index) => {
-                  const palette = cardPalette[index % cardPalette.length];
-                  return (
-                    <MotionCard key={subject.id}>
-                      <Link
-                        href={`/${subject.boardSlug}/${subject.classSlug}/${subject.slug}`}
-                        className="block"
-                      >
-                        <article
-                          className={cn(
-                            palette.bg,
-                            "rounded-2xl p-5 transition-shadow hover:shadow-lg",
-                          )}
-                        >
-                          <div className="flex items-start gap-4">
+                      <CardBody className="p-5 sm:p-6">
+                        <div className="flex items-start gap-4">
+                          {/* Subject icon */}
+                          <div
+                            className={cn(
+                              "flex h-14 w-14 shrink-0 items-center justify-center rounded-xl",
+                              "border border-border-default bg-bg-subtle",
+                              "transition-colors duration-200 group-hover:border-accent-primary/20"
+                            )}
+                          >
                             <Image
                               src={subject.iconSrc}
                               alt={`${subject.name} icon`}
-                              width={64}
-                              height={64}
-                              className="h-16 w-16 shrink-0 rounded-xl border border-[var(--border)] bg-[var(--card)] p-1"
+                              width={36}
+                              height={36}
+                              className="h-9 w-9"
                             />
-                            <div className="min-w-0 flex-1">
-                              <h2 className="text-lg font-semibold text-foreground">
-                                {subject.name}
-                              </h2>
-                              <p className="mt-0.5 text-xs font-semibold uppercase tracking-[0.08em] text-foreground/60">
-                                {subject.boardName} | Class {subject.className}
-                              </p>
+                          </div>
+
+                          {/* Subject info */}
+                          <div className="min-w-0 flex-1">
+                            <h2 className="font-[var(--font-display)] text-lg font-semibold tracking-tight text-text-primary">
+                              {subject.name}
+                            </h2>
+                            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                              <BoardBadge board={subject.boardSlug} size="sm" />
+                              <span className="text-[0.6875rem] font-medium text-text-muted">
+                                Class {subject.className}
+                              </span>
                             </div>
                           </div>
 
-                          <div className="mt-4">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-foreground/70">
-                                {subject.progress}% complete
-                              </span>
-                              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--card)] px-2 py-0.5 text-xs font-bold text-foreground">
-                                <Star
-                                  className="h-3 w-3 text-amber-500"
-                                  weight="fill"
-                                  aria-hidden
-                                />
-                                {Math.min(5, Math.max(1, 3 + subject.progress / 25)).toFixed(1)}
-                              </span>
-                            </div>
-                            <div
-                              role="progressbar"
-                              aria-label={`${subject.name} progress`}
-                              aria-valuemin={0}
-                              aria-valuemax={100}
-                              aria-valuenow={subject.progress}
-                              className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[var(--muted)]"
-                            >
-                              <span
-                                className="block h-full rounded-full bg-[var(--primary)]"
-                                style={{ width: `${Math.max(subject.progress, 4)}%` }}
-                              />
-                            </div>
-                            <p className="mt-3 text-sm font-semibold text-foreground">
-                              Open chapters →
-                            </p>
+                          {/* Progress ring */}
+                          <div className="shrink-0">
+                            <ProgressRing
+                              percentage={subject.progress}
+                              size={48}
+                              strokeWidth={4}
+                            />
                           </div>
-                        </article>
-                      </Link>
-                    </MotionCard>
-                  );
-                })}
-              </div>
-            </MotionSection>
-          ) : null}
-        </StaggerContainer>
+                        </div>
+
+                        {/* Progress bar */}
+                        <div className="mt-4">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-medium text-text-secondary">
+                              {subject.progress}% complete
+                            </span>
+                          </div>
+                          <div
+                            role="progressbar"
+                            aria-label={`${subject.name} progress`}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-valuenow={subject.progress}
+                            className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-bg-subtle"
+                          >
+                            <div
+                              className="h-full rounded-full bg-accent-primary transition-all duration-500"
+                              style={{ width: `${Math.max(subject.progress, 2)}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* CTA */}
+                        <div className="mt-4 flex items-center gap-1.5 text-sm font-semibold text-accent-primary transition-colors group-hover:text-accent-primary-hover">
+                          <span>Open chapters</span>
+                          <ArrowRight
+                            className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
+                            aria-hidden
+                          />
+                        </div>
+                      </CardBody>
+                    </Card>
+                  </Link>
+                </MotionCard>
+              ))}
+            </div>
+          </MotionSection>
+        ) : null}
+      </StaggerContainer>
     </AppShell>
   );
 }

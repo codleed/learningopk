@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { prepare, layout, type PreparedText } from "@chenglou/pretext";
 
 export type BlockType =
   | "h1" | "h2" | "h3" | "h4" | "h5" | "h6"
@@ -44,8 +43,6 @@ const HEADER_FONT_SIZES: Record<string, number> = {
   h5: 18,
   h6: 16,
 };
-
-const preparedCache = new Map<string, PreparedText>();
 
 function extractTextFromMarkdown(markdown: string): string {
   return markdown
@@ -218,23 +215,16 @@ export function parseMarkdownBlocks(content: string): MarkdownBlock[] {
   return blocks;
 }
 
-function measureTextHeight(
-  handle: PreparedText,
+function estimateTextHeight(
   text: string,
+  fontSize: number,
   width: number,
   lineHeight: number
 ): number {
-  const result = layout(handle, width, lineHeight);
-  return result.height;
-}
-
-function getOrCreatePrepared(key: string, text: string, font: string): PreparedText {
-  let handle = preparedCache.get(key);
-  if (!handle) {
-    handle = prepare(text, font);
-    preparedCache.set(key, handle);
-  }
-  return handle;
+  const avgCharWidth = fontSize * 0.6;
+  const charsPerLine = Math.max(Math.floor(width / avgCharWidth), 1);
+  const estimatedLines = Math.ceil(text.length / charsPerLine);
+  return Math.max(estimatedLines, 1) * lineHeight;
 }
 
 function computeBlockHeight(
@@ -252,10 +242,7 @@ function computeBlockHeight(
       const fontSize = HEADER_FONT_SIZES[block.type];
       const multiplier = HEADER_MULTIPLIERS[block.type];
       const text = extractTextFromMarkdown(block.text);
-      const key = `header-${fontSize}-${text.slice(0, 50)}`;
-
-      const handle = getOrCreatePrepared(key, text, `${fontSize}px Inter, system-ui, sans-serif`);
-      const textHeight = measureTextHeight(handle, text, width, baseLineHeight);
+      const textHeight = estimateTextHeight(text, fontSize, width, baseLineHeight);
       return Math.max(textHeight * multiplier, fontSize * multiplier);
     }
 
@@ -277,17 +264,12 @@ function computeBlockHeight(
       if (!text.trim()) {
         return baseLineHeight;
       }
-      const key = `math-${block.type}-${text.slice(0, 50)}`;
-      const handle = getOrCreatePrepared(key, text, `${FONT_SIZE}px Inter, system-ui, sans-serif`);
-      return measureTextHeight(handle, text, width, baseLineHeight) + 16;
+      return estimateTextHeight(text, FONT_SIZE, width, baseLineHeight) + 16;
     }
 
     case "table": {
       const text = extractTextFromMarkdown(block.text);
-      const columns = text.split(/\s+/).length;
-      const key = `table-${columns}-${text.slice(0, 50)}`;
-      const handle = getOrCreatePrepared(key, text, `${FONT_SIZE}px Inter, system-ui, sans-serif`);
-      return measureTextHeight(handle, text, width, baseLineHeight) * 2;
+      return estimateTextHeight(text, FONT_SIZE, width, baseLineHeight) * 2;
     }
 
     case "hr": {
@@ -304,9 +286,7 @@ function computeBlockHeight(
       if (!text.trim()) {
         return baseLineHeight;
       }
-      const key = `p-${text.slice(0, 100)}`;
-      const handle = getOrCreatePrepared(key, text, `${FONT_SIZE}px Inter, system-ui, sans-serif`);
-      return measureTextHeight(handle, text, width, baseLineHeight) + 8;
+      return estimateTextHeight(text, FONT_SIZE, width, baseLineHeight) + 8;
     }
   }
 }

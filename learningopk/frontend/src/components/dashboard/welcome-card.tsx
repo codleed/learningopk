@@ -1,3 +1,5 @@
+import { Avatar } from "@/components/ui/avatar";
+
 type WelcomeCardProps = {
   displayName: string;
   email: string;
@@ -5,11 +7,21 @@ type WelcomeCardProps = {
 
 export function WelcomeCard({ displayName, email }: WelcomeCardProps) {
   return (
-    <article className="surface-card rounded-2xl border border-border p-6">
-      <p className="text-sm text-muted-foreground">Welcome back</p>
-      <h2 className="mt-1 text-2xl font-semibold text-foreground">{displayName}</h2>
-      <p className="mt-3 text-sm text-muted-foreground">Signed in as {email}</p>
+    <article className="rounded-xl border border-border-default bg-bg-surface p-6">
+      <div className="flex items-center gap-4">
+        <Avatar name={displayName} size="lg" />
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-text-secondary">
+            Welcome back
+          </p>
+          <h2 className="font-[var(--font-display)] mt-0.5 text-xl font-bold text-text-primary truncate">
+            {displayName}
+          </h2>
+          <p className="mt-1 text-xs text-text-muted truncate">
+            Signed in as {email}
+          </p>
+        </div>
+      </div>
     </article>
   );
 }
-

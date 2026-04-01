@@ -2,10 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { ThumbsUp, ThumbsDown, CheckCircle, Award } from "lucide-react";
 import { z } from "zod";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
@@ -87,52 +90,89 @@ export const ForumReplyActions = ({
   };
 
   return (
-    <div className="mt-3 space-y-2">
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <Button
+    <div className="mt-3 space-y-1.5">
+      <div className="flex flex-wrap items-center gap-1.5">
+        {/* Upvote button */}
+        <button
           type="button"
           disabled={isPending}
           onClick={() => handleVote("upvote")}
-          className={[
-            "px-2.5 py-1 text-xs",
+          className={cn(
+            "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-all duration-150",
+            "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40",
+            "disabled:pointer-events-none disabled:opacity-50",
             viewerVoteType === "upvote"
-              ? "border-emerald-700 bg-emerald-100 text-emerald-700"
-              : ""
-          ].join(" ")}
-          size="sm"
-          variant="secondary"
+              ? "border-accent-success/30 bg-accent-success-light text-accent-success"
+              : "border-border-default bg-bg-subtle text-text-secondary hover:border-accent-success/30 hover:text-accent-success"
+          )}
+          aria-label="Upvote"
+          aria-pressed={viewerVoteType === "upvote"}
         >
-          Upvote
-        </Button>
-        <Button
+          <ThumbsUp className="h-3 w-3" aria-hidden="true" />
+          <span>Upvote</span>
+        </button>
+
+        {/* Score */}
+        <span className={cn(
+          "px-1.5 text-xs font-bold tabular-nums",
+          upvotes > 0 ? "text-accent-success" : upvotes < 0 ? "text-accent-danger" : "text-text-muted"
+        )}>
+          {upvotes > 0 ? `+${upvotes}` : upvotes}
+        </span>
+
+        {/* Downvote button */}
+        <button
           type="button"
           disabled={isPending}
           onClick={() => handleVote("downvote")}
-          className={[
-            "px-2.5 py-1 text-xs",
+          className={cn(
+            "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-all duration-150",
+            "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40",
+            "disabled:pointer-events-none disabled:opacity-50",
             viewerVoteType === "downvote"
-              ? "border-rose-700 bg-rose-100 text-rose-700"
-              : ""
-          ].join(" ")}
-          size="sm"
-          variant="secondary"
+              ? "border-accent-danger/30 bg-accent-danger-light text-accent-danger"
+              : "border-border-default bg-bg-subtle text-text-secondary hover:border-accent-danger/30 hover:text-accent-danger"
+          )}
+          aria-label="Downvote"
+          aria-pressed={viewerVoteType === "downvote"}
         >
-          Downvote
-        </Button>
-        <span className="text-muted-foreground">Score: {upvotes}</span>
+          <ThumbsDown className="h-3 w-3" aria-hidden="true" />
+        </button>
 
-        {isAcceptedAnswer ? (
-          <Badge variant="success">Accepted Answer</Badge>
-        ) : null}
+        {/* Separator */}
+        <span className="h-4 w-px bg-border-default" aria-hidden="true" />
 
+        {/* Accept answer button */}
         {canMarkAccepted && !isAcceptedAnswer ? (
-          <Button type="button" disabled={isPending} onClick={handleAccept} size="sm" variant="secondary">
-            Mark accepted
-          </Button>
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={handleAccept}
+            className={cn(
+              "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-all duration-150",
+              "border border-border-default bg-bg-subtle text-text-secondary",
+              "hover:border-accent-success/30 hover:bg-accent-success-light hover:text-accent-success",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40",
+              "disabled:pointer-events-none disabled:opacity-50"
+            )}
+            aria-label="Mark as accepted answer"
+          >
+            <Award className="h-3 w-3" aria-hidden="true" />
+            <span>Accept</span>
+          </button>
         ) : null}
       </div>
 
-      {error ? <p className="text-xs text-rose-700">{error}</p> : null}
+      {/* Error */}
+      {error ? (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-xs text-accent-danger"
+        >
+          {error}
+        </motion.p>
+      ) : null}
     </div>
   );
 };

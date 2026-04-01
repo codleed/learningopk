@@ -1,27 +1,28 @@
 import type { Metadata } from "next";
-import { Montserrat, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
-
+import { Syne, DM_Sans, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import { ToastProvider } from "@/components/ui/toast";
-import { themeInitScript } from "@/lib/theme";
-
 import "./globals.css";
 
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+const syne = Syne({
+  variable: "--font-syne",
   subsets: ["latin"],
-  display: "swap"
+  weight: ["600", "700", "800"],
+  display: "swap",
 });
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta-sans",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
-  display: "swap"
+  weight: ["400", "500"],
+  display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
-  display: "swap"
+  weight: ["400", "500"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -30,8 +31,8 @@ export const metadata: Metadata = {
   icons: {
     icon: "/new_logo.png",
     shortcut: "/new_logo.png",
-    apple: "/new_logo.png"
-  }
+    apple: "/new_logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -41,17 +42,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-      </head>
       <body
+        className={`${syne.variable} ${dmSans.variable} ${jetbrainsMono.variable} antialiased`}
         suppressHydrationWarning
-        className={`${montserrat.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} antialiased`}
-        style={{
-          fontFamily: "var(--font-plus-jakarta-sans), sans-serif",
-        }}
       >
-        <ToastProvider>{children}</ToastProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          <ToastProvider>{children}</ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { AuthLayout } from "@/components/auth/auth-layout";
-import { RegisterForm } from "@/components/auth/register-form";
+import { RegisterPageClient } from "@/components/auth/register-page-client";
 import { getServerSession } from "@/lib/session";
 
 export default async function RegisterPage() {
@@ -10,13 +9,5 @@ export default async function RegisterPage() {
     redirect("/dashboard");
   }
 
-  return (
-    <AuthLayout
-      title="Create your account"
-      subtitle="Join LearningoPK and start your learning journey today"
-      topLink={{ href: "/login", label: "Sign in" }}
-    >
-      <RegisterForm />
-    </AuthLayout>
-  );
+  return <RegisterPageClient />;
 }

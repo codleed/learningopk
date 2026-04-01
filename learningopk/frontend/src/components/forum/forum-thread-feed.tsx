@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2 } from "lucide-react";
 
 import { getForumThreads, type ForumFeedQuery, type ForumFeedResponse } from "@/lib/forum-api";
 
@@ -88,11 +90,35 @@ export function ForumThreadFeed({ initialThreads, query, initialBatchSize, pageS
   }, [hasMore, loadMore]);
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-3" aria-label="Forum threads">
       <ForumThreadList threads={threads} />
-      {threads.length > 0 && hasMore ? <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" /> : null}
-      {isLoading ? <p className="text-sm text-muted-foreground">Loading more threads...</p> : null}
-      {loadError ? <p className="text-sm text-rose-700">{loadError}</p> : null}
+
+      {/* Infinite scroll sentinel */}
+      {threads.length > 0 && hasMore ? (
+        <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />
+      ) : null}
+
+      {/* Loading indicator */}
+      <AnimatePresence>
+        {isLoading ? (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="flex items-center justify-center gap-2 py-6"
+          >
+            <Loader2 className="h-4 w-4 animate-spin text-accent-primary" aria-hidden="true" />
+            <span className="text-sm font-medium text-text-secondary">Loading more threads...</span>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      {/* Error state */}
+      {loadError ? (
+        <div className="rounded-lg border border-accent-danger/20 bg-accent-danger-light px-4 py-3">
+          <p className="text-sm text-accent-danger">{loadError}</p>
+        </div>
+      ) : null}
     </section>
   );
 }

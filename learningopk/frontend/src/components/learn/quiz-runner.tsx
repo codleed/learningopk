@@ -2,9 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight, SkipForward, Send, AlertTriangle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { LinearProgress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/ui/states";
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 
@@ -82,6 +86,24 @@ type QuizRunnerProps = {
   chapterTitle?: string;
 };
 
+/** Slide direction for the page transition */
+type SlideDirection = "left" | "right";
+
+const slideVariants = {
+  enter: (direction: SlideDirection) => ({
+    x: direction === "left" ? 300 : -300,
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+  },
+  exit: (direction: SlideDirection) => ({
+    x: direction === "left" ? -300 : 300,
+    opacity: 0,
+  }),
+};
+
 export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle }: QuizRunnerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerOption>>({});
@@ -91,6 +113,7 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle }: Q
   const [result, setResult] = useState<QuizResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [announcementText, setAnnouncementText] = useState("");
+  const [slideDirection, setSlideDirection] = useState<SlideDirection>("left");
 
   const backendUrl = useMemo(() => process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001", []);
 
@@ -98,8 +121,8 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle }: Q
   const answeredCount = Object.keys(answers).length;
   const isMockExam = quiz.type === "mock_exam";
   const isTimeUp = remainingSeconds === 0;
-
-  const questionProgressLabel = useMemo(() => `${currentIndex + 1} of ${quiz.questions.length}`, [currentIndex, quiz.questions.length]);
+  const totalQuestions = quiz.questions.length;
+  const progressPercent = ((currentIndex + 1) / totalQuestions) * 100;
 
   const selectAnswer = (questionId: number, option: AnswerOption) => {
     if (result || isSubmitting || isTimeUp) {
@@ -111,6 +134,32 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle }: Q
       [String(questionId)]: option
     }));
   };
+
+  const goToQuestion = useCallback((newIndex: number) => {
+    setSlideDirection(newIndex > currentIndex ? "left" : "right");
+    setCurrentIndex(newIndex);
+  }, [currentIndex]);
+
+  const goNext = useCallback(() => {
+    if (currentIndex < totalQuestions - 1) {
+      setSlideDirection("left");
+      setCurrentIndex((prev) => prev + 1);
+    }
+  }, [currentIndex, totalQuestions]);
+
+  const goPrevious = useCallback(() => {
+    if (currentIndex > 0) {
+      setSlideDirection("right");
+      setCurrentIndex((prev) => prev - 1);
+    }
+  }, [currentIndex]);
+
+  const skipQuestion = useCallback(() => {
+    if (currentIndex < totalQuestions - 1) {
+      setSlideDirection("left");
+      setCurrentIndex((prev) => prev + 1);
+    }
+  }, [currentIndex, totalQuestions]);
 
   const submitQuiz = useCallback(async () => {
     if (result || isSubmitting) {
@@ -156,7 +205,7 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle }: Q
     } finally {
       setIsSubmitting(false);
     }
-  }, [answers, isSubmitting, quiz.id, result, startedAtMs]);
+  }, [answers, backendUrl, isSubmitting, quiz.id, result, startedAtMs]);
 
   const startRetake = () => {
     setResult(null);
@@ -167,6 +216,7 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle }: Q
     setStartedAtMs(Date.now());
     setIsSubmitting(false);
     setAnnouncementText("");
+    setSlideDirection("left");
   };
 
   useEffect(() => {
@@ -190,160 +240,202 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle }: Q
     );
   }
 
-  return (
+  /* ─── Result view ─── */
+  if (result) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="space-y-5"
+      >
+        <QuizResultSummary
+          result={result}
+          onRetake={startRetake}
+          subjectName={subjectName}
+          chapterNumber={chapterNumber}
+          chapterTitle={chapterTitle}
+        />
+        {isMockExam && result.sectionScores && result.sectionScores.length > 0 && (
+          <MockExamResultDetails
+            sectionScores={result.sectionScores}
+            weakAreas={result.weakAreas}
+          />
+        )}
+        <QuizQuestionReviewList result={result} />
+      </motion.div>
+    );
+  }
+
+  /* ─── Quiz taking view ─── */
+  const showNavigator = isMockExam && totalQuestions > QUIZ_NAVIGATOR_THRESHOLD;
+
+  const quizContent = (
     <div className="space-y-5">
-      <section className="surface-card rounded-xl border border-border bg-card p-4">
+      {/* Top bar: counter + timer + progress */}
+      <Card className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {isMockExam ? "Mock Exam Mode" : "Chapter Quiz"}
-            </p>
-            <h3 className="text-lg font-semibold text-foreground">{quiz.title}</h3>
+          <div className="flex items-center gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                {isMockExam ? "Mock Exam" : "Chapter Quiz"}
+              </p>
+              <p className="font-display text-lg font-bold text-text-primary">
+                Q {currentIndex + 1}
+                <span className="text-text-secondary font-normal">/{totalQuestions}</span>
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <Badge variant="default" size="sm">{totalQuestions} questions</Badge>
+              <Badge variant="default" size="sm">{quiz.totalMarks} marks</Badge>
+              <Badge variant="primary" size="sm">{answeredCount} answered</Badge>
+            </div>
           </div>
           <QuizTimer remainingSeconds={remainingSeconds} expired={isTimeUp && !result} />
         </div>
-        <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-          <Badge variant="neutral">{quiz.questions.length} questions</Badge>
-          <Badge variant="neutral">{quiz.totalMarks} total marks</Badge>
-          <Badge variant="neutral">{answeredCount} answered</Badge>
-        </div>
-      </section>
 
-      {result ? (
-        <div className="space-y-4">
-          <QuizResultSummary result={result} onRetake={startRetake} subjectName={subjectName} chapterNumber={chapterNumber} chapterTitle={chapterTitle} />
-          {isMockExam && result.sectionScores && result.sectionScores.length > 0 && (
-            <MockExamResultDetails
-              sectionScores={result.sectionScores}
-              weakAreas={result.weakAreas}
+        {/* Linear progress */}
+        <div className="mt-3">
+          <LinearProgress
+            value={progressPercent}
+            barSize="sm"
+            colorVariant={isTimeUp ? "danger" : "primary"}
+          />
+        </div>
+      </Card>
+
+      {/* Alerts */}
+      {isTimeUp && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-2 rounded-xl border border-accent-warning/30 bg-accent-warning-light px-4 py-3 text-sm text-accent-warning"
+        >
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>Time is up. Answer selection is locked — submit your attempt to view results.</span>
+        </motion.div>
+      )}
+
+      {submitError && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-2 rounded-xl border border-accent-danger/30 bg-accent-danger-light px-4 py-3 text-sm text-accent-danger"
+        >
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>{submitError}</span>
+        </motion.div>
+      )}
+
+      {/* Accessibility announcement */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcementText}
+      </div>
+
+      {/* Question card with slide transition */}
+      <div className="relative overflow-hidden">
+        <AnimatePresence mode="wait" custom={slideDirection}>
+          <motion.div
+            key={currentIndex}
+            custom={slideDirection}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+          >
+            <QuizQuestionCard
+              question={currentQuestion}
+              questionNumber={currentIndex + 1}
+              selectedAnswer={answers[String(currentQuestion.id)]}
+              locked={isTimeUp}
+              onSelect={(option) => selectAnswer(currentQuestion.id, option)}
             />
-          )}
-          <QuizQuestionReviewList result={result} />
-        </div>
-      ) : isMockExam && quiz.questions.length > QUIZ_NAVIGATOR_THRESHOLD ? (
-        // Mock exam with more than 20 questions shows navigator sidebar
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <section className="surface-card space-y-4 rounded-xl border border-border bg-card p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-foreground">Question {questionProgressLabel}</p>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setCurrentIndex((previous) => Math.max(0, previous - 1))}
-                    disabled={currentIndex === 0}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setCurrentIndex((previous) => Math.min(quiz.questions.length - 1, previous + 1))}
-                    disabled={currentIndex === quiz.questions.length - 1}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
-              {isTimeUp ? (
-                <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                  Time is up. Answer selection is locked, submit your attempt to view results.
-                </p>
-              ) : null}
-              {submitError ? <p className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">{submitError}</p> : null}
-
-              <div aria-live="polite" aria-atomic="true" className="sr-only">
-                {announcementText}
-              </div>
-              <QuizQuestionCard
-                question={currentQuestion}
-                questionNumber={currentIndex + 1}
-                selectedAnswer={answers[String(currentQuestion.id)]}
-                locked={isTimeUp}
-                onSelect={(option) => selectAnswer(currentQuestion.id, option)}
-              />
-
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-3">
-                <p className="text-xs text-muted-foreground">
-                  Mock exam rule: feedback is shown only after final submission.
-                </p>
-                <Button type="button" onClick={submitQuiz} disabled={isSubmitting}>
-                  {isSubmitting ? "Submitting..." : isTimeUp ? "Submit Time-Up Attempt" : "Submit Quiz"}
-                </Button>
-              </div>
-            </section>
+      {/* Navigation bar */}
+      <Card className="p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={goPrevious}
+              disabled={currentIndex === 0}
+              iconLeft={<ChevronLeft />}
+            >
+              Previous
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={skipQuestion}
+              disabled={currentIndex === totalQuestions - 1 || isTimeUp}
+              iconLeft={<SkipForward />}
+            >
+              Skip
+            </Button>
           </div>
-          <div className="w-48 shrink-0">
+
+          <div className="flex items-center gap-2">
+            {currentIndex < totalQuestions - 1 && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={goNext}
+                iconRight={<ChevronRight />}
+              >
+                Next
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="primary"
+              onClick={submitQuiz}
+              disabled={isSubmitting}
+              loading={isSubmitting}
+              iconLeft={!isSubmitting ? <Send /> : undefined}
+            >
+              {isTimeUp ? "Submit Time-Up Attempt" : "Submit Quiz"}
+            </Button>
+          </div>
+        </div>
+
+        <p className="mt-2 text-xs text-text-secondary">
+          {isMockExam
+            ? "Mock exam rule: feedback is shown only after final submission."
+            : "Submit when ready to view your score and explanations."}
+        </p>
+      </Card>
+    </div>
+  );
+
+  /* ─── Layout: with navigator sidebar or standalone ─── */
+  if (showNavigator) {
+    return (
+      <div className="flex gap-5">
+        <div className="min-w-0 flex-1">
+          {quizContent}
+        </div>
+        <div className="hidden w-52 shrink-0 lg:block">
+          <div className="sticky top-4">
             <QuestionNavigator
               questions={quiz.questions}
               currentIndex={currentIndex}
               answers={answers}
-              onSelectQuestion={setCurrentIndex}
+              onSelectQuestion={goToQuestion}
               isLocked={isTimeUp}
             />
           </div>
         </div>
-      ) : (
-        <section className="surface-card space-y-4 rounded-xl border border-border bg-card p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-foreground">Question {questionProgressLabel}</p>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setCurrentIndex((previous) => Math.max(0, previous - 1))}
-                disabled={currentIndex === 0}
-              >
-                Previous
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setCurrentIndex((previous) => Math.min(quiz.questions.length - 1, previous + 1))}
-                disabled={currentIndex === quiz.questions.length - 1}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+      </div>
+    );
+  }
 
-          {isTimeUp ? (
-            <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              Time is up. Answer selection is locked, submit your attempt to view results.
-            </p>
-          ) : null}
-          {submitError ? <p className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">{submitError}</p> : null}
-
-          <div aria-live="polite" aria-atomic="true" className="sr-only">
-            {announcementText}
-          </div>
-          <QuizQuestionCard
-            question={currentQuestion}
-            questionNumber={currentIndex + 1}
-            selectedAnswer={answers[String(currentQuestion.id)]}
-            locked={isTimeUp}
-            onSelect={(option) => selectAnswer(currentQuestion.id, option)}
-          />
-
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-3">
-            <p className="text-xs text-muted-foreground">
-              {isMockExam
-                ? "Mock exam rule: feedback is shown only after final submission."
-                : "Submit when ready to view your score and explanations."}
-            </p>
-            <Button type="button" onClick={submitQuiz} disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : isTimeUp ? "Submit Time-Up Attempt" : "Submit Quiz"}
-            </Button>
-          </div>
-        </section>
-      )}
-    </div>
-  );
+  return quizContent;
 }
-

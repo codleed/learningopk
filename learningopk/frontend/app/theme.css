@@ -1,387 +1,87 @@
-:root {
-  color-scheme: light;
-  --radius: 8px;
+/* ═══════════════════════════════════════════════════════════════
+   LearningoPK Theme — Tailwind v4 bridge variables
+   Maps design tokens to shadcn/Tailwind semantic names
+   ═══════════════════════════════════════════════════════════════ */
 
-  /* Lime Primary */
-  --primary: #7ac943;
-  --primary-hover: #68b036;
-  --primary-light: rgba(122, 201, 67, 0.2);
-  --primary-foreground: #ffffff;
-
-  /* Background & Surface */
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
-
-  /* Secondary & Muted */
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --muted: #e2e8f0;
-  --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
-
-  /* Semantic Colors */
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --success: #10b981;
-  --success-foreground: #ffffff;
-  --warning: #f59e0b;
-  --warning-foreground: #ffffff;
-  --info: #3b82f6;
-  --info-foreground: #ffffff;
-
-  /* Border & Input */
-  --border: #e2e8f0;
-  --input: #cbd5e1;
-  --ring: #7ac943;
-
-  /* Chart colors */
-  --chart-1: #7ac943;
-  --chart-2: #68b036;
-  --chart-3: #5ba132;
-  --chart-4: #4e8a2c;
-  --chart-5: #3d6b22;
-
-  /* === SIDEBAR: Luminous Depth Design === */
-  --sidebar: #ffffff;
-  --sidebar-bg: #ffffff;
-  --sidebar-bg-gradient: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
-  --sidebar-foreground: #1e293b;
-  --sidebar-border: rgba(148, 163, 184, 0.2);
-  --sidebar-ring: #7ac943;
-
-  /* Brand Zone */
-  --sidebar-brand-bg: transparent;
-  --sidebar-brand-text: #0f172a;
-  --sidebar-brand-text-muted: #64748b;
-
-  /* Primary Nav */
-  --sidebar-nav-default-bg: transparent;
-  --sidebar-nav-default-text: #64748b;
-  --sidebar-nav-default-icon: #94a3b8;
-  --sidebar-nav-hover-bg: rgba(122, 201, 67, 0.08);
-  --sidebar-nav-hover-text: #1e293b;
-  --sidebar-nav-hover-icon: #64748b;
-  --sidebar-nav-active-bg: linear-gradient(135deg, rgba(122, 201, 67, 0.15) 0%, rgba(122, 201, 67, 0.08) 100%);
-  --sidebar-nav-active-text: #4a7c22;
-  --sidebar-nav-active-icon: #7ac943;
-  --sidebar-nav-active-shadow: 0 0 0 1px rgba(122, 201, 67, 0.3), 0 4px 12px -2px rgba(122, 201, 67, 0.25);
-  --sidebar-nav-active-glow: 0 0 20px rgba(122, 201, 67, 0.15);
-
-  /* Secondary Nav */
-  --sidebar-secondary-default-text: #94a3b8;
-  --sidebar-secondary-default-icon: #cbd5e1;
-  --sidebar-secondary-hover-bg: rgba(148, 163, 184, 0.1);
-  --sidebar-secondary-hover-text: #64748b;
-  --sidebar-secondary-active-bg: rgba(148, 163, 184, 0.15);
-  --sidebar-secondary-active-text: #475569;
-  --sidebar-secondary-active-icon: #64748b;
-
-  /* Admin Section */
-  --sidebar-admin-bg: rgba(139, 92, 246, 0.05);
-  --sidebar-admin-border: rgba(139, 92, 246, 0.2);
-  --sidebar-admin-default-text: #a78bfa;
-  --sidebar-admin-default-icon: #c4b5fd;
-  --sidebar-admin-hover-bg: rgba(139, 92, 246, 0.1);
-  --sidebar-admin-hover-text: #7c3aed;
-  --sidebar-admin-active-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0.08) 100%);
-  --sidebar-admin-active-text: #6d28d9;
-  --sidebar-admin-active-icon: #8b5cf6;
-  --sidebar-admin-active-shadow: 0 0 0 1px rgba(139, 92, 246, 0.3), 0 4px 12px -2px rgba(139, 92, 246, 0.25);
-  --sidebar-admin-active-glow: 0 0 20px rgba(139, 92, 246, 0.25);
-
-  /* Submenu */
-  --sidebar-submenu-bg: rgba(148, 163, 184, 0.05);
-  --sidebar-submenu-border: rgba(148, 163, 184, 0.15);
-  --sidebar-submenu-item-default-text: #94a3b8;
-  --sidebar-submenu-item-hover-bg: rgba(148, 163, 184, 0.1);
-  --sidebar-submenu-item-hover-text: #64748b;
-  --sidebar-submenu-item-active-bg: rgba(139, 92, 246, 0.1);
-  --sidebar-submenu-item-active-text: #7c3aed;
-
-  /* Utility Controls */
-  --sidebar-utility-default-text: #94a3b8;
-  --sidebar-utility-default-icon: #cbd5e1;
-  --sidebar-utility-hover-bg: rgba(148, 163, 184, 0.1);
-  --sidebar-utility-hover-text: #64748b;
-  --sidebar-utility-hover-icon: #94a3b8;
-
-  /* Profile Footer */
-  --sidebar-profile-bg: rgba(148, 163, 184, 0.05);
-  --sidebar-profile-border: rgba(148, 163, 184, 0.15);
-  --sidebar-profile-text: #1e293b;
-  --sidebar-profile-text-muted: #64748b;
-  --sidebar-profile-avatar-bg: linear-gradient(135deg, rgba(122, 201, 67, 0.15) 0%, rgba(122, 201, 67, 0.08) 100%);
-  --sidebar-profile-avatar-text: #4a7c22;
-
-  /* Sidebar Dimensions */
-  --sidebar-width-expanded: 280px;
-  --sidebar-width-collapsed: 72px;
-  --sidebar-padding-x: 16px;
-  --sidebar-padding-top: 20px;
-  --sidebar-padding-bottom: 16px;
-  --sidebar-nav-item-height: 44px;
-  --sidebar-nav-item-radius: 12px;
-  --sidebar-icon-size: 20px;
-
-  /* Role Toggle */
-  --role-toggle-bg: rgba(148, 163, 184, 0.08);
-  --role-toggle-border: rgba(148, 163, 184, 0.15);
-  --role-toggle-tab-default-text: #64748b;
-  --role-toggle-admin-active-bg: rgba(139, 92, 246, 0.15);
-  --role-toggle-admin-active-text: #6d28d9;
-  --role-toggle-student-active-bg: rgba(122, 201, 67, 0.15);
-  --role-toggle-student-active-text: #4a7c22;
-
-  /* Transitions */
-  --sidebar-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --sidebar-transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --sidebar-transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Typography */
-  --font-heading: "Montserrat", sans-serif;
-  --font-body: "Plus Jakarta Sans", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
-
-  /* Spacing */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-
-  /* Card Gradient */
-  --card-gradient: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
-}
-
-.dark {
+:root[class~="dark"],
+:root:not([class~="light"]) {
   color-scheme: dark;
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --card: #1e293b;
-  --card-foreground: #f8fafc;
-  --popover: #1e293b;
-  --popover-foreground: #f8fafc;
+  --radius: 10px;
 
-  /* Lime Primary - same color, adjusted for dark */
-  --primary: #7ac943;
-  --primary-hover: #8fd654;
-  --primary-light: rgba(122, 201, 67, 0.3);
-  --primary-foreground: #0f172a;
-
-  /* Secondary & Muted */
-  --secondary: #1e293b;
-  --secondary-foreground: #f8fafc;
-  --muted: #334155;
-  --muted-foreground: #94a3b8;
-  --accent: #1e293b;
-  --accent-foreground: #f8fafc;
-
-  /* Semantic Colors */
-  --destructive: #f87171;
-  --destructive-foreground: #0f172a;
-  --success: #34d399;
-  --success-foreground: #0f172a;
-  --warning: #fbbf24;
-  --warning-foreground: #0f172a;
-  --info: #60a5fa;
-  --info-foreground: #0f172a;
-
-  /* Border & Input */
-  --border: #334155;
-  --input: #475569;
-  --ring: #7ac943;
-
-  /* Chart colors */
-  --chart-1: #7ac943;
-  --chart-2: #5ba132;
-  --chart-3: #4e8a2c;
-  --chart-4: #8fd654;
-  --chart-5: #a3e066;
-
-  /* === SIDEBAR: Luminous Depth Design (Dark) === */
-  --sidebar: #0f172a;
-  --sidebar-bg: #0f172a;
-  --sidebar-bg-gradient: linear-gradient(180deg, #0f172a 0%, #0c1425 100%);
-  --sidebar-foreground: #f1f5f9;
-  --sidebar-border: rgba(71, 85, 105, 0.3);
-  --sidebar-ring: #7ac943;
-
-  /* Brand Zone */
-  --sidebar-brand-bg: transparent;
-  --sidebar-brand-text: #f8fafc;
-  --sidebar-brand-text-muted: #94a3b8;
-
-  /* Primary Nav */
-  --sidebar-nav-default-bg: transparent;
-  --sidebar-nav-default-text: #94a3b8;
-  --sidebar-nav-default-icon: #64748b;
-  --sidebar-nav-hover-bg: rgba(122, 201, 67, 0.12);
-  --sidebar-nav-hover-text: #e2e8f0;
-  --sidebar-nav-hover-icon: #94a3b8;
-  --sidebar-nav-active-bg: linear-gradient(135deg, rgba(122, 201, 67, 0.2) 0%, rgba(122, 201, 67, 0.1) 100%);
-  --sidebar-nav-active-text: #a3e072;
-  --sidebar-nav-active-icon: #7ac943;
-  --sidebar-nav-active-shadow: 0 0 0 1px rgba(122, 201, 67, 0.4), 0 4px 16px -2px rgba(122, 201, 67, 0.35), 0 0 30px rgba(122, 201, 67, 0.2);
-  --sidebar-nav-active-glow: 0 0 30px rgba(122, 201, 67, 0.25);
-
-  /* Secondary Nav */
-  --sidebar-secondary-default-text: #64748b;
-  --sidebar-secondary-default-icon: #475569;
-  --sidebar-secondary-hover-bg: rgba(148, 163, 184, 0.12);
-  --sidebar-secondary-hover-text: #94a3b8;
-  --sidebar-secondary-active-bg: rgba(148, 163, 184, 0.18);
-  --sidebar-secondary-active-text: #cbd5e1;
-  --sidebar-secondary-active-icon: #94a3b8;
-
-  /* Admin Section */
-  --sidebar-admin-bg: rgba(139, 92, 246, 0.08);
-  --sidebar-admin-border: rgba(139, 92, 246, 0.25);
-  --sidebar-admin-default-text: #a78bfa;
-  --sidebar-admin-default-icon: #7c3aed;
-  --sidebar-admin-hover-bg: rgba(139, 92, 246, 0.15);
-  --sidebar-admin-hover-text: #c4b5fd;
-  --sidebar-admin-active-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%);
-  --sidebar-admin-active-text: #ddd6fe;
-  --sidebar-admin-active-icon: #a78bfa;
-  --sidebar-admin-active-shadow: 0 0 0 1px rgba(139, 92, 246, 0.4), 0 4px 16px -2px rgba(139, 92, 246, 0.35), 0 0 30px rgba(139, 92, 246, 0.2);
-  --sidebar-admin-active-glow: 0 0 30px rgba(139, 92, 246, 0.3);
-
-  /* Submenu */
-  --sidebar-submenu-bg: rgba(30, 41, 59, 0.5);
-  --sidebar-submenu-border: rgba(71, 85, 105, 0.3);
-  --sidebar-submenu-item-default-text: #64748b;
-  --sidebar-submenu-item-hover-bg: rgba(148, 163, 184, 0.1);
-  --sidebar-submenu-item-hover-text: #94a3b8;
-  --sidebar-submenu-item-active-bg: rgba(139, 92, 246, 0.15);
-  --sidebar-submenu-item-active-text: #c4b5fd;
-
-  /* Utility Controls */
-  --sidebar-utility-default-text: #64748b;
-  --sidebar-utility-default-icon: #475569;
-  --sidebar-utility-hover-bg: rgba(148, 163, 184, 0.12);
-  --sidebar-utility-hover-text: #94a3b8;
-  --sidebar-utility-hover-icon: #64748b;
-
-  /* Profile Footer */
-  --sidebar-profile-bg: rgba(30, 41, 59, 0.5);
-  --sidebar-profile-border: rgba(71, 85, 105, 0.3);
-  --sidebar-profile-text: #f1f5f9;
-  --sidebar-profile-text-muted: #94a3b8;
-  --sidebar-profile-avatar-bg: linear-gradient(135deg, rgba(122, 201, 67, 0.2) 0%, rgba(122, 201, 67, 0.1) 100%);
-  --sidebar-profile-avatar-text: #a3e072;
-
-  /* Role Toggle (Dark) */
-  --role-toggle-bg: rgba(30, 41, 59, 0.5);
-  --role-toggle-border: rgba(71, 85, 105, 0.3);
-  --role-toggle-tab-default-text: #94a3b8;
-  --role-toggle-admin-active-bg: rgba(139, 92, 246, 0.2);
-  --role-toggle-admin-active-text: #ddd6fe;
-  --role-toggle-student-active-bg: rgba(122, 201, 67, 0.2);
-  --role-toggle-student-active-text: #a3e072;
-
-  /* Shadows - lighter for dark mode */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
-
-  --card-gradient: linear-gradient(135deg, rgba(30,41,59,0.95) 0%, rgba(15,23,42,0.95) 100%);
+  /* Tailwind / shadcn semantic mapping */
+  --background:           var(--bg-base);
+  --foreground:           var(--text-primary);
+  --card:                 var(--bg-surface);
+  --card-foreground:      var(--text-primary);
+  --popover:              var(--bg-elevated);
+  --popover-foreground:   var(--text-primary);
+  --primary:              var(--accent-primary);
+  --primary-foreground:   var(--accent-primary-fg);
+  --primary-hover:        var(--accent-primary-hover);
+  --secondary:            var(--bg-surface);
+  --secondary-foreground: var(--text-primary);
+  --muted:                var(--bg-subtle);
+  --muted-foreground:     var(--text-secondary);
+  --accent:               var(--bg-subtle);
+  --accent-foreground:    var(--text-primary);
+  --destructive:          var(--accent-danger);
+  --destructive-foreground: var(--accent-primary-fg);
+  --success:              var(--accent-success);
+  --success-foreground:   var(--text-inverse);
+  --warning:              var(--accent-warning);
+  --warning-foreground:   var(--text-inverse);
+  --info:                 var(--accent-info);
+  --info-foreground:      var(--text-inverse);
+  --border:               var(--border-default);
+  --input:                var(--border-strong);
+  --ring:                 var(--accent-primary);
 }
 
-/* Glassmorphism utilities */
+:root[class~="light"] {
+  color-scheme: light;
+  --radius: 10px;
+
+  --background:           var(--bg-base);
+  --foreground:           var(--text-primary);
+  --card:                 var(--bg-surface);
+  --card-foreground:      var(--text-primary);
+  --popover:              var(--bg-elevated);
+  --popover-foreground:   var(--text-primary);
+  --primary:              var(--accent-primary);
+  --primary-foreground:   var(--accent-primary-fg);
+  --primary-hover:        var(--accent-primary-hover);
+  --secondary:            var(--bg-elevated);
+  --secondary-foreground: var(--text-primary);
+  --muted:                var(--bg-subtle);
+  --muted-foreground:     var(--text-secondary);
+  --accent:               var(--bg-subtle);
+  --accent-foreground:    var(--text-primary);
+  --destructive:          var(--accent-danger);
+  --destructive-foreground: var(--accent-primary-fg);
+  --success:              var(--accent-success);
+  --success-foreground:   var(--accent-primary-fg);
+  --warning:              var(--accent-warning);
+  --warning-foreground:   var(--text-inverse);
+  --info:                 var(--accent-info);
+  --info-foreground:      var(--accent-primary-fg);
+  --border:               var(--border-default);
+  --input:                var(--border-strong);
+  --ring:                 var(--accent-primary);
+}
+
+/* ── Glassmorphism ── */
 .glass {
-  background: var(--card);
+  background: var(--bg-surface);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
 }
 
 .glass-sm {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--bg-elevated);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.dark .glass-sm {
-  background: rgba(30, 41, 59, 0.7);
-}
-
-/* Gradient backgrounds */
-.bg-gradient-radial {
-  background-image: radial-gradient(at 0% 0%, rgba(122, 201, 67, 0.1) 0px, transparent 50%), 
-                    radial-gradient(at 100% 0%, rgba(122, 201, 67, 0.1) 0px, transparent 50%), 
-                    radial-gradient(at 100% 100%, rgba(122, 201, 67, 0.1) 0px, transparent 50%), 
-                    radial-gradient(at 0% 100%, rgba(122, 201, 67, 0.1) 0px, transparent 50%);
-}
-
-.dark .bg-gradient-radial {
-  background-image: radial-gradient(at 0% 0%, rgba(122, 201, 67, 0.15) 0px, transparent 50%), 
-                    radial-gradient(at 100% 0%, rgba(122, 201, 67, 0.15) 0px, transparent 50%), 
-                    radial-gradient(at 100% 100%, rgba(122, 201, 67, 0.15) 0px, transparent 50%), 
-                    radial-gradient(at 0% 100%, rgba(122, 201, 67, 0.15) 0px, transparent 50%);
-}
-
-/* Sidebar scrollbar styling */
-.sidebar-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-
-.sidebar-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar-scroll::-webkit-scrollbar-thumb {
-  background: var(--sidebar-border);
-  border-radius: 3px;
-}
-
-.sidebar-scroll::-webkit-scrollbar-thumb:hover {
-  background: var(--sidebar-foreground);
-  opacity: 0.3;
-}
-
-/* === Left Rail Layout === */
-#main-content {
-  margin-left: var(--sidebar-width-collapsed, 72px) !important;
-}
-
-/* === Touch Device: Always Expanded Sidebar === */
-/* On touch devices (no hover capability), always show expanded sidebar */
-@media (hover: none) and (pointer: coarse) {
-  .left-rail-container {
-    width: var(--sidebar-width-expanded, 280px) !important;
-  }
-  
-  #main-content {
-    margin-left: var(--sidebar-width-expanded, 280px) !important;
-  }
-}
-
-/* === Keyboard Navigation Focus === */
-/* When sidebar or its children have focus, keep expanded */
-.left-rail-container:focus-within {
-  width: var(--sidebar-width-expanded, 280px);
-}
-
-/* Ensure main content adjusts when sidebar is focused */
-.left-rail-container:focus-within ~ #main-content,
-.left-rail-container:focus-within + #main-content {
-  margin-left: var(--sidebar-width-expanded, 280px);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
 }
