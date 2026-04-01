@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Clock } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { TIMER_WARNING_SECONDS, TIMER_CRITICAL_SECONDS } from "@/lib/quiz-constants";
 
@@ -31,21 +34,43 @@ export function QuizTimer({ remainingSeconds, expired }: QuizTimerProps) {
   }, [remainingSeconds]);
 
   return (
-    <div className="text-right">
-      <p
+    <div className="flex items-center gap-2">
+      <Clock
         className={cn(
-          "text-2xl font-bold tabular-nums",
-          expired && "text-destructive",
-          isCritical && !expired && "text-destructive animate-pulse-soft",
-          isWarning && !expired && "text-[var(--warning)]",
-          !isWarning && !isCritical && !expired && "text-foreground"
+          "h-4 w-4",
+          expired && "text-accent-danger",
+          isCritical && !expired && "text-accent-danger",
+          isWarning && !expired && "text-accent-warning",
+          !isWarning && !isCritical && !expired && "text-text-secondary"
         )}
-        aria-live={isCritical ? "assertive" : "polite"}
-        aria-atomic="true"
-      >
-        {formatTimeLeft(remainingSeconds)}
-      </p>
-      <p className="text-xs text-muted-foreground">Time left</p>
+        aria-hidden="true"
+      />
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={isCritical ? "critical" : isWarning ? "warning" : "normal"}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{
+            opacity: 1,
+            scale: isCritical && !expired ? [1, 1.05, 1] : 1,
+          }}
+          transition={
+            isCritical && !expired
+              ? { scale: { repeat: Infinity, duration: 1, ease: "easeInOut" } }
+              : { duration: 0.2 }
+          }
+          className={cn(
+            "font-display text-lg font-bold tabular-nums",
+            expired && "text-accent-danger",
+            isCritical && !expired && "text-accent-danger",
+            isWarning && !expired && "text-accent-warning",
+            !isWarning && !isCritical && !expired && "text-text-primary"
+          )}
+          aria-live={isCritical ? "assertive" : "polite"}
+          aria-atomic="true"
+        >
+          {formatTimeLeft(remainingSeconds)}
+        </motion.p>
+      </AnimatePresence>
 
       {isCritical && !expired && announcement && (
         <p className="sr-only" role="alert">
@@ -61,17 +86,28 @@ export function QuizTimerCompact({ remainingSeconds, expired }: QuizTimerProps) 
   const isCritical = remainingSeconds <= TIMER_CRITICAL_SECONDS && remainingSeconds > 0;
 
   return (
-    <div
+    <motion.div
+      animate={
+        isCritical && !expired
+          ? { scale: [1, 1.04, 1] }
+          : { scale: 1 }
+      }
+      transition={
+        isCritical && !expired
+          ? { repeat: Infinity, duration: 1, ease: "easeInOut" }
+          : { duration: 0.2 }
+      }
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold",
-        expired && "bg-destructive/10 text-destructive",
-        isCritical && !expired && "bg-destructive/10 text-destructive animate-pulse-soft",
-        isWarning && !expired && "bg-[var(--warning)]/10 text-[var(--warning)]",
-        !isWarning && !isCritical && !expired && "bg-muted text-muted-foreground"
+        expired && "bg-accent-danger-light text-accent-danger",
+        isCritical && !expired && "bg-accent-danger-light text-accent-danger",
+        isWarning && !expired && "bg-accent-warning-light text-accent-warning",
+        !isWarning && !isCritical && !expired && "bg-bg-subtle text-text-secondary"
       )}
       aria-live={isCritical ? "assertive" : "polite"}
     >
+      <Clock className="h-3.5 w-3.5" aria-hidden="true" />
       <span className="tabular-nums">{formatTimeLeft(remainingSeconds)}</span>
-    </div>
+    </motion.div>
   );
 }

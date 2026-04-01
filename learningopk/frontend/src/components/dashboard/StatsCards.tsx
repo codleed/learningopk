@@ -1,8 +1,13 @@
 "use client";
 
 import { useToast } from "@/components/ui/toast";
-import { cn } from "@/lib/utils";
 import { useEffect } from "react";
+
+import { Card, CardHeader, CardBody } from "@/components/ui/card";
+import { StreakCounter } from "@/components/common/streak-counter";
+import { XPBar } from "@/components/common/xp-bar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 export interface XpInfo {
   xp: number;
@@ -51,107 +56,50 @@ export function StatsCards({
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {/* Streak Card */}
-      <div className="rounded-xl bg-card p-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/20">
-            {/* Flame icon - CSS only, no emoji */}
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              className="h-5 w-5 text-orange-500"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-xs text-foreground/60">Streak</p>
-            <p className="text-lg font-bold text-foreground">
-              {streakDays}
-              <span className="ml-1 text-xs font-normal text-foreground/50">
-                days
-              </span>
-            </p>
-          </div>
+      <Card variant="default" className="!p-4 hover:!-translate-y-0">
+        <div className="flex items-center gap-3">
+          <StreakCounter count={streakDays} size="md" />
         </div>
         {longestStreakDays > 0 && (
-          <p className="mt-2 text-[10px] text-foreground/40">
+          <p className="mt-2 text-[10px] text-text-muted">
             Best: {longestStreakDays} days
           </p>
         )}
-      </div>
+      </Card>
 
       {/* XP Card */}
-      {xp && (
-        <div className="rounded-xl bg-card p-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--primary)]/20">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                className="h-5 w-5 text-[var(--primary)]"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-xs text-foreground/60">XP</p>
-              <p className="text-lg font-bold text-foreground">{xp.xp}</p>
-            </div>
-          </div>
-          <p className="mt-2 text-[10px] text-foreground/40">
-            {xp.xpToNextLevel} to {xp.levelName}
+      {xp ? (
+        <Card variant="default" className="!p-4 hover:!-translate-y-0 col-span-2">
+          <p className="mb-2 text-xs font-medium text-text-secondary">
+            Experience Points
           </p>
-        </div>
-      )}
-
-      {/* Level Card */}
-      {xp && (
-        <div className="rounded-xl bg-card p-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                className="h-5 w-5 text-amber-500"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                <path d="M2 17l10 5 10-5" />
-                <path d="M2 12l10 5 10-5" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-xs text-foreground/60">Level</p>
-              <p className="text-lg font-bold text-foreground">{xp.levelName}</p>
-            </div>
-          </div>
-          <p className="mt-2 text-[10px] text-foreground/40">
-            Level {xp.level}
+          <XPBar
+            currentXP={xp.xp}
+            maxXP={xp.xp + xp.xpToNextLevel}
+            level={xp.level}
+          />
+          <p className="mt-2 text-[10px] text-text-muted">
+            {xp.xpToNextLevel} XP to {xp.levelName}
           </p>
-        </div>
+        </Card>
+      ) : (
+        <Card variant="default" className="!p-4 hover:!-translate-y-0 col-span-2">
+          <Skeleton className="h-4 w-24 mb-2" />
+          <Skeleton className="h-3 w-full rounded-full" />
+          <Skeleton className="h-3 w-16 mt-2" />
+        </Card>
       )}
 
       {/* Streak Freeze Card */}
       {streakFreeze && (
-        <div className="rounded-xl bg-card p-4">
+        <Card variant="default" className="!p-4 hover:!-translate-y-0">
           <div className="flex items-center gap-2">
             <div
               className={cn(
                 "flex h-8 w-8 items-center justify-center rounded-lg",
                 streakFreeze.canUseStreakFreeze
-                  ? "bg-cyan-500/20"
-                  : "bg-muted"
+                  ? "bg-accent-primary/10"
+                  : "bg-bg-subtle"
               )}
             >
               <svg
@@ -160,8 +108,8 @@ export function StatsCards({
                 className={cn(
                   "h-5 w-5",
                   streakFreeze.canUseStreakFreeze
-                    ? "text-cyan-500"
-                    : "text-foreground/30"
+                    ? "text-accent-primary"
+                    : "text-text-muted"
                 )}
                 stroke="currentColor"
                 strokeWidth={2}
@@ -172,20 +120,22 @@ export function StatsCards({
               </svg>
             </div>
             <div>
-              <p className="text-xs text-foreground/60">Freeze</p>
-              <p className="text-lg font-bold text-foreground">
+              <p className="text-xs text-text-secondary">Freeze</p>
+              <p className="text-sm font-bold text-text-primary">
                 {streakFreeze.canUseStreakFreeze ? "Available" : "Used"}
               </p>
             </div>
           </div>
           {!streakFreeze.canUseStreakFreeze &&
             streakFreeze.nextFreezeAvailableAt && (
-              <p className="mt-2 text-[10px] text-foreground/40">
+              <p className="mt-2 text-[10px] text-text-muted">
                 Resets{" "}
-                {new Date(streakFreeze.nextFreezeAvailableAt).toLocaleDateString()}
+                {new Date(
+                  streakFreeze.nextFreezeAvailableAt
+                ).toLocaleDateString()}
               </p>
             )}
-        </div>
+        </Card>
       )}
     </div>
   );

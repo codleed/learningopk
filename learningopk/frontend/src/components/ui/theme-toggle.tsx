@@ -1,19 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Moon, Sun, CircleHalf } from "@phosphor-icons/react";
+import { useTheme } from "next-themes";
+import { Sun, Moon } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
 import { cn } from "@/lib/utils";
+
+/* ═══════════════════════════════════════════
+   ThemeToggle — Three-state segmented control
+   ═══════════════════════════════════════════ */
 
 type ThemeMode = "light" | "dark" | "system";
 
-interface ThemeToggleProps {
-  className?: string;
-  showLabels?: boolean;
-}
-
-const THEME_STORAGE_KEY = "learningo-theme-mode";
-
-const themeConfig = {
+const themeConfig: Record<ThemeMode, { icon: typeof Sun; label: string; ariaLabel: string }> = {
   light: {
     icon: Sun,
     label: "Light",
@@ -25,65 +25,35 @@ const themeConfig = {
     ariaLabel: "Switch to dark theme",
   },
   system: {
-    icon: CircleHalf,
+    icon: Sun, // placeholder, replaced inline
     label: "System",
     ariaLabel: "Switch to system theme",
   },
-} as const;
+};
 
-function getSystemTheme(): "light" | "dark" {
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+/** Props for the ThemeToggle component. */
+export interface ThemeToggleProps {
+  /** Additional CSS classes. */
+  className?: string;
+  /** Show text labels next to icons. Defaults to true. */
+  showLabels?: boolean;
 }
 
-function applyTheme(theme: "light" | "dark") {
-  if (typeof document === "undefined") return;
-  const root = document.documentElement;
-  root.classList.remove("light", "dark");
-  root.classList.add(theme);
-  root.setAttribute("data-theme", theme);
-}
-
-function getStoredTheme(): ThemeMode {
-  if (typeof window === "undefined") return "system";
-  const stored = localStorage.getItem(THEME_STORAGE_KEY);
-  if (stored === "light" || stored === "dark" || stored === "system") {
-    return stored;
-  }
-  return "system";
-}
-
+/**
+ * Three-state theme toggle using next-themes.
+ *
+ * Renders a segmented control for light/dark/system with animated active indicator.
+ */
 export function ThemeToggle({
   className,
   showLabels = true,
 }: ThemeToggleProps) {
-  const [mode, setMode] = useState<ThemeMode>(() => getStoredTheme());
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    applyTheme(mode === "system" ? getSystemTheme() : mode);
-
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => {
-      if (mode === "system") {
-        applyTheme(getSystemTheme());
-      }
-    };
-
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const handleModeChange = useCallback(
-    (newMode: ThemeMode) => {
-      setMode(newMode);
-      localStorage.setItem(THEME_STORAGE_KEY, newMode);
-      applyTheme(newMode === "system" ? getSystemTheme() : newMode);
-    },
-    []
-  );
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent, currentIndex: number) => {
@@ -110,12 +80,14 @@ export function ThemeToggle({
       }
 
       event.preventDefault();
-      handleModeChange(modes[newIndex]);
+      setTheme(modes[newIndex]!);
 
-      const buttons = event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+      const buttons = event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+        '[role="tab"]'
+      );
       buttons?.[newIndex]?.focus();
     },
-    [handleModeChange]
+    [setTheme]
   );
 
   const modes: ThemeMode[] = ["light", "dark", "system"];
@@ -124,7 +96,7 @@ export function ThemeToggle({
     return (
       <div
         className={cn(
-          "inline-flex h-10 items-center gap-1 rounded-xl border border-border bg-transparent p-1",
+          "inline-flex h-10 items-center gap-1 rounded-xl border border-border-default bg-bg-surface p-1",
           className
         )}
         aria-label="Theme toggle"
@@ -132,7 +104,7 @@ export function ThemeToggle({
         {modes.map((m) => (
           <div
             key={m}
-            className="h-8 w-8 rounded-lg bg-muted"
+            className="h-8 w-8 rounded-lg bg-bg-subtle animate-pulse"
             aria-hidden
           />
         ))}
@@ -145,46 +117,62 @@ export function ThemeToggle({
       role="tablist"
       aria-label="Theme selection"
       className={cn(
-        "inline-flex h-10 items-center gap-1 rounded-xl border border-border bg-white/80 p-1 shadow-sm",
-        "dark:bg-card/50 dark:backdrop-blur-sm",
+        "inline-flex h-10 items-center gap-1 rounded-xl border border-border-default bg-bg-surface p-1",
         className
       )}
     >
       {modes.map((m, index) => {
-        const config = themeConfig[m];
-        const Icon = config.icon;
-        const isActive = mode === m;
+        const isActive = theme === m;
+        const Icon = m === "system" ? Sun : themeConfig[m].icon;
 
         return (
           <button
             key={m}
             role="tab"
+            type="button"
             tabIndex={isActive ? 0 : -1}
             aria-selected={isActive}
-            aria-label={config.ariaLabel}
-            onClick={() => handleModeChange(m)}
+            aria-label={themeConfig[m].ariaLabel}
+            onClick={() => setTheme(m)}
             onKeyDown={(e) => handleKeyDown(e, index)}
             className={cn(
               "relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium",
               "transition-all duration-200 ease-out",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base",
               isActive
-                ? "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm"
-                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                ? "text-white"
+                : "text-text-muted hover:text-text-primary hover:bg-bg-subtle"
             )}
           >
-            <Icon
-              className={cn(
-                "h-4 w-4 transition-transform duration-200",
-                isActive && "scale-110"
+            {isActive ? (
+              <motion.span
+                layoutId="theme-toggle-indicator"
+                className="absolute inset-0 rounded-lg bg-accent-primary"
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              />
+            ) : null}
+
+            <span className="relative z-10 flex items-center gap-1.5">
+              {m === "system" ? (
+                <span className="h-4 w-4 flex items-center justify-center">
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                  >
+                    <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm0 2v12A6 6 0 008 2z" />
+                  </svg>
+                </span>
+              ) : (
+                <Icon className="h-4 w-4" aria-hidden />
               )}
-              aria-hidden
-            />
-            {showLabels && (
-              <span className={cn("hidden sm:inline", isActive && "font-semibold")}>
-                {config.label}
-              </span>
-            )}
+              {showLabels ? (
+                <span className="hidden sm:inline">
+                  {themeConfig[m].label}
+                </span>
+              ) : null}
+            </span>
           </button>
         );
       })}
@@ -192,45 +180,109 @@ export function ThemeToggle({
   );
 }
 
-export function ThemeToggleCompact({
-  className,
-  isCollapsed = false,
-}: {
+/* ═══════════════════════════════════════════
+   ThemeToggleCompact — Single icon button cycle
+   ═══════════════════════════════════════════ */
+
+/** Props for the ThemeToggleCompact component. */
+export interface ThemeToggleCompactProps {
+  /** Additional CSS classes. */
   className?: string;
+  /**
+   * Whether the parent container is collapsed.
+   * @deprecated No longer affects rendering. Accepted for backward compatibility.
+   */
   isCollapsed?: boolean;
-}) {
-  const [mode, setMode] = useState<ThemeMode>("system");
+}
+
+/**
+ * Compact single-button theme toggle that cycles through light → dark → system.
+ *
+ * Uses Framer Motion AnimatePresence for smooth icon swap animation.
+ */
+export function ThemeToggleCompact({ className, isCollapsed: _isCollapsed }: ThemeToggleCompactProps) {
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMode(getStoredTheme());
     setMounted(true);
   }, []);
 
-  const toggleTheme = useCallback(() => {
-    const nextMode: ThemeMode = mode === "light" ? "dark" : mode === "dark" ? "system" : "light";
-    setMode(nextMode);
-    localStorage.setItem(THEME_STORAGE_KEY, nextMode);
-    applyTheme(nextMode === "system" ? getSystemTheme() : nextMode);
-  }, [mode]);
+  const toggle = useCallback(() => {
+    const nextTheme =
+      theme === "light" ? "dark" : theme === "dark" ? "system" : "light";
+    setTheme(nextTheme);
+  }, [theme, setTheme]);
 
-  const currentConfig = themeConfig[mode];
-  const Icon = currentConfig.icon;
+  if (!mounted) {
+    return (
+      <button
+        className={cn(
+          "h-10 w-10 rounded-lg bg-bg-subtle animate-pulse",
+          className
+        )}
+        aria-label="Theme toggle"
+        disabled
+      />
+    );
+  }
+
+  const currentTheme = (theme ?? "system") as ThemeMode;
+  const label = `Current theme: ${themeConfig[currentTheme].label}. Click to change.`;
 
   return (
     <button
-      onClick={toggleTheme}
+      type="button"
+      onClick={toggle}
       className={cn(
-        "flex items-center rounded-xl text-[var(--sidebar-utility-default-text)] transition-all duration-150 hover:bg-[var(--sidebar-utility-hover-bg)] hover:text-[var(--sidebar-utility-hover-text)]",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sidebar)]",
-        isCollapsed
-          ? "h-11 w-11 justify-center"
-          : "h-10 w-full justify-center gap-3 px-3",
+        "relative inline-flex h-10 w-10 items-center justify-center rounded-lg",
+        "text-text-secondary hover:text-text-primary hover:bg-bg-subtle",
+        "transition-colors duration-150",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base",
         className
       )}
-      aria-label={`Current theme: ${currentConfig.label}. Click to change.`}
+      aria-label={label}
     >
-      <Icon className="h-5 w-5 shrink-0 transition-transform duration-150 hover:scale-110" weight="regular" aria-hidden />
+      <AnimatePresence mode="wait">
+        {currentTheme === "dark" ? (
+          <motion.span
+            key="moon"
+            initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+            animate={{ rotate: 0, opacity: 1, scale: 1 }}
+            exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Moon className="h-5 w-5" aria-hidden />
+          </motion.span>
+        ) : currentTheme === "light" ? (
+          <motion.span
+            key="sun"
+            initial={{ rotate: 90, opacity: 0, scale: 0.5 }}
+            animate={{ rotate: 0, opacity: 1, scale: 1 }}
+            exit={{ rotate: -90, opacity: 0, scale: 0.5 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Sun className="h-5 w-5" aria-hidden />
+          </motion.span>
+        ) : (
+          <motion.span
+            key="system"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={{ duration: 0.2 }}
+          >
+            <svg
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="h-5 w-5"
+              aria-hidden="true"
+            >
+              <path d="M10 0a10 10 0 100 20 10 10 0 000-20zm0 2.5v15a7.5 7.5 0 000-15z" />
+            </svg>
+          </motion.span>
+        )}
+      </AnimatePresence>
     </button>
   );
 }

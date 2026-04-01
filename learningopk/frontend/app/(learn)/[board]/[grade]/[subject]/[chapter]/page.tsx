@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 
 import { AppShell } from "@/components/foundation/app-shell";
-import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
+import { PageHeader } from "@/components/common/page-header";
 import { ChapterProgressTracker } from "@/components/learn/chapter-progress-tracker";
 import { ChapterStudyWorkspace } from "@/components/learn/chapter-study-workspace";
 import { getChapterDetail } from "@/lib/learn-api";
@@ -71,36 +71,43 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
       currentPath={basePath}
       contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6"
     >
-      <Breadcrumbs
-        items={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Subjects", href: "/subjects" },
-          { label: payload.subject.name, href: subjectPath },
-          { label: `Chapter ${payload.chapter.chapterNumber}` },
-        ]}
-        className="mb-4"
-      />
-      <ChapterProgressTracker chapterId={payload.chapter.id} />
-      <ChapterStudyWorkspace
-        boardName={payload.board.name}
-        className={payload.class.name}
-        subjectName={payload.subject.name}
-        boardSlug={payload.board.slug}
-        classSlug={payload.class.slug}
-        subjectSlug={payload.subject.slug}
-        chapterSlug={payload.chapter.slug}
-        activeTab={activeTab}
-        tabs={tabs}
-        chapterId={payload.chapter.id}
-        chapterNumber={payload.chapter.chapterNumber}
-        chapterTitle={payload.chapter.title}
-        chapterSummary={payload.chapter.summary}
-        exercises={payload.exercises}
-        flashcards={payload.flashcards}
-        quiz={payload.quiz}
-        flashcardStorageKey={`learningopk:flashcards:${payload.board.slug}:${payload.class.slug}:${payload.subject.slug}:${payload.chapter.slug}`}
-        autoOpenAi={autoOpenAi}
-      />
+      <div className="space-y-4">
+        {/* Breadcrumb navigation */}
+        <PageHeader
+          title=""
+          breadcrumbs={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Subjects", href: "/subjects" },
+            { label: payload.subject.name, href: subjectPath },
+            { label: `Chapter ${payload.chapter.chapterNumber}` },
+          ]}
+        />
+
+        {/* Progress tracker (invisible, fires event) */}
+        <ChapterProgressTracker chapterId={payload.chapter.id} />
+
+        {/* Main workspace */}
+        <ChapterStudyWorkspace
+          boardName={payload.board.name}
+          className={payload.class.name}
+          subjectName={payload.subject.name}
+          boardSlug={payload.board.slug}
+          classSlug={payload.class.slug}
+          subjectSlug={payload.subject.slug}
+          chapterSlug={payload.chapter.slug}
+          activeTab={activeTab}
+          tabs={tabs}
+          chapterId={payload.chapter.id}
+          chapterNumber={payload.chapter.chapterNumber}
+          chapterTitle={payload.chapter.title}
+          chapterSummary={payload.chapter.summary}
+          exercises={payload.exercises}
+          flashcards={payload.flashcards}
+          quiz={payload.quiz}
+          flashcardStorageKey={`learningopk:flashcards:${payload.board.slug}:${payload.class.slug}:${payload.subject.slug}:${payload.chapter.slug}`}
+          autoOpenAi={autoOpenAi}
+        />
+      </div>
     </AppShell>
   );
 }

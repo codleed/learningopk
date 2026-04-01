@@ -2,14 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { motion, AnimatePresence } from "framer-motion";
+import { Eye, Pencil, X, Send, BookOpen, Layers } from "lucide-react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ContentRenderer } from "@/components/common/content-renderer";
+import { Sheet, SheetHeader, SheetBody, SheetFooter, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Tabs, TabList, TabTrigger, TabContent } from "@/components/ui/tabs";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
@@ -47,15 +50,17 @@ type ForumChapterOption = {
 type ForumThreadFormProps = {
   subjects: ForumSubjectOption[];
   chapters: ForumChapterOption[];
+  isOpen: boolean;
+  closeHref: string;
 };
 
-export const ForumThreadForm = ({ subjects, chapters }: ForumThreadFormProps) => {
+export const ForumThreadForm = ({ subjects, chapters, isOpen, closeHref }: ForumThreadFormProps) => {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [chapterId, setChapterId] = useState("");
-  const [previewEnabled, setPreviewEnabled] = useState(false);
+  const [activeTab, setActiveTab] = useState("write");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -85,6 +90,10 @@ export const ForumThreadForm = ({ subjects, chapters }: ForumThreadFormProps) =>
         setChapterId("");
       }
     }
+  };
+
+  const handleClose = () => {
+    router.push(closeHref);
   };
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -148,92 +157,143 @@ export const ForumThreadForm = ({ subjects, chapters }: ForumThreadFormProps) =>
   };
 
   return (
-    <form onSubmit={onSubmit} className="surface-card space-y-4 rounded-xl border border-border p-5">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">Ask a question</h2>
-        <Button
-          type="button"
-          onClick={() => setPreviewEnabled((current) => !current)}
-          variant="ghost"
-          size="sm"
-        >
-          {previewEnabled ? "Edit" : "Preview"}
-        </Button>
-      </div>
+    <Sheet open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }} side="right" className="!w-[480px] !max-w-[92vw]">
+      <SheetHeader>
+        <SheetTitle>New Post</SheetTitle>
+        <SheetDescription>Ask a question or share something with the community.</SheetDescription>
+      </SheetHeader>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <label className="space-y-1 text-sm text-foreground">
-          <span>Subject (optional)</span>
-          <Select
-            value={subjectId}
-            onChange={(event) => onSubjectChange(event.target.value)}
-          >
-            <option value="">No subject tag</option>
-            {subjects.map((subject) => (
-              <option key={subject.id} value={String(subject.id)}>
-                {subject.name}
-                {subject.className ? ` (${subject.className})` : ""}
-              </option>
-            ))}
-          </Select>
-        </label>
-
-        <label className="space-y-1 text-sm text-foreground">
-          <span>Chapter (optional)</span>
-          <Select
-            value={chapterId}
-            onChange={(event) => setChapterId(event.target.value)}
-            disabled={!subjectId}
-          >
-            <option value="">No chapter tag</option>
-            {filteredChapterOptions.map((chapter) => (
-              <option key={chapter.id} value={String(chapter.id)}>
-                Chapter {chapter.chapterNumber}: {chapter.title}
-              </option>
-            ))}
-          </Select>
-        </label>
-      </div>
-
-      <label className="space-y-1 text-sm text-foreground">
-        <span>Title</span>
-        <Input
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          maxLength={160}
-          required
-          placeholder="What are you stuck on?"
-        />
-      </label>
-
-      <label className="space-y-1 text-sm text-foreground">
-        <span>Body (markdown supported)</span>
-        {previewEnabled ? (
-          <div className="min-h-32 rounded-md border border-border bg-muted/45 p-3">
-            {body.trim().length > 0 ? (
-              <div className="prose prose-zinc max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Nothing to preview yet.</p>
-            )}
-          </div>
-        ) : (
-          <Textarea
-            value={body}
-            onChange={(event) => setBody(event.target.value)}
+      <SheetBody>
+        <form id="create-thread-form" onSubmit={onSubmit} className="space-y-5">
+          {/* Title input */}
+          <Input
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            maxLength={160}
             required
-            rows={8}
-            placeholder="Add details, context, and what you tried."
+            label="Title"
+            placeholder="What are you stuck on?"
+            prefix={<Pencil />}
           />
-        )}
-      </label>
 
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+          {/* Subject & Chapter selectors */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="space-y-1.5">
+              <span className="flex items-center gap-1.5 text-sm font-medium text-text-primary">
+                <BookOpen className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
+                Subject
+              </span>
+              <Select
+                value={subjectId}
+                onChange={(event) => onSubjectChange(event.target.value)}
+                className="!h-10 !text-sm"
+              >
+                <option value="">No subject tag</option>
+                {subjects.map((subject) => (
+                  <option key={subject.id} value={String(subject.id)}>
+                    {subject.name}
+                    {subject.className ? ` (${subject.className})` : ""}
+                  </option>
+                ))}
+              </Select>
+            </label>
 
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "Posting..." : "Post thread"}
-      </Button>
-    </form>
+            <label className="space-y-1.5">
+              <span className="flex items-center gap-1.5 text-sm font-medium text-text-primary">
+                <Layers className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
+                Chapter
+              </span>
+              <Select
+                value={chapterId}
+                onChange={(event) => setChapterId(event.target.value)}
+                disabled={!subjectId}
+                className="!h-10 !text-sm"
+              >
+                <option value="">No chapter tag</option>
+                {filteredChapterOptions.map((chapter) => (
+                  <option key={chapter.id} value={String(chapter.id)}>
+                    Ch. {chapter.chapterNumber}: {chapter.title}
+                  </option>
+                ))}
+              </Select>
+            </label>
+          </div>
+
+          {/* Body editor with tabs */}
+          <div className="space-y-1.5">
+            <span className="block text-sm font-medium text-text-primary">Body</span>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabList variant="pills" className="mb-3">
+                <TabTrigger value="write" variant="pills" layoutId="compose-tab">
+                  <Pencil className="h-3 w-3" aria-hidden="true" />
+                  Write
+                </TabTrigger>
+                <TabTrigger value="preview" variant="pills" layoutId="compose-tab">
+                  <Eye className="h-3 w-3" aria-hidden="true" />
+                  Preview
+                </TabTrigger>
+              </TabList>
+
+              <TabContent value="write">
+                <Textarea
+                  value={body}
+                  onChange={(event) => setBody(event.target.value)}
+                  required
+                  rows={10}
+                  placeholder="Add details, context, and what you've tried. Markdown & LaTeX supported."
+                  autoResize
+                  maxRows={20}
+                />
+                <p className="mt-1.5 text-[11px] text-text-muted">
+                  Supports **bold**, *italic*, `code`, and $\LaTeX$ math.
+                </p>
+              </TabContent>
+
+              <TabContent value="preview">
+                <div className="min-h-[200px] rounded-lg border border-border-default bg-bg-base p-4">
+                  {body.trim().length > 0 ? (
+                    <ContentRenderer content={body} variant="default" />
+                  ) : (
+                    <p className="text-sm text-text-muted">Nothing to preview yet. Start writing above.</p>
+                  )}
+                </div>
+              </TabContent>
+            </Tabs>
+          </div>
+
+          {/* Error display */}
+          <AnimatePresence>
+            {error ? (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="rounded-lg border border-accent-danger/20 bg-accent-danger-light px-4 py-3">
+                  <p className="text-sm text-accent-danger">{error}</p>
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </form>
+      </SheetBody>
+
+      <SheetFooter>
+        <Button type="button" variant="ghost" size="sm" onClick={handleClose}>
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          form="create-thread-form"
+          variant="primary"
+          size="sm"
+          loading={isPending}
+          iconLeft={<Send />}
+        >
+          {isPending ? "Posting..." : "Submit"}
+        </Button>
+      </SheetFooter>
+    </Sheet>
   );
 };

@@ -1,19 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useMemo } from "react";
-import { ChevronLeft, BookOpen, Dumbbell, Layers, HelpCircle } from "lucide-react";
+import { BookOpen, Dumbbell, Layers, HelpCircle } from "lucide-react";
 
 import type { ChapterDetailResponse } from "@/lib/learn-api";
-import {
-  DashboardSection,
-  DashboardSurface,
-} from "@/components/foundation/dashboard-primitives";
+import type { TabItem } from "@/components/foundation/tabs";
 import {
   StaggerContainer,
   MotionSection,
 } from "@/components/dashboard/DashboardClient";
-import { Tabs, type TabItem } from "@/components/foundation/tabs";
 import { cn } from "@/lib/utils";
 
 import { ChapterStudyContentWithAi } from "./chapter-study-content-with-ai";
@@ -78,7 +73,7 @@ export function ChapterStudyWorkspace({
   flashcardStorageKey,
   autoOpenAi = false,
 }: ChapterStudyWorkspaceProps) {
-  const [prompt, setPrompt] = useState<string | null>(
+  const [, setPrompt] = useState<string | null>(
     autoOpenAi ? "Guide me through this chapter using hints first." : null,
   );
 
@@ -114,86 +109,90 @@ export function ChapterStudyWorkspace({
     <>
       <XpToast notifications={visibleNotifications} onDismiss={dismiss} />
       <ConfettiCelebration show={leveledUp} onComplete={() => {}} />
+
       <StaggerContainer
         className={cn(
           "grid gap-5 xl:items-start",
           "xl:grid-cols-[minmax(0,1fr)_minmax(22rem,26rem)]"
         )}
       >
+        {/* Main content column */}
         <MotionSection>
-          <DashboardSurface
-            as="section"
-            tone="shell"
-            className="overflow-visible space-y-5 p-4 sm:p-6"
-          >
-            <MotionSection>
-              <QuestHeader
-                boardName={boardName}
-                boardSlug={boardSlug}
-                classSlug={classSlug}
-                subjectName={subjectName}
-                subjectSlug={subjectSlug}
-                chapterNumber={chapterNumber}
-                chapterTitle={chapterTitle}
-                gamificationState={state}
-                streak={streak}
-                completionPercent={completionPercent}
+          <div className="space-y-4">
+            {/* Quest header */}
+            <QuestHeader
+              boardName={boardName}
+              boardSlug={boardSlug}
+              classSlug={classSlug}
+              subjectName={subjectName}
+              subjectSlug={subjectSlug}
+              chapterNumber={chapterNumber}
+              chapterTitle={chapterTitle}
+              gamificationState={state}
+              streak={streak}
+              completionPercent={completionPercent}
+            />
+
+            {/* Tab bar */}
+            <div className="rounded-xl border border-border-default bg-bg-surface p-1.5">
+              <QuestTabBar
+                activeTab={activeTab}
+                baseHref={`/${boardSlug}/${classSlug}/${subjectSlug}/${chapterSlug}`}
+                status={{
+                  summary: chapterProgress?.summaryRead ?? false,
+                  exercises: chapterProgress?.exercisesCompleted?.length ?? 0,
+                  totalExercises: exercises?.length ?? 0,
+                  flashcards: Object.keys(chapterProgress?.flashcardsReviewed ?? {}).length,
+                  totalFlashcards: flashcards?.length ?? 0,
+                  quizCompleted: (chapterProgress?.quizAttempts?.length ?? 0) > 0,
+                }}
               />
-            </MotionSection>
+            </div>
 
-            <MotionSection>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                <DashboardSurface 
-                  as="div" 
-                  tone="header" 
-                  className="flex-1 px-1.5 py-1.5"
-                >
-                  <QuestTabBar
-                    activeTab={activeTab}
-                    baseHref={`/${boardSlug}/${classSlug}/${subjectSlug}/${chapterSlug}`}
-                    status={{
-                      summary: chapterProgress?.summaryRead ?? false,
-                      exercises: chapterProgress?.exercisesCompleted?.length ?? 0,
-                      totalExercises: exercises?.length ?? 0,
-                      flashcards: Object.keys(chapterProgress?.flashcardsReviewed ?? {}).length,
-                      totalFlashcards: flashcards?.length ?? 0,
-                      quizCompleted: (chapterProgress?.quizAttempts?.length ?? 0) > 0,
-                    }}
-                  />
-                </DashboardSurface>
+            {/* Study content */}
+            <div
+              className={cn(
+                "rounded-xl border border-border-default bg-bg-surface",
+                "p-4 sm:p-6",
+                "min-h-[400px]"
+              )}
+            >
+              <div className="mb-4 flex items-center gap-2 border-b border-border-default pb-3">
+                <span className="text-text-secondary">
+                  {TAB_ICONS[activeTab]}
+                </span>
+                <h2 className="font-[var(--font-display)] text-lg font-semibold text-text-primary">
+                  {tabs.find((t) => t.key === activeTab)?.label || "Study Content"}
+                </h2>
               </div>
-            </MotionSection>
 
-            <MotionSection>
-              <DashboardSection 
-                title={tabs.find(t => t.key === activeTab)?.label || 'Study Content'}
-                className="min-h-[400px]"
-              >
-                <ChapterStudyContentWithAi
-                  activeTab={activeTab}
-                  chapterId={chapterId}
-                  chapterTitle={chapterTitle}
-                  chapterNumber={chapterNumber}
-                  summary={chapterSummary}
-                  subjectName={subjectName}
-                  exercises={exercises}
-                  flashcards={flashcards}
-                  quiz={quiz}
-                  flashcardStorageKey={flashcardStorageKey}
-                  autoOpenAi={autoOpenAi}
-                  onPromptChange={(nextPrompt) => {
-                    setPrompt(nextPrompt);
-                  }}
-                />
-              </DashboardSection>
-            </MotionSection>
-          </DashboardSurface>
+              <ChapterStudyContentWithAi
+                activeTab={activeTab}
+                chapterId={chapterId}
+                chapterTitle={chapterTitle}
+                chapterNumber={chapterNumber}
+                summary={chapterSummary}
+                subjectName={subjectName}
+                exercises={exercises}
+                flashcards={flashcards}
+                quiz={quiz}
+                flashcardStorageKey={flashcardStorageKey}
+                autoOpenAi={autoOpenAi}
+                onPromptChange={(nextPrompt) => {
+                  setPrompt(nextPrompt);
+                }}
+              />
+            </div>
+          </div>
         </MotionSection>
 
+        {/* AI sidebar */}
         <MotionSection>
-          <AIUnifiedChat context={aiContext} />
+          <div className="sticky top-4">
+            <AIUnifiedChat context={aiContext} />
+          </div>
         </MotionSection>
-    </StaggerContainer>
+      </StaggerContainer>
     </>
   );
 }

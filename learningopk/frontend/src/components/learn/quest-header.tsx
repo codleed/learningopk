@@ -1,10 +1,13 @@
 "use client";
 
-import { Star, Trophy } from "lucide-react";
+import { Star, Trophy, Target } from "lucide-react";
 import { motion } from "framer-motion";
-import { ProgressRing } from "@/components/gamification/progress-ring";
+
+import { ProgressRing } from "@/components/common/progress-ring";
 import { StreakCounter } from "@/components/gamification/streak-counter";
+import { Badge } from "@/components/ui/badge";
 import type { GamificationState } from "@/lib/gamification-types";
+import { cn } from "@/lib/utils";
 
 interface QuestHeaderProps {
   boardName: string;
@@ -19,79 +22,127 @@ interface QuestHeaderProps {
   completionPercent: number;
 }
 
-export function QuestHeader({
-  boardName,
-  boardSlug,
-  classSlug,
-  subjectName,
-  subjectSlug,
-  chapterNumber,
-  chapterTitle,
-  gamificationState,
-  streak,
-  completionPercent,
-}: QuestHeaderProps) {
+export function QuestHeader(props: QuestHeaderProps) {
+  const {
+    boardName,
+    subjectName,
+    chapterNumber,
+    chapterTitle,
+    gamificationState,
+    streak,
+    completionPercent,
+  } = props;
   return (
-    <header className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-background via-background to-muted/20 p-6">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-      
+    <motion.header
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+      className={cn(
+        "relative overflow-hidden rounded-2xl",
+        "border border-border-default bg-bg-surface",
+        "p-5 sm:p-6 lg:p-8"
+      )}
+    >
+      {/* Background effects */}
+      <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-accent-primary/6 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-accent-success/5 blur-3xl" />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+          backgroundSize: "20px 20px",
+        }}
+      />
+
       <div className="relative">
-        <div className="flex items-center justify-end mb-4">
+        {/* Top row: breadcrumb + streak */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs text-text-secondary">
+            <span className="font-medium">{boardName}</span>
+            <span className="text-text-muted">/</span>
+            <span>{subjectName}</span>
+          </div>
           <StreakCounter streak={streak} />
         </div>
 
-        <div className="flex items-start gap-6">
-          <ProgressRing progress={completionPercent} size={80} strokeWidth={8} />
-          
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
-                Quest {chapterNumber}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {boardName} • Class {classSlug.replace("grade-", "")}
-              </span>
+        {/* Main content row */}
+        <div className="flex items-start gap-5 sm:gap-6">
+          {/* Progress ring */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15, duration: 0.4 }}
+            className="shrink-0"
+          >
+            <ProgressRing
+              percentage={completionPercent}
+              size={76}
+              strokeWidth={6}
+            />
+          </motion.div>
+
+          {/* Title and meta */}
+          <div className="min-w-0 flex-1">
+            {/* Chapter badge */}
+            <div className="mb-2 flex items-center gap-2">
+              <Badge variant="primary" size="sm">
+                <Target className="mr-0.5 h-3 w-3" aria-hidden />
+                Chapter {chapterNumber}
+              </Badge>
             </div>
-            
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+
+            {/* Chapter title */}
+            <h1 className="font-[var(--font-display)] text-xl font-bold tracking-tight text-text-primary sm:text-2xl lg:text-3xl">
               {chapterTitle}
             </h1>
-            
-            <div className="mt-4 flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-1.5 rounded-lg bg-amber-500/10 px-3 py-1.5">
-                <motion.div
-                  animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 1] }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
-                </motion.div>
-                <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
+
+            {/* XP + Level stats */}
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <motion.div
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.25, duration: 0.3 }}
+                className="flex items-center gap-1.5 rounded-lg border border-accent-warning/20 bg-accent-warning-light px-2.5 py-1"
+              >
+                <Star className="h-3.5 w-3.5 fill-accent-warning text-accent-warning" aria-hidden />
+                <span className="font-[var(--font-mono)] text-xs font-bold text-accent-warning">
                   {gamificationState.xp} XP
                 </span>
-              </div>
-              
-              <div className="flex items-center gap-1.5 rounded-lg bg-purple-500/10 px-3 py-1.5">
-                <Trophy className="h-4 w-4 text-purple-500" />
-                <span className="text-sm font-bold text-purple-600 dark:text-purple-400">
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.3 }}
+                className="flex items-center gap-1.5 rounded-lg border border-accent-primary/20 bg-accent-primary-light px-2.5 py-1"
+              >
+                <Trophy className="h-3.5 w-3.5 text-accent-primary" aria-hidden />
+                <span className="font-[var(--font-mono)] text-xs font-bold text-accent-primary">
                   Level {gamificationState.level}
                 </span>
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>
 
-        <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${completionPercent}%` }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-400"
-          />
+        {/* Progress bar */}
+        <div className="mt-5">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-bg-subtle">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${completionPercent}%` }}
+              transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+              className="h-full rounded-full bg-gradient-to-r from-accent-primary to-accent-success"
+            />
+          </div>
+          <p className="mt-1.5 font-[var(--font-mono)] text-[0.6875rem] text-text-muted">
+            {completionPercent < 100
+              ? `${Math.round(completionPercent)}% complete — ${Math.round(100 - completionPercent)}% remaining`
+              : "Quest complete!"}
+          </p>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          {completionPercent < 100 ? `${Math.round(100 - completionPercent)}% remaining to complete quest` : "Quest completed! Great job!"}
-        </p>
       </div>
-    </header>
+    </motion.header>
   );
 }

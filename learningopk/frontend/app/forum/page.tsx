@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { z } from "zod";
 
-import { DashboardChromeHeader, DashboardChromeLayout } from "@/components/dashboard/dashboard-chrome-layout";
-import { DashboardSurface } from "@/components/foundation/dashboard-primitives";
-import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
+import { AppShell } from "@/components/foundation/app-shell";
+import { PageHeader } from "@/components/common/page-header";
 import { ForumFilterBar } from "@/components/forum/forum-filter-bar";
 import { ForumThreadFeed } from "@/components/forum/forum-thread-feed";
 import { ForumThreadForm } from "@/components/forum/forum-thread-form";
+import { ForumSidebar } from "@/components/forum/forum-sidebar";
+import { ForumTrendingSidebar } from "@/components/forum/forum-trending-sidebar";
 import { ErrorState } from "@/components/ui/states";
 import { getForumFilters, getForumThreads } from "@/lib/forum-api";
 import { buildForumHref, forumSearchParamsSchema } from "@/lib/forum-utils";
@@ -97,33 +97,22 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
 
   if (forumError) {
     return (
-      <DashboardChromeLayout
-        session={session}
-        currentPath="/forum"
-        header={
-          <>
-            <Breadcrumbs
-              items={[
-                { label: "Dashboard", href: "/dashboard" },
-                { label: "Forum" },
-              ]}
-              className="mb-3"
-            />
-            <DashboardChromeHeader
-              eyebrow="Community"
-              title="Forum"
-              subtitle="Ask questions, share hints, and help other students learn faster."
-            />
-          </>
-        }
-      >
-        <DashboardSurface as="section" tone="panel" className="p-4 sm:p-5">
+      <AppShell session={session} currentPath="/forum">
+        <div className="space-y-6">
+          <PageHeader
+            title="Community Forum"
+            subtitle="Ask questions, share hints, and help other students learn faster."
+            breadcrumbs={[
+              { label: "Dashboard", href: "/dashboard" },
+              { label: "Forum" },
+            ]}
+          />
           <ErrorState
             title="Forum is temporarily unavailable"
             description={`${forumError} Ensure backend is running on http://localhost:3001.`}
           />
-        </DashboardSurface>
-      </DashboardChromeLayout>
+        </div>
+      </AppShell>
     );
   }
 
@@ -170,48 +159,46 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
       : forumFilters;
 
   return (
-    <DashboardChromeLayout
-      session={session}
-      currentPath="/forum"
-      header={
-        <>
-          <Breadcrumbs
-            items={[
-              { label: "Dashboard", href: "/dashboard" },
-              { label: "Forum" },
-            ]}
-            className="mb-3"
-          />
-          <DashboardChromeHeader
-            eyebrow="Community"
-            title="Forum"
-            subtitle="Ask questions, share hints, and help other students learn faster."
-          />
-        </>
-      }
-    >
-      {isComposeMode ? (
-        <DashboardSurface as="section" tone="panel" className="p-4 sm:p-5">
-          <section className="surface-card space-y-4 rounded-xl border border-border p-5">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-foreground">Create new thread</h2>
-              <Link href={forumListHref} className="text-sm font-semibold text-foreground underline underline-offset-4">
-                Back to forum
-              </Link>
-            </div>
-            <ForumThreadForm subjects={scopedForumFilters.subjects} chapters={scopedForumFilters.chapters} />
-          </section>
-        </DashboardSurface>
-      ) : (
-        <>
-          <DashboardSurface as="section" tone="panel" className="p-4 sm:p-5">
+    <AppShell session={session} currentPath="/forum">
+      <div className="space-y-6">
+        {/* ── Page Header ── */}
+        <PageHeader
+          title="Community Forum"
+          subtitle="Ask questions, share hints, and help other students learn faster."
+          breadcrumbs={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Forum" },
+          ]}
+        />
+
+        {/* ── Three-Column Layout ── */}
+        <div className="flex gap-6">
+          {/* ── Left Sidebar: Filters ── */}
+          <aside className="hidden w-[200px] shrink-0 lg:block" aria-label="Forum filters">
+            <ForumSidebar
+              filters={scopedForumFilters}
+              selected={{
+                q: searchQuery,
+                board: selectedBoard,
+                grade: selectedGrade,
+                subjectId: selectedSubjectId,
+                chapterId: selectedChapterId,
+                solved: selectedSolved
+              }}
+            />
+          </aside>
+
+          {/* ── Main Content ── */}
+          <main className="min-w-0 flex-1">
+            {/* ── Filter Bar + Create Button ── */}
             <ForumFilterBar
               filters={scopedForumFilters}
               createThreadHref={session ? forumComposeHref : undefined}
+              session={session}
               topContent={
                 session ? null : (
-                  <p className="text-sm text-muted-foreground">
-                    <Link href="/login" className="font-semibold text-foreground underline underline-offset-4">
+                  <p className="text-sm text-text-secondary">
+                    <Link href="/login" className="font-semibold text-accent-primary underline underline-offset-4 transition-colors hover:text-accent-primary-hover">
                       Sign in
                     </Link>{" "}
                     to create a thread. You can still browse all discussions below.
@@ -227,24 +214,41 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
                 solved: selectedSolved
               }}
             />
-          </DashboardSurface>
 
-          <DashboardSurface as="section" tone="panel" className="p-4 sm:p-5">
-            <ForumThreadFeed
-              initialThreads={forumFeed.threads}
-              initialBatchSize={initialThreadLimit}
-              query={{
-                q: searchQuery,
-                board: selectedBoard,
-                grade: selectedGrade,
-                subjectId: selectedSubjectId,
-                chapterId: selectedChapterId,
-                solved: selectedSolved
-              }}
-            />
-          </DashboardSurface>
-        </>
-      )}
-    </DashboardChromeLayout>
+            {/* ── Thread Feed ── */}
+            <div className="mt-4">
+              <ForumThreadFeed
+                initialThreads={forumFeed.threads}
+                initialBatchSize={initialThreadLimit}
+                query={{
+                  q: searchQuery,
+                  board: selectedBoard,
+                  grade: selectedGrade,
+                  subjectId: selectedSubjectId,
+                  chapterId: selectedChapterId,
+                  solved: selectedSolved
+                }}
+              />
+            </div>
+          </main>
+
+          {/* ── Right Sidebar: Trending + Top Contributors ── */}
+          <aside className="hidden w-[200px] shrink-0 xl:block" aria-label="Trending and contributors">
+            <ForumTrendingSidebar threads={forumFeed.threads} />
+          </aside>
+        </div>
+
+        {/* ── Compose Sheet (rendered client-side) ── */}
+        {session ? (
+          <ForumThreadForm
+            subjects={scopedForumFilters.subjects}
+            chapters={scopedForumFilters.chapters}
+            isOpen={isComposeMode}
+            closeHref={forumListHref}
+          />
+        ) : null}
+      </div>
+    </AppShell>
   );
 }
+

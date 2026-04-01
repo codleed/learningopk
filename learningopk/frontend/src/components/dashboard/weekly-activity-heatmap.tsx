@@ -1,3 +1,7 @@
+import { Card, CardHeader, CardBody } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+
 type WeeklyActivityEntry = {
   date: string;
   active: boolean;
@@ -8,35 +12,64 @@ type WeeklyActivityHeatmapProps = {
   weeklyActivity: WeeklyActivityEntry[];
 };
 
-export function WeeklyActivityHeatmap({ weeklyActivity }: WeeklyActivityHeatmapProps) {
+const getDayLabel = (dateStr: string): string =>
+  new Date(dateStr).toLocaleDateString("en-US", {
+    weekday: "short",
+    timeZone: "UTC",
+  });
+
+const getIntensityClass = (count: number): string => {
+  if (count === 0) return "bg-bg-subtle border-border-default text-text-muted";
+  if (count <= 1)
+    return "bg-accent-primary/10 border-accent-primary/20 text-accent-primary";
+  if (count <= 3)
+    return "bg-accent-primary/20 border-accent-primary/30 text-accent-primary";
+  if (count <= 5)
+    return "bg-accent-primary/40 border-accent-primary/40 text-accent-primary";
+  return "bg-accent-primary/60 border-accent-primary/50 text-white";
+};
+
+export function WeeklyActivityHeatmap({
+  weeklyActivity,
+}: WeeklyActivityHeatmapProps) {
   return (
-    <article className="surface-card rounded-2xl border border-border p-6">
-      <h2 className="text-base font-semibold text-foreground">Weekly Activity</h2>
-      <div className="mt-4 grid grid-cols-7 gap-2">
+    <Card variant="default">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <h2 className="font-[var(--font-display)] text-base font-bold text-text-primary">
+            Weekly Activity
+          </h2>
+          <Badge variant="default" size="sm">
+            Last 7 days
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardBody className="pt-0">
         {weeklyActivity.length > 0 ? (
-          weeklyActivity.map((entry) => (
-            <div key={entry.date} className="text-center">
-              <div
-                className={[
-                  "mx-auto flex h-11 w-11 items-center justify-center rounded-md border text-xs font-semibold",
-                  entry.active
-                    ? "border-emerald-300 bg-emerald-100 text-emerald-900"
-                    : "border-border bg-muted text-muted-foreground"
-                ].join(" ")}
-                title={`${entry.date}: ${entry.activityCount} activity`}
-              >
-                {entry.activityCount}
+          <div className="grid grid-cols-7 gap-2">
+            {weeklyActivity.map((entry) => (
+              <div key={entry.date} className="flex flex-col items-center gap-1.5">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-text-muted">
+                  {getDayLabel(entry.date)}
+                </span>
+                <div
+                  className={cn(
+                    "flex h-12 w-full items-center justify-center rounded-lg border text-xs font-bold tabular-nums transition-colors",
+                    getIntensityClass(entry.activityCount)
+                  )}
+                  title={`${entry.date}: ${entry.activityCount} activit${entry.activityCount === 1 ? "y" : "ies"}`}
+                >
+                  {entry.activityCount}
+                </div>
               </div>
-              <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-                {new Date(entry.date).toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })}
-              </p>
-            </div>
-          ))
+            ))}
+          </div>
         ) : (
-          <p className="col-span-7 text-xs text-muted-foreground">No activity data available.</p>
+          <p className="py-6 text-center text-xs text-text-secondary">
+            No activity data available yet.
+          </p>
         )}
-      </div>
-    </article>
+      </CardBody>
+    </Card>
   );
 }
-

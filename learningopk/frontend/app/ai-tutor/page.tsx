@@ -14,7 +14,7 @@ export default async function AITutorPage() {
     <AppShell
       session={session}
       currentPath="/ai-tutor"
-      className="bg-background"
+      className="bg-bg-base"
       contentClassName="max-w-none px-0 pb-0 pt-0"
     >
       <AITutorChat />
