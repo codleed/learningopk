@@ -59,13 +59,15 @@ export function QuizQuestionCard({ question, questionNumber, selectedAnswer, loc
 
   return (
     <article className="space-y-4">
-      <fieldset onKeyDown={handleKeyDown} disabled={locked}>
-        <legend className="sr-only">Question {questionNumber}: {question.question}</legend>
-        <div
-          role="radiogroup"
-          aria-label={`Options for question ${questionNumber}`}
-          className="grid gap-2"
-        >
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-foreground">Question {questionNumber}: {question.question}</p>
+        <fieldset onKeyDown={handleKeyDown} disabled={locked}>
+          <legend className="sr-only">Options for question {questionNumber}</legend>
+          <div
+            role="radiogroup"
+            aria-label={`Options for question ${questionNumber}`}
+            className="grid gap-2"
+          >
           {answerOptionEntries.map((option) => {
             const isSelected = selectedAnswer === option.key;
             return (
@@ -105,8 +107,9 @@ export function QuizQuestionCard({ question, questionNumber, selectedAnswer, loc
               </label>
             );
           })}
-        </div>
-      </fieldset>
+          </div>
+        </fieldset>
+      </div>
     </article>
   );
 }

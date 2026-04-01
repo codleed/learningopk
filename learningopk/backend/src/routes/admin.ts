@@ -222,7 +222,7 @@ const quizQuestionCreateBodySchema = z.object({
   optionC: z.string().trim().min(1),
   optionD: z.string().trim().min(1),
   correctOption: z.enum(["a", "b", "c", "d"]),
-  explanation: z.string().trim().min(1),
+  explanation: z.string().trim().optional(),
   marks: z.coerce.number().int().positive().optional().default(1)
 });
 
@@ -233,7 +233,7 @@ const quizQuestionUpdateBodySchema = z.object({
   optionC: z.string().trim().min(1),
   optionD: z.string().trim().min(1),
   correctOption: z.enum(["a", "b", "c", "d"]),
-  explanation: z.string().trim().min(1),
+  explanation: z.string().trim().optional(),
   marks: z.coerce.number().int().positive().optional().default(1)
 });
 
@@ -4336,6 +4336,10 @@ adminRouter.post("/content/quiz-questions", requireSession, async (req, res) => 
 
   const parsedBody = quizQuestionCreateBodySchema.safeParse(req.body);
   if (!parsedBody.success) {
+    console.error("[quiz-questions POST] Validation failed:", {
+      body: req.body,
+      errors: parsedBody.error.flatten()
+    });
     res.status(400).json({
       error: "Invalid quiz question payload",
       details: parsedBody.error.flatten()
@@ -4383,7 +4387,7 @@ adminRouter.post("/content/quiz-questions", requireSession, async (req, res) => 
       optionC: parsedBody.data.optionC.trim(),
       optionD: parsedBody.data.optionD.trim(),
       correctOption: parsedBody.data.correctOption,
-      explanation: parsedBody.data.explanation.trim(),
+      explanation: parsedBody.data.explanation?.trim() ?? null,
       marks: parsedBody.data.marks ?? 1
     })
     .returning({
@@ -4540,7 +4544,7 @@ adminRouter.post("/content/quiz-questions/:id/update", requireSession, async (re
       optionC: parsedBody.data.optionC.trim(),
       optionD: parsedBody.data.optionD.trim(),
       correctOption: parsedBody.data.correctOption,
-      explanation: parsedBody.data.explanation.trim(),
+      explanation: parsedBody.data.explanation?.trim() ?? null,
       marks: parsedBody.data.marks ?? 1
     })
     .where(eq(quizQuestions.id, question.id))

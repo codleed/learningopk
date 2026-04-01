@@ -36,7 +36,7 @@ type QuestionFormData = {
   optionC: string;
   optionD: string;
   correctOption: "a" | "b" | "c" | "d";
-  explanation: string;
+  explanation: string | null;
   marks: number;
 };
 
@@ -163,7 +163,14 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
   };
 
   const handleSaveQuestion = async () => {
-    if (!quiz) return;
+    if (!quiz || !quiz.id || quiz.id <= 0) {
+      pushToast({
+        title: "Error",
+        description: "Quiz not properly loaded. Please refresh and try again.",
+        tone: "error",
+      });
+      return;
+    }
     if (!questionForm.questionText.trim() || !questionForm.optionA.trim() || 
         !questionForm.optionB.trim() || !questionForm.optionC.trim() || !questionForm.optionD.trim()) {
       pushToast({
@@ -185,7 +192,7 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
             optionC: questionForm.optionC,
             optionD: questionForm.optionD,
             correctOption: questionForm.correctOption,
-            explanation: questionForm.explanation,
+            explanation: questionForm.explanation ?? undefined,
             marks: questionForm.marks,
           },
         });
@@ -205,7 +212,7 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
           optionC: questionForm.optionC,
           optionD: questionForm.optionD,
           correctOption: questionForm.correctOption,
-          explanation: questionForm.explanation,
+          explanation: questionForm.explanation ?? undefined,
           marks: questionForm.marks,
         });
         setQuestions((prev) => [...prev, created.data]);
@@ -217,8 +224,10 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
       resetQuestionForm();
     } catch (error) {
       console.error("Failed to save question:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       pushToast({
         title: "Failed to save question",
+        description: errorMessage,
         tone: "error",
       });
     } finally {
@@ -569,7 +578,7 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
                 <div>
                   <label className="text-sm font-medium mb-2 block">Explanation</label>
                   <Textarea
-                    value={questionForm.explanation}
+                    value={questionForm.explanation ?? ""}
                     onChange={(e) => setQuestionForm(prev => ({ ...prev, explanation: e.target.value }))}
                     placeholder="Explain why the correct answer is correct..."
                     rows={2}
