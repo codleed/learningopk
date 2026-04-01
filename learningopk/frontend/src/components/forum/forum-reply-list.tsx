@@ -1,7 +1,7 @@
 import { EmptyState } from "@/components/ui/states";
 import type { ForumThreadDetailResponse } from "@/lib/forum-api";
 
-import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { VirtualizedMarkdown } from "@/components/VirtualizedMarkdown";
 
 import { ForumReplyActions } from "./forum-reply-actions";
 import { ForumReplyForm } from "./forum-reply-form";
@@ -41,7 +41,7 @@ export function ForumReplyList({ threadId, replies, canMarkAccepted, isAuthentic
             <span>{formatDateTime(reply.createdAt)}</span>
           </div>
           <div className="mt-3">
-            <MarkdownRenderer content={reply.body} />
+            <VirtualizedMarkdown content={reply.body} threshold={5000} />
           </div>
           <ForumReplyActions
             replyId={reply.id}
@@ -61,7 +61,7 @@ export function ForumReplyList({ threadId, replies, canMarkAccepted, isAuthentic
                     <span>{formatDateTime(nestedReply.createdAt)}</span>
                   </div>
                   <div className="mt-2">
-                    <MarkdownRenderer content={nestedReply.body} />
+                    <VirtualizedMarkdown content={nestedReply.body} threshold={5000} />
                   </div>
                   <ForumReplyActions
                     replyId={nestedReply.id}
