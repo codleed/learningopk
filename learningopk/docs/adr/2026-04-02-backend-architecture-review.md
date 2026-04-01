@@ -599,3 +599,12 @@ app.use("/api/health", healthRouter);
 | Worker stubs | `src/jobs/email.ts` | 3-10 |
 | Missing forumReplies index | `src/lib/db/schema.ts` | 380-394 |
 | Missing userProgress index | `src/lib/db/schema.ts` | 473-490 |
+
+---
+
+## Addendum: Deep Architecture Review — NEW Findings
+
+**Date:** 2026-04-02 (Phase 2)
+**Reviewer:** Backend Architect
+**Scope:** Route architecture, service layer patterns, async workers (BullMQ), caching strategy (Redis), API conventions, error handling patterns, middleware stack design
+**Rule:** Findings below are **not duplicated** from the original review above, the code-quality review, or the database review.
