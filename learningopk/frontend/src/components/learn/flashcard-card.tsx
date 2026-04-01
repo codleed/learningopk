@@ -1,6 +1,7 @@
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 
 import { Button } from "@/components/ui/button";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
 type Flashcard = ChapterDetailResponse["flashcards"][number];
 type CardStatus = "known" | "review" | null;
@@ -31,7 +32,9 @@ export function FlashcardCard({
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Card {cardIndex + 1} of {totalCards}
       </p>
-      <p className="mt-3 text-xl font-semibold text-foreground">{isBackVisible ? card.back : card.front}</p>
+      <div className="mt-3 text-xl font-semibold text-foreground">
+        <MarkdownRenderer content={isBackVisible ? card.back : card.front} />
+      </div>
       <Button type="button" onClick={onToggleSide} variant="secondary" className="mt-5">
         {isBackVisible ? "Show front" : "Show back"}
       </Button>

@@ -1,5 +1,5 @@
 import { AskAiButton } from "@/components/learn/ask-ai-button";
-import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
 type ExerciseSolutionPanelProps = {
   solution: string;
@@ -13,7 +13,7 @@ export function ExerciseSolutionPanel({ solution, onAskAi }: ExerciseSolutionPan
         <AskAiButton onClick={onAskAi} />
       </div>
       <p className="mb-2 text-sm font-semibold text-muted-foreground">Step-by-step solution</p>
-      <MarkdownMathRenderer content={solution} />
+      <MarkdownRenderer content={solution} />
     </div>
   );
 }

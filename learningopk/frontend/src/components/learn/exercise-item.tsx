@@ -1,6 +1,7 @@
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 
 import { Badge } from "@/components/ui/badge";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
 import { ExerciseSolutionPanel } from "./exercise-solution-panel";
 
@@ -25,7 +26,9 @@ export function ExerciseItem({ exercise, onExpanded, onAskAi }: ExerciseItemProp
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-muted-foreground">Exercise {exercise.exerciseNumber}</p>
-          <p className="mt-1 font-medium text-foreground">{exercise.question}</p>
+          <div className="mt-1 font-medium text-foreground">
+            <MarkdownRenderer content={exercise.question} />
+          </div>
         </div>
         <Badge variant={exercise.difficulty === "hard" ? "warning" : exercise.difficulty === "medium" ? "info" : "success"}>
           {exercise.difficulty}

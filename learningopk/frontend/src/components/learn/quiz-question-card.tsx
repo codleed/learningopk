@@ -1,5 +1,6 @@
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 import { cn } from "@/lib/utils";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
 type Quiz = NonNullable<ChapterDetailResponse["quiz"]>;
 type QuizQuestion = Quiz["questions"][number];
@@ -60,7 +61,10 @@ export function QuizQuestionCard({ question, questionNumber, selectedAnswer, loc
   return (
     <article className="space-y-4">
       <div className="space-y-3">
-        <p className="text-sm font-medium text-foreground">Question {questionNumber}: {question.question}</p>
+        <div className="text-sm font-medium text-foreground">
+          <span>Question {questionNumber}: </span>
+          <MarkdownRenderer content={question.question} />
+        </div>
         <fieldset onKeyDown={handleKeyDown} disabled={locked}>
           <legend className="sr-only">Options for question {questionNumber}</legend>
           <div
@@ -103,7 +107,7 @@ export function QuizQuestionCard({ question, questionNumber, selectedAnswer, loc
                 >
                   {option.label}
                 </span>
-                <span className="flex-1">{getOptionText(question, option.key)}</span>
+                <span className="flex-1"><MarkdownRenderer content={getOptionText(question, option.key)} /></span>
               </label>
             );
           })}

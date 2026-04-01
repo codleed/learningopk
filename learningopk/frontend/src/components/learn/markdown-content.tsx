@@ -1,9 +1,9 @@
-import { MarkdownMathRenderer } from "./markdown-math-renderer";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
 type MarkdownContentProps = {
   content: string;
 };
 
 export function MarkdownContent({ content }: MarkdownContentProps) {
-  return <MarkdownMathRenderer content={content} />;
+  return <MarkdownRenderer content={content} />;
 }
