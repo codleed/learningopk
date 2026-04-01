@@ -195,6 +195,8 @@ _No tasks in progress yet. Pick from Todo below._
 - [ ] Forum E2E coverage verifies combined filter interactions instead of only isolated controls
 - [ ] Forum Playwright assertions use the current UI contract for search and thread-composer entry points
 
+> **Partial Progress:** Forum filter state preservation utilities (`forum-filter-utils.ts`, `useForumFilters.ts`) merged to main (`c32464d`). Remaining: E2E coverage for combined filter interactions and Playwright assertions for search + solved toggle + advanced filters.
+
 ---
 
 #### TASK-63 🔵
@@ -380,67 +382,7 @@ _No tasks in progress yet. Pick from Todo below._
 
 ---
 
-### Phase 10 — Enhancements (Critical 🔴 / High 🟠)
-
----
-
-#### TASK-36 🔴
-
-**Title:** KaTeX Math Screen Reader Accessibility
-**Phase:** 10 — Enhancements
-**Priority:** Critical
-**Depends on:** TASK-10
-**Acceptance Criteria:**
-
-- [ ] All KaTeX equations have `aria-label` with spoken-form math (e.g., "x squared divided by y plus 3")
-- [ ] Complex equations include hidden descriptive text explaining the mathematical structure in plain language
-- [ ] Math content passes screen reader testing with VoiceOver (Safari) and NVDA (Firefox)
-- [ ] Math rendering respects `prefers-reduced-motion`
-
----
-
-#### TASK-37 🔴
-
-**Title:** AI Chat Panel Keyboard Navigation & Focus Management
-**Phase:** 10 — Enhancements
-**Priority:** Critical
-**Depends on:** TASK-15
-**Acceptance Criteria:**
-
-- [ ] Tab navigation enters the chat panel and focuses the message input field
-- [ ] All AI response messages are focusable and readable with screen readers via arrow-key navigation
-- [ ] Focus is trapped within the chat panel when open; Escape key returns focus to trigger element
-- [ ] Visual focus indicator has 3:1 contrast ratio minimum and is distinguishable from chat bubble backgrounds
-
----
-
-#### TASK-38 🔴
-
-**Title:** Quiz System Keyboard Accessibility
-**Phase:** 10 — Enhancements
-**Priority:** Critical
-**Depends on:** TASK-12
-**Acceptance Criteria:**
-
-- [ ] Quiz questions use properly grouped `<fieldset>` and `<legend>` elements with clear question numbering
-- [ ] All MCQ options are selectable via keyboard (Arrow keys between options, Space/Enter to select)
-- [ ] Answer submission results are announced via `aria-live` region ("Correct!" or "Incorrect.")
-- [ ] Focus moves to the next question after answer selection
-
----
-
-#### TASK-39 🔴
-
-**Title:** Background Job Processing Infrastructure
-**Phase:** 10 — Enhancements
-**Priority:** Critical
-**Depends on:** TASK-04
-**Acceptance Criteria:**
-
-- [ ] BullMQ integration using existing Redis 7 infrastructure with worker processes
-- [ ] Job registry with typed definitions, retry policies, and dead-letter queue for failed jobs
-- [ ] Schedulable jobs: cron-based recurring jobs (daily analytics, weekly emails, stale session cleanup)
-- [ ] Admin dashboard integration: job monitoring endpoint exposing queue statistics and manual retry
+### Phase 10 — Enhancements (High 🟠)
 
 ---
 
@@ -456,6 +398,8 @@ _No tasks in progress yet. Pick from Todo below._
 - [ ] Automatic cache purge hooks on content mutations via repository pattern
 - [ ] Cache statistics endpoint exposing hit rates, miss rates, and eviction counts
 - [ ] Dashboard query optimization with background refresh before TTL expiry
+
+> **Note:** TASK-51B delivered the core Redis caching layer (typed keys, TTL management, cache-through pattern). This task covers remaining items: automatic cache purge hooks on content mutations, cache statistics endpoint, and background refresh before TTL expiry.
 
 ---
 
@@ -938,6 +882,45 @@ _Completed tasks are moved here by the coding agent._
 **Phase:** 0 — Infrastructure Scaling
 **Priority:** Critical
 **Evidence:** `backend/src/repositories/*.ts` all services refactored to use repos; `backend/src/services/` removed; direct db.select() removed from services; cache-through pattern added to repositories; `backend/src/tests/unit/repositories/` added with passing tests
+
+---
+
+### Admin Content Management & UI Improvements
+
+#### TASK-65 ✅
+
+**Title:** Chapter Content Management System (CMS)
+**Phase:** Admin — Content Management
+**Priority:** High
+**Evidence:** `frontend/app/admin/content/` with chapter CRUD, exercise/quiz/flashcard editing; flashcard reorder with DB transaction atomicity (`4325feb`); quiz question explanation made optional (`5dd9630`); PRs #14, #15 merged
+
+#### TASK-66 ✅
+
+**Title:** Reusable MarkdownRenderer + Virtual Text Measurement
+**Phase:** Frontend — Components
+**Priority:** Medium
+**Evidence:** `frontend/src/components/MarkdownRenderer.tsx` with themeable CSS module; `frontend/src/hooks/usePretextMeasure.ts` with Pretext.js integration for markdown virtualization; PRs #16, #17 merged
+
+#### TASK-67 ✅
+
+**Title:** Admin Subject Management + Curriculum FK Fixes
+**Phase:** Admin — Content Management
+**Priority:** Medium
+**Evidence:** Subject CRUD with deletion and markdown file import in chapter forms; updated foreign key constraints for subjects and board_classes; routing path adjustments for admin content management; PR #13 merged
+
+#### TASK-68 ✅
+
+**Title:** Curriculum Delete API + Admin Navigation Paths
+**Phase:** Admin — Content Management
+**Priority:** Medium
+**Evidence:** Connected delete API endpoints for boards, classes, subjects, chapters; fixed navigation paths for curriculum management flows; PR #12 merged
+
+#### TASK-69 ✅
+
+**Title:** Sidebar Navigation Fix + Icon Centering
+**Phase:** Frontend — UI Fix
+**Priority:** Low
+**Evidence:** Resolved sidebar icon centering and navigation issues in left rail; PR #11 merged
 
 ---
 
