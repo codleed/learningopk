@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import {
   AnyPgColumn,
   boolean,
@@ -315,7 +315,10 @@ export const quizAttempts = pgTable("quiz_attempts", {
   totalMarks: integer("total_marks").notNull(),
   startedAt: timestamp("started_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
   completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
-});
+}, (table) => [
+  index("quiz_attempts_quiz_id_idx").on(table.quizId),
+  index("quiz_attempts_user_completed_idx").on(table.userId, desc(table.completedAt))
+]);
 
 export const aiChatSessions = pgTable("ai_chat_sessions", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -373,7 +376,8 @@ export const forumThreads = pgTable(
     index("forum_threads_search_idx").using(
       "gin",
       sql`to_tsvector('english', coalesce(${table.title}, '') || ' ' || coalesce(${table.body}, ''))`
-    )
+    ),
+    index("forum_threads_user_id_idx").on(table.userId, desc(table.createdAt))
   ]
 );
 
@@ -391,7 +395,9 @@ export const forumReplies = pgTable("forum_replies", {
   upvotes: integer("upvotes").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
-});
+}, (table) => [
+  index("forum_replies_thread_id_idx").on(table.threadId)
+]);
 
 export const forumReplyVotes = pgTable(
   "forum_reply_votes",
@@ -486,7 +492,10 @@ export const userProgress = pgTable(
     quizBestScore: integer("quiz_best_score").notNull().default(0),
     quizAttemptsCount: integer("quiz_attempts_count").notNull().default(0)
   },
-  (table) => [uniqueIndex("user_progress_user_chapter_idx").on(table.userId, table.chapterId)]
+  (table) => [
+    uniqueIndex("user_progress_user_chapter_idx").on(table.userId, table.chapterId),
+    index("user_progress_user_visited_idx").on(table.userId, desc(table.visitedAt))
+  ]
 );
 
 export const mockExams = pgTable("mock_exams", {

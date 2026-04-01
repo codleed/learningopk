@@ -7,16 +7,22 @@ export async function processStaleSessionCleanup(job: CleanupJob): Promise<void>
 
   await job.updateProgress(10);
 
-  const keys = await redis.keys("session:*");
   let cleanedCount = 0;
+  let cursor = "0";
 
-  for (const key of keys) {
-    const ttl = await redis.ttl(key);
-    if (ttl === -1) {
-      await redis.del(key);
-      cleanedCount++;
+  do {
+    const result = await redis.scan(cursor, { MATCH: "session:*", COUNT: 100 });
+    cursor = String(result.cursor);
+    const keys = result.keys;
+
+    for (const key of keys) {
+      const ttl = await redis.ttl(key);
+      if (ttl === -1) {
+        await redis.del(key);
+        cleanedCount++;
+      }
     }
-  }
+  } while (cursor !== "0");
 
   await job.updateProgress(100);
   console.log(`Cleaned up ${cleanedCount} stale sessions`);

@@ -3,7 +3,7 @@ import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { db } from "../lib/db/index.js";
 import { boardClasses, boards, chapters, forumReplies, forumReplyVotes, forumThreads, subjects, users } from "../lib/db/schema.js";
 import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
-import { ServiceUnavailableError } from "../lib/errors/index.js";
+import { HttpError, ServiceUnavailableError } from "../lib/errors/index.js";
 
 export class ForumRepository {
   async findFilters() {

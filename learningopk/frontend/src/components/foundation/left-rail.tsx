@@ -104,6 +104,14 @@ export function LeftRail({
   const isAdmin = session.user.role === "admin";
   const suppressExpandRef = useRef(false);
 
+  /* ── Set CSS variable for main content offset ── */
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--left-rail-width",
+      isMobile ? "0px" : "72px"
+    );
+  }, [isMobile]);
+
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < MOBILE_BREAKPOINT;

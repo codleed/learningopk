@@ -8,6 +8,7 @@ import { xpService } from "./xp.service.js";
 import type { Response } from "express";
 import {
   ForbiddenError,
+  ModerationError,
   NotFoundError,
   ServiceUnavailableError,
   ValidationError,
@@ -237,7 +238,7 @@ export class ForumService {
 
     const moderation = moderateForumInput(`${title}\n${body}`);
     if (moderation.blocked) {
-      throw new ModerationError("Forum content blocked by safety checks.", moderation.reason);
+      throw new ModerationError("Forum content blocked by safety checks.", moderation.reason ?? undefined);
     }
 
     const subjectResolution = await this.resolveThreadSubjectId({
@@ -261,7 +262,7 @@ export class ForumService {
 
     const moderation = moderateForumInput(body);
     if (moderation.blocked) {
-      throw new ModerationError("Forum content blocked by safety checks.", moderation.reason);
+      throw new ModerationError("Forum content blocked by safety checks.", moderation.reason ?? undefined);
     }
 
     const threadRows = await forumRepository.findThreadByIdForReply(threadId);

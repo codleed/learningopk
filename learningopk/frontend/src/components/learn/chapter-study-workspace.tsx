@@ -188,7 +188,7 @@ export function ChapterStudyWorkspace({
 
         {/* AI sidebar */}
         <MotionSection>
-          <div className="sticky top-4">
+          <div className="sticky top-4 min-w-0 overflow-hidden">
             <AIUnifiedChat context={aiContext} />
           </div>
         </MotionSection>
