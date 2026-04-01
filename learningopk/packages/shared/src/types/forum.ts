@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const createThreadSchema = z.object({
   title: z.string().trim().min(5).max(160),
-  body: z.string().trim().min(10),
+  body: z.string().trim().min(10).max(50000),
   subjectId: z.number().int().positive().optional(),
   chapterId: z.number().int().positive().optional()
 });

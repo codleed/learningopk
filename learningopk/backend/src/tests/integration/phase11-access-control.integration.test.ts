@@ -27,16 +27,18 @@ const createMockExamFixture = async () => {
   const suffix = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 
   // Create board
-  const [board] = await db
+  const boardRows = await db
     .insert(boards)
     .values({
       name: `Mock Exam Test Board ${suffix}`,
       slug: `mock-exam-test-board-${suffix}`
     })
-    .returning({ id: boards.id });
+    .returning({ id: boards.id, slug: boards.slug, name: boards.name });
+  const board = boardRows[0];
+  assert.ok(board, "Expected board to be created");
 
   // Create subject
-  const [subject] = await db
+  const subjectRows = await db
     .insert(subjects)
     .values({
       boardId: board.id,
@@ -44,10 +46,12 @@ const createMockExamFixture = async () => {
       name: `Mock Exam Test Subject ${suffix}`,
       slug: `mock-exam-test-subject-${suffix}`
     })
-    .returning({ id: subjects.id });
+    .returning({ id: subjects.id, slug: subjects.slug, name: subjects.name });
+  const subject = subjectRows[0];
+  assert.ok(subject, "Expected subject to be created");
 
   // Create chapter
-  const [chapter] = await db
+  const chapterRows = await db
     .insert(chapters)
     .values({
       subjectId: subject.id,
@@ -58,9 +62,11 @@ const createMockExamFixture = async () => {
       isPublished: true
     })
     .returning({ id: chapters.id });
+  const chapter = chapterRows[0];
+  assert.ok(chapter, "Expected chapter to be created");
 
   // Create quiz (mock_exam type)
-  const [quiz] = await db
+  const quizRows = await db
     .insert(quizzes)
     .values({
       chapterId: chapter.id,
@@ -70,6 +76,8 @@ const createMockExamFixture = async () => {
       type: "mock_exam"
     })
     .returning({ id: quizzes.id, type: quizzes.type });
+  const quiz = quizRows[0];
+  assert.ok(quiz, "Expected quiz to be created");
 
   // Create quiz questions
   await db.insert(quizQuestions).values([
@@ -99,20 +107,25 @@ const createMockExamFixture = async () => {
     }
   ]);
 
-  // Create mock exam entry
-  const [mockExam] = await db
+  // Create mock exam entry (include all required fields: title, durationMinutes, totalMarks)
+  const mockExamRows = await db
     .insert(mockExams)
     .values({
       quizId: quiz.id,
       year: 2024,
       boardId: board.id,
       subjectId: subject.id,
-      grade: "10"
+      grade: "10",
+      title: `Mock Exam ${suffix}`,
+      durationMinutes: 60,
+      totalMarks: 50
     })
     .returning({
       id: mockExams.id,
       quizId: mockExams.quizId
     });
+  const mockExam = mockExamRows[0];
+  assert.ok(mockExam, "Expected mock exam to be created");
 
   return {
     mockExamId: mockExam.id,
@@ -212,22 +225,26 @@ test("Subject progress route uses scoped identifiers (TASK-60)", async () => {
   const suffix = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 
   // Board A - FBISE
-  const [boardA] = await db
+  const boardARows = await db
     .insert(boards)
     .values({
       name: `FBISE Board ${suffix}`,
       slug: `fbise-${suffix}`
     })
-    .returning({ id: boards.id });
+    .returning({ id: boards.id, slug: boards.slug, name: boards.name });
+  const boardA = boardARows[0];
+  assert.ok(boardA, "Expected boardA to be created");
 
   // Board B - BISE
-  const [boardB] = await db
+  const boardBRows = await db
     .insert(boards)
     .values({
       name: `BISE Board ${suffix}`,
       slug: `bise-${suffix}`
     })
-    .returning({ id: boards.id });
+    .returning({ id: boards.id, slug: boards.slug, name: boards.name });
+  const boardB = boardBRows[0];
+  assert.ok(boardB, "Expected boardB to be created");
 
   // Both boards have "Mathematics" subject for grade 10
   const subjectSlug = `mathematics-${suffix}`;
@@ -264,10 +281,14 @@ test("Subject progress route uses scoped identifiers (TASK-60)", async () => {
     .where(eq(users.id, userId));
 
   // Create chapter for subject in board A
-  const [chapterA] = await db
+  const subjectARows = await db.select({ id: subjects.id }).from(subjects).where(eq(subjects.boardId, boardA.id));
+  const subjectA = subjectARows[0];
+  assert.ok(subjectA, "Expected subjectA to exist");
+
+  await db
     .insert(chapters)
     .values({
-      subjectId: (await db.select({ id: subjects.id }).from(subjects).where(eq(subjects.boardId, boardA.id)))[0].id,
+      subjectId: subjectA.id,
       chapterNumber: 1,
       title: "Algebra Basics",
       slug: `algebra-basics-${suffix}`,

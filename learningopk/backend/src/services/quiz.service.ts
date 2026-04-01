@@ -4,6 +4,12 @@ import { getInvalidAnswerQuestionIds, scoreQuizSubmission } from "../lib/quiz-sc
 import { applyProgressEvent } from "../lib/progress.js";
 import { xpService } from "./xp.service.js";
 import { QUIZ_PASS_THRESHOLD_PERCENT } from "../lib/constants.js";
+import {
+  QuizNotFoundError,
+  QuizNoQuestionsError,
+  QuizAnswerMismatchError,
+  QuizAttemptSaveError
+} from "../lib/errors/index.js";
 
 export interface QuizQuestionRow {
   id: number;
@@ -100,17 +106,17 @@ export class QuizService {
 
     const quizRow = await this.getQuizById(quizId);
     if (!quizRow) {
-      throw new Error("Quiz not found");
+      throw new QuizNotFoundError();
     }
 
     const questionRows = await this.getQuizQuestions(quizId);
     if (questionRows.length === 0) {
-      throw new Error("Quiz has no questions to score");
+      throw new QuizNoQuestionsError();
     }
 
     const invalidAnswerQuestionIds = getInvalidAnswerQuestionIds(questionRows, answers);
     if (invalidAnswerQuestionIds.length > 0) {
-      throw new Error("Answers include question IDs that do not belong to this quiz");
+      throw new QuizAnswerMismatchError();
     }
 
     const { questionResults, score, totalMarks, percentage } = scoreQuizSubmission({
@@ -211,7 +217,7 @@ export class QuizService {
 
     const insertedAttempt = insertedAttemptRows[0];
     if (!insertedAttempt) {
-      throw new Error("Could not save quiz attempt");
+      throw new QuizAttemptSaveError();
     }
 
     await applyProgressEvent({

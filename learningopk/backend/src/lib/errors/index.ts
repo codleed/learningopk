@@ -82,6 +82,34 @@ export class ModerationError extends HttpError {
   }
 }
 
+export class QuizNotFoundError extends HttpError {
+  constructor(message = "Quiz not found") {
+    super(404, message, "QUIZ_NOT_FOUND");
+    this.name = "QuizNotFoundError";
+  }
+}
+
+export class QuizNoQuestionsError extends HttpError {
+  constructor(message = "Quiz has no questions to score") {
+    super(422, message, "QUIZ_NO_QUESTIONS");
+    this.name = "QuizNoQuestionsError";
+  }
+}
+
+export class QuizAnswerMismatchError extends HttpError {
+  constructor(message = "Answers include question IDs that do not belong to this quiz") {
+    super(400, message, "QUIZ_ANSWER_MISMATCH");
+    this.name = "QuizAnswerMismatchError";
+  }
+}
+
+export class QuizAttemptSaveError extends HttpError {
+  constructor(message = "Could not save quiz attempt") {
+    super(409, message, "QUIZ_ATTEMPT_SAVE_FAILED");
+    this.name = "QuizAttemptSaveError";
+  }
+}
+
 /**
  * Type guard to check if an error is an HttpError
  */

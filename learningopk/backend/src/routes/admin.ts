@@ -27,6 +27,7 @@ import {
 } from "../lib/db/schema.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { extractWikiLinks, normalizeWikiLinkTarget } from "../lib/wiki-links.js";
+import { escapeLikePattern } from "../lib/escape-like.js";
 import { allQueues, jobRegistry } from "../lib/queue.js";
 
 const chapterParamsSchema = z.object({
@@ -613,11 +614,12 @@ const listAuditLogs = async ({ scope, status, q, page, pageSize }: ListAuditLogs
     predicates.push(eq(adminAuditLogs.status, status));
   }
   if (searchTerm.length > 0) {
+    const escaped = escapeLikePattern(searchTerm);
     const searchPredicate = or(
-      ilike(adminAuditLogs.action, `%${searchTerm}%`),
-      ilike(adminAuditLogs.target, `%${searchTerm}%`),
-      ilike(adminAuditLogs.message, `%${searchTerm}%`),
-      ilike(adminAuditLogs.actorName, `%${searchTerm}%`)
+      ilike(adminAuditLogs.action, `%${escaped}%`),
+      ilike(adminAuditLogs.target, `%${escaped}%`),
+      ilike(adminAuditLogs.message, `%${escaped}%`),
+      ilike(adminAuditLogs.actorName, `%${escaped}%`)
     );
     if (searchPredicate) {
       predicates.push(searchPredicate);
@@ -811,7 +813,12 @@ const listAdminUsers = async ({
   const rolePredicate = role ? eq(users.role, role) : undefined;
   const statusPredicate = status ? eq(users.status, status) : undefined;
   const searchPredicate =
-    searchTerm.length > 0 ? or(ilike(users.name, `%${searchTerm}%`), ilike(users.email, `%${searchTerm}%`)) : undefined;
+    searchTerm.length > 0
+      ? or(
+          ilike(users.name, `%${escapeLikePattern(searchTerm)}%`),
+          ilike(users.email, `%${escapeLikePattern(searchTerm)}%`)
+        )
+      : undefined;
   const predicates = [rolePredicate, statusPredicate, searchPredicate].filter((value): value is SQL => Boolean(value));
   const whereClause = predicates.length > 0 ? and(...predicates) : undefined;
 
@@ -4743,7 +4750,7 @@ adminRouter.get("/content/chapters/link-suggestions", requireSession, async (req
       chapterNumber: chapters.chapterNumber
     })
     .from(chapters)
-    .where(searchTerm.length > 0 ? ilike(chapters.title, `%${searchTerm}%`) : undefined)
+    .where(searchTerm.length > 0 ? ilike(chapters.title, `%${escapeLikePattern(searchTerm)}%`) : undefined)
     .orderBy(asc(chapters.title), asc(chapters.chapterNumber))
     .limit(parsedQuery.data.limit);
 

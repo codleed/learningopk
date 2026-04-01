@@ -1,8 +1,12 @@
 import cors from "cors";
 import express from "express";
+import helmet from "helmet";
 import { pathToFileURL } from "node:url";
 
 import { env } from "./lib/env.js";
+import { errorResponse } from "./lib/response.js";
+import { isHttpError } from "./lib/errors/index.js";
+import { authRateLimiter, globalRateLimiter } from "./middleware/rate-limits.js";
 import { adminRouter } from "./routes/admin.js";
 import { aiChatRouter } from "./routes/ai-chat.js";
 import { authRouter } from "./routes/auth.js";
@@ -25,6 +29,12 @@ let cleanupWorker: ReturnType<typeof createCleanupWorker> | null = null;
 export const createApp = () => {
   const app = express();
 
+  // Trust proxy for correct IP detection behind reverse proxy (for rate limiting)
+  app.set("trust proxy", 1);
+
+  // Security headers
+  app.use(helmet());
+
   app.use(
     cors({
       origin: env.FRONTEND_ORIGIN,
@@ -33,8 +43,17 @@ export const createApp = () => {
     })
   );
 
+  // Strict rate limit on auth endpoints to prevent brute force
+  app.use("/api/auth", authRateLimiter);
+
+  // Auth routes go before JSON body parser (better-auth handles its own parsing)
   app.use("/api/auth", authRouter);
-  app.use(express.json());
+
+  // JSON body parser with size limit to prevent large payload DoS
+  app.use(express.json({ limit: "1mb" }));
+
+  // Global rate limit on all other routes
+  app.use(globalRateLimiter);
 
   app.use("/api/health", healthRouter);
   app.use("/api/learn", learnRouter);
@@ -49,6 +68,17 @@ export const createApp = () => {
 
   app.get("/api/ready", (_req, res) => {
     res.status(200).json({ ok: true });
+  });
+
+  // Global error handler — catches unhandled errors from route handlers
+  app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    if (isHttpError(err)) {
+      res.status(err.status).json(err.toResponse());
+      return;
+    }
+
+    console.error("Unhandled error:", err);
+    res.status(500).json(errorResponse("Internal server error", "INTERNAL_ERROR"));
   });
 
   return app;

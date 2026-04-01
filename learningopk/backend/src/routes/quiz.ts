@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { quizService } from "../services/quiz.service.js";
+import { isHttpError } from "../lib/errors/index.js";
+import { errorResponse } from "../lib/response.js";
 
 export const submitQuizSchema = z.object({
   quizId: z.number().int().positive(),
@@ -37,21 +39,11 @@ quizRouter.post("/submit", requireSession, async (req, res) => {
 
     res.status(200).json(result);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    if (message === "Quiz not found") {
-      res.status(404).json({ error: "Quiz not found" });
-      return;
+    if (isHttpError(error)) {
+      res.status(error.status).json(error.toResponse());
+    } else {
+      console.error("Unexpected error in submitQuiz:", error);
+      res.status(500).json(errorResponse("Internal server error", "INTERNAL_ERROR"));
     }
-    if (message === "Quiz has no questions to score") {
-      res.status(422).json({ error: "Quiz has no questions to score." });
-      return;
-    }
-    if (message.includes("Answers include question IDs")) {
-      res.status(400).json({
-        error: "Answers include question IDs that do not belong to this quiz."
-      });
-      return;
-    }
-    res.status(500).json({ error: message });
   }
 });

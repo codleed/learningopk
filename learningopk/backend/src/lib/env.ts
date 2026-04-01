@@ -15,8 +15,8 @@ const schema = z.object({
     .regex(/^\d+$/)
     .default("9000"),
   MINIO_USE_SSL: z.enum(["true", "false"]).default("false"),
-  MINIO_ACCESS_KEY: z.string().min(1).default("minioadmin"),
-  MINIO_SECRET_KEY: z.string().min(1).default("minioadmin123"),
+  MINIO_ACCESS_KEY: z.string().min(1),
+  MINIO_SECRET_KEY: z.string().min(1),
   MINIO_BUCKET: z.string().min(1).default("learningo-media"),
   MINIO_PUBLIC_URL: z.string().url().default("http://localhost:9000"),
   MISTRAL_API_KEY: z.string().min(1).optional().default("not-configured"),

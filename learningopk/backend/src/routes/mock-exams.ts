@@ -5,6 +5,7 @@ import { db } from "../lib/db/index.js";
 import { mockExams, quizzes, subjects, boards, quizAttempts, quizQuestions, chapters } from "../lib/db/schema.js";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
+import { errorResponse, successResponse } from "../lib/response.js";
 
 const mockExamFiltersSchema = z.object({
   boardId: z.number().int().positive().optional(),
@@ -19,248 +20,8 @@ const mockExamParamsSchema = z.object({
 
 export const mockExamsRouter = Router();
 
-// Get all mock exams with filters
-mockExamsRouter.get("/", async (req, res) => {
-  try {
-    const parsed = mockExamFiltersSchema.safeParse(req.query);
-    if (!parsed.success) {
-      res.status(400).json({
-        error: "Invalid filter parameters",
-        details: parsed.error.flatten()
-      });
-      return;
-    }
-
-    const { boardId, grade, subjectId, year } = parsed.data;
-
-    const conditions = [];
-    if (boardId) conditions.push(eq(mockExams.boardId, boardId));
-    if (grade) conditions.push(eq(mockExams.grade, grade));
-    if (subjectId) conditions.push(eq(mockExams.subjectId, subjectId));
-    if (year) conditions.push(eq(mockExams.year, year));
-
-    const examRows = await db
-      .select({
-        id: mockExams.id,
-        title: mockExams.title,
-        year: mockExams.year,
-        durationMinutes: mockExams.durationMinutes,
-        totalMarks: mockExams.totalMarks,
-        boardId: mockExams.boardId,
-        boardName: boards.name,
-        boardSlug: boards.slug,
-        grade: mockExams.grade,
-        subjectId: mockExams.subjectId,
-        subjectName: subjects.name,
-        subjectSlug: subjects.slug,
-        quizId: mockExams.quizId
-      })
-      .from(mockExams)
-      .innerJoin(boards, eq(mockExams.boardId, boards.id))
-      .innerJoin(subjects, eq(mockExams.subjectId, subjects.id))
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(mockExams.year));
-
-    res.json({ mockExams: examRows });
-  } catch (error) {
-    console.error("Get mock exams error:", error);
-    res.status(500).json({ error: "Failed to fetch mock exams" });
-  }
-});
-
-// Get mock exam with quiz questions (for view solutions)
-mockExamsRouter.get("/:id", async (req, res) => {
-  try {
-    const parsed = mockExamParamsSchema.safeParse(req.params);
-    if (!parsed.success) {
-      res.status(400).json({ error: "Invalid mock exam ID" });
-      return;
-    }
-
-    const examRows = await db
-      .select({
-        id: mockExams.id,
-        title: mockExams.title,
-        year: mockExams.year,
-        durationMinutes: mockExams.durationMinutes,
-        totalMarks: mockExams.totalMarks,
-        boardId: mockExams.boardId,
-        boardName: boards.name,
-        boardSlug: boards.slug,
-        grade: mockExams.grade,
-        subjectId: mockExams.subjectId,
-        subjectName: subjects.name,
-        subjectSlug: subjects.slug,
-        quizId: mockExams.quizId,
-        quizTitle: quizzes.title,
-        quizType: quizzes.type,
-        quizDurationMinutes: quizzes.durationMinutes
-      })
-      .from(mockExams)
-      .innerJoin(boards, eq(mockExams.boardId, boards.id))
-      .innerJoin(subjects, eq(mockExams.subjectId, subjects.id))
-      .innerJoin(quizzes, eq(mockExams.quizId, quizzes.id))
-      .where(eq(mockExams.id, parsed.data.id))
-      .limit(1);
-
-    const examRow = examRows[0];
-    if (!examRow) {
-      res.status(404).json({ error: "Mock exam not found" });
-      return;
-    }
-
-    res.json({ mockExam: examRow });
-  } catch (error) {
-    console.error("Get mock exam error:", error);
-    res.status(500).json({ error: "Failed to fetch mock exam" });
-  }
-});
-
-// Get user's attempts for a mock exam (to check if solved)
-mockExamsRouter.get("/:id/attempts", requireSession, async (req, res) => {
-  try {
-    const parsed = mockExamParamsSchema.safeParse(req.params);
-    if (!parsed.success) {
-      res.status(400).json({ error: "Invalid mock exam ID" });
-      return;
-    }
-
-    const authedReq = req as AuthenticatedRequest;
-    const userId = authedReq.session.user.id;
-
-    // First get the quizId for this mock exam
-    const examRows = await db
-      .select({ quizId: mockExams.quizId })
-      .from(mockExams)
-      .where(eq(mockExams.id, parsed.data.id))
-      .limit(1);
-
-    if (examRows.length === 0) {
-      res.status(404).json({ error: "Mock exam not found" });
-      return;
-    }
-
-    const firstExam = examRows[0];
-    if (!firstExam) {
-      res.status(404).json({ error: "Mock exam not found" });
-      return;
-    }
-
-    // Get attempts for this quiz
-    const quizId = firstExam.quizId;
-    const attemptRows = await db
-      .select({
-        id: quizAttempts.id,
-        score: quizAttempts.score,
-        totalMarks: quizAttempts.totalMarks,
-        completedAt: quizAttempts.completedAt
-      })
-      .from(quizAttempts)
-      .where(and(
-        eq(quizAttempts.userId, userId),
-        eq(quizAttempts.quizId, quizId)
-      ))
-      .orderBy(desc(quizAttempts.completedAt));
-
-    res.json({ attempts: attemptRows });
-  } catch (error) {
-    console.error("Get mock exam attempts error:", error);
-    res.status(500).json({ error: "Failed to fetch mock exam attempts" });
-  }
-});
-
-// Get quiz questions with correct answers (for view solutions)
-mockExamsRouter.get("/:id/questions", requireSession, async (req, res) => {
-  try {
-    const parsed = mockExamParamsSchema.safeParse(req.params);
-    if (!parsed.success) {
-      res.status(400).json({ error: "Invalid mock exam ID" });
-      return;
-    }
-
-    const authedReq = req as AuthenticatedRequest;
-    const userId = authedReq.session.user.id;
-
-    // First get the mock exam with quizId and ensure it's a mock_exam type
-    const examRows = await db
-      .select({
-        quizId: mockExams.quizId,
-        quizType: quizzes.type
-      })
-      .from(mockExams)
-      .innerJoin(quizzes, eq(mockExams.quizId, quizzes.id))
-      .where(eq(mockExams.id, parsed.data.id))
-      .limit(1);
-
-    if (examRows.length === 0) {
-      res.status(404).json({ error: "Mock exam not found" });
-      return;
-    }
-
-    const firstExam = examRows[0];
-    if (!firstExam) {
-      res.status(404).json({ error: "Mock exam not found" });
-      return;
-    }
-
-    // Verify this is a mock_exam type quiz
-    if (firstExam.quizType !== "mock_exam") {
-      res.status(404).json({ error: "Mock exam not found" });
-      return;
-    }
-
-    // Check if user has completed this mock exam
-    const quizId = firstExam.quizId;
-    const attemptCount = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(quizAttempts)
-      .where(
-        and(
-          eq(quizAttempts.userId, userId),
-          eq(quizAttempts.quizId, quizId),
-          eq(quizAttempts.type, "mock_exam"),
-          sql`${quizAttempts.completedAt} IS NOT NULL`
-        )
-      );
-
-    const hasCompletedAttempt = (attemptCount[0]?.count ?? 0) > 0;
-    if (!hasCompletedAttempt) {
-      res.status(403).json({
-        error: "Solutions only available after completing the exam",
-        code: "EXAM_NOT_COMPLETED"
-      });
-      return;
-    }
-
-    // Get quiz questions
-    const questionRows = await db
-      .select({
-        id: quizQuestions.id,
-        quizId: quizQuestions.quizId,
-        chapterId: quizQuestions.chapterId,
-        question: quizQuestions.question,
-        optionA: quizQuestions.optionA,
-        optionB: quizQuestions.optionB,
-        optionC: quizQuestions.optionC,
-        optionD: quizQuestions.optionD,
-        correctOption: quizQuestions.correctOption,
-        explanation: quizQuestions.explanation,
-        marks: quizQuestions.marks,
-        chapterTitle: chapters.title,
-        chapterNumber: chapters.chapterNumber
-      })
-      .from(quizQuestions)
-      .leftJoin(chapters, eq(quizQuestions.chapterId, chapters.id))
-      .where(eq(quizQuestions.quizId, quizId));
-
-    res.json({ questions: questionRows });
-  } catch (error) {
-    console.error("Get quiz questions error:", error);
-    res.status(500).json({ error: "Failed to fetch quiz questions" });
-  }
-});
-
 // Get filter options (distinct values for boards, grades, subjects, years)
+// IMPORTANT: This MUST be registered before /:id to avoid being swallowed by the param route
 mockExamsRouter.get("/filters/options", async (_req, res) => {
   try {
     // Get available boards
@@ -299,16 +60,253 @@ mockExamsRouter.get("/filters/options", async (_req, res) => {
       .from(mockExams)
       .orderBy(desc(mockExams.year));
 
-    res.json({
+    res.json(successResponse({
       filters: {
         boards: boardRows,
         grades: gradeRows.map(r => r.grade),
         subjects: subjectRows,
         years: yearRows.map(r => r.year)
       }
-    });
+    }));
   } catch (error) {
     console.error("Get filter options error:", error);
-    res.status(500).json({ error: "Failed to fetch filter options" });
+    res.status(500).json(errorResponse("Failed to fetch filter options", "FETCH_ERROR"));
   }
 });
+
+// Get all mock exams with filters
+mockExamsRouter.get("/", async (req, res) => {
+  try {
+    const parsed = mockExamFiltersSchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json(errorResponse("Invalid filter parameters", "VALIDATION_ERROR", parsed.error.flatten()));
+      return;
+    }
+
+    const { boardId, grade, subjectId, year } = parsed.data;
+
+    const conditions = [];
+    if (boardId) conditions.push(eq(mockExams.boardId, boardId));
+    if (grade) conditions.push(eq(mockExams.grade, grade));
+    if (subjectId) conditions.push(eq(mockExams.subjectId, subjectId));
+    if (year) conditions.push(eq(mockExams.year, year));
+
+    const examRows = await db
+      .select({
+        id: mockExams.id,
+        title: mockExams.title,
+        year: mockExams.year,
+        durationMinutes: mockExams.durationMinutes,
+        totalMarks: mockExams.totalMarks,
+        boardId: mockExams.boardId,
+        boardName: boards.name,
+        boardSlug: boards.slug,
+        grade: mockExams.grade,
+        subjectId: mockExams.subjectId,
+        subjectName: subjects.name,
+        subjectSlug: subjects.slug,
+        quizId: mockExams.quizId
+      })
+      .from(mockExams)
+      .innerJoin(boards, eq(mockExams.boardId, boards.id))
+      .innerJoin(subjects, eq(mockExams.subjectId, subjects.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(mockExams.year));
+
+    res.json(successResponse({ mockExams: examRows }));
+  } catch (error) {
+    console.error("Get mock exams error:", error);
+    res.status(500).json(errorResponse("Failed to fetch mock exams", "FETCH_ERROR"));
+  }
+});
+
+// Get mock exam with quiz questions (for view solutions)
+mockExamsRouter.get("/:id", async (req, res) => {
+  try {
+    const parsed = mockExamParamsSchema.safeParse(req.params);
+    if (!parsed.success) {
+      res.status(400).json(errorResponse("Invalid mock exam ID", "VALIDATION_ERROR"));
+      return;
+    }
+
+    const examRows = await db
+      .select({
+        id: mockExams.id,
+        title: mockExams.title,
+        year: mockExams.year,
+        durationMinutes: mockExams.durationMinutes,
+        totalMarks: mockExams.totalMarks,
+        boardId: mockExams.boardId,
+        boardName: boards.name,
+        boardSlug: boards.slug,
+        grade: mockExams.grade,
+        subjectId: mockExams.subjectId,
+        subjectName: subjects.name,
+        subjectSlug: subjects.slug,
+        quizId: mockExams.quizId,
+        quizTitle: quizzes.title,
+        quizType: quizzes.type,
+        quizDurationMinutes: quizzes.durationMinutes
+      })
+      .from(mockExams)
+      .innerJoin(boards, eq(mockExams.boardId, boards.id))
+      .innerJoin(subjects, eq(mockExams.subjectId, subjects.id))
+      .innerJoin(quizzes, eq(mockExams.quizId, quizzes.id))
+      .where(eq(mockExams.id, parsed.data.id))
+      .limit(1);
+
+    const examRow = examRows[0];
+    if (!examRow) {
+      res.status(404).json(errorResponse("Mock exam not found", "NOT_FOUND"));
+      return;
+    }
+
+    res.json(successResponse({ mockExam: examRow }));
+  } catch (error) {
+    console.error("Get mock exam error:", error);
+    res.status(500).json(errorResponse("Failed to fetch mock exam", "FETCH_ERROR"));
+  }
+});
+
+// Get user's attempts for a mock exam (to check if solved)
+mockExamsRouter.get("/:id/attempts", requireSession, async (req, res) => {
+  try {
+    const parsed = mockExamParamsSchema.safeParse(req.params);
+    if (!parsed.success) {
+      res.status(400).json(errorResponse("Invalid mock exam ID", "VALIDATION_ERROR"));
+      return;
+    }
+
+    const authedReq = req as AuthenticatedRequest;
+    const userId = authedReq.session.user.id;
+
+    // First get the quizId for this mock exam
+    const examRows = await db
+      .select({ quizId: mockExams.quizId })
+      .from(mockExams)
+      .where(eq(mockExams.id, parsed.data.id))
+      .limit(1);
+
+    if (examRows.length === 0) {
+      res.status(404).json(errorResponse("Mock exam not found", "NOT_FOUND"));
+      return;
+    }
+
+    const firstExam = examRows[0];
+    if (!firstExam) {
+      res.status(404).json(errorResponse("Mock exam not found", "NOT_FOUND"));
+      return;
+    }
+
+    // Get attempts for this quiz
+    const quizId = firstExam.quizId;
+    const attemptRows = await db
+      .select({
+        id: quizAttempts.id,
+        score: quizAttempts.score,
+        totalMarks: quizAttempts.totalMarks,
+        completedAt: quizAttempts.completedAt
+      })
+      .from(quizAttempts)
+      .where(and(
+        eq(quizAttempts.userId, userId),
+        eq(quizAttempts.quizId, quizId)
+      ))
+      .orderBy(desc(quizAttempts.completedAt));
+
+    res.json(successResponse({ attempts: attemptRows }));
+  } catch (error) {
+    console.error("Get mock exam attempts error:", error);
+    res.status(500).json(errorResponse("Failed to fetch mock exam attempts", "FETCH_ERROR"));
+  }
+});
+
+// Get quiz questions with correct answers (for view solutions)
+mockExamsRouter.get("/:id/questions", requireSession, async (req, res) => {
+  try {
+    const parsed = mockExamParamsSchema.safeParse(req.params);
+    if (!parsed.success) {
+      res.status(400).json(errorResponse("Invalid mock exam ID", "VALIDATION_ERROR"));
+      return;
+    }
+
+    const authedReq = req as AuthenticatedRequest;
+    const userId = authedReq.session.user.id;
+
+    // First get the mock exam with quizId and ensure it's a mock_exam type
+    const examRows = await db
+      .select({
+        quizId: mockExams.quizId,
+        quizType: quizzes.type
+      })
+      .from(mockExams)
+      .innerJoin(quizzes, eq(mockExams.quizId, quizzes.id))
+      .where(eq(mockExams.id, parsed.data.id))
+      .limit(1);
+
+    if (examRows.length === 0) {
+      res.status(404).json(errorResponse("Mock exam not found", "NOT_FOUND"));
+      return;
+    }
+
+    const firstExam = examRows[0];
+    if (!firstExam) {
+      res.status(404).json(errorResponse("Mock exam not found", "NOT_FOUND"));
+      return;
+    }
+
+    // Verify this is a mock_exam type quiz
+    if (firstExam.quizType !== "mock_exam") {
+      res.status(404).json(errorResponse("Mock exam not found", "NOT_FOUND"));
+      return;
+    }
+
+    // Check if user has completed this mock exam
+    const quizId = firstExam.quizId;
+    const attemptCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(quizAttempts)
+      .where(
+        and(
+          eq(quizAttempts.userId, userId),
+          eq(quizAttempts.quizId, quizId),
+          eq(quizAttempts.type, "mock_exam"),
+          sql`${quizAttempts.completedAt} IS NOT NULL`
+        )
+      );
+
+    const hasCompletedAttempt = (attemptCount[0]?.count ?? 0) > 0;
+    if (!hasCompletedAttempt) {
+      res.status(403).json(errorResponse("Solutions only available after completing the exam", "EXAM_NOT_COMPLETED"));
+      return;
+    }
+
+    // Get quiz questions
+    const questionRows = await db
+      .select({
+        id: quizQuestions.id,
+        quizId: quizQuestions.quizId,
+        chapterId: quizQuestions.chapterId,
+        question: quizQuestions.question,
+        optionA: quizQuestions.optionA,
+        optionB: quizQuestions.optionB,
+        optionC: quizQuestions.optionC,
+        optionD: quizQuestions.optionD,
+        correctOption: quizQuestions.correctOption,
+        explanation: quizQuestions.explanation,
+        marks: quizQuestions.marks,
+        chapterTitle: chapters.title,
+        chapterNumber: chapters.chapterNumber
+      })
+      .from(quizQuestions)
+      .leftJoin(chapters, eq(quizQuestions.chapterId, chapters.id))
+      .where(eq(quizQuestions.quizId, quizId));
+
+    res.json(successResponse({ questions: questionRows }));
+  } catch (error) {
+    console.error("Get quiz questions error:", error);
+    res.status(500).json(errorResponse("Failed to fetch quiz questions", "FETCH_ERROR"));
+  }
+});
+
+
