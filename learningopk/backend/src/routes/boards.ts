@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "../lib/db/index.js";
 import { boards } from "../lib/db/schema.js";
 import { asc } from "drizzle-orm";
+import { errorResponse, successResponse } from "../lib/response.js";
 
 export const boardsRouter = Router();
 
@@ -16,9 +17,9 @@ boardsRouter.get("/", async (_req, res) => {
       .from(boards)
       .orderBy(asc(boards.name));
 
-    res.json({ boards: allBoards });
+    res.json(successResponse({ boards: allBoards }));
   } catch (error) {
     console.error("Get boards error:", error);
-    res.status(500).json({ error: "Failed to fetch boards" });
+    res.status(500).json(errorResponse("Failed to fetch boards", "FETCH_ERROR"));
   }
 });

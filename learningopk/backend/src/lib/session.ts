@@ -58,7 +58,7 @@ export const requireSession: RequestHandler = async (req, res, next) => {
   }
 };
 
-export const getSessionFromRequest = async (req: Request): Promise<{ session: { user: { id: string } } } | null> => {
+export const getSessionFromRequest = async (req: Request): Promise<SessionResult> => {
   try {
     const session = await auth.api.getSession({
       headers: fromNodeHeaders(req.headers)
