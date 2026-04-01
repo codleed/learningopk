@@ -88,6 +88,8 @@
 
   html {
     background-color: var(--bg-base);
+    /* Default sidebar offset - updated dynamically by LeftRail component */
+    --left-rail-width: 72px;
   }
 
   body {

@@ -19,7 +19,7 @@ export function AppShell({
   className,
   contentClassName
 }: AppShellProps) {
-  const shellContainerClassName = cn("w-full max-w-[97rem] px-4 pb-14 pt-6 sm:px-6 lg:px-8", contentClassName);
+  const shellContainerClassName = cn("max-w-[97rem] px-4 pb-14 pt-6 sm:px-6 lg:px-8", contentClassName);
 
   if (session) {
     return (

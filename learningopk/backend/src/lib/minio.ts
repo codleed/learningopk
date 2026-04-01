@@ -166,3 +166,18 @@ export const deleteObjectIfExists = async ({
     // Object replacement should not fail the primary request if cleanup misses.
   }
 };
+
+export const generatePresignedPutUrl = async ({
+  objectKey,
+  mimeType,
+  expirySeconds = 3600,
+  bucket = env.MINIO_BUCKET
+}: {
+  objectKey: string;
+  mimeType: string;
+  expirySeconds?: number;
+  bucket?: string;
+}): Promise<string> => {
+  await ensureMediaBucket(bucket);
+  return minioClient.presignedPutObject(bucket, objectKey, expirySeconds);
+};

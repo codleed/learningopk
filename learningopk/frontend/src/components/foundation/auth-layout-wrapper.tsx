@@ -17,6 +17,9 @@ type AuthLayoutWrapperProps = {
 
 const VIEW_MODE_STORAGE_KEY = "learningo-view-mode";
 
+/** Width of the collapsed LeftRail on desktop (matches left-rail.tsx) */
+const LEFT_RAIL_COLLAPSED_WIDTH = 72;
+
 function getInitialViewMode(isAdmin: boolean): ViewMode {
   if (!isAdmin) return "student";
   if (typeof window === "undefined") return "admin";
@@ -50,24 +53,38 @@ export function AuthLayoutWrapper({
   }, []);
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden">
-      {/* Left Rail */}
+    <div className="relative min-h-screen">
+      {/* Left Rail — fixed positioned sidebar */}
       <LeftRail
         session={session}
         currentPath={currentPath}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
       />
-      
-      {/* Main content */}
+
+      {/*
+       * Main content — offset by sidebar width on desktop.
+       * Uses both margin-left AND width: calc(100% - rail) so the element
+       * never exceeds the viewport (fixes the 72 px horizontal-overflow bug).
+       *
+       * Structural padding (pt-14 for mobile hamburger clearance) lives on
+       * <main> so page-level `className` cannot accidentally override it.
+       * Content padding lives on the inner <div>.
+       */}
       <main
         id="main-content"
         className={cn(
-          "flex-1 min-w-0 pb-16 pl-4 pr-4 md:pb-4",
-          className
+          "min-h-screen min-w-0 pt-14 md:pt-0",
+          "transition-[margin-left,width] duration-300 ease-in-out",
         )}
+        style={{
+          marginLeft: `var(--left-rail-width, ${LEFT_RAIL_COLLAPSED_WIDTH}px)`,
+          width: `calc(100% - var(--left-rail-width, ${LEFT_RAIL_COLLAPSED_WIDTH}px))`,
+        }}
       >
-        {children}
+        <div className={cn("pb-16 pl-4 pr-4 md:pb-4", className)}>
+          {children}
+        </div>
       </main>
     </div>
   );
