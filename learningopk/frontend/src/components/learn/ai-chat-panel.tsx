@@ -10,7 +10,7 @@ import {
   Loader2
 } from "lucide-react";
 
-import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -116,10 +116,9 @@ function MessageBubble({ message, isStreaming, showAvatar }: MessageBubbleProps)
         <StreamingIndicator />
       ) : (
         <div className="[overflow-wrap:anywhere] [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
-          <MarkdownMathRenderer
+          <MarkdownRenderer
             content={message.content}
-            forceWrap
-            className="text-[15px] leading-relaxed [&_.katex-display]:overflow-x-visible"
+            className="text-[15px] leading-relaxed"
           />
         </div>
       )}

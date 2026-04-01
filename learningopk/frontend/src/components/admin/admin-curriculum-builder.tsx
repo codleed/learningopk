@@ -32,7 +32,7 @@ import {
 
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { MarkdownMathRenderer } from "../learn/markdown-math-renderer";
+import { MarkdownRenderer } from "../MarkdownRenderer";
 import { Select } from "../ui/select";
 import { Textarea } from "../ui/textarea";
 import { useToast } from "../ui/toast";
@@ -1617,7 +1617,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                   >
                     <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Summary preview</p>
                     {chapterSummary.trim().length > 0 ? (
-                      <MarkdownMathRenderer content={chapterSummary} className="prose-sm" />
+                      <MarkdownRenderer content={chapterSummary} className="prose-sm" />
                     ) : (
                       <p className="text-sm text-muted-foreground">Preview appears here as rendered Markdown.</p>
                     )}
@@ -1927,7 +1927,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                   >
                     <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Editor preview</p>
                     {summaryEditorContent.trim().length > 0 ? (
-                      <MarkdownMathRenderer content={summaryEditorContent} className="prose-sm" />
+                      <MarkdownRenderer content={summaryEditorContent} className="prose-sm" />
                     ) : (
                       <p className="text-sm text-muted-foreground">Select a chapter to load and preview summary markdown.</p>
                     )}
