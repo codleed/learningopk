@@ -272,7 +272,7 @@ const quizQuestionCreateSchema = z.object({
   optionC: z.string().trim().min(1),
   optionD: z.string().trim().min(1),
   correctOption: z.enum(["a", "b", "c", "d"]),
-  explanation: z.string().trim().min(1),
+  explanation: z.string().trim().optional(),
   marks: z.number().int().positive().optional().default(1)
 });
 
@@ -286,7 +286,7 @@ const quizQuestionResponseSchema = z.object({
   optionC: z.string(),
   optionD: z.string(),
   correctOption: z.enum(["a", "b", "c", "d"]),
-  explanation: z.string(),
+  explanation: z.string().nullable(),
   marks: z.number(),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional()
@@ -647,7 +647,14 @@ const fetchAdminJson = async <T>({
   });
 
   if (!response.ok) {
-    throw new Error(`Admin request failed: ${response.status}`);
+    let errorDetails = response.status;
+    try {
+      const errorBody = await response.json();
+      errorDetails = errorBody.details || errorBody.error || errorBody;
+    } catch {
+      // response body isn't JSON, use status code
+    }
+    throw new Error(`Admin request failed: ${response.status} - ${JSON.stringify(errorDetails)}`);
   }
 
   return schema.parse((await response.json()) as unknown);
@@ -1380,7 +1387,7 @@ export const createAdminQuizQuestion = async (input: {
   optionC: string;
   optionD: string;
   correctOption: "a" | "b" | "c" | "d";
-  explanation: string;
+  explanation?: string | null;
   marks?: number;
 }): Promise<QuizQuestionMutationResponse> => {
   return fetchAdminJson({

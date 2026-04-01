@@ -297,7 +297,7 @@ export const quizQuestions = pgTable("quiz_questions", {
   optionC: text("option_c").notNull(),
   optionD: text("option_d").notNull(),
   correctOption: answerOptionEnum("correct_option").notNull(),
-  explanation: text("explanation").notNull(),
+  explanation: text("explanation"),
   marks: integer("marks").notNull().default(1)
 });
 
