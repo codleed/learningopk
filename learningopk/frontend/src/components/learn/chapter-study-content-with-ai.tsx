@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/ui/states";
 
 import { ChapterExercisesWithAi } from "./chapter-exercises-with-ai";
 import { FlashcardDeck } from "./flashcard-deck";
-import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { VirtualizedMarkdown } from "@/components/VirtualizedMarkdown";
 import { QuizRunner } from "./quiz-runner";
 
 type ChapterTab = "summary" | "exercises" | "flashcards" | "quiz";
@@ -43,7 +43,7 @@ export function ChapterStudyContentWithAi({
     <div className="min-w-0">
       {activeTab === "summary" ? (
         <div data-testid="chapter-summary-markdown">
-          <MarkdownRenderer content={summary} />
+          <VirtualizedMarkdown content={summary} threshold={5000} />
         </div>
       ) : null}
 
