@@ -11,6 +11,7 @@ import {
   deleteObjectIfExists,
   fileExtensionFromMimeType,
   generatePresignedPutUrl,
+  objectExists,
   SUPPORTED_IMAGE_MIME_TYPES,
   type SupportedImageMimeType,
   uploadImageBuffer
@@ -258,6 +259,12 @@ chapterMediaRouter.post("/chapters/:chapterId/media/confirm", requireSession, as
     }
 
     const objectUrl = buildPublicObjectUrl({ objectKey });
+
+    const exists = await objectExists({ objectKey });
+    if (!exists) {
+      res.status(400).json(errorResponse("Object not found in storage. Upload may have failed.", "UPLOAD_VALIDATION_FAILED"));
+      return;
+    }
 
     const insertedRows = await db
       .insert(chapterSummaryMedia)

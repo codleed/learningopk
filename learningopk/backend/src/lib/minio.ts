@@ -167,6 +167,21 @@ export const deleteObjectIfExists = async ({
   }
 };
 
+export const objectExists = async ({
+  bucket = env.MINIO_BUCKET,
+  objectKey
+}: {
+  bucket?: string;
+  objectKey: string;
+}): Promise<boolean> => {
+  try {
+    await minioClient.statObject(bucket, objectKey);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const generatePresignedPutUrl = async ({
   objectKey,
   mimeType,

@@ -18,9 +18,9 @@ import { createAnalyticsWorker } from "./workers/analytics.worker.js";
 import { createEmailWorker } from "./workers/email.worker.js";
 import { createCleanupWorker } from "./workers/cleanup.worker.js";
 
-createAnalyticsWorker();
-createEmailWorker();
-createCleanupWorker();
+let analyticsWorker: ReturnType<typeof createAnalyticsWorker> | null = null;
+let emailWorker: ReturnType<typeof createEmailWorker> | null = null;
+let cleanupWorker: ReturnType<typeof createCleanupWorker> | null = null;
 
 export const createApp = () => {
   const app = express();
@@ -58,7 +58,24 @@ const isDirectRun = process.argv[1] ? import.meta.url === pathToFileURL(process.
 
 if (isDirectRun) {
   const app = createApp();
-  app.listen(Number(env.PORT), () => {
+
+  analyticsWorker = createAnalyticsWorker();
+  emailWorker = createEmailWorker();
+  cleanupWorker = createCleanupWorker();
+
+  const server = app.listen(Number(env.PORT), () => {
     console.log(`Backend listening on http://localhost:${env.PORT}`);
   });
+
+  const shutdown = () => {
+    console.log("Shutting down workers...");
+    analyticsWorker?.close();
+    emailWorker?.close();
+    cleanupWorker?.close();
+    server.close();
+    process.exit(0);
+  };
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 }
