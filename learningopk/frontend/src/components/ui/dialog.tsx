@@ -128,7 +128,7 @@ export function Dialog({
    ═══════════════════════════════════════════ */
 
 /** Props for DialogHeader. */
-export interface DialogHeaderProps extends HTMLAttributes<HTMLDivElement> {}
+export type DialogHeaderProps = HTMLAttributes<HTMLDivElement>;
 
 /** Header section with title area and bottom padding. */
 export function DialogHeader({ className, ...props }: DialogHeaderProps) {
@@ -141,7 +141,7 @@ export function DialogHeader({ className, ...props }: DialogHeaderProps) {
 }
 
 /** Props for DialogBody. */
-export interface DialogBodyProps extends HTMLAttributes<HTMLDivElement> {}
+export type DialogBodyProps = HTMLAttributes<HTMLDivElement>;
 
 /** Scrollable body content area. */
 export function DialogBody({ className, ...props }: DialogBodyProps) {
@@ -154,7 +154,7 @@ export function DialogBody({ className, ...props }: DialogBodyProps) {
 }
 
 /** Props for DialogFooter. */
-export interface DialogFooterProps extends HTMLAttributes<HTMLDivElement> {}
+export type DialogFooterProps = HTMLAttributes<HTMLDivElement>;
 
 /** Footer area with flex-end layout for action buttons. */
 export function DialogFooter({ className, ...props }: DialogFooterProps) {
@@ -172,7 +172,7 @@ export function DialogFooter({ className, ...props }: DialogFooterProps) {
 /* ─── Title and Description primitives ─── */
 
 /** Props for DialogTitle. */
-export interface DialogTitleProps extends HTMLAttributes<HTMLHeadingElement> {}
+export type DialogTitleProps = HTMLAttributes<HTMLHeadingElement>;
 
 /** Accessible dialog title. Renders as an h2. */
 export function DialogTitle({ className, ...props }: DialogTitleProps) {
@@ -188,7 +188,7 @@ export function DialogTitle({ className, ...props }: DialogTitleProps) {
 }
 
 /** Props for DialogDescription. */
-export interface DialogDescriptionProps extends HTMLAttributes<HTMLParagraphElement> {}
+export type DialogDescriptionProps = HTMLAttributes<HTMLParagraphElement>;
 
 /** Accessible dialog description paragraph. */
 export function DialogDescription({ className, ...props }: DialogDescriptionProps) {

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { getGamificationState, updateStreak } from "@/lib/gamification-storage";
 
 export function useStreakTracking() {
-  const [streak, setStreak] = useState(0);
-  const [longestStreak, setLongestStreak] = useState(0);
+  const initialState = getGamificationState();
+  const [streak, setStreak] = useState(initialState.currentStreak);
+  const [longestStreak, setLongestStreak] = useState(initialState.longestStreak);
   
   const isHydrated = useSyncExternalStore(
     () => () => undefined,
@@ -13,13 +14,9 @@ export function useStreakTracking() {
     () => false
   );
 
-  useEffect(() => {
-    if (isHydrated) {
-      const state = getGamificationState();
-      setStreak(state.currentStreak);
-      setLongestStreak(state.longestStreak);
-    }
-  }, [isHydrated]);
+  const hydratedState = isHydrated ? getGamificationState() : initialState;
+  const currentStreak = isHydrated ? hydratedState.currentStreak : streak;
+  const currentLongestStreak = isHydrated ? hydratedState.longestStreak : longestStreak;
 
   const checkAndUpdateStreak = () => {
     const newState = updateStreak();
@@ -30,11 +27,16 @@ export function useStreakTracking() {
 
   const getStreakMilestone = (): string | null => {
     const milestones = [3, 7, 14, 30, 60, 100];
-    if (milestones.includes(streak)) {
-      return `${streak}-Day Streak!`;
+    if (milestones.includes(currentStreak)) {
+      return `${currentStreak}-Day Streak!`;
     }
     return null;
   };
 
-  return { streak, longestStreak, checkAndUpdateStreak, getStreakMilestone };
+  return {
+    streak: currentStreak,
+    longestStreak: currentLongestStreak,
+    checkAndUpdateStreak,
+    getStreakMilestone,
+  };
 }

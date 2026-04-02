@@ -123,7 +123,7 @@ export function Sheet({
    ═══════════════════════════════════════════ */
 
 /** Props for SheetHeader. */
-export interface SheetHeaderProps extends HTMLAttributes<HTMLDivElement> {}
+export type SheetHeaderProps = HTMLAttributes<HTMLDivElement>;
 
 /** Header area for the sheet panel. */
 export function SheetHeader({ className, ...props }: SheetHeaderProps) {
@@ -136,7 +136,7 @@ export function SheetHeader({ className, ...props }: SheetHeaderProps) {
 }
 
 /** Props for SheetBody. */
-export interface SheetBodyProps extends HTMLAttributes<HTMLDivElement> {}
+export type SheetBodyProps = HTMLAttributes<HTMLDivElement>;
 
 /** Scrollable body area. */
 export function SheetBody({ className, ...props }: SheetBodyProps) {
@@ -149,7 +149,7 @@ export function SheetBody({ className, ...props }: SheetBodyProps) {
 }
 
 /** Props for SheetFooter. */
-export interface SheetFooterProps extends HTMLAttributes<HTMLDivElement> {}
+export type SheetFooterProps = HTMLAttributes<HTMLDivElement>;
 
 /** Footer area with flex layout for actions. */
 export function SheetFooter({ className, ...props }: SheetFooterProps) {
@@ -165,7 +165,7 @@ export function SheetFooter({ className, ...props }: SheetFooterProps) {
 }
 
 /** Props for SheetTitle. */
-export interface SheetTitleProps extends HTMLAttributes<HTMLHeadingElement> {}
+export type SheetTitleProps = HTMLAttributes<HTMLHeadingElement>;
 
 /** Accessible sheet title. */
 export function SheetTitle({ className, ...props }: SheetTitleProps) {
@@ -181,7 +181,7 @@ export function SheetTitle({ className, ...props }: SheetTitleProps) {
 }
 
 /** Props for SheetDescription. */
-export interface SheetDescriptionProps extends HTMLAttributes<HTMLParagraphElement> {}
+export type SheetDescriptionProps = HTMLAttributes<HTMLParagraphElement>;
 
 /** Accessible sheet description. */
 export function SheetDescription({ className, ...props }: SheetDescriptionProps) {

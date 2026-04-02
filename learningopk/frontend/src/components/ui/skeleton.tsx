@@ -50,7 +50,7 @@ export function Skeleton({ className, variant, ...props }: SkeletonProps) {
 /* ─── Pre-built SkeletonCard ─── */
 
 /** Props for the SkeletonCard compound component. */
-export interface SkeletonCardProps extends HTMLAttributes<HTMLDivElement> {}
+export type SkeletonCardProps = HTMLAttributes<HTMLDivElement>;
 
 /**
  * Pre-built card loading state with avatar, title, body lines, and badges.

@@ -53,10 +53,29 @@ export function StreamingText({
 
   /* ─── Incrementally reveal characters as content grows ─── */
   useEffect(() => {
+    if (content.length === 0) {
+      rafRef.current = requestAnimationFrame(() => {
+        setDisplayedLength(0);
+      });
+      prevContentLenRef.current = 0;
+      return () => {
+        if (rafRef.current !== null) {
+          cancelAnimationFrame(rafRef.current);
+        }
+      };
+    }
+
     if (!isStreaming) {
       // When streaming stops, show full content immediately
-      setDisplayedLength(content.length);
-      return;
+      rafRef.current = requestAnimationFrame(() => {
+        setDisplayedLength(content.length);
+      });
+      prevContentLenRef.current = content.length;
+      return () => {
+        if (rafRef.current !== null) {
+          cancelAnimationFrame(rafRef.current);
+        }
+      };
     }
 
     // When new content arrives, animate reveal
@@ -85,14 +104,6 @@ export function StreamingText({
       }
     };
   }, [content, isStreaming]);
-
-  /* ─── Reset when content changes entirely (new message) ─── */
-  useEffect(() => {
-    if (content.length === 0) {
-      setDisplayedLength(0);
-      prevContentLenRef.current = 0;
-    }
-  }, [content]);
 
   /* ─── Displayed text during streaming ─── */
   const displayedText = useMemo(

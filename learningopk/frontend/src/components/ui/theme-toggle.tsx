@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,11 +49,11 @@ export function ThemeToggle({
   showLabels = true,
 }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false
+  );
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent, currentIndex: number) => {
@@ -202,11 +202,11 @@ export interface ThemeToggleCompactProps {
  */
 export function ThemeToggleCompact({ className, isCollapsed: _isCollapsed }: ThemeToggleCompactProps) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false
+  );
 
   const toggle = useCallback(() => {
     const nextTheme =

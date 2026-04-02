@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import {
   getGamificationState,
   addXp as addXpToStorage,
@@ -26,16 +26,11 @@ export function useGamification() {
     () => false
   );
 
-  useEffect(() => {
-    if (isHydrated) {
-      setState(getGamificationState());
-    }
-  }, [isHydrated]);
-
   const addXp = useCallback((amount: number, reason: string) => {
     const newState = addXpToStorage(amount);
     setState(newState);
-    setXpQueue((prev) => [...prev, { amount, reason, timestamp: Date.now() }]);
+    const timestamp = Date.now();
+    setXpQueue((prev) => [...prev, { id: crypto.randomUUID(), amount, reason, timestamp }]);
     
     if (newState.level > state.level) {
       setLeveledUp(true);
@@ -94,12 +89,12 @@ export function useGamification() {
     }
   }, [addXp]);
 
-  const dismissXpNotification = useCallback((timestamp: number) => {
-    setXpQueue((prev) => prev.filter((r) => r.timestamp !== timestamp));
+  const dismissXpNotification = useCallback((notificationId: string) => {
+    setXpQueue((prev) => prev.filter((r) => r.id !== notificationId));
   }, []);
 
   return {
-    state,
+    state: isHydrated ? state : getGamificationState(),
     xpQueue,
     leveledUp,
     addXp,

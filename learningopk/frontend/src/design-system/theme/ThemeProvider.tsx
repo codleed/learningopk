@@ -26,16 +26,14 @@ export function ThemeProvider({
   children,
   defaultMode = "light",
 }: ThemeProviderProps) {
-  const [mode, setMode] = useState<ThemeMode>(defaultMode);
-  const [mounted, setMounted] = useState(false);
+  const [mode, setMode] = useState<ThemeMode>(() => {
+    if (typeof window === "undefined") {
+      return defaultMode;
+    }
 
-  useEffect(() => {
-    setMounted(true);
     const stored = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode | null;
-    const initialMode = stored === "dark" || stored === "light" ? stored : defaultMode;
-    setMode(initialMode);
-    applyThemeVariables(initialMode);
-  }, [defaultMode]);
+    return stored === "dark" || stored === "light" ? stored : defaultMode;
+  });
 
   const applyThemeVariables = (themeMode: ThemeMode) => {
     const variables = getCssVariables(themeMode);
@@ -52,17 +50,18 @@ export function ThemeProvider({
     }
   };
 
+  useEffect(() => {
+    applyThemeVariables(mode);
+  }, [mode]);
+
   const toggleTheme = () => {
     const newMode = mode === "light" ? "dark" : "light";
-    setMode(newMode);
-    localStorage.setItem(THEME_STORAGE_KEY, newMode);
-    applyThemeVariables(newMode);
+    setTheme(newMode);
   };
 
   const setTheme = (newMode: ThemeMode) => {
     setMode(newMode);
     localStorage.setItem(THEME_STORAGE_KEY, newMode);
-    applyThemeVariables(newMode);
   };
 
   return (

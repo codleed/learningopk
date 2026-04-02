@@ -1,5 +1,10 @@
 import { cookies } from "next/headers";
 
+type AuthServiceError = Error & {
+  status?: number;
+  code?: "AUTH_SERVICE_UNAVAILABLE";
+};
+
 export type SessionPayload = {
   session: {
     id: string;
@@ -42,9 +47,9 @@ export const getServerSession = async (): Promise<SessionPayload | null> => {
       }
       // Other errors indicate service issue
       const errorData = await response.json().catch(() => ({ error: "Authentication service error" }));
-      const err = new Error(errorData?.error ?? "Authentication service unavailable");
-      (err as any).status = response.status;
-      (err as any).code = "AUTH_SERVICE_UNAVAILABLE";
+      const err: AuthServiceError = new Error(errorData?.error ?? "Authentication service unavailable");
+      err.status = response.status;
+      err.code = "AUTH_SERVICE_UNAVAILABLE";
       throw err;
     }
 
@@ -55,12 +60,12 @@ export const getServerSession = async (): Promise<SessionPayload | null> => {
 
     return payload;
   } catch (error) {
-    if (error instanceof Error && (error as any).code === "AUTH_SERVICE_UNAVAILABLE") {
+    if (error instanceof Error && (error as AuthServiceError).code === "AUTH_SERVICE_UNAVAILABLE") {
       throw error;
     }
     // Network or other unexpected error
-    const err = new Error("Failed to connect to authentication service");
-    (err as any).code = "AUTH_SERVICE_UNAVAILABLE";
+    const err: AuthServiceError = new Error("Failed to connect to authentication service");
+    err.code = "AUTH_SERVICE_UNAVAILABLE";
     throw err;
   }
 };

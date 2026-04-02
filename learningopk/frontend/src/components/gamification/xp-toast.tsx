@@ -8,7 +8,7 @@ import type { XpReward } from "@/lib/gamification-types";
 
 interface XpToastProps {
   notifications: XpReward[];
-  onDismiss: (timestamp: number) => void;
+  onDismiss: (id: string) => void;
 }
 
 export function XpToast({ notifications, onDismiss }: XpToastProps) {
@@ -17,7 +17,7 @@ export function XpToast({ notifications, onDismiss }: XpToastProps) {
     
     const latest = notifications[notifications.length - 1];
     const timer = setTimeout(() => {
-      onDismiss(latest.timestamp);
+      onDismiss(latest.id);
     }, 3000);
 
     return () => clearTimeout(timer);
@@ -28,7 +28,7 @@ export function XpToast({ notifications, onDismiss }: XpToastProps) {
       <AnimatePresence mode="popLayout">
         {notifications.map((notification) => (
           <motion.div
-            key={notification.timestamp}
+            key={notification.id}
             initial={{ opacity: 0, x: 100, scale: 0.8 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 100, scale: 0.8 }}
@@ -49,7 +49,7 @@ export function XpToast({ notifications, onDismiss }: XpToastProps) {
               <p className="text-xs opacity-90">{notification.reason}</p>
             </div>
             <button
-              onClick={() => onDismiss(notification.timestamp)}
+              onClick={() => onDismiss(notification.id)}
               className="ml-2 rounded-full p-1 hover:bg-white/20 transition-colors"
             >
               <span className="sr-only">Dismiss</span>

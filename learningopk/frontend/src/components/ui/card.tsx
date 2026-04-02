@@ -83,7 +83,7 @@ export function Card({ className, variant, children, style, ...props }: CardProp
 }
 
 /** Props for the CardHeader sub-component. */
-export interface CardHeaderProps extends HTMLAttributes<HTMLDivElement> {}
+export type CardHeaderProps = HTMLAttributes<HTMLDivElement>;
 
 /**
  * Header section of a Card. Renders a flex column with bottom border.
@@ -101,7 +101,7 @@ export function CardHeader({ className, ...props }: CardHeaderProps) {
 }
 
 /** Props for the CardBody sub-component. */
-export interface CardBodyProps extends HTMLAttributes<HTMLDivElement> {}
+export type CardBodyProps = HTMLAttributes<HTMLDivElement>;
 
 /**
  * Body/content section of a Card.
@@ -116,7 +116,7 @@ export function CardBody({ className, ...props }: CardBodyProps) {
 }
 
 /** Props for the CardFooter sub-component. */
-export interface CardFooterProps extends HTMLAttributes<HTMLDivElement> {}
+export type CardFooterProps = HTMLAttributes<HTMLDivElement>;
 
 /**
  * Footer section of a Card. Renders a flex row with top border.

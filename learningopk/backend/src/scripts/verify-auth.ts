@@ -8,8 +8,14 @@ const run = async (): Promise<void> => {
   const anonAgent = request(app);
   const email = `phase1_${Date.now()}@example.com`;
   const password = "StrongPass123";
+  const testIp = `203.0.113.${Math.floor(Math.random() * 200) + 10}`;
 
-  const unauthQuizResponse = await anonAgent.post("/api/quiz/submit").send({
+  const withAuthHeaders = <T extends request.Test>(req: T): T =>
+    req
+      .set("origin", "http://localhost:3000")
+      .set("x-forwarded-for", testIp);
+
+  const unauthQuizResponse = await withAuthHeaders(anonAgent.post("/api/quiz/submit")).send({
     quizId: 1,
     answers: { "1": "a" }
   });
@@ -17,9 +23,9 @@ const run = async (): Promise<void> => {
     throw new Error(`Expected 401 for unauthenticated quiz mutation, got ${unauthQuizResponse.status}`);
   }
 
-  const signUpResponse = await agent
-    .post("/api/auth/sign-up/email")
-    .set("origin", "http://localhost:3000")
+  const signUpResponse = await withAuthHeaders(
+    agent.post("/api/auth/sign-up/email")
+  )
     .send({
       name: "Phase One User",
       email,
@@ -32,38 +38,36 @@ const run = async (): Promise<void> => {
     throw new Error(`Sign-up failed: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`);
   }
 
-  const sessionResponse = await agent.get("/api/auth/get-session").set("origin", "http://localhost:3000");
+  const sessionResponse = await withAuthHeaders(agent.get("/api/auth/get-session"));
   if (sessionResponse.status >= 400 || !sessionResponse.body?.session) {
     throw new Error(`Session fetch failed after sign-up: ${sessionResponse.status}`);
   }
 
-  const signOutResponse = await agent.post("/api/auth/sign-out").set("origin", "http://localhost:3000").send({});
+  const signOutResponse = await withAuthHeaders(agent.post("/api/auth/sign-out")).send({});
   if (signOutResponse.status >= 400) {
     throw new Error(`Sign-out failed: ${signOutResponse.status} ${JSON.stringify(signOutResponse.body)}`);
   }
 
-  const afterSignOutSessionResponse = await agent
-    .get("/api/auth/get-session")
-    .set("origin", "http://localhost:3000");
+  const afterSignOutSessionResponse = await withAuthHeaders(agent.get("/api/auth/get-session"));
   if (afterSignOutSessionResponse.body?.session) {
     throw new Error("Session should be cleared after sign-out.");
   }
 
-  const signInResponse = await agent
-    .post("/api/auth/sign-in/email")
-    .set("origin", "http://localhost:3000")
+  const signInResponse = await withAuthHeaders(
+    agent.post("/api/auth/sign-in/email")
+  )
     .send({ email, password });
 
   if (signInResponse.status >= 400) {
     throw new Error(`Sign-in failed: ${signInResponse.status} ${JSON.stringify(signInResponse.body)}`);
   }
 
-  const afterSignInSessionResponse = await agent.get("/api/auth/get-session").set("origin", "http://localhost:3000");
+  const afterSignInSessionResponse = await withAuthHeaders(agent.get("/api/auth/get-session"));
   if (!afterSignInSessionResponse.body?.session) {
     throw new Error("Session should exist after sign-in.");
   }
 
-  const authedQuizResponse = await agent.post("/api/quiz/submit").send({
+  const authedQuizResponse = await withAuthHeaders(agent.post("/api/quiz/submit")).send({
     quizId: 1,
     answers: {}
   });
