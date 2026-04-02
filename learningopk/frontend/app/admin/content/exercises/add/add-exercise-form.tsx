@@ -176,6 +176,8 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
         solution: solution.trim(),
         difficulty: difficulty as "easy" | "medium" | "hard",
         type: apiType,
+        problemMarkdown: apiType === "numerical" ? question.trim() : undefined,
+        solutionCode: apiType === "numerical" ? solution.trim() : undefined,
         visualizationHtml: apiType === "numerical" ? visualizationHtml : undefined,
         blanksAnswer: apiType === "fill_in_blanks" ? blanksAnswer : undefined,
       });

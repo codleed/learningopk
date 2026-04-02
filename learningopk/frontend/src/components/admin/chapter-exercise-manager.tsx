@@ -179,6 +179,8 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
           solution: formData.solution,
           difficulty: formData.difficulty,
           type: apiType,
+          problemMarkdown: apiType === "numerical" ? formData.question : undefined,
+          solutionCode: apiType === "numerical" ? formData.solution : undefined,
           visualizationHtml: apiType === "numerical" ? formData.visualizationHtml || undefined : undefined,
           blanksAnswer: apiType === "fill_in_blanks" ? formData.blanksAnswer : undefined,
         });
@@ -197,6 +199,8 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
           solution: formData.solution,
           difficulty: formData.difficulty,
           type: apiType,
+          problemMarkdown: apiType === "numerical" ? formData.question : undefined,
+          solutionCode: apiType === "numerical" ? formData.solution : undefined,
           visualizationHtml: apiType === "numerical" ? formData.visualizationHtml || undefined : undefined,
           blanksAnswer: apiType === "fill_in_blanks" ? formData.blanksAnswer : undefined,
         });
