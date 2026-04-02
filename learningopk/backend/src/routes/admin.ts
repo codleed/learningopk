@@ -201,6 +201,18 @@ export const curriculumExerciseUpdateBodySchema = z
       message: "solutionCode is required when type is 'numerical'",
       path: ["solutionCode"]
     }
+  )
+  .refine(
+    (data) => {
+      if (data.type === "fill_in_blanks") {
+        return data.blanksAnswer !== undefined && data.blanksAnswer.length > 0;
+      }
+      return true;
+    },
+    {
+      message: "blanksAnswer is required when type is 'fill_in_blanks'",
+      path: ["blanksAnswer"]
+    }
   );
 
 const curriculumExerciseListQuerySchema = z.object({

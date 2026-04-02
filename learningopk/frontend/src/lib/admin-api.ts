@@ -966,6 +966,8 @@ export const updateAdminCurriculumExercise = async ({
   solution,
   difficulty,
   type,
+  problemMarkdown,
+  solutionCode,
   visualizationHtml,
   blanksAnswer
 }: {
@@ -975,6 +977,8 @@ export const updateAdminCurriculumExercise = async ({
   solution: string;
   difficulty?: "easy" | "medium" | "hard";
   type?: "mcq" | "short" | "long" | "numerical" | "fill_in_blanks";
+  problemMarkdown?: string;
+  solutionCode?: string;
   visualizationHtml?: string | null;
   blanksAnswer?: string[] | null;
 }): Promise<AdminCurriculumExerciseMutationResponse> => {
@@ -988,6 +992,8 @@ export const updateAdminCurriculumExercise = async ({
       solution,
       ...(difficulty ? { difficulty } : {}),
       ...(type ? { type } : {}),
+      ...(problemMarkdown !== undefined ? { problemMarkdown } : {}),
+      ...(solutionCode !== undefined ? { solutionCode } : {}),
       ...(visualizationHtml !== undefined ? { visualizationHtml } : {}),
       ...(blanksAnswer !== undefined ? { blanksAnswer } : {})
     }

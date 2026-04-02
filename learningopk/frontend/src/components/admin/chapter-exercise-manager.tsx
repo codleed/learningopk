@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { NumericalVisualizationEditor } from "@/components/admin/numerical-visualization-editor";
 import { FillInBlanksEditor } from "@/components/admin/fill-in-blanks-editor";
 import { CodeMirrorMarkdownEditor } from "@/components/admin/codemirror-markdown-editor";
+import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
 
 type ExerciseType = "all" | "mcq" | "short" | "long" | "numerical" | "fill_in_blanks";
 
@@ -636,9 +637,9 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                       </div>
 
                       {/* Question */}
-                      <p className="text-sm font-medium mb-3 leading-relaxed">
-                        {exercise.question}
-                      </p>
+                      <div className="text-sm font-medium mb-3 leading-relaxed prose prose-sm dark:prose-invert max-w-none">
+                        <MarkdownMathRenderer content={exercise.question} />
+                      </div>
 
                       {/* Solution Preview */}
                       <div className="p-3 rounded-lg bg-muted/30 border border-border">
@@ -646,11 +647,13 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                           <CheckCircle className="h-3 w-3" />
                           Solution
                         </p>
-                        <p className="text-sm text-muted-foreground">
-                          {exercise.solution.length > 150 
-                            ? `${exercise.solution.substring(0, 150)}...`
-                            : exercise.solution}
-                        </p>
+                        <div className="text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none">
+                          <MarkdownMathRenderer content={
+                            exercise.solution.length > 300
+                              ? `${exercise.solution.substring(0, 300)}...`
+                              : exercise.solution
+                          } />
+                        </div>
                       </div>
 
                       {/* Numerical-specific fields */}

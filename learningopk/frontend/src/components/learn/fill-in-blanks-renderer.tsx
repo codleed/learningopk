@@ -3,6 +3,9 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, RotateCcw } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -161,8 +164,17 @@ export function FillInBlanksRenderer({
 
             return (
               <span key={segIdx} className="contents">
-                {/* Text segment */}
-                {segment && <span>{segment}</span>}
+                {/* Text segment rendered with inline markdown + math */}
+                {segment && (
+                  <span className="inline md-root [&_p]:inline [&_p]:m-0">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkMath]}
+                      rehypePlugins={[rehypeKatex]}
+                    >
+                      {segment}
+                    </ReactMarkdown>
+                  </span>
+                )}
 
                 {/* Blank input (one fewer blank than segments) */}
                 {!isLastSegment && (

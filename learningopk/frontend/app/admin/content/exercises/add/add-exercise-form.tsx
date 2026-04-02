@@ -57,7 +57,8 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
   const [difficulty, setDifficulty] = useState<string>("medium");
   const [question, setQuestion] = useState<string>("");
   const [solution, setSolution] = useState<string>("");
-  const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [showQuestionPreview, setShowQuestionPreview] = useState<boolean>(false);
+  const [showSolutionPreview, setShowSolutionPreview] = useState<boolean>(false);
   const [blanksAnswer, setBlanksAnswer] = useState<string[]>([]);
   const [visualizationHtml, setVisualizationHtml] = useState<string>("");
 
@@ -257,13 +258,13 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setShowPreview(!showPreview)}
+                    onClick={() => setShowQuestionPreview(!showQuestionPreview)}
                     className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-accent/50"
                   >
-                    {showPreview ? "Edit" : "Preview"}
+                    {showQuestionPreview ? "Edit" : "Preview"}
                   </button>
                 </div>
-                {showPreview ? (
+                {showQuestionPreview ? (
                   <div className="min-h-48 rounded-lg border border-[var(--border)] bg-card p-4">
                     {question ? (
                       <MarkdownMathRenderer content={question} />
@@ -295,13 +296,13 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowPreview(!showPreview)}
+                  onClick={() => setShowSolutionPreview(!showSolutionPreview)}
                   className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-accent/50"
                 >
-                  {showPreview ? "Edit" : "Preview"}
+                  {showSolutionPreview ? "Edit" : "Preview"}
                 </button>
               </div>
-              {showPreview ? (
+              {showSolutionPreview ? (
                 <div className="min-h-48 rounded-lg border border-[var(--border)] bg-card p-4">
                   {solution ? (
                     <MarkdownMathRenderer content={solution} />
