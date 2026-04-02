@@ -24,6 +24,8 @@ import type { AdminCurriculumExerciseRead } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 import { NumericalVisualizationEditor } from "@/components/admin/numerical-visualization-editor";
 import { FillInBlanksEditor } from "@/components/admin/fill-in-blanks-editor";
+import { CodeMirrorMarkdownEditor } from "@/components/admin/codemirror-markdown-editor";
+import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
 
 type ExerciseType = "all" | "mcq" | "short" | "long" | "numerical" | "fill_in_blanks";
 
@@ -108,10 +110,34 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
     typeFilter === "all" ? exercises : exercises.filter((e) => e.type === typeFilter);
 
   const handleSave = async () => {
-    if (!formData.exerciseNumber.trim() || !formData.question.trim() || !formData.solution.trim()) {
+    if (!formData.exerciseNumber.trim()) {
       pushToast({
         title: "Validation Error",
-        description: "Exercise number, question, and solution are required",
+        description: "Exercise number is required",
+        tone: "error",
+      });
+      return;
+    }
+    if (!formData.question.trim()) {
+      pushToast({
+        title: "Validation Error",
+        description: "Question is required",
+        tone: "error",
+      });
+      return;
+    }
+    if (!formData.solution.trim()) {
+      pushToast({
+        title: "Validation Error",
+        description: "Solution is required",
+        tone: "error",
+      });
+      return;
+    }
+    if (formData.type === "fill_in_blanks" && formData.blanksAnswer.length === 0) {
+      pushToast({
+        title: "Validation Error",
+        description: "At least one blank answer is required for fill in the blanks",
         tone: "error",
       });
       return;
@@ -405,34 +431,31 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
               </div>
             </div>
 
-            {/* Question & Solution */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  Question <span className="text-destructive">*</span>
-                </label>
-                <Textarea
-                  value={formData.question}
-                  onChange={(e) => setFormData(prev => ({ ...prev, question: e.target.value }))}
-                  placeholder="Enter the exercise question..."
-                  rows={3}
-                  className="resize-none"
-                />
-              </div>
+            {formData.type !== "fill_in_blanks" && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    Question <span className="text-destructive">*</span>
+                  </label>
+                  <CodeMirrorMarkdownEditor
+                    value={formData.question}
+                    onChange={(value) => setFormData(prev => ({ ...prev, question: value }))}
+                    placeholderText="Enter the exercise question in markdown..."
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  Solution <span className="text-destructive">*</span>
-                </label>
-                <Textarea
-                  value={formData.solution}
-                  onChange={(e) => setFormData(prev => ({ ...prev, solution: e.target.value }))}
-                  placeholder="Enter the solution..."
-                  rows={3}
-                  className="resize-none"
-                />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    Solution <span className="text-destructive">*</span>
+                  </label>
+                  <CodeMirrorMarkdownEditor
+                    value={formData.solution}
+                    onChange={(value) => setFormData(prev => ({ ...prev, solution: value }))}
+                    placeholderText="Enter the solution in markdown..."
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Numerical type specific fields */}
             {formData.type === "numerical" && (
@@ -481,12 +504,25 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                   <TextCursorInput className="h-4 w-4" />
                   Fill in the Blanks
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Use markdown with {"{{blank}}"} placeholders in the question.
+                </p>
                 <FillInBlanksEditor
                   questionValue={formData.question}
                   onQuestionChange={(value) => setFormData(prev => ({ ...prev, question: value }))}
                   answersValue={formData.blanksAnswer}
                   onAnswersChange={(answers) => setFormData(prev => ({ ...prev, blanksAnswer: answers }))}
                 />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    Solution <span className="text-destructive">*</span>
+                  </label>
+                  <CodeMirrorMarkdownEditor
+                    value={formData.solution}
+                    onChange={(value) => setFormData(prev => ({ ...prev, solution: value }))}
+                    placeholderText="Enter the fill in the blanks solution in markdown..."
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -601,9 +637,9 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                       </div>
 
                       {/* Question */}
-                      <p className="text-sm font-medium mb-3 leading-relaxed">
-                        {exercise.question}
-                      </p>
+                      <div className="text-sm font-medium mb-3 leading-relaxed prose prose-sm dark:prose-invert max-w-none">
+                        <MarkdownMathRenderer content={exercise.question} />
+                      </div>
 
                       {/* Solution Preview */}
                       <div className="p-3 rounded-lg bg-muted/30 border border-border">
@@ -611,11 +647,13 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                           <CheckCircle className="h-3 w-3" />
                           Solution
                         </p>
-                        <p className="text-sm text-muted-foreground">
-                          {exercise.solution.length > 150 
-                            ? `${exercise.solution.substring(0, 150)}...`
-                            : exercise.solution}
-                        </p>
+                        <div className="text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none">
+                          <MarkdownMathRenderer content={
+                            exercise.solution.length > 300
+                              ? `${exercise.solution.substring(0, 300)}...`
+                              : exercise.solution
+                          } />
+                        </div>
                       </div>
 
                       {/* Numerical-specific fields */}
