@@ -103,7 +103,12 @@ export function LoginPageClient() {
     setIsPending(false);
 
     if (result.error) {
-      setErrorMessage(result.error.message ?? "Login failed.");
+      const message = result.error.message ?? "Login failed.";
+      if (message.toLowerCase().includes("too many requests")) {
+        setErrorMessage("Too many login attempts. Please wait a minute and try again.");
+      } else {
+        setErrorMessage(message);
+      }
       return;
     }
 

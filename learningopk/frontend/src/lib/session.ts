@@ -26,7 +26,7 @@ export type SessionPayload = {
 /**
  * Retrieves the server-side session.
  * Throws an error if auth service is unreachable or returns an error.
- * Returns null if user is not authenticated (401 or no session).
+ * Returns null if user is not authenticated (401/403/429 or no session).
  */
 export const getServerSession = async (): Promise<SessionPayload | null> => {
   const cookieStore = await cookies();
@@ -42,7 +42,7 @@ export const getServerSession = async (): Promise<SessionPayload | null> => {
     });
 
     if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
+      if (response.status === 401 || response.status === 403 || response.status === 429) {
         return null;
       }
       // Other errors indicate service issue
