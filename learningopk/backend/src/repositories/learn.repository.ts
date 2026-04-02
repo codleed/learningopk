@@ -152,7 +152,7 @@ export class LearnRepository {
   }
 
   async findQuizByChapter(chapterId: number) {
-    // Get quiz by chapter ID and enhance with mock exam duration
+    // Get chapter quiz by chapter ID for chapter challenge screens.
     const quizzesData = await db
       .select({
         id: quizzes.id,
@@ -163,7 +163,7 @@ export class LearnRepository {
         type: quizzes.type
       })
       .from(quizzes)
-      .where(eq(quizzes.chapterId, chapterId))
+      .where(and(eq(quizzes.chapterId, chapterId), eq(quizzes.type, "chapter_quiz")))
       .orderBy(asc(quizzes.id))
       .limit(1);
 

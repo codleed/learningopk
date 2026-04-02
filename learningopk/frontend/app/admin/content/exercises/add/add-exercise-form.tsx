@@ -13,6 +13,8 @@ import {
 } from "@/components/admin";
 import { Select } from "@/components/ui/select";
 import { CodeMirrorMarkdownEditor } from "@/components/admin/codemirror-markdown-editor";
+import { FillInBlanksEditor } from "@/components/admin/fill-in-blanks-editor";
+import { NumericalVisualizationEditor } from "@/components/admin/numerical-visualization-editor";
 import {
   createAdminCurriculumExercise,
   type AdminCurriculumBoard,
@@ -56,6 +58,8 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
   const [question, setQuestion] = useState<string>("");
   const [solution, setSolution] = useState<string>("");
   const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [blanksAnswer, setBlanksAnswer] = useState<string[]>([]);
+  const [visualizationHtml, setVisualizationHtml] = useState<string>("");
 
   // Errors
   const [chapterError, setChapterError] = useState<string>("");
@@ -88,6 +92,11 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
       hasError = true;
     }
 
+    if (type === "fill_in_blanks" && blanksAnswer.length === 0) {
+      setQuestionError("At least one {{blank}} answer is required");
+      hasError = true;
+    }
+
     return !hasError;
   };
 
@@ -107,7 +116,9 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
         question: question.trim(),
         solution: solution.trim(),
         difficulty: difficulty as "easy" | "medium" | "hard",
-        type: type as "mcq" | "short" | "long" | "numerical",
+        type: type as "mcq" | "short" | "long" | "numerical" | "fill_in_blanks",
+        visualizationHtml: type === "numerical" ? visualizationHtml : undefined,
+        blanksAnswer: type === "fill_in_blanks" ? blanksAnswer : undefined,
       });
 
       pushToast({
@@ -201,6 +212,7 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
                 <option value="short">Short Answer</option>
                 <option value="long">Long Answer</option>
                 <option value="numerical">Numerical</option>
+                <option value="fill_in_blanks">Fill in the Blanks</option>
               </Select>
             </AdminFormField>
           </div>
@@ -217,42 +229,61 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
             </Select>
           </AdminFormField>
 
-          <AdminFormField
-            id="exercise-question"
-            label="Question"
-            required
-            error={questionError}
-          >
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowPreview(!showPreview)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-accent/50"
-                >
-                  {showPreview ? "Edit" : "Preview"}
-                </button>
-              </div>
-              {showPreview ? (
-                <div className="min-h-48 rounded-lg border border-[var(--border)] bg-card p-4">
-                  {question ? (
-                    <MarkdownMathRenderer content={question} />
-                  ) : (
-                    <p className="text-sm text-[var(--muted-foreground)]">No content to preview</p>
-                  )}
+          {type === "fill_in_blanks" ? (
+            <AdminFormField
+              id="exercise-question"
+              label="Question"
+              required
+              error={questionError}
+            >
+              <FillInBlanksEditor
+                questionValue={question}
+                onQuestionChange={(value) => {
+                  setQuestion(value);
+                  setQuestionError("");
+                }}
+                answersValue={blanksAnswer}
+                onAnswersChange={setBlanksAnswer}
+              />
+            </AdminFormField>
+          ) : (
+            <AdminFormField
+              id="exercise-question"
+              label="Question"
+              required
+              error={questionError}
+            >
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPreview(!showPreview)}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-accent/50"
+                  >
+                    {showPreview ? "Edit" : "Preview"}
+                  </button>
                 </div>
-              ) : (
-                <CodeMirrorMarkdownEditor
-                  value={question}
-                  onChange={(value) => {
-                    setQuestion(value);
-                    setQuestionError("");
-                  }}
-                  placeholderText="Enter your question in markdown..."
-                />
-              )}
-            </div>
-          </AdminFormField>
+                {showPreview ? (
+                  <div className="min-h-48 rounded-lg border border-[var(--border)] bg-card p-4">
+                    {question ? (
+                      <MarkdownMathRenderer content={question} />
+                    ) : (
+                      <p className="text-sm text-[var(--muted-foreground)]">No content to preview</p>
+                    )}
+                  </div>
+                ) : (
+                  <CodeMirrorMarkdownEditor
+                    value={question}
+                    onChange={(value) => {
+                      setQuestion(value);
+                      setQuestionError("");
+                    }}
+                    placeholderText="Enter your question in markdown..."
+                  />
+                )}
+              </div>
+            </AdminFormField>
+          )}
 
           <AdminFormField
             id="exercise-solution"
@@ -290,6 +321,18 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
               )}
             </div>
           </AdminFormField>
+
+          {type === "numerical" && (
+            <AdminFormField
+              id="exercise-visualization"
+              label="Illustration (HTML/CSS/JS)"
+            >
+              <NumericalVisualizationEditor
+                value={visualizationHtml}
+                onChange={setVisualizationHtml}
+              />
+            </AdminFormField>
+          )}
 
           <div className="flex items-center gap-3 pt-2">
             <AdminActionButton
