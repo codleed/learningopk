@@ -68,6 +68,16 @@
   --color-sidebar: var(--sidebar-bg);
   --color-sidebar-border: var(--sidebar-border);
 
+  /* Exercise section accent tokens */
+  --color-exercise-long: var(--exercise-long);
+  --color-exercise-long-light: var(--exercise-long-light);
+  --color-exercise-short: var(--exercise-short);
+  --color-exercise-short-light: var(--exercise-short-light);
+  --color-exercise-blanks: var(--exercise-blanks);
+  --color-exercise-blanks-light: var(--exercise-blanks-light);
+  --color-exercise-physics: var(--exercise-physics);
+  --color-exercise-physics-light: var(--exercise-physics-light);
+
   /* Font families */
   --font-display: var(--font-display);
   --font-body: var(--font-body);
@@ -179,6 +189,163 @@
 .animate-shimmer     { animation: shimmer 2s linear infinite; }
 .animate-streak-pulse { animation: streak-pulse 2s ease-in-out infinite; }
 
+/* ── Exercise Section Animations ── */
+
+/* Custom easing curves (Emil Kowalski principles) */
+:root {
+  --ease-out-expo: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-expo: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Section content entrance — stagger children via animation-delay */
+@keyframes exercise-section-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Left border accent pulse for active section */
+@keyframes exercise-border-glow {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+
+/* Section tab switch — content swap */
+@keyframes exercise-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Blank highlight shimmer */
+@keyframes blank-highlight {
+  0%   { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Stagger utility: children animate in sequence */
+.exercise-section-stagger > * {
+  opacity: 0;
+  animation: exercise-section-in 280ms var(--ease-out-expo) forwards;
+}
+.exercise-section-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.exercise-section-stagger > *:nth-child(2) { animation-delay: 50ms; }
+.exercise-section-stagger > *:nth-child(3) { animation-delay: 100ms; }
+.exercise-section-stagger > *:nth-child(4) { animation-delay: 150ms; }
+.exercise-section-stagger > *:nth-child(5) { animation-delay: 200ms; }
+.exercise-section-stagger > *:nth-child(6) { animation-delay: 250ms; }
+.exercise-section-stagger > *:nth-child(7) { animation-delay: 300ms; }
+.exercise-section-stagger > *:nth-child(8) { animation-delay: 350ms; }
+
+.animate-exercise-content-enter {
+  animation: exercise-content-enter 250ms var(--ease-out-expo) forwards;
+}
+
+/* Blank answer underline highlight effect */
+.blank-underline-active {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--exercise-blanks-light) 40%,
+    var(--exercise-blanks-light) 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: blank-highlight 2.5s linear infinite;
+}
+
+/* Exercise section card base — the shared foundation */
+.exercise-section-card {
+  position: relative;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  overflow: hidden;
+  transition:
+    border-color 200ms var(--ease-out-expo),
+    box-shadow 200ms var(--ease-out-expo);
+}
+
+/* 3px left accent bar via pseudo-element */
+.exercise-section-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  border-radius: 3px 0 0 3px;
+  opacity: 0.7;
+  transition: opacity 200ms var(--ease-out-expo);
+}
+
+.exercise-section-card:focus-within::before,
+.exercise-section-card[data-active="true"]::before {
+  opacity: 1;
+  animation: exercise-border-glow 2s ease-in-out infinite;
+}
+
+/* Per-section accent colors */
+.exercise-section-card[data-type="long"]::before {
+  background: var(--exercise-long);
+}
+.exercise-section-card[data-type="long"]:focus-within,
+.exercise-section-card[data-type="long"][data-active="true"] {
+  border-color: var(--exercise-long-border);
+  box-shadow: 0 0 0 1px var(--exercise-long-border), var(--shadow-sm);
+}
+
+.exercise-section-card[data-type="short"]::before {
+  background: var(--exercise-short);
+}
+.exercise-section-card[data-type="short"]:focus-within,
+.exercise-section-card[data-type="short"][data-active="true"] {
+  border-color: var(--exercise-short-border);
+  box-shadow: 0 0 0 1px var(--exercise-short-border), var(--shadow-sm);
+}
+
+.exercise-section-card[data-type="blanks"]::before {
+  background: var(--exercise-blanks);
+}
+.exercise-section-card[data-type="blanks"]:focus-within,
+.exercise-section-card[data-type="blanks"][data-active="true"] {
+  border-color: var(--exercise-blanks-border);
+  box-shadow: 0 0 0 1px var(--exercise-blanks-border), var(--shadow-sm);
+}
+
+.exercise-section-card[data-type="physics"]::before {
+  background: var(--exercise-physics);
+}
+.exercise-section-card[data-type="physics"]:focus-within,
+.exercise-section-card[data-type="physics"][data-active="true"] {
+  border-color: var(--exercise-physics-border);
+  box-shadow: 0 0 0 1px var(--exercise-physics-border), var(--shadow-sm);
+}
+
+/* Section header accent backgrounds */
+.exercise-section-header[data-type="long"] {
+  background: var(--exercise-long-bg);
+}
+.exercise-section-header[data-type="short"] {
+  background: var(--exercise-short-bg);
+}
+.exercise-section-header[data-type="blanks"] {
+  background: var(--exercise-blanks-bg);
+}
+.exercise-section-header[data-type="physics"] {
+  background: var(--exercise-physics-bg);
+}
+
 /* ── Scrollbar ── */
 .scrollbar-thin {
   scrollbar-width: thin;
@@ -222,7 +389,21 @@
   .animate-message-in,
   .animate-spin,
   .animate-shimmer,
-  .animate-streak-pulse {
+  .animate-streak-pulse,
+  .animate-exercise-content-enter {
+    animation: none !important;
+  }
+
+  .exercise-section-stagger > * {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .exercise-section-card::before {
+    animation: none !important;
+  }
+
+  .blank-underline-active {
     animation: none !important;
   }
 
