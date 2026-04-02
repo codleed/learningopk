@@ -15,7 +15,6 @@ import {
   Bell,
   BellRing,
   Camera,
-  ChevronRight,
   Flame,
   Globe,
   KeyRound,
@@ -34,7 +33,6 @@ import { z } from "zod";
 
 import { PageHeader } from "@/components/common/page-header";
 import { Alert } from "@/components/ui/alert";
-import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -624,13 +622,13 @@ function PreferencesTab({ initialBoard }: { initialBoard: string }) {
 
       {/* ── Subject interests ── */}
       <Card variant="default" className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle>Subjects of Interest</CardTitle>
-          <p className="text-sm text-text-secondary">
-            Select the subjects you're studying. This helps personalize your
+          <CardHeader>
+            <CardTitle>Subjects of Interest</CardTitle>
+            <p className="text-sm text-text-secondary">
+            Select the subjects you&apos;re studying. This helps personalize your
             dashboard and recommendations.
-          </p>
-        </CardHeader>
+            </p>
+          </CardHeader>
         <CardBody>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {SUBJECTS.map((subject) => (

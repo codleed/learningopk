@@ -43,8 +43,22 @@ export const createApp = () => {
     })
   );
 
-  // Strict rate limit on auth endpoints to prevent brute force
-  app.use("/api/auth", authRateLimiter);
+  // Strict rate limit on auth mutations to prevent brute force.
+  // Skip GET endpoints (for example, /get-session) to avoid starving
+  // interactive sessions while still protecting sign-in/sign-up flows.
+  app.use("/api/auth", (req, res, next) => {
+    if (process.env.NODE_ENV !== "production") {
+      next();
+      return;
+    }
+
+    if (req.method === "GET") {
+      next();
+      return;
+    }
+
+    authRateLimiter(req, res, next);
+  });
 
   // Auth routes go before JSON body parser (better-auth handles its own parsing)
   app.use("/api/auth", authRouter);

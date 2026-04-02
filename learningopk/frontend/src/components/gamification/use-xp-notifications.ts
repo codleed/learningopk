@@ -1,31 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import type { XpReward } from "@/lib/gamification-types";
 
-export function useXpNotifications(queue: XpReward[], onDismiss: (timestamp: number) => void) {
-  const [visibleNotifications, setVisibleNotifications] = useState<XpReward[]>([]);
-
+export function useXpNotifications(queue: XpReward[], onDismiss: (id: string) => void) {
   useEffect(() => {
     if (queue.length === 0) return;
-    
+
     const latest = queue[queue.length - 1];
-    setVisibleNotifications((prev) => {
-      if (prev.some((n) => n.timestamp === latest.timestamp)) return prev;
-      return [...prev, latest];
-    });
 
     const timer = setTimeout(() => {
-      onDismiss(latest.timestamp);
+      onDismiss(latest.id);
     }, 3000);
 
     return () => clearTimeout(timer);
   }, [queue, onDismiss]);
 
-  const dismiss = (timestamp: number) => {
-    setVisibleNotifications((prev) => prev.filter((n) => n.timestamp !== timestamp));
-    onDismiss(timestamp);
+  const dismiss = (id: string) => {
+    onDismiss(id);
   };
 
-  return { visibleNotifications, dismiss };
+  return { visibleNotifications: queue, dismiss };
 }

@@ -31,6 +31,7 @@ export const BADGE_DEFINITIONS: Record<BadgeId, BadgeDefinition> = {
 export type CardStatus = "new" | "learning" | "known" | "review";
 
 export interface XpReward {
+  id: string;
   amount: number;
   reason: string;
   timestamp: number;

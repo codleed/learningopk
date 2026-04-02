@@ -1,6 +1,6 @@
 import { type HTMLAttributes } from "react";
 
-interface TypographyProps extends HTMLAttributes<HTMLHeadingElement> {}
+type TypographyProps = HTMLAttributes<HTMLHeadingElement>;
 
 export function H1({ className = "", style, ...props }: TypographyProps) {
   return (
@@ -56,7 +56,7 @@ export function Body({ className = "", style, muted, ...props }: BodyProps) {
   );
 }
 
-interface LabelProps extends HTMLAttributes<HTMLLabelElement> {}
+type LabelProps = HTMLAttributes<HTMLLabelElement>;
 
 export function Label({ className = "", style, ...props }: LabelProps) {
   return (
@@ -68,7 +68,7 @@ export function Label({ className = "", style, ...props }: LabelProps) {
   );
 }
 
-interface CaptionProps extends HTMLAttributes<HTMLSpanElement> {}
+type CaptionProps = HTMLAttributes<HTMLSpanElement>;
 
 export function Caption({ className = "", style, ...props }: CaptionProps) {
   return (
@@ -80,7 +80,7 @@ export function Caption({ className = "", style, ...props }: CaptionProps) {
   );
 }
 
-interface MonoProps extends HTMLAttributes<HTMLSpanElement> {}
+type MonoProps = HTMLAttributes<HTMLSpanElement>;
 
 export function Mono({ className = "", style, ...props }: MonoProps) {
   return (

@@ -125,6 +125,46 @@ function SandboxedIframe({ srcdoc, height, onLoad, className }: SandboxedIframeP
   );
 }
 
+type VisualizationFrameProps = {
+  srcdoc: string;
+  height: number;
+};
+
+function VisualizationFrame({ srcdoc, height }: VisualizationFrameProps) {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const handleIframeLoad = useCallback(() => {
+    setIsLoaded(true);
+  }, []);
+
+  return (
+    <div className="relative bg-white">
+      {!isLoaded && (
+        <div className="absolute inset-0 z-10 bg-bg-surface">
+          <LoadingSkeleton height={height} />
+        </div>
+      )}
+
+      <motion.div
+        animate={{ height }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="overflow-hidden"
+      >
+        <SandboxedIframe
+          key={srcdoc}
+          srcdoc={srcdoc}
+          height={height}
+          onLoad={handleIframeLoad}
+          className={cn(
+            "transition-opacity duration-300",
+            isLoaded ? "opacity-100" : "opacity-0"
+          )}
+        />
+      </motion.div>
+    </div>
+  );
+}
+
 /* ─── Fullscreen modal ─── */
 
 type FullscreenModalProps = {
@@ -242,21 +282,11 @@ export function NumericalVisualizationRenderer({
   title = DEFAULT_TITLE,
   className,
 }: NumericalVisualizationRendererProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const hasVisualization =
     typeof visualizationHtml === "string" && visualizationHtml.trim().length > 0;
-
-  /* Reset loading state when the HTML changes */
-  useEffect(() => {
-    setIsLoaded(false);
-  }, [visualizationHtml]);
-
-  const handleIframeLoad = useCallback(() => {
-    setIsLoaded(true);
-  }, []);
 
   const toggleExpanded = useCallback(() => {
     setIsExpanded((prev) => !prev);
@@ -330,31 +360,11 @@ export function NumericalVisualizationRenderer({
         {!hasVisualization ? (
           <EmptyState />
         ) : (
-          <div className="relative bg-white">
-            {/* Loading skeleton (shown until iframe reports loaded) */}
-            {!isLoaded && (
-              <div className="absolute inset-0 z-10 bg-bg-surface">
-                <LoadingSkeleton height={currentHeight} />
-              </div>
-            )}
-
-            {/* Animated height container */}
-            <motion.div
-              animate={{ height: currentHeight }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="overflow-hidden"
-            >
-              <SandboxedIframe
-                srcdoc={visualizationHtml}
-                height={currentHeight}
-                onLoad={handleIframeLoad}
-                className={cn(
-                  "transition-opacity duration-300",
-                  isLoaded ? "opacity-100" : "opacity-0"
-                )}
-              />
-            </motion.div>
-          </div>
+          <VisualizationFrame
+            key={visualizationHtml}
+            srcdoc={visualizationHtml}
+            height={currentHeight}
+          />
         )}
       </div>
 

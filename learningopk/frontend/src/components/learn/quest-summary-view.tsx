@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { CheckCircle2, Clock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MarkdownContent } from "./markdown-content";
-import { cn } from "@/lib/utils";
 
 interface QuestSummaryViewProps {
   summary: string;
@@ -15,7 +14,6 @@ interface QuestSummaryViewProps {
 
 export function QuestSummaryView({
   summary,
-  chapterId,
   isRead,
   onMarkRead,
 }: QuestSummaryViewProps) {
@@ -60,7 +58,7 @@ export function QuestSummaryView({
           
           <Button onClick={onMarkRead} className="gap-2">
             <CheckCircle2 className="h-4 w-4" />
-            I've Read This
+            I&apos;ve Read This
             <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">
               +10 XP
             </span>
