@@ -28,6 +28,7 @@ const typeConfig = {
   short: { label: "Short", variant: "info" as const },
   long: { label: "Long", variant: "default" as const },
   numerical: { label: "Numerical", variant: "outline" as const },
+  fill_in_blanks: { label: "Fill in Blanks", variant: "info" as const },
 } as const;
 
 export function ExerciseItem({ exercise, onExpanded, onAskAi }: ExerciseItemProps) {

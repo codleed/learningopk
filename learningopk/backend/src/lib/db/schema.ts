@@ -17,7 +17,7 @@ import {
 export const userRoleEnum = pgEnum("user_role", ["student", "admin"]);
 export const gradeEnum = pgEnum("grade", ["9", "10"]);
 export const difficultyEnum = pgEnum("difficulty", ["easy", "medium", "hard"]);
-export const exerciseTypeEnum = pgEnum("exercise_type", ["mcq", "short", "long", "numerical"]);
+export const exerciseTypeEnum = pgEnum("exercise_type", ["mcq", "short", "long", "numerical", "fill_in_blanks"]);
 export const quizTypeEnum = pgEnum("quiz_type", ["chapter_quiz", "mock_exam"]);
 export const answerOptionEnum = pgEnum("answer_option", ["a", "b", "c", "d"]);
 export const aiMessageRoleEnum = pgEnum("ai_message_role", ["user", "assistant"]);
@@ -259,7 +259,9 @@ export const exercises = pgTable(
     type: exerciseTypeEnum("type").notNull().default("short"),
     sourceId: uuid("source_id").references(() => contentSources.id, { onDelete: "set null" }),
     problemMarkdown: text("problem_markdown"),
-    solutionCode: text("solution_code")
+    solutionCode: text("solution_code"),
+    visualizationHtml: text("visualization_html"),
+    blanksAnswer: jsonb("blanks_answer").$type<string[]>()
   },
   (table) => [uniqueIndex("exercises_chapter_exercise_number_idx").on(table.chapterId, table.exerciseNumber)]
 );

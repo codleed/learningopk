@@ -79,7 +79,9 @@ const chapterDetailResponseSchema = z.object({
       question: z.string(),
       solution: z.string(),
       difficulty: z.enum(["easy", "medium", "hard"]),
-      type: z.enum(["mcq", "short", "long", "numerical"])
+      type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]),
+      visualizationHtml: z.string().nullable().optional(),
+      blanksAnswer: z.array(z.string()).nullable().optional()
     })
   ),
   flashcards: z.array(

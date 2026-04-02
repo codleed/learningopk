@@ -9,6 +9,8 @@ import { ContentRenderer } from "@/components/common/content-renderer";
 import { cn } from "@/lib/utils";
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 import { XP_REWARDS } from "@/lib/gamification-types";
+import { NumericalVisualizationRenderer } from "@/components/learn/numerical-visualization-renderer";
+import { FillInBlanksRenderer } from "@/components/learn/fill-in-blanks-renderer";
 
 type Exercise = ChapterDetailResponse["exercises"][number];
 
@@ -126,6 +128,26 @@ export function QuestExercisesView({
                       enableCode={false}
                     />
                   </div>
+
+                  {/* Numerical visualization */}
+                  {exercise.type === "numerical" && exercise.visualizationHtml && (
+                    <div className="mt-3">
+                      <NumericalVisualizationRenderer
+                        visualizationHtml={exercise.visualizationHtml}
+                      />
+                    </div>
+                  )}
+
+                  {/* Fill in the blanks interactive */}
+                  {exercise.type === "fill_in_blanks" && exercise.blanksAnswer && exercise.blanksAnswer.length > 0 && (
+                    <div className="mt-3">
+                      <FillInBlanksRenderer
+                        question={exercise.question}
+                        blanksAnswer={exercise.blanksAnswer}
+                        onComplete={() => onMarkComplete(exercise.id, difficulty)}
+                      />
+                    </div>
+                  )}
 
                   {/* Solution preview */}
                   {exercise.solution && (

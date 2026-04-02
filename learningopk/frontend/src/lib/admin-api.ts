@@ -208,7 +208,9 @@ const adminCurriculumExerciseCreateResponseSchema = z.object({
     problemMarkdown: z.string().nullable().optional(),
     solutionCode: z.string().nullable().optional(),
     difficulty: z.enum(["easy", "medium", "hard"]),
-    type: z.enum(["mcq", "short", "long", "numerical"])
+    type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]),
+    visualizationHtml: z.string().nullable().optional(),
+    blanksAnswer: z.array(z.string()).nullable().optional()
   })
 });
 
@@ -223,7 +225,9 @@ const adminCurriculumExerciseReadSchema = z.object({
   problemMarkdown: z.string().nullable().optional(),
   solutionCode: z.string().nullable().optional(),
   difficulty: z.enum(["easy", "medium", "hard"]),
-  type: z.enum(["mcq", "short", "long", "numerical"])
+  type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]),
+  visualizationHtml: z.string().nullable().optional(),
+  blanksAnswer: z.array(z.string()).nullable().optional()
 });
 
 const adminCurriculumExerciseListResponseSchema = z.object({
@@ -240,7 +244,9 @@ const adminCurriculumExerciseMutationResponseSchema = z.object({
     problemMarkdown: z.string().nullable().optional(),
     solutionCode: z.string().nullable().optional(),
     difficulty: z.enum(["easy", "medium", "hard"]),
-    type: z.enum(["mcq", "short", "long", "numerical"])
+    type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]),
+    visualizationHtml: z.string().nullable().optional(),
+    blanksAnswer: z.array(z.string()).nullable().optional()
   }),
   timestamp: z.string().datetime()
 });
@@ -913,9 +919,11 @@ export const createAdminCurriculumExercise = async (input: {
   question: string;
   solution: string;
   difficulty?: "easy" | "medium" | "hard";
-  type?: "mcq" | "short" | "long" | "numerical";
+  type?: "mcq" | "short" | "long" | "numerical" | "fill_in_blanks";
   problemMarkdown?: string;
   solutionCode?: string;
+  visualizationHtml?: string | null;
+  blanksAnswer?: string[] | null;
 }): Promise<AdminCurriculumExerciseCreateResponse> => {
   return fetchAdminJson({
     path: "/api/admin/content/exercises",
@@ -930,6 +938,8 @@ export const createAdminCurriculumExercise = async (input: {
       type: input.type,
       ...(input.problemMarkdown && { problemMarkdown: input.problemMarkdown }),
       ...(input.solutionCode && { solutionCode: input.solutionCode }),
+      ...(input.visualizationHtml !== undefined && { visualizationHtml: input.visualizationHtml }),
+      ...(input.blanksAnswer !== undefined && { blanksAnswer: input.blanksAnswer }),
     }
   });
 };
@@ -955,14 +965,18 @@ export const updateAdminCurriculumExercise = async ({
   question,
   solution,
   difficulty,
-  type
+  type,
+  visualizationHtml,
+  blanksAnswer
 }: {
   exerciseId: number;
   exerciseNumber: string;
   question: string;
   solution: string;
   difficulty?: "easy" | "medium" | "hard";
-  type?: "mcq" | "short" | "long" | "numerical";
+  type?: "mcq" | "short" | "long" | "numerical" | "fill_in_blanks";
+  visualizationHtml?: string | null;
+  blanksAnswer?: string[] | null;
 }): Promise<AdminCurriculumExerciseMutationResponse> => {
   return fetchAdminJson({
     path: `/api/admin/content/exercises/${exerciseId}/update`,
@@ -973,7 +987,9 @@ export const updateAdminCurriculumExercise = async ({
       question,
       solution,
       ...(difficulty ? { difficulty } : {}),
-      ...(type ? { type } : {})
+      ...(type ? { type } : {}),
+      ...(visualizationHtml !== undefined ? { visualizationHtml } : {}),
+      ...(blanksAnswer !== undefined ? { blanksAnswer } : {})
     }
   });
 };

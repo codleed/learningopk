@@ -119,9 +119,11 @@ export const curriculumExerciseCreateBodySchema = z
     question: z.string().trim().min(1),
     solution: z.string().trim().min(1),
     difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
-    type: z.enum(["mcq", "short", "long", "numerical"]).optional().default("short"),
+    type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]).optional().default("short"),
     problemMarkdown: z.string().trim().optional(),
-    solutionCode: z.string().trim().optional()
+    solutionCode: z.string().trim().optional(),
+    visualizationHtml: z.string().trim().optional(),
+    blanksAnswer: z.array(z.string()).optional()
   })
   .refine(
     (data) => {
@@ -148,6 +150,18 @@ export const curriculumExerciseCreateBodySchema = z
       message: "solutionCode is required when type is 'numerical'",
       path: ["solutionCode"]
     }
+  )
+  .refine(
+    (data) => {
+      if (data.type === "fill_in_blanks") {
+        return data.blanksAnswer !== undefined && data.blanksAnswer.length > 0;
+      }
+      return true;
+    },
+    {
+      message: "blanksAnswer is required when type is 'fill_in_blanks'",
+      path: ["blanksAnswer"]
+    }
   );
 
 export const curriculumExerciseUpdateBodySchema = z
@@ -156,9 +170,11 @@ export const curriculumExerciseUpdateBodySchema = z
     question: z.string().trim().min(1),
     solution: z.string().trim().min(1),
     difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
-    type: z.enum(["mcq", "short", "long", "numerical"]).optional().default("short"),
+    type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]).optional().default("short"),
     problemMarkdown: z.string().trim().optional(),
-    solutionCode: z.string().trim().optional()
+    solutionCode: z.string().trim().optional(),
+    visualizationHtml: z.string().trim().optional(),
+    blanksAnswer: z.array(z.string()).optional()
   })
   .refine(
     (data) => {
@@ -2523,7 +2539,13 @@ adminRouter.post("/content/exercises", requireSession, async (req, res) => {
         difficulty: parsedBody.data.difficulty,
         type: parsedBody.data.type,
         problemMarkdown: parsedBody.data.problemMarkdown?.trim() || null,
-        solutionCode: parsedBody.data.solutionCode?.trim() || null
+        solutionCode: parsedBody.data.solutionCode?.trim() || null,
+        visualizationHtml: parsedBody.data.type === "numerical"
+          ? (parsedBody.data.visualizationHtml?.trim() || null)
+          : null,
+        blanksAnswer: parsedBody.data.type === "fill_in_blanks"
+          ? (parsedBody.data.blanksAnswer ?? null)
+          : null
       })
       .returning({
         id: exercises.id,
@@ -2534,7 +2556,9 @@ adminRouter.post("/content/exercises", requireSession, async (req, res) => {
         difficulty: exercises.difficulty,
         type: exercises.type,
         problemMarkdown: exercises.problemMarkdown,
-        solutionCode: exercises.solutionCode
+        solutionCode: exercises.solutionCode,
+        visualizationHtml: exercises.visualizationHtml,
+        blanksAnswer: exercises.blanksAnswer
       });
 
     const exercise = insertedRows[0];
@@ -2599,7 +2623,11 @@ adminRouter.get("/content/exercises", requireSession, async (req, res) => {
       question: exercises.question,
       solution: exercises.solution,
       difficulty: exercises.difficulty,
-      type: exercises.type
+      type: exercises.type,
+      problemMarkdown: exercises.problemMarkdown,
+      solutionCode: exercises.solutionCode,
+      visualizationHtml: exercises.visualizationHtml,
+      blanksAnswer: exercises.blanksAnswer
     })
     .from(exercises)
     .innerJoin(chapters, eq(exercises.chapterId, chapters.id))
@@ -3353,6 +3381,8 @@ adminRouter.post("/content/exercises/:id/update", requireSession, async (req, re
       type: exercises.type,
       problemMarkdown: exercises.problemMarkdown,
       solutionCode: exercises.solutionCode,
+      visualizationHtml: exercises.visualizationHtml,
+      blanksAnswer: exercises.blanksAnswer,
       chapterTitle: chapters.title,
       subjectName: subjects.name
     })
@@ -3396,10 +3426,13 @@ adminRouter.post("/content/exercises/:id/update", requireSession, async (req, re
   }
 
   try {
-    // Determine if we need to clear problemMarkdown/solutionCode
-    // If changing FROM 'numerical' to another type, clear these fields
+    // Determine if we need to clear type-specific fields
+    // If changing FROM 'numerical' to another type, clear numerical fields
+    // If changing FROM 'fill_in_blanks' to another type, clear blanks fields
     const isChangingFromNumerical =
       exercise.type === "numerical" && parsedBody.data.type !== "numerical";
+    const isChangingFromBlanks =
+      exercise.type === "fill_in_blanks" && parsedBody.data.type !== "fill_in_blanks";
 
     const updatedRows = await db
       .update(exercises)
@@ -3415,7 +3448,17 @@ adminRouter.post("/content/exercises/:id/update", requireSession, async (req, re
           : (parsedBody.data.problemMarkdown?.trim() || null),
         solutionCode: isChangingFromNumerical
           ? null
-          : (parsedBody.data.solutionCode?.trim() || null)
+          : (parsedBody.data.solutionCode?.trim() || null),
+        visualizationHtml: isChangingFromNumerical
+          ? null
+          : parsedBody.data.type === "numerical"
+            ? (parsedBody.data.visualizationHtml?.trim() || null)
+            : null,
+        blanksAnswer: isChangingFromBlanks
+          ? null
+          : parsedBody.data.type === "fill_in_blanks"
+            ? (parsedBody.data.blanksAnswer ?? null)
+            : null
       })
       .where(eq(exercises.id, exercise.id))
       .returning({
@@ -3427,7 +3470,9 @@ adminRouter.post("/content/exercises/:id/update", requireSession, async (req, re
         difficulty: exercises.difficulty,
         type: exercises.type,
         problemMarkdown: exercises.problemMarkdown,
-        solutionCode: exercises.solutionCode
+        solutionCode: exercises.solutionCode,
+        visualizationHtml: exercises.visualizationHtml,
+        blanksAnswer: exercises.blanksAnswer
       });
     const updatedExercise = updatedRows[0];
     if (!updatedExercise) {

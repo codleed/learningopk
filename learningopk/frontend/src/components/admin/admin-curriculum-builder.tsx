@@ -46,7 +46,7 @@ type AdminCurriculumBuilderProps = {
 type CurriculumFormTab = "board" | "class" | "subject" | "chapter" | "exercise";
 type EntityModeTab = "add" | "manage";
 type ChapterModeTab = "add" | "edit";
-type ExerciseType = "short" | "mcq" | "long" | "numerical";
+type ExerciseType = "short" | "mcq" | "long" | "numerical" | "fill_in_blanks";
 
 const toSlug = (value: string) =>
   value
