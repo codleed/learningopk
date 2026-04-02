@@ -4,12 +4,6 @@ import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  FileText,
-  MessageSquare,
-  TextCursorInput,
-  Atom,
-} from "lucide-react";
 
 import {
   AdminBreadcrumb,
@@ -21,6 +15,11 @@ import {
   ExerciseSectionHeader,
   ExerciseSectionBody,
   ExerciseTypeTabs,
+  SECTION_TO_API_TYPE,
+  API_TYPE_TO_SECTION,
+  SECTION_META,
+  panelVariants,
+  panelTransition,
 } from "@/components/admin";
 import type { ExerciseSectionType } from "@/components/admin";
 import { Select } from "@/components/ui/select";
@@ -36,62 +35,6 @@ import {
   type AdminCurriculumExerciseRead,
 } from "@/lib/admin-api";
 import { useToast } from "@/components/ui/toast";
-
-/* ─── Type mapping ─── */
-
-const SECTION_TO_API_TYPE: Record<ExerciseSectionType, "long" | "short" | "fill_in_blanks" | "numerical"> = {
-  long: "long",
-  short: "short",
-  blanks: "fill_in_blanks",
-  physics: "numerical",
-};
-
-const API_TYPE_TO_SECTION: Record<string, ExerciseSectionType> = {
-  long: "long",
-  short: "short",
-  fill_in_blanks: "blanks",
-  numerical: "physics",
-  // MCQ maps to long as the closest equivalent in the new tab system
-  mcq: "long",
-};
-
-const SECTION_META: Record<ExerciseSectionType, { icon: React.ReactNode; title: string; description: string }> = {
-  long: {
-    icon: <FileText />,
-    title: "Long Questions",
-    description: "Detailed answers with full working and explanations",
-  },
-  short: {
-    icon: <MessageSquare />,
-    title: "Short Questions",
-    description: "Brief, focused answers — definitions, formulas, short derivations",
-  },
-  blanks: {
-    icon: <TextCursorInput />,
-    title: "Fill in the Blanks",
-    description: "Complete the sentence with the correct term or value",
-  },
-  physics: {
-    icon: <Atom />,
-    title: "Physics Word Problems",
-    description: "Numerical problems with optional interactive visualization",
-  },
-};
-
-/* ─── Animation variants ─── */
-
-const panelVariants = {
-  initial: { opacity: 0, y: 6, scale: 0.995 },
-  animate: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, y: -4, scale: 0.995 },
-};
-
-const panelTransition = {
-  type: "spring" as const,
-  stiffness: 400,
-  damping: 30,
-  mass: 0.8,
-};
 
 /* ─── Props ─── */
 
@@ -158,16 +101,25 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
     if (!chapterId || Number.isNaN(parsedChapterId)) return undefined;
 
     return async (file: File) => {
-      const response = await uploadAdminChapterSummaryMedia({
-        chapterId: parsedChapterId,
-        file,
-      });
-      return {
-        url: response.asset.objectUrl,
-        markdown: response.markdown,
-      };
+      try {
+        const response = await uploadAdminChapterSummaryMedia({
+          chapterId: parsedChapterId,
+          file,
+        });
+        return {
+          url: response.asset.objectUrl,
+          markdown: response.markdown,
+        };
+      } catch (error) {
+        pushToast({
+          title: "Upload failed",
+          description: error instanceof Error ? error.message : "Failed to upload image",
+          tone: "error",
+        });
+        throw error;
+      }
     };
-  }, [chapterId]);
+  }, [chapterId, pushToast]);
 
   /* ── Handlers ── */
 
@@ -455,6 +407,10 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeSection}
+                id={`exercise-panel-${activeSection}`}
+                role="tabpanel"
+                aria-labelledby={`exercise-tab-${activeSection}`}
+                tabIndex={0}
                 variants={panelVariants}
                 initial="initial"
                 animate="animate"

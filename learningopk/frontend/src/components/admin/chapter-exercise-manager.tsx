@@ -19,6 +19,11 @@ import {
   ExerciseSectionHeader,
   ExerciseSectionBody,
   ExerciseTypeTabs,
+  SECTION_TO_API_TYPE,
+  API_TYPE_TO_SECTION,
+  SECTION_META,
+  panelVariants,
+  panelTransition,
 } from "@/components/admin";
 import type { ExerciseSectionType } from "@/components/admin";
 import {
@@ -41,46 +46,6 @@ type ChapterExerciseManagerProps = {
   chapterId: number;
 };
 
-/** Maps UI section types to API exercise type values */
-const SECTION_TO_API_TYPE: Record<ExerciseSectionType, "long" | "short" | "fill_in_blanks" | "numerical"> = {
-  long: "long",
-  short: "short",
-  blanks: "fill_in_blanks",
-  physics: "numerical",
-};
-
-const API_TYPE_TO_SECTION: Record<string, ExerciseSectionType> = {
-  long: "long",
-  short: "short",
-  fill_in_blanks: "blanks",
-  numerical: "physics",
-  mcq: "long",
-};
-
-/** Section metadata for headers */
-const SECTION_META: Record<ExerciseSectionType, { icon: React.ReactNode; title: string; description: string }> = {
-  long: {
-    icon: <FileText />,
-    title: "Long Questions",
-    description: "Detailed answers with full working and explanations",
-  },
-  short: {
-    icon: <MessageSquare />,
-    title: "Short Questions",
-    description: "Brief, focused answers — definitions, formulas, short derivations",
-  },
-  blanks: {
-    icon: <TextCursorInput />,
-    title: "Fill in the Blanks",
-    description: "Complete the sentence with the correct term or value",
-  },
-  physics: {
-    icon: <Atom />,
-    title: "Physics Word Problems",
-    description: "Numerical problems with optional interactive visualization",
-  },
-};
-
 type ExerciseFormData = {
   exerciseNumber: string;
   question: string;
@@ -97,21 +62,6 @@ const initialFormData: ExerciseFormData = {
   difficulty: "medium",
   visualizationHtml: "",
   blanksAnswer: [],
-};
-
-/* ── Animation variants ── */
-
-const panelVariants = {
-  initial: { opacity: 0, y: 6, scale: 0.995 },
-  animate: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, y: -4, scale: 0.995 },
-};
-
-const panelTransition = {
-  type: "spring" as const,
-  stiffness: 400,
-  damping: 30,
-  mass: 0.8,
 };
 
 const typeFilters: { id: ExerciseFilterType; label: string; icon: typeof Brain }[] = [
@@ -159,16 +109,25 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
 
   const handleImageUpload = useMemo(() => {
     return async (file: File) => {
-      const response = await uploadAdminChapterSummaryMedia({
-        chapterId,
-        file,
-      });
-      return {
-        url: response.asset.objectUrl,
-        markdown: response.markdown,
-      };
+      try {
+        const response = await uploadAdminChapterSummaryMedia({
+          chapterId,
+          file,
+        });
+        return {
+          url: response.asset.objectUrl,
+          markdown: response.markdown,
+        };
+      } catch (error) {
+        pushToast({
+          title: "Upload failed",
+          description: error instanceof Error ? error.message : "Failed to upload image",
+          tone: "error",
+        });
+        throw error;
+      }
     };
-  }, [chapterId]);
+  }, [chapterId, pushToast]);
 
   /* ── Derived ── */
 
@@ -500,6 +459,10 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeSection}
+                  id={`exercise-panel-${activeSection}`}
+                  role="tabpanel"
+                  aria-labelledby={`exercise-tab-${activeSection}`}
+                  tabIndex={0}
                   variants={panelVariants}
                   initial="initial"
                   animate="animate"

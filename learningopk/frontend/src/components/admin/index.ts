@@ -25,3 +25,10 @@ export type {
 } from "./exercise-section-card";
 export { ExerciseTypeTabs } from "./exercise-type-tabs";
 export type { ExerciseTypeTabsProps } from "./exercise-type-tabs";
+export {
+  SECTION_TO_API_TYPE,
+  API_TYPE_TO_SECTION,
+  SECTION_META,
+  panelVariants,
+  panelTransition,
+} from "./exercise-constants";

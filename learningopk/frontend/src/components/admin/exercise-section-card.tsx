@@ -44,7 +44,7 @@ export function ExerciseSectionCard({
   return (
     <div
       data-type={type}
-      data-active={active || undefined}
+      data-active={active ? "true" : undefined}
       className={cn("exercise-section-card", className)}
     >
       {children}

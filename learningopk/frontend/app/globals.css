@@ -246,6 +246,8 @@
 .exercise-section-stagger > *:nth-child(6) { animation-delay: 250ms; }
 .exercise-section-stagger > *:nth-child(7) { animation-delay: 300ms; }
 .exercise-section-stagger > *:nth-child(8) { animation-delay: 350ms; }
+/* Fallback for children 9+: no stagger delay, just animate in immediately */
+.exercise-section-stagger > *:nth-child(n+9) { animation-delay: 400ms; }
 
 .animate-exercise-content-enter {
   animation: exercise-content-enter 250ms var(--ease-out-expo) forwards;

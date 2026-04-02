@@ -98,6 +98,7 @@ export function ExerciseTypeTabs({
             key={tab.type}
             type="button"
             role="tab"
+            id={`exercise-tab-${tab.type}`}
             aria-selected={isActive}
             aria-controls={`exercise-panel-${tab.type}`}
             onClick={() => onValueChange(tab.type)}
