@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { 
   Plus, Pencil, Trash2, Loader2, Brain, Filter, 
-  X, CheckCircle, Code, Hash, AlignLeft, ListChecks, Binary
+  X, CheckCircle, Code, Hash, AlignLeft, ListChecks, Binary, TextCursorInput
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,10 @@ import {
 } from "@/lib/admin-api";
 import type { AdminCurriculumExerciseRead } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
+import { NumericalVisualizationEditor } from "@/components/admin/numerical-visualization-editor";
+import { FillInBlanksEditor } from "@/components/admin/fill-in-blanks-editor";
 
-type ExerciseType = "all" | "mcq" | "short" | "long" | "numerical";
+type ExerciseType = "all" | "mcq" | "short" | "long" | "numerical" | "fill_in_blanks";
 
 type ChapterExerciseManagerProps = {
   chapterId: number;
@@ -34,9 +36,11 @@ type ExerciseFormData = {
   question: string;
   solution: string;
   difficulty: "easy" | "medium" | "hard";
-  type: "mcq" | "short" | "long" | "numerical";
+  type: "mcq" | "short" | "long" | "numerical" | "fill_in_blanks";
   problemMarkdown: string;
   solutionCode: string;
+  visualizationHtml: string;
+  blanksAnswer: string[];
 };
 
 const initialFormData: ExerciseFormData = {
@@ -47,6 +51,8 @@ const initialFormData: ExerciseFormData = {
   type: "short",
   problemMarkdown: "",
   solutionCode: "",
+  visualizationHtml: "",
+  blanksAnswer: [],
 };
 
 const typeFilters: { id: ExerciseType; label: string; icon: typeof Brain }[] = [
@@ -55,6 +61,7 @@ const typeFilters: { id: ExerciseType; label: string; icon: typeof Brain }[] = [
   { id: "mcq", label: "MCQ", icon: ListChecks },
   { id: "long", label: "Long", icon: AlignLeft },
   { id: "numerical", label: "Numerical", icon: Hash },
+  { id: "fill_in_blanks", label: "Fill Blanks", icon: TextCursorInput },
 ];
 
 const exerciseTypeIcons: Record<string, typeof Brain> = {
@@ -62,6 +69,7 @@ const exerciseTypeIcons: Record<string, typeof Brain> = {
   mcq: ListChecks,
   long: AlignLeft,
   numerical: Hash,
+  fill_in_blanks: TextCursorInput,
 };
 
 export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProps) {
@@ -118,6 +126,8 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
           solution: formData.solution,
           difficulty: formData.difficulty,
           type: formData.type,
+          visualizationHtml: formData.type === "numerical" ? formData.visualizationHtml || undefined : undefined,
+          blanksAnswer: formData.type === "fill_in_blanks" ? formData.blanksAnswer : undefined,
         });
         setExercises((prev) =>
           prev.map((e) => (e.id === editingExercise.id ? { ...e, ...updated.exercise } : e))
@@ -136,6 +146,8 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
           type: formData.type,
           problemMarkdown: formData.type === "numerical" ? formData.problemMarkdown : undefined,
           solutionCode: formData.type === "numerical" ? formData.solutionCode : undefined,
+          visualizationHtml: formData.type === "numerical" ? formData.visualizationHtml || undefined : undefined,
+          blanksAnswer: formData.type === "fill_in_blanks" ? formData.blanksAnswer : undefined,
         });
         setExercises((prev) => [
           ...prev,
@@ -182,6 +194,8 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
       type: exercise.type,
       problemMarkdown: exercise.problemMarkdown || "",
       solutionCode: exercise.solutionCode || "",
+      visualizationHtml: exercise.visualizationHtml || "",
+      blanksAnswer: exercise.blanksAnswer || [],
     });
     setShowForm(true);
   };
@@ -235,6 +249,8 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
         return "warning";
       case "numerical":
         return "neutral";
+      case "fill_in_blanks":
+        return "info";
       default:
         return "neutral";
     }
@@ -363,13 +379,14 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                   value={formData.type}
                   onChange={(e) => setFormData(prev => ({ 
                     ...prev, 
-                    type: e.target.value as "mcq" | "short" | "long" | "numerical" 
+                    type: e.target.value as "mcq" | "short" | "long" | "numerical" | "fill_in_blanks"
                   }))}
                 >
                   <option value="short">Short Answer</option>
                   <option value="mcq">MCQ</option>
                   <option value="long">Long Answer</option>
                   <option value="numerical">Numerical</option>
+                  <option value="fill_in_blanks">Fill in the Blanks</option>
                 </Select>
               </div>
               <div className="space-y-2">
@@ -444,6 +461,32 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                     className="resize-none font-mono text-sm bg-muted/50"
                   />
                 </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Interactive Visualization (optional)</label>
+                  <p className="text-xs text-muted-foreground">
+                    Create an HTML/CSS/JS visualization that students can interact with
+                  </p>
+                  <NumericalVisualizationEditor
+                    value={formData.visualizationHtml}
+                    onChange={(value) => setFormData(prev => ({ ...prev, visualizationHtml: value }))}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Fill in the blanks type specific fields */}
+            {formData.type === "fill_in_blanks" && (
+              <div className="space-y-4 p-4 rounded-lg bg-muted/30 border border-border">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <TextCursorInput className="h-4 w-4" />
+                  Fill in the Blanks
+                </div>
+                <FillInBlanksEditor
+                  questionValue={formData.question}
+                  onQuestionChange={(value) => setFormData(prev => ({ ...prev, question: value }))}
+                  answersValue={formData.blanksAnswer}
+                  onAnswersChange={(answers) => setFormData(prev => ({ ...prev, blanksAnswer: answers }))}
+                />
               </div>
             )}
           </div>

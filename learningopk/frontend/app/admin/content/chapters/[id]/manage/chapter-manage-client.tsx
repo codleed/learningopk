@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { BookOpen, ClipboardList, Layers, Brain, Save, Eye, EyeOff, Loader2 } from "lucide-react";
+import { BookOpen, ClipboardList, Layers, Brain, Save, Loader2 } from "lucide-react";
 
 import { AdminBreadcrumb } from "@/components/admin/breadcrumb";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CodeMirrorMarkdownEditor } from "@/components/admin/codemirror-markdown-editor";
+import { GithubMarkdownEditor } from "@/components/admin/github-markdown-editor";
 import { useToast } from "@/components/ui/toast";
-import { getAdminChapterSummary, updateAdminChapterSummary } from "@/lib/admin-api";
+import { getAdminChapterSummary, updateAdminChapterSummary, uploadAdminChapterSummaryMedia } from "@/lib/admin-api";
 import type { AdminChapterSummaryResponse } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +44,6 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
   const [originalSummary, setOriginalSummary] = useState("");
   const [isLoadingSummary, setIsLoadingSummary] = useState(true);
   const [isSavingSummary, setIsSavingSummary] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
 
   // Fetch chapter summary
   useEffect(() => {
@@ -89,6 +88,14 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
       setIsSavingSummary(false);
     }
   }, [chapterId, summary, pushToast]);
+
+  const handleImageUpload = useCallback(async (file: File) => {
+    const response = await uploadAdminChapterSummaryMedia({ chapterId, file });
+    return {
+      url: response.asset.objectUrl,
+      markdown: response.markdown,
+    };
+  }, [chapterId]);
 
   const hasUnsavedChanges = summary !== originalSummary;
 
@@ -154,31 +161,13 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
                 <div className="w-1 h-8 bg-gradient-to-b from-[var(--primary)] to-[var(--primary-hover)] rounded-full" />
                 <div>
                   <h2 className="text-xl font-semibold tracking-tight">Chapter Summary</h2>
-                  <p className="text-sm text-muted-foreground">Write or edit the chapter summary in Markdown</p>
+                  <p className="text-sm text-muted-foreground">Write or edit the chapter content in Markdown</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 {hasUnsavedChanges && (
                   <Badge variant="warning" className="animate-pulse">Unsaved changes</Badge>
                 )}
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setShowPreview(!showPreview)}
-                  className="gap-2"
-                >
-                  {showPreview ? (
-                    <>
-                      <EyeOff className="h-4 w-4" />
-                      Hide Preview
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="h-4 w-4" />
-                      Show Preview
-                    </>
-                  )}
-                </Button>
                 <Button
                   variant="primary"
                   size="sm"
@@ -208,33 +197,13 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
                 </CardContent>
               </Card>
             ) : (
-              <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-                <div className="p-6 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--primary)]" />
-                    <CardTitle className="text-base">Markdown Content</CardTitle>
-                  </div>
-                  <CodeMirrorMarkdownEditor
-                    value={summary}
-                    onChange={setSummary}
-                    placeholderText="Write chapter summary in markdown..."
-                    className="min-h-96"
-                  />
-                  {showPreview && (
-                    <div className="mt-4 p-4 rounded-lg border border-border bg-muted/30">
-                      <h3 className="text-sm font-medium mb-2 text-muted-foreground flex items-center gap-2">
-                        <Eye className="h-4 w-4" />
-                        Preview
-                      </h3>
-                      <div className="prose prose-sm max-w-none dark:prose-invert">
-                        <pre className="whitespace-pre-wrap text-sm leading-relaxed">
-                          {summary || "No content yet..."}
-                        </pre>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <GithubMarkdownEditor
+                value={summary}
+                onChange={setSummary}
+                onImageUpload={handleImageUpload}
+                placeholder="Write chapter content in markdown..."
+                minHeight={500}
+              />
             )}
           </div>
         )}
