@@ -90,12 +90,21 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
   }, [chapterId, summary, pushToast]);
 
   const handleImageUpload = useCallback(async (file: File) => {
-    const response = await uploadAdminChapterSummaryMedia({ chapterId, file });
-    return {
-      url: response.asset.objectUrl,
-      markdown: response.markdown,
-    };
-  }, [chapterId]);
+    try {
+      const response = await uploadAdminChapterSummaryMedia({ chapterId, file });
+      return {
+        url: response.asset.objectUrl,
+        markdown: response.markdown,
+      };
+    } catch (error) {
+      pushToast({
+        title: "Image upload failed",
+        description: error instanceof Error ? error.message : "Failed to upload image. Please try again.",
+        tone: "error",
+      });
+      throw error;
+    }
+  }, [chapterId, pushToast]);
 
   const hasUnsavedChanges = summary !== originalSummary;
 

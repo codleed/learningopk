@@ -44,6 +44,7 @@ type GithubMarkdownEditorProps = {
   value: string;
   onChange: (value: string) => void;
   onImageUpload?: (file: File) => Promise<ImageUploadResult>;
+  onImageUploadError?: (error: unknown) => void;
   disabled?: boolean;
   placeholder?: string;
   className?: string;
@@ -356,6 +357,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
       value,
       onChange,
       onImageUpload,
+      onImageUploadError,
       disabled = false,
       placeholder = "Write chapter content in markdown...",
       className,
@@ -425,17 +427,19 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
             const updated = currentVal.slice(0, placeholderIndex) + result.markdown + currentVal.slice(placeholderIndex + placeholderText.length);
             updateValue(updated);
           }
-        } catch {
-          // Remove placeholder on failure
+        } catch (error) {
+          // Remove placeholder on failure and notify consumer
           const currentVal = textareaRef.current?.value ?? newValue;
           const placeholderIndex = currentVal.indexOf(placeholderText);
           if (placeholderIndex !== -1) {
             const updated = currentVal.slice(0, placeholderIndex) + currentVal.slice(placeholderIndex + placeholderText.length);
             updateValue(updated);
           }
+          console.error("[GithubMarkdownEditor] Image upload failed:", error);
+          onImageUploadError?.(error);
         }
       },
-      [onImageUpload, value, updateValue],
+      [onImageUpload, onImageUploadError, value, updateValue],
     );
 
     const handleFilesFromInput = useCallback(
