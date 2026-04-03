@@ -16,7 +16,7 @@ import {
   type SupportedImageMimeType,
   uploadImageBuffer
 } from "../lib/minio.js";
-import { errorResponse, successResponse } from "../lib/response.js";
+import { errorResponse } from "../lib/response.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { createSingleImageUploadMiddleware } from "../middleware/image-upload.js";
 
@@ -132,7 +132,7 @@ chapterMediaRouter.post("/chapters/:chapterId/summary-media", requireSession, up
       return;
     }
 
-    res.status(201).json(successResponse({
+    res.status(201).json({
       asset: {
         id: asset.id,
         chapterId: asset.chapterId,
@@ -142,7 +142,7 @@ chapterMediaRouter.post("/chapters/:chapterId/summary-media", requireSession, up
         createdAt: asset.createdAt.toISOString()
       },
       markdown: `![Chapter summary media](${asset.objectUrl})`
-    }));
+    });
     shouldCleanupNewObject = false;
   } catch (error) {
     if (shouldCleanupNewObject) {
@@ -211,11 +211,11 @@ chapterMediaRouter.post("/chapters/:chapterId/presigned-upload", requireSession,
 
     const publicUrl = buildPublicObjectUrl({ objectKey });
 
-    res.status(200).json(successResponse({
+    res.status(200).json({
       presignedUrl,
       objectKey,
       publicUrl
-    }));
+    });
   } catch (error) {
     console.error("Failed to generate presigned upload URL:", error);
     res.status(500).json(errorResponse("Failed to generate presigned upload URL.", "INTERNAL_ERROR"));
@@ -291,7 +291,7 @@ chapterMediaRouter.post("/chapters/:chapterId/media/confirm", requireSession, as
       return;
     }
 
-    res.status(201).json(successResponse({
+    res.status(201).json({
       asset: {
         id: asset.id,
         chapterId: asset.chapterId,
@@ -301,7 +301,7 @@ chapterMediaRouter.post("/chapters/:chapterId/media/confirm", requireSession, as
         createdAt: asset.createdAt.toISOString()
       },
       markdown: `![Chapter summary media](${asset.objectUrl})`
-    }));
+    });
   } catch (error) {
     console.error("Failed to confirm chapter summary media upload:", error);
     res.status(500).json(errorResponse("Failed to confirm chapter summary media upload.", "INTERNAL_ERROR"));
@@ -359,7 +359,7 @@ chapterMediaRouter.get("/chapters/:chapterId/media", requireSession, async (req,
       createdAt: row.createdAt.toISOString()
     }));
 
-    res.status(200).json(successResponse({ media }));
+    res.status(200).json({ media });
   } catch (error) {
     console.error("Failed to list chapter summary media:", error);
     res.status(500).json(errorResponse("Failed to list chapter summary media.", "INTERNAL_ERROR"));

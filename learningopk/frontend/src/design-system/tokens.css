@@ -48,6 +48,27 @@
 
   /* Card gradient border */
   --card-gradient: conic-gradient(from 180deg at 50% 50%, #6366F1, #38BDF8, #22C55E, #F59E0B, #6366F1);
+
+  /* ── Exercise Section Accents (Dark) ── */
+  --exercise-long:       #8B5CF6;
+  --exercise-long-light: rgba(139, 92, 246, 0.12);
+  --exercise-long-border: rgba(139, 92, 246, 0.25);
+  --exercise-long-bg:    rgba(139, 92, 246, 0.06);
+
+  --exercise-short:       #22C55E;
+  --exercise-short-light: rgba(34, 197, 94, 0.12);
+  --exercise-short-border: rgba(34, 197, 94, 0.25);
+  --exercise-short-bg:    rgba(34, 197, 94, 0.06);
+
+  --exercise-blanks:       #F59E0B;
+  --exercise-blanks-light: rgba(245, 158, 11, 0.12);
+  --exercise-blanks-border: rgba(245, 158, 11, 0.25);
+  --exercise-blanks-bg:    rgba(245, 158, 11, 0.06);
+
+  --exercise-physics:       #38BDF8;
+  --exercise-physics-light: rgba(56, 189, 248, 0.12);
+  --exercise-physics-border: rgba(56, 189, 248, 0.25);
+  --exercise-physics-bg:    rgba(56, 189, 248, 0.06);
 }
 
 /* ── LIGHT THEME ── */
@@ -95,6 +116,27 @@
 
   /* Card gradient border */
   --card-gradient: conic-gradient(from 180deg at 50% 50%, #4F52E8, #0284C7, #16A34A, #D97706, #4F52E8);
+
+  /* ── Exercise Section Accents (Light) ── */
+  --exercise-long:       #7C3AED;
+  --exercise-long-light: rgba(124, 58, 237, 0.08);
+  --exercise-long-border: rgba(124, 58, 237, 0.20);
+  --exercise-long-bg:    rgba(124, 58, 237, 0.04);
+
+  --exercise-short:       #16A34A;
+  --exercise-short-light: rgba(22, 163, 74, 0.08);
+  --exercise-short-border: rgba(22, 163, 74, 0.20);
+  --exercise-short-bg:    rgba(22, 163, 74, 0.04);
+
+  --exercise-blanks:       #D97706;
+  --exercise-blanks-light: rgba(217, 119, 6, 0.08);
+  --exercise-blanks-border: rgba(217, 119, 6, 0.20);
+  --exercise-blanks-bg:    rgba(217, 119, 6, 0.04);
+
+  --exercise-physics:       #0284C7;
+  --exercise-physics-light: rgba(2, 132, 199, 0.08);
+  --exercise-physics-border: rgba(2, 132, 199, 0.20);
+  --exercise-physics-bg:    rgba(2, 132, 199, 0.04);
 }
 
 /* ── SHARED TOKENS ── */

@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, HelpCircle, Layers, FileQuestion } from 'lucide-react';
+import { Atom, BookOpen, HelpCircle, Layers, FileQuestion } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AIContext } from '../types';
 
@@ -14,6 +14,7 @@ const tabIcons = {
   exercises: HelpCircle,
   flashcards: Layers,
   quiz: FileQuestion,
+  illustration: Atom,
 } as const;
 
 const tabLabels = {
@@ -21,6 +22,7 @@ const tabLabels = {
   exercises: 'Exercises',
   flashcards: 'Flashcards',
   quiz: 'Quiz',
+  illustration: 'Illustration',
 } as const;
 
 export function AIContextChip({ context, className }: AIContextChipProps) {

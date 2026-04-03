@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 
 import {
   AdminBreadcrumb,
@@ -10,19 +11,32 @@ import {
   AdminFormCard,
   AdminFormField,
   AdminActionButton,
+  ExerciseSectionCard,
+  ExerciseSectionHeader,
+  ExerciseSectionBody,
+  ExerciseTypeTabs,
+  SECTION_TO_API_TYPE,
+  API_TYPE_TO_SECTION,
+  SECTION_META,
+  panelVariants,
+  panelTransition,
 } from "@/components/admin";
+import type { ExerciseSectionType } from "@/components/admin";
 import { Select } from "@/components/ui/select";
-import { CodeMirrorMarkdownEditor } from "@/components/admin/codemirror-markdown-editor";
+import { Badge } from "@/components/ui/badge";
+import { GithubMarkdownEditor } from "@/components/admin/github-markdown-editor";
 import { FillInBlanksEditor } from "@/components/admin/fill-in-blanks-editor";
 import { NumericalVisualizationEditor } from "@/components/admin/numerical-visualization-editor";
 import {
   updateAdminCurriculumExercise,
   deleteAdminCurriculumExercise,
+  uploadAdminChapterSummaryMedia,
   type AdminCurriculumBoard,
   type AdminCurriculumExerciseRead,
 } from "@/lib/admin-api";
 import { useToast } from "@/components/ui/toast";
-import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
+
+/* ─── Props ─── */
 
 interface EditExerciseFormProps {
   exercise: AdminCurriculumExerciseRead & {
@@ -38,6 +52,8 @@ interface ChapterOption {
   id: number;
   label: string;
 }
+
+/* ─── Component ─── */
 
 export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
   const router = useRouter();
@@ -55,24 +71,63 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
     )
   );
 
+  /* ── Form state ── */
   const [chapterId, setChapterId] = useState<string>(exercise.chapterId.toString());
   const [exerciseNumber, setExerciseNumber] = useState<string>(exercise.exerciseNumber);
-  const [type, setType] = useState<string>(exercise.type);
+  const [activeSection, setActiveSection] = useState<ExerciseSectionType>(
+    API_TYPE_TO_SECTION[exercise.type] ?? "long"
+  );
   const [difficulty, setDifficulty] = useState<string>(exercise.difficulty);
   const [question, setQuestion] = useState<string>(exercise.question);
   const [solution, setSolution] = useState<string>(exercise.solution);
-  const [showQuestionPreview, setShowQuestionPreview] = useState<boolean>(false);
-  const [showSolutionPreview, setShowSolutionPreview] = useState<boolean>(false);
   const [blanksAnswer, setBlanksAnswer] = useState<string[]>(exercise.blanksAnswer ?? []);
   const [visualizationHtml, setVisualizationHtml] = useState<string>(exercise.visualizationHtml ?? "");
 
-  // Errors
+  /* ── Errors ── */
   const [chapterError, setChapterError] = useState<string>("");
   const [exerciseNumberError, setExerciseNumberError] = useState<string>("");
   const [questionError, setQuestionError] = useState<string>("");
   const [solutionError, setSolutionError] = useState<string>("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /* ── Derived ── */
+  const apiType = SECTION_TO_API_TYPE[activeSection];
+
+  /* ── Image upload handler ── */
+
+  const handleImageUpload = useMemo(() => {
+    const parsedChapterId = parseInt(chapterId, 10);
+    if (!chapterId || Number.isNaN(parsedChapterId)) return undefined;
+
+    return async (file: File) => {
+      try {
+        const response = await uploadAdminChapterSummaryMedia({
+          chapterId: parsedChapterId,
+          file,
+        });
+        return {
+          url: response.asset.objectUrl,
+          markdown: response.markdown,
+        };
+      } catch (error) {
+        pushToast({
+          title: "Upload failed",
+          description: error instanceof Error ? error.message : "Failed to upload image",
+          tone: "error",
+        });
+        throw error;
+      }
+    };
+  }, [chapterId, pushToast]);
+
+  /* ── Handlers ── */
+
+  const handleSectionChange = useCallback((section: ExerciseSectionType) => {
+    setActiveSection(section);
+    setQuestionError("");
+    setSolutionError("");
+  }, []);
 
   const validateForm = (): boolean => {
     let hasError = false;
@@ -97,7 +152,7 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
       hasError = true;
     }
 
-    if (type === "fill_in_blanks" && blanksAnswer.length === 0) {
+    if (apiType === "fill_in_blanks" && blanksAnswer.length === 0) {
       setQuestionError("At least one {{blank}} answer is required");
       hasError = true;
     }
@@ -121,9 +176,11 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
         question: question.trim(),
         solution: solution.trim(),
         difficulty: difficulty as "easy" | "medium" | "hard",
-        type: type as "mcq" | "short" | "long" | "numerical" | "fill_in_blanks",
-        visualizationHtml: type === "numerical" ? visualizationHtml : undefined,
-        blanksAnswer: type === "fill_in_blanks" ? blanksAnswer : undefined,
+        type: apiType,
+        problemMarkdown: apiType === "numerical" ? question.trim() : undefined,
+        solutionCode: apiType === "numerical" ? solution.trim() : undefined,
+        visualizationHtml: apiType === "numerical" ? visualizationHtml : undefined,
+        blanksAnswer: apiType === "fill_in_blanks" ? blanksAnswer : undefined,
       });
 
       pushToast({
@@ -168,6 +225,97 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
     }
   };
 
+  /* ── Shared editor blocks ── */
+
+  const renderQuestionEditor = () => {
+    if (activeSection === "blanks") {
+      return (
+        <AdminFormField
+          id="exercise-question"
+          label="Question"
+          required
+          error={questionError}
+        >
+          <FillInBlanksEditor
+            questionValue={question}
+            onQuestionChange={(value) => {
+              setQuestion(value);
+              setQuestionError("");
+            }}
+            answersValue={blanksAnswer}
+            onAnswersChange={setBlanksAnswer}
+          />
+        </AdminFormField>
+      );
+    }
+
+    return (
+      <AdminFormField
+        id="exercise-question"
+        label="Question"
+        required
+        error={questionError}
+      >
+        <GithubMarkdownEditor
+          value={question}
+          onChange={(value) => {
+            setQuestion(value);
+            setQuestionError("");
+          }}
+          onImageUpload={handleImageUpload}
+          placeholder="Enter your question in markdown..."
+          minHeight={activeSection === "short" ? 128 : 200}
+        />
+      </AdminFormField>
+    );
+  };
+
+  const renderSolutionEditor = () => (
+    <AdminFormField
+      id="exercise-solution"
+      label="Solution"
+      required
+      error={solutionError}
+    >
+      <GithubMarkdownEditor
+        value={solution}
+        onChange={(value) => {
+          setSolution(value);
+          setSolutionError("");
+        }}
+        onImageUpload={handleImageUpload}
+        placeholder="Enter the solution in markdown..."
+        minHeight={activeSection === "short" ? 128 : 200}
+      />
+    </AdminFormField>
+  );
+
+  const renderVisualizationEditor = () => {
+    if (activeSection !== "physics") return null;
+
+    return (
+      <AdminFormField
+        id="exercise-visualization"
+        label="Illustration (HTML/CSS/JS)"
+      >
+        <NumericalVisualizationEditor
+          value={visualizationHtml}
+          onChange={setVisualizationHtml}
+        />
+      </AdminFormField>
+    );
+  };
+
+  const renderSectionContent = () => (
+    <ExerciseSectionBody>
+      {renderQuestionEditor()}
+      {renderSolutionEditor()}
+      {renderVisualizationEditor()}
+    </ExerciseSectionBody>
+  );
+
+  const meta = SECTION_META[activeSection];
+
   return (
     <div className="space-y-6">
       <AdminBreadcrumb
@@ -184,6 +332,7 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
         subtitle={`${exercise.boardName} / ${exercise.className} / ${exercise.subjectName} / ${exercise.chapterTitle}`}
       />
 
+      {/* ── Metadata Card ── */}
       <AdminFormCard>
         <form onSubmit={handleSubmit} className="space-y-6">
           <AdminFormField
@@ -227,142 +376,67 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
                   setExerciseNumberError("");
                 }}
                 placeholder="e.g., 3.1"
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-accent-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
               />
             </AdminFormField>
 
-            <AdminFormField id="exercise-type" label="Type" required>
+            <AdminFormField id="exercise-difficulty" label="Difficulty" required>
               <Select
-                id="exercise-type"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
+                id="exercise-difficulty"
+                value={difficulty}
+                onChange={(e) => setDifficulty(e.target.value)}
               >
-                <option value="mcq">Multiple Choice (MCQ)</option>
-                <option value="short">Short Answer</option>
-                <option value="long">Long Answer</option>
-                <option value="numerical">Numerical</option>
-                <option value="fill_in_blanks">Fill in the Blanks</option>
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
               </Select>
             </AdminFormField>
           </div>
 
-          <AdminFormField id="exercise-difficulty" label="Difficulty" required>
-            <Select
-              id="exercise-difficulty"
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value)}
-            >
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </Select>
-          </AdminFormField>
-
-          {type === "fill_in_blanks" ? (
+          {/* ── Exercise Type Tabs ── */}
+          <div className="space-y-4">
             <AdminFormField
-              id="exercise-question"
-              label="Question"
+              id="exercise-type"
+              label="Exercise Type"
               required
-              error={questionError}
             >
-              <FillInBlanksEditor
-                questionValue={question}
-                onQuestionChange={(value) => {
-                  setQuestion(value);
-                  setQuestionError("");
-                }}
-                answersValue={blanksAnswer}
-                onAnswersChange={setBlanksAnswer}
+              <ExerciseTypeTabs
+                value={activeSection}
+                onValueChange={handleSectionChange}
               />
             </AdminFormField>
-          ) : (
-            <AdminFormField
-              id="exercise-question"
-              label="Question"
-              required
-              error={questionError}
-            >
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowQuestionPreview(!showQuestionPreview)}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-accent/50"
-                  >
-                    {showQuestionPreview ? "Edit" : "Preview"}
-                  </button>
-                </div>
-                {showQuestionPreview ? (
-                  <div className="min-h-48 rounded-lg border border-[var(--border)] bg-card p-4">
-                    {question ? (
-                      <MarkdownMathRenderer content={question} />
-                    ) : (
-                      <p className="text-sm text-[var(--muted-foreground)]">No content to preview</p>
-                    )}
-                  </div>
-                ) : (
-                  <CodeMirrorMarkdownEditor
-                    value={question}
-                    onChange={(value) => {
-                      setQuestion(value);
-                      setQuestionError("");
-                    }}
-                    placeholderText="Enter your question in markdown..."
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSection}
+                id={`exercise-panel-${activeSection}`}
+                role="tabpanel"
+                aria-labelledby={`exercise-tab-${activeSection}`}
+                tabIndex={0}
+                variants={panelVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={panelTransition}
+              >
+                <ExerciseSectionCard type={activeSection} active>
+                  <ExerciseSectionHeader
+                    type={activeSection}
+                    icon={meta.icon}
+                    title={meta.title}
+                    trailing={
+                      <Badge variant="outline" size="sm">
+                        {meta.description}
+                      </Badge>
+                    }
                   />
-                )}
-              </div>
-            </AdminFormField>
-          )}
+                  {renderSectionContent()}
+                </ExerciseSectionCard>
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
-          <AdminFormField
-            id="exercise-solution"
-            label="Solution"
-            required
-            error={solutionError}
-          >
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSolutionPreview(!showSolutionPreview)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-accent/50"
-                >
-                  {showSolutionPreview ? "Edit" : "Preview"}
-                </button>
-              </div>
-              {showSolutionPreview ? (
-                <div className="min-h-48 rounded-lg border border-[var(--border)] bg-card p-4">
-                  {solution ? (
-                    <MarkdownMathRenderer content={solution} />
-                  ) : (
-                    <p className="text-sm text-[var(--muted-foreground)]">No content to preview</p>
-                  )}
-                </div>
-              ) : (
-                <CodeMirrorMarkdownEditor
-                  value={solution}
-                  onChange={(value) => {
-                    setSolution(value);
-                    setSolutionError("");
-                  }}
-                  placeholderText="Enter the solution in markdown..."
-                />
-              )}
-            </div>
-          </AdminFormField>
-
-          {type === "numerical" && (
-            <AdminFormField
-              id="exercise-visualization"
-              label="Illustration (HTML/CSS/JS)"
-            >
-              <NumericalVisualizationEditor
-                value={visualizationHtml}
-                onChange={setVisualizationHtml}
-              />
-            </AdminFormField>
-          )}
-
+          {/* ── Submit / Cancel / Delete ── */}
           <div className="flex items-center gap-3 pt-2">
             <AdminActionButton
               variant="primary"
