@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { BookOpen, Dumbbell, Layers, HelpCircle } from "lucide-react";
+import { BookOpen, Dumbbell, Layers, HelpCircle, Atom } from "lucide-react";
 
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 import type { TabItem } from "@/components/foundation/tabs";
@@ -23,7 +23,7 @@ import { QuestHeader } from "./quest-header";
 import { QuestTabBar } from "./quest-tab-bar";
 import { getChapterProgress } from "@/lib/gamification-storage";
 
-type ChapterTab = "summary" | "exercises" | "flashcards" | "quiz";
+type ChapterTab = "summary" | "exercises" | "flashcards" | "quiz" | "illustration";
 
 type ChapterStudyWorkspaceProps = {
   boardName: string;
@@ -51,6 +51,7 @@ const TAB_ICONS: Record<string, React.ReactNode> = {
   exercises: <Dumbbell className="h-4 w-4" />,
   flashcards: <Layers className="h-4 w-4" />,
   quiz: <HelpCircle className="h-4 w-4" />,
+  illustration: <Atom className="h-4 w-4" />,
 };
 
 export function ChapterStudyWorkspace({
@@ -85,15 +86,33 @@ export function ChapterStudyWorkspace({
     return getChapterProgress(String(chapterId));
   }, [chapterId]);
 
+  /** Split exercises: non-numerical → Training, numerical → Illustration */
+  const trainingExercises = useMemo(
+    () => exercises?.filter((e) => e.type !== "numerical") ?? [],
+    [exercises]
+  );
+  const illustrationExercises = useMemo(
+    () => exercises?.filter((e) => e.type === "numerical") ?? [],
+    [exercises]
+  );
+
+  /** Completed illustration exercise IDs (from gamification progress) */
+  const illustrationCompletedIds = useMemo(() => {
+    const completedAll = chapterProgress?.exercisesCompleted ?? [];
+    const numericalIds = new Set(illustrationExercises.map((e) => e.id));
+    return completedAll.filter((id) => numericalIds.has(id));
+  }, [chapterProgress, illustrationExercises]);
+
   const completionPercent = useMemo(() => {
-    const parts = 4;
+    const parts = 5;
     let completed = 0;
     if (chapterProgress?.summaryRead) completed++;
     if ((chapterProgress?.exercisesCompleted?.length ?? 0) > 0) completed++;
     if (Object.keys(chapterProgress?.flashcardsReviewed ?? {}).length > 0) completed++;
     if ((chapterProgress?.quizAttempts?.length ?? 0) > 0) completed++;
+    if (illustrationCompletedIds.length > 0) completed++;
     return (completed / parts) * 100;
-  }, [chapterProgress]);
+  }, [chapterProgress, illustrationCompletedIds]);
 
   const aiContext: AIContext | null = {
     chapterId,
@@ -141,10 +160,12 @@ export function ChapterStudyWorkspace({
                 status={{
                   summary: chapterProgress?.summaryRead ?? false,
                   exercises: chapterProgress?.exercisesCompleted?.length ?? 0,
-                  totalExercises: exercises?.length ?? 0,
+                  totalExercises: trainingExercises.length,
                   flashcards: Object.keys(chapterProgress?.flashcardsReviewed ?? {}).length,
                   totalFlashcards: flashcards?.length ?? 0,
                   quizCompleted: (chapterProgress?.quizAttempts?.length ?? 0) > 0,
+                  illustrations: illustrationCompletedIds.length,
+                  totalIllustrations: illustrationExercises.length,
                 }}
               />
             </div>
@@ -173,7 +194,9 @@ export function ChapterStudyWorkspace({
                 chapterNumber={chapterNumber}
                 summary={chapterSummary}
                 subjectName={subjectName}
-                exercises={exercises}
+                exercises={trainingExercises}
+                illustrationExercises={illustrationExercises}
+                illustrationCompletedIds={illustrationCompletedIds}
                 flashcards={flashcards}
                 quiz={quiz}
                 flashcardStorageKey={flashcardStorageKey}

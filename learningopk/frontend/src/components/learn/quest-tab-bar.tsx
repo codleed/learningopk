@@ -1,12 +1,12 @@
 "use client";
 
-import { BookOpen, Dumbbell, Layers, HelpCircle, Check } from "lucide-react";
+import { BookOpen, Dumbbell, Layers, HelpCircle, Atom, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
-type ChapterTab = "summary" | "exercises" | "flashcards" | "quiz";
+type ChapterTab = "summary" | "exercises" | "flashcards" | "quiz" | "illustration";
 
 interface TabStatus {
   summary: boolean;
@@ -15,6 +15,8 @@ interface TabStatus {
   flashcards: number;
   totalFlashcards: number;
   quizCompleted: boolean;
+  illustrations: number;
+  totalIllustrations: number;
 }
 
 interface QuestTabBarProps {
@@ -32,6 +34,7 @@ const TAB_CONFIG: Array<{
   { key: "exercises", label: "Training", icon: Dumbbell },
   { key: "flashcards", label: "Memory", icon: Layers },
   { key: "quiz", label: "Challenge", icon: HelpCircle },
+  { key: "illustration", label: "Illustration", icon: Atom },
 ];
 
 export function QuestTabBar({ activeTab, baseHref, status }: QuestTabBarProps) {
@@ -45,6 +48,8 @@ export function QuestTabBar({ activeTab, baseHref, status }: QuestTabBarProps) {
         return status.totalFlashcards > 0 && status.flashcards >= status.totalFlashcards;
       case "quiz":
         return status.quizCompleted;
+      case "illustration":
+        return status.totalIllustrations > 0 && status.illustrations >= status.totalIllustrations;
       default:
         return false;
     }
@@ -59,6 +64,10 @@ export function QuestTabBar({ activeTab, baseHref, status }: QuestTabBarProps) {
       case "flashcards":
         return status.totalFlashcards > 0
           ? `${status.flashcards}/${status.totalFlashcards}`
+          : null;
+      case "illustration":
+        return status.totalIllustrations > 0
+          ? `${status.illustrations}/${status.totalIllustrations}`
           : null;
       default:
         return null;

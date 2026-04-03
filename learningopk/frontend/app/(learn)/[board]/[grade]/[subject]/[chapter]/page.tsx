@@ -15,7 +15,7 @@ const routeParamsSchema = z.object({
   chapter: z.string().trim().regex(/^[a-z0-9-]+$/)
 });
 
-const tabSchema = z.enum(["summary", "exercises", "flashcards", "quiz"]).catch("summary");
+const tabSchema = z.enum(["summary", "exercises", "flashcards", "quiz", "illustration"]).catch("summary");
 
 type ChapterPageProps = {
   params: Promise<{
@@ -62,7 +62,8 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
       label: payload.quiz?.type === "mock_exam" ? "Mock Exam" : "Quiz",
       href: `${basePath}?tab=quiz`,
       disabled: payload.quiz === null
-    }
+    },
+    { key: "illustration", label: "Illustration", href: `${basePath}?tab=illustration` }
   ];
 
   return (
