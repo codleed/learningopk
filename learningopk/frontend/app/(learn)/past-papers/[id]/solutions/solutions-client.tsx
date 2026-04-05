@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import {
   getMockExam,
   getQuizQuestions,
+  MockExamApiError,
   type MockExamDetail,
   type QuizQuestion
 } from "@/lib/mock-exams-api";
@@ -60,11 +61,11 @@ export function MockExamSolutionsClient({ examId }: MockExamSolutionsClientProps
         setQuestions(questionsData);
       } catch (err: unknown) {
         console.error("Failed to load mock exam solutions:", err);
-        const errorMessage = err instanceof Error ? err.message : "Failed to load solutions. Please try again.";
 
-        if (errorMessage.includes("403") || errorMessage.includes("EXAM_NOT_COMPLETED")) {
+        if (err instanceof MockExamApiError && (err.status === 403 || err.code === "EXAM_NOT_COMPLETED")) {
           setError("Solutions are only available after you complete the exam. Please attempt the mock exam first.");
         } else {
+          const errorMessage = err instanceof Error ? err.message : "Failed to load solutions. Please try again.";
           setError(errorMessage);
         }
       } finally {

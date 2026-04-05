@@ -81,6 +81,18 @@ export type FilterOptions = z.infer<typeof filterOptionsSchema>;
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
+/** Structured error thrown when the backend returns a non-2xx response. */
+export class MockExamApiError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly code: string | null,
+    message: string
+  ) {
+    super(message);
+    this.name = "MockExamApiError";
+  }
+}
+
 const fetchJson = async <T>(
   url: string,
   schema: z.ZodType<T>,
@@ -102,7 +114,16 @@ const fetchJson = async <T>(
   });
 
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
+    let code: string | null = null;
+    let serverMessage = `API request failed: ${response.status}`;
+    try {
+      const body = (await response.json()) as Record<string, unknown>;
+      if (typeof body.code === "string") code = body.code;
+      if (typeof body.error === "string") serverMessage = body.error;
+    } catch {
+      // body may not be JSON — keep defaults
+    }
+    throw new MockExamApiError(response.status, code, serverMessage);
   }
 
   const json = (await response.json()) as unknown;
