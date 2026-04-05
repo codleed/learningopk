@@ -18,6 +18,7 @@ import { flashcardReviewsRouter } from "./routes/flashcard-reviews.js";
 import { forumRouter } from "./routes/forum.js";
 import { formulasRouter } from "./routes/formulas.js";
 import { healthRouter, performanceRouter } from "./routes/health.js";
+import { leaderboardRouter } from "./routes/leaderboard.js";
 import { learnRouter } from "./routes/learn.js";
 import { chapterMediaRouter } from "./routes/chapter-media.js";
 import { profileRouter } from "./routes/profile.js";
@@ -76,6 +77,7 @@ export const createApp = () => {
 
   app.use("/api/health", healthRouter);
   app.use("/api/learn", learnRouter);
+  app.use("/api/leaderboard", leaderboardRouter);
   app.use("/api/ai", aiChatRouter);
   app.use("/api/ai", aiContextRouter);
   app.use("/api/admin", adminRouter);

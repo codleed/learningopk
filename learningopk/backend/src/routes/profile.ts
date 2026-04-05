@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { Router } from "express";
 
@@ -14,8 +15,13 @@ import { users } from "../lib/db/schema.js";
 import { env } from "../lib/env.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { createSingleImageUploadMiddleware } from "../middleware/image-upload.js";
+import { leaderboardService } from "../services/leaderboard.service.js";
 
 export const profileRouter = Router();
+
+const leaderboardSettingsSchema = z.object({
+  public: z.boolean()
+});
 
 const uploadProfileImage = createSingleImageUploadMiddleware({
   fieldName: "image",
@@ -109,6 +115,43 @@ profileRouter.put("/me/profile-image", requireSession, uploadProfileImage, async
     console.error("Failed to upload profile image:", error);
     res.status(500).json({
       error: "Failed to upload profile image."
+    });
+  }
+});
+
+profileRouter.get("/me/leaderboard-settings", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+
+  try {
+    const settings = await leaderboardService.getSettings(authedReq.session.user.id);
+    res.status(200).json(settings);
+  } catch (error) {
+    console.error("Failed to load leaderboard settings:", error);
+    res.status(500).json({
+      error: "Failed to load leaderboard settings."
+    });
+  }
+});
+
+profileRouter.put("/me/leaderboard-settings", requireSession, async (req, res) => {
+  const parsed = leaderboardSettingsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid leaderboard settings payload.",
+      details: parsed.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+
+  try {
+    const settings = await leaderboardService.updateSettings(authedReq.session.user.id, parsed.data.public);
+    res.status(200).json(settings);
+  } catch (error) {
+    console.error("Failed to update leaderboard settings:", error);
+    res.status(500).json({
+      error: "Failed to update leaderboard settings."
     });
   }
 });

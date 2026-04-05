@@ -2,6 +2,7 @@ import {
   BookOpen,
   Sigma,
   ChartPie,
+  Trophy,
   MessageCircle,
   Bot,
   House,

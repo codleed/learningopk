@@ -25,6 +25,7 @@ import {
   Palette,
   Shield,
   Trash2,
+  Trophy,
   Upload,
   User,
   UserCircle,
@@ -33,6 +34,7 @@ import { z } from "zod";
 
 import { PageHeader } from "@/components/common/page-header";
 import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -47,6 +49,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useToast } from "@/components/ui/toast";
 import { PasswordInput } from "@/components/auth/password-input";
 import { authClient } from "@/lib/auth-client";
+import { updateLeaderboardSettings, type LeaderboardSettings } from "@/lib/leaderboard-api";
 import { uploadProfileImage } from "@/lib/profile-api";
 import { cn } from "@/lib/utils";
 
@@ -59,6 +62,7 @@ type SettingsProfile = {
   studentClass: string;
   degree: string;
   board: string;
+  leaderboard: LeaderboardSettings;
 };
 
 type SettingsPageClientProps = {
@@ -204,7 +208,7 @@ export function SettingsPageClient({ initialProfile }: SettingsPageClientProps) 
 
           <TabContent value="notifications" className="mt-6">
             <motion.div key="notifications" variants={fadeIn} initial="hidden" animate="visible">
-              <NotificationsTab />
+              <NotificationsTab initialLeaderboard={initialProfile.leaderboard} />
             </motion.div>
           </TabContent>
 
@@ -677,7 +681,7 @@ function PreferencesTab({ initialBoard }: { initialBoard: string }) {
    Notifications Tab
    ═══════════════════════════════════════════ */
 
-function NotificationsTab() {
+function NotificationsTab({ initialLeaderboard }: { initialLeaderboard: LeaderboardSettings }) {
   const { pushToast } = useToast();
   const [settings, setSettings] = useState<Record<string, boolean>>({
     "quiz-reminders": true,
@@ -685,6 +689,8 @@ function NotificationsTab() {
     "streak-alerts": true,
     "weekly-summary": false,
   });
+  const [leaderboardPublic, setLeaderboardPublic] = useState(initialLeaderboard.leaderboardPublic);
+  const [isSavingLeaderboard, setIsSavingLeaderboard] = useState(false);
 
   const toggleSetting = useCallback(
     (id: string, checked: boolean) => {
@@ -700,7 +706,7 @@ function NotificationsTab() {
   );
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl space-y-6">
       <Card variant="default">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -741,6 +747,81 @@ function NotificationsTab() {
               </div>
             );
           })}
+        </CardBody>
+      </Card>
+
+      <Card variant="default">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-accent-primary" aria-hidden />
+            <CardTitle>Leaderboard Privacy</CardTitle>
+          </div>
+          <p className="text-sm text-text-secondary">
+            Choose whether your profile appears publicly in competitive rankings.
+          </p>
+        </CardHeader>
+        <CardBody className="space-y-4">
+          <Switch
+            id="leaderboard-public"
+            name="leaderboard-public"
+            checked={leaderboardPublic}
+            onCheckedChange={async (checked) => {
+              const nextValue = checked as boolean;
+              const previousValue = leaderboardPublic;
+              setLeaderboardPublic(nextValue);
+              setIsSavingLeaderboard(true);
+
+              try {
+                const result = await updateLeaderboardSettings(nextValue);
+                setLeaderboardPublic(result.leaderboardPublic);
+                pushToast({
+                  title: result.leaderboardPublic ? "Leaderboard enabled" : "Leaderboard privacy updated",
+                  description: result.leaderboardPublic
+                    ? "Your profile can now appear in leaderboard rankings."
+                    : "Your profile is now hidden from public leaderboard entries.",
+                  tone: "success"
+                });
+              } catch (error) {
+                setLeaderboardPublic(previousValue);
+                pushToast({
+                  title: "Unable to update leaderboard privacy",
+                  description: error instanceof Error ? error.message : "Please try again.",
+                  tone: "error"
+                });
+              } finally {
+                setIsSavingLeaderboard(false);
+              }
+            }}
+            label="Show me on public leaderboards"
+            description="You will still see your own rank in context even when hidden from public entries."
+          />
+
+          <div className="rounded-xl border border-border-default bg-bg-subtle/60 p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge variant={leaderboardPublic ? "success" : "warning"}>
+                {leaderboardPublic ? "Public" : "Private"}
+              </Badge>
+              {initialLeaderboard.badge ? (
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "border px-3 py-1 text-[11px] uppercase tracking-[0.16em]",
+                    initialLeaderboard.badge === "gold" && "border-amber-400/60 bg-amber-400/15 text-amber-700 dark:text-amber-300",
+                    initialLeaderboard.badge === "silver" && "border-slate-400/60 bg-slate-400/15 text-slate-700 dark:text-slate-200",
+                    initialLeaderboard.badge === "bronze" && "border-orange-500/50 bg-orange-500/15 text-orange-700 dark:text-orange-300"
+                  )}
+                >
+                  Top 100 {initialLeaderboard.badge}
+                </Badge>
+              ) : null}
+            </div>
+            <p className="mt-3 text-sm text-text-secondary">
+              {initialLeaderboard.badge
+                ? "You currently hold a top-100 leaderboard badge on your profile."
+                : "Reach the global top 100 in XP to unlock a bronze, silver, or gold profile badge."}
+            </p>
+            {isSavingLeaderboard ? <p className="mt-2 text-xs text-text-muted">Saving preference…</p> : null}
+          </div>
         </CardBody>
       </Card>
     </div>

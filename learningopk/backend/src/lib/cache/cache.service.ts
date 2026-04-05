@@ -28,6 +28,7 @@ const DEFAULT_TTL: Record<string, number> = {
   subjectList: 3600,
   chapterContent: 1800,
   forumThreads: 300,
+  leaderboard: 300,
   quizQuestions: 0,
   progress: 0,
   aiResponses: 0
@@ -300,5 +301,7 @@ export const CacheKeys = {
   forumThreadDetail: (threadId: string) => `forum:thread:${threadId}`,
   quizQuestions: (quizId: number) => `quiz:questions:${quizId}`,
   userProgress: (userId: string) => `user:progress:${userId}`,
-  userDashboard: (userId: string) => `user:dashboard:${userId}`
+  userDashboard: (userId: string) => `user:dashboard:${userId}`,
+  leaderboard: (userId: string, scope: string, metric: string) => `leaderboard:${userId}:${scope}:${metric}`,
+  leaderboardBadges: () => "leaderboard:badges:global:xp"
 };

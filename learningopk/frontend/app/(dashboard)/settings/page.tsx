@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 import { AppShell } from "@/components/foundation/app-shell";
+import { getLeaderboardSettings } from "@/lib/leaderboard-api";
 import { getServerSession } from "@/lib/session";
 import { SettingsPageClient } from "@/components/settings/settings-page-client";
 
@@ -10,6 +12,12 @@ export default async function SettingsPage() {
     redirect("/login");
   }
 
+  const cookieStore = await cookies();
+  const leaderboard = await getLeaderboardSettings(cookieStore.toString()).catch(() => ({
+    leaderboardPublic: true,
+    badge: null
+  }));
+
   const settingsProfile = {
     name: session.user.name,
     email: session.user.email,
@@ -17,6 +25,7 @@ export default async function SettingsPage() {
     studentClass: session.user.class ?? "",
     degree: session.user.degree ?? "",
     board: session.user.board ?? "",
+    leaderboard,
   };
 
   return (
