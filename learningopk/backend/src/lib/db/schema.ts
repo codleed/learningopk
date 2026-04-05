@@ -246,6 +246,24 @@ export const chapterSummaryMedia = pgTable(
   ]
 );
 
+export const revisionNotes = pgTable(
+  "revision_notes",
+  {
+    id: serial("id").primaryKey(),
+    chapterId: integer("chapter_id")
+      .notNull()
+      .references(() => chapters.id, { onDelete: "cascade" }),
+    keyFormulas: jsonb("key_formulas").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    keyDefinitions: jsonb("key_definitions")
+      .$type<Array<{ term: string; definition: string }>>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    commonMistakes: text("common_mistakes"),
+    examTips: text("exam_tips")
+  },
+  (table) => [uniqueIndex("revision_notes_chapter_id_idx").on(table.chapterId)]
+);
+
 export const exercises = pgTable(
   "exercises",
   {

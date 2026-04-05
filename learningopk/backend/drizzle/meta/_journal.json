@@ -106,6 +106,13 @@
       "when": 1775411913745,
       "tag": "0014_sloppy_alex_power",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1775412913745,
+      "tag": "0015_revision_notes",
+      "breakpoints": true
     }
   ]
 }

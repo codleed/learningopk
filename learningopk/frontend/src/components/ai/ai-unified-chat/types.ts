@@ -21,7 +21,7 @@ export type AIContext = {
   boardName: string;
   className: string;
   
-  currentTab: 'summary' | 'exercises' | 'flashcards' | 'quiz' | 'illustration';
+  currentTab: 'summary' | 'quick-revision' | 'exercises' | 'flashcards' | 'quiz' | 'illustration';
   currentExerciseId?: number;
   currentFlashcardIndex?: number;
   quizQuestionId?: number;

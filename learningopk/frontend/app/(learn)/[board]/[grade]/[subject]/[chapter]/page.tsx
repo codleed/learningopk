@@ -15,7 +15,7 @@ const routeParamsSchema = z.object({
   chapter: z.string().trim().regex(/^[a-z0-9-]+$/)
 });
 
-const tabSchema = z.enum(["summary", "exercises", "flashcards", "quiz", "illustration"]).catch("summary");
+const tabSchema = z.enum(["summary", "quick-revision", "exercises", "flashcards", "quiz", "illustration"]).catch("summary");
 
 type ChapterPageProps = {
   params: Promise<{
@@ -55,6 +55,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
   const subjectPath = `/${payload.board.slug}/${payload.class.slug}/${payload.subject.slug}`;
   const tabs = [
     { key: "summary", label: "Summary", href: `${basePath}?tab=summary` },
+    { key: "quick-revision", label: "Quick Revision", href: `${basePath}?tab=quick-revision` },
     { key: "exercises", label: "Exercises", href: `${basePath}?tab=exercises` },
     { key: "flashcards", label: "Flashcards", href: `${basePath}?tab=flashcards` },
     {
@@ -102,6 +103,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
           chapterNumber={payload.chapter.chapterNumber}
           chapterTitle={payload.chapter.title}
           chapterSummary={payload.chapter.summary}
+          chapterRevisionNotes={payload.chapter.revisionNotes}
           exercises={payload.exercises}
           flashcards={payload.flashcards}
           quiz={payload.quiz}

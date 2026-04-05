@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import request from "supertest";
 
 import { db, pool } from "../../lib/db/index.js";
-import { aiChatSessions, aiMessages, boards, chapters, forumThreads, subjects, users } from "../../lib/db/schema.js";
+import { aiChatSessions, aiMessages, boards, chapters, forumThreads, revisionNotes, subjects, users } from "../../lib/db/schema.js";
 import { redis } from "../../lib/redis.js";
 import { createApp } from "../../server.js";
 
@@ -535,6 +535,64 @@ test("admin chapter summary endpoints enforce auth/role and support summary upda
     .limit(1);
 
   assert.equal(chapterRows[0]?.summary, updatedSummary);
+});
+
+test("admin revision notes endpoints enforce auth/role and upsert chapter revision notes", async () => {
+  const app = createApp();
+  const anonAgent = request(app);
+  const adminAgent = request.agent(app);
+  const memberAgent = request.agent(app);
+
+  await signUp(adminAgent, "Revision Admin", `tst_revision_admin_${Date.now()}@example.com`);
+  await signUp(memberAgent, "Revision Member", `tst_revision_member_${Date.now()}@example.com`);
+
+  const adminUser = await getSessionUser(adminAgent);
+  const chapterId = await createChapterFixture();
+
+  const unauthenticatedGet = await anonAgent.get(`/api/admin/content/chapters/${chapterId}/revision-notes`);
+  assert.equal(unauthenticatedGet.status, 401);
+
+  const forbiddenGet = await memberAgent.get(`/api/admin/content/chapters/${chapterId}/revision-notes`);
+  assert.equal(forbiddenGet.status, 403);
+
+  await assignAdminRole(adminUser.id);
+
+  const getResponse = await adminAgent.get(`/api/admin/content/chapters/${chapterId}/revision-notes`);
+  assert.equal(getResponse.status, 200);
+  assert.deepEqual(getResponse.body?.revisionNotes, {
+    keyFormulas: [],
+    keyDefinitions: [],
+    commonMistakes: "",
+    examTips: ""
+  });
+
+  const updatePayload = {
+    keyFormulas: ["v = u + at", "F = ma"],
+    keyDefinitions: [
+      { term: "Velocity", definition: "Rate of change of displacement." },
+      { term: "Force", definition: "Push or pull causing acceleration." }
+    ],
+    commonMistakes: "Using speed instead of velocity\nForgetting sign conventions",
+    examTips: "Write the known values first\nCheck SI units before solving"
+  };
+
+  const updateResponse = await adminAgent.post(`/api/admin/content/chapters/${chapterId}/revision-notes`).send(updatePayload);
+  assert.equal(updateResponse.status, 200);
+  assert.deepEqual(updateResponse.body?.revisionNotes, updatePayload);
+
+  const rows = await db
+    .select({
+      keyFormulas: revisionNotes.keyFormulas,
+      keyDefinitions: revisionNotes.keyDefinitions,
+      commonMistakes: revisionNotes.commonMistakes,
+      examTips: revisionNotes.examTips
+    })
+    .from(revisionNotes)
+    .where(eq(revisionNotes.chapterId, chapterId))
+    .limit(1);
+
+  assert.equal(rows.length, 1);
+  assert.deepEqual(rows[0], updatePayload);
 });
 
 test("admin chapter wiki-link endpoints persist backlinks and survive target rename", async () => {

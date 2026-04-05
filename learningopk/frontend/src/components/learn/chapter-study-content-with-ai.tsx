@@ -11,8 +11,9 @@ import { FlashcardDeck } from "./flashcard-deck";
 import { VirtualizedMarkdown } from "@/components/VirtualizedMarkdown";
 import { QuizRunner } from "./quiz-runner";
 import { QuestIllustrationView } from "./quest-illustration-view";
+import { QuickRevisionView } from "./quick-revision-view";
 
-type ChapterTab = "summary" | "exercises" | "flashcards" | "quiz" | "illustration";
+type ChapterTab = "summary" | "quick-revision" | "exercises" | "flashcards" | "quiz" | "illustration";
 
 type ChapterStudyContentWithAiProps = {
   activeTab: ChapterTab;
@@ -20,6 +21,7 @@ type ChapterStudyContentWithAiProps = {
   chapterTitle: string;
   chapterNumber?: number;
   summary: string;
+  revisionNotes: ChapterDetailResponse["chapter"]["revisionNotes"];
   subjectName?: string;
   exercises: ChapterDetailResponse["exercises"];
   illustrationExercises: ChapterDetailResponse["exercises"];
@@ -37,6 +39,7 @@ export function ChapterStudyContentWithAi({
   chapterTitle,
   chapterNumber,
   summary,
+  revisionNotes,
   subjectName,
   exercises,
   illustrationExercises,
@@ -79,6 +82,14 @@ export function ChapterStudyContentWithAi({
         <div data-testid="chapter-summary-markdown">
           <VirtualizedMarkdown content={summary} threshold={5000} />
         </div>
+      ) : null}
+
+      {activeTab === "quick-revision" ? (
+        <QuickRevisionView
+          chapterTitle={chapterTitle}
+          chapterNumber={chapterNumber}
+          revisionNotes={revisionNotes}
+        />
       ) : null}
 
       {activeTab === "exercises" ? (

@@ -22,6 +22,7 @@ import {
   quizAttempts,
   quizQuestions,
   quizzes,
+  revisionNotes,
   subjects,
   userProgress,
   users
@@ -49,6 +50,18 @@ const chapterPublishBodySchema = z.object({
 
 const chapterSummaryUpdateBodySchema = z.object({
   summary: z.string().trim().min(1)
+});
+
+const revisionDefinitionSchema = z.object({
+  term: z.string().trim().min(1),
+  definition: z.string().trim().min(1)
+});
+
+const chapterRevisionNotesBodySchema = z.object({
+  keyFormulas: z.array(z.string().trim().min(1)).default([]),
+  keyDefinitions: z.array(revisionDefinitionSchema).default([]),
+  commonMistakes: z.string().default(""),
+  examTips: z.string().default("")
 });
 
 const chapterRenameBodySchema = z.object({
@@ -5120,6 +5133,183 @@ adminRouter.post("/content/chapters/:id/summary", requireSession, async (req, re
 
   res.status(200).json({
     chapter: updatedChapter,
+    timestamp: new Date().toISOString()
+  });
+});
+
+adminRouter.get("/content/chapters/:id/revision-notes", requireSession, async (req, res) => {
+  const parsedParams = chapterParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid chapter identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const chapterRows = await db
+    .select({
+      id: chapters.id,
+      title: chapters.title,
+      keyFormulas: revisionNotes.keyFormulas,
+      keyDefinitions: revisionNotes.keyDefinitions,
+      commonMistakes: revisionNotes.commonMistakes,
+      examTips: revisionNotes.examTips
+    })
+    .from(chapters)
+    .leftJoin(revisionNotes, eq(revisionNotes.chapterId, chapters.id))
+    .where(eq(chapters.id, parsedParams.data.id))
+    .limit(1);
+
+  const chapter = chapterRows[0];
+  if (!chapter) {
+    res.status(404).json({
+      error: "Chapter not found"
+    });
+    return;
+  }
+
+  res.status(200).json({
+    chapter: {
+      id: chapter.id,
+      title: chapter.title
+    },
+    revisionNotes: {
+      keyFormulas: chapter.keyFormulas ?? [],
+      keyDefinitions: chapter.keyDefinitions ?? [],
+      commonMistakes: chapter.commonMistakes ?? "",
+      examTips: chapter.examTips ?? ""
+    }
+  });
+});
+
+adminRouter.post("/content/chapters/:id/revision-notes", requireSession, async (req, res) => {
+  const parsedParams = chapterParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid chapter identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const parsedBody = chapterRevisionNotesBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid revision notes payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Update chapter revision notes";
+  const fallbackTarget = `Chapter #${parsedParams.data.id}`;
+
+  const chapterRows = await db
+    .select({
+      id: chapters.id,
+      title: chapters.title,
+      subjectId: chapters.subjectId,
+      subjectName: subjects.name
+    })
+    .from(chapters)
+    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+    .where(eq(chapters.id, parsedParams.data.id))
+    .limit(1);
+
+  const chapter = chapterRows[0];
+  if (!chapter) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Chapter not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Chapter not found"
+    });
+    return;
+  }
+
+  const payload = {
+    keyFormulas: parsedBody.data.keyFormulas,
+    keyDefinitions: parsedBody.data.keyDefinitions,
+    commonMistakes: parsedBody.data.commonMistakes.trim() || null,
+    examTips: parsedBody.data.examTips.trim() || null
+  };
+
+  const upsertedRows = await db
+    .insert(revisionNotes)
+    .values({
+      chapterId: chapter.id,
+      ...payload
+    })
+    .onConflictDoUpdate({
+      target: revisionNotes.chapterId,
+      set: payload
+    })
+    .returning({
+      keyFormulas: revisionNotes.keyFormulas,
+      keyDefinitions: revisionNotes.keyDefinitions,
+      commonMistakes: revisionNotes.commonMistakes,
+      examTips: revisionNotes.examTips
+    });
+
+  const updatedRevisionNotes = upsertedRows[0];
+  if (!updatedRevisionNotes) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${chapter.subjectName} / ${chapter.title}`,
+      status: "failed",
+      message: "Revision notes update failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({
+      error: "Failed to update revision notes"
+    });
+    return;
+  }
+
+  await cacheService.delete(CacheKeys.chapterContent(chapter.id));
+
+  await persistAuditLog({
+    scope: "content",
+    action,
+    target: `${chapter.subjectName} / ${chapter.title}`,
+    status: "success",
+    message: "Updated chapter revision notes",
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    chapter: {
+      id: chapter.id,
+      title: chapter.title
+    },
+    revisionNotes: {
+      keyFormulas: updatedRevisionNotes.keyFormulas ?? [],
+      keyDefinitions: updatedRevisionNotes.keyDefinitions ?? [],
+      commonMistakes: updatedRevisionNotes.commonMistakes ?? "",
+      examTips: updatedRevisionNotes.examTips ?? ""
+    },
     timestamp: new Date().toISOString()
   });
 });

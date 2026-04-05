@@ -124,12 +124,41 @@ const adminChapterSummaryResponseSchema = z.object({
   })
 });
 
+const revisionDefinitionSchema = z.object({
+  term: z.string(),
+  definition: z.string()
+});
+
+const adminRevisionNotesSchema = z.object({
+  keyFormulas: z.array(z.string()),
+  keyDefinitions: z.array(revisionDefinitionSchema),
+  commonMistakes: z.string(),
+  examTips: z.string()
+});
+
 const adminChapterSummaryUpdateResponseSchema = z.object({
   chapter: z.object({
     id: z.number().int().positive(),
     title: z.string(),
     summary: z.string()
   }),
+  timestamp: z.string().datetime()
+});
+
+const adminChapterRevisionNotesResponseSchema = z.object({
+  chapter: z.object({
+    id: z.number().int().positive(),
+    title: z.string()
+  }),
+  revisionNotes: adminRevisionNotesSchema
+});
+
+const adminChapterRevisionNotesUpdateResponseSchema = z.object({
+  chapter: z.object({
+    id: z.number().int().positive(),
+    title: z.string()
+  }),
+  revisionNotes: adminRevisionNotesSchema,
   timestamp: z.string().datetime()
 });
 
@@ -577,6 +606,8 @@ export type AdminCurriculumSubjectMutationResponse = z.infer<typeof adminCurricu
 export type AdminCurriculumChapterCreateResponse = z.infer<typeof adminCurriculumChapterCreateResponseSchema>;
 export type AdminCurriculumChapterMutationResponse = z.infer<typeof adminCurriculumChapterMutationResponseSchema>;
 export type AdminChapterSummaryResponse = z.infer<typeof adminChapterSummaryResponseSchema>;
+export type AdminChapterRevisionNotesResponse = z.infer<typeof adminChapterRevisionNotesResponseSchema>;
+export type AdminChapterRevisionNotes = z.infer<typeof adminRevisionNotesSchema>;
 export type AdminChapterSummaryUpdateResponse = z.infer<typeof adminChapterSummaryUpdateResponseSchema>;
 export type AdminChapterLinksResponse = z.infer<typeof adminChapterLinksResponseSchema>;
 export type AdminChapterLinkSuggestionsResponse = z.infer<typeof adminChapterLinkSuggestionsResponseSchema>;
@@ -840,6 +871,28 @@ export const updateAdminChapterSummary = async ({
     schema: adminChapterSummaryUpdateResponseSchema,
     method: "POST",
     body: { summary }
+  });
+};
+
+export const getAdminChapterRevisionNotes = async (chapterId: number): Promise<AdminChapterRevisionNotesResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/${chapterId}/revision-notes`,
+    schema: adminChapterRevisionNotesResponseSchema
+  });
+};
+
+export const updateAdminChapterRevisionNotes = async ({
+  chapterId,
+  revisionNotes
+}: {
+  chapterId: number;
+  revisionNotes: AdminChapterRevisionNotes;
+}) => {
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/${chapterId}/revision-notes`,
+    schema: adminChapterRevisionNotesUpdateResponseSchema,
+    method: "POST",
+    body: revisionNotes
   });
 };
 

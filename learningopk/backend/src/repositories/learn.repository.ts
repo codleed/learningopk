@@ -1,7 +1,18 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
-import { boardClasses, boards, chapters, exercises, flashcards, mockExams, quizQuestions, quizzes, subjects } from "../lib/db/schema.js";
+import {
+  boardClasses,
+  boards,
+  chapters,
+  exercises,
+  flashcards,
+  mockExams,
+  quizQuestions,
+  quizzes,
+  revisionNotes,
+  subjects
+} from "../lib/db/schema.js";
 import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
 import { quizRepository } from "./quiz.repository.js";
 
@@ -290,6 +301,21 @@ export class LearnRepository {
       optionD: q.optionD,
       marks: q.marks
     }));
+  }
+
+  async findRevisionNotesByChapter(chapterId: number) {
+    const rows = await db
+      .select({
+        keyFormulas: revisionNotes.keyFormulas,
+        keyDefinitions: revisionNotes.keyDefinitions,
+        commonMistakes: revisionNotes.commonMistakes,
+        examTips: revisionNotes.examTips
+      })
+      .from(revisionNotes)
+      .where(eq(revisionNotes.chapterId, chapterId))
+      .limit(1);
+
+    return rows[0] ?? null;
   }
 }
 

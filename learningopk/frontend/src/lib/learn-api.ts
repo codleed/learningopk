@@ -105,7 +105,13 @@ const chapterDetailResponseSchema = z.object({
     chapterNumber: z.number().int().positive(),
     title: z.string(),
     slug: z.string(),
-    summary: z.string()
+    summary: z.string(),
+    revisionNotes: z.object({
+      keyFormulas: z.array(z.string()),
+      keyDefinitions: z.array(z.object({ term: z.string(), definition: z.string() })),
+      commonMistakes: z.string(),
+      examTips: z.string()
+    })
   }),
   exercises: z.array(
     z.object({

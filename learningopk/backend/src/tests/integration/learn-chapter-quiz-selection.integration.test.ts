@@ -4,7 +4,7 @@ import { after, test } from "node:test";
 import request from "supertest";
 
 import { db, pool } from "../../lib/db/index.js";
-import { boardClasses, boards, chapters, quizzes, subjects } from "../../lib/db/schema.js";
+import { boardClasses, boards, chapters, quizzes, revisionNotes, subjects } from "../../lib/db/schema.js";
 import { redis } from "../../lib/redis.js";
 import { createApp } from "../../server.js";
 
@@ -105,4 +105,29 @@ test("learn chapter detail returns chapter_quiz when chapter has both quiz types
 
   assert.equal(response.status, 200);
   assert.equal(response.body?.quiz?.type, "chapter_quiz");
+});
+
+test("learn chapter detail includes revision notes payload", async () => {
+  const app = createApp();
+  const fixture = await createLearnFixture();
+
+  await db.insert(revisionNotes).values({
+    chapterId: fixture.chapter.id,
+    keyFormulas: ["s = ut + \\frac{1}{2}at^2"],
+    keyDefinitions: [{ term: "Acceleration", definition: "Rate of change of velocity." }],
+    commonMistakes: "Dropping the square on time",
+    examTips: "Highlight the target variable before substitution"
+  });
+
+  const response = await request(app).get(
+    `/api/learn/${fixture.board.slug}/${fixture.boardClass.slug}/${fixture.subject.slug}/${fixture.chapter.slug}`
+  );
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(response.body?.chapter?.revisionNotes, {
+    keyFormulas: ["s = ut + \\frac{1}{2}at^2"],
+    keyDefinitions: [{ term: "Acceleration", definition: "Rate of change of velocity." }],
+    commonMistakes: "Dropping the square on time",
+    examTips: "Highlight the target variable before substitution"
+  });
 });
