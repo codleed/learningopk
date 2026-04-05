@@ -16,6 +16,17 @@ export type TutorChapterContext = {
   focusExerciseQuestion?: string;
 };
 
+export type TutorPersonalContext = {
+  weakTopics: string[];
+  strongTopics: string[];
+  preferredExplanationStyle: string;
+  lastConceptsDiscussed: string[];
+  recentQuizFailure?: {
+    chapterTitle: string;
+    scorePercent: number;
+  };
+};
+
 export type TutorResponseStage = "guide" | "hint" | "reveal";
 
 export const MISTRAL_MODEL_ID = "mistral-small-latest";
@@ -64,11 +75,12 @@ const normalizeText = (value: string): string => value.trim().replace(/\s+/g, " 
 export const buildTutorSystemPrompt = (params: {
   context: TutorChapterContext;
   failedAttempts: number;
+  personalContext?: TutorPersonalContext;
 }): string => {
-  const { context, failedAttempts } = params;
+  const { context, failedAttempts, personalContext } = params;
   const stage = getTutorResponseStage(failedAttempts);
 
-  return [
+  const lines: string[] = [
     "You are an AI tutor for Pakistani 9th/10th grade students.",
     "Use the Socratic method with controlled reveal policy.",
     "",
@@ -94,5 +106,49 @@ export const buildTutorSystemPrompt = (params: {
     `- chapter=${normalizeText(context.chapterTitle)}`,
     `- summary=${normalizeText(context.chapterSummary)}`,
     context.focusExerciseQuestion ? `- focus_exercise=${normalizeText(context.focusExerciseQuestion)}` : "- focus_exercise=none"
-  ].join("\n");
+  ];
+
+  // Inject personal context when available
+  if (personalContext) {
+    const personalLines: string[] = [];
+
+    if (personalContext.weakTopics.length > 0) {
+      personalLines.push(
+        `The student has identified weaknesses in: ${personalContext.weakTopics.join(", ")}. Give extra attention and simpler explanations for these areas.`
+      );
+    }
+
+    if (personalContext.strongTopics.length > 0) {
+      personalLines.push(
+        `The student is strong in: ${personalContext.strongTopics.join(", ")}. You can reference these as building blocks.`
+      );
+    }
+
+    if (personalContext.preferredExplanationStyle && personalContext.preferredExplanationStyle !== "balanced") {
+      personalLines.push(
+        `The student prefers ${personalContext.preferredExplanationStyle} explanations.`
+      );
+    }
+
+    if (personalContext.lastConceptsDiscussed.length > 0) {
+      personalLines.push(
+        `Recently discussed: ${personalContext.lastConceptsDiscussed.join(", ")}. Build on this context when relevant.`
+      );
+    }
+
+    if (personalContext.recentQuizFailure) {
+      personalLines.push(
+        `I see you scored ${personalContext.recentQuizFailure.scorePercent}% on ${personalContext.recentQuizFailure.chapterTitle}. Proactively reference this and offer to help strengthen understanding of that topic.`
+      );
+    }
+
+    if (personalLines.length > 0) {
+      lines.push("", "Student personal context:");
+      for (const line of personalLines) {
+        lines.push(`- ${line}`);
+      }
+    }
+  }
+
+  return lines.join("\n");
 };

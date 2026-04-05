@@ -24,6 +24,7 @@ import { ProgressRing } from "@/components/common/progress-ring";
 import { XPBar } from "@/components/common/xp-bar";
 import { StreakCounter } from "@/components/common/streak-counter";
 import { ReviewNowWidget } from "@/components/dashboard/review-now-widget";
+import { AiMemoryCard } from "@/components/dashboard/ai-memory-card";
 import type { DashboardSummaryResponse } from "@/lib/progress-api";
 import { cn } from "@/lib/utils";
 
@@ -828,6 +829,13 @@ export function DashboardClient({
           <RecentActivityCard activity={summary.recentActivity} />
         </MotionSection>
       </div>
+
+      {/* ============================================================ */}
+      {/*  AI MEMORY ROW                                                */}
+      {/* ============================================================ */}
+      <MotionSection>
+        <AiMemoryCard />
+      </MotionSection>
     </StaggerContainer>
   );
 }

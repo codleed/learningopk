@@ -4,6 +4,7 @@ import { getInvalidAnswerQuestionIds, scoreQuizSubmission } from "../lib/quiz-sc
 import { applyProgressEvent } from "../lib/progress.js";
 import { xpService } from "./xp.service.js";
 import { QUIZ_PASS_THRESHOLD_PERCENT } from "../lib/constants.js";
+import { aiContextRepository } from "../repositories/ai-context.repository.js";
 import {
   QuizNotFoundError,
   QuizNoQuestionsError,
@@ -255,6 +256,18 @@ export class QuizService {
       } catch (error) {
         console.error("Failed to award XP for quiz:", error);
         xpFailed = true;
+      }
+    }
+
+    // Quiz failure hook — add weak topics to AI context for low-scoring chapters
+    // This runs async and does not block the response
+    if (percentage < 50 && weakAreas.length > 0) {
+      try {
+        for (const area of weakAreas) {
+          await aiContextRepository.addWeakTopic(userId, area.chapterTitle);
+        }
+      } catch (error) {
+        console.error("Failed to update AI context with quiz weak areas:", error);
       }
     }
 

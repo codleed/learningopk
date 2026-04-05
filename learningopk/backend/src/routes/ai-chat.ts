@@ -7,6 +7,9 @@ import { db } from "../lib/db/index.js";
 import { aiChatSessions, aiMessages, aiUsageLogs, boards, chapters, exercises, subjects } from "../lib/db/schema.js";
 import { env } from "../lib/env.js";
 import { consumeAiChatRateLimit, moderateAiInput } from "../lib/ai-guardrails.js";
+import { extractConversationConcepts } from "../lib/ai-concept-extractor.js";
+import { logger } from "../lib/logger.js";
+import { startSpan, endSpan } from "../lib/performance.js";
 import {
   buildTutorSystemPrompt,
   inferFailedAttempts,
@@ -15,8 +18,10 @@ import {
   mistralModel,
   MISTRAL_TEMPERATURE,
   type ChatMessage,
-  type TutorChapterContext
+  type TutorChapterContext,
+  type TutorPersonalContext
 } from "../lib/mistral.js";
+import { aiContextRepository } from "../repositories/ai-context.repository.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 
 const chatMessageSchema = z.object({
@@ -252,7 +257,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
   try {
     rateLimit = await consumeAiChatRateLimit(userId);
   } catch (error) {
-    console.error("AI rate limit check failed:", error);
+    logger.error({ error }, "AI rate limit check failed");
     res.status(503).json({
       error: "AI rate limiting is temporarily unavailable."
     });
@@ -343,9 +348,27 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
   await db.update(aiChatSessions).set({ lastMessageAt: new Date() }).where(eq(aiChatSessions.id, sessionRow.id));
 
   const failedAttempts = inferFailedAttempts(messages as ChatMessage[]);
+
+  // Fetch personal AI context for the user (non-blocking on failure)
+  let personalContext: TutorPersonalContext | undefined;
+  try {
+    const aiCtx = await aiContextRepository.findByUserId(userId);
+    if (aiCtx) {
+      personalContext = {
+        weakTopics: aiCtx.weakTopics,
+        strongTopics: aiCtx.strongTopics,
+        preferredExplanationStyle: aiCtx.preferredExplanationStyle,
+        lastConceptsDiscussed: aiCtx.lastConceptsDiscussed
+      };
+    }
+  } catch (error) {
+    logger.error({ error }, "Failed to fetch AI context for user");
+  }
+
   const systemPrompt = buildTutorSystemPrompt({
     context: chapterContext?.context ?? fallbackContext,
-    failedAttempts
+    failedAttempts,
+    ...(personalContext ? { personalContext } : {}),
   });
 
   const modelMessages: ModelMessage[] = messages.map((message) => ({
@@ -354,6 +377,8 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
   }));
 
   let providerStreamError: string | null = null;
+
+  const aiSpan = startSpan("ai.chat.stream", "ai.call", { model: MISTRAL_MODEL_ID });
 
   const result = streamText({
     model: mistralModel,
@@ -383,6 +408,39 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
       });
 
       await db.update(aiChatSessions).set({ lastMessageAt: new Date() }).where(eq(aiChatSessions.id, sessionRow.id));
+
+      // Async concept extraction — don't block the response
+      if (assistantText.length > 0) {
+        try {
+          const extraction = extractConversationConcepts(latestUserMessage.content, assistantText);
+
+          // Update last discussed concepts
+          if (extraction.conceptsDiscussed.length > 0) {
+            await aiContextRepository.updateLastConcepts(userId, extraction.conceptsDiscussed);
+          }
+
+          // Add weak topic candidates
+          for (const weakTopic of extraction.weakTopicCandidates) {
+            await aiContextRepository.addWeakTopic(userId, weakTopic);
+          }
+
+          // If strong signal detected, move last discussed concepts from weak to strong
+          if (extraction.hasStrongSignal && extraction.conceptsDiscussed.length > 0) {
+            const ctx = await aiContextRepository.findByUserId(userId);
+            if (ctx) {
+              for (const concept of extraction.conceptsDiscussed) {
+                const normalizedConcept = concept.trim().toLowerCase();
+                if (ctx.weakTopics.includes(normalizedConcept)) {
+                  await aiContextRepository.removeWeakTopic(userId, normalizedConcept);
+                  await aiContextRepository.addStrongTopic(userId, normalizedConcept);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          logger.error({ error }, "AI concept extraction failed (non-critical)");
+        }
+      }
     }
   });
 
@@ -398,9 +456,11 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
       res.write(chunk);
     }
   } catch (error) {
-    console.error("AI provider streaming error:", error);
+    logger.error({ error }, "AI provider streaming error");
     providerStreamError = error instanceof Error ? error.message : "Unknown provider streaming error.";
   } finally {
+    endSpan(aiSpan);
+
     if (!streamedAtLeastOneChunk) {
       res.status(502).json({
         error: providerStreamError ?? "Failed to stream AI response from the provider.",
