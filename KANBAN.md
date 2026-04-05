@@ -356,99 +356,7 @@ _No tasks in progress yet. Pick from Todo below._
 
 ---
 
-#### TASK-41 🟠
-
-**Title:** Error Monitoring & Observability Infrastructure
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-04
-**Acceptance Criteria:**
-
-- [ ] Sentry integration with automatic error capture, stack traces, and source map resolution
-- [ ] Structured JSON logs with correlation IDs, log levels, and request timing spans
-- [ ] Performance monitoring: custom spans for DB queries, AI calls, and cache operations with p50/p95/p99 tracking
-- [ ] Health check enhancement: `/api/health/live` and `/api/health/ready` reporting PostgreSQL, Redis, MinIO, AI status
-
 ---
-
-#### TASK-42 🟠
-
-**Title:** Spaced Repetition Flashcard System (SRS)
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-11
-**Acceptance Criteria:**
-
-- [ ] SM-2 algorithm calculating next review date per card
-- [ ] `flashcard_reviews` table: `card_id`, `user_id`, `interval_days`, `ease_factor`, `next_review_date`
-- [ ] Dashboard "Review Now" button shows overdue flashcards based on `next_review_date`
-- [ ] After flip, user rates recall: "Again / Hard / Good / Easy" (4 buttons, CSS-only)
-- [ ] System calculates next review: Easy = +3 days, Good = +2 days, Hard = +1 day, Again = reset to today
-
----
-
-#### TASK-43 🟠
-
-**Title:** AI Tutor Memory & Personal Context
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-14
-**Acceptance Criteria:**
-
-- [ ] New `ai_context` table: `user_id`, `weak_topics`, `strong_topics`, `preferred_explanation_style`, `last_concepts_discussed`
-- [ ] System prompt includes user context: "Student struggles with [topic]. Prefers [visual/examples]."
-- [ ] AI messages parsed post-stream to extract concepts and auto-update `weak_topics`/`strong_topics`
-- [ ] Dashboard shows "AI remembers: You struggle with trigonometry" card with edit option
-- [ ] On quiz failure, AI tutor proactively references: "I see you scored 45% on Motion..."
-
----
-
-#### TASK-44 🟠
-
-**Title:** Learning Path from Weak Areas
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-16, TASK-14
-**Acceptance Criteria:**
-
-- [ ] Endpoint `GET /api/ai/learning-path` generates prioritized chapter list based on weak topics
-- [ ] Weighted scoring: quiz scores (50%), exercises viewed (30%), AI session engagement (20%)
-- [ ] Returns `{recommendedChapters: [{chapterId, priority, reason, estimatedTime}]}`
-- [ ] Dashboard displays "Focus Areas" widget with top 3 recommended chapters and one-click "Start practicing"
-- [ ] AI tutor context includes `studentWeakAreas` for proactive intervention
-
----
-
-#### TASK-45 🟠
-
-**Title:** Revision Notes & Quick Reference Cards
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-10
-**Acceptance Criteria:**
-
-- [ ] New `revision_notes` table: `chapter_id`, `key_formulas` (jsonb), `key_definitions` (jsonb), `common_mistakes`, `exam_tips`
-- [ ] Admin panel form to add revision notes per chapter
-- [ ] Chapter page new "Quick Revision" tab showing condensed notes (90% shorter than full summary)
-- [ ] Revision notes render with KaTeX formula highlighting and warning badges for common mistakes
-- [ ] "Download as PDF" button generates single-page cheat sheet for offline printing
-
----
-
-#### TASK-46 🟠
-
-**Title:** Formula Library Centralized Repository
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-07
-**Acceptance Criteria:**
-
-- [ ] New `formulas` table: `subject_id`, `chapter_id`, `name`, `formula_latex`, `description`, `variables`, `tags`
-- [ ] Formula Library page (`/formulas`) with filters: subject, chapter, topic tag
-- [ ] Full-text search by formula name or description (tsvector)
-- [ ] Formula cards render with KaTeX, expandable explanation, and "Copy LaTeX" button
-- [ ] Students can star formulas for personal quick-access (`user_starred_formulas` join table)
-- [ ] Dashboard shows "Your Starred Formulas" widget with top 5 by access frequency
 
 ---
 
@@ -966,6 +874,48 @@ _Completed tasks are moved here by the coding agent._
 **Phase:** 10 — Enhancements
 **Priority:** High
 **Evidence:** Cache purge hooks on all 22 admin mutation endpoints + forum mutations; `GET /api/admin/cache/stats` and `POST /api/admin/cache/purge` endpoints; stale-while-revalidate background refresh; `invalidatePattern()` uses SCAN instead of KEYS; 10 unit tests
+
+#### TASK-41 ✅
+
+**Title:** Error Monitoring & Observability Infrastructure
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Pino structured JSON logging with correlation IDs; optional Sentry integration; in-memory p50/p95/p99 performance spans; `/api/health/live`, `/api/health/ready`, and admin performance endpoint with unit coverage
+
+#### TASK-42 ✅
+
+**Title:** Spaced Repetition Flashcard System (SRS)
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added `flashcard_reviews` table and migration; SM-2 review algorithm; `/api/flashcard-reviews` routes; `SrsReviewDeck`, `/review` page, and dashboard `Review Now` widget; initial flashcard review seeding
+
+#### TASK-43 ✅
+
+**Title:** AI Tutor Memory & Personal Context
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added `ai_context` table and repository; system prompt personal context injection; post-stream concept extraction; AI context API routes; dashboard `AiMemoryCard`; quiz-failure weak-topic hook
+
+#### TASK-44 ✅
+
+**Title:** Learning Path from Weak Areas
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added protected `GET /api/ai/learning-path`; weighted weak-area scoring from quiz, progress, and AI engagement signals; dashboard `FocusAreasWidget`; AI tutor context includes `studentWeakAreas`
+
+#### TASK-45 ✅
+
+**Title:** Revision Notes & Quick Reference Cards
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added `revision_notes` table and migration; admin revision-notes manager; student `Quick Revision` tab with KaTeX formulas, common-mistake badges, and print-to-PDF cheat sheet flow
+
+#### TASK-46 ✅
+
+**Title:** Formula Library Centralized Repository
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added `formulas`, `user_starred_formulas`, and `formula_access_events`; `/formulas` page with filters and full-text search; KaTeX formula cards with copy and starring; dashboard top-5 starred formulas by access frequency
 
 ---
 
