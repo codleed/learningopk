@@ -1,8 +1,9 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   BookOpen,
@@ -12,12 +13,19 @@ import {
   PlayCircle,
   Target,
   Clock,
+  Shield,
+  ShieldAlert,
+  Sparkles,
+  AlertTriangle,
 } from "lucide-react";
 
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogBody, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/toast";
 import { LinearProgress } from "@/components/ui/progress";
 import { SubjectBadge } from "@/components/common/subject-badge";
 import { ProgressRing } from "@/components/common/progress-ring";
@@ -27,7 +35,7 @@ import { ReviewNowWidget } from "@/components/dashboard/review-now-widget";
 import { AiMemoryCard } from "@/components/dashboard/ai-memory-card";
 import { FocusAreasWidget, type FocusAreaItem } from "@/components/dashboard/focus-areas-widget";
 import { StarredFormulasWidget } from "@/components/dashboard/starred-formulas-widget";
-import type { DashboardSummaryResponse } from "@/lib/progress-api";
+import { placeStreakWager, recoverStreakWager, type DashboardSummaryResponse } from "@/lib/progress-api";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -270,46 +278,225 @@ function StreakXPCard({
   streakDays,
   longestStreakDays,
   xp,
+  summary,
 }: {
   streakDays: number;
   longestStreakDays: number;
   xp: XpInfo | null;
+  summary: DashboardSummaryResponse;
 }) {
+  const router = useRouter();
+  const { pushToast } = useToast();
+  const [lockModalOpen, setLockModalOpen] = useState(summary.streakWager.showLockModal);
+  const [wagerAmount, setWagerAmount] = useState(String(summary.streakWager.minWagerXp));
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRecovering, setIsRecovering] = useState(false);
+
+  useEffect(() => {
+    setLockModalOpen(summary.streakWager.showLockModal);
+  }, [summary.streakWager.showLockModal]);
+
+  const parsedWagerAmount = Number(wagerAmount);
+  const wagerError =
+    Number.isNaN(parsedWagerAmount) ||
+    parsedWagerAmount < summary.streakWager.minWagerXp ||
+    parsedWagerAmount > summary.streakWager.maxWagerXp
+      ? `Enter ${summary.streakWager.minWagerXp}-${summary.streakWager.maxWagerXp} XP`
+      : xp && parsedWagerAmount > xp.xp
+        ? "Not enough XP available"
+        : null;
+
+  const onPlaceWager = async () => {
+    if (wagerError) return;
+
+    setIsSubmitting(true);
+    try {
+      await placeStreakWager(parsedWagerAmount);
+      pushToast({
+        title: "Streak locked",
+        description: `Your ${parsedWagerAmount} XP wager now protects today's PKT streak window.`,
+        tone: "success"
+      });
+      setLockModalOpen(false);
+      router.refresh();
+    } catch (error) {
+      pushToast({
+        title: "Couldn't lock streak",
+        description: error instanceof Error ? error.message : "Please try again.",
+        tone: "error"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const onRecover = async () => {
+    setIsRecovering(true);
+    try {
+      await recoverStreakWager();
+      pushToast({
+        title: "Streak recovered",
+        description: "Your streak freeze restored the broken wager day.",
+        tone: "success"
+      });
+      router.refresh();
+    } catch (error) {
+      pushToast({
+        title: "Recovery failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+        tone: "error"
+      });
+    } finally {
+      setIsRecovering(false);
+    }
+  };
+
   return (
-    <Card variant="default" className="h-full flex flex-col">
-      <CardHeader className="pb-2">
-        <h3 className="font-[var(--font-display)] text-base font-bold text-text-primary">
-          Streak & XP
-        </h3>
-      </CardHeader>
-      <CardBody className="flex-1 flex flex-col justify-between gap-4">
-        <div className="flex items-center justify-center">
-          <StreakCounter count={streakDays} size="lg" />
-        </div>
-        {longestStreakDays > 0 && (
-          <p className="text-center text-xs text-text-muted">
-            Longest streak: {longestStreakDays} days
-          </p>
-        )}
-        {xp ? (
-          <div className="space-y-2">
-            <XPBar
-              currentXP={xp.xp}
-              maxXP={xp.xp + xp.xpToNextLevel}
-              level={xp.level}
-            />
-            <p className="text-center text-xs font-semibold text-accent-primary">
-              Level {xp.level} {xp.levelName}
+    <>
+      <Card variant="default" className="h-full flex flex-col">
+        <CardHeader className="pb-2">
+          <h3 className="font-[var(--font-display)] text-base font-bold text-text-primary">
+            Streak & XP
+          </h3>
+        </CardHeader>
+        <CardBody className="flex-1 flex flex-col justify-between gap-4">
+          <div className="flex items-center justify-center">
+            <StreakCounter count={streakDays} size="lg" />
+          </div>
+          {longestStreakDays > 0 && (
+            <p className="text-center text-xs text-text-muted">
+              Longest streak: {longestStreakDays} days
             </p>
+          )}
+          {xp ? (
+            <div className="space-y-2">
+              <XPBar
+                currentXP={xp.xp}
+                maxXP={xp.xp + xp.xpToNextLevel}
+                level={xp.level}
+              />
+              <p className="text-center text-xs font-semibold text-accent-primary">
+                Level {xp.level} {xp.levelName}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-full rounded-full" />
+              <Skeleton className="h-3 w-1/2 mx-auto rounded" />
+            </div>
+          )}
+
+          {summary.streakWager.warningAtRisk ? (
+            <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-100 shadow-[var(--shadow-sm)]">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" aria-hidden />
+                <div>
+                  <p className="font-semibold text-amber-50">Streak at Risk</p>
+                  <p className="mt-1 text-amber-100/85">
+                    It&apos;s after 8 PM PKT and your {streakDays}-day streak is uncovered.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {summary.streakWager.activeWager ? (
+            <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-xs text-emerald-50">
+              <div className="flex items-start gap-2">
+                <Shield className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden />
+                <div>
+                  <p className="font-semibold">Streak lock active</p>
+                  <p className="mt-1 text-emerald-50/80">
+                    {summary.streakWager.activeWager.amount} XP locked. Complete today&apos;s goal before midnight PKT to get it back with +{summary.streakWager.activeWager.bonusXp} XP.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {!summary.streakWager.activeWager && summary.streakWager.canPlaceWager ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              width="full"
+              iconLeft={<ShieldAlert />}
+              onClick={() => setLockModalOpen(true)}
+            >
+              Lock streak
+            </Button>
+          ) : null}
+
+          {summary.streakWager.brokenWager ? (
+            <div className="rounded-2xl border border-accent-danger/25 bg-accent-danger/8 p-3 text-xs text-text-secondary">
+              <div className="flex items-start gap-2">
+                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-accent-danger" aria-hidden />
+                <div className="space-y-2">
+                  <div>
+                    <p className="font-semibold text-text-primary">Broken wager</p>
+                    <p className="mt-1">
+                      {summary.streakWager.brokenWager.amount} XP was lost for {summary.streakWager.brokenWager.protectedDate}. You can use one streak freeze to recover the streak.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    width="full"
+                    loading={isRecovering}
+                    disabled={!summary.streakWager.brokenWager.canRecoverWithFreeze}
+                    onClick={() => void onRecover()}
+                  >
+                    {summary.streakWager.brokenWager.canRecoverWithFreeze ? "Use streak freeze" : "Freeze unavailable"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </CardBody>
+      </Card>
+
+      <Dialog open={lockModalOpen} onOpenChange={setLockModalOpen} size="md">
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-primary/12 text-accent-primary">
+              <Sparkles className="h-5 w-5" aria-hidden />
+            </div>
+            <div>
+              <DialogTitle>Streak Lock</DialogTitle>
+              <DialogDescription>
+                Lock in your streak! Wager 25-100 XP to protect it for 24 hours.
+              </DialogDescription>
+            </div>
           </div>
-        ) : (
-          <div className="space-y-2">
-            <Skeleton className="h-3 w-full rounded-full" />
-            <Skeleton className="h-3 w-1/2 mx-auto rounded" />
+        </DialogHeader>
+        <DialogBody className="space-y-4">
+          <div className="rounded-2xl border border-border-default bg-bg-base p-4 text-sm text-text-secondary">
+            Complete today&apos;s goal before midnight PKT and your wager returns with a 50% XP bonus.
           </div>
-        )}
-      </CardBody>
-    </Card>
+          <Input
+            label="Wager amount"
+            type="number"
+            min={summary.streakWager.minWagerXp}
+            max={summary.streakWager.maxWagerXp}
+            step={1}
+            value={wagerAmount}
+            error={wagerError}
+            onChange={(event) => setWagerAmount(event.target.value)}
+            suffix={<span className="text-xs">XP</span>}
+          />
+          {xp ? (
+            <p className="text-xs text-text-muted">Available balance: {xp.xp} XP</p>
+          ) : null}
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="secondary" onClick={() => setLockModalOpen(false)} disabled={isSubmitting}>
+            Maybe later
+          </Button>
+          <Button loading={isSubmitting} onClick={() => void onPlaceWager()} disabled={Boolean(wagerError)}>
+            Lock streak
+          </Button>
+        </DialogFooter>
+      </Dialog>
+    </>
   );
 }
 
@@ -318,26 +505,7 @@ function TodaysGoalCard({
 }: {
   summary: DashboardSummaryResponse | null;
 }) {
-  // Calculate today's goal progress from recent activity
-  const todayStr = new Date().toISOString().split("T")[0];
-  const todaysActivities =
-    summary?.recentActivity.filter((a) =>
-      a.occurredAt.startsWith(todayStr ?? "")
-    ) ?? [];
-
-  const chaptersToday = todaysActivities.filter(
-    (a) => a.type === "chapter_visit"
-  ).length;
-  const quizzesToday = todaysActivities.filter(
-    (a) => a.type === "quiz_submit"
-  ).length;
-
-  // Daily goal: 3 chapters + 1 quiz
-  const goalChapters = 3;
-  const goalQuizzes = 1;
-  const totalGoal = goalChapters + goalQuizzes;
-  const totalDone = Math.min(chaptersToday, goalChapters) + Math.min(quizzesToday, goalQuizzes);
-  const goalPercent = Math.round((totalDone / totalGoal) * 100);
+  const goal = summary?.todaysGoal;
 
   return (
     <Card variant="default" className="h-full flex flex-col">
@@ -351,7 +519,7 @@ function TodaysGoalCard({
       </CardHeader>
       <CardBody className="flex-1 flex flex-col items-center justify-center gap-4">
         <ProgressRing
-          percentage={goalPercent}
+          percentage={goal?.percent ?? 0}
           size={88}
           strokeWidth={7}
           color="var(--accent-success)"
@@ -363,7 +531,7 @@ function TodaysGoalCard({
               Chapters
             </span>
             <span className="font-semibold tabular-nums text-text-primary">
-              {chaptersToday}/{goalChapters}
+              {goal?.chaptersCompleted ?? 0}/{goal?.chaptersTarget ?? 3}
             </span>
           </div>
           <div className="flex items-center justify-between text-xs">
@@ -372,9 +540,12 @@ function TodaysGoalCard({
               Quizzes
             </span>
             <span className="font-semibold tabular-nums text-text-primary">
-              {quizzesToday}/{goalQuizzes}
+              {goal?.quizzesCompleted ?? 0}/{goal?.quizzesTarget ?? 1}
             </span>
           </div>
+          <p className="pt-1 text-[11px] text-text-muted">
+            Evaluated on {summary?.streakWager.currentPktDate ?? "today"} PKT.
+          </p>
         </div>
       </CardBody>
     </Card>
@@ -796,6 +967,7 @@ export function DashboardClient({
             streakDays={summary.streakDays}
             longestStreakDays={summary.longestStreakDays}
             xp={summary.xp}
+            summary={summary}
           />
         </MotionCard>
 

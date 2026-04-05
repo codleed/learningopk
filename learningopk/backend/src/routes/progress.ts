@@ -29,6 +29,9 @@ export const subjectDashboardParamSchema = z.object({
   grade: z.enum(["9", "10"]),
   subjectSlug: z.string().trim().regex(/^[a-z0-9-]+$/)
 });
+export const streakWagerSchema = z.object({
+  amount: z.number().int().min(25).max(100)
+});
 
 export const progressRouter = Router();
 
@@ -98,5 +101,38 @@ progressRouter.get("/dashboard/:boardSlug/:grade/:subjectSlug", requireSession, 
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     res.status(500).json({ error: message });
+  }
+});
+
+progressRouter.post("/streak-wager", requireSession, async (req, res) => {
+  const parsed = streakWagerSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid streak wager payload",
+      details: parsed.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+
+  try {
+    await progressService.placeStreakWager(authedReq.session.user.id, parsed.data.amount);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(400).json({ error: message });
+  }
+});
+
+progressRouter.post("/streak-wager/recover", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+
+  try {
+    await progressService.recoverBrokenStreakWager(authedReq.session.user.id);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(400).json({ error: message });
   }
 });

@@ -90,7 +90,41 @@ const dashboardSummarySchema = z.object({
       canUseStreakFreeze: z.boolean(),
       nextFreezeAvailableAt: z.string().datetime().nullable()
     })
-    .nullable()
+    .nullable(),
+  todaysGoal: z.object({
+    dateKey: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    chaptersCompleted: z.number().int().nonnegative(),
+    chaptersTarget: z.number().int().positive(),
+    quizzesCompleted: z.number().int().nonnegative(),
+    quizzesTarget: z.number().int().positive(),
+    completed: z.boolean(),
+    percent: z.number().int().min(0).max(100)
+  }),
+  streakWager: z.object({
+    timezone: z.literal("Asia/Karachi"),
+    minWagerXp: z.number().int().positive(),
+    maxWagerXp: z.number().int().positive(),
+    currentPktDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    currentPktTime: z.string().datetime(),
+    canPlaceWager: z.boolean(),
+    showLockModal: z.boolean(),
+    warningAtRisk: z.boolean(),
+    activeWager: z.object({
+      id: z.string(),
+      amount: z.number().int().positive(),
+      bonusXp: z.number().int().nonnegative(),
+      protectedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      placedAt: z.string().datetime(),
+      expiresAt: z.string().datetime()
+    }).nullable(),
+    brokenWager: z.object({
+      id: z.string(),
+      amount: z.number().int().positive(),
+      protectedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      lostAt: z.string().datetime(),
+      canRecoverWithFreeze: z.boolean()
+    }).nullable()
+  })
 });
 
 export type DashboardSummaryResponse = z.infer<typeof dashboardSummarySchema>;
@@ -156,4 +190,32 @@ export const getSubjectProgress = async (boardSlug: string, grade: "9" | "10", s
   }
 
   return subjectProgressResponseSchema.parse((await response.json()) as unknown);
+};
+
+export const placeStreakWager = async (amount: number): Promise<void> => {
+  const response = await fetch(`${backendUrl}/api/progress/streak-wager`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ amount })
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? `Streak wager request failed: ${response.status}`);
+  }
+};
+
+export const recoverStreakWager = async (): Promise<void> => {
+  const response = await fetch(`${backendUrl}/api/progress/streak-wager/recover`, {
+    method: "POST",
+    credentials: "include"
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? `Streak wager recovery failed: ${response.status}`);
+  }
 };

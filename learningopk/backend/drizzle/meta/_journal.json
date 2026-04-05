@@ -120,6 +120,20 @@
       "when": 1775415300000,
       "tag": "0016_formula_library",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1775448000000,
+      "tag": "0017_streak_wagers",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1775451600000,
+      "tag": "0018_leaderboard_privacy",
+      "breakpoints": true
     }
   ]
 }

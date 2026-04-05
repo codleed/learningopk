@@ -37,6 +37,7 @@ export const adminAuditScopeEnum = pgEnum("admin_audit_scope", [
 export const adminAuditStatusEnum = pgEnum("admin_audit_status", ["success", "failed"]);
 export const notificationAudienceEnum = pgEnum("notification_audience", ["all", "students", "admins"]);
 export const notificationStatusEnum = pgEnum("notification_status", ["sent"]);
+export const streakWagerStatusEnum = pgEnum("streak_wager_status", ["active", "won", "lost"]);
 
 export const users = pgTable("user", {
   id: text("id").primaryKey(),
@@ -47,6 +48,7 @@ export const users = pgTable("user", {
   class: text("student_class"),
   degree: text("degree"),
   board: text("board"),
+  leaderboardPublic: boolean("leaderboard_public").notNull().default(true),
   role: userRoleEnum("role").notNull().default("student"),
   status: userStatusEnum("status").notNull().default("active"),
   xp: integer("xp").notNull().default(0),
@@ -599,6 +601,29 @@ export const formulas = pgTable(
       "gin",
       sql`to_tsvector('english', coalesce(${table.name}, '') || ' ' || coalesce(${table.description}, ''))`
     )
+  ]
+);
+
+export const streakWagers = pgTable(
+  "streak_wagers",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    amount: integer("amount").notNull(),
+    bonusXp: integer("bonus_xp").notNull(),
+    protectedDate: text("protected_date").notNull(),
+    status: streakWagerStatusEnum("status").notNull().default("active"),
+    completedGoal: boolean("completed_goal"),
+    placedAt: timestamp("placed_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }).notNull(),
+    settledAt: timestamp("settled_at", { withTimezone: true, mode: "date" }),
+    recoveredAt: timestamp("recovered_at", { withTimezone: true, mode: "date" })
+  },
+  (table) => [
+    uniqueIndex("streak_wagers_user_protected_date_idx").on(table.userId, table.protectedDate),
+    index("streak_wagers_user_status_idx").on(table.userId, table.status, desc(table.placedAt))
   ]
 );
 

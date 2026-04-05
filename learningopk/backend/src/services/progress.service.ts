@@ -4,12 +4,13 @@ import {
   calculateLongestStreakDays,
   calculateStreakDays,
   createUtcDay,
-  scoreToPercent,
-  toDateKey
+  scoreToPercent
 } from "../lib/progress-metrics.js";
 import { applyProgressEvent } from "../lib/progress.js";
+import { getCurrentPktContext, getPktDateKey } from "../lib/streak-wager.js";
 import { formulasRepository } from "../repositories/formulas.repository.js";
 import { progressRepository } from "../repositories/progress.repository.js";
+import { streakWagerService } from "./streak-wager.service.js";
 import { xpService, XP_VALUES } from "./xp.service.js";
 
 export interface ProgressEventInput {
@@ -54,6 +55,14 @@ export interface SubjectAggregate {
 }
 
 export class ProgressService {
+  async placeStreakWager(userId: string, amount: number): Promise<void> {
+    await streakWagerService.placeWager(userId, amount);
+  }
+
+  async recoverBrokenStreakWager(userId: string): Promise<void> {
+    await streakWagerService.recoverBrokenWager(userId);
+  }
+
   async recordProgressEvent(input: ProgressEventInput): Promise<ProgressEventResult> {
     const snapshot = await applyProgressEvent(
       input.eventType === "quiz_submit"
@@ -147,9 +156,19 @@ export class ProgressService {
 
     const subjectAggregates = this.aggregateSubjectProgress(subjectProgressRows, chapterTotalMarks);
 
-    const progressActivityRows = await progressRepository.findProgressByUserId(userId);
+    await streakWagerService.settleOutstandingWagers(userId);
 
-    const { streakDays, longestStreakDays, weeklyActivity, activityCalendar } = this.calculateActivityMetrics(progressActivityRows);
+    const progressActivityRows = await progressRepository.findProgressByUserId(userId);
+    const recoveredProtectedDateKeys = await streakWagerService.getRecoveredProtectedDateKeys(userId);
+    const lostProtectedDateKeys = await streakWagerService.getLostProtectedDateKeys(userId);
+
+    const { streakDays, longestStreakDays, weeklyActivity, activityCalendar } = this.calculateActivityMetrics(
+      progressActivityRows,
+      {
+        recoveredProtectedDateKeys,
+        lostProtectedDateKeys
+      }
+    );
 
     const recentChapterVisitRows = await progressRepository.findRecentChapterVisits(userId, 5);
 
@@ -219,6 +238,9 @@ export class ProgressService {
       console.error("Failed to get streak freeze info:", error);
     }
 
+    const todaysGoal = await streakWagerService.getGoalProgressForDate(userId, getCurrentPktContext().todayKey);
+    const streakWager = await streakWagerService.buildDashboardState(userId, streakDays);
+
     return {
       studentName,
       streakDays,
@@ -251,7 +273,9 @@ export class ProgressService {
         levelName: xpInfo.levelName,
         xpToNextLevel: xpInfo.xpToNextLevel
       } : null,
-      streakFreeze: streakFreezeInfo
+      streakFreeze: streakFreezeInfo,
+      todaysGoal,
+      streakWager
     };
   }
 
@@ -371,18 +395,34 @@ export class ProgressService {
       activityAt: Date | null;
       exercisesViewed: number;
       quizAttemptsCount: number;
-    }>
+    }>,
+    options?: {
+      recoveredProtectedDateKeys?: string[];
+      lostProtectedDateKeys?: string[];
+    }
   ) {
     const activityDailyCounts = new Map<string, number>();
     for (const row of progressActivityRows) {
       if (!row.activityAt) continue;
-      const key = toDateKey(row.activityAt);
+      const key = getPktDateKey(row.activityAt);
       const count = 1 + row.exercisesViewed + row.quizAttemptsCount;
       activityDailyCounts.set(key, (activityDailyCounts.get(key) ?? 0) + count);
     }
 
-    const today = new Date();
-    const todayUtc = createUtcDay(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+    for (const recoveredProtectedDateKey of options?.recoveredProtectedDateKeys ?? []) {
+      activityDailyCounts.set(recoveredProtectedDateKey, Math.max(1, activityDailyCounts.get(recoveredProtectedDateKey) ?? 0));
+    }
+
+    for (const lostProtectedDateKey of options?.lostProtectedDateKeys ?? []) {
+      activityDailyCounts.delete(lostProtectedDateKey);
+    }
+
+    const todayKey = getCurrentPktContext().todayKey;
+    const todayUtc = createUtcDay(
+      Number(todayKey.slice(0, 4)),
+      Number(todayKey.slice(5, 7)) - 1,
+      Number(todayKey.slice(8, 10))
+    );
     const activityDates = Array.from(activityDailyCounts.keys()).map((dateKey) => new Date(`${dateKey}T00:00:00.000Z`));
     const streakDays = calculateStreakDays(activityDates, todayUtc);
     const longestStreakDays = calculateLongestStreakDays(activityDates);
