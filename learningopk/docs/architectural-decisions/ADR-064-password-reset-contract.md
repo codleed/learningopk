@@ -249,12 +249,15 @@ This requires `buildForumHref` to be passed as a prop or imported. Since it's cu
 - [x] Updated ADR-064 status from Proposed to Accepted
 
 ## TASK-57: Auth Review Drift
-- [ ] Remove `bento-auth-shell.tsx` and any unreferenced Bento components
-- [ ] Remove `auth-top-navbar.tsx` if truly unused (verify imports first)
-- [ ] Audit `login-form.tsx` for "Remember me" - it's present but needs documentation in API contract
-- [ ] Add `data-testid` attributes to auth forms
-- [ ] Update E2E tests to use test IDs, verify alignment with current UI
-- [ ] Update `phase3-auth-layout-routes.spec.ts` to match actual behavior (remove mocks if password reset enabled)
+- [x] Remove `bento-auth-shell.tsx` and any unreferenced Bento components (removed `bento-auth-field.tsx`; `bento-auth-shell.tsx` did not exist)
+- [x] Remove `auth-top-navbar.tsx` if truly unused (file did not exist)
+- [x] Audit `login-form.tsx` for "Remember me" — removed dead `login-form.tsx` (replaced by `login-page-client.tsx`); "Remember me" Switch removed from `login-page-client.tsx`
+- [x] Remove dead `register-form.tsx` (replaced by `register-page-client.tsx`)
+- [x] `data-testid` attributes already present on auth forms (login-email-input, login-password-input, login-submit-button)
+- [x] Update E2E tests — rewrote "bento auth shell" test to match current auth UI
+- [x] `phase3-auth-layout-routes.spec.ts` already correct (asserts forgot-password/reset-password 404, no mocks)
+- [x] `auth-resilience.spec.ts` locators verified against current UI (no ambiguity after Switch removal)
+- [x] `api-contracts.md` updated: removed false "Remember me" claim, added `autoSignIn` note, clarified password reset status
 
 ## TASK-62: Forum Filter State
 - [ ] Extract `buildForumHref` to `frontend/src/lib/forum-utils.ts`
