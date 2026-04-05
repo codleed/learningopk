@@ -77,6 +77,25 @@ const dashboardSummarySchema = z.object({
       level: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4)])
     })
   ),
+  todaysFocus: z
+    .object({
+      dateKey: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      type: z.enum(["weak_quiz", "streak_at_risk", "exam_countdown"]),
+      difficulty: z.enum(["easy", "medium", "hard"]),
+      title: z.string(),
+      reason: z.string(),
+      ctaLabel: z.string(),
+      href: z.string(),
+      xpReward: z.number().int().nonnegative(),
+      durationMinutes: z.number().int().positive(),
+      isRamadanAdjusted: z.boolean(),
+      chapterId: z.number().int().positive().nullable(),
+      chapterTitle: z.string().nullable(),
+      subjectName: z.string().nullable(),
+      completed: z.boolean(),
+      completedAt: z.string().datetime().nullable()
+    })
+    .nullable(),
   xp: z
     .object({
       xp: z.number().int().nonnegative(),
@@ -156,6 +175,24 @@ const subjectProgressResponseSchema = z.object({
 
 export type SubjectProgressResponse = z.infer<typeof subjectProgressResponseSchema>;
 
+const todaysFocusCompletionSchema = z.object({
+  completedAt: z.string().datetime(),
+  xpAwarded: z.number().int().nonnegative(),
+  alreadyCompleted: z.boolean(),
+  xp: z
+    .object({
+      xpAwarded: z.number().int().nonnegative(),
+      newXp: z.number().int().nonnegative(),
+      level: z.number().int().min(0),
+      levelName: z.string(),
+      leveledUp: z.boolean(),
+      previousLevel: z.number().int().min(0)
+    })
+    .optional()
+});
+
+export type TodaysFocusCompletionResponse = z.infer<typeof todaysFocusCompletionSchema>;
+
 export const getDashboardSummary = async (cookieHeader: string): Promise<DashboardSummaryResponse> => {
   const response = await fetch(`${backendUrl}/api/progress/dashboard`, {
     method: "GET",
@@ -190,6 +227,23 @@ export const getSubjectProgress = async (boardSlug: string, grade: "9" | "10", s
   }
 
   return subjectProgressResponseSchema.parse((await response.json()) as unknown);
+};
+
+export const completeTodaysFocus = async (): Promise<TodaysFocusCompletionResponse> => {
+  const response = await fetch(`${backendUrl}/api/progress/todays-focus/complete`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({})
+  });
+
+  if (!response.ok) {
+    throw new Error(`Today's focus completion request failed: ${response.status}`);
+  }
+
+  return todaysFocusCompletionSchema.parse((await response.json()) as unknown);
 };
 
 export const placeStreakWager = async (amount: number): Promise<void> => {

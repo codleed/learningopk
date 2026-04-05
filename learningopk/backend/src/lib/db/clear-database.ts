@@ -14,6 +14,7 @@ export const CLEAR_TABLES = [
   "flashcards",
   "exercises",
   "chapter_summary_media",
+  "user_daily_momentum_goals",
   "user_progress",
   "chapters",
   "content_sources",

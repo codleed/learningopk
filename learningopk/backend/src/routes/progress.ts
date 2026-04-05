@@ -32,6 +32,7 @@ export const subjectDashboardParamSchema = z.object({
 export const streakWagerSchema = z.object({
   amount: z.number().int().min(25).max(100)
 });
+export const todaysFocusCompletionSchema = z.object({});
 
 export const progressRouter = Router();
 
@@ -131,6 +132,27 @@ progressRouter.post("/streak-wager/recover", requireSession, async (req, res) =>
   try {
     await progressService.recoverBrokenStreakWager(authedReq.session.user.id);
     res.status(200).json({ success: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(400).json({ error: message });
+  }
+});
+
+progressRouter.post("/todays-focus/complete", requireSession, async (req, res) => {
+  const parsed = todaysFocusCompletionSchema.safeParse(req.body ?? {});
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid today's focus completion payload",
+      details: parsed.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+
+  try {
+    const result = await progressService.completeTodaysFocus(authedReq.session.user.id);
+    res.status(200).json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     res.status(400).json({ error: message });

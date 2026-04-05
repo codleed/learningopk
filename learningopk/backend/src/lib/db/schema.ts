@@ -140,7 +140,8 @@ export const subjects = pgTable(
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     icon: text("icon"),
-    description: text("description")
+    description: text("description"),
+    examDate: timestamp("exam_date", { withTimezone: true, mode: "date" })
   },
   (table) => [
     uniqueIndex("subjects_board_grade_slug_idx").on(table.boardId, table.grade, table.slug),
@@ -601,6 +602,25 @@ export const formulas = pgTable(
       "gin",
       sql`to_tsvector('english', coalesce(${table.name}, '') || ' ' || coalesce(${table.description}, ''))`
     )
+  ]
+);
+
+export const userDailyMomentumGoals = pgTable(
+  "user_daily_momentum_goals",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    dateKey: text("date_key").notNull(),
+    focusType: text("focus_type").notNull(),
+    chapterId: integer("chapter_id").references(() => chapters.id, { onDelete: "set null" }),
+    xpAwarded: integer("xp_awarded").notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    uniqueIndex("user_daily_momentum_goals_user_date_idx").on(table.userId, table.dateKey),
+    index("user_daily_momentum_goals_user_completed_idx").on(table.userId, desc(table.completedAt))
   ]
 );
 

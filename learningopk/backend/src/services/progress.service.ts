@@ -8,10 +8,12 @@ import {
 } from "../lib/progress-metrics.js";
 import { applyProgressEvent } from "../lib/progress.js";
 import { getCurrentPktContext, getPktDateKey } from "../lib/streak-wager.js";
+import { attachCompletionState, buildTodaysFocus, resolveRamadanConfig, type TodaysFocus } from "../lib/todays-focus.js";
+import { adminSettingsRepository } from "../repositories/admin-settings.repository.js";
 import { formulasRepository } from "../repositories/formulas.repository.js";
 import { progressRepository } from "../repositories/progress.repository.js";
 import { streakWagerService } from "./streak-wager.service.js";
-import { xpService, XP_VALUES } from "./xp.service.js";
+import { xpService } from "./xp.service.js";
 
 export interface ProgressEventInput {
   eventType: "chapter_visit" | "exercise_view" | "flashcard_complete" | "quiz_submit";
@@ -53,6 +55,8 @@ export interface SubjectAggregate {
   bestQuizScorePercent: number;
   lastActiveAt: Date | null;
 }
+
+type DashboardTodaysFocus = (TodaysFocus & { completed: boolean; completedAt: string | null }) | null;
 
 export class ProgressService {
   async placeStreakWager(userId: string, amount: number): Promise<void> {
@@ -169,6 +173,15 @@ export class ProgressService {
         lostProtectedDateKeys
       }
     );
+    const momentumContext = getCurrentPktContext();
+    const hasActivityToday = await progressRepository.hasActivityInRange(
+      userId,
+      momentumContext.dayStartUtc,
+      momentumContext.nextDayStartUtc
+    );
+    const ramadanConfig = resolveRamadanConfig({
+      settings: await adminSettingsRepository.findByKeys(["ramadan_mode", "ramadan_fasting_hours"])
+    });
 
     const recentChapterVisitRows = await progressRepository.findRecentChapterVisits(userId, 5);
 
@@ -240,6 +253,14 @@ export class ProgressService {
 
     const todaysGoal = await streakWagerService.getGoalProgressForDate(userId, getCurrentPktContext().todayKey);
     const streakWager = await streakWagerService.buildDashboardState(userId, streakDays);
+    const todaysFocus = await this.buildDashboardFocus({
+      userId,
+      streakDays,
+      hasActivityToday,
+      ramadanConfig,
+      subjectProgressRows,
+      chapterTotalMarks
+    });
 
     return {
       studentName,
@@ -267,6 +288,7 @@ export class ProgressService {
       })),
       weeklyActivity,
       dailyActivity: activityCalendar,
+      todaysFocus,
       xp: xpInfo ? {
         xp: xpInfo.xp,
         level: xpInfo.level,
@@ -333,6 +355,82 @@ export class ProgressService {
       },
       overallSubjectScorePercent,
       chapters: chapterProgress
+    };
+  }
+
+  async completeTodaysFocus(userId: string) {
+    const todayKey = getCurrentPktContext().todayKey;
+    const existing = await progressRepository.findDailyMomentumGoal(userId, todayKey);
+
+    if (existing) {
+      return {
+        completedAt: existing.completedAt.toISOString(),
+        xpAwarded: existing.xpAwarded,
+        alreadyCompleted: true
+      };
+    }
+
+    const chapterQuizRows = await progressRepository.findChapterQuizTotalMarks();
+    const chapterTotalMarks = new Map<number, number>();
+    for (const row of chapterQuizRows) {
+      if (!chapterTotalMarks.has(row.chapterId)) {
+        chapterTotalMarks.set(row.chapterId, row.totalMarks);
+      }
+    }
+
+    const progressActivityRows = await progressRepository.findProgressByUserId(userId);
+    const { streakDays } = this.calculateActivityMetrics(progressActivityRows);
+    const context = getCurrentPktContext();
+    const hasActivityToday = await progressRepository.hasActivityInRange(userId, context.dayStartUtc, context.nextDayStartUtc);
+    const ramadanConfig = resolveRamadanConfig({
+      settings: await adminSettingsRepository.findByKeys(["ramadan_mode", "ramadan_fasting_hours"])
+    });
+    const subjectProgressRows = await progressRepository.findSubjectProgress(userId);
+
+    const focus = buildTodaysFocus({
+      streakDays,
+      hasActivityToday,
+      ramadanConfig,
+      chapters: subjectProgressRows.map((row) => ({
+        chapterId: row.chapterId,
+        chapterNumber: row.chapterNumber,
+        chapterSlug: row.chapterSlug,
+        chapterTitle: row.chapterTitle,
+        subjectId: row.subjectId,
+        subjectName: row.subjectName,
+        subjectSlug: row.subjectSlug,
+        boardSlug: row.boardSlug,
+        grade: (row.grade ?? "9") as "9" | "10",
+        visited: Boolean(row.visitedAt),
+        quizAttemptsCount: row.quizAttemptsCount ?? 0,
+        bestQuizScorePercent: scoreToPercent(row.quizBestScore ?? 0, chapterTotalMarks.get(row.chapterId) ?? 0),
+        examDate: row.examDate ? row.examDate.toISOString() : null
+      }))
+    });
+
+    if (!focus) {
+      throw new Error("No daily momentum goal is available to complete.");
+    }
+
+    const created = await progressRepository.createDailyMomentumGoal({
+      userId,
+      dateKey: focus.dateKey,
+      focusType: focus.type,
+      chapterId: focus.chapterId,
+      xpAwarded: focus.xpReward
+    });
+
+    if (!created) {
+      throw new Error("Could not persist daily momentum completion.");
+    }
+
+    const xp = await xpService.awardXp(userId, focus.xpReward, "daily_momentum_goal");
+
+    return {
+      completedAt: created.completedAt.toISOString(),
+      xpAwarded: focus.xpReward,
+      alreadyCompleted: false,
+      xp
     };
   }
 
@@ -438,6 +536,71 @@ export class ProgressService {
     });
 
     return { streakDays, longestStreakDays, weeklyActivity, activityCalendar };
+  }
+
+  private async buildDashboardFocus(input: {
+    userId: string;
+    streakDays: number;
+    hasActivityToday: boolean;
+    ramadanConfig: {
+      enabled: boolean;
+      fastingStartHour: number;
+      fastingEndHour: number;
+    };
+    subjectProgressRows: Array<{
+      subjectId: number;
+      subjectSlug: string;
+      subjectName: string;
+      grade: string | null;
+      boardName: string;
+      boardSlug: string;
+      chapterId: number;
+      visitedAt: Date | null;
+      quizBestScore: number | null;
+      quizAttemptsCount: number | null;
+      chapterNumber: number;
+      chapterSlug: string;
+      chapterTitle: string;
+      examDate: Date | null;
+    }>;
+    chapterTotalMarks: Map<number, number>;
+  }): Promise<DashboardTodaysFocus> {
+    const focus = buildTodaysFocus({
+      streakDays: input.streakDays,
+      hasActivityToday: input.hasActivityToday,
+      ramadanConfig: input.ramadanConfig,
+      chapters: input.subjectProgressRows.map((row) => ({
+        chapterId: row.chapterId,
+        chapterNumber: row.chapterNumber,
+        chapterSlug: row.chapterSlug,
+        chapterTitle: row.chapterTitle,
+        subjectId: row.subjectId,
+        subjectName: row.subjectName,
+        subjectSlug: row.subjectSlug,
+        boardSlug: row.boardSlug,
+        grade: (row.grade ?? "9") as "9" | "10",
+        visited: Boolean(row.visitedAt),
+        quizAttemptsCount: row.quizAttemptsCount ?? 0,
+        bestQuizScorePercent: scoreToPercent(row.quizBestScore ?? 0, input.chapterTotalMarks.get(row.chapterId) ?? 0),
+        examDate: row.examDate ? row.examDate.toISOString() : null
+      }))
+    });
+
+    if (!focus) {
+      return null;
+    }
+
+    const completion = await progressRepository.findDailyMomentumGoal(input.userId, focus.dateKey);
+
+    return attachCompletionState(
+      focus,
+      completion
+        ? {
+            completedAt: completion.completedAt.toISOString(),
+            xpAwarded: completion.xpAwarded
+          }
+        : null
+    );
   }
 }
 

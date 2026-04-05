@@ -1,7 +1,7 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
-import { boards, chapters, quizAttempts, quizzes, subjects, userProgress } from "../lib/db/schema.js";
+import { boards, chapters, quizAttempts, quizzes, subjects, userDailyMomentumGoals, userProgress } from "../lib/db/schema.js";
 
 export class ProgressRepository {
   async findChapterById(chapterId: number) {
@@ -20,7 +20,8 @@ export class ProgressRepository {
         subjectName: subjects.name,
         grade: subjects.grade,
         boardName: boards.name,
-        boardSlug: boards.slug
+        boardSlug: boards.slug,
+        examDate: subjects.examDate
       })
       .from(subjects)
       .innerJoin(boards, eq(subjects.boardId, boards.id))
@@ -43,9 +44,11 @@ export class ProgressRepository {
         visitedAt: userProgress.visitedAt,
         exercisesViewed: userProgress.exercisesViewed,
         quizAttemptsCount: userProgress.quizAttemptsCount,
-        quizBestScore: userProgress.quizBestScore
+        quizBestScore: userProgress.quizBestScore,
+        examDate: subjects.examDate
       })
       .from(chapters)
+      .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
       .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
       .where(and(eq(chapters.subjectId, subjectId), eq(chapters.isPublished, true)))
       .orderBy(asc(chapters.chapterNumber));
@@ -72,6 +75,16 @@ export class ProgressRepository {
       })
       .from(userProgress)
       .where(eq(userProgress.userId, userId));
+  }
+
+  async hasActivityInRange(userId: string, startUtc: Date, endUtc: Date) {
+    const rows = await db
+      .select({ id: userProgress.id })
+      .from(userProgress)
+      .where(and(eq(userProgress.userId, userId), gte(userProgress.visitedAt, startUtc), lt(userProgress.visitedAt, endUtc)))
+      .limit(1);
+
+    return rows.length > 0;
   }
 
   async findRecentChapterVisits(userId: string, limit = 5) {
@@ -164,13 +177,63 @@ export class ProgressRepository {
         boardSlug: boards.slug,
         chapterId: chapters.id,
         visitedAt: userProgress.visitedAt,
-        quizBestScore: userProgress.quizBestScore
+        quizBestScore: userProgress.quizBestScore,
+        quizAttemptsCount: userProgress.quizAttemptsCount,
+        chapterNumber: chapters.chapterNumber,
+        chapterSlug: chapters.slug,
+        chapterTitle: chapters.title,
+        examDate: subjects.examDate
       })
       .from(subjects)
       .innerJoin(boards, eq(subjects.boardId, boards.id))
       .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
       .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
       .orderBy(asc(subjects.name), asc(chapters.chapterNumber));
+  }
+
+  async findDailyMomentumGoal(userId: string, dateKey: string) {
+    const rows = await db
+      .select({
+        id: userDailyMomentumGoals.id,
+        dateKey: userDailyMomentumGoals.dateKey,
+        focusType: userDailyMomentumGoals.focusType,
+        chapterId: userDailyMomentumGoals.chapterId,
+        xpAwarded: userDailyMomentumGoals.xpAwarded,
+        completedAt: userDailyMomentumGoals.completedAt,
+      })
+      .from(userDailyMomentumGoals)
+      .where(and(eq(userDailyMomentumGoals.userId, userId), eq(userDailyMomentumGoals.dateKey, dateKey)))
+      .limit(1);
+
+    return rows[0] ?? null;
+  }
+
+  async createDailyMomentumGoal(input: {
+    userId: string;
+    dateKey: string;
+    focusType: string;
+    chapterId: number | null;
+    xpAwarded: number;
+  }) {
+    const rows = await db
+      .insert(userDailyMomentumGoals)
+      .values({
+        userId: input.userId,
+        dateKey: input.dateKey,
+        focusType: input.focusType,
+        chapterId: input.chapterId,
+        xpAwarded: input.xpAwarded,
+      })
+      .returning({
+        id: userDailyMomentumGoals.id,
+        dateKey: userDailyMomentumGoals.dateKey,
+        focusType: userDailyMomentumGoals.focusType,
+        chapterId: userDailyMomentumGoals.chapterId,
+        xpAwarded: userDailyMomentumGoals.xpAwarded,
+        completedAt: userDailyMomentumGoals.completedAt,
+      });
+
+    return rows[0] ?? null;
   }
 }
 

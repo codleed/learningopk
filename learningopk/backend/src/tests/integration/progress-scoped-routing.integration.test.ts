@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import request from "supertest";
 
 import { db, pool } from "../../lib/db/index.js";
-import { boards, chapters, subjects, users } from "../../lib/db/schema.js";
+import { boards, chapters, subjects, userDailyMomentumGoals, users } from "../../lib/db/schema.js";
 import { redis } from "../../lib/redis.js";
 import { createApp } from "../../server.js";
 
@@ -252,4 +252,73 @@ test("dashboard summary includes boardSlug for each subject enabling scoped subj
   assert.equal(matchedB?.boardSlug, fixture.boardB.slug, "Subject B boardSlug must match board B.");
   assert.equal(matchedA?.subjectSlug, fixture.sharedSubjectSlug);
   assert.equal(matchedB?.subjectSlug, fixture.sharedSubjectSlug);
+});
+
+test("dashboard summary returns a today's focus card and completing it awards XP once", async () => {
+  const app = createApp();
+  const studentAgent = request.agent(app);
+
+  const userId = await signUp(studentAgent, "Momentum Student", `tst_momentum_${Date.now()}@example.com`);
+
+  const suffix = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  const boardRows = await db.insert(boards).values({ name: `Momentum Board ${suffix}`, slug: `momentum-board-${suffix}` }).returning({ id: boards.id, slug: boards.slug });
+  const board = boardRows[0];
+  assert.ok(board, "Expected board fixture insert.");
+
+  const subjectRows = await db
+    .insert(subjects)
+    .values({
+      boardId: board.id,
+      grade: "9",
+      name: `Momentum Subject ${suffix}`,
+      slug: `momentum-subject-${suffix}`,
+      examDate: new Date("2026-04-01T00:00:00.000Z")
+    })
+    .returning({ id: subjects.id, slug: subjects.slug });
+  const subject = subjectRows[0];
+  assert.ok(subject, "Expected subject fixture insert.");
+
+  const chapterRows = await db
+    .insert(chapters)
+    .values({
+      subjectId: subject.id,
+      chapterNumber: 1,
+      title: `Momentum Chapter ${suffix}`,
+      slug: `momentum-chapter-${suffix}`,
+      summary: "Momentum chapter summary.",
+      isPublished: true
+    })
+    .returning({ id: chapters.id, slug: chapters.slug });
+  const chapter = chapterRows[0];
+  assert.ok(chapter, "Expected chapter fixture insert.");
+
+  const dashboardResponse = await studentAgent.get("/api/progress/dashboard");
+  assert.equal(dashboardResponse.status, 200);
+  assert.equal(dashboardResponse.body?.todaysFocus?.type, "streak_at_risk");
+  assert.match(dashboardResponse.body?.todaysFocus?.href ?? "", new RegExp(`${chapter.slug}\\?tab=summary$`));
+
+  const beforeUserRows = await db.select({ xp: users.xp }).from(users).where(eq(users.id, userId)).limit(1);
+  const beforeXp = beforeUserRows[0]?.xp ?? 0;
+
+  const completeResponse = await studentAgent.post("/api/progress/todays-focus/complete").send({});
+  assert.equal(completeResponse.status, 200);
+  assert.equal(completeResponse.body?.xpAwarded, 5);
+  assert.equal(completeResponse.body?.alreadyCompleted, false);
+
+  const afterUserRows = await db.select({ xp: users.xp }).from(users).where(eq(users.id, userId)).limit(1);
+  assert.equal(afterUserRows[0]?.xp, beforeXp + 5, "Expected momentum XP to be added once.");
+
+  const completionRows = await db
+    .select({ dateKey: userDailyMomentumGoals.dateKey, xpAwarded: userDailyMomentumGoals.xpAwarded })
+    .from(userDailyMomentumGoals)
+    .where(eq(userDailyMomentumGoals.userId, userId));
+  assert.equal(completionRows.length, 1, "Expected a single completion row.");
+  assert.equal(completionRows[0]?.xpAwarded, 5);
+
+  const repeatResponse = await studentAgent.post("/api/progress/todays-focus/complete").send({});
+  assert.equal(repeatResponse.status, 200);
+  assert.equal(repeatResponse.body?.alreadyCompleted, true);
+
+  const finalUserRows = await db.select({ xp: users.xp }).from(users).where(eq(users.id, userId)).limit(1);
+  assert.equal(finalUserRows[0]?.xp, beforeXp + 5, "Expected repeated completion to avoid double XP.");
 });

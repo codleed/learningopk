@@ -65,6 +65,14 @@ test("progress dashboard endpoint requires authentication", async () => {
   assert.equal(response.status, 401, "GET /api/progress/dashboard should require auth.");
 });
 
+test("todays focus completion endpoint requires authentication", async () => {
+  const app = createApp();
+  const agent = request(app);
+
+  const response = await agent.post("/api/progress/todays-focus/complete").send({});
+  assert.equal(response.status, 401, "POST /api/progress/todays-focus/complete should require auth.");
+});
+
 test("health endpoint is public", async () => {
   const app = createApp();
   const agent = request(app);
