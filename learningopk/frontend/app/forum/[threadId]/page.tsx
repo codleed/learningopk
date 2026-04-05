@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { ArrowLeft, Eye, Clock, MessageSquare } from "lucide-react";
 
@@ -66,9 +67,12 @@ export default async function ForumThreadDetailPage({ params }: ForumThreadDetai
     notFound();
   }
 
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+
   const [session, threadPayload] = await Promise.all([
     getServerSession(),
-    getForumThreadById(parsedParams.data.threadId)
+    getForumThreadById(parsedParams.data.threadId, { cookieHeader })
   ]);
 
   if (!threadPayload) {

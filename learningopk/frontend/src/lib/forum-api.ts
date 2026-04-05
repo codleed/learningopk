@@ -117,9 +117,19 @@ export type ForumFeedQuery = {
   offset?: number;
 };
 
-const fetchForumJson = async <T>(url: string, schema: z.ZodType<T>): Promise<T> => {
+type FetchForumOptions = {
+  cookieHeader?: string;
+};
+
+const fetchForumJson = async <T>(url: string, schema: z.ZodType<T>, options?: FetchForumOptions): Promise<T> => {
+  const headers: Record<string, string> = {};
+  if (options?.cookieHeader) {
+    headers.cookie = options.cookieHeader;
+  }
+
   const response = await fetch(url, {
     method: "GET",
+    headers,
     cache: "no-store"
   });
 
@@ -166,9 +176,18 @@ export const getForumThreads = async (query: ForumFeedQuery): Promise<ForumFeedR
   return fetchForumJson(url, forumFeedResponseSchema);
 };
 
-export const getForumThreadById = async (threadId: string): Promise<ForumThreadDetailResponse | null> => {
+export const getForumThreadById = async (
+  threadId: string,
+  options?: FetchForumOptions
+): Promise<ForumThreadDetailResponse | null> => {
+  const headers: Record<string, string> = {};
+  if (options?.cookieHeader) {
+    headers.cookie = options.cookieHeader;
+  }
+
   const response = await fetch(`${backendUrl}/api/forum/threads/${threadId}`, {
     method: "GET",
+    headers,
     cache: "no-store"
   });
 
