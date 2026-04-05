@@ -116,16 +116,9 @@ forumRouter.get("/threads/:threadId", async (req, res) => {
     console.warn("Auth service unavailable for thread view, proceeding without personalized data:", error);
   }
 
-  // Only increment view count if explicitly requested via query param
-  // This prevents inflated counts from SSR, refreshes, and bot requests
-  if (req.query.trackView === "true") {
-    try {
-      await forumRepository.incrementThreadViews(threadId);
-    } catch (error) {
-      console.error("Failed to increment thread views:", error);
-      // Do not fail the request if view increment fails
-    }
-  }
+  // View counting is handled by the dedicated POST /threads/:threadId/view
+  // endpoint. The GET endpoint intentionally does NOT increment views to
+  // prevent inflation from SSR re-renders and router.refresh() calls.
 
   const threadRows = await forumRepository.findThreadById(threadId);
 
@@ -161,6 +154,30 @@ forumRouter.get("/threads/:threadId", async (req, res) => {
       replyCount: replyRowsWithVotes.length
     }
   });
+});
+
+/**
+ * POST /threads/:threadId/view
+ *
+ * Dedicated view-tracking endpoint. Decoupled from the GET so that
+ * client-side `router.refresh()` after mutations does NOT inflate counts.
+ * The frontend fires this once on mount via ForumThreadViewTracker.
+ */
+forumRouter.post("/threads/:threadId/view", async (req, res) => {
+  const parsedParams = threadParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json(errorResponse("Invalid thread identifier", "VALIDATION_ERROR", parsedParams.error.flatten()));
+    return;
+  }
+
+  try {
+    await forumRepository.incrementThreadViews(parsedParams.data.threadId);
+  } catch (error) {
+    console.error("Failed to increment thread views:", error);
+    // Best-effort — do not fail the request if view increment fails
+  }
+
+  res.status(204).end();
 });
 
 forumRouter.post("/threads", requireSession, async (req, res) => {

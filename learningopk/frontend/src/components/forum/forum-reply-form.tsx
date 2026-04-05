@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/toast";
 import { ContentRenderer } from "@/components/common/content-renderer";
 import { Tabs, TabList, TabTrigger, TabContent } from "@/components/ui/tabs";
 
@@ -26,6 +27,7 @@ type ForumReplyFormProps = {
 
 export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: ForumReplyFormProps) => {
   const router = useRouter();
+  const { pushToast } = useToast();
   const [body, setBody] = useState("");
   const [activeTab, setActiveTab] = useState("write");
   const [isPending, setIsPending] = useState(false);
@@ -50,35 +52,45 @@ export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: For
     }
 
     setIsPending(true);
-    const response = await fetch(`${backendUrl}/api/forum/threads/${threadId}/replies`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "content-type": "application/json"
-      },
-      body: JSON.stringify(parsed.data)
-    });
-    const responseBody = (await response.json().catch(() => null)) as unknown;
-    setIsPending(false);
+    try {
+      const response = await fetch(`${backendUrl}/api/forum/threads/${threadId}/replies`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(parsed.data)
+      });
+      const responseBody = (await response.json().catch(() => null)) as unknown;
 
-    if (response.status === 401) {
-      setError("You must sign in before replying.");
-      return;
+      if (response.status === 401) {
+        setError("You must sign in before replying.");
+        return;
+      }
+
+      if (!response.ok) {
+        const parsedError = z
+          .object({
+            error: z.string()
+          })
+          .safeParse(responseBody);
+        setError(parsedError.success ? parsedError.data.error : "Reply failed.");
+        return;
+      }
+
+      setBody("");
+      setActiveTab("write");
+      router.refresh();
+    } catch {
+      setError("Network error. Check your connection and try again.");
+      pushToast({
+        title: "Failed to post reply",
+        description: "The server could not be reached. Please try again.",
+        tone: "error"
+      });
+    } finally {
+      setIsPending(false);
     }
-
-    if (!response.ok) {
-      const parsedError = z
-        .object({
-          error: z.string()
-        })
-        .safeParse(responseBody);
-      setError(parsedError.success ? parsedError.data.error : "Reply failed.");
-      return;
-    }
-
-    setBody("");
-    setActiveTab("write");
-    router.refresh();
   };
 
   return (

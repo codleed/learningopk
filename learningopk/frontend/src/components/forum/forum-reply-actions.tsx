@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
@@ -34,6 +35,7 @@ export const ForumReplyActions = ({
   isAuthenticated
 }: ForumReplyActionsProps) => {
   const router = useRouter();
+  const { pushToast } = useToast();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,24 +47,34 @@ export const ForumReplyActions = ({
 
     setError(null);
     setIsPending(true);
-    const response = await fetch(`${backendUrl}/api/forum/replies/${replyId}/vote`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({ voteType })
-    });
-    const responseBody = (await response.json().catch(() => null)) as unknown;
-    setIsPending(false);
+    try {
+      const response = await fetch(`${backendUrl}/api/forum/replies/${replyId}/vote`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({ voteType })
+      });
+      const responseBody = (await response.json().catch(() => null)) as unknown;
 
-    if (!response.ok) {
-      const parsedError = errorSchema.safeParse(responseBody);
-      setError(parsedError.success ? parsedError.data.error : "Vote failed.");
-      return;
+      if (!response.ok) {
+        const parsedError = errorSchema.safeParse(responseBody);
+        setError(parsedError.success ? parsedError.data.error : "Vote failed.");
+        return;
+      }
+
+      router.refresh();
+    } catch {
+      setError("Network error. Check your connection and try again.");
+      pushToast({
+        title: "Vote failed",
+        description: "The server could not be reached. Please try again.",
+        tone: "error"
+      });
+    } finally {
+      setIsPending(false);
     }
-
-    router.refresh();
   };
 
   const handleAccept = async () => {
@@ -73,20 +85,30 @@ export const ForumReplyActions = ({
 
     setError(null);
     setIsPending(true);
-    const response = await fetch(`${backendUrl}/api/forum/replies/${replyId}/accept`, {
-      method: "POST",
-      credentials: "include"
-    });
-    const responseBody = (await response.json().catch(() => null)) as unknown;
-    setIsPending(false);
+    try {
+      const response = await fetch(`${backendUrl}/api/forum/replies/${replyId}/accept`, {
+        method: "POST",
+        credentials: "include"
+      });
+      const responseBody = (await response.json().catch(() => null)) as unknown;
 
-    if (!response.ok) {
-      const parsedError = errorSchema.safeParse(responseBody);
-      setError(parsedError.success ? parsedError.data.error : "Accept answer failed.");
-      return;
+      if (!response.ok) {
+        const parsedError = errorSchema.safeParse(responseBody);
+        setError(parsedError.success ? parsedError.data.error : "Accept answer failed.");
+        return;
+      }
+
+      router.refresh();
+    } catch {
+      setError("Network error. Check your connection and try again.");
+      pushToast({
+        title: "Accept answer failed",
+        description: "The server could not be reached. Please try again.",
+        tone: "error"
+      });
+    } finally {
+      setIsPending(false);
     }
-
-    router.refresh();
   };
 
   return (

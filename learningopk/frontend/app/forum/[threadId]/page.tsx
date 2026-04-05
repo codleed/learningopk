@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ContentRenderer } from "@/components/common/content-renderer";
 import { ForumReplyForm } from "@/components/forum/forum-reply-form";
 import { ForumReplyList } from "@/components/forum/forum-reply-list";
+import { ForumThreadViewTracker } from "@/components/forum/forum-thread-view-tracker";
 import { ForumThreadVoteControls } from "@/components/forum/forum-thread-vote-controls";
 import { getForumThreadById } from "@/lib/forum-api";
 import { getServerSession } from "@/lib/session";
@@ -86,6 +87,8 @@ export default async function ForumThreadDetailPage({ params }: ForumThreadDetai
   return (
     <AppShell session={session} currentPath="/forum">
       <div className="space-y-6">
+        {/* View tracker — fires once on client mount, never re-fires on router.refresh() */}
+        <ForumThreadViewTracker threadId={thread.id} />
         {/* ── Page Header with breadcrumbs ── */}
         <PageHeader
           title={thread.title}
