@@ -181,38 +181,6 @@ _No tasks in progress yet. Pick from Todo below._
 
 ---
 
-#### TASK-62 🔵
-
-**Title:** Preserve forum filter state across search, solved toggles, and advanced filters
-**Phase:** 11 — Code Review Follow-Ups
-**Priority:** Medium
-**Depends on:** TASK-18
-**Acceptance Criteria:**
-
-- [ ] Forum search keeps the active solved, board, class, subject, and chapter filters unless the user changes them
-- [ ] Solved/unsolved quick filters preserve the current board/class/subject/chapter query state
-- [ ] Applying advanced forum filters preserves the active search query when present
-- [ ] Forum E2E coverage verifies combined filter interactions instead of only isolated controls
-- [ ] Forum Playwright assertions use the current UI contract for search and thread-composer entry points
-
-> **Partial Progress:** Forum filter state preservation utilities (`forum-filter-utils.ts`, `useForumFilters.ts`) merged to main (`c32464d`). Remaining: E2E coverage for combined filter interactions and Playwright assertions for search + solved toggle + advanced filters.
-
----
-
-#### TASK-63 🔵
-
-**Title:** Harden forum mutation UX and prevent inflated thread view metrics
-**Phase:** 11 — Code Review Follow-Ups
-**Priority:** Medium
-**Depends on:** TASK-18, TASK-19
-**Acceptance Criteria:**
-
-- [ ] Forum thread/reply/vote/accept actions handle fetch rejection paths without leaving the UI stuck in a pending state
-- [ ] Forum mutations surface a clear user-facing error when the backend is unreachable
-- [ ] Posting, voting, or accepting a reply does not inflate thread view counts purely because the page refreshes server components
-- [ ] Thread-view counting semantics are made explicit in code and verified by automated coverage
-- [ ] Forum mutation failure and post-mutation detail refresh behavior are covered by tests
-
 ---
 
 ### Phase 8 — Growth Features (Medium 🔵)
@@ -385,21 +353,6 @@ _No tasks in progress yet. Pick from Todo below._
 ### Phase 10 — Enhancements (High 🟠)
 
 ---
-
-#### TASK-40 🟠
-
-**Title:** Structured Content Caching Layer
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-39
-**Acceptance Criteria:**
-
-- [ ] Cache-aside pattern with typed keys, JSON serialization, and TTL management (static: 1hr, user: 5min, analytics: 15min)
-- [ ] Automatic cache purge hooks on content mutations via repository pattern
-- [ ] Cache statistics endpoint exposing hit rates, miss rates, and eviction counts
-- [ ] Dashboard query optimization with background refresh before TTL expiry
-
-> **Note:** TASK-51B delivered the core Redis caching layer (typed keys, TTL management, cache-through pattern). This task covers remaining items: automatic cache purge hooks on content mutations, cache statistics endpoint, and background refresh before TTL expiry.
 
 ---
 
@@ -921,6 +874,98 @@ _Completed tasks are moved here by the coding agent._
 **Phase:** Frontend — UI Fix
 **Priority:** Low
 **Evidence:** Resolved sidebar icon centering and navigation issues in left rail; PR #11 merged
+
+---
+
+### Phase 11 — Code Review Follow-Ups (Completed)
+
+#### TASK-53 ✅
+
+**Title:** Decouple backend app creation from worker and Redis side effects
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Evidence:** `backend/src/lib/queue.ts` refactored with lazy singleton factories (`getRedisConnection()`, `getAnalyticsQueue()`); workers dynamically imported in `server.ts`; no module-level Redis side effects
+
+#### TASK-54 ✅
+
+**Title:** Separate auth outage handling from unauthenticated redirects
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Evidence:** `ServiceUnavailable` component for auth outage; error boundaries detect `AUTH_SERVICE_UNAVAILABLE`; `session.ts` and `proxy.ts` distinguish auth failures from missing sessions
+
+#### TASK-55 ✅
+
+**Title:** Decouple signup and student routing from forum filter metadata
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Evidence:** New `GET /api/learn/boards` and `GET /api/learn/subjects` endpoints; registration and subjects pages use learn API instead of forum filters
+
+#### TASK-56 ✅
+
+**Title:** Resolve password reset contract mismatch
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Evidence:** Removed "Forgot password?" link from login; created ADR-064 documenting password reset disabled until `sendResetPassword` implemented
+
+#### TASK-57 ✅
+
+**Title:** Repair auth review drift in tests, docs, and dead auth UI
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Evidence:** Deleted 3 dead auth component files; updated api-contracts.md; auth tests use correct locators
+
+#### TASK-58 ✅
+
+**Title:** Fix SSR personalization gaps and formalize student route protection matrix
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Evidence:** `getForumThreadById()` forwards cookies for SSR; created route-protection-matrix.md
+
+#### TASK-59 ✅
+
+**Title:** Lock mock exam solutions behind actual exam completion
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Evidence:** Frontend uses structured `MockExamApiError` for 403 detection; backend already had completion check
+
+#### TASK-60 ✅
+
+**Title:** Replace ambiguous subject-slug progress routing with scoped subject identity
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Evidence:** Route restructured from `[subject]` to `[boardSlug]/[grade]/[subjectSlug]`; repository selects `boardSlug`; removed `limit(1)`
+
+#### TASK-61 ✅
+
+**Title:** Fix forum thread validation contracts and preserve accurate error statuses
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Evidence:** Comprehensive integration tests documenting forum thread creation validation contract
+
+#### TASK-62 ✅
+
+**Title:** Preserve forum filter state across search, solved toggles, and advanced filters
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Evidence:** Search form preserves active filters via hidden inputs; E2E tests for 8 combined filter interaction scenarios; Playwright assertions updated to match current UI contract
+
+#### TASK-63 ✅
+
+**Title:** Harden forum mutation UX and prevent inflated thread view metrics
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Evidence:** Dedicated `POST /threads/:threadId/view` endpoint; client-side `ForumThreadViewTracker` fires once on mount; all mutation components have try/catch/finally with toast errors; integration tests for view tracking semantics
+
+---
+
+### Phase 10 — Enhancements (Completed)
+
+#### TASK-40 ✅
+
+**Title:** Structured Content Caching Layer
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Cache purge hooks on all 22 admin mutation endpoints + forum mutations; `GET /api/admin/cache/stats` and `POST /api/admin/cache/purge` endpoints; stale-while-revalidate background refresh; `invalidatePattern()` uses SCAN instead of KEYS; 10 unit tests
 
 ---
 
