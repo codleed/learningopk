@@ -92,8 +92,13 @@ export function ForumFilterBar({
 
       {/* ── Main toolbar row ── */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Search */}
+        {/* Search — hidden inputs preserve all active filters */}
         <form method="GET" className="min-w-[180px] flex-1">
+          {selected.board ? <input type="hidden" name="board" value={selected.board} /> : null}
+          {selected.grade ? <input type="hidden" name="grade" value={selected.grade} /> : null}
+          {selected.subjectId ? <input type="hidden" name="subjectId" value={String(selected.subjectId)} /> : null}
+          {selected.chapterId ? <input type="hidden" name="chapterId" value={String(selected.chapterId)} /> : null}
+          {selected.solved !== "all" ? <input type="hidden" name="solved" value={selected.solved} /> : null}
           <Input
             name="q"
             defaultValue={selected.q ?? ""}
