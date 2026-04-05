@@ -360,55 +360,6 @@ _No tasks in progress yet. Pick from Todo below._
 
 ---
 
-#### TASK-47 🟠
-
-**Title:** Daily Momentum Micro-Goal Engine
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-17
-**Acceptance Criteria:**
-
-- [ ] On dashboard load, display ONE "Today's Focus" card with a single micro-goal
-- [ ] Micro-goal algorithm prioritizes: (a) chapters with <50% quiz score, (b) streak-at-risk days, (c) unvisited chapters closest to exam date
-- [ ] Goal includes "Quick Start" button that deep-links directly to the action
-- [ ] Completion shows celebratory animation with XP bonus (+5 to +15 XP depending on difficulty)
-- [ ] Ramadan Mode: Micro-goals auto-adjust to shorter sessions (3-5 minutes) during fasting hours
-
----
-
-#### TASK-48 🟠
-
-**Title:** Streak Wager System (Loss Aversion Engine)
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-22
-**Acceptance Criteria:**
-
-- [ ] On streak ≥ 3 days, show "Streak Lock" modal: "Lock in your streak! Wager 25-100 XP to protect it for 24 hours"
-- [ ] Student selects wager amount; wagered XP temporarily deducted from balance
-- [ ] If daily goal completed before midnight PKT, wager returns +50% bonus
-- [ ] If goal missed, wagered XP permanently lost and streak broken
-- [ ] Streak freeze from TASK-22 can be used once to recover from broken wager
-- [ ] "Streak at Risk" warning at 8 PM PKT if no wager set and streak ≥ 5 days
-
----
-
-#### TASK-49 🟠
-
-**Title:** Leaderboard & Competitive Benchmarking
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-22
-**Acceptance Criteria:**
-
-- [ ] Leaderboard API: `GET /api/leaderboard?scope=global|board|school&metric=xp|streak|quizzes`
-- [ ] Leaderboard page (`/leaderboard`) with tabbed views: Global, Your Board, Your Grade
-- [ ] Each entry shows: Rank, Avatar, Name, XP/Level, Streak, Weekly Change
-- [ ] Student sees their rank in context: "You're ranked #847 of 12,391 students"
-- [ ] Leaderboard updates every 5 minutes to reduce DB load
-- [ ] Reward system: Top 100 badges shown on profile (Bronze/Silver/Gold badge CSS)
-- [ ] Privacy: Students can opt out of public leaderboard
-
 ---
 
 #### TASK-50 🟠
@@ -916,6 +867,27 @@ _Completed tasks are moved here by the coding agent._
 **Phase:** 10 — Enhancements
 **Priority:** High
 **Evidence:** Added `formulas`, `user_starred_formulas`, and `formula_access_events`; `/formulas` page with filters and full-text search; KaTeX formula cards with copy and starring; dashboard top-5 starred formulas by access frequency
+
+#### TASK-47 ✅
+
+**Title:** Daily Momentum Micro-Goal Engine
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added computed `todaysFocus` to dashboard payload; priority order for weak quiz chapters, streak-risk, and nearest unvisited chapters by exam date; protected completion route with XP bonus; dashboard Today\'s Focus card with celebration and Ramadan shortening heuristic
+
+#### TASK-48 ✅
+
+**Title:** Streak Wager System (Loss Aversion Engine)
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added streak wager persistence and PKT settlement logic; dashboard Streak Lock modal and 8 PM warning; explicit streak-freeze recovery flow for missed wager days
+
+#### TASK-49 ✅
+
+**Title:** Leaderboard & Competitive Benchmarking
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added leaderboard API with global/board/school scopes and xp/streak/quizzes metrics; `/leaderboard` page with cohort tabs; 5-minute caching; weekly change, badges, and privacy opt-out settings
 
 ---
 
