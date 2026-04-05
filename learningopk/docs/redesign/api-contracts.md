@@ -1,10 +1,10 @@
 # LearningoPK API Contract Document
 
 ## Date
-2026-03-28 (Updated for Phase 11 Consistency)
+2026-04-05 (Updated for TASK-57 auth drift repair)
 
 ## Auditor
-Software Architecture Review - Phase 11
+Software Architecture Review - TASK-57
 
 ---
 
@@ -27,7 +27,7 @@ Better Auth provides a comprehensive authentication system. The following endpoi
 | POST | `/auth/sign-out` | Yes | Logout current session |
 | GET | `/auth/get-session` | Yes | Get current session |
 
-**Note**: Password reset functionality (`/auth/request-password-reset`, `/auth/reset-password`) is **not currently enabled**. Users who forget passwords must contact support.
+**Note**: Password reset functionality (`/auth/request-password-reset`, `/auth/reset-password`) is **not currently enabled** — no `sendResetPassword` handler is configured in Better Auth. The login UI does not show a "Forgot password?" link. Users who forget passwords must contact support.
 
 **Request/Response Contracts:**
 
@@ -59,15 +59,15 @@ Success 200: { session: {...} | null }
 ```
 
 **Supported Features:**
-- Email/password authentication
+- Email/password authentication (with `autoSignIn` on signup)
 - Session-based auth with secure cookies
-- Remember me functionality (session duration controlled by `rememberMe` parameter)
-- User additional fields: `class`, `board`, `degree`, `role`
+- User additional fields: `class`, `board`, `degree`, `role` (role is server-set only, not user-input)
 
 **Not Yet Implemented:**
-- Password reset via email (planned for future phase)
+- Remember me / extended session duration (not configured in Better Auth)
+- Password reset via email (no `sendResetPassword` handler configured)
 - Email verification (not required for current product stage)
-- Social login providers
+- Social login providers (Google button exists in UI but no provider configured)
 - Two-factor authentication
 
 ---

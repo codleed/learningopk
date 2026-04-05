@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Divider } from "@/components/ui/divider";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+
 import { ThemeToggleCompact } from "@/components/ui/theme-toggle";
 import { PasswordInput } from "@/components/auth/password-input";
 import { authClient } from "@/lib/auth-client";
@@ -68,7 +68,6 @@ export function LoginPageClient() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -283,20 +282,13 @@ export function LoginPageClient() {
                     aria-invalid={passwordError ? true : undefined}
                   />
 
-                  {/* Remember me + Forgot password */}
-                  <div className="flex items-center justify-between">
-                    <Switch
-                      checked={rememberMe}
-                      onCheckedChange={setRememberMe}
-                      label="Remember me"
-                    />
-                    <Link
-                      href="/forgot-password"
-                      className="text-xs font-medium text-accent-primary hover:text-accent-primary-hover transition-colors"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
+                  {/* NOTE: Password reset is not implemented in the backend.
+                      Better Auth's emailAndPassword config does not include
+                      sendResetPassword, so /api/auth/request-password-reset
+                      and /api/auth/reset-password endpoints are not registered.
+                      See docs/redesign/api-contracts.md.
+                      Re-add "Forgot password?" link here once backend
+                      sendResetPassword is wired up. */}
 
                   {generalError ? (
                     <div className="rounded-lg border border-accent-danger/20 bg-accent-danger-light px-4 py-3 text-sm text-accent-danger">
