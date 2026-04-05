@@ -10,7 +10,7 @@ import { getServerSession } from "@/lib/session";
 import { getSubjectProgress } from "@/lib/progress-api";
 
 type SubjectProgressPageProps = {
-  params: Promise<{ boardSlug: string; grade: "9" | "10"; subjectSlug: string }>;
+  params: Promise<{ boardSlug: string; grade: string; subjectSlug: string }>;
 };
 
 export default async function SubjectProgressPage({ params }: SubjectProgressPageProps) {

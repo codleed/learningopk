@@ -244,7 +244,7 @@ function ContinueLearningCard({
             </Button>
           </Link>
         ) : (
-          <Link href={`/dashboard/${subject.subjectSlug}`} className="block">
+          <Link href={`/dashboard/${subject.boardSlug}/${subject.grade}/${subject.subjectSlug}`} className="block">
             <Button
               variant="secondary"
               size="sm"

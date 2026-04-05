@@ -19,7 +19,8 @@ export class ProgressRepository {
         subjectSlug: subjects.slug,
         subjectName: subjects.name,
         grade: subjects.grade,
-        boardName: boards.name
+        boardName: boards.name,
+        boardSlug: boards.slug
       })
       .from(subjects)
       .innerJoin(boards, eq(subjects.boardId, boards.id))
@@ -29,9 +30,7 @@ export class ProgressRepository {
           eq(subjects.grade, grade),
           eq(subjects.slug, subjectSlug)
         )
-      )
-      .orderBy(asc(subjects.id))
-      .limit(1);
+      );
   }
 
   async findChaptersBySubject(subjectId: number, userId: string) {

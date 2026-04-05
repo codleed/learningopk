@@ -293,7 +293,8 @@ export class ProgressService {
         slug: subjectRow.subjectSlug,
         name: subjectRow.subjectName,
         grade: subjectRow.grade,
-        boardName: subjectRow.boardName
+        boardName: subjectRow.boardName,
+        boardSlug: subjectRow.boardSlug
       },
       overallSubjectScorePercent,
       chapters: chapterProgress
