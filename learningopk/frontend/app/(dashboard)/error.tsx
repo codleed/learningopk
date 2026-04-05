@@ -4,12 +4,18 @@ import { ServiceUnavailable } from "@/components/foundation/service-unavailable"
 import { RouteError } from "@/components/foundation/route-state";
 import { isAuthServiceUnavailable } from "@/lib/auth-errors";
 
-type DashboardErrorProps = {
+type DashboardGroupErrorProps = {
   error: Error & { digest?: string };
   reset: () => void;
 };
 
-export default function DashboardError({ error, reset }: DashboardErrorProps) {
+/**
+ * Error boundary for the entire `(dashboard)` route group.
+ *
+ * - Auth / backend outage  → user-friendly "service unavailable" page with retry
+ * - Everything else        → generic route-error fallback
+ */
+export default function DashboardGroupError({ error, reset }: DashboardGroupErrorProps) {
   if (isAuthServiceUnavailable(error)) {
     return (
       <div className="mx-auto w-full max-w-6xl px-6 py-10">
@@ -20,7 +26,11 @@ export default function DashboardError({ error, reset }: DashboardErrorProps) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-10">
-      <RouteError title="Dashboard failed to load" description={error.message} onRetry={reset} />
+      <RouteError
+        title="Something went wrong"
+        description={error.message}
+        onRetry={reset}
+      />
     </div>
   );
 }
