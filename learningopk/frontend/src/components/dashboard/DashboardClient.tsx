@@ -26,6 +26,7 @@ import { StreakCounter } from "@/components/common/streak-counter";
 import { ReviewNowWidget } from "@/components/dashboard/review-now-widget";
 import { AiMemoryCard } from "@/components/dashboard/ai-memory-card";
 import { FocusAreasWidget, type FocusAreaItem } from "@/components/dashboard/focus-areas-widget";
+import { StarredFormulasWidget } from "@/components/dashboard/starred-formulas-widget";
 import type { DashboardSummaryResponse } from "@/lib/progress-api";
 import { cn } from "@/lib/utils";
 
@@ -819,6 +820,9 @@ export function DashboardClient({
           ) : null}
           <MotionSection>
             <ReviewNowWidget />
+          </MotionSection>
+          <MotionSection>
+            <StarredFormulasWidget formulas={summary.starredFormulas} />
           </MotionSection>
           <MotionSection>
             <QuickActionsCard firstChapterBasePath={firstChapterBasePath} />

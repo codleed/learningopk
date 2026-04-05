@@ -575,6 +575,66 @@ export const aiContext = pgTable("ai_context", {
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
 });
 
+export const formulas = pgTable(
+  "formulas",
+  {
+    id: serial("id").primaryKey(),
+    subjectId: integer("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    chapterId: integer("chapter_id")
+      .notNull()
+      .references(() => chapters.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    formulaLatex: text("formula_latex").notNull(),
+    description: text("description").notNull(),
+    variables: jsonb("variables").$type<Array<{ symbol: string; meaning: string }>>().notNull().default([]),
+    tags: jsonb("tags").$type<string[]>().notNull().default([]),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    index("formulas_subject_chapter_idx").on(table.subjectId, table.chapterId),
+    index("formulas_search_idx").using(
+      "gin",
+      sql`to_tsvector('english', coalesce(${table.name}, '') || ' ' || coalesce(${table.description}, ''))`
+    )
+  ]
+);
+
+export const userStarredFormulas = pgTable(
+  "user_starred_formulas",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    formulaId: integer("formula_id")
+      .notNull()
+      .references(() => formulas.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [uniqueIndex("user_starred_formulas_user_formula_idx").on(table.userId, table.formulaId)]
+);
+
+export const formulaAccessEvents = pgTable(
+  "formula_access_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    formulaId: integer("formula_id")
+      .notNull()
+      .references(() => formulas.id, { onDelete: "cascade" }),
+    accessedAt: timestamp("accessed_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    index("formula_access_events_user_accessed_idx").on(table.userId, desc(table.accessedAt)),
+    index("formula_access_events_formula_idx").on(table.formulaId)
+  ]
+);
+
 export const institutes = pgTable("institutes", {
   id: serial("id").primaryKey(),
   name: text("name").notNull()

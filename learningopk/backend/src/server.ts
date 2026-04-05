@@ -16,6 +16,7 @@ import { aiContextRouter } from "./routes/ai-context.js";
 import { authRouter } from "./routes/auth.js";
 import { flashcardReviewsRouter } from "./routes/flashcard-reviews.js";
 import { forumRouter } from "./routes/forum.js";
+import { formulasRouter } from "./routes/formulas.js";
 import { healthRouter, performanceRouter } from "./routes/health.js";
 import { learnRouter } from "./routes/learn.js";
 import { chapterMediaRouter } from "./routes/chapter-media.js";
@@ -79,6 +80,7 @@ export const createApp = () => {
   app.use("/api/ai", aiContextRouter);
   app.use("/api/admin", adminRouter);
   app.use("/api/forum", forumRouter);
+  app.use("/api/formulas", formulasRouter);
   app.use("/api/quiz", quizRouter);
   app.use("/api/mock-exams", mockExamsRouter);
   app.use("/api/progress", progressRouter);

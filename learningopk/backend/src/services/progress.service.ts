@@ -8,6 +8,7 @@ import {
   toDateKey
 } from "../lib/progress-metrics.js";
 import { applyProgressEvent } from "../lib/progress.js";
+import { formulasRepository } from "../repositories/formulas.repository.js";
 import { progressRepository } from "../repositories/progress.repository.js";
 import { xpService, XP_VALUES } from "./xp.service.js";
 
@@ -184,6 +185,8 @@ export class ProgressService {
         occurredAt: entry.occurredAt.toISOString()
       }));
 
+    const starredFormulas = await formulasRepository.findTopStarredByAccess(userId, 5);
+
     const subjectsSummary = Array.from(subjectAggregates.values()).map((entry) => ({
       subjectId: entry.subjectId,
       subjectSlug: entry.subjectSlug,
@@ -222,6 +225,14 @@ export class ProgressService {
       longestStreakDays,
       subjects: subjectsSummary,
       recentActivity,
+      starredFormulas: starredFormulas.map((row) => ({
+        formulaId: row.formulaId,
+        name: row.name,
+        formulaLatex: row.formulaLatex,
+        subjectName: row.subjectName,
+        chapterTitle: row.chapterTitle,
+        accessCount: row.accessCount
+      })),
       quizHistory: quizHistoryRows.map((row) => ({
         occurredAt: row.completedAt.toISOString(),
         subjectSlug: row.subjectSlug,

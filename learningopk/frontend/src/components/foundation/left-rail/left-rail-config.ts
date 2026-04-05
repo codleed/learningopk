@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  Sigma,
   ChartPie,
   MessageCircle,
   Bot,
@@ -38,6 +39,11 @@ export const studentNavItems: NavItem[] = [
     href: "/subjects",
     label: "Subjects",
     icon: BookOpen,
+  },
+  {
+    href: "/formulas",
+    label: "Formulas",
+    icon: Sigma,
   },
   {
     href: "/past-papers",

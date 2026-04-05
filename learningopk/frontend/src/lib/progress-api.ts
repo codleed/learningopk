@@ -41,6 +41,16 @@ const dashboardSummarySchema = z.object({
   longestStreakDays: z.number().int().nonnegative(),
   subjects: z.array(subjectSummarySchema),
   recentActivity: z.array(z.discriminatedUnion("type", [chapterVisitActivitySchema, quizSubmitActivitySchema])),
+  starredFormulas: z.array(
+    z.object({
+      formulaId: z.number().int().positive(),
+      name: z.string(),
+      formulaLatex: z.string(),
+      subjectName: z.string(),
+      chapterTitle: z.string(),
+      accessCount: z.number().int().nonnegative()
+    })
+  ),
   quizHistory: z.array(
     z.object({
       occurredAt: z.string().datetime(),
