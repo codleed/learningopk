@@ -19,6 +19,7 @@ export type TutorChapterContext = {
 export type TutorPersonalContext = {
   weakTopics: string[];
   strongTopics: string[];
+  studentWeakAreas?: string[];
   preferredExplanationStyle: string;
   lastConceptsDiscussed: string[];
   recentQuizFailure?: {
@@ -121,6 +122,12 @@ export const buildTutorSystemPrompt = (params: {
     if (personalContext.strongTopics.length > 0) {
       personalLines.push(
         `The student is strong in: ${personalContext.strongTopics.join(", ")}. You can reference these as building blocks.`
+      );
+    }
+
+    if (personalContext.studentWeakAreas && personalContext.studentWeakAreas.length > 0) {
+      personalLines.push(
+        `Student weak areas to proactively monitor: ${personalContext.studentWeakAreas.join(", ")}. Offer support before the student explicitly asks when these areas come up.`
       );
     }
 

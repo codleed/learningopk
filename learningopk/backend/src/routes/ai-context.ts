@@ -4,6 +4,7 @@ import { z } from "zod";
 import { aiContextRepository } from "../repositories/ai-context.repository.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { successResponse, errorResponse } from "../lib/response.js";
+import { learningPathService } from "../services/learning-path.service.js";
 
 const VALID_EXPLANATION_STYLES = ["balanced", "visual", "step-by-step", "examples", "analogies"] as const;
 
@@ -18,6 +19,25 @@ const topicParamSchema = z.object({
 });
 
 export const aiContextRouter = Router();
+
+aiContextRouter.get("/learning-path", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  const userId = authedReq.session.user.id;
+
+  try {
+    const result = await learningPathService.getLearningPath(userId, {
+      boardSlug: authedReq.session.user.board ?? null,
+      classSlug: authedReq.session.user.class ?? null
+    });
+
+    res.status(200).json(successResponse({
+      recommendedChapters: result.recommendedChapters
+    }));
+  } catch (error) {
+    console.error("Failed to build learning path:", error);
+    res.status(500).json(errorResponse("Failed to generate learning path.", "LEARNING_PATH_ERROR"));
+  }
+});
 
 aiContextRouter.get("/context", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;

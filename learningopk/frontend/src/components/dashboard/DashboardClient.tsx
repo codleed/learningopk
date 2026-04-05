@@ -25,6 +25,7 @@ import { XPBar } from "@/components/common/xp-bar";
 import { StreakCounter } from "@/components/common/streak-counter";
 import { ReviewNowWidget } from "@/components/dashboard/review-now-widget";
 import { AiMemoryCard } from "@/components/dashboard/ai-memory-card";
+import { FocusAreasWidget, type FocusAreaItem } from "@/components/dashboard/focus-areas-widget";
 import type { DashboardSummaryResponse } from "@/lib/progress-api";
 import { cn } from "@/lib/utils";
 
@@ -138,6 +139,8 @@ export interface DashboardClientProps {
   orderedSubjects: SubjectSummary[];
   /** First chapter base path for quick actions */
   firstChapterBasePath: string | null;
+  /** Top weak-area recommendations */
+  focusAreas: FocusAreaItem[];
 }
 
 /* ------------------------------------------------------------------ */
@@ -753,6 +756,7 @@ export function DashboardClient({
   continueHref,
   orderedSubjects,
   firstChapterBasePath,
+  focusAreas,
 }: DashboardClientProps) {
   if (summaryError && !summary) {
     return (
@@ -808,6 +812,11 @@ export function DashboardClient({
         </MotionSection>
 
         <div className="flex flex-col gap-6">
+          {focusAreas.length > 0 ? (
+            <MotionSection>
+              <FocusAreasWidget recommendations={focusAreas} />
+            </MotionSection>
+          ) : null}
           <MotionSection>
             <ReviewNowWidget />
           </MotionSection>

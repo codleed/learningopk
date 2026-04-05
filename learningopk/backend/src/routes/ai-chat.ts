@@ -23,6 +23,7 @@ import {
 } from "../lib/mistral.js";
 import { aiContextRepository } from "../repositories/ai-context.repository.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
+import { learningPathService } from "../services/learning-path.service.js";
 
 const chatMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -352,13 +353,29 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
   // Fetch personal AI context for the user (non-blocking on failure)
   let personalContext: TutorPersonalContext | undefined;
   try {
-    const aiCtx = await aiContextRepository.findByUserId(userId);
+    const [aiCtx, learningPath] = await Promise.all([
+      aiContextRepository.findByUserId(userId),
+      learningPathService.getLearningPath(userId, {
+        boardSlug: authedReq.session.user.board ?? null,
+        classSlug: authedReq.session.user.class ?? null
+      })
+    ]);
+
     if (aiCtx) {
       personalContext = {
         weakTopics: aiCtx.weakTopics,
         strongTopics: aiCtx.strongTopics,
+        studentWeakAreas: learningPath.studentWeakAreas.slice(0, 5),
         preferredExplanationStyle: aiCtx.preferredExplanationStyle,
         lastConceptsDiscussed: aiCtx.lastConceptsDiscussed
+      };
+    } else if (learningPath.studentWeakAreas.length > 0) {
+      personalContext = {
+        weakTopics: [],
+        strongTopics: [],
+        studentWeakAreas: learningPath.studentWeakAreas.slice(0, 5),
+        preferredExplanationStyle: "balanced",
+        lastConceptsDiscussed: []
       };
     }
   } catch (error) {
