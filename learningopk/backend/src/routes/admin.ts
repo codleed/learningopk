@@ -28,7 +28,7 @@ import {
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { extractWikiLinks, normalizeWikiLinkTarget } from "../lib/wiki-links.js";
 import { escapeLikePattern } from "../lib/escape-like.js";
-import { allQueues, jobRegistry } from "../lib/queue.js";
+import { getAllQueues, jobRegistry } from "../lib/queue.js";
 
 const chapterParamsSchema = z.object({
   id: z.coerce.number().int().positive()
@@ -5388,15 +5388,16 @@ adminRouter.get("/jobs/stats", requireSession, async (req, res) => {
 
   const stats = await Promise.all(
     jobRegistry.map(async (def) => {
+      const queue = def.getQueue();
       const [waiting, active, completed, failed] = await Promise.all([
-        def.queue.getWaitingCount(),
-        def.queue.getActiveCount(),
-        def.queue.getCompletedCount(),
-        def.queue.getFailedCount(),
+        queue.getWaitingCount(),
+        queue.getActiveCount(),
+        queue.getCompletedCount(),
+        queue.getFailedCount(),
       ]);
       return {
         name: def.name,
-        queue: def.queue.name,
+        queue: queue.name,
         counts: { waiting, active, completed, failed },
       };
     })
@@ -5417,7 +5418,7 @@ adminRouter.post("/jobs/:queueName/:jobId/retry", requireSession, async (req, re
     return;
   }
 
-  const queue = allQueues.find((q) => q.name === queueName);
+  const queue = getAllQueues().find((q) => q.name === queueName);
 
   if (!queue) {
     res.status(404).json({ error: "Queue not found" });

@@ -1,6 +1,6 @@
 import { Worker } from "bullmq";
 
-import { connection, cleanupQueue } from "../lib/queue.js";
+import { getRedisConnection } from "../lib/queue.js";
 import { processStaleSessionCleanup } from "../jobs/cleanup.js";
 
 export function createCleanupWorker() {
@@ -10,7 +10,7 @@ export function createCleanupWorker() {
       return processStaleSessionCleanup(job);
     },
     {
-      connection,
+      connection: getRedisConnection(),
       concurrency: 1,
     }
   );

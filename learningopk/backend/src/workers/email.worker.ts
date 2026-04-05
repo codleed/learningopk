@@ -1,6 +1,6 @@
 import { Worker } from "bullmq";
 
-import { connection, emailQueue } from "../lib/queue.js";
+import { getRedisConnection } from "../lib/queue.js";
 import { processEmailJob } from "../jobs/email.js";
 
 export function createEmailWorker() {
@@ -10,7 +10,7 @@ export function createEmailWorker() {
       return processEmailJob(job);
     },
     {
-      connection,
+      connection: getRedisConnection(),
       concurrency: 1,
     }
   );

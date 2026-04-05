@@ -1,6 +1,6 @@
 import { Worker } from "bullmq";
 
-import { connection, analyticsQueue } from "../lib/queue.js";
+import { getRedisConnection } from "../lib/queue.js";
 import { processDailyAnalytics, processWeeklyReport } from "../jobs/analytics.js";
 
 export function createAnalyticsWorker() {
@@ -16,7 +16,7 @@ export function createAnalyticsWorker() {
       throw new Error(`Unknown job name: ${job.name}`);
     },
     {
-      connection,
+      connection: getRedisConnection(),
       concurrency: 2,
     }
   );

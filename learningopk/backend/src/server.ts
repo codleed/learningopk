@@ -18,13 +18,6 @@ import { profileRouter } from "./routes/profile.js";
 import { progressRouter } from "./routes/progress.js";
 import { quizRouter } from "./routes/quiz.js";
 import { mockExamsRouter } from "./routes/mock-exams.js";
-import { createAnalyticsWorker } from "./workers/analytics.worker.js";
-import { createEmailWorker } from "./workers/email.worker.js";
-import { createCleanupWorker } from "./workers/cleanup.worker.js";
-
-let analyticsWorker: ReturnType<typeof createAnalyticsWorker> | null = null;
-let emailWorker: ReturnType<typeof createEmailWorker> | null = null;
-let cleanupWorker: ReturnType<typeof createCleanupWorker> | null = null;
 
 export const createApp = () => {
   const app = express();
@@ -103,9 +96,17 @@ const isDirectRun = process.argv[1] ? import.meta.url === pathToFileURL(process.
 if (isDirectRun) {
   const app = createApp();
 
-  analyticsWorker = createAnalyticsWorker();
-  emailWorker = createEmailWorker();
-  cleanupWorker = createCleanupWorker();
+  // Workers are loaded dynamically so that importing this module (e.g. in
+  // tests or scripts via createApp) does not start BullMQ workers or open
+  // long-lived Redis connections.
+  const { createAnalyticsWorker } = await import("./workers/analytics.worker.js");
+  const { createEmailWorker } = await import("./workers/email.worker.js");
+  const { createCleanupWorker } = await import("./workers/cleanup.worker.js");
+  const { closeAllQueues } = await import("./lib/queue.js");
+
+  const analyticsWorker = createAnalyticsWorker();
+  const emailWorker = createEmailWorker();
+  const cleanupWorker = createCleanupWorker();
 
   const server = app.listen(Number(env.PORT), () => {
     console.log(`Backend listening on http://localhost:${env.PORT}`);
@@ -113,11 +114,15 @@ if (isDirectRun) {
 
   const shutdown = () => {
     console.log("Shutting down workers...");
-    analyticsWorker?.close();
-    emailWorker?.close();
-    cleanupWorker?.close();
-    server.close();
-    process.exit(0);
+    Promise.all([
+      analyticsWorker.close(),
+      emailWorker.close(),
+      cleanupWorker.close(),
+      closeAllQueues(),
+    ]).finally(() => {
+      server.close();
+      process.exit(0);
+    });
   };
 
   process.on("SIGINT", shutdown);
