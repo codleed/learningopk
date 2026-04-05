@@ -1,4 +1,6 @@
 import { ensureRedisConnection, redis } from "../redis.js";
+import { logger } from "../logger.js";
+import { startSpan, endSpan } from "../performance.js";
 
 export type CacheKey = string;
 
@@ -55,6 +57,7 @@ export class CacheService {
   // ---------------------------------------------------------------------------
 
   async get<T>(key: CacheKey): Promise<T | null> {
+    const span = startSpan(`cache.get:${key}`, "cache.get", { key });
     try {
       const client = await this.getClient();
       const value = await client.get(key);
@@ -86,12 +89,15 @@ export class CacheService {
       this._hits++;
       return JSON.parse(value) as T;
     } catch (error) {
-      console.error(`Cache get error for key ${key}:`, error);
+      logger.error({ error, key }, "Cache get error");
       return null;
+    } finally {
+      endSpan(span);
     }
   }
 
   async set<T>(key: CacheKey, value: T, options: CacheOptions = {}): Promise<boolean> {
+    const span = startSpan(`cache.set:${key}`, "cache.set", { key });
     try {
       const client = await this.getClient();
       const ttl = options.ttlSeconds ?? DEFAULT_TTL[key] ?? 300;
@@ -107,8 +113,10 @@ export class CacheService {
       this._sets++;
       return true;
     } catch (error) {
-      console.error(`Cache set error for key ${key}:`, error);
+      logger.error({ error, key }, "Cache set error");
       return false;
+    } finally {
+      endSpan(span);
     }
   }
 
@@ -119,7 +127,7 @@ export class CacheService {
       this._deletes++;
       return true;
     } catch (error) {
-      console.error(`Cache delete error for key ${key}:`, error);
+      logger.error({ error, key }, "Cache delete error");
       return false;
     }
   }
@@ -146,7 +154,7 @@ export class CacheService {
       this._deletes += deleted;
       return deleted;
     } catch (error) {
-      console.error(`Cache invalidate pattern error for ${pattern}:`, error);
+      logger.error({ error, pattern }, "Cache invalidate pattern error");
       return 0;
     }
   }
@@ -201,7 +209,7 @@ export class CacheService {
         }
       }
     } catch (error) {
-      console.error(`Cache getOrSet read error for key ${key}:`, error);
+      logger.error({ error, key }, "Cache getOrSet read error");
       // fall through to factory
     }
 
@@ -231,7 +239,7 @@ export class CacheService {
         await this.set(key, value, options);
       })
       .catch((error: unknown) => {
-        console.error(`Cache background refresh error for key ${key}:`, error);
+        logger.error({ error, key }, "Cache background refresh error");
       })
       .finally(() => {
         this._refreshing.delete(key);

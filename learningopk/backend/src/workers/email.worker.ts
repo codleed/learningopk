@@ -1,6 +1,7 @@
 import { Worker } from "bullmq";
 
 import { getRedisConnection } from "../lib/queue.js";
+import { logger } from "../lib/logger.js";
 import { processEmailJob } from "../jobs/email.js";
 
 export function createEmailWorker() {
@@ -16,11 +17,11 @@ export function createEmailWorker() {
   );
 
   worker.on("completed", (job) => {
-    console.log(`Email job ${job.id} completed`);
+    logger.info({ jobId: job.id, worker: "email" }, "Email job completed");
   });
 
   worker.on("failed", (job, err) => {
-    console.error(`Email job ${job?.id} failed:`, err);
+    logger.error({ jobId: job?.id, error: err, worker: "email" }, "Email job failed");
   });
 
   return worker;

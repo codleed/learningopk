@@ -16,7 +16,7 @@ import { aiContextRouter } from "./routes/ai-context.js";
 import { authRouter } from "./routes/auth.js";
 import { flashcardReviewsRouter } from "./routes/flashcard-reviews.js";
 import { forumRouter } from "./routes/forum.js";
-import { healthRouter } from "./routes/health.js";
+import { healthRouter, performanceRouter } from "./routes/health.js";
 import { learnRouter } from "./routes/learn.js";
 import { chapterMediaRouter } from "./routes/chapter-media.js";
 import { profileRouter } from "./routes/profile.js";
@@ -85,6 +85,7 @@ export const createApp = () => {
   app.use("/api/flashcard-reviews", flashcardReviewsRouter);
   app.use("/api/users", profileRouter);
   app.use("/api/admin/content", chapterMediaRouter);
+  app.use("/api/admin", performanceRouter);
 
   app.get("/api/ready", (_req, res) => {
     res.status(200).json({ ok: true });

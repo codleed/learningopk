@@ -32,6 +32,7 @@
   "dependencies": {
     "@ai-sdk/mistral": "^3.0.20",
     "@learningopk/shared": "workspace:*",
+    "@sentry/node": "^10.47.0",
     "ai": "^6.0.97",
     "better-auth": "^1.3.10",
     "bullmq": "^5.71.1",
@@ -47,6 +48,7 @@
     "minio": "^8.0.7",
     "multer": "^2.1.0",
     "pg": "^8.16.3",
+    "pino": "^10.3.1",
     "rate-limit-redis": "^4.3.1",
     "redis": "^5.10.0",
     "zod": "^4.1.12"

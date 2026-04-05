@@ -1,6 +1,7 @@
 import { Worker } from "bullmq";
 
 import { getRedisConnection } from "../lib/queue.js";
+import { logger } from "../lib/logger.js";
 import { processStaleSessionCleanup } from "../jobs/cleanup.js";
 
 export function createCleanupWorker() {
@@ -16,11 +17,11 @@ export function createCleanupWorker() {
   );
 
   worker.on("completed", (job) => {
-    console.log(`Cleanup job ${job.id} completed`);
+    logger.info({ jobId: job.id, worker: "cleanup" }, "Cleanup job completed");
   });
 
   worker.on("failed", (job, err) => {
-    console.error(`Cleanup job ${job?.id} failed:`, err);
+    logger.error({ jobId: job?.id, error: err, worker: "cleanup" }, "Cleanup job failed");
   });
 
   return worker;
