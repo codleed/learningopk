@@ -1,8 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
-import { getForumFilters } from "@/lib/forum-api";
-import { getChapterDetail } from "@/lib/learn-api";
+import { getSubjectsList, getChapterDetail } from "@/lib/learn-api";
 import { getServerSession } from "@/lib/session";
 
 const routeParamsSchema = z.object({
@@ -63,24 +62,18 @@ export default async function LegacyChapterPage({
   );
   const mappedTab = mapLegacyTabToLearnTab(selectedLegacyTab);
 
-  const filters = await getForumFilters().catch(() => null);
-  if (!filters) {
+  const subjectsList = await getSubjectsList().catch(() => null);
+  if (!subjectsList) {
     notFound();
   }
 
-  const boardById = new Map(filters.boards.map((board) => [board.id, board]));
-  const candidateSubjects = filters.subjects.filter(
+  const candidateSubjects = subjectsList.subjects.filter(
     (subject) => {
-      const board = boardById.get(subject.boardId);
-      if (!board) {
-        return false;
-      }
-
       if (subject.slug !== parsedParams.data.subject || !subject.classSlug) {
         return false;
       }
 
-      if (session.user.board && board.slug !== session.user.board) {
+      if (session.user.board && subject.boardSlug !== session.user.board) {
         return false;
       }
 
@@ -93,13 +86,12 @@ export default async function LegacyChapterPage({
   );
 
   for (const candidate of candidateSubjects) {
-    const board = boardById.get(candidate.boardId);
-    if (!board || !candidate.classSlug) {
+    if (!candidate.classSlug) {
       continue;
     }
 
     const chapterDetail = await getChapterDetail({
-      board: board.slug,
+      board: candidate.boardSlug,
       grade: candidate.classSlug,
       subject: candidate.slug,
       chapter: parsedParams.data.chapter,

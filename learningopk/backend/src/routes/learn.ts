@@ -17,6 +17,26 @@ const chapterParamsSchema = paramsSchema.extend({
 
 export const learnRouter = Router();
 
+learnRouter.get("/boards", async (_req, res) => {
+  const [boardRows, classRows] = await Promise.all([
+    learnRepository.findAllBoards(),
+    learnRepository.findAllBoardClasses()
+  ]);
+
+  res.status(200).json({
+    boards: boardRows,
+    classes: classRows
+  });
+});
+
+learnRouter.get("/subjects", async (_req, res) => {
+  const subjectRows = await learnRepository.findAllSubjectsWithBoard();
+
+  res.status(200).json({
+    subjects: subjectRows
+  });
+});
+
 learnRouter.get("/:board/:grade/:subject", async (req, res) => {
   const parsed = paramsSchema.safeParse(req.params);
   if (!parsed.success) {

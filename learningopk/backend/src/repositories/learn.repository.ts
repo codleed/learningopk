@@ -6,6 +6,90 @@ import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
 import { quizRepository } from "./quiz.repository.js";
 
 export class LearnRepository {
+  async findAllBoards() {
+    const cacheKey = "learn:boards";
+    const cached = await cacheService.get<Array<{
+      id: number;
+      name: string;
+      slug: string;
+    }>>(cacheKey);
+    if (cached) return cached;
+
+    const result = await db
+      .select({
+        id: boards.id,
+        name: boards.name,
+        slug: boards.slug
+      })
+      .from(boards)
+      .orderBy(asc(boards.name));
+
+    await cacheService.set(cacheKey, result, { ttlSeconds: 3600 });
+    return result;
+  }
+
+  async findAllBoardClasses() {
+    const cacheKey = "learn:boardClasses";
+    const cached = await cacheService.get<Array<{
+      id: number;
+      boardId: number;
+      name: string;
+      slug: string;
+    }>>(cacheKey);
+    if (cached) return cached;
+
+    const result = await db
+      .select({
+        id: boardClasses.id,
+        boardId: boardClasses.boardId,
+        name: boardClasses.name,
+        slug: boardClasses.slug
+      })
+      .from(boardClasses)
+      .orderBy(asc(boardClasses.boardId), asc(boardClasses.name));
+
+    await cacheService.set(cacheKey, result, { ttlSeconds: 3600 });
+    return result;
+  }
+
+  async findAllSubjectsWithBoard() {
+    const cacheKey = "learn:subjectsWithBoard";
+    const cached = await cacheService.get<Array<{
+      id: number;
+      name: string;
+      slug: string;
+      grade: string | null;
+      className: string | null;
+      classSlug: string | null;
+      boardClassId: number | null;
+      boardId: number;
+      boardName: string;
+      boardSlug: string;
+    }>>(cacheKey);
+    if (cached) return cached;
+
+    const result = await db
+      .select({
+        id: subjects.id,
+        name: subjects.name,
+        slug: subjects.slug,
+        grade: subjects.grade,
+        className: sql<string | null>`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
+        classSlug: sql<string | null>`coalesce(${boardClasses.slug}, ${subjects.grade}::text)`,
+        boardClassId: subjects.boardClassId,
+        boardId: subjects.boardId,
+        boardName: boards.name,
+        boardSlug: boards.slug
+      })
+      .from(subjects)
+      .innerJoin(boards, eq(subjects.boardId, boards.id))
+      .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
+      .orderBy(asc(subjects.boardId), asc(sql`coalesce(${boardClasses.name}, ${subjects.grade}::text)`), asc(subjects.name));
+
+    await cacheService.set(cacheKey, result, { ttlSeconds: 3600 });
+    return result;
+  }
+
   async findAllSubjects() {
     const cacheKey = CacheKeys.subjectList();
     const cached = await cacheService.get<Array<{

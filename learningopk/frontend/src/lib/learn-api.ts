@@ -1,5 +1,40 @@
 import { z } from "zod";
 
+const boardOptionSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string(),
+  slug: z.string()
+});
+
+const boardClassOptionSchema = z.object({
+  id: z.number().int().positive(),
+  boardId: z.number().int().positive(),
+  name: z.string(),
+  slug: z.string()
+});
+
+const boardsResponseSchema = z.object({
+  boards: z.array(boardOptionSchema),
+  classes: z.array(boardClassOptionSchema)
+});
+
+const subjectListItemSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string(),
+  slug: z.string(),
+  grade: z.string().nullable(),
+  className: z.string().nullable(),
+  classSlug: z.string().nullable(),
+  boardClassId: z.number().int().positive().nullable(),
+  boardId: z.number().int().positive(),
+  boardName: z.string(),
+  boardSlug: z.string()
+});
+
+const subjectsListResponseSchema = z.object({
+  subjects: z.array(subjectListItemSchema)
+});
+
 const chapterListItemSchema = z.object({
   id: z.number().int().positive(),
   chapterNumber: z.number().int().positive(),
@@ -117,6 +152,9 @@ const chapterDetailResponseSchema = z.object({
 export type SubjectResponse = z.infer<typeof subjectResponseSchema>;
 export type SubjectGraphResponse = z.infer<typeof subjectGraphResponseSchema>;
 export type ChapterDetailResponse = z.infer<typeof chapterDetailResponseSchema>;
+export type BoardsResponse = z.infer<typeof boardsResponseSchema>;
+export type SubjectsListResponse = z.infer<typeof subjectsListResponseSchema>;
+export type SubjectListItem = z.infer<typeof subjectListItemSchema>;
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
@@ -165,4 +203,14 @@ export const getChapterDetail = async (params: { board: string; grade: string; s
 export const getSubjectGraph = async (params: { board: string; grade: string; subject: string }) => {
   const url = `${backendUrl}/api/learn/${params.board}/${params.grade}/${params.subject}/graph`;
   return fetchLearnJson(url, subjectGraphResponseSchema, { includeCredentials: true });
+};
+
+export const getBoards = async (): Promise<BoardsResponse | null> => {
+  const url = `${backendUrl}/api/learn/boards`;
+  return fetchLearnJson(url, boardsResponseSchema);
+};
+
+export const getSubjectsList = async (): Promise<SubjectsListResponse | null> => {
+  const url = `${backendUrl}/api/learn/subjects`;
+  return fetchLearnJson(url, subjectsListResponseSchema);
 };

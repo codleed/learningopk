@@ -86,7 +86,7 @@ export const RegisterForm = () => {
 
     const loadProfileOptions = async () => {
       try {
-        const response = await fetch(`${backendUrl}/api/forum/filters`, {
+        const response = await fetch(`${backendUrl}/api/learn/boards`, {
           method: "GET",
           cache: "no-store"
         });

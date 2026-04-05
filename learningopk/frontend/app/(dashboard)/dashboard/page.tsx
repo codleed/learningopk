@@ -6,8 +6,7 @@ import {
 } from "@/components/dashboard/DashboardClient";
 import { AppShell } from "@/components/foundation/app-shell";
 import { PageHeader } from "@/components/common/page-header";
-import { getForumFilters } from "@/lib/forum-api";
-import { getSubjectOverview } from "@/lib/learn-api";
+import { getSubjectsList, getSubjectOverview } from "@/lib/learn-api";
 import {
   getDashboardSummary,
   type DashboardSummaryResponse,
@@ -97,40 +96,30 @@ export default async function DashboardPage({
   /* ---- route seed (resolve "Continue Learning" link) ---- */
   let routeSeed: LearnRouteSeed | null = null;
   try {
-    const filters = await getForumFilters();
+    const subjectsList = await getSubjectsList();
+    const allSubjects = subjectsList?.subjects ?? [];
     if (featuredSubject) {
-      const matchedSubject = filters.subjects.find((subject) => {
-        const board = filters.boards.find(
-          (entry) => entry.id === subject.boardId
-        );
-        if (!board || !subject.classSlug) return false;
+      const matchedSubject = allSubjects.find((subject) => {
+        if (!subject.classSlug) return false;
         if (subject.slug !== featuredSubject.subjectSlug) return false;
-        if (session.user.board && board.slug !== session.user.board)
+        if (session.user.board && subject.boardSlug !== session.user.board)
           return false;
         if (session.user.class && subject.classSlug !== session.user.class)
           return false;
         return true;
       });
-      if (matchedSubject) {
-        const matchedBoard = filters.boards.find(
-          (board) => board.id === matchedSubject.boardId
-        );
-        if (matchedBoard && matchedSubject.classSlug) {
-          routeSeed = {
-            boardSlug: matchedBoard.slug,
-            classSlug: matchedSubject.classSlug,
-            subjectSlug: matchedSubject.slug,
-          };
-        }
+      if (matchedSubject && matchedSubject.classSlug) {
+        routeSeed = {
+          boardSlug: matchedSubject.boardSlug,
+          classSlug: matchedSubject.classSlug,
+          subjectSlug: matchedSubject.slug,
+        };
       }
     }
     if (!routeSeed) {
-      const fallbackSubject = filters.subjects.find((subject) => {
-        const board = filters.boards.find(
-          (entry) => entry.id === subject.boardId
-        );
-        if (!board || !subject.classSlug) return false;
-        if (session.user.board && board.slug !== session.user.board)
+      const fallbackSubject = allSubjects.find((subject) => {
+        if (!subject.classSlug) return false;
+        if (session.user.board && subject.boardSlug !== session.user.board)
           return false;
         if (session.user.class && subject.classSlug !== session.user.class)
           return false;
@@ -140,12 +129,9 @@ export default async function DashboardPage({
         throw new Error(
           "No subject route available for the current profile scope."
         );
-      const fallbackBoard = filters.boards.find(
-        (board) => board.id === fallbackSubject.boardId
-      );
-      if (fallbackBoard && fallbackSubject.classSlug) {
+      if (fallbackSubject.classSlug) {
         routeSeed = {
-          boardSlug: fallbackBoard.slug,
+          boardSlug: fallbackSubject.boardSlug,
           classSlug: fallbackSubject.classSlug,
           subjectSlug: fallbackSubject.slug,
         };

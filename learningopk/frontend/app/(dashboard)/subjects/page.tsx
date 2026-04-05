@@ -15,7 +15,7 @@ import { BoardBadge } from "@/components/common/board-badge";
 import { ProgressRing } from "@/components/common/progress-ring";
 import { Card, CardBody } from "@/components/ui/card";
 import { EmptyState, ErrorState } from "@/components/ui/states";
-import { getForumFilters } from "@/lib/forum-api";
+import { getSubjectsList } from "@/lib/learn-api";
 import { getDashboardSummary } from "@/lib/progress-api";
 import { getServerSession } from "@/lib/session";
 import { cn } from "@/lib/utils";
@@ -39,10 +39,10 @@ export default async function SubjectsPage() {
     redirect("/login");
   }
 
-  const filtersResult = await getForumFilters()
-    .then((filters) => ({ filters, error: null as string | null }))
+  const subjectsResult = await getSubjectsList()
+    .then((data) => ({ data, error: null as string | null }))
     .catch((error: unknown) => ({
-      filters: null,
+      data: null,
       error:
         error instanceof Error
           ? error.message
@@ -65,12 +65,11 @@ export default async function SubjectsPage() {
   }
 
   const subjects =
-    filtersResult.filters === null
+    subjectsResult.data === null
       ? []
-      : filtersResult.filters.subjects
+      : subjectsResult.data.subjects
           .filter((subject) => {
-            const board = filtersResult.filters?.boards.find((entry) => entry.id === subject.boardId);
-            if (!board) {
+            if (!subject.classSlug) {
               return false;
             }
 
@@ -78,7 +77,7 @@ export default async function SubjectsPage() {
               const selectedBoard = session.user.board ?? "";
               const selectedClass = session.user.class ?? "";
 
-              if (selectedBoard.length > 0 && board.slug !== selectedBoard) {
+              if (selectedBoard.length > 0 && subject.boardSlug !== selectedBoard) {
                 return false;
               }
 
@@ -90,10 +89,7 @@ export default async function SubjectsPage() {
             return true;
           })
           .map((subject) => {
-            const board = filtersResult.filters?.boards.find(
-              (entry) => entry.id === subject.boardId,
-            );
-            if (!board || !subject.classSlug) {
+            if (!subject.classSlug) {
               return null;
             }
 
@@ -103,8 +99,8 @@ export default async function SubjectsPage() {
               name: subject.name,
               className: subject.className ?? subject.classSlug,
               classSlug: subject.classSlug,
-              boardName: board.name,
-              boardSlug: board.slug,
+              boardName: subject.boardName,
+              boardSlug: subject.boardSlug,
               iconSrc: resolveSubjectIcon(subject.slug),
               progress: progressBySubjectSlug.get(subject.slug) ?? 0,
             };
@@ -131,17 +127,17 @@ export default async function SubjectsPage() {
         </MotionSection>
 
         {/* Error state */}
-        {filtersResult.error ? (
+        {subjectsResult.error ? (
           <MotionSection>
             <ErrorState
               title="Subjects are temporarily unavailable"
-              description={`${filtersResult.error} Ensure backend is running on http://localhost:3001.`}
+              description={`${subjectsResult.error} Ensure backend is running on http://localhost:3001.`}
             />
           </MotionSection>
         ) : null}
 
         {/* Empty state */}
-        {filtersResult.error === null && subjects.length === 0 ? (
+        {subjectsResult.error === null && subjects.length === 0 ? (
           <MotionSection>
             <EmptyState
               title="No subjects available"
@@ -151,7 +147,7 @@ export default async function SubjectsPage() {
         ) : null}
 
         {/* Subject grid */}
-        {filtersResult.error === null && subjects.length > 0 ? (
+        {subjectsResult.error === null && subjects.length > 0 ? (
           <MotionSection>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {subjects.map((subject) => (
