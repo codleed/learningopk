@@ -23,6 +23,7 @@ import { SubjectBadge } from "@/components/common/subject-badge";
 import { ProgressRing } from "@/components/common/progress-ring";
 import { XPBar } from "@/components/common/xp-bar";
 import { StreakCounter } from "@/components/common/streak-counter";
+import { ReviewNowWidget } from "@/components/dashboard/review-now-widget";
 import type { DashboardSummaryResponse } from "@/lib/progress-api";
 import { cn } from "@/lib/utils";
 
@@ -805,9 +806,14 @@ export function DashboardClient({
           <SubjectProgressGrid subjects={orderedSubjects} />
         </MotionSection>
 
-        <MotionSection>
-          <QuickActionsCard firstChapterBasePath={firstChapterBasePath} />
-        </MotionSection>
+        <div className="flex flex-col gap-6">
+          <MotionSection>
+            <ReviewNowWidget />
+          </MotionSection>
+          <MotionSection>
+            <QuickActionsCard firstChapterBasePath={firstChapterBasePath} />
+          </MotionSection>
+        </div>
       </div>
 
       {/* ============================================================ */}

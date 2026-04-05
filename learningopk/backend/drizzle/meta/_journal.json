@@ -99,6 +99,13 @@
       "when": 1775094857345,
       "tag": "0013_tearful_spot",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1775411913745,
+      "tag": "0014_sloppy_alex_power",
+      "breakpoints": true
     }
   ]
 }

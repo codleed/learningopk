@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/states";
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 import { trackProgressEvent } from "@/lib/progress-client";
+import { seedFlashcardReviews } from "@/lib/srs-api";
 
 import { FlashcardCard } from "./flashcard-card";
 
@@ -106,7 +107,20 @@ export function FlashcardDeck({ chapterId, flashcards, storageKey }: FlashcardDe
       eventType: "flashcard_complete",
       chapterId
     });
-  }, [cardCount, chapterId, stats.completed, storageKey]);
+
+    // Seed SRS reviews for all rated flashcards
+    const allStatuses = { ...persistedStatuses, ...statusOverrides };
+    const srsCards = flashcards
+      .filter((card) => allStatuses[String(card.id)] !== undefined)
+      .map((card) => ({
+        cardId: card.id,
+        status: allStatuses[String(card.id)] as "known" | "review",
+      }));
+
+    if (srsCards.length > 0) {
+      void seedFlashcardReviews(srsCards);
+    }
+  }, [cardCount, chapterId, stats.completed, storageKey, flashcards, persistedStatuses, statusOverrides]);
 
   if (!currentCard) {
     return (

@@ -7,6 +7,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  real,
   serial,
   text,
   timestamp,
@@ -276,6 +277,30 @@ export const flashcards = pgTable("flashcards", {
   orderIndex: integer("order_index").notNull()
 });
 
+export const flashcardReviews = pgTable(
+  "flashcard_reviews",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    cardId: integer("card_id")
+      .notNull()
+      .references(() => flashcards.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    intervalDays: integer("interval_days").notNull().default(0),
+    easeFactor: real("ease_factor").notNull().default(2.5),
+    repetitions: integer("repetitions").notNull().default(0),
+    nextReviewDate: timestamp("next_review_date", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    lastReviewedAt: timestamp("last_reviewed_at", { withTimezone: true, mode: "date" }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    uniqueIndex("flashcard_reviews_card_user_idx").on(table.cardId, table.userId),
+    index("flashcard_reviews_user_next_review_idx").on(table.userId, table.nextReviewDate)
+  ]
+);
+
 export const quizzes = pgTable("quizzes", {
   id: serial("id").primaryKey(),
   chapterId: integer("chapter_id")
@@ -516,6 +541,20 @@ export const mockExams = pgTable("mock_exams", {
   year: integer("year").notNull(),
   durationMinutes: integer("duration_minutes").notNull(),
   totalMarks: integer("total_marks").notNull()
+});
+
+export const aiContext = pgTable("ai_context", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" })
+    .unique(),
+  weakTopics: jsonb("weak_topics").$type<string[]>().notNull().default([]),
+  strongTopics: jsonb("strong_topics").$type<string[]>().notNull().default([]),
+  preferredExplanationStyle: text("preferred_explanation_style").notNull().default("balanced"),
+  lastConceptsDiscussed: jsonb("last_concepts_discussed").$type<string[]>().notNull().default([]),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
 });
 
 export const institutes = pgTable("institutes", {

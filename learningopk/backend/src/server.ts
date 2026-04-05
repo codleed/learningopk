@@ -4,14 +4,19 @@ import helmet from "helmet";
 import { pathToFileURL } from "node:url";
 
 import { env } from "./lib/env.js";
+import { logger, createRequestLogger } from "./lib/logger.js";
+import { correlationMiddleware } from "./middleware/correlation.js";
+import { sentryErrorHandler, captureException } from "./lib/sentry.js";
 import { errorResponse } from "./lib/response.js";
 import { isHttpError } from "./lib/errors/index.js";
 import { authRateLimiter, globalRateLimiter } from "./middleware/rate-limits.js";
 import { adminRouter } from "./routes/admin.js";
 import { aiChatRouter } from "./routes/ai-chat.js";
+import { aiContextRouter } from "./routes/ai-context.js";
 import { authRouter } from "./routes/auth.js";
+import { flashcardReviewsRouter } from "./routes/flashcard-reviews.js";
 import { forumRouter } from "./routes/forum.js";
-import { healthRouter } from "./routes/health.js";
+import { healthRouter, performanceRouter } from "./routes/health.js";
 import { learnRouter } from "./routes/learn.js";
 import { chapterMediaRouter } from "./routes/chapter-media.js";
 import { profileRouter } from "./routes/profile.js";
@@ -28,11 +33,17 @@ export const createApp = () => {
   // Security headers
   app.use(helmet());
 
+  // Correlation ID middleware (before everything else so all logs are tagged)
+  app.use(correlationMiddleware);
+
+  // Request logging middleware (logs start/finish with timing)
+  app.use(createRequestLogger());
+
   app.use(
     cors({
       origin: env.FRONTEND_ORIGIN,
       credentials: true,
-      exposedHeaders: ["x-ai-session-id", "x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset"]
+      exposedHeaders: ["x-ai-session-id", "x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset", "x-correlation-id"]
     })
   );
 
@@ -65,17 +76,23 @@ export const createApp = () => {
   app.use("/api/health", healthRouter);
   app.use("/api/learn", learnRouter);
   app.use("/api/ai", aiChatRouter);
+  app.use("/api/ai", aiContextRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/admin", performanceRouter);
   app.use("/api/forum", forumRouter);
   app.use("/api/quiz", quizRouter);
   app.use("/api/mock-exams", mockExamsRouter);
   app.use("/api/progress", progressRouter);
+  app.use("/api/flashcard-reviews", flashcardReviewsRouter);
   app.use("/api/users", profileRouter);
   app.use("/api/admin/content", chapterMediaRouter);
 
   app.get("/api/ready", (_req, res) => {
     res.status(200).json({ ok: true });
   });
+
+  // Sentry error handler (captures errors before the global handler)
+  app.use(sentryErrorHandler);
 
   // Global error handler — catches unhandled errors from route handlers
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -84,7 +101,8 @@ export const createApp = () => {
       return;
     }
 
-    console.error("Unhandled error:", err);
+    logger.error({ error: err }, "Unhandled error");
+    captureException(err);
     res.status(500).json(errorResponse("Internal server error", "INTERNAL_ERROR"));
   });
 
@@ -109,11 +127,11 @@ if (isDirectRun) {
   const cleanupWorker = createCleanupWorker();
 
   const server = app.listen(Number(env.PORT), () => {
-    console.log(`Backend listening on http://localhost:${env.PORT}`);
+    logger.info(`Backend listening on http://localhost:${env.PORT}`);
   });
 
   const shutdown = () => {
-    console.log("Shutting down workers...");
+    logger.info("Shutting down workers...");
     Promise.all([
       analyticsWorker.close(),
       emailWorker.close(),
