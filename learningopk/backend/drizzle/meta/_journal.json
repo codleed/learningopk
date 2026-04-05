@@ -155,6 +155,13 @@
       "when": 1775476800000,
       "tag": "0021_ai_model_fallback_strategy",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1775480400000,
+      "tag": "0020_exam_pattern_analysis",
+      "breakpoints": true
     }
   ]
 }

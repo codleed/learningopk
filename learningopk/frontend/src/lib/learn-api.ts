@@ -40,7 +40,11 @@ const chapterListItemSchema = z.object({
   chapterNumber: z.number().int().positive(),
   title: z.string(),
   slug: z.string(),
-  isPublished: z.boolean()
+  isPublished: z.boolean(),
+  weightagePercentage: z.number().int().min(0).max(100).optional().default(0),
+  occurrenceCount: z.number().int().min(0).optional().default(0),
+  avgMarks: z.number().min(0).optional().default(0),
+  lastSeenYear: z.number().int().nullable().optional().default(null)
 });
 
 const subjectResponseSchema = z.object({
@@ -59,7 +63,16 @@ const subjectResponseSchema = z.object({
     name: z.string(),
     description: z.string()
   }),
-  chapters: z.array(chapterListItemSchema)
+  chapters: z.array(chapterListItemSchema),
+  recommendation: z
+    .object({
+      focusPercent: z.number().int().positive(),
+      chapterCount: z.number().int().positive(),
+      chapters: z.array(z.string())
+    })
+    .nullable()
+    .optional()
+    .default(null)
 });
 
 const subjectGraphResponseSchema = z.object({
@@ -106,6 +119,15 @@ const chapterDetailResponseSchema = z.object({
     title: z.string(),
     slug: z.string(),
     summary: z.string(),
+    examWeightage: z
+      .object({
+        occurrenceCount: z.number().int().min(0),
+        avgMarks: z.number().min(0),
+        lastSeenYear: z.number().int().nullable(),
+        weightagePercentage: z.number().int().min(0).max(100),
+        analysisWindowYears: z.number().int().min(0)
+      })
+      .nullable(),
     revisionNotes: z.object({
       keyFormulas: z.array(z.string()),
       keyDefinitions: z.array(z.object({ term: z.string(), definition: z.string() })),
@@ -155,9 +177,51 @@ const chapterDetailResponseSchema = z.object({
     .nullable()
 });
 
+const patternAnalysisResponseSchema = z.object({
+  board: z.object({
+    id: z.number().int().positive(),
+    name: z.string(),
+    slug: z.string()
+  }),
+  subject: z.object({
+    id: z.number().int().positive(),
+    name: z.string(),
+    slug: z.string()
+  }),
+  grade: z.string(),
+  analysisWindowYears: z.number().int().min(0),
+  years: z.array(z.number().int()),
+  chapters: z.array(
+    z.object({
+      id: z.number().int().positive(),
+      chapterNumber: z.number().int().positive(),
+      title: z.string(),
+      slug: z.string(),
+      occurrenceCount: z.number().int().min(0),
+      avgMarks: z.number().min(0),
+      lastSeenYear: z.number().int().nullable(),
+      weightagePercentage: z.number().int().min(0).max(100),
+      trend: z.array(
+        z.object({
+          year: z.number().int(),
+          marks: z.number().min(0)
+        })
+      )
+    })
+  ),
+  recommendation: z
+    .object({
+      focusPercent: z.number().int().positive(),
+      chapterCount: z.number().int().positive(),
+      chapters: z.array(z.string())
+    })
+    .nullable()
+});
+
 export type SubjectResponse = z.infer<typeof subjectResponseSchema>;
 export type SubjectGraphResponse = z.infer<typeof subjectGraphResponseSchema>;
 export type ChapterDetailResponse = z.infer<typeof chapterDetailResponseSchema>;
+export type PatternAnalysisResponse = z.infer<typeof patternAnalysisResponseSchema>;
 export type BoardsResponse = z.infer<typeof boardsResponseSchema>;
 export type SubjectsListResponse = z.infer<typeof subjectsListResponseSchema>;
 export type SubjectListItem = z.infer<typeof subjectListItemSchema>;
@@ -193,6 +257,11 @@ const fetchLearnJson = async <T>(
   }
 
   const json = (await response.json()) as unknown;
+  const payloadSchema = z.object({ data: schema });
+  const parsed = payloadSchema.safeParse(json);
+  if (parsed.success) {
+    return parsed.data.data;
+  }
   return schema.parse(json);
 };
 
@@ -219,4 +288,9 @@ export const getBoards = async (): Promise<BoardsResponse | null> => {
 export const getSubjectsList = async (): Promise<SubjectsListResponse | null> => {
   const url = `${backendUrl}/api/learn/subjects`;
   return fetchLearnJson(url, subjectsListResponseSchema);
+};
+
+export const getPatternAnalysis = async (params: { board: string; grade: string; subject: string }) => {
+  const url = `${backendUrl}/api/learn/patterns/${params.board}/${params.subject}?grade=${params.grade}`;
+  return fetchLearnJson(url, patternAnalysisResponseSchema);
 };

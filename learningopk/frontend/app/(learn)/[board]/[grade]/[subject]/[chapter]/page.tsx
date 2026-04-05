@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { AppShell } from "@/components/foundation/app-shell";
 import { PageHeader } from "@/components/common/page-header";
+import { ChapterWeightageBadge } from "@/components/learn/chapter-weightage-badge";
 import { ChapterProgressTracker } from "@/components/learn/chapter-progress-tracker";
 import { ChapterStudyWorkspace } from "@/components/learn/chapter-study-workspace";
 import { getChapterDetail } from "@/lib/learn-api";
@@ -87,6 +88,8 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
 
         {/* Progress tracker (invisible, fires event) */}
         <ChapterProgressTracker chapterId={payload.chapter.id} />
+
+        <ChapterWeightageBadge examWeightage={payload.chapter.examWeightage} />
 
         {/* Main workspace */}
         <ChapterStudyWorkspace

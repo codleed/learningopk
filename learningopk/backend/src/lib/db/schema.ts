@@ -565,6 +565,30 @@ export const mockExams = pgTable("mock_exams", {
   totalMarks: integer("total_marks").notNull()
 });
 
+export const examAnalysis = pgTable(
+  "exam_analysis",
+  {
+    id: serial("id").primaryKey(),
+    boardId: integer("board_id")
+      .notNull()
+      .references(() => boards.id, { onDelete: "cascade" }),
+    subjectId: integer("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    chapterId: integer("chapter_id")
+      .notNull()
+      .references(() => chapters.id, { onDelete: "cascade" }),
+    occurrenceCount: integer("occurrence_count").notNull().default(0),
+    avgMarks: real("avg_marks").notNull().default(0),
+    lastSeenYear: integer("last_seen_year")
+  },
+  (table) => [
+    uniqueIndex("exam_analysis_board_subject_chapter_idx").on(table.boardId, table.subjectId, table.chapterId),
+    index("exam_analysis_board_subject_idx").on(table.boardId, table.subjectId),
+    index("exam_analysis_chapter_idx").on(table.chapterId)
+  ]
+);
+
 export const aiContext = pgTable("ai_context", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: text("user_id")
