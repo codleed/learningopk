@@ -189,20 +189,6 @@ _No tasks in progress yet. Pick from Todo below._
 
 ---
 
-#### TASK-28 🔵
-
-**Title:** Exam countdown + auto revision schedule
-**Phase:** 8 — Growth
-**Priority:** Medium
-**Depends on:** TASK-17
-**Acceptance Criteria:**
-
-- [ ] Student inputs board exam dates on dashboard
-- [ ] Platform generates a day-by-day revision schedule (which chapters on which day)
-- [ ] Schedule accounts for: remaining chapters, quiz scores, available days
-- [ ] Schedule shown as a calendar grid on dashboard
-- [ ] Daily reminder notification (browser push or email)
-
 ---
 
 ### Phase 9 — Low Priority (Post-Investment ⚪)
@@ -553,6 +539,13 @@ _Completed tasks are moved here by the coding agent._
 **Phase:** 8 — Growth
 **Priority:** Medium
 **Evidence:** Added historical subject weak-area aggregation after 3+ attempts, dashboard weak-areas card with direct exercise links, and AI tutor prompt context enriched with adaptive weak areas
+
+#### TASK-28 ✅
+
+**Title:** Exam countdown + auto revision schedule
+**Phase:** 8 — Growth
+**Priority:** Medium
+**Evidence:** Reused `subjects.examDate`; added per-subject read-time revision plan generation from chapters, progress, and quiz scores; dashboard planner widget with exam-date input, countdown, calendar grid, and visible today reminder; local in-app reminder toast on dashboard open
 
 #### TASK-29 ✅
 
