@@ -1,6 +1,7 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
+import { withOptionalDbFallback } from "../lib/db-schema-compat.js";
 import {
   boardClasses,
   boards,
@@ -304,18 +305,24 @@ export class LearnRepository {
   }
 
   async findRevisionNotesByChapter(chapterId: number) {
-    const rows = await db
-      .select({
-        keyFormulas: revisionNotes.keyFormulas,
-        keyDefinitions: revisionNotes.keyDefinitions,
-        commonMistakes: revisionNotes.commonMistakes,
-        examTips: revisionNotes.examTips
-      })
-      .from(revisionNotes)
-      .where(eq(revisionNotes.chapterId, chapterId))
-      .limit(1);
+    return withOptionalDbFallback(
+      "revision_notes",
+      async () => {
+        const rows = await db
+          .select({
+            keyFormulas: revisionNotes.keyFormulas,
+            keyDefinitions: revisionNotes.keyDefinitions,
+            commonMistakes: revisionNotes.commonMistakes,
+            examTips: revisionNotes.examTips
+          })
+          .from(revisionNotes)
+          .where(eq(revisionNotes.chapterId, chapterId))
+          .limit(1);
 
-    return rows[0] ?? null;
+        return rows[0] ?? null;
+      },
+      () => null
+    );
   }
 }
 

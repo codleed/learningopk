@@ -1,6 +1,7 @@
-import { and, asc, desc, eq, gte, inArray, lt } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
+import { withOptionalDbFallback } from "../lib/db-schema-compat.js";
 import {
   boards,
   chapters,
@@ -23,45 +24,91 @@ export class ProgressRepository {
   }
 
   async findSubjectBySlug(boardSlug: string, grade: "9" | "10", subjectSlug: string) {
-    return db
-      .select({
-        subjectId: subjects.id,
-        subjectSlug: subjects.slug,
-        subjectName: subjects.name,
-        grade: subjects.grade,
-        boardName: boards.name,
-        boardSlug: boards.slug,
-        examDate: subjects.examDate
-      })
-      .from(subjects)
-      .innerJoin(boards, eq(subjects.boardId, boards.id))
-      .where(
-        and(
-          eq(boards.slug, boardSlug),
-          eq(subjects.grade, grade),
-          eq(subjects.slug, subjectSlug)
-        )
-      );
+    return withOptionalDbFallback(
+      "subjects.exam_date.findSubjectBySlug",
+      () =>
+        db
+          .select({
+            subjectId: subjects.id,
+            subjectSlug: subjects.slug,
+            subjectName: subjects.name,
+            grade: subjects.grade,
+            boardName: boards.name,
+            boardSlug: boards.slug,
+            examDate: subjects.examDate
+          })
+          .from(subjects)
+          .innerJoin(boards, eq(subjects.boardId, boards.id))
+          .where(
+            and(
+              eq(boards.slug, boardSlug),
+              eq(subjects.grade, grade),
+              eq(subjects.slug, subjectSlug)
+            )
+          ),
+      () =>
+        db
+          .select({
+            subjectId: subjects.id,
+            subjectSlug: subjects.slug,
+            subjectName: subjects.name,
+            grade: subjects.grade,
+            boardName: boards.name,
+            boardSlug: boards.slug,
+            examDate: sql<Date | null>`null`
+          })
+          .from(subjects)
+          .innerJoin(boards, eq(subjects.boardId, boards.id))
+          .where(
+            and(
+              eq(boards.slug, boardSlug),
+              eq(subjects.grade, grade),
+              eq(subjects.slug, subjectSlug)
+            )
+          )
+    );
   }
 
   async findChaptersBySubject(subjectId: number, userId: string) {
-    return db
-      .select({
-        chapterId: chapters.id,
-        chapterNumber: chapters.chapterNumber,
-        chapterTitle: chapters.title,
-        chapterSlug: chapters.slug,
-        visitedAt: userProgress.visitedAt,
-        exercisesViewed: userProgress.exercisesViewed,
-        quizAttemptsCount: userProgress.quizAttemptsCount,
-        quizBestScore: userProgress.quizBestScore,
-        examDate: subjects.examDate
-      })
-      .from(chapters)
-      .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
-      .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
-      .where(and(eq(chapters.subjectId, subjectId), eq(chapters.isPublished, true)))
-      .orderBy(asc(chapters.chapterNumber));
+    return withOptionalDbFallback(
+      "subjects.exam_date.findChaptersBySubject",
+      () =>
+        db
+          .select({
+            chapterId: chapters.id,
+            chapterNumber: chapters.chapterNumber,
+            chapterTitle: chapters.title,
+            chapterSlug: chapters.slug,
+            visitedAt: userProgress.visitedAt,
+            exercisesViewed: userProgress.exercisesViewed,
+            quizAttemptsCount: userProgress.quizAttemptsCount,
+            quizBestScore: userProgress.quizBestScore,
+            examDate: subjects.examDate
+          })
+          .from(chapters)
+          .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+          .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+          .where(and(eq(chapters.subjectId, subjectId), eq(chapters.isPublished, true)))
+          .orderBy(asc(chapters.chapterNumber)),
+      () =>
+        db
+          .select({
+            chapterId: chapters.id,
+            chapterNumber: chapters.chapterNumber,
+            chapterTitle: chapters.title,
+            chapterSlug: chapters.slug,
+            visitedAt: userProgress.visitedAt,
+            exercisesViewed: userProgress.exercisesViewed,
+            quizAttemptsCount: userProgress.quizAttemptsCount,
+            quizBestScore: userProgress.quizBestScore,
+            examDate: sql<Date | null>`null`
+          })
+          .from(chapters)
+          .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+          .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+          .where(and(eq(chapters.subjectId, subjectId), eq(chapters.isPublished, true)))
+          .orderBy(asc(chapters.chapterNumber))
+    );
   }
 
   async findQuizTotalMarksBySubject(subjectId: number) {
@@ -177,28 +224,55 @@ export class ProgressRepository {
   }
 
   async findSubjectProgress(userId: string) {
-    return db
-      .select({
-        subjectId: subjects.id,
-        subjectSlug: subjects.slug,
-        subjectName: subjects.name,
-        grade: subjects.grade,
-        boardName: boards.name,
-        boardSlug: boards.slug,
-        chapterId: chapters.id,
-        visitedAt: userProgress.visitedAt,
-        quizBestScore: userProgress.quizBestScore,
-        quizAttemptsCount: userProgress.quizAttemptsCount,
-        chapterNumber: chapters.chapterNumber,
-        chapterSlug: chapters.slug,
-        chapterTitle: chapters.title,
-        examDate: subjects.examDate
-      })
-      .from(subjects)
-      .innerJoin(boards, eq(subjects.boardId, boards.id))
-      .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
-      .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
-      .orderBy(asc(subjects.name), asc(chapters.chapterNumber));
+    return withOptionalDbFallback(
+      "subjects.exam_date.findSubjectProgress",
+      () =>
+        db
+          .select({
+            subjectId: subjects.id,
+            subjectSlug: subjects.slug,
+            subjectName: subjects.name,
+            grade: subjects.grade,
+            boardName: boards.name,
+            boardSlug: boards.slug,
+            chapterId: chapters.id,
+            visitedAt: userProgress.visitedAt,
+            quizBestScore: userProgress.quizBestScore,
+            quizAttemptsCount: userProgress.quizAttemptsCount,
+            chapterNumber: chapters.chapterNumber,
+            chapterSlug: chapters.slug,
+            chapterTitle: chapters.title,
+            examDate: subjects.examDate
+          })
+          .from(subjects)
+          .innerJoin(boards, eq(subjects.boardId, boards.id))
+          .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
+          .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+          .orderBy(asc(subjects.name), asc(chapters.chapterNumber)),
+      () =>
+        db
+          .select({
+            subjectId: subjects.id,
+            subjectSlug: subjects.slug,
+            subjectName: subjects.name,
+            grade: subjects.grade,
+            boardName: boards.name,
+            boardSlug: boards.slug,
+            chapterId: chapters.id,
+            visitedAt: userProgress.visitedAt,
+            quizBestScore: userProgress.quizBestScore,
+            quizAttemptsCount: userProgress.quizAttemptsCount,
+            chapterNumber: chapters.chapterNumber,
+            chapterSlug: chapters.slug,
+            chapterTitle: chapters.title,
+            examDate: sql<Date | null>`null`
+          })
+          .from(subjects)
+          .innerJoin(boards, eq(subjects.boardId, boards.id))
+          .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
+          .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+          .orderBy(asc(subjects.name), asc(chapters.chapterNumber))
+    );
   }
 
   async findQuizAttemptsForSubjects(userId: string, subjectIds: number[]) {

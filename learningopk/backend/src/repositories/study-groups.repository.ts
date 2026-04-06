@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, ne, or, sql } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
+import { withOptionalDbFallback } from "../lib/db-schema-compat.js";
 import { boards, chapters, quizAttempts, quizzes, subjects, userProgress, users } from "../lib/db/schema.js";
 import { studyGroupActivities, studyGroupMembers, studyGroups } from "../lib/db/study-groups-schema.js";
 
@@ -24,12 +25,40 @@ export class StudyGroupsRepository {
   }
 
   async findGroupsForUser(userId: string) {
-    const groups = await db.select({ id: studyGroups.id, name: studyGroups.name, createdAt: studyGroups.createdAt }).from(studyGroups).innerJoin(studyGroupMembers, eq(studyGroupMembers.groupId, studyGroups.id)).where(eq(studyGroupMembers.userId, userId)).orderBy(desc(studyGroups.createdAt));
+    const groups = await withOptionalDbFallback(
+      "study_groups.list",
+      () =>
+        db
+          .select({ id: studyGroups.id, name: studyGroups.name, createdAt: studyGroups.createdAt })
+          .from(studyGroups)
+          .innerJoin(studyGroupMembers, eq(studyGroupMembers.groupId, studyGroups.id))
+          .where(eq(studyGroupMembers.userId, userId))
+          .orderBy(desc(studyGroups.createdAt)),
+      () => []
+    );
 
     if (groups.length === 0) return [];
 
-    const memberships = await db.select({ groupId: studyGroupMembers.groupId, memberCount: sql<number>`count(${studyGroupMembers.id})::int` }).from(studyGroupMembers).where(inArray(studyGroupMembers.groupId, groups.map((group) => group.id))).groupBy(studyGroupMembers.groupId);
-    const notifications = await db.select({ groupId: studyGroupActivities.groupId, notificationCount: sql<number>`count(${studyGroupActivities.id})::int` }).from(studyGroupActivities).where(and(inArray(studyGroupActivities.groupId, groups.map((group) => group.id)), eq(studyGroupActivities.recipientUserId, userId))).groupBy(studyGroupActivities.groupId);
+    const memberships = await withOptionalDbFallback(
+      "study_groups.member_counts",
+      () =>
+        db
+          .select({ groupId: studyGroupMembers.groupId, memberCount: sql<number>`count(${studyGroupMembers.id})::int` })
+          .from(studyGroupMembers)
+          .where(inArray(studyGroupMembers.groupId, groups.map((group) => group.id)))
+          .groupBy(studyGroupMembers.groupId),
+      () => []
+    );
+    const notifications = await withOptionalDbFallback(
+      "study_groups.notifications",
+      () =>
+        db
+          .select({ groupId: studyGroupActivities.groupId, notificationCount: sql<number>`count(${studyGroupActivities.id})::int` })
+          .from(studyGroupActivities)
+          .where(and(inArray(studyGroupActivities.groupId, groups.map((group) => group.id)), eq(studyGroupActivities.recipientUserId, userId)))
+          .groupBy(studyGroupActivities.groupId),
+      () => []
+    );
 
     const memberCounts = new Map(memberships.map((row) => [row.groupId, row.memberCount]));
     const notificationCounts = new Map(notifications.map((row) => [row.groupId, row.notificationCount]));
@@ -38,7 +67,17 @@ export class StudyGroupsRepository {
   }
 
   async findGroupMembership(groupId: string, userId: string) {
-    const rows = await db.select({ id: studyGroups.id, name: studyGroups.name, createdAt: studyGroups.createdAt, createdBy: studyGroups.createdBy }).from(studyGroups).innerJoin(studyGroupMembers, eq(studyGroupMembers.groupId, studyGroups.id)).where(and(eq(studyGroups.id, groupId), eq(studyGroupMembers.userId, userId))).limit(1);
+    const rows = await withOptionalDbFallback(
+      "study_groups.membership",
+      () =>
+        db
+          .select({ id: studyGroups.id, name: studyGroups.name, createdAt: studyGroups.createdAt, createdBy: studyGroups.createdBy })
+          .from(studyGroups)
+          .innerJoin(studyGroupMembers, eq(studyGroupMembers.groupId, studyGroups.id))
+          .where(and(eq(studyGroups.id, groupId), eq(studyGroupMembers.userId, userId)))
+          .limit(1),
+      () => []
+    );
     return rows[0] ?? null;
   }
 
@@ -75,7 +114,11 @@ export class StudyGroupsRepository {
   }
 
   async findMemberGroups(userId: string) {
-    return db.select({ groupId: studyGroupMembers.groupId }).from(studyGroupMembers).where(eq(studyGroupMembers.userId, userId));
+    return withOptionalDbFallback(
+      "study_groups.memberships",
+      () => db.select({ groupId: studyGroupMembers.groupId }).from(studyGroupMembers).where(eq(studyGroupMembers.userId, userId)),
+      () => []
+    );
   }
 
   async findOtherGroupMembers(groupId: string, userId: string) {

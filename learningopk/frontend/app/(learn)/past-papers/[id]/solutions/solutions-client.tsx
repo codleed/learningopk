@@ -60,11 +60,10 @@ export function MockExamSolutionsClient({ examId }: MockExamSolutionsClientProps
         setExam(examData);
         setQuestions(questionsData);
       } catch (err: unknown) {
-        console.error("Failed to load mock exam solutions:", err);
-
         if (err instanceof MockExamApiError && (err.status === 403 || err.code === "EXAM_NOT_COMPLETED")) {
           setError("Solutions are only available after you complete the exam. Please attempt the mock exam first.");
         } else {
+          console.error("Failed to load mock exam solutions:", err);
           const errorMessage = err instanceof Error ? err.message : "Failed to load solutions. Please try again.";
           setError(errorMessage);
         }

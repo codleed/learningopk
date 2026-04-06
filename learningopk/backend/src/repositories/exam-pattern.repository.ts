@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
+import { withOptionalDbFallback } from "../lib/db-schema-compat.js";
 import { boards, chapters, examAnalysis, mockExams, quizQuestions, subjects } from "../lib/db/schema.js";
 
 const ANALYSIS_WINDOW_YEARS = 5;
@@ -43,6 +44,9 @@ export class ExamPatternRepository {
   }
 
   async findSubjectPatternsByRoute(params: SubjectRoute) {
+    return withOptionalDbFallback(
+      "exam_analysis.subject_patterns",
+      async () => {
     const contextRows = await db
       .select({
         boardId: boards.id,
@@ -179,6 +183,9 @@ export class ExamPatternRepository {
           }
         : null
     };
+      },
+      () => null
+    );
   }
 
   async findChapterPatternByRoute(params: ChapterRoute) {

@@ -1,6 +1,7 @@
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
+import { withOptionalDbFallback } from "../lib/db-schema-compat.js";
 import { chapters, formulaAccessEvents, formulas, subjects, userStarredFormulas } from "../lib/db/schema.js";
 
 export type FormulaFilters = {
@@ -21,22 +22,32 @@ export class FormulasRepository {
         .select({ id: chapters.id, title: chapters.title, subjectId: chapters.subjectId })
         .from(chapters)
         .orderBy(asc(chapters.chapterNumber), asc(chapters.title)),
-      db.execute(sql<{ tag: string }>`
-        select distinct jsonb_array_elements_text(tags) as tag
-        from formulas
-        where jsonb_array_length(tags) > 0
-        order by tag asc
-      `)
+      withOptionalDbFallback(
+        "formulas.tags",
+        async () => {
+          const result = await db.execute(sql<{ tag: string }>`
+            select distinct jsonb_array_elements_text(tags) as tag
+            from formulas
+            where jsonb_array_length(tags) > 0
+            order by tag asc
+          `);
+          return result.rows;
+        },
+        () => [] as Array<{ tag: string }>
+      )
     ]);
 
     return {
       subjects: subjectRows,
       chapters: chapterRows,
-      tags: tagRows.rows.map((row) => row.tag)
+      tags: tagRows.map((row) => row.tag)
     };
   }
 
   async listFormulas(filters: FormulaFilters, userId: string) {
+    return withOptionalDbFallback(
+      "formulas.list",
+      async () => {
     const predicates = [
       filters.subjectId ? eq(formulas.subjectId, filters.subjectId) : undefined,
       filters.chapterId ? eq(formulas.chapterId, filters.chapterId) : undefined,
@@ -69,6 +80,9 @@ export class FormulasRepository {
       .orderBy(asc(subjects.name), asc(chapters.chapterNumber), asc(formulas.name));
 
     return rows;
+      },
+      () => []
+    );
   }
 
   async toggleStar(userId: string, formulaId: number) {
@@ -104,36 +118,42 @@ export class FormulasRepository {
   }
 
   async findTopStarredByAccess(userId: string, limit = 5) {
-    const starredRows = await db
-      .select({ formulaId: userStarredFormulas.formulaId })
-      .from(userStarredFormulas)
-      .where(eq(userStarredFormulas.userId, userId));
+    return withOptionalDbFallback(
+      "formulas.starred",
+      async () => {
+        const starredRows = await db
+          .select({ formulaId: userStarredFormulas.formulaId })
+          .from(userStarredFormulas)
+          .where(eq(userStarredFormulas.userId, userId));
 
-    const formulaIds = starredRows.map((row) => row.formulaId);
-    if (formulaIds.length === 0) {
-      return [];
-    }
+        const formulaIds = starredRows.map((row) => row.formulaId);
+        if (formulaIds.length === 0) {
+          return [];
+        }
 
-    return db
-      .select({
-        formulaId: formulas.id,
-        name: formulas.name,
-        formulaLatex: formulas.formulaLatex,
-        subjectName: subjects.name,
-        chapterTitle: chapters.title,
-        accessCount: count(formulaAccessEvents.id)
-      })
-      .from(formulas)
-      .innerJoin(subjects, eq(formulas.subjectId, subjects.id))
-      .innerJoin(chapters, eq(formulas.chapterId, chapters.id))
-      .leftJoin(
-        formulaAccessEvents,
-        and(eq(formulaAccessEvents.formulaId, formulas.id), eq(formulaAccessEvents.userId, userId))
-      )
-      .where(inArray(formulas.id, formulaIds))
-      .groupBy(formulas.id, subjects.name, chapters.title)
-      .orderBy(desc(count(formulaAccessEvents.id)), asc(formulas.name))
-      .limit(limit);
+        return db
+          .select({
+            formulaId: formulas.id,
+            name: formulas.name,
+            formulaLatex: formulas.formulaLatex,
+            subjectName: subjects.name,
+            chapterTitle: chapters.title,
+            accessCount: count(formulaAccessEvents.id)
+          })
+          .from(formulas)
+          .innerJoin(subjects, eq(formulas.subjectId, subjects.id))
+          .innerJoin(chapters, eq(formulas.chapterId, chapters.id))
+          .leftJoin(
+            formulaAccessEvents,
+            and(eq(formulaAccessEvents.formulaId, formulas.id), eq(formulaAccessEvents.userId, userId))
+          )
+          .where(inArray(formulas.id, formulaIds))
+          .groupBy(formulas.id, subjects.name, chapters.title)
+          .orderBy(desc(count(formulaAccessEvents.id)), asc(formulas.name))
+          .limit(limit);
+      },
+      () => []
+    );
   }
 }
 

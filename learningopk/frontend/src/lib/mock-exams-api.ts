@@ -127,7 +127,7 @@ const fetchJson = async <T>(
   }
 
   const json = (await response.json()) as unknown;
-  return schema.parse(json);
+  return z.object({ data: schema }).parse(json).data;
 };
 
 export type MockExamFilters = {

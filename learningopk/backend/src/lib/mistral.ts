@@ -29,6 +29,7 @@ export type TutorPersonalContext = {
 };
 
 export type TutorResponseStage = "guide" | "hint" | "reveal";
+export type TutorMode = "explain" | "socratic";
 
 export const MISTRAL_MODEL_IDS = {
   "mistral-tiny": "mistral-tiny-latest",
@@ -60,6 +61,32 @@ const stageInstructions: Record<TutorResponseStage, string> = {
     "STAGE: CONCISE REVEAL. The student appears stuck after 2 attempts. Provide a brief worked solution, then ask a checkpoint question."
 };
 
+const LATEX_DELIMITER_RULES = [
+  "Always return valid Markdown.",
+  "For inline math, wrap in single dollar signs: $F = ma$.",
+  "For block/display math, wrap in double dollar signs on their own line:",
+  "$$",
+  "\\frac{dy}{dx} = f'(g(x)) \\cdot g'(x)",
+  "$$",
+  "NEVER use square-bracket delimiters \\[...\\] or parenthesis delimiters \\(...\\) for math. Only dollar-sign delimiters are supported."
+];
+
+const modeInstructions: Record<TutorMode, string[]> = {
+  explain: [
+    "MODE: EXPLAIN.",
+    "Give the direct explanation first.",
+    "Be straightforward, teacher-like, and concise.",
+    ...LATEX_DELIMITER_RULES,
+    "Use short Markdown sections when they help clarity, such as `## Idea`, `## Formula`, `## Steps`, and `## Final Answer`."
+  ],
+  socratic: [
+    "MODE: SOCRATIC.",
+    "Use the Socratic method to lead the student to the answer.",
+    "Give a tiny hint first when useful, then ask one focused guiding question.",
+    ...LATEX_DELIMITER_RULES
+  ]
+};
+
 export const inferFailedAttempts = (messages: ChatMessage[]): number => {
   const userTurns = messages.reduce((count, message) => (message.role === "user" ? count + 1 : count), 0);
   if (userTurns <= 1) {
@@ -86,30 +113,53 @@ const normalizeText = (value: string): string => value.trim().replace(/\s+/g, " 
 export const buildTutorSystemPrompt = (params: {
   context: TutorChapterContext;
   failedAttempts: number;
+  mode: TutorMode;
   personalContext?: TutorPersonalContext;
 }): string => {
-  const { context, failedAttempts, personalContext } = params;
+  const { context, failedAttempts, mode, personalContext } = params;
   const stage = getTutorResponseStage(failedAttempts);
 
   const lines: string[] = [
     "You are an AI tutor for Pakistani 9th/10th grade students.",
-    "Use the Socratic method with controlled reveal policy.",
+    mode === "socratic"
+      ? "Use the Socratic method with controlled reveal policy."
+      : "Explain concepts directly with clear, structured teaching.",
     "",
     "Core rules:",
-    "- Keep responses concise: 3-5 sentences max.",
+    "- Keep responses concise and readable for a 14-16 year old student.",
     "- Use simple English for a 14-16 year old student.",
     "- Be warm, patient, encouraging, and precise.",
-    "- If a formula is relevant, ask the student to recall it before applying it.",
+    "- Always return valid Markdown.",
+    "- For math: use $...$ for inline math and $$...$$ for block math. NEVER use \\\\[...\\\\] or \\\\(...\\\\) delimiters.",
+    "- Make the answer visually clean with short paragraphs, bullet points, or numbered steps when helpful.",
     "- If the student is correct, praise briefly and move to the next step.",
     "- If the student is incorrect, point out one mistake gently and ask them to try again.",
     "",
-    "Controlled reveal policy:",
-    "- Attempt 0: guiding question.",
-    "- Attempt 1: structured hint, then a guiding question.",
-    "- Attempt 2+: concise worked solution, then a checkpoint question.",
-    "",
-    `Current stage rule: ${stageInstructions[stage]}`,
-    "",
+    ...modeInstructions[mode],
+    ""
+  ];
+
+  if (mode === "socratic") {
+    lines.push(
+      "Controlled reveal policy:",
+      "- Attempt 0: guiding question.",
+      "- Attempt 1: structured hint, then a guiding question.",
+      "- Attempt 2+: concise worked solution, then a checkpoint question.",
+      "",
+      `Current stage rule: ${stageInstructions[stage]}`,
+      ""
+    );
+  } else {
+    lines.push(
+      "Explain mode rules:",
+      "- Give the direct explanation first instead of leading with questions.",
+      "- If a formula is relevant, state it clearly before using it.",
+      "- End with a short final takeaway or final answer when useful.",
+      ""
+    );
+  }
+
+  lines.push(
     "Chapter context:",
     `- board=${normalizeText(context.board)}`,
     `- grade=${context.grade}`,
@@ -117,7 +167,7 @@ export const buildTutorSystemPrompt = (params: {
     `- chapter=${normalizeText(context.chapterTitle)}`,
     `- summary=${normalizeText(context.chapterSummary)}`,
     context.focusExerciseQuestion ? `- focus_exercise=${normalizeText(context.focusExerciseQuestion)}` : "- focus_exercise=none"
-  ];
+  );
 
   // Inject personal context when available
   if (personalContext) {

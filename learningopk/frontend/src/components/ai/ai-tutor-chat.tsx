@@ -1063,6 +1063,7 @@ export function AITutorChat() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           messages: requestMessages,
+          mode: tutorMode,
           sessionId: sessionId ?? undefined,
         }),
       });

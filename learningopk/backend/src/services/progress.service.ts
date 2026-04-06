@@ -6,6 +6,8 @@ import {
   createUtcDay,
   scoreToPercent
 } from "../lib/progress-metrics.js";
+import { withOptionalDbFallback } from "../lib/db-schema-compat.js";
+import { logger } from "../lib/logger.js";
 import { applyProgressEvent } from "../lib/progress.js";
 import { getCurrentPktContext, getPktDateKey } from "../lib/streak-wager.js";
 import { attachCompletionState, buildTodaysFocus, resolveRamadanConfig, type TodaysFocus } from "../lib/todays-focus.js";
@@ -181,7 +183,11 @@ export class ProgressService {
       momentumContext.nextDayStartUtc
     );
     const ramadanConfig = resolveRamadanConfig({
-      settings: await adminSettingsRepository.findByKeys(["ramadan_mode", "ramadan_fasting_hours"])
+      settings: await withOptionalDbFallback(
+        "admin_settings.ramadan",
+        () => adminSettingsRepository.findByKeys(["ramadan_mode", "ramadan_fasting_hours"]),
+        () => []
+      )
     });
 
     const recentChapterVisitRows = await progressRepository.findRecentChapterVisits(userId, 5);
@@ -220,6 +226,15 @@ export class ProgressService {
 
     const starredFormulas = await formulasRepository.findTopStarredByAccess(userId, 5);
 
+    const weakAreasBySubject = await withOptionalDbFallback(
+      "dashboard.weak_areas",
+      async () => {
+        const subjectIds = Array.from(new Set(subjectProgressRows.map((row) => row.subjectId)));
+        return this.buildHistoricalWeakAreas(userId, subjectIds);
+      },
+      () => new Map<number, SubjectWeakArea[]>()
+    );
+
     const subjectsSummary = Array.from(subjectAggregates.values()).map((entry) => ({
       subjectId: entry.subjectId,
       subjectSlug: entry.subjectSlug,
@@ -229,7 +244,8 @@ export class ProgressService {
       boardSlug: entry.boardSlug,
       chaptersVisitedPercent: entry.totalChapters > 0 ? Math.round((entry.visitedChapters / entry.totalChapters) * 100) : 0,
       bestQuizScorePercent: entry.bestQuizScorePercent,
-      lastActiveAt: entry.lastActiveAt ? entry.lastActiveAt.toISOString() : null
+      lastActiveAt: entry.lastActiveAt ? entry.lastActiveAt.toISOString() : null,
+      weakAreas: weakAreasBySubject.get(entry.subjectId) ?? []
     }));
 
     // Get XP and level info
@@ -237,7 +253,7 @@ export class ProgressService {
     try {
       xpInfo = await xpService.getUserXpInfo(userId);
     } catch (error) {
-      console.error("Failed to get XP info:", error);
+      logger.warn({ error }, "Failed to get XP info");
     }
 
     // Check streak freeze availability
@@ -249,19 +265,51 @@ export class ProgressService {
         nextFreezeAvailableAt: freezeStatus.nextFreezeAvailableAt?.toISOString() ?? null
       };
     } catch (error) {
-      console.error("Failed to get streak freeze info:", error);
+      logger.warn({ error }, "Failed to get streak freeze info");
     }
 
-    const todaysGoal = await streakWagerService.getGoalProgressForDate(userId, getCurrentPktContext().todayKey);
-    const streakWager = await streakWagerService.buildDashboardState(userId, streakDays);
-    const todaysFocus = await this.buildDashboardFocus({
-      userId,
-      streakDays,
-      hasActivityToday,
-      ramadanConfig,
-      subjectProgressRows,
-      chapterTotalMarks
-    });
+    const todaysGoal = await withOptionalDbFallback(
+      "dashboard.streak_goal",
+      () => streakWagerService.getGoalProgressForDate(userId, getCurrentPktContext().todayKey),
+      () => ({
+        dateKey: getCurrentPktContext().todayKey,
+        chaptersCompleted: 0,
+        chaptersTarget: 1,
+        quizzesCompleted: 0,
+        quizzesTarget: 1,
+        completed: false,
+        percent: 0
+      })
+    );
+    const streakWager = await withOptionalDbFallback(
+      "dashboard.streak_wager",
+      () => streakWagerService.buildDashboardState(userId, streakDays),
+      () => ({
+        timezone: "Asia/Karachi" as const,
+        minWagerXp: 25,
+        maxWagerXp: 100,
+        currentPktDate: getCurrentPktContext().todayKey,
+        currentPktTime: new Date().toISOString(),
+        canPlaceWager: false,
+        showLockModal: false,
+        warningAtRisk: false,
+        activeWager: null,
+        brokenWager: null
+      })
+    );
+    const todaysFocus = await withOptionalDbFallback(
+      "dashboard.todays_focus",
+      () =>
+        this.buildDashboardFocus({
+          userId,
+          streakDays,
+          hasActivityToday,
+          ramadanConfig,
+          subjectProgressRows,
+          chapterTotalMarks
+        }),
+      () => null
+    );
 
     return {
       studentName,
@@ -384,7 +432,11 @@ export class ProgressService {
     const context = getCurrentPktContext();
     const hasActivityToday = await progressRepository.hasActivityInRange(userId, context.dayStartUtc, context.nextDayStartUtc);
     const ramadanConfig = resolveRamadanConfig({
-      settings: await adminSettingsRepository.findByKeys(["ramadan_mode", "ramadan_fasting_hours"])
+      settings: await withOptionalDbFallback(
+        "admin_settings.ramadan",
+        () => adminSettingsRepository.findByKeys(["ramadan_mode", "ramadan_fasting_hours"]),
+        () => []
+      )
     });
     const subjectProgressRows = await progressRepository.findSubjectProgress(userId);
 

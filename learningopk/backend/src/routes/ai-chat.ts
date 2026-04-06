@@ -28,6 +28,7 @@ import {
   getMistralModelId,
   MISTRAL_TEMPERATURE,
   type ChatMessage,
+  type TutorMode,
   type TutorChapterContext,
   type TutorPersonalContext
 } from "../lib/mistral.js";
@@ -45,6 +46,7 @@ const chatMessageSchema = z.object({
 
 const chatInputSchema = z.object({
   messages: z.array(chatMessageSchema).min(1).max(40),
+  mode: z.enum(["explain", "socratic"]).default("explain"),
   chapterId: z.number().int().positive().optional(),
   sessionId: z.string().uuid().optional()
 });
@@ -299,7 +301,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
     return;
   }
 
-  const { messages, chapterId, sessionId } = parsed.data;
+  const { messages, chapterId, mode, sessionId } = parsed.data;
   const latestUserMessage = [...messages].reverse().find((message) => message.role === "user");
   if (!latestUserMessage) {
     res.status(400).json({
@@ -487,6 +489,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
   const systemPrompt = buildTutorSystemPrompt({
     context: chapterContext?.context ?? fallbackContext,
     failedAttempts,
+    mode: mode as TutorMode,
     ...(personalContext ? { personalContext } : {}),
   });
 
