@@ -362,52 +362,6 @@ _No tasks in progress yet. Pick from Todo below._
 
 ---
 
-#### TASK-50 🟠
-
-**Title:** Exam Pattern Analysis (Topic Weightage)
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-24, TASK-21
-**Acceptance Criteria:**
-
-- [ ] `exam_analysis` table: `board_id`, `subject_id`, `chapter_id`, `occurrence_count`, `avg_marks`, `last_seen_year`
-- [ ] Chapter page shows "Board Exam Weightage" badge: "This chapter appeared in 85% of past 5 board exams (avg 12 marks)"
-- [ ] Subject page shows chapters sorted by weightage with visual bar indicating importance
-- [ ] Pattern page (`/patterns/[board]/[subject]`) shows 5-year trend graph per topic
-- [ ] Study recommendation: "Focus 60% of your time on these 3 high-weight chapters: [list]"
-
----
-
-#### TASK-51 🟠
-
-**Title:** Model Fallback Strategy for Cost & Reliability
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-14
-**Acceptance Criteria:**
-
-- [ ] Three-tier model strategy: `mistral-tiny` for simple Q&A, `mistral-small` for standard tutoring, `mistral-medium` for complex explanations
-- [ ] Query classification within 50ms: simple (<50 tokens, factual recall) vs. complex (multi-step reasoning)
-- [ ] Automatic fallback chain with 3 retry attempts and exponential backoff
-- [ ] Circuit breaker pattern: after 5 consecutive failures in 1 minute, switch to cached response mode
-- [ ] Cost tracking per tier in `ai_usage_logs` with `modelTier` column
-
----
-
-#### TASK-52 🟠
-
-**Title:** Proactive Confusion Detection & Hints
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-14
-**Acceptance Criteria:**
-
-- [ ] Pattern detection triggers: ≥3 consecutive user messages under 15 characters, ≥2 identical wrong answers, or off-topic keywords
-- [ ] System injects proactive hint: "It looks like you're working through [topic]. Would you like me to break this down differently?"
-- [ ] New `ai_conversation_events` table logs: `sessionId`, `eventType`, `metadata`
-- [ ] Frontend shows subtle "Need a hint?" button that appears after confusion patterns detected
-- [ ] Analytics dashboard shows confusion patterns by chapter for content improvement insights
-
 ---
 
 ## 🔴 Blocked
@@ -888,6 +842,27 @@ _Completed tasks are moved here by the coding agent._
 **Phase:** 10 — Enhancements
 **Priority:** High
 **Evidence:** Added leaderboard API with global/board/school scopes and xp/streak/quizzes metrics; `/leaderboard` page with cohort tabs; 5-minute caching; weekly change, badges, and privacy opt-out settings
+
+#### TASK-50 ✅
+
+**Title:** Exam Pattern Analysis (Topic Weightage)
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added `exam_analysis` table and aggregation repository; chapter weightage badge; subject-level importance ranking and study recommendation; `/patterns/[board]/[subject]` trend page with 5-year topic bars
+
+#### TASK-51 ✅
+
+**Title:** Model Fallback Strategy for Cost & Reliability
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added AI model strategy with prompt classification, tiered model selection, retry fallback chain, circuit breaker, exact normalized-prompt cached-response mode, and `modelTier` persistence on `ai_usage_logs`
+
+#### TASK-52 ✅
+
+**Title:** Proactive Confusion Detection & Hints
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added `ai_conversation_events` table and confusion detection module using persisted session history; proactive hint payloads and subtle frontend hint CTA; admin analytics chapter-level confusion insights
 
 ---
 
