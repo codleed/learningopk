@@ -187,51 +187,6 @@ _No tasks in progress yet. Pick from Todo below._
 
 ---
 
-#### TASK-25 🔵
-
-**Title:** Study groups
-**Phase:** 8 — Growth
-**Priority:** Medium
-**Depends on:** TASK-17
-**Acceptance Criteria:**
-
-- [ ] Students create a group (name + invite by username/email)
-- [ ] Max 6 members per group
-- [ ] Group page shows: each member's chapter completion %, quiz scores, streak
-- [ ] No real-time chat — async only
-- [ ] Notifications when a group member completes a chapter or beats your quiz score
-
----
-
-#### TASK-26 🔵
-
-**Title:** Quiz duel — challenge a friend
-**Phase:** 8 — Growth
-**Priority:** Medium
-**Depends on:** TASK-12
-**Acceptance Criteria:**
-
-- [ ] "Challenge a friend" button on chapter quiz result page
-- [ ] Generates a shareable link with `challengeId`
-- [ ] Recipient opens link, takes the same 10 questions
-- [ ] Both scores shown side-by-side on result page
-- [ ] Challenge expires after 48 hours
-
----
-
-#### TASK-27 🔵
-
-**Title:** Adaptive weak-spot detection
-**Phase:** 8 — Growth
-**Priority:** Medium
-**Depends on:** TASK-12, TASK-14
-**Acceptance Criteria:**
-
-- [ ] After 3+ quiz attempts on a subject, analyse wrong answers by topic/exercise tag
-- [ ] Surface "Your weak areas" card on dashboard per subject
-- [ ] Weak areas link directly to relevant exercises
-- [ ] AI teacher context updated to mention weak areas in system prompt
-
 ---
 
 #### TASK-28 🔵
@@ -577,6 +532,27 @@ _Completed tasks are moved here by the coding agent._
 ---
 
 ### Phase 8 — Growth Features (Medium 🔵)
+
+#### TASK-25 ✅
+
+**Title:** Study groups
+**Phase:** 8 — Growth
+**Priority:** Medium
+**Evidence:** Added authenticated study groups API and pages with immediate invite resolution by username/email, 6-member cap, member progress/streak summaries, and async group activity notifications
+
+#### TASK-26 ✅
+
+**Title:** Quiz duel — challenge a friend
+**Phase:** 8 — Growth
+**Priority:** Medium
+**Evidence:** Added `quiz_duel_challenges`, shareable challenge links from quiz results, logged-in recipient duel flow using the same chapter quiz, side-by-side duel results, and 48-hour expiry enforcement
+
+#### TASK-27 ✅
+
+**Title:** Adaptive weak-spot detection
+**Phase:** 8 — Growth
+**Priority:** Medium
+**Evidence:** Added historical subject weak-area aggregation after 3+ attempts, dashboard weak-areas card with direct exercise links, and AI tutor prompt context enriched with adaptive weak areas
 
 #### TASK-29 ✅
 
