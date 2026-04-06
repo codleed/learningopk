@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { 
   Clock, 
   Trophy, 
@@ -34,6 +34,7 @@ interface QuizSubmissionResult {
 }
 
 export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProps) {
+  const reduced = useReducedMotion();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerOption>>({});
   const [remainingSeconds, setRemainingSeconds] = useState(quiz.durationMinutes * 60);
@@ -283,14 +284,16 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
 
       {isSubmitted && result && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={reduced ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={reduced ? { duration: 0 } : undefined}
           className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 to-purple-500/10 p-8 text-center"
         >
           {showCelebration && (
             <motion.div
-              initial={{ scale: 0 }}
+              initial={reduced ? false : { scale: 0 }}
               animate={{ scale: 1 }}
+              transition={reduced ? { duration: 0 } : undefined}
               className="mb-4"
             >
               <Sparkles className="mx-auto h-16 w-16 text-amber-500" />

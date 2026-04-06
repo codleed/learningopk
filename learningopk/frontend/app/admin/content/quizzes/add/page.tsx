@@ -29,11 +29,11 @@ export default function AddQuizPage() {
             <AlertCircle className="h-8 w-8 text-amber-600" aria-hidden />
           </div>
           
-          <h3 className="font-heading text-lg font-semibold text-[var(--foreground)] mb-2">
+          <h3 className="font-heading text-lg font-semibold text-[var(--text-primary)] mb-2">
             Quiz Management Not Available
           </h3>
           
-          <p className="text-sm text-[var(--muted-foreground)] max-w-md mb-6">
+          <p className="text-sm text-[var(--text-secondary)] max-w-md mb-6">
             The Quiz API is not yet available. Backend API support is needed to enable quiz creation.
           </p>
 
@@ -66,10 +66,10 @@ export default function AddQuizPage() {
         <div className="space-y-6 opacity-50 pointer-events-none select-none">
           {/* Chapter Select */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[var(--foreground)]">
+            <label className="text-sm font-medium text-[var(--text-primary)]">
               Chapter <span className="text-red-600">*</span>
             </label>
-            <div className="w-full rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm text-[var(--muted-foreground)]">
+            <div className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-secondary)]">
               Chapter selection (API needed)
             </div>
           </div>
@@ -77,18 +77,18 @@ export default function AddQuizPage() {
           {/* Title and Type */}
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-[var(--foreground)]">
+              <label className="text-sm font-medium text-[var(--text-primary)]">
                 Quiz Title <span className="text-red-600">*</span>
               </label>
-              <div className="w-full rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm text-[var(--muted-foreground)]">
+              <div className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-secondary)]">
                 Quiz title input (API needed)
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-[var(--foreground)]">
+              <label className="text-sm font-medium text-[var(--text-primary)]">
                 Type <span className="text-red-600">*</span>
               </label>
-              <div className="w-full rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm text-[var(--muted-foreground)]">
+              <div className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-secondary)]">
                 Type selection (API needed)
               </div>
             </div>
@@ -96,10 +96,10 @@ export default function AddQuizPage() {
 
           {/* Duration */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[var(--foreground)]">
+            <label className="text-sm font-medium text-[var(--text-primary)]">
               Duration (minutes) <span className="text-red-600">*</span>
             </label>
-            <div className="w-full rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm text-[var(--muted-foreground)]">
+            <div className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-secondary)]">
               Duration input (API needed)
             </div>
           </div>
@@ -107,19 +107,19 @@ export default function AddQuizPage() {
           {/* Questions Preview */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-heading text-base font-semibold text-[var(--foreground)]">
+              <h3 className="font-heading text-base font-semibold text-[var(--text-primary)]">
                 Questions (0)
               </h3>
               <button
                 disabled
-                className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-1.5 text-sm font-medium text-[var(--muted-foreground)] cursor-not-allowed"
+                className="inline-flex items-center gap-1 rounded-md border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-1.5 text-sm font-medium text-[var(--text-secondary)] cursor-not-allowed"
               >
                 + Add Question
               </button>
             </div>
 
-            <div className="rounded-lg border border-dashed border-[var(--border)] p-6 text-center">
-              <p className="text-sm text-[var(--muted-foreground)]">
+            <div className="rounded-lg border border-dashed border-[var(--border-default)] p-6 text-center">
+              <p className="text-sm text-[var(--text-secondary)]">
                 Question editor will appear here once API is available
               </p>
             </div>
@@ -129,13 +129,13 @@ export default function AddQuizPage() {
           <div className="flex items-center gap-3 pt-2">
             <button
               disabled
-              className="inline-flex items-center rounded-md bg-[var(--muted)] px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] cursor-not-allowed"
+              className="inline-flex items-center rounded-md bg-[var(--bg-subtle)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] cursor-not-allowed"
             >
               Create Quiz
             </button>
             <button
               disabled
-              className="inline-flex items-center rounded-md border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] cursor-not-allowed"
+              className="inline-flex items-center rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] cursor-not-allowed"
             >
               Cancel
             </button>

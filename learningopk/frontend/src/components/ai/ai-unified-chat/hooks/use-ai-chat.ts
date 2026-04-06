@@ -1,6 +1,6 @@
 // learningopk/frontend/src/components/ai/ai-unified-chat/hooks/use-ai-chat.ts
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ChatMessage } from '../types';
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:3001';
@@ -29,15 +29,61 @@ const formatAssistantError = (payload: AIChatErrorResponse | null, fallback: str
   return `${payload.error ?? fallback}${reasonSuffix}${retrySuffix}`;
 };
 
+/** Duration in ms to show the "Generation stopped" status */
+const STOPPED_STATUS_DURATION = 3000;
+
 export function useAIChat(chapterId?: number, existingSessionId?: string | null) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(existingSessionId ?? null);
   const [isSending, setIsSending] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stoppedStatus, setStoppedStatus] = useState<string | null>(null);
   const [proactiveHint, setProactiveHint] = useState<ProactiveHint | null>(null);
+  const [rateLimitRemaining, setRateLimitRemaining] = useState<number | null>(null);
+  const [rateLimitTotal, setRateLimitTotal] = useState<number | null>(null);
   
   const abortControllerRef = useRef<AbortController | null>(null);
+  const stoppedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+      if (stoppedTimerRef.current) {
+        clearTimeout(stoppedTimerRef.current);
+      }
+    };
+  }, []);
+  
+  /** Extract rate-limit info from response headers */
+  const extractRateLimitHeaders = useCallback((response: Response) => {
+    const remaining = response.headers.get('x-ratelimit-remaining');
+    const limit = response.headers.get('x-ratelimit-limit');
+    if (remaining !== null) {
+      const parsed = parseInt(remaining, 10);
+      if (!Number.isNaN(parsed)) setRateLimitRemaining(parsed);
+    }
+    if (limit !== null) {
+      const parsed = parseInt(limit, 10);
+      if (!Number.isNaN(parsed)) setRateLimitTotal(parsed);
+    }
+  }, []);
+  
+  const stopGenerating = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsSending(false);
+    setIsStreaming(false);
+    
+    // Show brief "Generation stopped" status
+    setStoppedStatus('Generation stopped');
+    if (stoppedTimerRef.current) clearTimeout(stoppedTimerRef.current);
+    stoppedTimerRef.current = setTimeout(() => {
+      setStoppedStatus(null);
+    }, STOPPED_STATUS_DURATION);
+  }, []);
   
   const sendMessage = useCallback(async (content: string): Promise<void> => {
     const trimmed = content.trim();
@@ -47,11 +93,14 @@ export function useAIChat(chapterId?: number, existingSessionId?: string | null)
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    abortControllerRef.current = new AbortController();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
     
     setIsSending(true);
     setIsStreaming(true);
     setError(null);
+    setStoppedStatus(null);
+    if (stoppedTimerRef.current) clearTimeout(stoppedTimerRef.current);
     
     const userMessage: ChatMessage = {
       id: createMessageId(),
@@ -83,8 +132,11 @@ export function useAIChat(chapterId?: number, existingSessionId?: string | null)
           chapterId,
           sessionId: sessionId ?? undefined,
         }),
-        signal: abortControllerRef.current.signal,
+        signal: abortController.signal,
       });
+      
+      // Extract rate limit headers from every response
+      extractRateLimitHeaders(response);
       
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as AIChatErrorResponse | null;
@@ -132,16 +184,26 @@ export function useAIChat(chapterId?: number, existingSessionId?: string | null)
       }
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
-        // Request was cancelled, don't show error
+        // Request was cancelled by user — keep partial content if any
+        setMessages((prev) => {
+          const assistantMsg = prev.find((m) => m.id === assistantMessageId);
+          if (assistantMsg && assistantMsg.content.trim().length === 0) {
+            return prev.filter((m) => m.id !== assistantMessageId);
+          }
+          return prev;
+        });
         return;
       }
       setMessages((prev) => prev.filter((m) => m.id !== assistantMessageId));
       setError('Unable to reach AI service. Please try again.');
     } finally {
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null;
+      }
       setIsSending(false);
       setIsStreaming(false);
     }
-  }, [messages, sessionId, chapterId, isSending]);
+  }, [messages, sessionId, chapterId, isSending, extractRateLimitHeaders]);
   
   const clearMessages = useCallback(() => {
     setMessages([]);
@@ -165,9 +227,13 @@ export function useAIChat(chapterId?: number, existingSessionId?: string | null)
     sessionId,
     isSending,
     isStreaming,
-      error,
-      proactiveHint,
-      sendMessage,
+    error,
+    stoppedStatus,
+    proactiveHint,
+    rateLimitRemaining,
+    rateLimitTotal,
+    sendMessage,
+    stopGenerating,
     clearMessages,
     clearError,
     setMessagesFromSession,

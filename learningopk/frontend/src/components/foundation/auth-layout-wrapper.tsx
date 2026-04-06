@@ -82,7 +82,7 @@ export function AuthLayoutWrapper({
           width: `calc(100% - var(--left-rail-width, ${LEFT_RAIL_COLLAPSED_WIDTH}px))`,
         }}
       >
-        <div className={cn("pb-16 pl-4 pr-4 md:pb-4", className)}>
+        <div className={cn("pb-16 md:pb-4", className)}>
           {children}
         </div>
       </main>

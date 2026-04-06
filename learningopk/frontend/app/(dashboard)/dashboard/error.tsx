@@ -1,7 +1,7 @@
 "use client";
 
 import { ServiceUnavailable } from "@/components/foundation/service-unavailable";
-import { RouteError } from "@/components/foundation/route-state";
+import { ErrorState } from "@/components/ui/states";
 import { isAuthServiceUnavailable } from "@/lib/auth-errors";
 
 type DashboardErrorProps = {
@@ -20,7 +20,11 @@ export default function DashboardError({ error, reset }: DashboardErrorProps) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-10">
-      <RouteError title="Dashboard failed to load" description={error.message} onRetry={reset} />
+      <ErrorState
+        title="Dashboard failed to load"
+        description="We couldn't load your dashboard. Please try again."
+        onRetry={reset}
+      />
     </div>
   );
 }

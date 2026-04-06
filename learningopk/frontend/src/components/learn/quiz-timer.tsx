@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Clock } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ const formatTimeLeft = (seconds: number): string => {
 };
 
 export function QuizTimer({ remainingSeconds, expired }: QuizTimerProps) {
+  const reduced = useReducedMotion();
   const isWarning = remainingSeconds <= TIMER_WARNING_SECONDS && remainingSeconds > TIMER_CRITICAL_SECONDS;
   const isCritical = remainingSeconds <= TIMER_CRITICAL_SECONDS && remainingSeconds > 0;
 
@@ -48,15 +49,15 @@ export function QuizTimer({ remainingSeconds, expired }: QuizTimerProps) {
       <AnimatePresence mode="wait">
         <motion.p
           key={isCritical ? "critical" : isWarning ? "warning" : "normal"}
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={reduced ? false : { opacity: 0, scale: 0.95 }}
           animate={{
             opacity: 1,
-            scale: isCritical && !expired ? [1, 1.05, 1] : 1,
+            scale: isCritical && !expired && !reduced ? [1, 1.05, 1] : 1,
           }}
           transition={
-            isCritical && !expired
+            isCritical && !expired && !reduced
               ? { scale: { repeat: Infinity, duration: 1, ease: "easeInOut" } }
-              : { duration: 0.2 }
+              : { duration: reduced ? 0 : 0.2 }
           }
           className={cn(
             "font-display text-lg font-bold tabular-nums",
@@ -82,20 +83,21 @@ export function QuizTimer({ remainingSeconds, expired }: QuizTimerProps) {
 }
 
 export function QuizTimerCompact({ remainingSeconds, expired }: QuizTimerProps) {
+  const reduced = useReducedMotion();
   const isWarning = remainingSeconds <= TIMER_WARNING_SECONDS && remainingSeconds > TIMER_CRITICAL_SECONDS;
   const isCritical = remainingSeconds <= TIMER_CRITICAL_SECONDS && remainingSeconds > 0;
 
   return (
     <motion.div
       animate={
-        isCritical && !expired
+        isCritical && !expired && !reduced
           ? { scale: [1, 1.04, 1] }
           : { scale: 1 }
       }
       transition={
-        isCritical && !expired
+        isCritical && !expired && !reduced
           ? { repeat: Infinity, duration: 1, ease: "easeInOut" }
-          : { duration: 0.2 }
+          : { duration: reduced ? 0 : 0.2 }
       }
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold",

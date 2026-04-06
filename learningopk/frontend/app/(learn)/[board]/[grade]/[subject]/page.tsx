@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
@@ -6,7 +7,7 @@ import { AppShell } from "@/components/foundation/app-shell";
 import {
   StaggerContainer,
   MotionSection,
-} from "@/components/dashboard/DashboardClient";
+} from "@/components/motion";
 import { PageHeader } from "@/components/common/page-header";
 import { SubjectHeader } from "@/components/learn/subject-header";
 import { SubjectWeightageList } from "@/components/learn/subject-weightage-list";
@@ -28,6 +29,22 @@ type SubjectPageProps = {
   }>;
   searchParams: Promise<{ mockExamId?: string }>;
 };
+
+export async function generateMetadata({ params }: SubjectPageProps): Promise<Metadata> {
+  const { board, grade, subject } = await params;
+  const subjectName = subject.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  const boardName = board.replace(/-/g, " ").toUpperCase();
+  const gradeName = grade.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+
+  return {
+    title: `${subjectName} — ${gradeName} | ${boardName} | LearningoPK`,
+    description: `Study ${subjectName} for ${gradeName} ${boardName} board. Access chapters, exercises, flashcards, and AI-powered tutoring.`,
+    openGraph: {
+      title: `${subjectName} — ${gradeName}`,
+      description: `Study ${subjectName} for ${gradeName} ${boardName} board.`,
+    },
+  };
+}
 
 export default async function SubjectPage({ params, searchParams }: SubjectPageProps) {
   const query = await searchParams;

@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import type { EChartsOption } from "echarts";
 
+import { ChartDataTable } from "@/components/stats/chart-data-table";
 import { EChartWrapper } from "@/components/stats/echart-wrapper";
+import { useResolvedTokens } from "@/lib/resolve-css-tokens";
 import type { QuizAccuracyPoint } from "@/lib/stats-metrics";
 
 interface QuizAccuracyTrendChartProps {
@@ -11,6 +13,9 @@ interface QuizAccuracyTrendChartProps {
 }
 
 export function QuizAccuracyTrendChart({ data }: QuizAccuracyTrendChartProps) {
+  const tableId = useId();
+  const tokens = useResolvedTokens();
+
   const option = useMemo((): EChartsOption => {
     const labels = data.map((d) => d.label);
     const percentages = data.map((d) => d.percentage);
@@ -19,17 +24,17 @@ export function QuizAccuracyTrendChart({ data }: QuizAccuracyTrendChartProps) {
     return {
       tooltip: {
         trigger: "axis",
-        backgroundColor: "var(--bg-elevated)",
-        borderColor: "var(--border-default)",
+        backgroundColor: tokens.bgElevated,
+        borderColor: tokens.borderDefault,
         borderWidth: 1,
         textStyle: {
-          color: "var(--text-primary)",
+          color: tokens.textPrimary,
           fontSize: 12,
         },
         axisPointer: {
           type: "cross",
           crossStyle: {
-            color: "var(--text-muted)",
+            color: tokens.textMuted,
           },
         },
       },
@@ -38,7 +43,7 @@ export function QuizAccuracyTrendChart({ data }: QuizAccuracyTrendChartProps) {
         top: 0,
         right: 0,
         textStyle: {
-          color: "var(--text-secondary)",
+          color: tokens.textSecondary,
           fontSize: 11,
         },
         itemWidth: 16,
@@ -48,10 +53,10 @@ export function QuizAccuracyTrendChart({ data }: QuizAccuracyTrendChartProps) {
         type: "category",
         data: labels,
         boundaryGap: false,
-        axisLine: { lineStyle: { color: "var(--border-default)" } },
+        axisLine: { lineStyle: { color: tokens.borderDefault } },
         axisTick: { show: false },
         axisLabel: {
-          color: "var(--text-muted)",
+          color: tokens.textMuted,
           fontSize: 11,
         },
       },
@@ -61,17 +66,17 @@ export function QuizAccuracyTrendChart({ data }: QuizAccuracyTrendChartProps) {
         max: 100,
         name: "Accuracy %",
         nameTextStyle: {
-          color: "var(--text-muted)",
+          color: tokens.textMuted,
           fontSize: 11,
         },
         splitLine: {
           lineStyle: {
-            color: "var(--border-default)",
+            color: tokens.borderDefault,
             type: "dashed",
           },
         },
         axisLabel: {
-          color: "var(--text-muted)",
+          color: tokens.textMuted,
           fontSize: 11,
           formatter: "{value}%",
         },
@@ -85,12 +90,12 @@ export function QuizAccuracyTrendChart({ data }: QuizAccuracyTrendChartProps) {
           symbol: "circle",
           symbolSize: 6,
           lineStyle: {
-            color: "var(--accent-info)",
+            color: tokens.accentInfo,
             width: 2,
           },
           itemStyle: {
-            color: "var(--accent-info)",
-            borderColor: "var(--bg-surface)",
+            color: tokens.accentInfo,
+            borderColor: tokens.bgSurface,
             borderWidth: 2,
           },
           areaStyle: {
@@ -101,8 +106,8 @@ export function QuizAccuracyTrendChart({ data }: QuizAccuracyTrendChartProps) {
               x2: 0,
               y2: 1,
               colorStops: [
-                { offset: 0, color: "rgba(56, 189, 248, 0.25)" },
-                { offset: 1, color: "rgba(56, 189, 248, 0.02)" },
+                { offset: 0, color: tokens.accentInfo + "40" },
+                { offset: 1, color: tokens.accentInfo + "05" },
               ],
             },
           },
@@ -114,7 +119,7 @@ export function QuizAccuracyTrendChart({ data }: QuizAccuracyTrendChartProps) {
           smooth: true,
           symbol: "none",
           lineStyle: {
-            color: "var(--accent-primary)",
+            color: tokens.accentPrimary,
             width: 2.5,
             type: "solid",
           },
@@ -129,7 +134,7 @@ export function QuizAccuracyTrendChart({ data }: QuizAccuracyTrendChartProps) {
       animationDuration: 1000,
       animationEasing: "cubicOut",
     };
-  }, [data]);
+  }, [data, tokens]);
 
   if (data.length === 0) {
     return (
@@ -139,5 +144,17 @@ export function QuizAccuracyTrendChart({ data }: QuizAccuracyTrendChartProps) {
     );
   }
 
-  return <EChartWrapper option={option} height="320px" />;
+  return (
+    <div aria-describedby={tableId}>
+      <div aria-hidden="true">
+        <EChartWrapper option={option} height="320px" />
+      </div>
+      <ChartDataTable
+        id={tableId}
+        caption="Quiz accuracy trend over time"
+        headers={["Date", "Accuracy %", "Moving average %"]}
+        rows={data.map((d) => [d.label, `${d.percentage}%`, `${d.movingAverage}%`])}
+      />
+    </div>
+  );
 }

@@ -240,20 +240,20 @@ export function EditFlashCardForm({ deck, boards }: EditFlashCardFormProps) {
                 setTitleError("");
               }}
               placeholder="e.g., Algebra Formulas"
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+              className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
             />
           </AdminFormField>
 
           {/* Cards */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-heading text-base font-semibold text-[var(--foreground)]">
+              <h3 className="font-heading text-base font-semibold text-[var(--text-primary)]">
                 Cards ({cards.length})
               </h3>
               <button
                 type="button"
                 onClick={addCard}
-                className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
+                className="inline-flex items-center gap-1 rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-subtle)]"
               >
                 <Plus className="h-4 w-4" aria-hidden />
                 Add Card
@@ -268,10 +268,10 @@ export function EditFlashCardForm({ deck, boards }: EditFlashCardFormProps) {
               {cards.map((card, index) => (
                 <div
                   key={card.id}
-                  className="rounded-lg border border-[var(--border)] bg-[var(--muted)] p-4"
+                  className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-4"
                 >
                   <div className="mb-4 flex items-center justify-between">
-                    <h4 className="font-medium text-[var(--foreground)]">
+                    <h4 className="font-medium text-[var(--text-primary)]">
                       Card {index + 1}
                     </h4>
                     {cards.length > 1 && (
@@ -298,7 +298,7 @@ export function EditFlashCardForm({ deck, boards }: EditFlashCardFormProps) {
                         onChange={(e) => updateCard(card.id, "front", e.target.value)}
                         placeholder="Enter the question or term..."
                         rows={3}
-                        className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                        className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
                       />
                     </AdminFormField>
 
@@ -313,7 +313,7 @@ export function EditFlashCardForm({ deck, boards }: EditFlashCardFormProps) {
                         onChange={(e) => updateCard(card.id, "back", e.target.value)}
                         placeholder="Enter the answer or definition..."
                         rows={3}
-                        className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                        className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
                       />
                     </AdminFormField>
                   </div>

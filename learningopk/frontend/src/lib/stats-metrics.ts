@@ -6,6 +6,7 @@ type QuizHistoryEntry = DashboardSummaryResponse["quizHistory"][number];
 
 export type WeeklyStudyTrendPoint = {
   label: string;
+  /** Estimated hours derived from activity event count x assumed minutes per activity. Not directly measured. */
   estimatedHours: number;
   activityCount: number;
 };
@@ -20,8 +21,11 @@ export type WeakSubjectPoint = {
   subjectId: number;
   subjectSlug: string;
   subjectName: string;
+  boardSlug: string;
+  grade: string;
   chaptersVisitedPercent: number;
   bestQuizScorePercent: number;
+  /** Proxy score: average of chaptersVisitedPercent and bestQuizScorePercent. Range: 0-100. */
   healthScore: number;
 };
 
@@ -126,6 +130,8 @@ export const getWeakSubjects = (subjects: SubjectEntry[], limit = 3): WeakSubjec
       subjectId: subject.subjectId,
       subjectSlug: subject.subjectSlug,
       subjectName: subject.subjectName,
+      boardSlug: subject.boardSlug,
+      grade: subject.grade,
       chaptersVisitedPercent: subject.chaptersVisitedPercent,
       bestQuizScorePercent: subject.bestQuizScorePercent,
       healthScore: Math.round((subject.chaptersVisitedPercent + subject.bestQuizScorePercent) / 2)

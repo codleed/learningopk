@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Share2, RotateCcw, Sparkles, Check, X, Minus, Swords } from "lucide-react";
 
 import type { QuizResult } from "./quiz-runner";
@@ -22,6 +22,7 @@ type QuizResultSummaryProps = {
 
 export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber, chapterTitle, onCreateChallenge }: QuizResultSummaryProps) {
   const passed = result.percentage >= 70;
+  const reduced = useReducedMotion();
   const [showShareCard, setShowShareCard] = useState(false);
   const [isCreatingChallenge, setIsCreatingChallenge] = useState(false);
   const [challengeMessage, setChallengeMessage] = useState<string | null>(null);
@@ -114,9 +115,9 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
 
               {/* XP badge with pop animation */}
               <motion.div
-                initial={{ scale: 0, opacity: 0 }}
+                initial={reduced ? false : { scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.5, type: "spring", stiffness: 400, damping: 15 }}
+                transition={reduced ? { duration: 0 } : { delay: 0.5, type: "spring", stiffness: 400, damping: 15 }}
                 className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-accent-warning-light px-3 py-1"
               >
                 <Sparkles className="h-3.5 w-3.5 text-accent-warning" />
@@ -130,9 +131,9 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
           {/* Stat boxes */}
           <div className="mt-6 grid grid-cols-3 gap-3">
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={reduced ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={reduced ? { duration: 0 } : { delay: 0.2 }}
               className="flex flex-col items-center gap-1 rounded-xl border border-accent-success/20 bg-accent-success-light p-3"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-success text-white">
@@ -143,9 +144,9 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={reduced ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={reduced ? { duration: 0 } : { delay: 0.3 }}
               className="flex flex-col items-center gap-1 rounded-xl border border-accent-danger/20 bg-accent-danger-light p-3"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-danger text-white">
@@ -156,9 +157,9 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={reduced ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              transition={reduced ? { duration: 0 } : { delay: 0.4 }}
               className="flex flex-col items-center gap-1 rounded-xl border border-accent-warning/20 bg-accent-warning-light p-3"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-warning text-white">
@@ -217,9 +218,9 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
       {/* Shareable result card */}
       {showShareCard && (
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={reduced ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={reduced ? { duration: 0 } : { duration: 0.3 }}
           className="flex justify-center"
         >
           <ShareableResultCard

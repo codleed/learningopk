@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAIChatContext } from './ai-chat-context';
 import { AIChatHeader } from './components/ai-chat-header';
 import { AIChatMessages } from './components/ai-chat-messages';
 import { AIChatInput } from './components/ai-chat-input';
 import { AIChatEmptyState } from './components/ai-chat-empty-state';
+import { CrisisBanner } from './components/crisis-banner';
+import { useMobileKeyboard } from './hooks/use-mobile-keyboard';
 
 type AIChatSidebarProps = {
   onHide: () => void;
@@ -20,14 +22,23 @@ export function AIChatSidebar({ onHide, className }: AIChatSidebarProps) {
     isSending,
     isExpanded,
     error,
+    stoppedStatus,
     proactiveHint,
     isVisible,
+    context,
+    showCrisisBanner,
+    rateLimitRemaining,
+    rateLimitTotal,
     sendMessage,
+    stopGenerating,
     clearError,
+    dismissCrisisBanner,
     toggleExpanded,
   } = useAIChatContext();
   
   const [inputValue, setInputValue] = useState('');
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const { keyboardVisible, viewportHeight } = useMobileKeyboard();
   
   if (!isVisible) return null;
   
@@ -50,15 +61,16 @@ export function AIChatSidebar({ onHide, className }: AIChatSidebarProps) {
       className={cn(
         'flex flex-col',
         'fixed right-0 top-0 bottom-0',
-        'bg-card',
-        'border-l border-border/50',
+        'bg-bg-surface',
+        'border-l border-border-default/50',
         'overflow-hidden',
-        'h-screen max-h-screen',
+        'h-dvh max-h-dvh',
         'transition-all duration-300 ease-out',
         'z-30',
         isExpanded ? 'w-[calc(100vw-16rem)]' : 'w-[380px]',
         className
       )}
+      style={keyboardVisible ? { height: `${viewportHeight}px` } : undefined}
       aria-label="AI Chat Sidebar"
     >
       <AIChatHeader 
@@ -70,6 +82,7 @@ export function AIChatSidebar({ onHide, className }: AIChatSidebarProps) {
       
       {messages.length === 0 ? (
         <AIChatEmptyState
+          context={context}
           onSuggestionClick={handleSuggestionClick}
           className="flex-1"
         />
@@ -77,17 +90,19 @@ export function AIChatSidebar({ onHide, className }: AIChatSidebarProps) {
         <AIChatMessages
           messages={messages}
           isStreaming={isStreaming}
-          className="flex-1"
+          topBanner={showCrisisBanner ? <CrisisBanner onDismiss={dismissCrisisBanner} /> : null}
+          className="min-h-0"
+          containerRef={messagesContainerRef}
         />
       )}
       
       {error && (
-        <div className="mx-4 mb-3 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
-          <p className="text-sm text-destructive">{error}</p>
+        <div className="mx-4 mb-3 rounded-xl border border-accent-danger/20 bg-accent-danger/5 px-4 py-3">
+          <p className="text-sm text-accent-danger">{error}</p>
           <button
             type="button"
             onClick={clearError}
-            className="text-xs text-destructive/80 hover:text-destructive underline mt-1.5 transition-colors"
+            className="text-xs text-accent-danger/80 hover:text-accent-danger underline mt-1.5 transition-colors"
           >
             Dismiss
           </button>
@@ -113,8 +128,14 @@ export function AIChatSidebar({ onHide, className }: AIChatSidebarProps) {
         onChange={setInputValue}
         onSubmit={handleSubmit}
         isSending={isSending}
+        isStreaming={isStreaming}
+        onStopGenerating={stopGenerating}
+        stoppedStatus={stoppedStatus}
+        rateLimitRemaining={rateLimitRemaining}
+        rateLimitTotal={rateLimitTotal}
         placeholder={placeholder}
         className="flex-shrink-0"
+        messagesContainerRef={messagesContainerRef}
       />
     </aside>
   );

@@ -70,10 +70,10 @@ export function AdminEntityDetailPanel({
 }: EntityDetailPanelProps) {
   if (!entity) {
     return (
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-8">
+      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-8">
         <div className="flex flex-col items-center justify-center text-center">
-          <Folder className="mb-4 h-12 w-12 text-[var(--muted-foreground)]" />
-          <p className="text-sm text-[var(--muted-foreground)]">
+          <Folder className="mb-4 h-12 w-12 text-[var(--text-secondary)]" />
+          <p className="text-sm text-[var(--text-secondary)]">
             Select an entity from the tree to view details and actions
           </p>
         </div>
@@ -98,7 +98,7 @@ export function AdminEntityDetailPanel({
       <AdminBreadcrumb segments={breadcrumbSegments} />
 
       {/* Main entity card */}
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
+      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
         {/* Header with icon, name, and badge */}
         <div className="mb-4 flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -106,7 +106,7 @@ export function AdminEntityDetailPanel({
               <Icon className="h-5 w-5 text-[var(--primary)]" aria-hidden />
             </div>
             <div>
-              <h2 className="font-heading text-xl font-semibold text-[var(--foreground)]">
+              <h2 className="font-heading text-xl font-semibold text-[var(--text-primary)]">
                 {entity.name}
               </h2>
               <span className="inline-flex items-center rounded-full bg-[var(--primary-light)] px-2.5 py-0.5 text-xs font-medium text-[var(--primary)]">
@@ -143,15 +143,15 @@ export function AdminEntityDetailPanel({
 
       {/* Child entities preview */}
       {entity.children && entity.children.length > 0 && (
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-          <h3 className="mb-4 font-heading text-sm font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
+        <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
+          <h3 className="mb-4 font-heading text-sm font-semibold uppercase tracking-[0.1em] text-[var(--text-secondary)]">
             {childTypeLabel[childType]} ({entity.children.length})
           </h3>
           <div className="space-y-2">
             {entity.children.map((child) => (
               <div
                 key={child.id}
-                className="flex items-center gap-3 rounded-lg border border-[var(--border)] p-3 transition-colors hover:bg-[var(--muted)]"
+                className="flex items-center gap-3 rounded-lg border border-[var(--border-default)] p-3 transition-colors hover:bg-[var(--bg-subtle)]"
               >
                 {child.type === "class" && (
                   <GraduationCap className="h-4 w-4 shrink-0 text-[var(--primary)]" aria-hidden />
@@ -163,11 +163,11 @@ export function AdminEntityDetailPanel({
                   <FileText className="h-4 w-4 shrink-0 text-[var(--primary)]" aria-hidden />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-[var(--foreground)]">
+                  <p className="truncate text-sm font-medium text-[var(--text-primary)]">
                     {child.name}
                   </p>
                   {child.subtitle && (
-                    <p className="truncate text-xs text-[var(--muted-foreground)]">
+                    <p className="truncate text-xs text-[var(--text-secondary)]">
                       {child.subtitle}
                     </p>
                   )}
@@ -180,11 +180,11 @@ export function AdminEntityDetailPanel({
 
       {/* Empty children state */}
       {entity.children && entity.children.length === 0 && (
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-          <h3 className="mb-4 font-heading text-sm font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
+        <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
+          <h3 className="mb-4 font-heading text-sm font-semibold uppercase tracking-[0.1em] text-[var(--text-secondary)]">
             {childTypeLabel[childType]} (0)
           </h3>
-          <p className="text-sm text-[var(--muted-foreground)]">
+          <p className="text-sm text-[var(--text-secondary)]">
             No {childTypeLabel[childType].toLowerCase()} yet.
             {canAddChild && (
               <>

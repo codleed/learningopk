@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { AdminAuditPanel } from "@/components/admin/admin-audit-panel";
-import { PageHeader } from "@/components/foundation/page-header";
+import { AdminPageHeader } from "@/components/admin/page-header";
 import { getAdminAuditLogs } from "@/lib/admin-api";
 
 export default async function AdminAuditPage() {
@@ -25,12 +25,12 @@ export default async function AdminAuditPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Admin Audit"
         title="Audit Trail"
         subtitle="Review admin actions across all operational scopes with unified filtering."
         actions={
-          <Link href="/admin" className="text-sm font-medium text-foreground underline underline-offset-4">
+          <Link href="/admin" className="text-sm font-medium text-text-primary underline underline-offset-4">
             Back to admin
           </Link>
         }

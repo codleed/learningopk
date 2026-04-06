@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { AdminCommunityPanel } from "@/components/admin/admin-community-panel";
-import { PageHeader } from "@/components/foundation/page-header";
+import { AdminPageHeader } from "@/components/admin/page-header";
 import { getAdminCommunityThreads } from "@/lib/admin-api";
 
 export default async function AdminCommunityPage() {
@@ -25,12 +25,12 @@ export default async function AdminCommunityPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Admin Community"
         title="Community Forum"
         subtitle="Track thread health and moderation pressure across the forum."
         actions={
-          <Link href="/admin" className="text-sm font-medium text-foreground underline underline-offset-4">
+          <Link href="/admin" className="text-sm font-medium text-text-primary underline underline-offset-4">
             Back to admin
           </Link>
         }

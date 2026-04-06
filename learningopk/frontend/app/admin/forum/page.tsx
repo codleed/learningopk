@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { AdminForumPanel } from "@/components/admin/admin-forum-panel";
-import { PageHeader } from "@/components/foundation/page-header";
+import { AdminPageHeader } from "@/components/admin/page-header";
 import { getAdminForumAuditLogs } from "@/lib/admin-api";
 import { getForumThreads } from "@/lib/forum-api";
 
@@ -35,12 +35,12 @@ export default async function AdminForumPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Admin Forum"
         title="Forum Moderation"
         subtitle="Prioritize important threads with pin controls and audit logs."
         actions={
-          <Link href="/admin" className="text-sm font-medium text-foreground underline underline-offset-4">
+          <Link href="/admin" className="text-sm font-medium text-text-primary underline underline-offset-4">
             Back to admin
           </Link>
         }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Maximize2, Minimize2, Sparkles, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -132,6 +132,7 @@ type VisualizationFrameProps = {
 
 function VisualizationFrame({ srcdoc, height }: VisualizationFrameProps) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const reduced = useReducedMotion();
 
   const handleIframeLoad = useCallback(() => {
     setIsLoaded(true);
@@ -147,7 +148,7 @@ function VisualizationFrame({ srcdoc, height }: VisualizationFrameProps) {
 
       <motion.div
         animate={{ height }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 300, damping: 30 }}
         className="overflow-hidden"
       >
         <SandboxedIframe
@@ -175,6 +176,7 @@ type FullscreenModalProps = {
 
 function FullscreenModal({ srcdoc, title, onClose }: FullscreenModalProps) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const reduced = useReducedMotion();
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
@@ -203,10 +205,10 @@ function FullscreenModal({ srcdoc, title, onClose }: FullscreenModalProps) {
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 sm:p-8"
-      variants={overlayVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
+      variants={reduced ? undefined : overlayVariants}
+      initial={reduced ? false : "hidden"}
+      animate={reduced ? undefined : "visible"}
+      exit={reduced ? undefined : "exit"}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -214,10 +216,10 @@ function FullscreenModal({ srcdoc, title, onClose }: FullscreenModalProps) {
     >
       <motion.div
         className="flex h-full max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border-default bg-bg-surface shadow-[var(--shadow-elevated)]"
-        variants={modalVariants}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
+        variants={reduced ? undefined : modalVariants}
+        initial={reduced ? false : "hidden"}
+        animate={reduced ? undefined : "visible"}
+        exit={reduced ? undefined : "exit"}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal header */}

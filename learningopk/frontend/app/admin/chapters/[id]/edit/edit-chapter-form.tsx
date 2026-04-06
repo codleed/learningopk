@@ -283,14 +283,14 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
       />
 
       {/* Tab buttons */}
-      <div className="flex items-center gap-1 border-b border-[var(--border)]">
+      <div className="flex items-center gap-1 border-b border-[var(--border-default)]">
         <button
           type="button"
           onClick={() => setActiveTab("metadata")}
           className={`px-4 py-2.5 text-sm font-medium transition-colors ${
             activeTab === "metadata"
-              ? "border-b-2 border-[var(--primary)] text-[var(--foreground)]"
-              : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+              ? "border-b-2 border-[var(--primary)] text-[var(--text-primary)]"
+              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           }`}
         >
           Metadata
@@ -300,8 +300,8 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
           onClick={() => setActiveTab("summary")}
           className={`px-4 py-2.5 text-sm font-medium transition-colors ${
             activeTab === "summary"
-              ? "border-b-2 border-[var(--primary)] text-[var(--foreground)]"
-              : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+              ? "border-b-2 border-[var(--primary)] text-[var(--text-primary)]"
+              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           }`}
         >
           Summary Editor
@@ -321,7 +321,7 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
                 type="text"
                 value={breadcrumbSubject}
                 readOnly
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm text-[var(--foreground)] cursor-not-allowed"
+                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-primary)] cursor-not-allowed"
               />
             </AdminFormField>
 
@@ -339,7 +339,7 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
                 value={chapterNumber}
                 onChange={(e) => handleChapterNumberChange(e.target.value)}
                 onBlur={handleChapterNumberBlur}
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
                 aria-invalid={!!chapterNumberError}
                 aria-describedby={chapterNumberError ? "chapter-number-error" : undefined}
               />
@@ -358,7 +358,7 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
                 onChange={(e) => handleTitleChange(e.target.value)}
                 onBlur={handleTitleBlur}
                 placeholder="e.g., Introduction to Physics"
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
                 aria-invalid={!!titleError}
                 aria-describedby={titleError ? "chapter-title-error" : undefined}
               />
@@ -371,7 +371,7 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
                 value={slug}
                 readOnly
                 placeholder="auto-generated-from-title"
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] cursor-not-allowed"
+                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] cursor-not-allowed"
               />
             </AdminFormField>
 
@@ -397,14 +397,14 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
                 <button
                   type="button"
                   onClick={() => setShowPreview(!showPreview)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-accent/50"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border-default bg-bg-surface px-3 py-1.5 text-xs font-medium text-text-primary transition hover:bg-bg-subtle/50"
                 >
                   {showPreview ? "Edit" : "Preview"}
                 </button>
                 <button
                   type="button"
                   onClick={() => markdownInputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-accent/50"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border-default bg-bg-surface px-3 py-1.5 text-xs font-medium text-text-primary transition hover:bg-bg-subtle/50"
                 >
                   Upload .md file
                 </button>
@@ -418,11 +418,11 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
               </div>
 
               {showPreview ? (
-                <div className="min-h-48 rounded-lg border border-[var(--border)] bg-card p-4">
+                <div className="min-h-48 rounded-lg border border-[var(--border-default)] bg-bg-surface p-4">
                   {summary ? (
                     <MarkdownMathRenderer content={summary} />
                   ) : (
-                    <p className="text-sm text-[var(--muted-foreground)]">No content to preview</p>
+                    <p className="text-sm text-[var(--text-secondary)]">No content to preview</p>
                   )}
                 </div>
               ) : (
@@ -450,7 +450,7 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
       )}
 
       {/* Delete button */}
-      <div className="pt-4 border-t border-[var(--border)]">
+      <div className="pt-4 border-t border-[var(--border-default)]">
         <button
           type="button"
           onClick={handleDelete}

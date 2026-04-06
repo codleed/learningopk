@@ -23,13 +23,13 @@ export function AdminBreadcrumb({ segments, className }: AdminBreadcrumbProps) {
             <span
               className={cn(
                 "transition-colors",
-                isLast ? "text-[var(--foreground)]" : "text-[var(--muted-foreground)]"
+                isLast ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]"
               )}
             >
               {segment.label}
             </span>
             {!isLast && (
-              <ChevronRight className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" aria-hidden />
+              <ChevronRight className="h-4 w-4 shrink-0 text-[var(--text-secondary)]" aria-hidden />
             )}
           </>
         );
@@ -47,14 +47,14 @@ export function AdminBreadcrumb({ segments, className }: AdminBreadcrumbProps) {
             {segment.href ? (
               <a
                 href={segment.href}
-                className="text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+                className="text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
               >
                 {segment.label}
               </a>
             ) : (
-              <span className="text-[var(--muted-foreground)]">{segment.label}</span>
+              <span className="text-[var(--text-secondary)]">{segment.label}</span>
             )}
-            <ChevronRight className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" aria-hidden />
+            <ChevronRight className="h-4 w-4 shrink-0 text-[var(--text-secondary)]" aria-hidden />
           </span>
         );
       })}

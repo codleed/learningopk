@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 
 import { AdminUsersPanel } from "@/components/admin/admin-users-panel";
-import { PageHeader } from "@/components/foundation/page-header";
+import { AdminPageHeader } from "@/components/admin/page-header";
 import { getAdminUsers } from "@/lib/admin-api";
 
 export default async function AdminUsersPage() {
@@ -23,7 +23,7 @@ export default async function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Admin Users"
         title="User Management"
         subtitle="Search learners and admins with role-based filtering."

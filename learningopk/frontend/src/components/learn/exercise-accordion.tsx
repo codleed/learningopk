@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ListChecks } from "lucide-react";
 
 import type { ChapterDetailResponse } from "@/lib/learn-api";
@@ -23,6 +23,8 @@ export function ExerciseAccordion({
   chapterId,
   onAskAi,
 }: ExerciseAccordionProps) {
+  const reduced = useReducedMotion();
+
   if (exercises.length === 0) {
     return (
       <EmptyState
@@ -36,8 +38,9 @@ export function ExerciseAccordion({
     <div className="space-y-3">
       {/* Exercise count header */}
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={reduced ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
+        transition={reduced ? { duration: 0 } : undefined}
         className="flex items-center gap-2 pb-1"
       >
         <ListChecks className="h-4 w-4 text-accent-primary" aria-hidden />
@@ -50,13 +53,17 @@ export function ExerciseAccordion({
       {exercises.map((exercise, index) => (
         <motion.div
           key={exercise.id}
-          initial={{ opacity: 0, y: 6 }}
+          initial={reduced ? false : { opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{
-            delay: Math.min(index * 0.03, 0.3),
-            duration: 0.3,
-            ease: [0.23, 1, 0.32, 1],
-          }}
+          transition={
+            reduced
+              ? { duration: 0 }
+              : {
+                  delay: Math.min(index * 0.03, 0.3),
+                  duration: 0.3,
+                  ease: [0.23, 1, 0.32, 1],
+                }
+          }
         >
           <ExerciseItem
             exercise={exercise}

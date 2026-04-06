@@ -29,19 +29,19 @@ export function FlashCardsPage({ stats }: FlashCardsPageProps) {
 
       <ContentStatsStrip stats={stats} />
 
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)]">
+      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
         <ContentTabs />
 
         <div className="p-6">
           {/* Flash Cards List - Stub State */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-heading text-lg font-semibold text-[var(--foreground)]">
+              <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
                 Flash Cards
               </h2>
               <button
                 disabled
-                className="inline-flex items-center gap-2 rounded-md bg-[var(--muted)] px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-md bg-[var(--bg-subtle)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] cursor-not-allowed"
                 title="Flash Card API not yet available"
               >
                 + Add Flash Cards
@@ -100,20 +100,20 @@ export function FlashCardsPage({ stats }: FlashCardsPageProps) {
             </div>
 
             {/* Placeholder Table Structure (visual reference only) */}
-            <div className="overflow-x-auto rounded-lg border border-[var(--border)] bg-[var(--card)]">
+            <div className="overflow-x-auto rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-[var(--border)] bg-[var(--muted)]">
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
+                  <tr className="border-b border-[var(--border-default)] bg-[var(--bg-subtle)]">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                       Deck Title
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                       Chapter
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                       Card Count
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                       Actions
                     </th>
                   </tr>
@@ -122,8 +122,8 @@ export function FlashCardsPage({ stats }: FlashCardsPageProps) {
                   <tr>
                     <td colSpan={4} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
-                        <Settings2 className="h-8 w-8 text-[var(--muted-foreground)]" aria-hidden />
-                        <p className="text-sm text-[var(--muted-foreground)]">
+                        <Settings2 className="h-8 w-8 text-[var(--text-secondary)]" aria-hidden />
+                        <p className="text-sm text-[var(--text-secondary)]">
                           Flash Card table will appear here once API is available
                         </p>
                       </div>

@@ -80,13 +80,13 @@ function TreeItem({
           <button
             type="button"
             onClick={handleChevronClick}
-            className="p-0.5 rounded hover:bg-[var(--muted)] transition-colors"
+            className="p-0.5 rounded hover:bg-[var(--bg-subtle)] transition-colors"
             aria-label={isExpanded ? "Collapse" : "Expand"}
           >
             {isExpanded ? (
-              <ChevronDown className="h-4 w-4 text-[var(--muted-foreground)]" aria-hidden />
+              <ChevronDown className="h-4 w-4 text-[var(--text-secondary)]" aria-hidden />
             ) : (
-              <ChevronRight className="h-4 w-4 text-[var(--muted-foreground)]" aria-hidden />
+              <ChevronRight className="h-4 w-4 text-[var(--text-secondary)]" aria-hidden />
             )}
           </button>
         ) : (
@@ -108,7 +108,7 @@ function TreeItem({
 
         <span
           className={`font-body text-[0.875rem] ${
-            isSelected ? "text-[var(--foreground)]" : "text-[var(--foreground)]"
+            isSelected ? "text-[var(--text-primary)]" : "text-[var(--text-primary)]"
           }`}
           style={{
             backgroundColor: isSelected ? "rgba(122, 201, 67, 0.15)" : undefined,
@@ -177,7 +177,7 @@ export function AdminEntityTree({
 
   if (boards.length === 0) {
     return (
-      <div className="py-8 text-center text-[var(--muted-foreground)] text-sm">
+      <div className="py-8 text-center text-[var(--text-secondary)] text-sm">
         No boards yet. Create your first board to get started.
       </div>
     );

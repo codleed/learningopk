@@ -22,7 +22,7 @@ export function RoleToggle({
           "bg-[var(--role-toggle-bg)]",
           "border border-[var(--role-toggle-border)]",
           "text-[var(--role-toggle-tab-default-text)]",
-          "hover:text-[var(--foreground)]",
+          "hover:text-[var(--text-primary)]",
           "transition-all duration-150",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-ring)]"
         )}
@@ -61,7 +61,7 @@ export function RoleToggle({
           ],
           currentMode !== "admin" && [
             "text-[var(--role-toggle-tab-default-text)]",
-            "hover:text-[var(--foreground)]",
+            "hover:text-[var(--text-primary)]",
           ],
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-ring)]"
         )}
@@ -87,7 +87,7 @@ export function RoleToggle({
           ],
           currentMode !== "student" && [
             "text-[var(--role-toggle-tab-default-text)]",
-            "hover:text-[var(--foreground)]",
+            "hover:text-[var(--text-primary)]",
           ],
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-ring)]"
         )}

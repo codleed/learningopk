@@ -1,7 +1,7 @@
 "use client";
 
 import { ServiceUnavailable } from "@/components/foundation/service-unavailable";
-import { RouteError } from "@/components/foundation/route-state";
+import { ErrorState } from "@/components/ui/states";
 import { isAuthServiceUnavailable } from "@/lib/auth-errors";
 
 type DashboardSubjectErrorProps = {
@@ -20,7 +20,11 @@ export default function DashboardSubjectError({ error, reset }: DashboardSubject
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-10">
-      <RouteError title="Subject progress failed to load" description={error.message} onRetry={reset} />
+      <ErrorState
+        title="Subject progress failed to load"
+        description="We couldn't load your progress for this subject. Please try again."
+        onRetry={reset}
+      />
     </div>
   );
 }

@@ -288,7 +288,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
       case "hard":
         return "bg-rose-500";
       default:
-        return "bg-muted";
+        return "bg-bg-subtle";
     }
   };
 
@@ -351,7 +351,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
           <div className="w-1 h-8 bg-gradient-to-b from-[var(--primary)] to-[var(--primary-hover)] rounded-full" />
           <div>
             <h2 className="text-xl font-semibold tracking-tight">Exercises</h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-text-secondary">
               {filteredExercises.length} {filteredExercises.length === 1 ? "exercise" : "exercises"}
               {typeFilter !== "all" && ` (${typeFilter} only)`}
             </p>
@@ -376,8 +376,8 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
       {/* Type Filter Pills */}
       {!showForm && (
         <div className="flex items-center gap-2 flex-wrap">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground mr-1">Filter:</span>
+          <Filter className="h-4 w-4 text-text-secondary" />
+          <span className="text-sm text-text-secondary mr-1">Filter:</span>
           {typeFilters.map((filter) => {
             const Icon = filter.icon;
             const isActive = typeFilter === filter.id;
@@ -389,7 +389,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                   "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200",
                   isActive
                     ? "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm"
-                    : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "bg-bg-subtle/50 text-text-secondary hover:bg-bg-subtle hover:text-text-primary"
                 )}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -402,7 +402,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div className="rounded-xl border bg-card shadow-sm overflow-hidden animate-in slide-in-from-top duration-300">
+         <div className="rounded-xl border bg-bg-surface shadow-sm overflow-hidden animate-in slide-in-from-top duration-300">
           <div className="p-6 space-y-5">
             <div className="flex items-center justify-between">
               <h4 className="font-medium flex items-center gap-2">
@@ -417,7 +417,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                 variant="ghost" 
                 size="sm" 
                 onClick={resetForm}
-                className="text-muted-foreground"
+                className="text-text-secondary"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -427,7 +427,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  Exercise Number <span className="text-destructive">*</span>
+                  Exercise Number <span className="text-accent-danger">*</span>
                 </label>
                 <Input
                   value={formData.exerciseNumber}
@@ -489,7 +489,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                       {activeSection === "blanks" ? (
                         <div className="space-y-2">
                           <label className="text-sm font-medium flex items-center gap-2">
-                            Question <span className="text-destructive">*</span>
+                            Question <span className="text-accent-danger">*</span>
                           </label>
                           <FillInBlanksEditor
                             questionValue={formData.question}
@@ -501,7 +501,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                       ) : (
                         <div className="space-y-2">
                           <label className="text-sm font-medium flex items-center gap-2">
-                            Question <span className="text-destructive">*</span>
+                            Question <span className="text-accent-danger">*</span>
                           </label>
                           <GithubMarkdownEditor
                             value={formData.question}
@@ -516,7 +516,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                       {/* Solution Editor */}
                       <div className="space-y-2">
                         <label className="text-sm font-medium flex items-center gap-2">
-                          Solution <span className="text-destructive">*</span>
+                          Solution <span className="text-accent-danger">*</span>
                         </label>
                         <GithubMarkdownEditor
                           value={formData.solution}
@@ -531,7 +531,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                       {activeSection === "physics" && (
                         <div className="space-y-2">
                           <label className="text-sm font-medium">Illustration (HTML/CSS/JS)</label>
-                          <p className="text-xs text-muted-foreground">
+                           <p className="text-xs text-text-secondary">
                             Create an interactive visualization for students
                           </p>
                           <NumericalVisualizationEditor
@@ -547,7 +547,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 px-6 py-4 bg-muted/5 border-t">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 bg-bg-subtle/5 border-t">
             <Button variant="secondary" onClick={resetForm}>
               Cancel
             </Button>
@@ -580,15 +580,15 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
 
       {/* Exercises List */}
       {filteredExercises.length === 0 && !showForm ? (
-        <div className="relative overflow-hidden rounded-xl border border-dashed border-border bg-muted/5">
+        <div className="relative overflow-hidden rounded-xl border border-dashed border-border-default bg-bg-subtle/5">
           <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-            <div className="rounded-full bg-muted/20 p-4 mb-4">
-              <Brain className="h-10 w-10 text-muted-foreground/60" />
+            <div className="rounded-full bg-bg-subtle/20 p-4 mb-4">
+              <Brain className="h-10 w-10 text-text-secondary/60" />
             </div>
             <h3 className="text-lg font-medium mb-1">
               {typeFilter === "all" ? "No exercises yet" : `No ${typeFilter} exercises found`}
             </h3>
-            <p className="text-sm text-muted-foreground max-w-xs mb-6">
+            <p className="text-sm text-text-secondary max-w-xs mb-6">
               {typeFilter === "all"
                 ? "Add exercises to help students practice and master chapter concepts"
                 : "Try a different filter or add a new exercise"}
@@ -625,7 +625,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
             return (
               <div 
                 key={exercise.id}
-                className="group rounded-xl border bg-card shadow-sm overflow-hidden transition-all hover:shadow-md hover:border-[var(--primary)]/20"
+                className="group rounded-xl border bg-bg-surface shadow-sm overflow-hidden transition-all hover:shadow-md hover:border-[var(--primary)]/20"
               >
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-4">
@@ -648,7 +648,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                             "w-2 h-2 rounded-full",
                             getDifficultyColor(exercise.difficulty)
                           )} />
-                          <span className="text-xs text-muted-foreground capitalize">
+                          <span className="text-xs text-text-secondary capitalize">
                             {exercise.difficulty}
                           </span>
                         </div>
@@ -660,12 +660,12 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                       </div>
 
                       {/* Solution Preview */}
-                      <div className="p-3 rounded-lg bg-muted/30 border border-border">
-                        <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                      <div className="p-3 rounded-lg bg-bg-subtle/30 border border-border-default">
+                        <p className="text-xs font-medium text-text-secondary mb-1 flex items-center gap-1">
                           <CheckCircle className="h-3 w-3" />
                           Solution
                         </p>
-                        <div className="text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none">
+                        <div className="text-sm text-text-secondary prose prose-sm dark:prose-invert max-w-none">
                           <MarkdownMathRenderer content={
                             exercise.solution.length > 300
                               ? `${exercise.solution.substring(0, 300)}...`
@@ -688,7 +688,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                         variant="ghost" 
                         size="sm" 
                         onClick={() => setDeleteConfirm({ show: true, id: exercise.id })}
-                        className="text-destructive hover:text-destructive"
+                         className="text-accent-danger hover:text-accent-danger"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

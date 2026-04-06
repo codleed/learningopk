@@ -3,6 +3,7 @@
 import { createContext, useContext, useCallback, useMemo, useState, type ReactNode } from 'react';
 import { useAIChat } from './hooks/use-ai-chat';
 import { useAIPersistence } from './hooks/use-ai-persistence';
+import { detectCrisisKeywords } from './utils/crisis-detection';
 import type { AIContext, AIChatContextValue, ChatSession } from './types';
 
 const AIChatContext = createContext<AIChatContextValue | null>(null);
@@ -35,6 +36,24 @@ export function AIChatProvider({ children, initialContext = null }: AIChatProvid
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
   
+  const [showCrisisBanner, setShowCrisisBanner] = useState(false);
+  
+  const dismissCrisisBanner = useCallback(() => {
+    setShowCrisisBanner(false);
+  }, []);
+  
+  /**
+   * Wraps the underlying chat.sendMessage so we can run client-side crisis
+   * keyword detection BEFORE the message is sent (non-blocking — the message
+   * still goes through regardless).
+   */
+  const sendMessageWithCrisisCheck = useCallback(async (content: string) => {
+    if (detectCrisisKeywords(content)) {
+      setShowCrisisBanner(true);
+    }
+    await chat.sendMessage(content);
+  }, [chat]);
+  
   const updateContext = useCallback((newContext: Partial<AIContext>) => {
     setContext((prev) => prev ? { ...prev, ...newContext } : null);
   }, []);
@@ -52,16 +71,51 @@ export function AIChatProvider({ children, initialContext = null }: AIChatProvid
   }, []);
   
   const startNewSession = useCallback(() => {
+    setShowCrisisBanner(false);
     chat.clearMessages();
     if (context?.chapterId) {
       persistence.setChapterSessionId(context.chapterId, '');
     }
   }, [chat, context, persistence]);
   
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:3001';
+  
+  const fetchSessionsList = useCallback(async () => {
+    setIsLoadingSessions(true);
+    try {
+      const response = await fetch(`${backendUrl}/api/ai/sessions`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to load sessions');
+      const payload = await response.json() as { sessions: ChatSession[] };
+      setSessions(payload.sessions ?? []);
+    } catch {
+      // Silently fail — sessions list is non-critical
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  }, [backendUrl]);
+  
+  const refreshSessionsList = useCallback(async (preferredSessionId?: string | null) => {
+    try {
+      const response = await fetch(`${backendUrl}/api/ai/sessions`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!response.ok) return;
+      const payload = await response.json() as { sessions: ChatSession[] };
+      const latestSessions = payload.sessions ?? [];
+      setSessions(latestSessions);
+    } catch {
+      // Silently fail
+    }
+  }, [backendUrl]);
+  
   const loadSession = useCallback(async (sessionId: string) => {
     setIsLoadingSessions(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:3001'}/api/ai/sessions/${sessionId}/messages`, {
+      const response = await fetch(`${backendUrl}/api/ai/sessions/${sessionId}/messages`, {
         credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to load session');
@@ -73,14 +127,15 @@ export function AIChatProvider({ children, initialContext = null }: AIChatProvid
         content: m.content,
       }));
       
+      setShowCrisisBanner(false);
       chat.setMessagesFromSession(sessionMessages, sessionId);
-    } catch (err) {
+    } catch {
       chat.clearError();
     } finally {
       setIsLoadingSessions(false);
       setIsHistoryOpen(false);
     }
-  }, [chat]);
+  }, [chat, backendUrl]);
   
   const value = useMemo<AIChatContextValue>(() => ({
     messages: chat.messages,
@@ -88,7 +143,11 @@ export function AIChatProvider({ children, initialContext = null }: AIChatProvid
     isStreaming: chat.isStreaming,
     isSending: chat.isSending,
     error: chat.error,
+    stoppedStatus: chat.stoppedStatus,
     proactiveHint: chat.proactiveHint,
+    
+    rateLimitRemaining: chat.rateLimitRemaining,
+    rateLimitTotal: chat.rateLimitTotal,
     
     context,
     updateContext,
@@ -98,11 +157,14 @@ export function AIChatProvider({ children, initialContext = null }: AIChatProvid
     isHistoryOpen,
     isFirstVisit: persistence.isFirstVisit,
     
+    showCrisisBanner,
+    
     sessions,
     activeSessionId: chat.sessionId,
     isLoadingSessions,
     
-    sendMessage: chat.sendMessage,
+    sendMessage: sendMessageWithCrisisCheck,
+    stopGenerating: chat.stopGenerating,
     loadSession,
     startNewSession,
     toggleVisibility,
@@ -110,14 +172,21 @@ export function AIChatProvider({ children, initialContext = null }: AIChatProvid
     toggleHistory,
     clearError: chat.clearError,
     dismissFirstVisit: persistence.dismissFirstVisit,
+    dismissCrisisBanner,
+    fetchSessionsList,
+    refreshSessionsList,
   }), [
     chat.messages,
     chat.sessionId,
     chat.isStreaming,
     chat.isSending,
     chat.error,
+    chat.stoppedStatus,
     chat.proactiveHint,
-    chat.sendMessage,
+    chat.rateLimitRemaining,
+    chat.rateLimitTotal,
+    sendMessageWithCrisisCheck,
+    chat.stopGenerating,
     chat.clearError,
     context,
     updateContext,
@@ -125,6 +194,7 @@ export function AIChatProvider({ children, initialContext = null }: AIChatProvid
     persistence.isExpanded,
     persistence.isFirstVisit,
     isHistoryOpen,
+    showCrisisBanner,
     sessions,
     isLoadingSessions,
     loadSession,
@@ -133,6 +203,9 @@ export function AIChatProvider({ children, initialContext = null }: AIChatProvid
     toggleExpanded,
     toggleHistory,
     persistence.dismissFirstVisit,
+    dismissCrisisBanner,
+    fetchSessionsList,
+    refreshSessionsList,
   ]);
   
   return (

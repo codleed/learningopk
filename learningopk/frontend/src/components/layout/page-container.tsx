@@ -1,12 +1,12 @@
-"use client";
-
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/common/page-header";
+import type { BreadcrumbItem } from "@/components/common/page-header";
 
 type PageContainerProps = {
   title?: ReactNode;
   subtitle?: ReactNode;
-  breadcrumbs?: ReactNode;
+  breadcrumbs?: BreadcrumbItem[] | ReactNode;
   actions?: ReactNode;
   headerExtra?: ReactNode;
   children?: ReactNode;
@@ -23,6 +23,18 @@ const contentPaddingClasses = {
   lg: "p-8",
 };
 
+/**
+ * Check whether a breadcrumbs prop is a structured BreadcrumbItem array
+ * (as expected by the canonical PageHeader) vs. arbitrary ReactNode markup.
+ */
+function isBreadcrumbItemArray(
+  value: BreadcrumbItem[] | ReactNode,
+): value is BreadcrumbItem[] {
+  return Array.isArray(value) && value.every(
+    (v) => typeof v === "object" && v !== null && "label" in v,
+  );
+}
+
 export function PageContainer({
   title,
   subtitle,
@@ -37,42 +49,31 @@ export function PageContainer({
 }: PageContainerProps) {
   const hasHeader = title || subtitle || breadcrumbs || actions || headerExtra;
 
+  // Determine if breadcrumbs is a structured array we can forward to PageHeader
+  const structuredBreadcrumbs =
+    breadcrumbs && isBreadcrumbItemArray(breadcrumbs) ? breadcrumbs : undefined;
+  const breadcrumbsNode =
+    breadcrumbs && !isBreadcrumbItemArray(breadcrumbs) ? breadcrumbs : undefined;
+
   return (
     <div className={cn("mx-auto w-full max-w-7xl px-4 pb-14 pt-6 sm:px-6 lg:px-8", className)}>
-      {breadcrumbs && (
-        <div className="mb-3 animate-fade-in">{breadcrumbs}</div>
+      {/* Render raw ReactNode breadcrumbs above the header (legacy compat) */}
+      {breadcrumbsNode && (
+        <div className="mb-3 animate-fade-in">{breadcrumbsNode}</div>
       )}
 
       {hasHeader && (
-        <header
-          className={cn(
-            "flex flex-col gap-1 pb-6 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
-            "border-b border-border/75",
-            headerClassName
+        <div className={cn("border-b border-border-default/75 pb-6", headerClassName)}>
+          <PageHeader
+            title={typeof title === "string" ? title : String(title ?? "")}
+            subtitle={typeof subtitle === "string" ? subtitle : subtitle ? String(subtitle) : undefined}
+            breadcrumbs={structuredBreadcrumbs}
+            actions={actions}
+          />
+          {headerExtra && (
+            <div className="mt-2 animate-slide-up" style={{ animationDelay: "100ms" }}>{headerExtra}</div>
           )}
-        >
-          <div className="flex-1 min-w-0">
-            {title && (
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground animate-slide-up sm:text-3xl">
-                {title}
-              </h1>
-            )}
-            {subtitle && (
-              <p className="mt-1 text-sm text-muted-foreground sm:text-base animate-slide-up" style={{ animationDelay: "50ms" }}>
-                {subtitle}
-              </p>
-            )}
-            {headerExtra && (
-              <div className="mt-2 animate-slide-up" style={{ animationDelay: "100ms" }}>{headerExtra}</div>
-            )}
-          </div>
-
-          {actions && (
-            <div className="flex shrink-0 items-center gap-2 pt-1 sm:pt-0 animate-slide-up" style={{ animationDelay: "150ms" }}>
-              {actions}
-            </div>
-          )}
-        </header>
+        </div>
       )}
 
       <main className={cn("flex-1", contentPaddingClasses[contentPadding], contentClassName)}>
@@ -102,7 +103,7 @@ export function ContentSection({
     <section
       className={cn(
         "pb-6",
-        !noBorder && "border-b border-border/70",
+        !noBorder && "border-b border-border-default/70",
         className
       )}
       {...props}
@@ -111,10 +112,10 @@ export function ContentSection({
         <div className="flex flex-wrap items-start justify-between gap-3 pb-4">
           <div>
             {title && (
-              <h2 className="text-lg font-semibold text-foreground sm:text-xl">{title}</h2>
+              <h2 className="text-lg font-semibold text-text-primary sm:text-xl">{title}</h2>
             )}
             {subtitle && (
-              <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:text-sm">
+              <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-text-secondary sm:text-sm">
                 {subtitle}
               </p>
             )}
@@ -141,8 +142,8 @@ export function PageFooter({
   return (
     <div
       className={cn(
-        "flex items-center justify-end gap-3 border-t border-border/75 pt-6",
-        sticky && "sticky bottom-0 bg-background/95 backdrop-blur-sm pb-2",
+        "flex items-center justify-end gap-3 border-t border-border-default/75 pt-6",
+        sticky && "sticky bottom-0 bg-bg-base/95 backdrop-blur-sm pb-2",
         className
       )}
       {...props}

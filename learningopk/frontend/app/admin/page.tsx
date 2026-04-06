@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { AdminCommandCenterPanel } from "@/components/admin/admin-command-center-panel";
-import { PageHeader } from "@/components/foundation/page-header";
+import { AdminPageHeader } from "@/components/admin/page-header";
 import { getAdminOverview } from "@/lib/admin-api";
 
 export default async function AdminPage() {
@@ -28,12 +28,12 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Admin"
         title="Command Center"
         subtitle="Track operational risk, admin activity, and response priorities in real time."
         actions={
-          <Link href="/admin/audit" className="text-sm font-medium text-foreground underline underline-offset-4">
+          <Link href="/admin/audit" className="text-sm font-medium text-text-primary underline underline-offset-4">
             Open operations log
           </Link>
         }

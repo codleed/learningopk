@@ -5,7 +5,7 @@ import { DashboardSurface } from "@/components/foundation/dashboard-primitives";
 import {
   StaggerContainer,
   MotionSection,
-} from "@/components/dashboard/DashboardClient";
+} from "@/components/motion";
 import type { SessionPayload } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
@@ -70,8 +70,8 @@ export function DashboardChromeHeader({ title, subtitle, eyebrow, actions, class
           {eyebrow ? (
             <p className="text-xs font-semibold uppercase tracking-[0.07em] text-[var(--primary)]">{eyebrow}</p>
           ) : null}
-          <h1 className="mt-1 text-3xl font-medium tracking-tight text-foreground sm:text-4xl">{title}</h1>
-          {subtitle ? <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{subtitle}</p> : null}
+          <h1 className="mt-1 text-3xl font-medium tracking-tight text-text-primary sm:text-4xl">{title}</h1>
+          {subtitle ? <p className="mt-2 max-w-3xl text-sm text-text-secondary">{subtitle}</p> : null}
         </div>
         {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>

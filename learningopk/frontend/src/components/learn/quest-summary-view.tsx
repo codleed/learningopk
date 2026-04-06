@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { CheckCircle2, Clock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MarkdownContent } from "./markdown-content";
@@ -18,11 +18,12 @@ export function QuestSummaryView({
   onMarkRead,
 }: QuestSummaryViewProps) {
   const estimatedReadTime = Math.max(1, Math.ceil(summary.length / 1000));
+  const reduced = useReducedMotion();
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-text-secondary">
           <Clock className="h-4 w-4" />
           <span>~{estimatedReadTime} min read</span>
         </div>
@@ -35,23 +36,24 @@ export function QuestSummaryView({
         )}
       </div>
 
-      <div className="rounded-2xl border border-border/50 bg-card p-6">
+      <div className="rounded-2xl border border-border-default/50 bg-bg-surface p-6">
         <MarkdownContent content={summary} />
       </div>
 
       {!isRead && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={reduced ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center gap-4 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 text-center"
+          transition={reduced ? { duration: 0 } : undefined}
+          className="flex flex-col items-center gap-4 rounded-2xl border-2 border-dashed border-accent-primary/30 bg-accent-primary/5 p-6 text-center"
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Sparkles className="h-6 w-6 text-primary" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary/10">
+            <Sparkles className="h-6 w-6 text-accent-primary" />
           </div>
           
           <div>
-            <p className="font-semibold text-foreground">Finished reading?</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="font-semibold text-text-primary">Finished reading?</p>
+            <p className="text-sm text-text-secondary">
               Mark as complete to earn +10 XP
             </p>
           </div>

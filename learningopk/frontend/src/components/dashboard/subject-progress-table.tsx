@@ -26,29 +26,29 @@ export function SubjectProgressTable({ chapters }: SubjectProgressTableProps) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-border text-sm">
-        <thead className="bg-muted/50">
+      <table className="min-w-full divide-y divide-border-default text-sm">
+        <thead className="bg-bg-subtle/50">
           <tr>
-            <th className="px-3 py-2 text-left font-semibold text-foreground">Chapter</th>
-            <th className="px-3 py-2 text-left font-semibold text-foreground">Visited</th>
-            <th className="px-3 py-2 text-left font-semibold text-foreground">Exercises Viewed</th>
-            <th className="px-3 py-2 text-left font-semibold text-foreground">Quiz Attempted</th>
-            <th className="px-3 py-2 text-left font-semibold text-foreground">Best Score</th>
-            <th className="px-3 py-2 text-left font-semibold text-foreground">Status</th>
+            <th className="px-3 py-2 text-left font-semibold text-text-primary">Chapter</th>
+            <th className="px-3 py-2 text-left font-semibold text-text-primary">Visited</th>
+            <th className="px-3 py-2 text-left font-semibold text-text-primary">Exercises Viewed</th>
+            <th className="px-3 py-2 text-left font-semibold text-text-primary">Quiz Attempted</th>
+            <th className="px-3 py-2 text-left font-semibold text-text-primary">Best Score</th>
+            <th className="px-3 py-2 text-left font-semibold text-text-primary">Status</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border">
+        <tbody className="divide-y divide-border-default">
           {chapters.map((chapter) => (
             <tr key={chapter.chapterId}>
-              <td className="px-3 py-2 text-foreground">
+              <td className="px-3 py-2 text-text-primary">
                 <p className="font-medium">
                   Chapter {chapter.chapterNumber}: {chapter.chapterTitle}
                 </p>
               </td>
-              <td className="px-3 py-2 text-foreground/90">{chapter.visited ? "Yes" : "No"}</td>
-              <td className="px-3 py-2 text-foreground/90">{chapter.exercisesViewed}</td>
-              <td className="px-3 py-2 text-foreground/90">{chapter.quizAttempted ? "Yes" : "No"}</td>
-              <td className="px-3 py-2 text-foreground/90">{chapter.bestScorePercent}%</td>
+              <td className="px-3 py-2 text-text-primary/90">{chapter.visited ? "Yes" : "No"}</td>
+              <td className="px-3 py-2 text-text-primary/90">{chapter.exercisesViewed}</td>
+              <td className="px-3 py-2 text-text-primary/90">{chapter.quizAttempted ? "Yes" : "No"}</td>
+              <td className="px-3 py-2 text-text-primary/90">{chapter.bestScorePercent}%</td>
               <td className="px-3 py-2">
                 <StatusPill tone={statusTone[chapter.status]} label={statusLabel[chapter.status]} />
               </td>

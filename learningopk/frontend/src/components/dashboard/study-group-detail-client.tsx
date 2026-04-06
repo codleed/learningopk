@@ -25,12 +25,12 @@ export function StudyGroupDetailClient({ payload }: { payload: StudyGroupDetailR
 
       <div className="grid gap-6">
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Bell className="h-4 w-4 text-amber-400" />Your notifications</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Bell className="h-4 w-4 text-accent-warning" />Your notifications</CardTitle></CardHeader>
           <CardBody className="space-y-3">{payload.notifications.length === 0 ? <p className="text-sm text-text-secondary">No group alerts yet.</p> : payload.notifications.map((notification) => <div key={notification.id} className="rounded-2xl border border-border-default bg-bg-subtle/70 p-3"><p className="text-sm text-text-primary">{notification.message}</p><p className="mt-1 text-xs text-text-secondary">{new Date(notification.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p></div>)}</CardBody>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Trophy className="h-4 w-4 text-emerald-400" />Activity feed</CardTitle></CardHeader>
-          <CardBody className="space-y-3">{payload.activityFeed.length === 0 ? <p className="text-sm text-text-secondary">Activity will appear as members complete chapters and beat quiz scores.</p> : payload.activityFeed.map((entry) => <div key={entry.id} className="rounded-2xl border border-border-default bg-bg-subtle/70 p-3"><div className="flex items-start gap-2">{entry.eventType === "chapter_completed" ? <Flame className="mt-0.5 h-4 w-4 text-orange-400" /> : <Trophy className="mt-0.5 h-4 w-4 text-emerald-400" />}<div><p className="text-sm text-text-primary">{entry.message}</p><p className="mt-1 text-xs text-text-secondary">{new Date(entry.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p></div></div></div>)}</CardBody>
+          <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Trophy className="h-4 w-4 text-accent-success" />Activity feed</CardTitle></CardHeader>
+          <CardBody className="space-y-3">{payload.activityFeed.length === 0 ? <p className="text-sm text-text-secondary">Activity will appear as members complete chapters and beat quiz scores.</p> : payload.activityFeed.map((entry) => <div key={entry.id} className="rounded-2xl border border-border-default bg-bg-subtle/70 p-3"><div className="flex items-start gap-2">{entry.eventType === "chapter_completed" ? <Flame className="mt-0.5 h-4 w-4 text-accent-warning" /> : <Trophy className="mt-0.5 h-4 w-4 text-accent-success" />}<div><p className="text-sm text-text-primary">{entry.message}</p><p className="mt-1 text-xs text-text-secondary">{new Date(entry.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p></div></div></div>)}</CardBody>
         </Card>
       </div>
     </div>

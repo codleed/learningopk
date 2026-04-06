@@ -1,7 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import type { EChartsOption } from "echarts";
+import { useResolvedTokens } from "@/lib/resolve-css-tokens";
+import type { ResolvedTokens } from "@/lib/resolve-css-tokens";
+
+export type { ResolvedTokens };
 
 export interface EChartWrapperProps {
   option: EChartsOption;
@@ -11,8 +15,12 @@ export interface EChartWrapperProps {
 }
 
 /**
- * Reusable ECharts wrapper with dynamic import, auto-resize, and CSS variable theming.
- * Uses ResizeObserver for responsive chart behavior.
+ * Reusable ECharts wrapper with dynamic import, auto-resize, and theme-aware
+ * color resolution.
+ *
+ * CSS variables are resolved to actual hex/rgba values via `useResolvedTokens`
+ * before being passed to ECharts (canvas cannot access CSS custom properties).
+ * The hook automatically re-resolves when the theme changes (light ↔ dark).
  */
 export function EChartWrapper({
   option,
@@ -24,36 +32,9 @@ export function EChartWrapper({
   const chartRef = useRef<ReturnType<typeof import("echarts")["init"]> | null>(null);
   const echartsRef = useRef<typeof import("echarts") | null>(null);
 
-  const getThemeColors = useCallback(() => {
-    if (typeof window === "undefined") {
-      return {
-        textPrimary: "#F1F5F9",
-        textSecondary: "#94A3B8",
-        textMuted: "#4B5472",
-        borderDefault: "rgba(255, 255, 255, 0.08)",
-        bgSurface: "#151825",
-        accentPrimary: "#6366F1",
-        accentSuccess: "#22C55E",
-        accentWarning: "#F59E0B",
-        accentDanger: "#EF4444",
-        accentInfo: "#38BDF8",
-      };
-    }
-    const styles = getComputedStyle(document.documentElement);
-    return {
-      textPrimary: styles.getPropertyValue("--text-primary").trim() || "#F1F5F9",
-      textSecondary: styles.getPropertyValue("--text-secondary").trim() || "#94A3B8",
-      textMuted: styles.getPropertyValue("--text-muted").trim() || "#4B5472",
-      borderDefault: styles.getPropertyValue("--border-default").trim() || "rgba(255,255,255,0.08)",
-      bgSurface: styles.getPropertyValue("--bg-surface").trim() || "#151825",
-      accentPrimary: styles.getPropertyValue("--accent-primary").trim() || "#6366F1",
-      accentSuccess: styles.getPropertyValue("--accent-success").trim() || "#22C55E",
-      accentWarning: styles.getPropertyValue("--accent-warning").trim() || "#F59E0B",
-      accentDanger: styles.getPropertyValue("--accent-danger").trim() || "#EF4444",
-      accentInfo: styles.getPropertyValue("--accent-info").trim() || "#38BDF8",
-    };
-  }, []);
+  const tokens = useResolvedTokens();
 
+  /* ── Initialise ECharts instance ── */
   useEffect(() => {
     let disposed = false;
 
@@ -70,13 +51,11 @@ export function EChartWrapper({
       });
       chartRef.current = chart;
 
-      const colors = getThemeColors();
-
       const mergedOption: EChartsOption = {
         ...option,
         textStyle: {
-          fontFamily: "var(--font-body), 'DM Sans', system-ui, sans-serif",
-          color: colors.textSecondary,
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          color: tokens.textSecondary,
           ...(option.textStyle as Record<string, unknown>),
         },
         grid: {
@@ -94,7 +73,7 @@ export function EChartWrapper({
       if (loading) {
         chart.showLoading({
           text: "",
-          color: colors.accentPrimary,
+          color: tokens.accentPrimary,
           maskColor: "transparent",
         });
       }
@@ -112,17 +91,15 @@ export function EChartWrapper({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* Update option reactively */
+  /* ── Update option reactively (data changes + theme changes) ── */
   useEffect(() => {
     if (!chartRef.current) return;
-
-    const colors = getThemeColors();
 
     const mergedOption: EChartsOption = {
       ...option,
       textStyle: {
-        fontFamily: "var(--font-body), 'DM Sans', system-ui, sans-serif",
-        color: colors.textSecondary,
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+        color: tokens.textSecondary,
         ...(option.textStyle as Record<string, unknown>),
       },
       grid: {
@@ -140,15 +117,15 @@ export function EChartWrapper({
     if (loading) {
       chartRef.current.showLoading({
         text: "",
-        color: colors.accentPrimary,
+        color: tokens.accentPrimary,
         maskColor: "transparent",
       });
     } else {
       chartRef.current.hideLoading();
     }
-  }, [option, loading, getThemeColors]);
+  }, [option, loading, tokens]);
 
-  /* ResizeObserver for responsive */
+  /* ── ResizeObserver for responsive sizing ── */
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -163,27 +140,6 @@ export function EChartWrapper({
       observer.disconnect();
     };
   }, []);
-
-  /* Theme change observer */
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      if (!chartRef.current || !echartsRef.current) return;
-      const colors = getThemeColors();
-
-      chartRef.current.setOption({
-        textStyle: {
-          color: colors.textSecondary,
-        },
-      });
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    return () => observer.disconnect();
-  }, [getThemeColors]);
 
   return (
     <div

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -17,15 +17,21 @@ type ChapterCardProps = {
 };
 
 export function ChapterCard({ chapter, href, index = 0 }: ChapterCardProps) {
+  const reduced = useReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={reduced ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{
-        delay: Math.min(index * 0.04, 0.4),
-        duration: 0.35,
-        ease: [0.23, 1, 0.32, 1],
-      }}
+      transition={
+        reduced
+          ? { duration: 0 }
+          : {
+              delay: Math.min(index * 0.04, 0.4),
+              duration: 0.35,
+              ease: [0.23, 1, 0.32, 1],
+            }
+      }
     >
       <Link
         href={href}

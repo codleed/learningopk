@@ -49,8 +49,8 @@ export default async function SubjectProgressPage({ params }: SubjectProgressPag
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--primary)]">
             {progress.subject.boardName} | Grade {progress.subject.grade}
           </p>
-          <h1 className="mt-2 text-3xl font-medium text-foreground sm:text-4xl">{progress.subject.name} Progress</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Overall subject score: {progress.overallSubjectScorePercent}%</p>
+          <h1 className="mt-2 text-3xl font-medium text-text-primary sm:text-4xl">{progress.subject.name} Progress</h1>
+          <p className="mt-2 text-sm text-text-secondary">Overall subject score: {progress.overallSubjectScorePercent}%</p>
           <Link
             href="/dashboard"
             className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--primary)] underline underline-offset-4"

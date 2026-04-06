@@ -7,14 +7,19 @@ import {
 import { AppShell } from "@/components/foundation/app-shell";
 import { PageHeader } from "@/components/common/page-header";
 import type { FocusAreaItem } from "@/components/dashboard/focus-areas-widget";
-import { getSubjectsList, getSubjectOverview } from "@/lib/learn-api";
-import { getLearningPath } from "@/lib/learning-path-api";
+import {
+  getSubjectsList,
+  getSubjectOverview,
+  type SubjectsListResponse,
+  type SubjectResponse,
+} from "@/lib/learn-api";
+import { getLearningPath, type LearningPathResponse } from "@/lib/learning-path-api";
 import {
   getDashboardSummary,
   type DashboardSummaryResponse,
 } from "@/lib/progress-api";
 import { getServerSession } from "@/lib/session";
-import { getStudyGroups } from "@/lib/study-groups-api";
+import { getStudyGroups, type StudyGroupsListResponse } from "@/lib/study-groups-api";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -76,29 +81,48 @@ export default async function DashboardPage({
   const requestedRail = getFirstQueryValue(parsedSearchParams.rail);
   if (requestedRail === "settings") redirect("/settings");
 
-  /* ---- data ---- */
+  /* ---------------------------------------------------------------- */
+  /*  PHASE 1: Fire ALL independent API calls in parallel             */
+  /*  getDashboardSummary, getLearningPath, getStudyGroups, and       */
+  /*  getSubjectsList are all independent — no reason to waterfall.   */
+  /* ---------------------------------------------------------------- */
   const cookieStore = await cookies();
-  const summaryResult = await getDashboardSummary(cookieStore.toString())
-    .then((data) => ({ summary: data, summaryError: null as string | null }))
-    .catch((error: unknown) => ({
-      summary: null as DashboardSummaryResponse | null,
-      summaryError:
-        error instanceof Error
-          ? error.message
-          : "Unable to load progress dashboard.",
-    }));
-  const learningPathResult = await getLearningPath(cookieStore.toString())
-    .then((data) => ({ learningPath: data, learningPathError: null as string | null }))
-    .catch((error: unknown) => ({
-      learningPath: { recommendedChapters: [] },
-      learningPathError:
-        error instanceof Error ? error.message : "Unable to load learning path.",
-    }));
-  const studyGroupsResult = await getStudyGroups(cookieStore.toString())
-    .then((data) => ({ groups: data.groups }))
-    .catch(() => ({ groups: [] }));
+  const cookieHeader = cookieStore.toString();
 
-  const { summary, summaryError } = summaryResult;
+  const [summarySettled, learningPathSettled, studyGroupsSettled, subjectsListSettled] =
+    await Promise.allSettled([
+      getDashboardSummary(cookieHeader),
+      getLearningPath(cookieHeader),
+      getStudyGroups(cookieHeader),
+      getSubjectsList(),
+    ]);
+
+  /* ---- Unwrap settled results with proper fallbacks ---- */
+  const summary: DashboardSummaryResponse | null =
+    summarySettled.status === "fulfilled" ? summarySettled.value : null;
+  const summaryError: string | null =
+    summarySettled.status === "rejected"
+      ? summarySettled.reason instanceof Error
+        ? summarySettled.reason.message
+        : "Unable to load progress dashboard."
+      : null;
+
+  const learningPath: LearningPathResponse =
+    learningPathSettled.status === "fulfilled"
+      ? learningPathSettled.value
+      : { recommendedChapters: [] };
+
+  const studyGroups: StudyGroupsListResponse["groups"] =
+    studyGroupsSettled.status === "fulfilled"
+      ? studyGroupsSettled.value.groups
+      : [];
+
+  // Single subjects list used everywhere (deduplicated — was called twice before)
+  const subjectsList: SubjectsListResponse | null =
+    subjectsListSettled.status === "fulfilled" ? subjectsListSettled.value : null;
+  const allSubjects = subjectsList?.subjects ?? [];
+
+  /* ---- Derive summary-dependent values ---- */
   const subjects = summary?.subjects ?? [];
   const orderedSubjects = [...subjects].sort(
     (a, b) =>
@@ -112,21 +136,23 @@ export default async function DashboardPage({
       ? summary.studentName
       : session.user.name;
 
-  /* ---- route seed (resolve "Continue Learning" link) ---- */
+  /* ---- Scope subjects to the user's board/class ---- */
+  const scopedSubjects = allSubjects.filter((subject) => {
+    if (!subject.classSlug) return false;
+    if (session.user.board && subject.boardSlug !== session.user.board)
+      return false;
+    if (session.user.class && subject.classSlug !== session.user.class)
+      return false;
+    return true;
+  });
+
+  /* ---- Route seed (resolve "Continue Learning" link) ---- */
   let routeSeed: LearnRouteSeed | null = null;
   try {
-    const subjectsList = await getSubjectsList();
-    const allSubjects = subjectsList?.subjects ?? [];
     if (featuredSubject) {
-      const matchedSubject = allSubjects.find((subject) => {
-        if (!subject.classSlug) return false;
-        if (subject.slug !== featuredSubject.subjectSlug) return false;
-        if (session.user.board && subject.boardSlug !== session.user.board)
-          return false;
-        if (session.user.class && subject.classSlug !== session.user.class)
-          return false;
-        return true;
-      });
+      const matchedSubject = scopedSubjects.find(
+        (subject) => subject.slug === featuredSubject.subjectSlug
+      );
       if (matchedSubject && matchedSubject.classSlug) {
         routeSeed = {
           boardSlug: matchedSubject.boardSlug,
@@ -136,14 +162,7 @@ export default async function DashboardPage({
       }
     }
     if (!routeSeed) {
-      const fallbackSubject = allSubjects.find((subject) => {
-        if (!subject.classSlug) return false;
-        if (session.user.board && subject.boardSlug !== session.user.board)
-          return false;
-        if (session.user.class && subject.classSlug !== session.user.class)
-          return false;
-        return true;
-      });
+      const fallbackSubject = scopedSubjects[0];
       if (!fallbackSubject)
         throw new Error(
           "No subject route available for the current profile scope."
@@ -160,14 +179,83 @@ export default async function DashboardPage({
     routeSeed = null;
   }
 
+  /* ---------------------------------------------------------------- */
+  /*  PHASE 2: Fire route-seed overview + all focus-area overviews    */
+  /*  in parallel. This eliminates the N+1 sequential loop.           */
+  /* ---------------------------------------------------------------- */
+  const requestedFocusAreas = learningPath.recommendedChapters.slice(0, 3);
+  const focusChapterIds = new Set(requestedFocusAreas.map((item) => item.chapterId));
+
+  // Build the set of subject overviews we need to fetch:
+  // 1. routeSeed overview (for "Continue Learning" link)
+  // 2. All scoped subject overviews (for resolving focus area chapter IDs)
+  //    — but skip fetching ones we don't need if no focus areas are requested
+  type OverviewEntry = {
+    key: string;
+    board: string;
+    grade: string;
+    subject: string;
+  };
+
+  const overviewsToFetch: OverviewEntry[] = [];
+  const overviewKeySet = new Set<string>();
+
+  // Always fetch routeSeed overview if available
+  if (routeSeed) {
+    const key = `${routeSeed.boardSlug}/${routeSeed.classSlug}/${routeSeed.subjectSlug}`;
+    overviewKeySet.add(key);
+    overviewsToFetch.push({
+      key,
+      board: routeSeed.boardSlug,
+      grade: routeSeed.classSlug,
+      subject: routeSeed.subjectSlug,
+    });
+  }
+
+  // Add scoped subject overviews needed for focus area resolution
+  if (requestedFocusAreas.length > 0) {
+    for (const subject of scopedSubjects) {
+      const key = `${subject.boardSlug}/${subject.classSlug}/${subject.slug}`;
+      if (!overviewKeySet.has(key)) {
+        overviewKeySet.add(key);
+        overviewsToFetch.push({
+          key,
+          board: subject.boardSlug,
+          grade: subject.classSlug ?? "",
+          subject: subject.slug,
+        });
+      }
+    }
+  }
+
+  // Fire all overview fetches in parallel — eliminates the N+1 loop
+  const overviewSettledResults = await Promise.allSettled(
+    overviewsToFetch.map((entry) =>
+      getSubjectOverview({
+        board: entry.board,
+        grade: entry.grade,
+        subject: entry.subject,
+      })
+    )
+  );
+
+  // Build a lookup map: key → SubjectResponse
+  const overviewMap = new Map<string, SubjectResponse | null>();
+  overviewsToFetch.forEach((entry, index) => {
+    const settled = overviewSettledResults[index];
+    overviewMap.set(
+      entry.key,
+      settled?.status === "fulfilled" ? settled.value : null
+    );
+  });
+
+  /* ---- Resolve "Continue Learning" link from overview ---- */
   let firstChapterBasePath: string | null = null;
   if (routeSeed) {
     try {
-      const overview = await getSubjectOverview({
-        board: routeSeed.boardSlug,
-        grade: routeSeed.classSlug,
-        subject: routeSeed.subjectSlug,
-      });
+      const overview = overviewMap.get(
+        `${routeSeed.boardSlug}/${routeSeed.classSlug}/${routeSeed.subjectSlug}`
+      );
       const publishedChapters =
         overview?.chapters.filter((chapter) => chapter.isPublished) ?? [];
       const orderedChapters = [
@@ -188,30 +276,18 @@ export default async function DashboardPage({
     ? `${firstChapterBasePath}?tab=summary`
     : null;
 
+  /* ---- Resolve focus areas from the already-fetched overviews ---- */
   let focusAreas: FocusAreaItem[] = [];
-  const requestedFocusAreas = learningPathResult.learningPath.recommendedChapters.slice(0, 3);
-
   if (requestedFocusAreas.length > 0) {
     try {
-      const subjectsList = await getSubjectsList();
-      const scopedSubjects = (subjectsList?.subjects ?? []).filter((subject) => {
-        if (!subject.classSlug) return false;
-        if (session.user.board && subject.boardSlug !== session.user.board) return false;
-        if (session.user.class && subject.classSlug !== session.user.class) return false;
-        return true;
-      });
-
       const resolvedRoutes: ResolvedFocusAreaRoute[] = [];
 
       for (const subject of scopedSubjects) {
-        const overview = await getSubjectOverview({
-          board: subject.boardSlug,
-          grade: subject.classSlug ?? "",
-          subject: subject.slug,
-        });
+        const key = `${subject.boardSlug}/${subject.classSlug}/${subject.slug}`;
+        const overview = overviewMap.get(key);
 
         for (const chapter of overview?.chapters ?? []) {
-          if (!requestedFocusAreas.some((item) => item.chapterId === chapter.id)) {
+          if (!focusChapterIds.has(chapter.id)) {
             continue;
           }
 
@@ -277,7 +353,7 @@ export default async function DashboardPage({
         orderedSubjects={orderedSubjects}
         firstChapterBasePath={firstChapterBasePath}
         focusAreas={focusAreas}
-        studyGroups={studyGroupsResult.groups}
+        studyGroups={studyGroups}
       />
     </AppShell>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { BookOpen, GraduationCap } from "lucide-react";
 
 import { SubjectBadge } from "@/components/common/subject-badge";
@@ -24,11 +24,13 @@ export function SubjectHeader({
   chapterCount,
   completionPercent = 0,
 }: SubjectHeaderProps) {
+  const reduced = useReducedMotion();
+
   return (
     <motion.header
-      initial={{ opacity: 0, y: 12 }}
+      initial={reduced ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+      transition={reduced ? { duration: 0 } : { duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
       className={cn(
         "relative overflow-hidden rounded-2xl",
         "border border-border-default",
@@ -95,9 +97,9 @@ export function SubjectHeader({
         {/* Right: progress ring */}
         {completionPercent > 0 && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={reduced ? false : { opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.4 }}
+            transition={reduced ? { duration: 0 } : { delay: 0.2, duration: 0.4 }}
             className="shrink-0 self-center sm:self-start"
           >
             <ProgressRing

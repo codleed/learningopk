@@ -118,9 +118,9 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-bg-base">
       {/* Header */}
-      <div className="border-b border-border bg-card">
+      <div className="border-b border-border-default bg-bg-surface">
         <div className="container mx-auto px-4 py-4">
           <AdminBreadcrumb segments={breadcrumbSegments} className="mb-4" />
           <AdminPageHeader
@@ -131,7 +131,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-border bg-card sticky top-0 z-10">
+      <div className="border-b border-border-default bg-bg-surface sticky top-0 z-10">
         <div className="container mx-auto px-4">
           <nav className="flex items-center gap-0.5 overflow-x-auto" role="tablist" aria-label="Chapter content tabs">
             {tabs.map((tab) => {
@@ -146,8 +146,8 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
                   className={cn(
                     "relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-200 whitespace-nowrap",
                     isActive
-                      ? "text-[var(--foreground)]"
-                      : "text-muted-foreground hover:text-[var(--foreground)] hover:bg-muted/50"
+                      ? "text-[var(--text-primary)]"
+                      : "text-text-secondary hover:text-[var(--text-primary)] hover:bg-bg-subtle/50"
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" aria-hidden />
@@ -172,7 +172,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
                 <div className="w-1 h-8 bg-gradient-to-b from-[var(--primary)] to-[var(--primary-hover)] rounded-full" />
                 <div>
                   <h2 className="text-xl font-semibold tracking-tight">Chapter Summary</h2>
-                  <p className="text-sm text-muted-foreground">Write or edit the chapter content in Markdown</p>
+                  <p className="text-sm text-text-secondary">Write or edit the chapter content in Markdown</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -204,7 +204,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
             {isLoadingSummary ? (
               <Card>
                 <CardContent className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  <Loader2 className="h-8 w-8 animate-spin text-text-secondary" />
                 </CardContent>
               </Card>
             ) : (

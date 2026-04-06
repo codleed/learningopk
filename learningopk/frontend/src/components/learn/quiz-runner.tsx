@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, SkipForward, Send, AlertTriangle, Swords, TimerReset } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -142,6 +142,7 @@ const slideVariants = {
 };
 
 export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, challengeId }: QuizRunnerProps) {
+  const reduced = useReducedMotion();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerOption>>({});
   const [remainingSeconds, setRemainingSeconds] = useState(quiz.durationMinutes * 60);
@@ -370,9 +371,9 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
   if (result) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={reduced ? false : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        transition={reduced ? { duration: 0 } : { duration: 0.4 }}
         className="space-y-5"
       >
         <QuizResultSummary
@@ -434,7 +435,7 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
       {/* Alerts */}
       {isTimeUp && (
         <motion.div
-          initial={{ opacity: 0, y: -8 }}
+          initial={reduced ? false : { opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-2 rounded-xl border border-accent-warning/30 bg-accent-warning-light px-4 py-3 text-sm text-accent-warning"
         >
@@ -445,7 +446,7 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
 
       {submitError && (
         <motion.div
-          initial={{ opacity: 0, y: -8 }}
+          initial={reduced ? false : { opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-2 rounded-xl border border-accent-danger/30 bg-accent-danger-light px-4 py-3 text-sm text-accent-danger"
         >
@@ -456,7 +457,7 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
 
       {isChallengeMode && challengeError ? (
         <motion.div
-          initial={{ opacity: 0, y: -8 }}
+          initial={reduced ? false : { opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-2 rounded-xl border border-accent-danger/30 bg-accent-danger-light px-4 py-3 text-sm text-accent-danger"
         >
@@ -499,11 +500,11 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
           <motion.div
             key={currentIndex}
             custom={slideDirection}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.25, ease: "easeInOut" }}
+            variants={reduced ? undefined : slideVariants}
+            initial={reduced ? false : "enter"}
+            animate={reduced ? undefined : "center"}
+            exit={reduced ? undefined : "exit"}
+            transition={reduced ? { duration: 0 } : { duration: 0.25, ease: "easeInOut" }}
           >
             <QuizQuestionCard
               question={currentQuestion}

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,7 +10,7 @@ import {
   StaggerContainer,
   MotionSection,
   MotionCard,
-} from "@/components/dashboard/DashboardClient";
+} from "@/components/motion";
 import { PageHeader } from "@/components/common/page-header";
 import { BoardBadge } from "@/components/common/board-badge";
 import { ProgressRing } from "@/components/common/progress-ring";
@@ -19,6 +20,17 @@ import { getSubjectsList } from "@/lib/learn-api";
 import { getDashboardSummary } from "@/lib/progress-api";
 import { getServerSession } from "@/lib/session";
 import { cn } from "@/lib/utils";
+
+export const metadata: Metadata = {
+  title: "My Subjects | LearningoPK",
+  description:
+    "Browse and study your enrolled subjects. Access chapters, exercises, and quizzes.",
+  openGraph: {
+    title: "My Subjects | LearningoPK",
+    description:
+      "Browse and study your enrolled subjects. Access chapters, exercises, and quizzes.",
+  },
+};
 
 const subjectIconBySlug: Record<string, string> = {
   physics: "/subjects/physics.svg",

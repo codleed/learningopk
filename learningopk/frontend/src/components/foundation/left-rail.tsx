@@ -305,7 +305,7 @@ export function LeftRail({
                 href="/dashboard"
                 aria-label="LearningoPK Home"
                 onClick={handleNavItemClick}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--foreground)] p-2 shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--text-primary)] p-2 shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105"
               >
                 <Image
                   src="/new_logo.png"
