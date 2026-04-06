@@ -499,9 +499,18 @@ const adminAnalyticsOverviewSchema = z.object({
     quizAttempts: z.number().int().nonnegative(),
     averageQuizScorePercent: z.number(),
     threadsCreated: z.number().int().nonnegative(),
-    openModerationFlags: z.number().int().nonnegative()
+    openModerationFlags: z.number().int().nonnegative(),
+    confusionEvents: z.number().int().nonnegative()
   }),
-  subjectPerformance: z.array(adminAnalyticsSubjectPerformanceSchema)
+  subjectPerformance: z.array(adminAnalyticsSubjectPerformanceSchema),
+  confusionByChapter: z.array(
+    z.object({
+      chapterId: z.number().int().positive(),
+      chapterTitle: z.string(),
+      subjectName: z.string(),
+      count: z.number().int().nonnegative()
+    })
+  )
 });
 
 const adminOverviewActivityScopeSchema = z.enum([
@@ -630,6 +639,7 @@ export type AdminCommunityThread = z.infer<typeof adminCommunityThreadSchema>;
 export type AdminCommunityThreadsResponse = z.infer<typeof adminCommunityThreadsResponseSchema>;
 export type AdminAnalyticsOverview = z.infer<typeof adminAnalyticsOverviewSchema>;
 export type AdminAnalyticsSubjectPerformance = z.infer<typeof adminAnalyticsSubjectPerformanceSchema>;
+export type AdminAnalyticsConfusionChapter = z.infer<typeof adminAnalyticsOverviewSchema>['confusionByChapter'][number];
 export type AdminOverviewResponse = z.infer<typeof adminOverviewResponseSchema>;
 export type AdminOverviewActivityScope = z.infer<typeof adminOverviewActivityScopeSchema>;
 export type AdminNotification = z.infer<typeof adminNotificationSchema>;

@@ -14,6 +14,12 @@ type AIChatErrorResponse = {
   sessionId?: string;
 };
 
+type ProactiveHint = {
+  topic: string;
+  message: string;
+  reasons: string[];
+};
+
 const formatAssistantError = (payload: AIChatErrorResponse | null, fallback: string): string => {
   if (!payload) return fallback;
   const reasonSuffix = payload.reason ? ` (${payload.reason})` : '';
@@ -29,6 +35,7 @@ export function useAIChat(chapterId?: number, existingSessionId?: string | null)
   const [isSending, setIsSending] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [proactiveHint, setProactiveHint] = useState<ProactiveHint | null>(null);
   
   const abortControllerRef = useRef<AbortController | null>(null);
   
@@ -88,7 +95,15 @@ export function useAIChat(chapterId?: number, existingSessionId?: string | null)
       }
       
       const responseSessionId = response.headers.get('x-ai-session-id');
+      const proactiveHintHeader = response.headers.get('x-ai-proactive-hint');
       if (responseSessionId) setSessionId(responseSessionId);
+      if (proactiveHintHeader) {
+        try {
+          setProactiveHint(JSON.parse(decodeURIComponent(proactiveHintHeader)) as ProactiveHint);
+        } catch {
+          // Ignore malformed hint headers.
+        }
+      }
       
       if (!response.body) {
         setMessages((prev) => prev.filter((m) => m.id !== assistantMessageId));
@@ -132,6 +147,7 @@ export function useAIChat(chapterId?: number, existingSessionId?: string | null)
     setMessages([]);
     setSessionId(null);
     setError(null);
+    setProactiveHint(null);
   }, []);
   
   const clearError = useCallback(() => {
@@ -149,8 +165,9 @@ export function useAIChat(chapterId?: number, existingSessionId?: string | null)
     sessionId,
     isSending,
     isStreaming,
-    error,
-    sendMessage,
+      error,
+      proactiveHint,
+      sendMessage,
     clearMessages,
     clearError,
     setMessagesFromSession,

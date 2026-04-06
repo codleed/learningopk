@@ -33,6 +33,11 @@ export type AIChatState = {
   isStreaming: boolean;
   isSending: boolean;
   error: string | null;
+  proactiveHint: {
+    topic: string;
+    message: string;
+    reasons: string[];
+  } | null;
   
   context: AIContext | null;
   

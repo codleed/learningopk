@@ -88,6 +88,7 @@ export function AIChatProvider({ children, initialContext = null }: AIChatProvid
     isStreaming: chat.isStreaming,
     isSending: chat.isSending,
     error: chat.error,
+    proactiveHint: chat.proactiveHint,
     
     context,
     updateContext,
@@ -115,6 +116,7 @@ export function AIChatProvider({ children, initialContext = null }: AIChatProvid
     chat.isStreaming,
     chat.isSending,
     chat.error,
+    chat.proactiveHint,
     chat.sendMessage,
     chat.clearError,
     context,

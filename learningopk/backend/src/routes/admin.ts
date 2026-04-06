@@ -10,6 +10,8 @@ import {
   adminAuditLogs,
   adminNotifications,
   adminSettings,
+  aiConversationEvents,
+  aiChatSessions,
   boardClasses,
   boards,
   chapterSummaryLinks,
@@ -1075,6 +1077,22 @@ const listAdminAnalyticsOverview = async ({
     .groupBy(subjects.id, subjects.name, subjects.grade, boards.name)
     .orderBy(desc(sql`count(${quizAttempts.id})`), asc(subjects.name));
 
+  const confusionRows = await db
+    .select({
+      chapterId: chapters.id,
+      chapterTitle: chapters.title,
+      subjectName: subjects.name,
+      count: sql<number>`count(${aiConversationEvents.id})::int`
+    })
+    .from(aiConversationEvents)
+    .innerJoin(aiChatSessions, eq(aiConversationEvents.sessionId, aiChatSessions.id))
+    .innerJoin(chapters, eq(aiChatSessions.chapterId, chapters.id))
+    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+    .where(and(eq(aiConversationEvents.eventType, "confusion_detected"), sql`${aiConversationEvents.createdAt} >= ${windowStart}`))
+    .groupBy(chapters.id, chapters.title, subjects.name)
+    .orderBy(desc(sql`count(${aiConversationEvents.id})`), asc(chapters.title))
+    .limit(10);
+
   return {
     windowDays,
     summary: {
@@ -1082,7 +1100,8 @@ const listAdminAnalyticsOverview = async ({
       quizAttempts: quizAttemptsRow?.count ?? 0,
       averageQuizScorePercent: Number(averageQuizScoreRow?.value ?? 0),
       threadsCreated: threadsCreatedRow?.count ?? 0,
-      openModerationFlags: openModerationFlagsRow?.count ?? 0
+      openModerationFlags: openModerationFlagsRow?.count ?? 0,
+      confusionEvents: confusionRows.reduce((total, row) => total + row.count, 0)
     },
     subjectPerformance: subjectPerformanceRows.map((row) => ({
       subjectId: row.subjectId,
@@ -1092,6 +1111,12 @@ const listAdminAnalyticsOverview = async ({
       attempts: row.attempts,
       averageScorePercent: Number(row.averageScorePercent),
       activeStudents: row.activeStudents
+    })),
+    confusionByChapter: confusionRows.map((row) => ({
+      chapterId: row.chapterId,
+      chapterTitle: row.chapterTitle,
+      subjectName: row.subjectName,
+      count: row.count
     }))
   };
 };

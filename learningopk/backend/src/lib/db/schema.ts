@@ -578,6 +578,23 @@ export const aiContext = pgTable("ai_context", {
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
 });
 
+export const aiConversationEvents = pgTable(
+  "ai_conversation_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => aiChatSessions.id, { onDelete: "cascade" }),
+    eventType: text("event_type").notNull(),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    index("ai_conversation_events_session_created_idx").on(table.sessionId, desc(table.createdAt)),
+    index("ai_conversation_events_event_type_created_idx").on(table.eventType, desc(table.createdAt))
+  ]
+);
+
 export const formulas = pgTable(
   "formulas",
   {

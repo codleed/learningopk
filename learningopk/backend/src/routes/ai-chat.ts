@@ -4,7 +4,17 @@ import { Router } from "express";
 import { z } from "zod";
 
 import { db } from "../lib/db/index.js";
-import { aiChatSessions, aiMessages, aiUsageLogs, boards, chapters, exercises, subjects } from "../lib/db/schema.js";
+import {
+  aiChatSessions,
+  aiConversationEvents,
+  aiMessages,
+  aiUsageLogs,
+  boards,
+  chapters,
+  exercises,
+  subjects
+} from "../lib/db/schema.js";
+import { buildProactiveHint, detectConfusionPattern, getConfusionTopicLabel } from "../lib/ai-confusion.js";
 import { env } from "../lib/env.js";
 import { consumeAiChatRateLimit, moderateAiInput } from "../lib/ai-guardrails.js";
 import { extractConversationConcepts } from "../lib/ai-concept-extractor.js";
@@ -151,6 +161,12 @@ const sessionParamsSchema = z.object({
   sessionId: z.string().uuid()
 });
 
+const proactiveHintHeaderSchema = z.object({
+  topic: z.string(),
+  message: z.string(),
+  reasons: z.array(z.string())
+});
+
 aiChatRouter.get("/sessions", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   const userId = authedReq.session.user.id;
@@ -212,9 +228,27 @@ aiChatRouter.get("/sessions/:sessionId/messages", requireSession, async (req, re
     .where(eq(aiMessages.sessionId, sessionRow.id))
     .orderBy(asc(aiMessages.createdAt));
 
+  const latestConfusionEventRows = await db
+    .select({
+      metadata: aiConversationEvents.metadata
+    })
+    .from(aiConversationEvents)
+    .where(and(eq(aiConversationEvents.sessionId, sessionRow.id), eq(aiConversationEvents.eventType, "confusion_detected")))
+    .orderBy(desc(aiConversationEvents.createdAt))
+    .limit(1);
+
+  const latestConfusionEvent = proactiveHintHeaderSchema.safeParse(latestConfusionEventRows[0]?.metadata);
+
   res.status(200).json({
     session: sessionRow,
-    messages: messageRows
+    messages: messageRows,
+    proactiveHint: latestConfusionEvent.success
+      ? {
+          topic: latestConfusionEvent.data.topic,
+          message: latestConfusionEvent.data.message,
+          reasons: latestConfusionEvent.data.reasons
+        }
+      : null
   });
 });
 
@@ -348,6 +382,39 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
 
   await db.update(aiChatSessions).set({ lastMessageAt: new Date() }).where(eq(aiChatSessions.id, sessionRow.id));
 
+  const persistedMessageRows = await db
+    .select({
+      role: aiMessages.role,
+      content: aiMessages.content
+    })
+    .from(aiMessages)
+    .where(eq(aiMessages.sessionId, sessionRow.id))
+    .orderBy(asc(aiMessages.createdAt));
+
+  const confusionResult = detectConfusionPattern({
+    messages: persistedMessageRows as ChatMessage[]
+  });
+  const proactiveHint = confusionResult.triggered
+    ? {
+        topic: getConfusionTopicLabel(chapterContext?.context ?? fallbackContext),
+        message: buildProactiveHint(getConfusionTopicLabel(chapterContext?.context ?? fallbackContext)),
+        reasons: confusionResult.reasons
+      }
+    : null;
+
+  if (proactiveHint) {
+    await db.insert(aiConversationEvents).values({
+      sessionId: sessionRow.id,
+      eventType: "confusion_detected",
+      metadata: {
+        topic: proactiveHint.topic,
+        message: proactiveHint.message,
+        reasons: proactiveHint.reasons,
+        chapterId: chapterContext?.chapterId ?? sessionRow.chapterId ?? null
+      }
+    });
+  }
+
   const failedAttempts = inferFailedAttempts(messages as ChatMessage[]);
 
   // Fetch personal AI context for the user (non-blocking on failure)
@@ -468,6 +535,9 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
         res.status(200);
         res.setHeader("content-type", "text/plain; charset=utf-8");
         res.setHeader("x-ai-session-id", sessionRow.id);
+        if (proactiveHint) {
+          res.setHeader("x-ai-proactive-hint", encodeURIComponent(JSON.stringify(proactiveHint)));
+        }
       }
       streamedAtLeastOneChunk = true;
       res.write(chunk);

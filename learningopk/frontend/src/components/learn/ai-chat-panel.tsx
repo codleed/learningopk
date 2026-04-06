@@ -29,6 +29,12 @@ type AIChatErrorResponse = {
   sessionId?: string;
 };
 
+type ProactiveHint = {
+  topic: string;
+  message: string;
+  reasons: string[];
+};
+
 type AIChatPanelProps = {
   chapterId: number;
   chapterTitle: string;
@@ -215,6 +221,7 @@ export function AIChatPanel({
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [proactiveHint, setProactiveHint] = useState<ProactiveHint | null>(null);
 
   const messageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -335,6 +342,7 @@ export function AIChatPanel({
     setMessages([]);
     setInputValue("");
     setError(null);
+    setProactiveHint(null);
   };
 
   const adjustTextareaHeight = useCallback(() => {
@@ -439,8 +447,16 @@ export function AIChatPanel({
       }
 
       const responseSessionId = response.headers.get("x-ai-session-id");
+      const proactiveHintHeader = response.headers.get("x-ai-proactive-hint");
       if (responseSessionId) {
         setSessionId(responseSessionId);
+      }
+      if (proactiveHintHeader) {
+        try {
+          setProactiveHint(JSON.parse(decodeURIComponent(proactiveHintHeader)) as ProactiveHint);
+        } catch {
+          // Ignore malformed hint payloads.
+        }
       }
 
       if (!response.body) {
@@ -578,6 +594,18 @@ export function AIChatPanel({
       {/* Input area */}
       <div className="border-t border-border p-3">
         <form onSubmit={onSubmit} className="relative">
+          {proactiveHint ? (
+            <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/40 bg-amber-50 px-3 py-2 dark:border-amber-500/20 dark:bg-amber-500/10">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">Need a hint?</p>
+                <p className="text-sm text-amber-900 dark:text-amber-100">{proactiveHint.message}</p>
+              </div>
+              <Button type="button" variant="secondary" size="sm" onClick={() => setInputValue(proactiveHint.message)}>
+                Need a hint?
+              </Button>
+            </div>
+          ) : null}
+
           <div
             className="flex items-end rounded-2xl border border-border bg-card 
                         px-1 py-1 shadow-[0_4px_24px_rgba(0,0,0,0.08)]

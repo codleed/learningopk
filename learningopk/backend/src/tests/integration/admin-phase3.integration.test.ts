@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import request from "supertest";
 
 import { db, pool } from "../../lib/db/index.js";
-import { forumThreads, users } from "../../lib/db/schema.js";
+import { aiChatSessions, aiConversationEvents, chapters, forumThreads, users } from "../../lib/db/schema.js";
 import { redis } from "../../lib/redis.js";
 import { createApp } from "../../server.js";
 
@@ -186,7 +186,35 @@ test("admin analytics overview enforces auth/role and returns windowed KPI aggre
   await signUp(memberAgent, "Analytics Member", `tst_phase3_analytics_member_${Date.now()}@example.com`);
 
   const adminUser = await getSessionUser(adminAgent);
+  const memberUser = await getSessionUser(memberAgent);
   await assignAdminRole(adminUser.id);
+
+  const chapterRows = await db.select({ id: chapters.id }).from(chapters).limit(1);
+  const chapterId = chapterRows[0]?.id;
+  assert.ok(chapterId, "Expected a chapter fixture for analytics confusion test.");
+
+  const insertedSessionRows = await db
+    .insert(aiChatSessions)
+    .values({
+      userId: memberUser.id,
+      chapterId,
+      title: "Confusion analytics fixture"
+    })
+    .returning({
+      id: aiChatSessions.id
+    });
+  const insertedSessionId = insertedSessionRows[0]?.id;
+  assert.ok(insertedSessionId, "Expected ai_chat_sessions fixture insert.");
+
+  await db.insert(aiConversationEvents).values({
+    sessionId: insertedSessionId,
+    eventType: "confusion_detected",
+    metadata: {
+      topic: "Fixture topic",
+      message: "It looks like you're working through Fixture topic. Would you like me to break this down differently?",
+      reasons: ["short_consecutive_messages"]
+    }
+  });
 
   const unauthenticated = await anonAgent.get("/api/admin/analytics/overview");
   assert.equal(unauthenticated.status, 401);
@@ -202,7 +230,9 @@ test("admin analytics overview enforces auth/role and returns windowed KPI aggre
   assert.equal(typeof analytics.body.summary?.averageQuizScorePercent, "number");
   assert.equal(typeof analytics.body.summary?.threadsCreated, "number");
   assert.equal(typeof analytics.body.summary?.openModerationFlags, "number");
+  assert.equal(typeof analytics.body.summary?.confusionEvents, "number");
   assert.ok(Array.isArray(analytics.body.subjectPerformance), "Expected subject performance list.");
+  assert.ok(Array.isArray(analytics.body.confusionByChapter), "Expected confusion by chapter list.");
 });
 
 

@@ -76,8 +76,13 @@ type AISessionMessagesResponse = {
     id: string;
     role: ChatRole;
     content: string;
-    createdAt: string;
-  }>;
+      createdAt: string;
+    }>;
+  proactiveHint: {
+    topic: string;
+    message: string;
+    reasons: string[];
+  } | null;
 };
 
 type AIChatErrorResponse = {
@@ -85,6 +90,12 @@ type AIChatErrorResponse = {
   reason?: string;
   retryAfterSeconds?: number;
   sessionId?: string;
+};
+
+type ProactiveHint = {
+  topic: string;
+  message: string;
+  reasons: string[];
 };
 
 type TutorMode = "explain" | "socratic";
@@ -819,6 +830,7 @@ export function AITutorChat() {
   const [tutorMode, setTutorMode] = useState<TutorMode>("explain");
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const [isContextPanelVisible, setIsContextPanelVisible] = useState(true);
+  const [proactiveHint, setProactiveHint] = useState<ProactiveHint | null>(null);
 
   // ---------------------------------------------------------------------------
   // Refs
@@ -871,6 +883,7 @@ export function AITutorChat() {
           }))
         );
         setSessionId(payload.session.id);
+        setProactiveHint(payload.proactiveHint);
         setError(null);
       } catch {
         setError("Unable to load this conversation. Please try another session.");
@@ -966,10 +979,11 @@ export function AITutorChat() {
   }, []);
 
   const startFreshChat = useCallback(() => {
-    setMessages([]);
-    setSessionId(null);
-    setInputValue("");
-    setError(null);
+      setMessages([]);
+      setSessionId(null);
+      setProactiveHint(null);
+      setInputValue("");
+      setError(null);
     textareaRef.current?.focus();
   }, []);
 
@@ -1067,9 +1081,18 @@ export function AITutorChat() {
       }
 
       const responseSessionId = response.headers.get("x-ai-session-id");
+      const proactiveHintHeader = response.headers.get("x-ai-proactive-hint");
       if (responseSessionId) {
         setSessionId(responseSessionId);
         void refreshSessions(responseSessionId);
+      }
+      if (proactiveHintHeader) {
+        try {
+          const parsedHint = JSON.parse(decodeURIComponent(proactiveHintHeader)) as ProactiveHint;
+          setProactiveHint(parsedHint);
+        } catch {
+          // Ignore malformed hint headers.
+        }
       }
 
       if (!response.body) {
@@ -1302,6 +1325,31 @@ export function AITutorChat() {
             )}
 
             <form onSubmit={onSubmit} className="relative">
+              <AnimatePresence>
+                {proactiveHint ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 4 }}
+                    className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/40 bg-amber-50 px-4 py-3 text-left dark:border-amber-500/20 dark:bg-amber-500/10"
+                  >
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">Need a hint?</p>
+                      <p className="text-sm text-amber-900 dark:text-amber-100">{proactiveHint.message}</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0"
+                      onClick={() => setInputValue(proactiveHint.message)}
+                    >
+                      Need a hint?
+                    </Button>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+
               <div
                 className={cn(
                   "flex items-end gap-2",
