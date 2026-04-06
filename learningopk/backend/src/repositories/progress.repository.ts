@@ -1,7 +1,17 @@
-import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
-import { boards, chapters, quizAttempts, quizzes, subjects, userDailyMomentumGoals, userProgress } from "../lib/db/schema.js";
+import {
+  boards,
+  chapters,
+  exercises,
+  quizAttempts,
+  quizQuestions,
+  quizzes,
+  subjects,
+  userDailyMomentumGoals,
+  userProgress
+} from "../lib/db/schema.js";
 
 export class ProgressRepository {
   async findChapterById(chapterId: number) {
@@ -189,6 +199,69 @@ export class ProgressRepository {
       .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
       .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
       .orderBy(asc(subjects.name), asc(chapters.chapterNumber));
+  }
+
+  async findQuizAttemptsForSubjects(userId: string, subjectIds: number[]) {
+    if (subjectIds.length === 0) {
+      return [];
+    }
+
+    return db
+      .select({
+        attemptId: quizAttempts.id,
+        quizId: quizAttempts.quizId,
+        answers: quizAttempts.answers,
+        completedAt: quizAttempts.completedAt,
+        subjectId: subjects.id,
+        subjectSlug: subjects.slug,
+        subjectName: subjects.name,
+        grade: subjects.grade,
+        boardSlug: boards.slug,
+        chapterId: chapters.id,
+        chapterSlug: chapters.slug,
+        chapterTitle: chapters.title
+      })
+      .from(quizAttempts)
+      .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
+      .innerJoin(chapters, eq(quizzes.chapterId, chapters.id))
+      .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+      .innerJoin(boards, eq(subjects.boardId, boards.id))
+      .where(and(eq(quizAttempts.userId, userId), inArray(subjects.id, subjectIds)))
+      .orderBy(desc(quizAttempts.completedAt));
+  }
+
+  async findQuizQuestionsForQuizzes(quizIds: number[]) {
+    if (quizIds.length === 0) {
+      return [];
+    }
+
+    return db
+      .select({
+        questionId: quizQuestions.id,
+        quizId: quizQuestions.quizId,
+        chapterId: quizQuestions.chapterId,
+        question: quizQuestions.question,
+        correctOption: quizQuestions.correctOption
+      })
+      .from(quizQuestions)
+      .where(inArray(quizQuestions.quizId, quizIds));
+  }
+
+  async findExercisesForChapters(chapterIds: number[]) {
+    if (chapterIds.length === 0) {
+      return [];
+    }
+
+    return db
+      .select({
+        exerciseId: exercises.id,
+        chapterId: exercises.chapterId,
+        exerciseNumber: exercises.exerciseNumber,
+        question: exercises.question
+      })
+      .from(exercises)
+      .where(inArray(exercises.chapterId, chapterIds))
+      .orderBy(asc(exercises.chapterId), asc(exercises.exerciseNumber));
   }
 
   async findDailyMomentumGoal(userId: string, dateKey: string) {

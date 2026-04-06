@@ -34,6 +34,7 @@ import {
 import { aiContextRepository } from "../repositories/ai-context.repository.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { learningPathService } from "../services/learning-path.service.js";
+import { progressService } from "../services/progress.service.js";
 import { createAiModelStrategy } from "../services/ai-model-strategy.js";
 import { getCachedAiResponse, readAiCircuitState, setCachedAiResponse, writeAiCircuitState } from "../services/ai-model-strategy.store.js";
 
@@ -451,27 +452,30 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
   // Fetch personal AI context for the user (non-blocking on failure)
   let personalContext: TutorPersonalContext | undefined;
   try {
-    const [aiCtx, learningPath] = await Promise.all([
+    const [aiCtx, learningPath, adaptiveWeakAreas] = await Promise.all([
       aiContextRepository.findByUserId(userId),
       learningPathService.getLearningPath(userId, {
         boardSlug: authedReq.session.user.board ?? null,
         classSlug: authedReq.session.user.class ?? null
-      })
+      }),
+      progressService.getAdaptiveWeakAreaLabels(userId, 5)
     ]);
+
+    const mergedWeakAreas = Array.from(new Set([...adaptiveWeakAreas, ...learningPath.studentWeakAreas])).slice(0, 5);
 
     if (aiCtx) {
       personalContext = {
         weakTopics: aiCtx.weakTopics,
         strongTopics: aiCtx.strongTopics,
-        studentWeakAreas: learningPath.studentWeakAreas.slice(0, 5),
+        studentWeakAreas: mergedWeakAreas,
         preferredExplanationStyle: aiCtx.preferredExplanationStyle,
         lastConceptsDiscussed: aiCtx.lastConceptsDiscussed
       };
-    } else if (learningPath.studentWeakAreas.length > 0) {
+    } else if (mergedWeakAreas.length > 0) {
       personalContext = {
         weakTopics: [],
         strongTopics: [],
-        studentWeakAreas: learningPath.studentWeakAreas.slice(0, 5),
+        studentWeakAreas: mergedWeakAreas,
         preferredExplanationStyle: "balanced",
         lastConceptsDiscussed: []
       };

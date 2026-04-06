@@ -137,7 +137,7 @@ export const buildTutorSystemPrompt = (params: {
 
     if (personalContext.studentWeakAreas && personalContext.studentWeakAreas.length > 0) {
       personalLines.push(
-        `Student weak areas to proactively monitor: ${personalContext.studentWeakAreas.join(", ")}. Offer support before the student explicitly asks when these areas come up.`
+        `Quiz history weak areas to proactively monitor: ${personalContext.studentWeakAreas.join(", ")}. Offer support before the student explicitly asks when these areas come up, and steer the student toward extra practice in those weak areas.`
       );
     }
 

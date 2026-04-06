@@ -35,6 +35,7 @@ import { StreakCounter } from "@/components/common/streak-counter";
 import { ReviewNowWidget } from "@/components/dashboard/review-now-widget";
 import { AiMemoryCard } from "@/components/dashboard/ai-memory-card";
 import { FocusAreasWidget, type FocusAreaItem } from "@/components/dashboard/focus-areas-widget";
+import { SubjectWeakAreasCard } from "@/components/dashboard/subject-weak-areas-card";
 import { StarredFormulasWidget } from "@/components/dashboard/starred-formulas-widget";
 import { ConfettiCelebration } from "@/components/gamification/confetti-celebration";
 import { completeTodaysFocus, placeStreakWager, recoverStreakWager, type DashboardSummaryResponse } from "@/lib/progress-api";
@@ -1100,7 +1101,10 @@ export function DashboardClient({
       {/* ============================================================ */}
       <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
         <MotionSection>
-          <SubjectProgressGrid subjects={orderedSubjects} />
+          <div className="space-y-6">
+            <SubjectWeakAreasCard subjects={orderedSubjects} />
+            <SubjectProgressGrid subjects={orderedSubjects} />
+          </div>
         </MotionSection>
 
         <div className="flex flex-col gap-6">

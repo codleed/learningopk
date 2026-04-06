@@ -9,6 +9,7 @@ import {
 import { applyProgressEvent } from "../lib/progress.js";
 import { getCurrentPktContext, getPktDateKey } from "../lib/streak-wager.js";
 import { attachCompletionState, buildTodaysFocus, resolveRamadanConfig, type TodaysFocus } from "../lib/todays-focus.js";
+import { buildSubjectWeakAreas, type SubjectWeakArea } from "../lib/weak-areas.js";
 import { adminSettingsRepository } from "../repositories/admin-settings.repository.js";
 import { formulasRepository } from "../repositories/formulas.repository.js";
 import { progressRepository } from "../repositories/progress.repository.js";
@@ -57,16 +58,8 @@ export interface SubjectAggregate {
 }
 
 type DashboardTodaysFocus = (TodaysFocus & { completed: boolean; completedAt: string | null }) | null;
-type HistoricalWeakArea = {
-  label: string;
-  wrongAnswerCount: number;
-};
 
 export class ProgressService {
-  private async buildHistoricalWeakAreas(_userId: string, subjectIds: number[]): Promise<Map<number, HistoricalWeakArea[]>> {
-    return new Map(subjectIds.map((subjectId) => [subjectId, []]));
-  }
-
   async placeStreakWager(userId: string, amount: number): Promise<void> {
     await streakWagerService.placeWager(userId, amount);
   }
@@ -447,11 +440,11 @@ export class ProgressService {
     const subjectIds = Array.from(new Set(subjectProgressRows.map((row) => row.subjectId)));
     const weakAreasBySubject = await this.buildHistoricalWeakAreas(userId, subjectIds);
 
-    return Array.from(weakAreasBySubject.values())
+    const rankedWeakAreas: SubjectWeakArea[] = Array.from(weakAreasBySubject.values())
       .flat()
-      .sort((left, right) => right.wrongAnswerCount - left.wrongAnswerCount)
-      .slice(0, limit)
-      .map((area) => area.label);
+      .sort((left, right) => right.wrongAnswerCount - left.wrongAnswerCount);
+
+    return rankedWeakAreas.slice(0, limit).map((area) => area.label);
   }
 
   private aggregateSubjectProgress(
@@ -621,6 +614,22 @@ export class ProgressService {
           }
         : null
     );
+  }
+
+  private async buildHistoricalWeakAreas(userId: string, subjectIds: number[]) {
+    const attempts = await progressRepository.findQuizAttemptsForSubjects(userId, subjectIds);
+    const quizIds = Array.from(new Set(attempts.map((attempt) => attempt.quizId)));
+    const chapterIds = Array.from(new Set(attempts.map((attempt) => attempt.chapterId)));
+    const [questions, chapterExercises] = await Promise.all([
+      progressRepository.findQuizQuestionsForQuizzes(quizIds),
+      progressRepository.findExercisesForChapters(chapterIds)
+    ]);
+
+    return buildSubjectWeakAreas({
+      attempts,
+      questions,
+      exercises: chapterExercises
+    });
   }
 }
 

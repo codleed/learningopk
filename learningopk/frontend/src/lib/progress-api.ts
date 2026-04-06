@@ -11,7 +11,20 @@ const subjectSummarySchema = z.object({
   boardSlug: z.string(),
   chaptersVisitedPercent: z.number().int().min(0).max(100),
   bestQuizScorePercent: z.number().int().min(0).max(100),
-  lastActiveAt: z.string().datetime().nullable()
+  lastActiveAt: z.string().datetime().nullable(),
+  weakAreas: z.array(
+    z.object({
+      label: z.string(),
+      href: z.string(),
+      chapterId: z.number().int().positive(),
+      chapterTitle: z.string(),
+      exerciseId: z.number().int().positive().nullable(),
+      exerciseNumber: z.string().nullable(),
+      exerciseQuestion: z.string().nullable(),
+      wrongAnswerCount: z.number().int().nonnegative(),
+      quizAttemptsCount: z.number().int().nonnegative()
+    })
+  )
 });
 
 const chapterVisitActivitySchema = z.object({
