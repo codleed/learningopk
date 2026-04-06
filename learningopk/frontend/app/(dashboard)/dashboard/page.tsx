@@ -14,6 +14,7 @@ import {
   type DashboardSummaryResponse,
 } from "@/lib/progress-api";
 import { getServerSession } from "@/lib/session";
+import { getStudyGroups } from "@/lib/study-groups-api";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -93,6 +94,9 @@ export default async function DashboardPage({
       learningPathError:
         error instanceof Error ? error.message : "Unable to load learning path.",
     }));
+  const studyGroupsResult = await getStudyGroups(cookieStore.toString())
+    .then((data) => ({ groups: data.groups }))
+    .catch(() => ({ groups: [] }));
 
   const { summary, summaryError } = summaryResult;
   const subjects = summary?.subjects ?? [];
@@ -273,6 +277,7 @@ export default async function DashboardPage({
         orderedSubjects={orderedSubjects}
         firstChapterBasePath={firstChapterBasePath}
         focusAreas={focusAreas}
+        studyGroups={studyGroupsResult.groups}
       />
     </AppShell>
   );

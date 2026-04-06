@@ -25,6 +25,7 @@ import { profileRouter } from "./routes/profile.js";
 import { progressRouter } from "./routes/progress.js";
 import { quizRouter } from "./routes/quiz.js";
 import { mockExamsRouter } from "./routes/mock-exams.js";
+import { studyGroupsRouter } from "./routes/study-groups.js";
 
 export const createApp = () => {
   const app = express();
@@ -86,6 +87,7 @@ export const createApp = () => {
   app.use("/api/quiz", quizRouter);
   app.use("/api/mock-exams", mockExamsRouter);
   app.use("/api/progress", progressRouter);
+  app.use("/api/study-groups", studyGroupsRouter);
   app.use("/api/flashcard-reviews", flashcardReviewsRouter);
   app.use("/api/users", profileRouter);
   app.use("/api/admin/content", chapterMediaRouter);

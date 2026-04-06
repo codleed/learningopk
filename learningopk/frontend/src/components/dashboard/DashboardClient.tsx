@@ -36,9 +36,11 @@ import { ReviewNowWidget } from "@/components/dashboard/review-now-widget";
 import { AiMemoryCard } from "@/components/dashboard/ai-memory-card";
 import { FocusAreasWidget, type FocusAreaItem } from "@/components/dashboard/focus-areas-widget";
 import { SubjectWeakAreasCard } from "@/components/dashboard/subject-weak-areas-card";
+import { StudyGroupsPanel } from "@/components/dashboard/study-groups-panel";
 import { StarredFormulasWidget } from "@/components/dashboard/starred-formulas-widget";
 import { ConfettiCelebration } from "@/components/gamification/confetti-celebration";
 import { completeTodaysFocus, placeStreakWager, recoverStreakWager, type DashboardSummaryResponse } from "@/lib/progress-api";
+import type { StudyGroupsListResponse } from "@/lib/study-groups-api";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -153,6 +155,8 @@ export interface DashboardClientProps {
   firstChapterBasePath: string | null;
   /** Top weak-area recommendations */
   focusAreas: FocusAreaItem[];
+  /** User study groups */
+  studyGroups: StudyGroupsListResponse["groups"];
 }
 
 /* ------------------------------------------------------------------ */
@@ -1049,6 +1053,7 @@ export function DashboardClient({
   orderedSubjects,
   firstChapterBasePath,
   focusAreas,
+  studyGroups,
 }: DashboardClientProps) {
   if (summaryError && !summary) {
     return (
@@ -1143,6 +1148,10 @@ export function DashboardClient({
       {/* ============================================================ */}
       <MotionSection>
         <AiMemoryCard />
+      </MotionSection>
+
+      <MotionSection>
+        <StudyGroupsPanel groups={studyGroups} />
       </MotionSection>
     </StaggerContainer>
   );

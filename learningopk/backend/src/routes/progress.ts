@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireSession } from "../lib/session.js";
 import type { AuthenticatedRequest } from "../lib/session.js";
 import { progressService } from "../services/progress.service.js";
+import { studyGroupsService } from "../services/study-groups.service.js";
 
 export const progressEventSchema = z.discriminatedUnion("eventType", [
   z.object({
@@ -53,6 +54,13 @@ progressRouter.post("/events", requireSession, async (req, res) => {
       ...parsed.data,
       userId: authedReq.session.user.id
     });
+
+    if (parsed.data.eventType === "chapter_visit") {
+      await studyGroupsService.recordChapterCompletion({
+        userId: authedReq.session.user.id,
+        chapterId: parsed.data.chapterId
+      });
+    }
 
     res.status(200).json(result);
   } catch (error) {
