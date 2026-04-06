@@ -53,7 +53,7 @@ export function RoleToggle({
         tabIndex={currentMode === "admin" ? 0 : -1}
         onClick={() => onModeChange("admin")}
         className={cn(
-          "relative z-10 flex flex-1 items-center justify-center gap-1.5",
+          "relative z-10 flex flex-1 items-center px-3",
           "h-9 rounded-lg px-3",
           "text-[13px] font-medium transition-all duration-150",
           currentMode === "admin" && [
@@ -66,11 +66,13 @@ export function RoleToggle({
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-ring)]"
         )}
       >
-        <ShieldCheck
-          className="h-4 w-4 shrink-0"
-          strokeWidth={currentMode === "admin" ? 2.5 : 2}
-        />
-        <span>Admin</span>
+        <span className="flex h-4 w-6 shrink-0 items-center justify-center">
+          <ShieldCheck
+            className="h-4 w-4 shrink-0"
+            strokeWidth={currentMode === "admin" ? 2.5 : 2}
+          />
+        </span>
+        <span className="truncate">Admin</span>
       </button>
 
       <button
@@ -79,7 +81,7 @@ export function RoleToggle({
         tabIndex={currentMode === "student" ? 0 : -1}
         onClick={() => onModeChange("student")}
         className={cn(
-          "relative z-10 flex flex-1 items-center justify-center gap-1.5",
+          "relative z-10 flex flex-1 items-center px-3",
           "h-9 rounded-lg px-3",
           "text-[13px] font-medium transition-all duration-150",
           currentMode === "student" && [
@@ -92,11 +94,13 @@ export function RoleToggle({
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-ring)]"
         )}
       >
-        <GraduationCap
-          className="h-4 w-4 shrink-0"
-          strokeWidth={currentMode === "student" ? 2.5 : 2}
-        />
-        <span>Student</span>
+        <span className="flex h-4 w-6 shrink-0 items-center justify-center">
+          <GraduationCap
+            className="h-4 w-4 shrink-0"
+            strokeWidth={currentMode === "student" ? 2.5 : 2}
+          />
+        </span>
+        <span className="truncate">Student</span>
       </button>
 
       {currentMode === "admin" && (

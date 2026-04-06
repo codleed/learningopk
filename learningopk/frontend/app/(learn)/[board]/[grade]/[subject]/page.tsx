@@ -10,7 +10,6 @@ import {
 } from "@/components/motion";
 import { PageHeader } from "@/components/common/page-header";
 import { SubjectHeader } from "@/components/learn/subject-header";
-import { SubjectWeightageList } from "@/components/learn/subject-weightage-list";
 import { SubjectViewSwitcher } from "@/components/learn/subject-view-switcher";
 import { getSubjectOverview } from "@/lib/learn-api";
 import { getServerSession } from "@/lib/session";
@@ -99,32 +98,6 @@ export default async function SubjectPage({ params, searchParams }: SubjectPageP
             subject={payload.subject}
             chapterCount={payload.chapters.length}
           />
-        </MotionSection>
-
-        {/* Chapters section */}
-        <MotionSection>
-          <div className="rounded-xl border border-border-default bg-bg-surface p-4 sm:p-6">
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="font-[var(--font-display)] text-lg font-semibold text-text-primary">Board exam weightage</h2>
-                <p className="mt-0.5 text-sm text-text-secondary">Chapters sorted by recurring exam importance.</p>
-              </div>
-              <Link
-                href={`/patterns/${payload.board.slug}/${payload.subject.slug}?grade=${payload.class.slug}`}
-                className="rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-accent-primary transition-colors hover:bg-accent-primary/5"
-              >
-                View patterns
-              </Link>
-            </div>
-
-            <SubjectWeightageList
-              boardSlug={payload.board.slug}
-              classSlug={payload.class.slug}
-              subjectSlug={payload.subject.slug}
-              chapters={payload.chapters}
-              recommendation={payload.recommendation}
-            />
-          </div>
         </MotionSection>
 
         <MotionSection>
