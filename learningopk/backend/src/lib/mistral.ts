@@ -30,7 +30,13 @@ export type TutorPersonalContext = {
 
 export type TutorResponseStage = "guide" | "hint" | "reveal";
 
-export const MISTRAL_MODEL_ID = "mistral-small-latest";
+export const MISTRAL_MODEL_IDS = {
+  "mistral-tiny": "mistral-tiny-latest",
+  "mistral-small": "mistral-small-latest",
+  "mistral-medium": "mistral-medium-latest"
+} as const;
+
+export const MISTRAL_MODEL_ID = MISTRAL_MODEL_IDS["mistral-small"];
 
 export const MISTRAL_COMPLETION_MAX_TOKENS = 500;
 export const MISTRAL_TEMPERATURE = 0.7;
@@ -40,6 +46,10 @@ const mistralProvider = createMistral({
 });
 
 export const mistralModel = mistralProvider(MISTRAL_MODEL_ID);
+
+export const getMistralModel = (modelTier: keyof typeof MISTRAL_MODEL_IDS) => mistralProvider(MISTRAL_MODEL_IDS[modelTier]);
+
+export const getMistralModelId = (modelTier: keyof typeof MISTRAL_MODEL_IDS) => MISTRAL_MODEL_IDS[modelTier];
 
 const stageInstructions: Record<TutorResponseStage, string> = {
   guide:

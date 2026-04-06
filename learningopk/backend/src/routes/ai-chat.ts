@@ -1,4 +1,4 @@
-import { streamText, type ModelMessage } from "ai";
+import { type ModelMessage, generateText } from "ai";
 import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import { Router } from "express";
 import { z } from "zod";
@@ -24,8 +24,8 @@ import {
   buildTutorSystemPrompt,
   inferFailedAttempts,
   MISTRAL_COMPLETION_MAX_TOKENS,
-  MISTRAL_MODEL_ID,
-  mistralModel,
+  getMistralModel,
+  getMistralModelId,
   MISTRAL_TEMPERATURE,
   type ChatMessage,
   type TutorChapterContext,
@@ -34,6 +34,8 @@ import {
 import { aiContextRepository } from "../repositories/ai-context.repository.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { learningPathService } from "../services/learning-path.service.js";
+import { createAiModelStrategy } from "../services/ai-model-strategy.js";
+import { getCachedAiResponse, readAiCircuitState, setCachedAiResponse, writeAiCircuitState } from "../services/ai-model-strategy.store.js";
 
 const chatMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -154,6 +156,35 @@ const buildSessionTitle = (chapterContext: ChapterContextPayload | null, latestP
   }
   return truncateTitle(latestPrompt);
 };
+
+const aiModelStrategy = createAiModelStrategy({
+  readCircuitState: async () => readAiCircuitState(),
+  writeCircuitState: async ({ state }) => writeAiCircuitState(state),
+  getCachedResponse: async ({ normalizedPrompt }) => getCachedAiResponse(normalizedPrompt),
+  setCachedResponse: async ({ normalizedPrompt, responseText }) => setCachedAiResponse(normalizedPrompt, responseText),
+  invokeModel: async ({ tier, system, messages, maxOutputTokens, temperature }) => {
+    const model = getMistralModel(tier);
+    const modelId = getMistralModelId(tier);
+    const result = await generateText({
+      model,
+      system,
+      messages: messages as ModelMessage[],
+      maxOutputTokens,
+      temperature
+    });
+
+    return {
+      text: result.text,
+      model: modelId,
+      modelTier: tier,
+      promptTokens: result.usage.inputTokens ?? 0,
+      completionTokens: result.usage.outputTokens ?? 0
+    };
+  },
+  sleep: async (delayMs) => {
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+});
 
 export const aiChatRouter = Router();
 
@@ -460,104 +491,84 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
     content: message.content
   }));
 
-  let providerStreamError: string | null = null;
+  let providerError: string | null = null;
+  const aiSpan = startSpan("ai.chat.generate", "ai.call");
 
-  const aiSpan = startSpan("ai.chat.stream", "ai.call", { model: MISTRAL_MODEL_ID });
+  try {
+    const result = await aiModelStrategy.generate({
+      prompt: latestUserMessage.content,
+      messages: modelMessages as ChatMessage[],
+      system: systemPrompt,
+      maxOutputTokens: MISTRAL_COMPLETION_MAX_TOKENS,
+      temperature: MISTRAL_TEMPERATURE,
+    });
 
-  const result = streamText({
-    model: mistralModel,
-    system: systemPrompt,
-    messages: modelMessages,
-    maxOutputTokens: MISTRAL_COMPLETION_MAX_TOKENS,
-    temperature: MISTRAL_TEMPERATURE,
-    onError: ({ error }) => {
-      providerStreamError = error instanceof Error ? error.message : "Unknown provider streaming error.";
-    },
-    onFinish: async (event) => {
-      const assistantText = event.text.trim();
-      if (assistantText.length > 0) {
-        await db.insert(aiMessages).values({
-          sessionId: sessionRow.id,
-          role: "assistant",
-          content: assistantText
-        });
-      }
-
-      await db.insert(aiUsageLogs).values({
-        userId,
+    const assistantText = result.text.trim();
+    if (assistantText.length > 0) {
+      await db.insert(aiMessages).values({
         sessionId: sessionRow.id,
-        model: MISTRAL_MODEL_ID,
-        promptTokens: event.totalUsage.inputTokens ?? 0,
-        completionTokens: event.totalUsage.outputTokens ?? 0
+        role: "assistant",
+        content: assistantText
       });
+    }
 
-      await db.update(aiChatSessions).set({ lastMessageAt: new Date() }).where(eq(aiChatSessions.id, sessionRow.id));
+    await db.insert(aiUsageLogs).values({
+      userId,
+      sessionId: sessionRow.id,
+      modelTier: result.modelTier,
+      model: result.model,
+      promptTokens: result.promptTokens,
+      completionTokens: result.completionTokens
+    });
 
-      // Async concept extraction — don't block the response
-      if (assistantText.length > 0) {
-        try {
-          const extraction = extractConversationConcepts(latestUserMessage.content, assistantText);
+    await db.update(aiChatSessions).set({ lastMessageAt: new Date() }).where(eq(aiChatSessions.id, sessionRow.id));
 
-          // Update last discussed concepts
-          if (extraction.conceptsDiscussed.length > 0) {
-            await aiContextRepository.updateLastConcepts(userId, extraction.conceptsDiscussed);
-          }
+    if (assistantText.length > 0) {
+      try {
+        const extraction = extractConversationConcepts(latestUserMessage.content, assistantText);
 
-          // Add weak topic candidates
-          for (const weakTopic of extraction.weakTopicCandidates) {
-            await aiContextRepository.addWeakTopic(userId, weakTopic);
-          }
+        if (extraction.conceptsDiscussed.length > 0) {
+          await aiContextRepository.updateLastConcepts(userId, extraction.conceptsDiscussed);
+        }
 
-          // If strong signal detected, move last discussed concepts from weak to strong
-          if (extraction.hasStrongSignal && extraction.conceptsDiscussed.length > 0) {
-            const ctx = await aiContextRepository.findByUserId(userId);
-            if (ctx) {
-              for (const concept of extraction.conceptsDiscussed) {
-                const normalizedConcept = concept.trim().toLowerCase();
-                if (ctx.weakTopics.includes(normalizedConcept)) {
-                  await aiContextRepository.removeWeakTopic(userId, normalizedConcept);
-                  await aiContextRepository.addStrongTopic(userId, normalizedConcept);
-                }
+        for (const weakTopic of extraction.weakTopicCandidates) {
+          await aiContextRepository.addWeakTopic(userId, weakTopic);
+        }
+
+        if (extraction.hasStrongSignal && extraction.conceptsDiscussed.length > 0) {
+          const ctx = await aiContextRepository.findByUserId(userId);
+          if (ctx) {
+            for (const concept of extraction.conceptsDiscussed) {
+              const normalizedConcept = concept.trim().toLowerCase();
+              if (ctx.weakTopics.includes(normalizedConcept)) {
+                await aiContextRepository.removeWeakTopic(userId, normalizedConcept);
+                await aiContextRepository.addStrongTopic(userId, normalizedConcept);
               }
             }
           }
-        } catch (error) {
-          logger.error({ error }, "AI concept extraction failed (non-critical)");
         }
+      } catch (error) {
+        logger.error({ error }, "AI concept extraction failed (non-critical)");
       }
     }
-  });
 
-  let streamedAtLeastOneChunk = false;
-  try {
-    for await (const chunk of result.textStream) {
-      if (!streamedAtLeastOneChunk) {
-        res.status(200);
-        res.setHeader("content-type", "text/plain; charset=utf-8");
-        res.setHeader("x-ai-session-id", sessionRow.id);
-        if (proactiveHint) {
-          res.setHeader("x-ai-proactive-hint", encodeURIComponent(JSON.stringify(proactiveHint)));
-        }
-      }
-      streamedAtLeastOneChunk = true;
-      res.write(chunk);
+    res.status(200);
+    res.setHeader("content-type", "text/plain; charset=utf-8");
+    res.setHeader("x-ai-session-id", sessionRow.id);
+    res.setHeader("x-ai-model-tier", result.modelTier);
+    if (proactiveHint) {
+      res.setHeader("x-ai-proactive-hint", encodeURIComponent(JSON.stringify(proactiveHint)));
     }
+    res.write(assistantText);
+    res.end();
   } catch (error) {
-    logger.error({ error }, "AI provider streaming error");
-    providerStreamError = error instanceof Error ? error.message : "Unknown provider streaming error.";
+    logger.error({ error }, "AI provider generation error");
+    providerError = error instanceof Error ? error.message : "Unknown provider generation error.";
+    res.status(502).json({
+      error: providerError ?? "Failed to generate AI response from the provider.",
+      sessionId: sessionRow.id
+    });
   } finally {
     endSpan(aiSpan);
-
-    if (!streamedAtLeastOneChunk) {
-      res.status(502).json({
-        error: providerStreamError ?? "Failed to stream AI response from the provider.",
-        sessionId: sessionRow.id
-      });
-      return;
-    }
-
-    if (!res.writableEnded) {
-      res.end();
-    }
   }
 });

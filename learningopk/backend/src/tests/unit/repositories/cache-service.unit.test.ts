@@ -84,6 +84,7 @@ test("CacheKeys has all expected factory functions", () => {
   assert.ok(typeof CacheKeys.subjectDetail === "function");
   assert.ok(typeof CacheKeys.chapterContent === "function");
   assert.ok(typeof CacheKeys.chapterList === "function");
+  assert.ok(typeof CacheKeys.aiResponse === "function");
   assert.ok(typeof CacheKeys.forumThreads === "function");
   assert.ok(typeof CacheKeys.forumThreadDetail === "function");
   assert.ok(typeof CacheKeys.quizQuestions === "function");

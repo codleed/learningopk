@@ -297,6 +297,7 @@ export const CacheKeys = {
   subjectDetail: (subjectId: number) => `subjects:detail:${subjectId}`,
   chapterContent: (chapterId: number) => `chapters:content:${chapterId}`,
   chapterList: (subjectId: number) => `chapters:list:${subjectId}`,
+  aiResponse: (normalizedPromptHash: string) => `ai:responses:${normalizedPromptHash}`,
   forumThreads: (filters: Record<string, unknown>) => `forum:threads:${JSON.stringify(filters)}`,
   forumThreadDetail: (threadId: string) => `forum:thread:${threadId}`,
   quizQuestions: (quizId: number) => `quiz:questions:${quizId}`,

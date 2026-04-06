@@ -397,6 +397,7 @@ export const aiUsageLogs = pgTable("ai_usage_logs", {
   sessionId: uuid("session_id")
     .notNull()
     .references(() => aiChatSessions.id, { onDelete: "cascade" }),
+  modelTier: text("model_tier").notNull().default("mistral-small"),
   model: text("model").notNull(),
   promptTokens: integer("prompt_tokens").notNull(),
   completionTokens: integer("completion_tokens").notNull(),
