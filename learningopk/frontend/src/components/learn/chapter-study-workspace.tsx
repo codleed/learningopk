@@ -45,6 +45,7 @@ type ChapterStudyWorkspaceProps = {
   quiz: ChapterDetailResponse["quiz"];
   flashcardStorageKey: string;
   autoOpenAi?: boolean;
+  challengeId?: string;
 };
 
 const TAB_ICONS: Record<string, React.ReactNode> = {
@@ -76,6 +77,7 @@ export function ChapterStudyWorkspace({
   quiz,
   flashcardStorageKey,
   autoOpenAi = false,
+  challengeId,
 }: ChapterStudyWorkspaceProps) {
   const [, setPrompt] = useState<string | null>(
     autoOpenAi ? "Guide me through this chapter using hints first." : null,
@@ -210,6 +212,7 @@ export function ChapterStudyWorkspace({
                 quiz={quiz}
                 flashcardStorageKey={flashcardStorageKey}
                 autoOpenAi={autoOpenAi}
+                challengeId={challengeId}
                 onPromptChange={(nextPrompt) => {
                   setPrompt(nextPrompt);
                 }}

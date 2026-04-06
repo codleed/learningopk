@@ -7,6 +7,7 @@ export const CLEAR_TABLES = [
   "ai_usage_logs",
   "ai_messages",
   "ai_chat_sessions",
+  "quiz_duel_challenges",
   "quiz_attempts",
   "quiz_questions",
   "mock_exams",

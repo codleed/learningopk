@@ -30,6 +30,7 @@ type ChapterStudyContentWithAiProps = {
   quiz: ChapterDetailResponse["quiz"];
   flashcardStorageKey: string;
   autoOpenAi?: boolean;
+  challengeId?: string;
   onPromptChange?: (prompt: string) => void;
 };
 
@@ -48,6 +49,7 @@ export function ChapterStudyContentWithAi({
   quiz,
   flashcardStorageKey,
   autoOpenAi = false,
+  challengeId,
   onPromptChange,
 }: ChapterStudyContentWithAiProps) {
   /** Persist illustration exercise completion to gamification storage. */
@@ -109,7 +111,7 @@ export function ChapterStudyContentWithAi({
 
       {activeTab === "quiz" ? (
         quiz ? (
-          <QuizRunner quiz={quiz} subjectName={subjectName} chapterNumber={chapterNumber} chapterTitle={chapterTitle} />
+          <QuizRunner quiz={quiz} subjectName={subjectName} chapterNumber={chapterNumber} chapterTitle={chapterTitle} challengeId={challengeId} />
         ) : (
           <EmptyState
             title="Quiz unavailable"

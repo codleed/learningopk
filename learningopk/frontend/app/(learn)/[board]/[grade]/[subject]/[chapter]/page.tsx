@@ -25,7 +25,7 @@ type ChapterPageProps = {
     subject: string;
     chapter: string;
   }>;
-  searchParams: Promise<{ tab?: string; ai?: string }>;
+  searchParams: Promise<{ tab?: string; ai?: string; challengeId?: string }>;
 };
 
 export default async function ChapterPage({ params, searchParams }: ChapterPageProps) {
@@ -46,6 +46,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
   const query = await searchParams;
   const activeTab = tabSchema.parse(query.tab);
   const autoOpenAi = query.ai === "1";
+  const challengeId = typeof query.challengeId === "string" ? query.challengeId : undefined;
 
   const payload = await getChapterDetail(routeParams.data);
   if (!payload) {
@@ -112,6 +113,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
           quiz={payload.quiz}
           flashcardStorageKey={`learningopk:flashcards:${payload.board.slug}:${payload.class.slug}:${payload.subject.slug}:${payload.chapter.slug}`}
           autoOpenAi={autoOpenAi}
+          challengeId={challengeId}
         />
       </div>
     </AppShell>

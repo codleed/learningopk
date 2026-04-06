@@ -57,8 +57,16 @@ export interface SubjectAggregate {
 }
 
 type DashboardTodaysFocus = (TodaysFocus & { completed: boolean; completedAt: string | null }) | null;
+type HistoricalWeakArea = {
+  label: string;
+  wrongAnswerCount: number;
+};
 
 export class ProgressService {
+  private async buildHistoricalWeakAreas(_userId: string, subjectIds: number[]): Promise<Map<number, HistoricalWeakArea[]>> {
+    return new Map(subjectIds.map((subjectId) => [subjectId, []]));
+  }
+
   async placeStreakWager(userId: string, amount: number): Promise<void> {
     await streakWagerService.placeWager(userId, amount);
   }
@@ -432,6 +440,18 @@ export class ProgressService {
       alreadyCompleted: false,
       xp
     };
+  }
+
+  async getAdaptiveWeakAreaLabels(userId: string, limit = 5): Promise<string[]> {
+    const subjectProgressRows = await progressRepository.findSubjectProgress(userId);
+    const subjectIds = Array.from(new Set(subjectProgressRows.map((row) => row.subjectId)));
+    const weakAreasBySubject = await this.buildHistoricalWeakAreas(userId, subjectIds);
+
+    return Array.from(weakAreasBySubject.values())
+      .flat()
+      .sort((left, right) => right.wrongAnswerCount - left.wrongAnswerCount)
+      .slice(0, limit)
+      .map((area) => area.label);
   }
 
   private aggregateSubjectProgress(

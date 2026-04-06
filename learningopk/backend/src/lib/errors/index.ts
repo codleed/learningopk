@@ -110,6 +110,27 @@ export class QuizAttemptSaveError extends HttpError {
   }
 }
 
+export class QuizChallengeNotFoundError extends HttpError {
+  constructor(message = "Quiz challenge not found") {
+    super(404, message, "QUIZ_CHALLENGE_NOT_FOUND");
+    this.name = "QuizChallengeNotFoundError";
+  }
+}
+
+export class QuizChallengeExpiredError extends HttpError {
+  constructor(message = "Quiz challenge has expired") {
+    super(410, message, "QUIZ_CHALLENGE_EXPIRED");
+    this.name = "QuizChallengeExpiredError";
+  }
+}
+
+export class QuizChallengeConflictError extends HttpError {
+  constructor(message = "Quiz challenge is not valid for this submission") {
+    super(409, message, "QUIZ_CHALLENGE_CONFLICT");
+    this.name = "QuizChallengeConflictError";
+  }
+}
+
 /**
  * Type guard to check if an error is an HttpError
  */

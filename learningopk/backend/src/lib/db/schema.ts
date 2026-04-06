@@ -368,6 +368,28 @@ export const quizAttempts = pgTable("quiz_attempts", {
   index("quiz_attempts_user_completed_idx").on(table.userId, desc(table.completedAt))
 ]);
 
+export const quizDuelChallenges = pgTable("quiz_duel_challenges", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  quizId: integer("quiz_id")
+    .notNull()
+    .references(() => quizzes.id, { onDelete: "cascade" }),
+  challengerUserId: text("challenger_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  challengerAttemptId: uuid("challenger_attempt_id")
+    .notNull()
+    .references(() => quizAttempts.id, { onDelete: "cascade" }),
+  recipientUserId: text("recipient_user_id").references(() => users.id, { onDelete: "set null" }),
+  recipientAttemptId: uuid("recipient_attempt_id").references(() => quizAttempts.id, { onDelete: "set null" }),
+  expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+}, (table) => [
+  index("quiz_duel_challenges_quiz_id_idx").on(table.quizId),
+  index("quiz_duel_challenges_challenger_user_idx").on(table.challengerUserId),
+  uniqueIndex("quiz_duel_challenges_recipient_attempt_unique").on(table.recipientAttemptId)
+]);
+
 export const aiChatSessions = pgTable("ai_chat_sessions", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: text("user_id")
