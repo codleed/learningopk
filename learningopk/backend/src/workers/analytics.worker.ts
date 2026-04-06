@@ -1,6 +1,7 @@
 import { Worker } from "bullmq";
 
-import { connection, analyticsQueue } from "../lib/queue.js";
+import { getRedisConnection } from "../lib/queue.js";
+import { logger } from "../lib/logger.js";
 import { processDailyAnalytics, processWeeklyReport } from "../jobs/analytics.js";
 
 export function createAnalyticsWorker() {
@@ -16,17 +17,17 @@ export function createAnalyticsWorker() {
       throw new Error(`Unknown job name: ${job.name}`);
     },
     {
-      connection,
+      connection: getRedisConnection(),
       concurrency: 2,
     }
   );
 
   worker.on("completed", (job) => {
-    console.log(`Analytics job ${job.id} completed`);
+    logger.info({ jobId: job.id, worker: "analytics" }, "Analytics job completed");
   });
 
   worker.on("failed", (job, err) => {
-    console.error(`Analytics job ${job?.id} failed:`, err);
+    logger.error({ jobId: job?.id, error: err, worker: "analytics" }, "Analytics job failed");
   });
 
   return worker;

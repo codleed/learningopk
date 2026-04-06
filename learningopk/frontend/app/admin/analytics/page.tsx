@@ -18,9 +18,11 @@ export default async function AdminAnalyticsPage() {
       quizAttempts: 0,
       averageQuizScorePercent: 0,
       threadsCreated: 0,
-      openModerationFlags: 0
+      openModerationFlags: 0,
+      confusionEvents: 0
     },
-    subjectPerformance: []
+    subjectPerformance: [],
+    confusionByChapter: []
   }));
 
   return (

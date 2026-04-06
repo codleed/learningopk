@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { BookOpen, ClipboardList, Layers, Brain, Save, Loader2 } from "lucide-react";
+import { BookOpen, ClipboardList, Layers, Brain, Save, Loader2, NotebookPen } from "lucide-react";
 
 import { AdminBreadcrumb } from "@/components/admin/breadcrumb";
 import { AdminPageHeader } from "@/components/admin/page-header";
@@ -17,8 +17,9 @@ import { cn } from "@/lib/utils";
 import { ChapterQuizManager } from "@/components/admin/chapter-quiz-manager";
 import { ChapterFlashcardManager } from "@/components/admin/chapter-flashcard-manager";
 import { ChapterExerciseManager } from "@/components/admin/chapter-exercise-manager";
+import { ChapterRevisionNotesManager } from "@/components/admin/chapter-revision-notes-manager";
 
-type TabId = "summary" | "quiz" | "flashcards" | "exercises";
+type TabId = "summary" | "revision" | "quiz" | "flashcards" | "exercises";
 
 type Tab = {
   id: TabId;
@@ -28,6 +29,7 @@ type Tab = {
 
 const tabs: Tab[] = [
   { id: "summary", label: "Summary", icon: BookOpen },
+  { id: "revision", label: "Revision Notes", icon: NotebookPen },
   { id: "quiz", label: "Quiz", icon: ClipboardList },
   { id: "flashcards", label: "Flashcards", icon: Layers },
   { id: "exercises", label: "Exercises", icon: Brain },
@@ -221,6 +223,12 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
         {activeTab === "quiz" && (
           <div className="animate-in fade-in duration-300">
             <ChapterQuizManager chapterId={chapterId} />
+          </div>
+        )}
+
+        {activeTab === "revision" && (
+          <div className="animate-in fade-in duration-300">
+            <ChapterRevisionNotesManager chapterId={chapterId} />
           </div>
         )}
 

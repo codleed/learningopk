@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { BookOpen, Dumbbell, Layers, HelpCircle, Atom } from "lucide-react";
+import { BookOpen, Dumbbell, Layers, HelpCircle, Atom, NotebookPen } from "lucide-react";
 
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 import type { TabItem } from "@/components/foundation/tabs";
@@ -23,7 +23,7 @@ import { QuestHeader } from "./quest-header";
 import { QuestTabBar } from "./quest-tab-bar";
 import { getChapterProgress } from "@/lib/gamification-storage";
 
-type ChapterTab = "summary" | "exercises" | "flashcards" | "quiz" | "illustration";
+type ChapterTab = "summary" | "quick-revision" | "exercises" | "flashcards" | "quiz" | "illustration";
 
 type ChapterStudyWorkspaceProps = {
   boardName: string;
@@ -39,15 +39,18 @@ type ChapterStudyWorkspaceProps = {
   chapterNumber: number;
   chapterTitle: string;
   chapterSummary: string;
+  chapterRevisionNotes: ChapterDetailResponse["chapter"]["revisionNotes"];
   exercises: ChapterDetailResponse["exercises"];
   flashcards: ChapterDetailResponse["flashcards"];
   quiz: ChapterDetailResponse["quiz"];
   flashcardStorageKey: string;
   autoOpenAi?: boolean;
+  challengeId?: string;
 };
 
 const TAB_ICONS: Record<string, React.ReactNode> = {
   summary: <BookOpen className="h-4 w-4" />,
+  "quick-revision": <NotebookPen className="h-4 w-4" />,
   exercises: <Dumbbell className="h-4 w-4" />,
   flashcards: <Layers className="h-4 w-4" />,
   quiz: <HelpCircle className="h-4 w-4" />,
@@ -68,11 +71,13 @@ export function ChapterStudyWorkspace({
   chapterNumber,
   chapterTitle,
   chapterSummary,
+  chapterRevisionNotes,
   exercises,
   flashcards,
   quiz,
   flashcardStorageKey,
   autoOpenAi = false,
+  challengeId,
 }: ChapterStudyWorkspaceProps) {
   const [, setPrompt] = useState<string | null>(
     autoOpenAi ? "Guide me through this chapter using hints first." : null,
@@ -159,6 +164,11 @@ export function ChapterStudyWorkspace({
                 baseHref={`/${boardSlug}/${classSlug}/${subjectSlug}/${chapterSlug}`}
                 status={{
                   summary: chapterProgress?.summaryRead ?? false,
+                  quickRevision:
+                    chapterRevisionNotes.keyFormulas.length > 0 ||
+                    chapterRevisionNotes.keyDefinitions.length > 0 ||
+                    chapterRevisionNotes.commonMistakes.trim().length > 0 ||
+                    chapterRevisionNotes.examTips.trim().length > 0,
                   exercises: chapterProgress?.exercisesCompleted?.length ?? 0,
                   totalExercises: trainingExercises.length,
                   flashcards: Object.keys(chapterProgress?.flashcardsReviewed ?? {}).length,
@@ -193,6 +203,7 @@ export function ChapterStudyWorkspace({
                 chapterTitle={chapterTitle}
                 chapterNumber={chapterNumber}
                 summary={chapterSummary}
+                revisionNotes={chapterRevisionNotes}
                 subjectName={subjectName}
                 exercises={trainingExercises}
                 illustrationExercises={illustrationExercises}
@@ -201,6 +212,7 @@ export function ChapterStudyWorkspace({
                 quiz={quiz}
                 flashcardStorageKey={flashcardStorageKey}
                 autoOpenAi={autoOpenAi}
+                challengeId={challengeId}
                 onPromptChange={(nextPrompt) => {
                   setPrompt(nextPrompt);
                 }}

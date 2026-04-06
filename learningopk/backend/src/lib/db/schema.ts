@@ -7,6 +7,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  real,
   serial,
   text,
   timestamp,
@@ -36,6 +37,7 @@ export const adminAuditScopeEnum = pgEnum("admin_audit_scope", [
 export const adminAuditStatusEnum = pgEnum("admin_audit_status", ["success", "failed"]);
 export const notificationAudienceEnum = pgEnum("notification_audience", ["all", "students", "admins"]);
 export const notificationStatusEnum = pgEnum("notification_status", ["sent"]);
+export const streakWagerStatusEnum = pgEnum("streak_wager_status", ["active", "won", "lost"]);
 
 export const users = pgTable("user", {
   id: text("id").primaryKey(),
@@ -46,6 +48,7 @@ export const users = pgTable("user", {
   class: text("student_class"),
   degree: text("degree"),
   board: text("board"),
+  leaderboardPublic: boolean("leaderboard_public").notNull().default(true),
   role: userRoleEnum("role").notNull().default("student"),
   status: userStatusEnum("status").notNull().default("active"),
   xp: integer("xp").notNull().default(0),
@@ -137,7 +140,8 @@ export const subjects = pgTable(
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     icon: text("icon"),
-    description: text("description")
+    description: text("description"),
+    examDate: timestamp("exam_date", { withTimezone: true, mode: "date" })
   },
   (table) => [
     uniqueIndex("subjects_board_grade_slug_idx").on(table.boardId, table.grade, table.slug),
@@ -245,6 +249,24 @@ export const chapterSummaryMedia = pgTable(
   ]
 );
 
+export const revisionNotes = pgTable(
+  "revision_notes",
+  {
+    id: serial("id").primaryKey(),
+    chapterId: integer("chapter_id")
+      .notNull()
+      .references(() => chapters.id, { onDelete: "cascade" }),
+    keyFormulas: jsonb("key_formulas").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    keyDefinitions: jsonb("key_definitions")
+      .$type<Array<{ term: string; definition: string }>>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    commonMistakes: text("common_mistakes"),
+    examTips: text("exam_tips")
+  },
+  (table) => [uniqueIndex("revision_notes_chapter_id_idx").on(table.chapterId)]
+);
+
 export const exercises = pgTable(
   "exercises",
   {
@@ -275,6 +297,30 @@ export const flashcards = pgTable("flashcards", {
   back: text("back").notNull(),
   orderIndex: integer("order_index").notNull()
 });
+
+export const flashcardReviews = pgTable(
+  "flashcard_reviews",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    cardId: integer("card_id")
+      .notNull()
+      .references(() => flashcards.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    intervalDays: integer("interval_days").notNull().default(0),
+    easeFactor: real("ease_factor").notNull().default(2.5),
+    repetitions: integer("repetitions").notNull().default(0),
+    nextReviewDate: timestamp("next_review_date", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    lastReviewedAt: timestamp("last_reviewed_at", { withTimezone: true, mode: "date" }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    uniqueIndex("flashcard_reviews_card_user_idx").on(table.cardId, table.userId),
+    index("flashcard_reviews_user_next_review_idx").on(table.userId, table.nextReviewDate)
+  ]
+);
 
 export const quizzes = pgTable("quizzes", {
   id: serial("id").primaryKey(),
@@ -322,6 +368,28 @@ export const quizAttempts = pgTable("quiz_attempts", {
   index("quiz_attempts_user_completed_idx").on(table.userId, desc(table.completedAt))
 ]);
 
+export const quizDuelChallenges = pgTable("quiz_duel_challenges", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  quizId: integer("quiz_id")
+    .notNull()
+    .references(() => quizzes.id, { onDelete: "cascade" }),
+  challengerUserId: text("challenger_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  challengerAttemptId: uuid("challenger_attempt_id")
+    .notNull()
+    .references(() => quizAttempts.id, { onDelete: "cascade" }),
+  recipientUserId: text("recipient_user_id").references(() => users.id, { onDelete: "set null" }),
+  recipientAttemptId: uuid("recipient_attempt_id").references(() => quizAttempts.id, { onDelete: "set null" }),
+  expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+}, (table) => [
+  index("quiz_duel_challenges_quiz_id_idx").on(table.quizId),
+  index("quiz_duel_challenges_challenger_user_idx").on(table.challengerUserId),
+  uniqueIndex("quiz_duel_challenges_recipient_attempt_unique").on(table.recipientAttemptId)
+]);
+
 export const aiChatSessions = pgTable("ai_chat_sessions", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: text("user_id")
@@ -351,6 +419,7 @@ export const aiUsageLogs = pgTable("ai_usage_logs", {
   sessionId: uuid("session_id")
     .notNull()
     .references(() => aiChatSessions.id, { onDelete: "cascade" }),
+  modelTier: text("model_tier").notNull().default("mistral-small"),
   model: text("model").notNull(),
   promptTokens: integer("prompt_tokens").notNull(),
   completionTokens: integer("completion_tokens").notNull(),
@@ -517,6 +586,163 @@ export const mockExams = pgTable("mock_exams", {
   durationMinutes: integer("duration_minutes").notNull(),
   totalMarks: integer("total_marks").notNull()
 });
+
+export const examAnalysis = pgTable(
+  "exam_analysis",
+  {
+    id: serial("id").primaryKey(),
+    boardId: integer("board_id")
+      .notNull()
+      .references(() => boards.id, { onDelete: "cascade" }),
+    subjectId: integer("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    chapterId: integer("chapter_id")
+      .notNull()
+      .references(() => chapters.id, { onDelete: "cascade" }),
+    occurrenceCount: integer("occurrence_count").notNull().default(0),
+    avgMarks: real("avg_marks").notNull().default(0),
+    lastSeenYear: integer("last_seen_year")
+  },
+  (table) => [
+    uniqueIndex("exam_analysis_board_subject_chapter_idx").on(table.boardId, table.subjectId, table.chapterId),
+    index("exam_analysis_board_subject_idx").on(table.boardId, table.subjectId),
+    index("exam_analysis_chapter_idx").on(table.chapterId)
+  ]
+);
+
+export const aiContext = pgTable("ai_context", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" })
+    .unique(),
+  weakTopics: jsonb("weak_topics").$type<string[]>().notNull().default([]),
+  strongTopics: jsonb("strong_topics").$type<string[]>().notNull().default([]),
+  preferredExplanationStyle: text("preferred_explanation_style").notNull().default("balanced"),
+  lastConceptsDiscussed: jsonb("last_concepts_discussed").$type<string[]>().notNull().default([]),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+});
+
+export const aiConversationEvents = pgTable(
+  "ai_conversation_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => aiChatSessions.id, { onDelete: "cascade" }),
+    eventType: text("event_type").notNull(),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    index("ai_conversation_events_session_created_idx").on(table.sessionId, desc(table.createdAt)),
+    index("ai_conversation_events_event_type_created_idx").on(table.eventType, desc(table.createdAt))
+  ]
+);
+
+export const formulas = pgTable(
+  "formulas",
+  {
+    id: serial("id").primaryKey(),
+    subjectId: integer("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    chapterId: integer("chapter_id")
+      .notNull()
+      .references(() => chapters.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    formulaLatex: text("formula_latex").notNull(),
+    description: text("description").notNull(),
+    variables: jsonb("variables").$type<Array<{ symbol: string; meaning: string }>>().notNull().default([]),
+    tags: jsonb("tags").$type<string[]>().notNull().default([]),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    index("formulas_subject_chapter_idx").on(table.subjectId, table.chapterId),
+    index("formulas_search_idx").using(
+      "gin",
+      sql`to_tsvector('english', coalesce(${table.name}, '') || ' ' || coalesce(${table.description}, ''))`
+    )
+  ]
+);
+
+export const userDailyMomentumGoals = pgTable(
+  "user_daily_momentum_goals",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    dateKey: text("date_key").notNull(),
+    focusType: text("focus_type").notNull(),
+    chapterId: integer("chapter_id").references(() => chapters.id, { onDelete: "set null" }),
+    xpAwarded: integer("xp_awarded").notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    uniqueIndex("user_daily_momentum_goals_user_date_idx").on(table.userId, table.dateKey),
+    index("user_daily_momentum_goals_user_completed_idx").on(table.userId, desc(table.completedAt))
+  ]
+);
+
+export const streakWagers = pgTable(
+  "streak_wagers",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    amount: integer("amount").notNull(),
+    bonusXp: integer("bonus_xp").notNull(),
+    protectedDate: text("protected_date").notNull(),
+    status: streakWagerStatusEnum("status").notNull().default("active"),
+    completedGoal: boolean("completed_goal"),
+    placedAt: timestamp("placed_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }).notNull(),
+    settledAt: timestamp("settled_at", { withTimezone: true, mode: "date" }),
+    recoveredAt: timestamp("recovered_at", { withTimezone: true, mode: "date" })
+  },
+  (table) => [
+    uniqueIndex("streak_wagers_user_protected_date_idx").on(table.userId, table.protectedDate),
+    index("streak_wagers_user_status_idx").on(table.userId, table.status, desc(table.placedAt))
+  ]
+);
+
+export const userStarredFormulas = pgTable(
+  "user_starred_formulas",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    formulaId: integer("formula_id")
+      .notNull()
+      .references(() => formulas.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [uniqueIndex("user_starred_formulas_user_formula_idx").on(table.userId, table.formulaId)]
+);
+
+export const formulaAccessEvents = pgTable(
+  "formula_access_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    formulaId: integer("formula_id")
+      .notNull()
+      .references(() => formulas.id, { onDelete: "cascade" }),
+    accessedAt: timestamp("accessed_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    index("formula_access_events_user_accessed_idx").on(table.userId, desc(table.accessedAt)),
+    index("formula_access_events_formula_idx").on(table.formulaId)
+  ]
+);
 
 export const institutes = pgTable("institutes", {
   id: serial("id").primaryKey(),

@@ -20,6 +20,7 @@ export function AIChatSidebar({ onHide, className }: AIChatSidebarProps) {
     isSending,
     isExpanded,
     error,
+    proactiveHint,
     isVisible,
     sendMessage,
     clearError,
@@ -89,6 +90,20 @@ export function AIChatSidebar({ onHide, className }: AIChatSidebarProps) {
             className="text-xs text-destructive/80 hover:text-destructive underline mt-1.5 transition-colors"
           >
             Dismiss
+          </button>
+        </div>
+      )}
+
+      {proactiveHint && (
+        <div className="mx-4 mb-3 rounded-xl border border-amber-300/40 bg-amber-50 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-500/10">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">Need a hint?</p>
+          <p className="mt-1 text-sm text-amber-900 dark:text-amber-100">{proactiveHint.message}</p>
+          <button
+            type="button"
+            onClick={() => setInputValue(proactiveHint.message)}
+            className="mt-2 text-xs font-medium text-amber-800 underline underline-offset-4 dark:text-amber-200"
+          >
+            Need a hint?
           </button>
         </div>
       )}

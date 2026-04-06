@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Share2, RotateCcw, Sparkles, Check, X, Minus } from "lucide-react";
+import { Share2, RotateCcw, Sparkles, Check, X, Minus, Swords } from "lucide-react";
 
 import type { QuizResult } from "./quiz-runner";
 import { Button } from "@/components/ui/button";
@@ -17,11 +17,14 @@ type QuizResultSummaryProps = {
   subjectName?: string;
   chapterNumber?: number;
   chapterTitle?: string;
+  onCreateChallenge?: () => Promise<string | null>;
 };
 
-export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber, chapterTitle }: QuizResultSummaryProps) {
+export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber, chapterTitle, onCreateChallenge }: QuizResultSummaryProps) {
   const passed = result.percentage >= 70;
   const [showShareCard, setShowShareCard] = useState(false);
+  const [isCreatingChallenge, setIsCreatingChallenge] = useState(false);
+  const [challengeMessage, setChallengeMessage] = useState<string | null>(null);
 
   const displaySubjectName = subjectName || "Quiz";
 
@@ -46,6 +49,37 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
         />
 
         <div className="p-6">
+          {result.duel ? (
+            <div className="mb-6 rounded-2xl border border-accent-primary/20 bg-gradient-to-r from-accent-primary/5 via-bg-surface to-accent-warning-light p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-primary/10 text-accent-primary">
+                  <Swords className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">Quiz Duel</p>
+                  <p className="text-xs text-text-secondary">Both scores, side-by-side</p>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[result.duel.challenger, result.duel.recipient].filter(Boolean).map((player) => (
+                  <div key={`${player!.userId}-${player!.completedAt}`} className="rounded-xl border border-border-default bg-bg-surface/90 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-text-primary">{player!.name}</p>
+                        <p className="text-xs text-text-secondary">{player!.isCurrentUser ? "You" : "Friend"}</p>
+                      </div>
+                      <Badge variant={player!.isCurrentUser ? "primary" : "default"} size="sm">{player!.percentage}%</Badge>
+                    </div>
+                    <p className="mt-3 font-display text-2xl font-bold text-text-primary">
+                      {player!.score} <span className="text-sm font-medium text-text-secondary">/ {player!.totalMarks}</span>
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
             {/* Large progress ring */}
             <div className="flex flex-col items-center gap-2">
@@ -153,7 +187,30 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
             >
               {showShareCard ? "Hide Share Card" : "Share Result"}
             </Button>
+            {onCreateChallenge ? (
+              <Button
+                type="button"
+                variant="outline"
+                loading={isCreatingChallenge}
+                onClick={async () => {
+                  try {
+                    setIsCreatingChallenge(true);
+                    setChallengeMessage(null);
+                    const url = await onCreateChallenge();
+                    setChallengeMessage(url ? "Challenge link copied to clipboard." : "Unable to create challenge link.");
+                  } catch (error) {
+                    setChallengeMessage(error instanceof Error ? error.message : "Unable to create challenge link.");
+                  } finally {
+                    setIsCreatingChallenge(false);
+                  }
+                }}
+                iconLeft={<Swords />}
+              >
+                Challenge a friend
+              </Button>
+            ) : null}
           </div>
+          {challengeMessage ? <p className="mt-3 text-center text-sm text-text-secondary">{challengeMessage}</p> : null}
         </div>
       </Card>
 

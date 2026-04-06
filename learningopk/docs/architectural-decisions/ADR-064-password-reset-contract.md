@@ -1,34 +1,44 @@
 # ADR-064: Password Reset Contract Resolution
 
 ## Status
-Proposed
+Accepted (2026-04-05) — Option 2 implemented
 
 ## Context
-The system exhibits a critical contract mismatch between frontend and backend regarding password reset functionality:
+The system exhibited a contract mismatch between frontend and backend regarding password reset functionality:
 
-**Frontend Implementation:**
-- `forgot-password-form.tsx` calls `/api/auth/request-password-reset`
-- `reset-password-form.tsx` calls `/api/auth/reset-password`
-- Both pages are fully implemented with UI and error handling
+**Frontend Implementation (at time of investigation):**
+- `login-page-client.tsx` had a "Forgot password?" link pointing to `/forgot-password`
+- No `/forgot-password` or `/reset-password` page routes existed
+- No `forgot-password-form.tsx` or `reset-password-form.tsx` components existed
 
 **Backend Reality:**
 - `backend/src/lib/auth.ts` configures Better Auth but **does not enable** `emailAndPassword.sendResetPassword`
 - Without this configuration, the `/api/auth/request-password-reset` and `/api/auth/reset-password` endpoints are **not registered**
-- Users clicking "Forgot password?" will encounter 404 errors
+- Users clicking "Forgot password?" would be navigated to a nonexistent route
 
-**Documentation Gap:**
-- `docs/redesign/api-contracts.md` does not document password reset endpoints at all
-- No indication whether password reset is supported or intentionally disabled
+**Documentation:**
+- `docs/redesign/api-contracts.md` already correctly documents that password reset is not enabled (line 30)
 
 **Test Coverage:**
-- `frontend/tests/e2e/auth-resilience.spec.ts` mocks `/api/auth/sign-in/email` (correct Better Auth endpoint)
-- `phase3-auth-layout-routes.spec.ts` tests password reset by mocking the endpoint, indicating it doesn't exist
+- `phase3-auth-layout-routes.spec.ts` already asserts that reset-password and forgot-password routes 404
+- `auth-resilience.spec.ts` tests login network failure handling (unrelated to password reset)
 
 ## Decision
 
-**Option 1 (Recommended): Enable Password Reset End-to-End**
+**Option 2 implemented: Disable password reset in the UI.**
 
-Configure Better Auth with `sendResetPassword` function and document the complete flow:
+Investigation found that the frontend had no `/forgot-password` or `/reset-password` page routes, and no form components for these flows existed. The only artifact was a dangling "Forgot password?" link in `login-page-client.tsx`. The backend does not configure `sendResetPassword`, so the endpoints are not available.
+
+**Changes made (TASK-56):**
+1. Removed the "Forgot password?" link from `login-page-client.tsx` with a comment explaining the status and how to re-enable
+2. Confirmed no `/forgot-password` or `/reset-password` page routes or form components need removal (they never existed)
+3. Confirmed `docs/redesign/api-contracts.md` already documents password reset as not enabled
+4. Confirmed `phase3-auth-layout-routes.spec.ts` already asserts these routes 404
+5. Updated this ADR status from Proposed to Accepted
+
+**To enable password reset in the future (Option 1):**
+
+Configure Better Auth with `sendResetPassword` function:
 
 ```ts
 // backend/src/lib/auth.ts
@@ -49,52 +59,27 @@ export const auth = betterAuth({
 });
 ```
 
-**Option 2: Remove Password Reset from UI**
-
-If password reset is not intended for the current phase:
-- Remove `/forgot-password` and `/reset-password` pages
-- Remove "Forgot password?" link from login form
-- Remove dead code (`forgot-password-form.tsx`, `reset-password-form.tsx`)
-- Update API contracts to explicitly state password reset is disabled
+Then:
+- Create `/forgot-password` and `/reset-password` page routes
+- Create form components for both flows
+- Re-add "Forgot password?" link to `login-page-client.tsx`
+- Update `phase3-auth-layout-routes.spec.ts` to test real endpoints
+- Update `docs/redesign/api-contracts.md` to document the endpoints
 
 ## Consequences
 
-### Option 1 (Enable)
 **Positive:**
-- Full password reset functionality available to users
-- Consistent contract between frontend and backend
-- Reduced support burden (users can self-serve password recovery)
-
-**Negative:**
-- Requires email delivery infrastructure (already exists via email worker)
-- Need to implement `sendResetPassword` handler
-- Must test email integration
-- Security considerations: rate limiting, token expiry
-
-**Effort:** ~4 hours (email integration already exists, just need to wire it)
-
-### Option 2 (Remove)
-**Positive:**
-- Quick fix, no backend work needed
-- Eliminates broken user experience (404s)
+- Eliminates the broken "Forgot password?" link that led nowhere
+- Frontend and backend contract are now consistent (neither offers password reset)
+- No backend work needed
 - Reduces attack surface area
+- Test suite (`phase3-auth-layout-routes.spec.ts`) already validates that password reset routes 404
 
 **Negative:**
 - Users who forget passwords must contact support
-- Loss of self-service capability
-- Significant UI changes needed
-- Existing test (`phase3-auth-layout-routes.spec.ts`) expects password reset to work, so test must be updated
+- Loss of self-service capability until Option 1 is implemented
 
-**Effort:** ~2 hours (removal) + test updates
-
-## Recommendation
-
-**Implement Option 1** - Enable password reset with proper configuration. The infrastructure is already in place (email worker, Better Auth support). The frontend is already built and tested. This provides a complete user experience and aligns with the product requirements.
-
-If Option 1 is chosen, also:
-1. Update `docs/redesign/api-contracts.md` to document password reset endpoints
-2. Ensure `phase3-auth-layout-routes.spec.ts` tests work without mocking (currently mocks the reset endpoint)
-3. Add password reset verification script similar to `verify-auth.ts`
+**Effort:** Minimal — only one link removal + ADR update + doc confirmation
 
 ---
 
@@ -256,19 +241,23 @@ This requires `buildForumHref` to be passed as a prop or imported. Since it's cu
 # Summary of Required Fixes
 
 ## TASK-56: Password Reset Contract
-- [ ] **Decision**: Enable password reset OR remove UI (RECOMMEND: Enable)
-- [ ] If enabled: Add `sendResetPassword` to `backend/src/lib/auth.ts`
-- [ ] Update `docs/redesign/api-contracts.md` with password reset endpoints
-- [ ] Update `auth-resilience.spec.ts` to test real endpoints (remove mock if password reset enabled)
-- [ ] Consider: Remove hardcoded mock in favor of real behavior verification
+- [x] **Decision**: Disable password reset UI (Option 2)
+- [x] Removed "Forgot password?" link from `login-page-client.tsx` with explanatory comment
+- [x] Confirmed no forgot-password/reset-password pages or form components exist to remove
+- [x] Confirmed `docs/redesign/api-contracts.md` already documents password reset as not enabled
+- [x] Confirmed `phase3-auth-layout-routes.spec.ts` already asserts these routes 404
+- [x] Updated ADR-064 status from Proposed to Accepted
 
 ## TASK-57: Auth Review Drift
-- [ ] Remove `bento-auth-shell.tsx` and any unreferenced Bento components
-- [ ] Remove `auth-top-navbar.tsx` if truly unused (verify imports first)
-- [ ] Audit `login-form.tsx` for "Remember me" - it's present but needs documentation in API contract
-- [ ] Add `data-testid` attributes to auth forms
-- [ ] Update E2E tests to use test IDs, verify alignment with current UI
-- [ ] Update `phase3-auth-layout-routes.spec.ts` to match actual behavior (remove mocks if password reset enabled)
+- [x] Remove `bento-auth-shell.tsx` and any unreferenced Bento components (removed `bento-auth-field.tsx`; `bento-auth-shell.tsx` did not exist)
+- [x] Remove `auth-top-navbar.tsx` if truly unused (file did not exist)
+- [x] Audit `login-form.tsx` for "Remember me" — removed dead `login-form.tsx` (replaced by `login-page-client.tsx`); "Remember me" Switch removed from `login-page-client.tsx`
+- [x] Remove dead `register-form.tsx` (replaced by `register-page-client.tsx`)
+- [x] `data-testid` attributes already present on auth forms (login-email-input, login-password-input, login-submit-button)
+- [x] Update E2E tests — rewrote "bento auth shell" test to match current auth UI
+- [x] `phase3-auth-layout-routes.spec.ts` already correct (asserts forgot-password/reset-password 404, no mocks)
+- [x] `auth-resilience.spec.ts` locators verified against current UI (no ambiguity after Switch removal)
+- [x] `api-contracts.md` updated: removed false "Remember me" claim, added `autoSignIn` note, clarified password reset status
 
 ## TASK-62: Forum Filter State
 - [ ] Extract `buildForumHref` to `frontend/src/lib/forum-utils.ts`

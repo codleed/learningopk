@@ -1,8 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
-import { getForumFilters } from "@/lib/forum-api";
-import { getSubjectOverview } from "@/lib/learn-api";
+import { getSubjectsList, getSubjectOverview } from "@/lib/learn-api";
 import { getServerSession } from "@/lib/session";
 
 type SubjectRedirectPageProps = {
@@ -26,24 +25,18 @@ export default async function SubjectRedirectPage({
     notFound();
   }
 
-  const filters = await getForumFilters().catch(() => null);
-  if (!filters) {
+  const subjectsList = await getSubjectsList().catch(() => null);
+  if (!subjectsList) {
     notFound();
   }
 
-  const boardById = new Map(filters.boards.map((board) => [board.id, board]));
-  const candidateSubjects = filters.subjects.filter(
+  const candidateSubjects = subjectsList.subjects.filter(
     (subject) => {
-      const board = boardById.get(subject.boardId);
-      if (!board) {
-        return false;
-      }
-
       if (subject.slug !== parsedParams.data.subject || !subject.classSlug) {
         return false;
       }
 
-      if (session.user.board && board.slug !== session.user.board) {
+      if (session.user.board && subject.boardSlug !== session.user.board) {
         return false;
       }
 
@@ -56,13 +49,12 @@ export default async function SubjectRedirectPage({
   );
 
   for (const candidate of candidateSubjects) {
-    const board = boardById.get(candidate.boardId);
-    if (!board || !candidate.classSlug) {
+    if (!candidate.classSlug) {
       continue;
     }
 
     const subjectOverview = await getSubjectOverview({
-      board: board.slug,
+      board: candidate.boardSlug,
       grade: candidate.classSlug,
       subject: candidate.slug,
     });

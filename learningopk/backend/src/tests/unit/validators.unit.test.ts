@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { progressEventSchema, subjectDashboardParamSchema } from "../../routes/progress.js";
+import { progressEventSchema, subjectDashboardParamSchema, todaysFocusCompletionSchema } from "../../routes/progress.js";
 import { submitQuizSchema } from "../../routes/quiz.js";
 
 test("submitQuizSchema accepts a valid quiz submission payload", () => {
@@ -68,4 +68,9 @@ test("subjectDashboardParamSchema rejects invalid slug characters", () => {
     subjectSlug: "mathematics"
   });
   assert.equal(parsed.success, false);
+});
+
+test("todaysFocusCompletionSchema accepts an empty object payload", () => {
+  const parsed = todaysFocusCompletionSchema.safeParse({});
+  assert.equal(parsed.success, true);
 });

@@ -3,12 +3,15 @@ import { Router, type Response } from "express";
 import { z } from "zod";
 
 import { requireAdminRole } from "../lib/admin.js";
+import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
 import { listAdminChapterGraph } from "../lib/chapter-graph.js";
 import { db } from "../lib/db/index.js";
 import {
   adminAuditLogs,
   adminNotifications,
   adminSettings,
+  aiConversationEvents,
+  aiChatSessions,
   boardClasses,
   boards,
   chapterSummaryLinks,
@@ -21,6 +24,7 @@ import {
   quizAttempts,
   quizQuestions,
   quizzes,
+  revisionNotes,
   subjects,
   userProgress,
   users
@@ -28,7 +32,7 @@ import {
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { extractWikiLinks, normalizeWikiLinkTarget } from "../lib/wiki-links.js";
 import { escapeLikePattern } from "../lib/escape-like.js";
-import { allQueues, jobRegistry } from "../lib/queue.js";
+import { getAllQueues, jobRegistry } from "../lib/queue.js";
 
 const chapterParamsSchema = z.object({
   id: z.coerce.number().int().positive()
@@ -48,6 +52,18 @@ const chapterPublishBodySchema = z.object({
 
 const chapterSummaryUpdateBodySchema = z.object({
   summary: z.string().trim().min(1)
+});
+
+const revisionDefinitionSchema = z.object({
+  term: z.string().trim().min(1),
+  definition: z.string().trim().min(1)
+});
+
+const chapterRevisionNotesBodySchema = z.object({
+  keyFormulas: z.array(z.string().trim().min(1)).default([]),
+  keyDefinitions: z.array(revisionDefinitionSchema).default([]),
+  commonMistakes: z.string().default(""),
+  examTips: z.string().default("")
 });
 
 const chapterRenameBodySchema = z.object({
@@ -1061,6 +1077,22 @@ const listAdminAnalyticsOverview = async ({
     .groupBy(subjects.id, subjects.name, subjects.grade, boards.name)
     .orderBy(desc(sql`count(${quizAttempts.id})`), asc(subjects.name));
 
+  const confusionRows = await db
+    .select({
+      chapterId: chapters.id,
+      chapterTitle: chapters.title,
+      subjectName: subjects.name,
+      count: sql<number>`count(${aiConversationEvents.id})::int`
+    })
+    .from(aiConversationEvents)
+    .innerJoin(aiChatSessions, eq(aiConversationEvents.sessionId, aiChatSessions.id))
+    .innerJoin(chapters, eq(aiChatSessions.chapterId, chapters.id))
+    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+    .where(and(eq(aiConversationEvents.eventType, "confusion_detected"), sql`${aiConversationEvents.createdAt} >= ${windowStart}`))
+    .groupBy(chapters.id, chapters.title, subjects.name)
+    .orderBy(desc(sql`count(${aiConversationEvents.id})`), asc(chapters.title))
+    .limit(10);
+
   return {
     windowDays,
     summary: {
@@ -1068,7 +1100,8 @@ const listAdminAnalyticsOverview = async ({
       quizAttempts: quizAttemptsRow?.count ?? 0,
       averageQuizScorePercent: Number(averageQuizScoreRow?.value ?? 0),
       threadsCreated: threadsCreatedRow?.count ?? 0,
-      openModerationFlags: openModerationFlagsRow?.count ?? 0
+      openModerationFlags: openModerationFlagsRow?.count ?? 0,
+      confusionEvents: confusionRows.reduce((total, row) => total + row.count, 0)
     },
     subjectPerformance: subjectPerformanceRows.map((row) => ({
       subjectId: row.subjectId,
@@ -1078,6 +1111,12 @@ const listAdminAnalyticsOverview = async ({
       attempts: row.attempts,
       averageScorePercent: Number(row.averageScorePercent),
       activeStudents: row.activeStudents
+    })),
+    confusionByChapter: confusionRows.map((row) => ({
+      chapterId: row.chapterId,
+      chapterTitle: row.chapterTitle,
+      subjectName: row.subjectName,
+      count: row.count
     }))
   };
 };
@@ -2138,6 +2177,10 @@ adminRouter.post("/content/boards", requireSession, async (req, res) => {
       actorName
     });
 
+    // Purge cached curriculum data
+    void cacheService.invalidatePattern("learn:*");
+    void cacheService.delete(CacheKeys.subjectList());
+
     res.status(201).json({
       board
     });
@@ -2235,6 +2278,9 @@ adminRouter.post("/content/classes", requireSession, async (req, res) => {
       actorId,
       actorName
     });
+
+    // Purge cached curriculum data
+    void cacheService.invalidatePattern("learn:*");
 
     res.status(201).json({
       class: boardClass
@@ -2342,6 +2388,10 @@ adminRouter.post("/content/subjects", requireSession, async (req, res) => {
       actorId,
       actorName
     });
+
+    // Purge cached subject lists
+    void cacheService.delete(CacheKeys.subjectList());
+    void cacheService.invalidatePattern("learn:*");
 
     res.status(201).json({
       subject
@@ -2455,6 +2505,9 @@ adminRouter.post("/content/chapters", requireSession, async (req, res) => {
       actorId,
       actorName
     });
+
+    // Purge cached chapter lists for this subject
+    void cacheService.delete(CacheKeys.chapterList(subject.id));
 
     res.status(201).json({
       chapter
@@ -2580,6 +2633,9 @@ adminRouter.post("/content/exercises", requireSession, async (req, res) => {
       });
       return;
     }
+
+    // Invalidate chapter content cache (exercises are part of chapter content)
+    await cacheService.delete(CacheKeys.chapterContent(chapter.id));
 
     await persistAuditLog({
       scope: "content",
@@ -2746,6 +2802,11 @@ adminRouter.post("/content/boards/:id/update", requireSession, async (req, res) 
       actorId,
       actorName
     });
+
+    // Purge cached curriculum data
+    void cacheService.invalidatePattern("learn:*");
+    void cacheService.delete(CacheKeys.subjectList());
+
     res.status(200).json({
       board: updatedBoard,
       timestamp: new Date().toISOString()
@@ -2841,6 +2902,11 @@ adminRouter.post("/content/boards/:id/delete", requireSession, async (req, res) 
     actorId,
     actorName
   });
+
+  // Purge cached curriculum data
+  void cacheService.invalidatePattern("learn:*");
+  void cacheService.delete(CacheKeys.subjectList());
+  void cacheService.invalidatePattern("chapters:list:*");
 
   res.status(200).json({
     board,
@@ -2946,6 +3012,10 @@ adminRouter.post("/content/classes/:id/update", requireSession, async (req, res)
       actorId,
       actorName
     });
+
+    // Purge cached curriculum data
+    void cacheService.invalidatePattern("learn:*");
+
     res.status(200).json({
       class: updatedClass,
       timestamp: new Date().toISOString()
@@ -3044,6 +3114,11 @@ adminRouter.post("/content/classes/:id/delete", requireSession, async (req, res)
     actorName
   });
 
+  // Purge cached curriculum data
+  void cacheService.invalidatePattern("learn:*");
+  void cacheService.delete(CacheKeys.subjectList());
+  void cacheService.invalidatePattern("chapters:list:*");
+
   res.status(200).json({
     class: {
       id: boardClass.id,
@@ -3131,6 +3206,12 @@ adminRouter.post("/content/subjects/:id/delete", requireSession, async (req, res
     actorId,
     actorName
   });
+
+  // Purge cached subject/chapter lists
+  void cacheService.delete(CacheKeys.subjectList());
+  void cacheService.delete(CacheKeys.subjectDetail(subject.id));
+  void cacheService.invalidatePattern("learn:*");
+  void cacheService.invalidatePattern("chapters:list:*");
 
   res.status(200).json({
     subject: {
@@ -3257,6 +3338,11 @@ adminRouter.post("/content/chapters/:id/update", requireSession, async (req, res
       actorId,
       actorName
     });
+
+    // Purge cached chapter data
+    void cacheService.delete(CacheKeys.chapterList(chapter.subjectId));
+    void cacheService.delete(CacheKeys.chapterContent(chapter.id));
+
     res.status(200).json({
       chapter: updatedChapter,
       timestamp: new Date().toISOString()
@@ -3339,6 +3425,10 @@ adminRouter.post("/content/chapters/:id/delete", requireSession, async (req, res
     actorId,
     actorName
   });
+
+  // Purge cached chapter data
+  void cacheService.delete(CacheKeys.chapterList(chapter.subjectId));
+  void cacheService.delete(CacheKeys.chapterContent(chapter.id));
 
   res.status(200).json({
     chapter: {
@@ -3503,6 +3593,9 @@ adminRouter.post("/content/exercises/:id/update", requireSession, async (req, re
       return;
     }
 
+    // Invalidate chapter content cache (exercises are part of chapter content)
+    await cacheService.delete(CacheKeys.chapterContent(exercise.chapterId));
+
     await persistAuditLog({
       scope: "content",
       action,
@@ -3587,6 +3680,9 @@ adminRouter.post("/content/exercises/:id/delete", requireSession, async (req, re
   }
 
   await db.delete(exercises).where(eq(exercises.id, exercise.id));
+
+  // Invalidate chapter content cache (exercises are part of chapter content)
+  await cacheService.delete(CacheKeys.chapterContent(exercise.chapterId));
 
   await persistAuditLog({
     scope: "content",
@@ -3687,6 +3783,9 @@ adminRouter.post("/content/quizzes", requireSession, async (req, res) => {
       return;
     }
 
+    // Invalidate chapter content cache (quiz metadata is part of chapter content)
+    await cacheService.delete(CacheKeys.chapterContent(updatedQuiz.chapterId));
+
     await persistAuditLog({
       scope: "content",
       action: "Update quiz",
@@ -3735,6 +3834,9 @@ adminRouter.post("/content/quizzes", requireSession, async (req, res) => {
       res.status(500).json({ error: "Failed to create quiz" });
       return;
     }
+
+    // Invalidate chapter content cache (quiz metadata is part of chapter content)
+    await cacheService.delete(CacheKeys.chapterContent(newQuiz.chapterId));
 
     await persistAuditLog({
       scope: "content",
@@ -3890,6 +3992,9 @@ adminRouter.post("/content/quizzes/:id/update", requireSession, async (req, res)
     return;
   }
 
+  // Invalidate chapter content cache (quiz metadata is part of chapter content)
+  await cacheService.delete(CacheKeys.chapterContent(updatedQuiz.chapterId));
+
   await persistAuditLog({
     scope: "content",
     action,
@@ -3957,6 +4062,10 @@ adminRouter.post("/content/quizzes/:id/delete", requireSession, async (req, res)
   }
 
   await db.delete(quizzes).where(eq(quizzes.id, quiz.id));
+
+  // Invalidate chapter content cache + quiz questions cache
+  await cacheService.delete(CacheKeys.chapterContent(quiz.chapterId));
+  await cacheService.delete(CacheKeys.quizQuestions(quiz.id));
 
   await persistAuditLog({
     scope: "content",
@@ -4040,6 +4149,9 @@ adminRouter.post("/content/flashcards", requireSession, async (req, res) => {
     res.status(500).json({ error: "Failed to create flashcard" });
     return;
   }
+
+  // Invalidate chapter content cache (flashcards are part of chapter content)
+  await cacheService.delete(CacheKeys.chapterContent(newFlashcard.chapterId));
 
   await persistAuditLog({
     scope: "content",
@@ -4188,6 +4300,9 @@ adminRouter.post("/content/flashcards/:id/update", requireSession, async (req, r
     return;
   }
 
+  // Invalidate chapter content cache (flashcards are part of chapter content)
+  await cacheService.delete(CacheKeys.chapterContent(updatedFlashcard.chapterId));
+
   await persistAuditLog({
     scope: "content",
     action: "Update flashcard",
@@ -4249,6 +4364,9 @@ adminRouter.post("/content/flashcards/:id/delete", requireSession, async (req, r
   }
 
   await db.delete(flashcards).where(eq(flashcards.id, flashcard.id));
+
+  // Invalidate chapter content cache (flashcards are part of chapter content)
+  await cacheService.delete(CacheKeys.chapterContent(flashcard.chapterId));
 
   await persistAuditLog({
     scope: "content",
@@ -4349,6 +4467,9 @@ adminRouter.post("/content/flashcards/reorder", requireSession, async (req, res)
     res.status(500).json({ error: "Failed to reorder flashcards" });
     return;
   }
+
+  // Invalidate chapter content cache (flashcard order is part of chapter content)
+  await cacheService.delete(CacheKeys.chapterContent(chapterId));
 
   await persistAuditLog({
     scope: "content",
@@ -4485,6 +4606,10 @@ adminRouter.post("/content/quiz-questions", requireSession, async (req, res) => 
 
   // Recalculate quiz totalMarks
   const newTotalMarks = await recalculateQuizTotalMarks(quiz.id);
+
+  // Invalidate quiz questions cache + chapter content cache
+  await cacheService.delete(CacheKeys.quizQuestions(quiz.id));
+  await cacheService.delete(CacheKeys.chapterContent(quiz.chapterId));
 
   await persistAuditLog({
     scope: "content",
@@ -4644,6 +4769,9 @@ adminRouter.post("/content/quiz-questions/:id/update", requireSession, async (re
   // Recalculate quiz totalMarks
   await recalculateQuizTotalMarks(question.quizId);
 
+  // Invalidate quiz questions cache
+  await cacheService.delete(CacheKeys.quizQuestions(question.quizId));
+
   await persistAuditLog({
     scope: "content",
     action,
@@ -4711,6 +4839,9 @@ adminRouter.post("/content/quiz-questions/:id/delete", requireSession, async (re
 
   // Recalculate quiz totalMarks after deletion
   await recalculateQuizTotalMarks(question.quizId);
+
+  // Invalidate quiz questions cache
+  await cacheService.delete(CacheKeys.quizQuestions(question.quizId));
 
   await persistAuditLog({
     scope: "content",
@@ -5011,6 +5142,10 @@ adminRouter.post("/content/chapters/:id/summary", requireSession, async (req, re
     summary
   });
 
+  // Invalidate chapter content cache + chapter list for subject
+  await cacheService.delete(CacheKeys.chapterContent(chapter.id));
+  await cacheService.delete(CacheKeys.chapterList(chapter.subjectId));
+
   await persistAuditLog({
     scope: "content",
     action,
@@ -5023,6 +5158,183 @@ adminRouter.post("/content/chapters/:id/summary", requireSession, async (req, re
 
   res.status(200).json({
     chapter: updatedChapter,
+    timestamp: new Date().toISOString()
+  });
+});
+
+adminRouter.get("/content/chapters/:id/revision-notes", requireSession, async (req, res) => {
+  const parsedParams = chapterParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid chapter identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const chapterRows = await db
+    .select({
+      id: chapters.id,
+      title: chapters.title,
+      keyFormulas: revisionNotes.keyFormulas,
+      keyDefinitions: revisionNotes.keyDefinitions,
+      commonMistakes: revisionNotes.commonMistakes,
+      examTips: revisionNotes.examTips
+    })
+    .from(chapters)
+    .leftJoin(revisionNotes, eq(revisionNotes.chapterId, chapters.id))
+    .where(eq(chapters.id, parsedParams.data.id))
+    .limit(1);
+
+  const chapter = chapterRows[0];
+  if (!chapter) {
+    res.status(404).json({
+      error: "Chapter not found"
+    });
+    return;
+  }
+
+  res.status(200).json({
+    chapter: {
+      id: chapter.id,
+      title: chapter.title
+    },
+    revisionNotes: {
+      keyFormulas: chapter.keyFormulas ?? [],
+      keyDefinitions: chapter.keyDefinitions ?? [],
+      commonMistakes: chapter.commonMistakes ?? "",
+      examTips: chapter.examTips ?? ""
+    }
+  });
+});
+
+adminRouter.post("/content/chapters/:id/revision-notes", requireSession, async (req, res) => {
+  const parsedParams = chapterParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid chapter identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const parsedBody = chapterRevisionNotesBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid revision notes payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Update chapter revision notes";
+  const fallbackTarget = `Chapter #${parsedParams.data.id}`;
+
+  const chapterRows = await db
+    .select({
+      id: chapters.id,
+      title: chapters.title,
+      subjectId: chapters.subjectId,
+      subjectName: subjects.name
+    })
+    .from(chapters)
+    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+    .where(eq(chapters.id, parsedParams.data.id))
+    .limit(1);
+
+  const chapter = chapterRows[0];
+  if (!chapter) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Chapter not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Chapter not found"
+    });
+    return;
+  }
+
+  const payload = {
+    keyFormulas: parsedBody.data.keyFormulas,
+    keyDefinitions: parsedBody.data.keyDefinitions,
+    commonMistakes: parsedBody.data.commonMistakes.trim() || null,
+    examTips: parsedBody.data.examTips.trim() || null
+  };
+
+  const upsertedRows = await db
+    .insert(revisionNotes)
+    .values({
+      chapterId: chapter.id,
+      ...payload
+    })
+    .onConflictDoUpdate({
+      target: revisionNotes.chapterId,
+      set: payload
+    })
+    .returning({
+      keyFormulas: revisionNotes.keyFormulas,
+      keyDefinitions: revisionNotes.keyDefinitions,
+      commonMistakes: revisionNotes.commonMistakes,
+      examTips: revisionNotes.examTips
+    });
+
+  const updatedRevisionNotes = upsertedRows[0];
+  if (!updatedRevisionNotes) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${chapter.subjectName} / ${chapter.title}`,
+      status: "failed",
+      message: "Revision notes update failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({
+      error: "Failed to update revision notes"
+    });
+    return;
+  }
+
+  await cacheService.delete(CacheKeys.chapterContent(chapter.id));
+
+  await persistAuditLog({
+    scope: "content",
+    action,
+    target: `${chapter.subjectName} / ${chapter.title}`,
+    status: "success",
+    message: "Updated chapter revision notes",
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    chapter: {
+      id: chapter.id,
+      title: chapter.title
+    },
+    revisionNotes: {
+      keyFormulas: updatedRevisionNotes.keyFormulas ?? [],
+      keyDefinitions: updatedRevisionNotes.keyDefinitions ?? [],
+      commonMistakes: updatedRevisionNotes.commonMistakes ?? "",
+      examTips: updatedRevisionNotes.examTips ?? ""
+    },
     timestamp: new Date().toISOString()
   });
 });
@@ -5060,6 +5372,7 @@ adminRouter.post("/content/chapters/:id/rename", requireSession, async (req, res
     .select({
       id: chapters.id,
       title: chapters.title,
+      subjectId: chapters.subjectId,
       subjectName: subjects.name
     })
     .from(chapters)
@@ -5126,6 +5439,10 @@ adminRouter.post("/content/chapters/:id/rename", requireSession, async (req, res
     chapterId: chapter.id
   });
 
+  // Invalidate chapter content cache + chapter list for subject
+  await cacheService.delete(CacheKeys.chapterContent(chapter.id));
+  await cacheService.delete(CacheKeys.chapterList(chapter.subjectId));
+
   await persistAuditLog({
     scope: "content",
     action,
@@ -5175,6 +5492,7 @@ adminRouter.post("/content/chapters/:id/publish", requireSession, async (req, re
     .select({
       id: chapters.id,
       title: chapters.title,
+      subjectId: chapters.subjectId,
       subjectName: subjects.name
     })
     .from(chapters)
@@ -5228,6 +5546,11 @@ adminRouter.post("/content/chapters/:id/publish", requireSession, async (req, re
     });
     return;
   }
+
+  // Invalidate chapter content cache + chapter list for subject + learn hierarchy
+  await cacheService.delete(CacheKeys.chapterContent(chapterRow.id));
+  await cacheService.delete(CacheKeys.chapterList(chapterRow.subjectId));
+  await cacheService.invalidatePattern("learn:*");
 
   await persistAuditLog({
     scope: "content",
@@ -5333,6 +5656,10 @@ adminRouter.post("/forum/threads/:threadId/pin", requireSession, async (req, res
     return;
   }
 
+  // Invalidate forum thread caches (pinning affects thread listing order)
+  await cacheService.invalidatePattern("forum:threads:*");
+  await cacheService.delete(CacheKeys.forumThreadDetail(parsedParams.data.threadId));
+
   await persistAuditLog({
     scope: "forum",
     action,
@@ -5388,15 +5715,16 @@ adminRouter.get("/jobs/stats", requireSession, async (req, res) => {
 
   const stats = await Promise.all(
     jobRegistry.map(async (def) => {
+      const queue = def.getQueue();
       const [waiting, active, completed, failed] = await Promise.all([
-        def.queue.getWaitingCount(),
-        def.queue.getActiveCount(),
-        def.queue.getCompletedCount(),
-        def.queue.getFailedCount(),
+        queue.getWaitingCount(),
+        queue.getActiveCount(),
+        queue.getCompletedCount(),
+        queue.getFailedCount(),
       ]);
       return {
         name: def.name,
-        queue: def.queue.name,
+        queue: queue.name,
         counts: { waiting, active, completed, failed },
       };
     })
@@ -5417,7 +5745,7 @@ adminRouter.post("/jobs/:queueName/:jobId/retry", requireSession, async (req, re
     return;
   }
 
-  const queue = allQueues.find((q) => q.name === queueName);
+  const queue = getAllQueues().find((q) => q.name === queueName);
 
   if (!queue) {
     res.status(404).json({ error: "Queue not found" });
@@ -5432,4 +5760,50 @@ adminRouter.post("/jobs/:queueName/:jobId/retry", requireSession, async (req, re
 
   await job.retry();
   res.json({ success: true, jobId });
+});
+
+// ==================== CACHE MANAGEMENT ====================
+
+/**
+ * GET /api/admin/cache/stats - Cache statistics (hit rate, miss rate, eviction counts)
+ */
+adminRouter.get("/cache/stats", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const stats = cacheService.getStats();
+  res.status(200).json({ data: stats });
+});
+
+/**
+ * POST /api/admin/cache/purge - Purge all cache entries
+ */
+adminRouter.post("/cache/purge", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const deleted = await cacheService.purgeAll();
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+
+  await persistAuditLog({
+    scope: "settings",
+    action: "Purge cache",
+    target: "All cache entries",
+    status: "success",
+    message: `Purged ${deleted} cache entries`,
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    success: true,
+    deletedCount: deleted,
+    timestamp: new Date().toISOString()
+  });
 });

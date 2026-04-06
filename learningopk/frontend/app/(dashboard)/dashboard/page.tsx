@@ -6,13 +6,15 @@ import {
 } from "@/components/dashboard/DashboardClient";
 import { AppShell } from "@/components/foundation/app-shell";
 import { PageHeader } from "@/components/common/page-header";
-import { getForumFilters } from "@/lib/forum-api";
-import { getSubjectOverview } from "@/lib/learn-api";
+import type { FocusAreaItem } from "@/components/dashboard/focus-areas-widget";
+import { getSubjectsList, getSubjectOverview } from "@/lib/learn-api";
+import { getLearningPath } from "@/lib/learning-path-api";
 import {
   getDashboardSummary,
   type DashboardSummaryResponse,
 } from "@/lib/progress-api";
 import { getServerSession } from "@/lib/session";
+import { getStudyGroups } from "@/lib/study-groups-api";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -22,6 +24,12 @@ type LearnRouteSeed = {
   boardSlug: string;
   classSlug: string;
   subjectSlug: string;
+};
+
+type ResolvedFocusAreaRoute = LearnRouteSeed & {
+  chapterId: number;
+  chapterSlug: string;
+  chapterTitle: string;
 };
 
 type DashboardPageSearchParams = {
@@ -79,6 +87,16 @@ export default async function DashboardPage({
           ? error.message
           : "Unable to load progress dashboard.",
     }));
+  const learningPathResult = await getLearningPath(cookieStore.toString())
+    .then((data) => ({ learningPath: data, learningPathError: null as string | null }))
+    .catch((error: unknown) => ({
+      learningPath: { recommendedChapters: [] },
+      learningPathError:
+        error instanceof Error ? error.message : "Unable to load learning path.",
+    }));
+  const studyGroupsResult = await getStudyGroups(cookieStore.toString())
+    .then((data) => ({ groups: data.groups }))
+    .catch(() => ({ groups: [] }));
 
   const { summary, summaryError } = summaryResult;
   const subjects = summary?.subjects ?? [];
@@ -97,40 +115,30 @@ export default async function DashboardPage({
   /* ---- route seed (resolve "Continue Learning" link) ---- */
   let routeSeed: LearnRouteSeed | null = null;
   try {
-    const filters = await getForumFilters();
+    const subjectsList = await getSubjectsList();
+    const allSubjects = subjectsList?.subjects ?? [];
     if (featuredSubject) {
-      const matchedSubject = filters.subjects.find((subject) => {
-        const board = filters.boards.find(
-          (entry) => entry.id === subject.boardId
-        );
-        if (!board || !subject.classSlug) return false;
+      const matchedSubject = allSubjects.find((subject) => {
+        if (!subject.classSlug) return false;
         if (subject.slug !== featuredSubject.subjectSlug) return false;
-        if (session.user.board && board.slug !== session.user.board)
+        if (session.user.board && subject.boardSlug !== session.user.board)
           return false;
         if (session.user.class && subject.classSlug !== session.user.class)
           return false;
         return true;
       });
-      if (matchedSubject) {
-        const matchedBoard = filters.boards.find(
-          (board) => board.id === matchedSubject.boardId
-        );
-        if (matchedBoard && matchedSubject.classSlug) {
-          routeSeed = {
-            boardSlug: matchedBoard.slug,
-            classSlug: matchedSubject.classSlug,
-            subjectSlug: matchedSubject.slug,
-          };
-        }
+      if (matchedSubject && matchedSubject.classSlug) {
+        routeSeed = {
+          boardSlug: matchedSubject.boardSlug,
+          classSlug: matchedSubject.classSlug,
+          subjectSlug: matchedSubject.slug,
+        };
       }
     }
     if (!routeSeed) {
-      const fallbackSubject = filters.subjects.find((subject) => {
-        const board = filters.boards.find(
-          (entry) => entry.id === subject.boardId
-        );
-        if (!board || !subject.classSlug) return false;
-        if (session.user.board && board.slug !== session.user.board)
+      const fallbackSubject = allSubjects.find((subject) => {
+        if (!subject.classSlug) return false;
+        if (session.user.board && subject.boardSlug !== session.user.board)
           return false;
         if (session.user.class && subject.classSlug !== session.user.class)
           return false;
@@ -140,12 +148,9 @@ export default async function DashboardPage({
         throw new Error(
           "No subject route available for the current profile scope."
         );
-      const fallbackBoard = filters.boards.find(
-        (board) => board.id === fallbackSubject.boardId
-      );
-      if (fallbackBoard && fallbackSubject.classSlug) {
+      if (fallbackSubject.classSlug) {
         routeSeed = {
-          boardSlug: fallbackBoard.slug,
+          boardSlug: fallbackSubject.boardSlug,
           classSlug: fallbackSubject.classSlug,
           subjectSlug: fallbackSubject.slug,
         };
@@ -183,6 +188,65 @@ export default async function DashboardPage({
     ? `${firstChapterBasePath}?tab=summary`
     : null;
 
+  let focusAreas: FocusAreaItem[] = [];
+  const requestedFocusAreas = learningPathResult.learningPath.recommendedChapters.slice(0, 3);
+
+  if (requestedFocusAreas.length > 0) {
+    try {
+      const subjectsList = await getSubjectsList();
+      const scopedSubjects = (subjectsList?.subjects ?? []).filter((subject) => {
+        if (!subject.classSlug) return false;
+        if (session.user.board && subject.boardSlug !== session.user.board) return false;
+        if (session.user.class && subject.classSlug !== session.user.class) return false;
+        return true;
+      });
+
+      const resolvedRoutes: ResolvedFocusAreaRoute[] = [];
+
+      for (const subject of scopedSubjects) {
+        const overview = await getSubjectOverview({
+          board: subject.boardSlug,
+          grade: subject.classSlug ?? "",
+          subject: subject.slug,
+        });
+
+        for (const chapter of overview?.chapters ?? []) {
+          if (!requestedFocusAreas.some((item) => item.chapterId === chapter.id)) {
+            continue;
+          }
+
+          resolvedRoutes.push({
+            chapterId: chapter.id,
+            chapterSlug: chapter.slug,
+            chapterTitle: chapter.title,
+            boardSlug: subject.boardSlug,
+            classSlug: subject.classSlug ?? "",
+            subjectSlug: subject.slug,
+          });
+        }
+
+        if (resolvedRoutes.length >= requestedFocusAreas.length) {
+          break;
+        }
+      }
+
+      focusAreas = requestedFocusAreas
+        .map((item) => {
+          const route = resolvedRoutes.find((entry) => entry.chapterId === item.chapterId);
+          if (!route) return null;
+
+          return {
+            ...item,
+            title: route.chapterTitle,
+            href: `/${route.boardSlug}/${route.classSlug}/${route.subjectSlug}/${route.chapterSlug}?tab=exercises`
+          };
+        })
+        .filter((item): item is FocusAreaItem => item !== null);
+    } catch {
+      focusAreas = [];
+    }
+  }
+
   /* ================================================================ */
   /*  RENDER                                                           */
   /* ================================================================ */
@@ -212,6 +276,8 @@ export default async function DashboardPage({
         continueHref={continueHref}
         orderedSubjects={orderedSubjects}
         firstChapterBasePath={firstChapterBasePath}
+        focusAreas={focusAreas}
+        studyGroups={studyGroupsResult.groups}
       />
     </AppShell>
   );

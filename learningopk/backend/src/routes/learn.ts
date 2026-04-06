@@ -3,7 +3,9 @@ import { z } from "zod";
 
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { learnRepository } from "../repositories/learn.repository.js";
+import { examPatternRepository } from "../repositories/exam-pattern.repository.js";
 import { listSubjectChapterGraph } from "../lib/chapter-graph.js";
+import { errorResponse, successResponse } from "../lib/response.js";
 
 const paramsSchema = z.object({
   board: z.string().trim().regex(/^[a-z0-9-]+$/),
@@ -16,6 +18,58 @@ const chapterParamsSchema = paramsSchema.extend({
 });
 
 export const learnRouter = Router();
+
+learnRouter.get("/patterns/:board/:subject", async (req, res) => {
+  const parsed = z
+    .object({
+      board: z.string().trim().regex(/^[a-z0-9-]+$/),
+      subject: z.string().trim().regex(/^[a-z0-9-]+$/),
+      grade: z.string().trim().regex(/^[a-z0-9-]+$/).optional()
+    })
+    .safeParse({ ...req.params, ...req.query });
+
+  if (!parsed.success) {
+    res.status(400).json(errorResponse("Invalid pattern route parameters", "VALIDATION_ERROR", parsed.error.flatten()));
+    return;
+  }
+
+  const grade = parsed.data.grade ?? "9";
+  const patterns = await examPatternRepository.findSubjectPatternsByRoute({
+    board: parsed.data.board,
+    grade,
+    subject: parsed.data.subject
+  });
+
+  if (!patterns) {
+    res.status(404).json(errorResponse("Pattern analysis not found", "NOT_FOUND"));
+    return;
+  }
+
+  res.status(200).json(successResponse({
+    ...patterns,
+    grade
+  }));
+});
+
+learnRouter.get("/boards", async (_req, res) => {
+  const [boardRows, classRows] = await Promise.all([
+    learnRepository.findAllBoards(),
+    learnRepository.findAllBoardClasses()
+  ]);
+
+  res.status(200).json({
+    boards: boardRows,
+    classes: classRows
+  });
+});
+
+learnRouter.get("/subjects", async (_req, res) => {
+  const subjectRows = await learnRepository.findAllSubjectsWithBoard();
+
+  res.status(200).json({
+    subjects: subjectRows
+  });
+});
 
 learnRouter.get("/:board/:grade/:subject", async (req, res) => {
   const parsed = paramsSchema.safeParse(req.params);
@@ -37,8 +91,9 @@ learnRouter.get("/:board/:grade/:subject", async (req, res) => {
   }
 
   const chapterRows = await learnRepository.findChaptersBySubject(subjectRow.subjectId);
+  const patterns = await examPatternRepository.findSubjectPatternsByRoute(parsed.data);
 
-  res.status(200).json({
+  res.status(200).json(successResponse({
     board: {
       slug: subjectRow.boardSlug,
       name: subjectRow.boardName
@@ -54,8 +109,18 @@ learnRouter.get("/:board/:grade/:subject", async (req, res) => {
       name: subjectRow.subjectName,
       description: subjectRow.subjectDescription ?? ""
     },
-    chapters: chapterRows
-  });
+    chapters: chapterRows.map((chapter) => {
+      const pattern = patterns?.chapters.find((item) => item.id === chapter.id);
+      return {
+        ...chapter,
+        weightagePercentage: pattern?.weightagePercentage ?? 0,
+        occurrenceCount: pattern?.occurrenceCount ?? 0,
+        avgMarks: pattern?.avgMarks ?? 0,
+        lastSeenYear: pattern?.lastSeenYear ?? null
+      };
+    }),
+    recommendation: patterns?.recommendation ?? null
+  }));
 });
 
 learnRouter.get("/:board/:grade/:subject/graph", requireSession, async (req, res) => {
@@ -120,11 +185,13 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
     return;
   }
 
-  const [chapterExercises, chapterFlashcards, quizRows] = await Promise.all([
+  const [chapterExercises, chapterFlashcards, quizRows, chapterRevisionNotes] = await Promise.all([
     learnRepository.findExercisesByChapter(chapterRow.chapterId),
     learnRepository.findFlashcardsByChapter(chapterRow.chapterId),
-    learnRepository.findQuizByChapter(chapterRow.chapterId)
+    learnRepository.findQuizByChapter(chapterRow.chapterId),
+    learnRepository.findRevisionNotesByChapter(chapterRow.chapterId)
   ]);
+  const chapterPattern = await examPatternRepository.findChapterPatternByRoute(parsed.data);
 
   const quizRow = quizRows[0] ?? null;
   let quiz = null;
@@ -133,7 +200,7 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
     quiz = { ...quizRow, questions: quizQuestions };
   }
 
-  res.status(200).json({
+  res.status(200).json(successResponse({
     board: {
       slug: chapterRow.boardSlug,
       name: chapterRow.boardName
@@ -153,10 +220,25 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
       chapterNumber: chapterRow.chapterNumber,
       title: chapterRow.chapterTitle,
       slug: chapterRow.chapterSlug,
-      summary: chapterRow.chapterSummary
+      summary: chapterRow.chapterSummary,
+      examWeightage: chapterPattern
+        ? {
+            occurrenceCount: chapterPattern.occurrenceCount,
+            avgMarks: chapterPattern.avgMarks,
+            lastSeenYear: chapterPattern.lastSeenYear,
+            weightagePercentage: chapterPattern.weightagePercentage,
+            analysisWindowYears: chapterPattern.analysisWindowYears
+          }
+        : null,
+      revisionNotes: {
+        keyFormulas: chapterRevisionNotes?.keyFormulas ?? [],
+        keyDefinitions: chapterRevisionNotes?.keyDefinitions ?? [],
+        commonMistakes: chapterRevisionNotes?.commonMistakes ?? "",
+        examTips: chapterRevisionNotes?.examTips ?? ""
+      }
     },
     exercises: chapterExercises,
     flashcards: chapterFlashcards,
     quiz: quiz
-  });
+  }));
 });

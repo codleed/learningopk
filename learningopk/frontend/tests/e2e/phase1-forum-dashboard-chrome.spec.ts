@@ -47,8 +47,8 @@ test("forum keeps dashboard shell styling while showing authenticated left rail"
   await expect(page.getByRole("link", { name: "Home", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
 
-  await page.getByLabel("Search").fill("phase1-filter-check");
-  await page.getByRole("button", { name: "Apply filters" }).click();
+  await page.getByPlaceholder("Search threads...").fill("phase1-filter-check");
+  await page.getByPlaceholder("Search threads...").press("Enter");
   await expect(page).toHaveURL(/q=phase1-filter-check/);
 
   await page.goto("/dashboard");
@@ -84,8 +84,8 @@ test.describe("forum mobile layout", () => {
     await expect(page.getByLabel("Primary navigation")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Log out" })).toHaveCount(0);
 
-    await page.getByLabel("Search").fill("mobile-phase1-check");
-    await page.getByRole("button", { name: "Apply filters" }).click();
+    await page.getByPlaceholder("Search threads...").fill("mobile-phase1-check");
+    await page.getByPlaceholder("Search threads...").press("Enter");
     await expect(page).toHaveURL(/q=mobile-phase1-check/);
 
     await assertNoHorizontalOverflow(page);

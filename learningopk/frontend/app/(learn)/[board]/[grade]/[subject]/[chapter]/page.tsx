@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { AppShell } from "@/components/foundation/app-shell";
 import { PageHeader } from "@/components/common/page-header";
+import { ChapterWeightageBadge } from "@/components/learn/chapter-weightage-badge";
 import { ChapterProgressTracker } from "@/components/learn/chapter-progress-tracker";
 import { ChapterStudyWorkspace } from "@/components/learn/chapter-study-workspace";
 import { getChapterDetail } from "@/lib/learn-api";
@@ -15,7 +16,7 @@ const routeParamsSchema = z.object({
   chapter: z.string().trim().regex(/^[a-z0-9-]+$/)
 });
 
-const tabSchema = z.enum(["summary", "exercises", "flashcards", "quiz", "illustration"]).catch("summary");
+const tabSchema = z.enum(["summary", "quick-revision", "exercises", "flashcards", "quiz", "illustration"]).catch("summary");
 
 type ChapterPageProps = {
   params: Promise<{
@@ -24,7 +25,7 @@ type ChapterPageProps = {
     subject: string;
     chapter: string;
   }>;
-  searchParams: Promise<{ tab?: string; ai?: string }>;
+  searchParams: Promise<{ tab?: string; ai?: string; challengeId?: string }>;
 };
 
 export default async function ChapterPage({ params, searchParams }: ChapterPageProps) {
@@ -45,6 +46,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
   const query = await searchParams;
   const activeTab = tabSchema.parse(query.tab);
   const autoOpenAi = query.ai === "1";
+  const challengeId = typeof query.challengeId === "string" ? query.challengeId : undefined;
 
   const payload = await getChapterDetail(routeParams.data);
   if (!payload) {
@@ -55,6 +57,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
   const subjectPath = `/${payload.board.slug}/${payload.class.slug}/${payload.subject.slug}`;
   const tabs = [
     { key: "summary", label: "Summary", href: `${basePath}?tab=summary` },
+    { key: "quick-revision", label: "Quick Revision", href: `${basePath}?tab=quick-revision` },
     { key: "exercises", label: "Exercises", href: `${basePath}?tab=exercises` },
     { key: "flashcards", label: "Flashcards", href: `${basePath}?tab=flashcards` },
     {
@@ -87,6 +90,8 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
         {/* Progress tracker (invisible, fires event) */}
         <ChapterProgressTracker chapterId={payload.chapter.id} />
 
+        <ChapterWeightageBadge examWeightage={payload.chapter.examWeightage} />
+
         {/* Main workspace */}
         <ChapterStudyWorkspace
           boardName={payload.board.name}
@@ -102,11 +107,13 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
           chapterNumber={payload.chapter.chapterNumber}
           chapterTitle={payload.chapter.title}
           chapterSummary={payload.chapter.summary}
+          chapterRevisionNotes={payload.chapter.revisionNotes}
           exercises={payload.exercises}
           flashcards={payload.flashcards}
           quiz={payload.quiz}
           flashcardStorageKey={`learningopk:flashcards:${payload.board.slug}:${payload.class.slug}:${payload.subject.slug}:${payload.chapter.slug}`}
           autoOpenAi={autoOpenAi}
+          challengeId={challengeId}
         />
       </div>
     </AppShell>

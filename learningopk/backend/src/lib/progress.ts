@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 
 import { db } from "./db/index.js";
 import { userProgress } from "./db/schema.js";
+import { studyGroupsService } from "../services/study-groups.service.js";
 
 type ProgressEventBase = {
   userId: string;
@@ -140,6 +141,13 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
   const snapshot = await selectProgressById(existing.id);
   if (!snapshot) {
     throw new Error("Could not fetch updated user progress.");
+  }
+
+  if (input.eventType === "quiz_submit") {
+    await studyGroupsService.recordQuizScore({
+      userId: input.userId,
+      chapterId: input.chapterId
+    });
   }
 
   return snapshot;

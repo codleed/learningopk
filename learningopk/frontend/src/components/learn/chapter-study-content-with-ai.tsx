@@ -11,8 +11,9 @@ import { FlashcardDeck } from "./flashcard-deck";
 import { VirtualizedMarkdown } from "@/components/VirtualizedMarkdown";
 import { QuizRunner } from "./quiz-runner";
 import { QuestIllustrationView } from "./quest-illustration-view";
+import { QuickRevisionView } from "./quick-revision-view";
 
-type ChapterTab = "summary" | "exercises" | "flashcards" | "quiz" | "illustration";
+type ChapterTab = "summary" | "quick-revision" | "exercises" | "flashcards" | "quiz" | "illustration";
 
 type ChapterStudyContentWithAiProps = {
   activeTab: ChapterTab;
@@ -20,6 +21,7 @@ type ChapterStudyContentWithAiProps = {
   chapterTitle: string;
   chapterNumber?: number;
   summary: string;
+  revisionNotes: ChapterDetailResponse["chapter"]["revisionNotes"];
   subjectName?: string;
   exercises: ChapterDetailResponse["exercises"];
   illustrationExercises: ChapterDetailResponse["exercises"];
@@ -28,6 +30,7 @@ type ChapterStudyContentWithAiProps = {
   quiz: ChapterDetailResponse["quiz"];
   flashcardStorageKey: string;
   autoOpenAi?: boolean;
+  challengeId?: string;
   onPromptChange?: (prompt: string) => void;
 };
 
@@ -37,6 +40,7 @@ export function ChapterStudyContentWithAi({
   chapterTitle,
   chapterNumber,
   summary,
+  revisionNotes,
   subjectName,
   exercises,
   illustrationExercises,
@@ -45,6 +49,7 @@ export function ChapterStudyContentWithAi({
   quiz,
   flashcardStorageKey,
   autoOpenAi = false,
+  challengeId,
   onPromptChange,
 }: ChapterStudyContentWithAiProps) {
   /** Persist illustration exercise completion to gamification storage. */
@@ -81,6 +86,14 @@ export function ChapterStudyContentWithAi({
         </div>
       ) : null}
 
+      {activeTab === "quick-revision" ? (
+        <QuickRevisionView
+          chapterTitle={chapterTitle}
+          chapterNumber={chapterNumber}
+          revisionNotes={revisionNotes}
+        />
+      ) : null}
+
       {activeTab === "exercises" ? (
         <ChapterExercisesWithAi
           chapterId={chapterId}
@@ -98,7 +111,7 @@ export function ChapterStudyContentWithAi({
 
       {activeTab === "quiz" ? (
         quiz ? (
-          <QuizRunner quiz={quiz} subjectName={subjectName} chapterNumber={chapterNumber} chapterTitle={chapterTitle} />
+          <QuizRunner quiz={quiz} subjectName={subjectName} chapterNumber={chapterNumber} chapterTitle={chapterTitle} challengeId={challengeId} />
         ) : (
           <EmptyState
             title="Quiz unavailable"

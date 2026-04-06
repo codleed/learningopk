@@ -1,11 +1,50 @@
 import { z } from "zod";
 
+const boardOptionSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string(),
+  slug: z.string()
+});
+
+const boardClassOptionSchema = z.object({
+  id: z.number().int().positive(),
+  boardId: z.number().int().positive(),
+  name: z.string(),
+  slug: z.string()
+});
+
+const boardsResponseSchema = z.object({
+  boards: z.array(boardOptionSchema),
+  classes: z.array(boardClassOptionSchema)
+});
+
+const subjectListItemSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string(),
+  slug: z.string(),
+  grade: z.string().nullable(),
+  className: z.string().nullable(),
+  classSlug: z.string().nullable(),
+  boardClassId: z.number().int().positive().nullable(),
+  boardId: z.number().int().positive(),
+  boardName: z.string(),
+  boardSlug: z.string()
+});
+
+const subjectsListResponseSchema = z.object({
+  subjects: z.array(subjectListItemSchema)
+});
+
 const chapterListItemSchema = z.object({
   id: z.number().int().positive(),
   chapterNumber: z.number().int().positive(),
   title: z.string(),
   slug: z.string(),
-  isPublished: z.boolean()
+  isPublished: z.boolean(),
+  weightagePercentage: z.number().int().min(0).max(100).optional().default(0),
+  occurrenceCount: z.number().int().min(0).optional().default(0),
+  avgMarks: z.number().min(0).optional().default(0),
+  lastSeenYear: z.number().int().nullable().optional().default(null)
 });
 
 const subjectResponseSchema = z.object({
@@ -24,7 +63,16 @@ const subjectResponseSchema = z.object({
     name: z.string(),
     description: z.string()
   }),
-  chapters: z.array(chapterListItemSchema)
+  chapters: z.array(chapterListItemSchema),
+  recommendation: z
+    .object({
+      focusPercent: z.number().int().positive(),
+      chapterCount: z.number().int().positive(),
+      chapters: z.array(z.string())
+    })
+    .nullable()
+    .optional()
+    .default(null)
 });
 
 const subjectGraphResponseSchema = z.object({
@@ -70,7 +118,22 @@ const chapterDetailResponseSchema = z.object({
     chapterNumber: z.number().int().positive(),
     title: z.string(),
     slug: z.string(),
-    summary: z.string()
+    summary: z.string(),
+    examWeightage: z
+      .object({
+        occurrenceCount: z.number().int().min(0),
+        avgMarks: z.number().min(0),
+        lastSeenYear: z.number().int().nullable(),
+        weightagePercentage: z.number().int().min(0).max(100),
+        analysisWindowYears: z.number().int().min(0)
+      })
+      .nullable(),
+    revisionNotes: z.object({
+      keyFormulas: z.array(z.string()),
+      keyDefinitions: z.array(z.object({ term: z.string(), definition: z.string() })),
+      commonMistakes: z.string(),
+      examTips: z.string()
+    })
   }),
   exercises: z.array(
     z.object({
@@ -114,9 +177,54 @@ const chapterDetailResponseSchema = z.object({
     .nullable()
 });
 
+const patternAnalysisResponseSchema = z.object({
+  board: z.object({
+    id: z.number().int().positive(),
+    name: z.string(),
+    slug: z.string()
+  }),
+  subject: z.object({
+    id: z.number().int().positive(),
+    name: z.string(),
+    slug: z.string()
+  }),
+  grade: z.string(),
+  analysisWindowYears: z.number().int().min(0),
+  years: z.array(z.number().int()),
+  chapters: z.array(
+    z.object({
+      id: z.number().int().positive(),
+      chapterNumber: z.number().int().positive(),
+      title: z.string(),
+      slug: z.string(),
+      occurrenceCount: z.number().int().min(0),
+      avgMarks: z.number().min(0),
+      lastSeenYear: z.number().int().nullable(),
+      weightagePercentage: z.number().int().min(0).max(100),
+      trend: z.array(
+        z.object({
+          year: z.number().int(),
+          marks: z.number().min(0)
+        })
+      )
+    })
+  ),
+  recommendation: z
+    .object({
+      focusPercent: z.number().int().positive(),
+      chapterCount: z.number().int().positive(),
+      chapters: z.array(z.string())
+    })
+    .nullable()
+});
+
 export type SubjectResponse = z.infer<typeof subjectResponseSchema>;
 export type SubjectGraphResponse = z.infer<typeof subjectGraphResponseSchema>;
 export type ChapterDetailResponse = z.infer<typeof chapterDetailResponseSchema>;
+export type PatternAnalysisResponse = z.infer<typeof patternAnalysisResponseSchema>;
+export type BoardsResponse = z.infer<typeof boardsResponseSchema>;
+export type SubjectsListResponse = z.infer<typeof subjectsListResponseSchema>;
+export type SubjectListItem = z.infer<typeof subjectListItemSchema>;
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
@@ -149,6 +257,11 @@ const fetchLearnJson = async <T>(
   }
 
   const json = (await response.json()) as unknown;
+  const payloadSchema = z.object({ data: schema });
+  const parsed = payloadSchema.safeParse(json);
+  if (parsed.success) {
+    return parsed.data.data;
+  }
   return schema.parse(json);
 };
 
@@ -165,4 +278,19 @@ export const getChapterDetail = async (params: { board: string; grade: string; s
 export const getSubjectGraph = async (params: { board: string; grade: string; subject: string }) => {
   const url = `${backendUrl}/api/learn/${params.board}/${params.grade}/${params.subject}/graph`;
   return fetchLearnJson(url, subjectGraphResponseSchema, { includeCredentials: true });
+};
+
+export const getBoards = async (): Promise<BoardsResponse | null> => {
+  const url = `${backendUrl}/api/learn/boards`;
+  return fetchLearnJson(url, boardsResponseSchema);
+};
+
+export const getSubjectsList = async (): Promise<SubjectsListResponse | null> => {
+  const url = `${backendUrl}/api/learn/subjects`;
+  return fetchLearnJson(url, subjectsListResponseSchema);
+};
+
+export const getPatternAnalysis = async (params: { board: string; grade: string; subject: string }) => {
+  const url = `${backendUrl}/api/learn/patterns/${params.board}/${params.subject}?grade=${params.grade}`;
+  return fetchLearnJson(url, patternAnalysisResponseSchema);
 };

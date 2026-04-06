@@ -21,6 +21,8 @@ type ProgressClientResponse = {
   error?: string;
 };
 
+const isDev = process.env.NODE_ENV !== "production";
+
 export const trackProgressEvent = async (event: ProgressClientEvent): Promise<boolean> => {
   try {
     const response = await fetch(`${backendUrl}/api/progress/events`, {
@@ -37,7 +39,7 @@ export const trackProgressEvent = async (event: ProgressClientEvent): Promise<bo
       if (response.status === 401) {
         return false;
       }
-      if (payload?.error) {
+      if (isDev && payload?.error) {
         console.error(payload.error);
       }
       return false;

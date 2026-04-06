@@ -21,7 +21,7 @@ export type AIContext = {
   boardName: string;
   className: string;
   
-  currentTab: 'summary' | 'exercises' | 'flashcards' | 'quiz' | 'illustration';
+  currentTab: 'summary' | 'quick-revision' | 'exercises' | 'flashcards' | 'quiz' | 'illustration';
   currentExerciseId?: number;
   currentFlashcardIndex?: number;
   quizQuestionId?: number;
@@ -33,6 +33,11 @@ export type AIChatState = {
   isStreaming: boolean;
   isSending: boolean;
   error: string | null;
+  proactiveHint: {
+    topic: string;
+    message: string;
+    reasons: string[];
+  } | null;
   
   context: AIContext | null;
   

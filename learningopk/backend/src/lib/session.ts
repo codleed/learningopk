@@ -6,6 +6,7 @@ import { auth } from "./auth.js";
 import { db } from "./db/index.js";
 import { users } from "./db/schema.js";
 import { ServiceUnavailableError } from "./errors/index.js";
+import { logger } from "./logger.js";
 
 export type SessionResult = Awaited<ReturnType<typeof auth.api.getSession>>;
 
@@ -49,7 +50,7 @@ export const requireSession: RequestHandler = async (req, res, next) => {
     (req as AuthenticatedRequest).session = session;
     next();
   } catch (error) {
-    console.error("Session retrieval error:", error);
+    logger.error({ error }, "Session retrieval error");
     // Auth service or database error - treat as service unavailable
     res.status(503).json({
       error: "Authentication service unavailable",
@@ -65,7 +66,7 @@ export const getSessionFromRequest = async (req: Request): Promise<SessionResult
     });
     return session;
   } catch (error) {
-    console.error("Session retrieval error:", error);
+    logger.error({ error }, "Session retrieval error");
     // Throw service unavailable error so route can handle appropriately
     throw new ServiceUnavailableError("Authentication service unavailable.", "AUTH_SERVICE_UNAVAILABLE");
   }

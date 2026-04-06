@@ -1,15 +1,22 @@
-import { quizRepository } from "../repositories/quiz.repository.js";
+import { quizRepository, type QuizRepository } from "../repositories/quiz.repository.js";
 import type { QuizOption } from "../lib/quiz-scoring.js";
 import { getInvalidAnswerQuestionIds, scoreQuizSubmission } from "../lib/quiz-scoring.js";
 import { applyProgressEvent } from "../lib/progress.js";
 import { xpService } from "./xp.service.js";
 import { QUIZ_PASS_THRESHOLD_PERCENT } from "../lib/constants.js";
+import { aiContextRepository } from "../repositories/ai-context.repository.js";
 import {
   QuizNotFoundError,
   QuizNoQuestionsError,
   QuizAnswerMismatchError,
-  QuizAttemptSaveError
+  QuizAttemptSaveError,
+  QuizChallengeConflictError,
+  QuizChallengeExpiredError,
+  QuizChallengeNotFoundError
 } from "../lib/errors/index.js";
+
+const QUIZ_DUEL_EXPIRY_HOURS = 48;
+type DuelChallengeRow = Awaited<ReturnType<typeof quizRepository.findDuelChallengeById>>[number];
 
 export interface QuizQuestionRow {
   id: number;
@@ -31,7 +38,26 @@ export interface QuizSubmissionInput {
   quizId: number;
   answers: Record<string, "a" | "b" | "c" | "d">;
   startedAt?: string | undefined;
+  challengeId?: string | undefined;
   userId: string;
+}
+
+export interface QuizDuelParticipant {
+  userId: string;
+  name: string;
+  score: number;
+  totalMarks: number;
+  percentage: number;
+  completedAt: string;
+  isCurrentUser: boolean;
+}
+
+export interface QuizDuelResult {
+  challengeId: string;
+  status: "open" | "completed" | "expired";
+  expiresAt: string;
+  challenger: QuizDuelParticipant;
+  recipient: QuizDuelParticipant | null;
 }
 
 export interface SectionScore {
@@ -89,6 +115,7 @@ export interface QuizSubmissionResult {
     leveledUp: boolean;
   } | null;
   xpFailed?: boolean;
+  duel?: QuizDuelResult | undefined;
 }
 
 export class QuizService {
@@ -101,8 +128,126 @@ export class QuizService {
     return quizRepository.findQuestionsByQuizId(quizId);
   }
 
+  private toPercentage(score: number, totalMarks: number) {
+    if (totalMarks <= 0) {
+      return 0;
+    }
+
+    return Math.round((score / totalMarks) * 100);
+  }
+
+  private mapDuelResult(challenge: DuelChallengeRow, currentUserId: string): QuizDuelResult {
+    const challengerTotalMarks = challenge.challengerTotalMarks ?? 0;
+    const challengerScore = challenge.challengerScore ?? 0;
+
+    return {
+      challengeId: challenge.id,
+      status: challenge.expiresAt <= new Date() ? "expired" : challenge.recipientAttemptId ? "completed" : "open",
+      expiresAt: challenge.expiresAt.toISOString(),
+      challenger: {
+        userId: challenge.challengerUserId,
+        name: challenge.challengerName ?? "Challenger",
+        score: challengerScore,
+        totalMarks: challengerTotalMarks,
+        percentage: this.toPercentage(challengerScore, challengerTotalMarks),
+        completedAt: challenge.challengerCompletedAt?.toISOString() ?? challenge.createdAt.toISOString(),
+        isCurrentUser: challenge.challengerUserId === currentUserId
+      },
+      recipient: challenge.recipientAttemptId
+        ? {
+            userId: challenge.recipientUserId ?? "",
+            name: challenge.recipientName ?? "Friend",
+            score: challenge.recipientScore ?? 0,
+            totalMarks: challenge.recipientTotalMarks ?? 0,
+            percentage: this.toPercentage(challenge.recipientScore ?? 0, challenge.recipientTotalMarks ?? 0),
+            completedAt: challenge.recipientCompletedAt?.toISOString() ?? challenge.createdAt.toISOString(),
+            isCurrentUser: challenge.recipientUserId === currentUserId
+          }
+        : null
+    };
+  }
+
+  async createQuizDuelChallenge(input: { quizId: number; attemptId: string; userId: string }) {
+    const quizRow = await this.getQuizById(input.quizId);
+    if (!quizRow) {
+      throw new QuizNotFoundError();
+    }
+
+    if (quizRow.type !== "chapter_quiz") {
+      throw new QuizChallengeConflictError("Only chapter quiz results can be challenged.");
+    }
+
+    const attemptRows = await quizRepository.findAttemptById(input.attemptId);
+    const attempt = attemptRows[0] ?? null;
+
+    if (!attempt || attempt.userId !== input.userId || attempt.quizId !== input.quizId) {
+      throw new QuizChallengeConflictError("Challenge can only be created from your own attempt for this quiz.");
+    }
+
+    const expiresAt = new Date(Date.now() + QUIZ_DUEL_EXPIRY_HOURS * 60 * 60 * 1000);
+    const createdRows = await quizRepository.createDuelChallenge({
+      quizId: input.quizId,
+      challengerUserId: input.userId,
+      challengerAttemptId: input.attemptId,
+      expiresAt
+    });
+    const created = createdRows[0];
+
+    if (!created) {
+      throw new QuizAttemptSaveError("Could not create quiz challenge");
+    }
+
+    return {
+      challengeId: created.id,
+      quizId: created.quizId,
+      expiresAt: created.expiresAt.toISOString(),
+      createdAt: created.createdAt.toISOString()
+    };
+  }
+
+  async getQuizDuelChallenge(input: { challengeId: string; userId: string }) {
+    const challengeRows = await quizRepository.findDuelChallengeById(input.challengeId);
+    const challenge = challengeRows[0] ?? null;
+
+    if (!challenge) {
+      throw new QuizChallengeNotFoundError();
+    }
+
+    return this.mapDuelResult(challenge, input.userId);
+  }
+
   async submitQuiz(input: QuizSubmissionInput): Promise<QuizSubmissionResult> {
-    const { quizId, answers, startedAt, userId } = input;
+    const { quizId, answers, startedAt, challengeId, userId } = input;
+
+    let challengeBeforeSubmit: DuelChallengeRow | null = null;
+    if (challengeId) {
+      const challengeRows = await quizRepository.findDuelChallengeById(challengeId);
+      challengeBeforeSubmit = challengeRows[0] ?? null;
+
+      if (!challengeBeforeSubmit) {
+        throw new QuizChallengeNotFoundError();
+      }
+
+      if (challengeBeforeSubmit.expiresAt <= new Date()) {
+        throw new QuizChallengeExpiredError();
+      }
+
+      if (challengeBeforeSubmit.quizId !== quizId) {
+        throw new QuizChallengeConflictError();
+      }
+
+      if (challengeBeforeSubmit.challengerUserId === userId) {
+        throw new QuizChallengeConflictError("You cannot accept your own challenge.");
+      }
+
+      if (challengeBeforeSubmit.recipientUserId && challengeBeforeSubmit.recipientUserId !== userId) {
+        throw new QuizChallengeConflictError("This challenge has already been accepted.");
+      }
+
+      if (challengeBeforeSubmit.recipientAttemptId) {
+        throw new QuizChallengeConflictError("This challenge has already been completed.");
+      }
+    }
 
     const quizRow = await this.getQuizById(quizId);
     if (!quizRow) {
@@ -258,6 +403,40 @@ export class QuizService {
       }
     }
 
+    // Quiz failure hook — add weak topics to AI context for low-scoring chapters
+    // This runs async and does not block the response
+    if (percentage < 50 && weakAreas.length > 0) {
+      try {
+        for (const area of weakAreas) {
+          await aiContextRepository.addWeakTopic(userId, area.chapterTitle);
+        }
+      } catch (error) {
+        console.error("Failed to update AI context with quiz weak areas:", error);
+      }
+    }
+
+    let duel: QuizDuelResult | undefined;
+    if (challengeId && challengeBeforeSubmit) {
+      const attachedRows = await quizRepository.attachRecipientToDuelChallenge({
+        challengeId,
+        recipientUserId: userId,
+        recipientAttemptId: insertedAttempt.id
+      });
+
+      if (attachedRows.length === 0) {
+        throw new QuizChallengeConflictError("This challenge has already been completed.");
+      }
+
+      const challengeAfterRows = await quizRepository.findDuelChallengeById(challengeId);
+      const challengeAfter = challengeAfterRows[0] ?? null;
+
+      if (!challengeAfter) {
+        throw new QuizChallengeNotFoundError();
+      }
+
+      duel = this.mapDuelResult(challengeAfter, userId);
+    }
+
     return {
       attemptId: insertedAttempt.id,
       quizId,
@@ -272,7 +451,8 @@ export class QuizService {
       sectionScores,
       weakAreas,
       xp: xpResult,
-      xpFailed
+      xpFailed,
+      ...(duel ? { duel } : {})
     };
   }
 }

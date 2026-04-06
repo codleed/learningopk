@@ -1,15 +1,16 @@
 "use client";
 
-import { BookOpen, Dumbbell, Layers, HelpCircle, Atom, Check } from "lucide-react";
+import { BookOpen, Dumbbell, Layers, HelpCircle, Atom, Check, NotebookPen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
-type ChapterTab = "summary" | "exercises" | "flashcards" | "quiz" | "illustration";
+type ChapterTab = "summary" | "quick-revision" | "exercises" | "flashcards" | "quiz" | "illustration";
 
 interface TabStatus {
   summary: boolean;
+  quickRevision: boolean;
   exercises: number;
   totalExercises: number;
   flashcards: number;
@@ -31,6 +32,7 @@ const TAB_CONFIG: Array<{
   icon: typeof BookOpen;
 }> = [
   { key: "summary", label: "Study", icon: BookOpen },
+  { key: "quick-revision", label: "Quick Revision", icon: NotebookPen },
   { key: "exercises", label: "Training", icon: Dumbbell },
   { key: "flashcards", label: "Memory", icon: Layers },
   { key: "quiz", label: "Challenge", icon: HelpCircle },
@@ -42,6 +44,8 @@ export function QuestTabBar({ activeTab, baseHref, status }: QuestTabBarProps) {
     switch (key) {
       case "summary":
         return status.summary;
+      case "quick-revision":
+        return status.quickRevision;
       case "exercises":
         return status.totalExercises > 0 && status.exercises >= status.totalExercises;
       case "flashcards":

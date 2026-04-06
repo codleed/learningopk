@@ -19,6 +19,7 @@ export function AdminAnalyticsPanel({ initialPayload }: AdminAnalyticsPanelProps
   const [windowDays, setWindowDays] = useState<WindowDays>(initialPayload.windowDays);
   const [summary, setSummary] = useState(initialPayload.summary);
   const [subjectRows, setSubjectRows] = useState(initialPayload.subjectPerformance);
+  const [confusionRows, setConfusionRows] = useState(initialPayload.confusionByChapter);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { pushToast } = useToast();
 
@@ -32,6 +33,7 @@ export function AdminAnalyticsPanel({ initialPayload }: AdminAnalyticsPanelProps
       setWindowDays(payload.windowDays);
       setSummary(payload.summary);
       setSubjectRows(payload.subjectPerformance);
+      setConfusionRows(payload.confusionByChapter);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to refresh analytics.";
       pushToast({
@@ -89,9 +91,36 @@ export function AdminAnalyticsPanel({ initialPayload }: AdminAnalyticsPanelProps
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Open moderation flags</p>
             <p className="mt-1 text-xl font-semibold text-foreground">{summary.openModerationFlags}</p>
           </div>
+          <div className="rounded-lg border border-border bg-card p-3 sm:col-span-2 xl:col-span-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Confusion events</p>
+            <p className="mt-1 text-xl font-semibold text-foreground">{summary.confusionEvents}</p>
+          </div>
         </div>
 
         <AdminAnalyticsSubjectTable rows={subjectRows} />
+
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="mb-3">
+            <h3 className="text-sm font-semibold text-foreground">Confusion patterns by chapter</h3>
+            <p className="text-sm text-muted-foreground">Shows where proactive hints are firing most often.</p>
+          </div>
+
+          {confusionRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No confusion patterns recorded in this window.</p>
+          ) : (
+            <div className="space-y-2">
+              {confusionRows.map((row) => (
+                <div key={row.chapterId} className="flex items-center justify-between rounded-lg border border-border/80 px-3 py-2">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{row.chapterTitle}</p>
+                    <p className="text-xs text-muted-foreground">{row.subjectName}</p>
+                  </div>
+                  <div className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">{row.count}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </SectionCard>
   );

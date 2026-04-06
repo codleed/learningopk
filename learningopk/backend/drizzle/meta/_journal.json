@@ -99,6 +99,83 @@
       "when": 1775094857345,
       "tag": "0013_tearful_spot",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1775411913745,
+      "tag": "0014_sloppy_alex_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1775412913745,
+      "tag": "0015_revision_notes",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1775415300000,
+      "tag": "0016_formula_library",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1775448000000,
+      "tag": "0017_streak_wagers",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1775451600000,
+      "tag": "0018_leaderboard_privacy",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1775462400000,
+      "tag": "0019_daily_momentum_goals",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1775473200000,
+      "tag": "0020_ai_confusion_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1775476800000,
+      "tag": "0021_ai_model_fallback_strategy",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1775480400000,
+      "tag": "0020_exam_pattern_analysis",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1775491200000,
+      "tag": "0022_study_groups",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1775494800000,
+      "tag": "0023_quiz_duel_challenges",
+      "breakpoints": true
     }
   ]
 }

@@ -192,7 +192,7 @@ export class ForumRepository {
 
   async voteReply(params: { replyId: string; userId: string; voteType: "upvote" | "downvote" }) {
     const replyRows = await db
-      .select({ id: forumReplies.id })
+      .select({ id: forumReplies.id, threadId: forumReplies.threadId })
       .from(forumReplies)
       .where(eq(forumReplies.id, params.replyId))
       .limit(1);
@@ -200,6 +200,8 @@ export class ForumRepository {
     if (replyRows.length === 0) {
       throw new Error("Reply not found");
     }
+
+    const replyThreadId = replyRows[0]?.threadId;
 
     const updatedUpvotes = await db.transaction(async (tx) => {
       const existingVotes = await tx
@@ -250,6 +252,11 @@ export class ForumRepository {
 
     if (updatedUpvotes === null) {
       throw new HttpError(500, "Unable to update vote.");
+    }
+
+    // Purge cached thread detail (vote counts changed)
+    if (replyThreadId) {
+      void cacheService.delete(CacheKeys.forumThreadDetail(replyThreadId));
     }
 
     return { replyId: params.replyId, voteType: params.voteType, upvotes: updatedUpvotes };
@@ -304,6 +311,9 @@ export class ForumRepository {
         .where(eq(forumThreads.id, reply.threadId));
     });
 
+    // Purge cached thread detail (accepted answer / solved state changed)
+    void cacheService.delete(CacheKeys.forumThreadDetail(reply.threadId));
+
     return {
       replyId: params.replyId,
       threadId: reply.threadId,
@@ -342,6 +352,9 @@ export class ForumRepository {
     if (!insertedThread) {
       throw new Error("Unable to create thread.");
     }
+
+    // Purge forum thread list caches (new thread invalidates any filtered list)
+    void cacheService.invalidatePattern("forum:threads:*");
 
     return {
       thread: {
@@ -382,6 +395,9 @@ export class ForumRepository {
     if (!insertedReply) {
       throw new Error("Unable to create reply.");
     }
+
+    // Purge cached thread detail (reply count / content changed)
+    void cacheService.delete(CacheKeys.forumThreadDetail(data.threadId));
 
     return { reply: insertedReply };
   }

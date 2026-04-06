@@ -1,23 +1,43 @@
-import { streamText, type ModelMessage } from "ai";
+import { type ModelMessage, generateText } from "ai";
 import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import { Router } from "express";
 import { z } from "zod";
 
 import { db } from "../lib/db/index.js";
-import { aiChatSessions, aiMessages, aiUsageLogs, boards, chapters, exercises, subjects } from "../lib/db/schema.js";
+import {
+  aiChatSessions,
+  aiConversationEvents,
+  aiMessages,
+  aiUsageLogs,
+  boards,
+  chapters,
+  exercises,
+  subjects
+} from "../lib/db/schema.js";
+import { buildProactiveHint, detectConfusionPattern, getConfusionTopicLabel } from "../lib/ai-confusion.js";
 import { env } from "../lib/env.js";
 import { consumeAiChatRateLimit, moderateAiInput } from "../lib/ai-guardrails.js";
+import { extractConversationConcepts } from "../lib/ai-concept-extractor.js";
+import { logger } from "../lib/logger.js";
+import { startSpan, endSpan } from "../lib/performance.js";
 import {
   buildTutorSystemPrompt,
   inferFailedAttempts,
   MISTRAL_COMPLETION_MAX_TOKENS,
-  MISTRAL_MODEL_ID,
-  mistralModel,
+  getMistralModel,
+  getMistralModelId,
   MISTRAL_TEMPERATURE,
   type ChatMessage,
-  type TutorChapterContext
+  type TutorMode,
+  type TutorChapterContext,
+  type TutorPersonalContext
 } from "../lib/mistral.js";
+import { aiContextRepository } from "../repositories/ai-context.repository.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
+import { learningPathService } from "../services/learning-path.service.js";
+import { progressService } from "../services/progress.service.js";
+import { createAiModelStrategy } from "../services/ai-model-strategy.js";
+import { getCachedAiResponse, readAiCircuitState, setCachedAiResponse, writeAiCircuitState } from "../services/ai-model-strategy.store.js";
 
 const chatMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -26,6 +46,7 @@ const chatMessageSchema = z.object({
 
 const chatInputSchema = z.object({
   messages: z.array(chatMessageSchema).min(1).max(40),
+  mode: z.enum(["explain", "socratic"]).default("explain"),
   chapterId: z.number().int().positive().optional(),
   sessionId: z.string().uuid().optional()
 });
@@ -139,10 +160,45 @@ const buildSessionTitle = (chapterContext: ChapterContextPayload | null, latestP
   return truncateTitle(latestPrompt);
 };
 
+const aiModelStrategy = createAiModelStrategy({
+  readCircuitState: async () => readAiCircuitState(),
+  writeCircuitState: async ({ state }) => writeAiCircuitState(state),
+  getCachedResponse: async ({ normalizedPrompt }) => getCachedAiResponse(normalizedPrompt),
+  setCachedResponse: async ({ normalizedPrompt, responseText }) => setCachedAiResponse(normalizedPrompt, responseText),
+  invokeModel: async ({ tier, system, messages, maxOutputTokens, temperature }) => {
+    const model = getMistralModel(tier);
+    const modelId = getMistralModelId(tier);
+    const result = await generateText({
+      model,
+      system,
+      messages: messages as ModelMessage[],
+      maxOutputTokens,
+      temperature
+    });
+
+    return {
+      text: result.text,
+      model: modelId,
+      modelTier: tier,
+      promptTokens: result.usage.inputTokens ?? 0,
+      completionTokens: result.usage.outputTokens ?? 0
+    };
+  },
+  sleep: async (delayMs) => {
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+});
+
 export const aiChatRouter = Router();
 
 const sessionParamsSchema = z.object({
   sessionId: z.string().uuid()
+});
+
+const proactiveHintHeaderSchema = z.object({
+  topic: z.string(),
+  message: z.string(),
+  reasons: z.array(z.string())
 });
 
 aiChatRouter.get("/sessions", requireSession, async (req, res) => {
@@ -206,9 +262,27 @@ aiChatRouter.get("/sessions/:sessionId/messages", requireSession, async (req, re
     .where(eq(aiMessages.sessionId, sessionRow.id))
     .orderBy(asc(aiMessages.createdAt));
 
+  const latestConfusionEventRows = await db
+    .select({
+      metadata: aiConversationEvents.metadata
+    })
+    .from(aiConversationEvents)
+    .where(and(eq(aiConversationEvents.sessionId, sessionRow.id), eq(aiConversationEvents.eventType, "confusion_detected")))
+    .orderBy(desc(aiConversationEvents.createdAt))
+    .limit(1);
+
+  const latestConfusionEvent = proactiveHintHeaderSchema.safeParse(latestConfusionEventRows[0]?.metadata);
+
   res.status(200).json({
     session: sessionRow,
-    messages: messageRows
+    messages: messageRows,
+    proactiveHint: latestConfusionEvent.success
+      ? {
+          topic: latestConfusionEvent.data.topic,
+          message: latestConfusionEvent.data.message,
+          reasons: latestConfusionEvent.data.reasons
+        }
+      : null
   });
 });
 
@@ -227,7 +301,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
     return;
   }
 
-  const { messages, chapterId, sessionId } = parsed.data;
+  const { messages, chapterId, mode, sessionId } = parsed.data;
   const latestUserMessage = [...messages].reverse().find((message) => message.role === "user");
   if (!latestUserMessage) {
     res.status(400).json({
@@ -252,7 +326,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
   try {
     rateLimit = await consumeAiChatRateLimit(userId);
   } catch (error) {
-    console.error("AI rate limit check failed:", error);
+    logger.error({ error }, "AI rate limit check failed");
     res.status(503).json({
       error: "AI rate limiting is temporarily unavailable."
     });
@@ -342,10 +416,81 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
 
   await db.update(aiChatSessions).set({ lastMessageAt: new Date() }).where(eq(aiChatSessions.id, sessionRow.id));
 
+  const persistedMessageRows = await db
+    .select({
+      role: aiMessages.role,
+      content: aiMessages.content
+    })
+    .from(aiMessages)
+    .where(eq(aiMessages.sessionId, sessionRow.id))
+    .orderBy(asc(aiMessages.createdAt));
+
+  const confusionResult = detectConfusionPattern({
+    messages: persistedMessageRows as ChatMessage[]
+  });
+  const proactiveHint = confusionResult.triggered
+    ? {
+        topic: getConfusionTopicLabel(chapterContext?.context ?? fallbackContext),
+        message: buildProactiveHint(getConfusionTopicLabel(chapterContext?.context ?? fallbackContext)),
+        reasons: confusionResult.reasons
+      }
+    : null;
+
+  if (proactiveHint) {
+    await db.insert(aiConversationEvents).values({
+      sessionId: sessionRow.id,
+      eventType: "confusion_detected",
+      metadata: {
+        topic: proactiveHint.topic,
+        message: proactiveHint.message,
+        reasons: proactiveHint.reasons,
+        chapterId: chapterContext?.chapterId ?? sessionRow.chapterId ?? null
+      }
+    });
+  }
+
   const failedAttempts = inferFailedAttempts(messages as ChatMessage[]);
+
+  // Fetch personal AI context for the user (non-blocking on failure)
+  let personalContext: TutorPersonalContext | undefined;
+  try {
+    const [aiCtx, learningPath, adaptiveWeakAreas] = await Promise.all([
+      aiContextRepository.findByUserId(userId),
+      learningPathService.getLearningPath(userId, {
+        boardSlug: authedReq.session.user.board ?? null,
+        classSlug: authedReq.session.user.class ?? null
+      }),
+      progressService.getAdaptiveWeakAreaLabels(userId, 5)
+    ]);
+
+    const mergedWeakAreas = Array.from(new Set([...adaptiveWeakAreas, ...learningPath.studentWeakAreas])).slice(0, 5);
+
+    if (aiCtx) {
+      personalContext = {
+        weakTopics: aiCtx.weakTopics,
+        strongTopics: aiCtx.strongTopics,
+        studentWeakAreas: mergedWeakAreas,
+        preferredExplanationStyle: aiCtx.preferredExplanationStyle,
+        lastConceptsDiscussed: aiCtx.lastConceptsDiscussed
+      };
+    } else if (mergedWeakAreas.length > 0) {
+      personalContext = {
+        weakTopics: [],
+        strongTopics: [],
+        studentWeakAreas: mergedWeakAreas,
+        preferredExplanationStyle: "balanced",
+        lastConceptsDiscussed: []
+      };
+    }
+  } catch (error) {
+    logger.error({ error }, "Failed to fetch AI context for user");
+  }
+
   const systemPrompt = buildTutorSystemPrompt({
     context: chapterContext?.context ?? fallbackContext,
-    failedAttempts
+    failedAttempts,
+    mode: mode as TutorMode,
+    ...(personalContext ? { personalContext } : {}),
   });
 
   const modelMessages: ModelMessage[] = messages.map((message) => ({
@@ -353,64 +498,84 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
     content: message.content
   }));
 
-  let providerStreamError: string | null = null;
+  let providerError: string | null = null;
+  const aiSpan = startSpan("ai.chat.generate", "ai.call");
 
-  const result = streamText({
-    model: mistralModel,
-    system: systemPrompt,
-    messages: modelMessages,
-    maxOutputTokens: MISTRAL_COMPLETION_MAX_TOKENS,
-    temperature: MISTRAL_TEMPERATURE,
-    onError: ({ error }) => {
-      providerStreamError = error instanceof Error ? error.message : "Unknown provider streaming error.";
-    },
-    onFinish: async (event) => {
-      const assistantText = event.text.trim();
-      if (assistantText.length > 0) {
-        await db.insert(aiMessages).values({
-          sessionId: sessionRow.id,
-          role: "assistant",
-          content: assistantText
-        });
-      }
-
-      await db.insert(aiUsageLogs).values({
-        userId,
-        sessionId: sessionRow.id,
-        model: MISTRAL_MODEL_ID,
-        promptTokens: event.totalUsage.inputTokens ?? 0,
-        completionTokens: event.totalUsage.outputTokens ?? 0
-      });
-
-      await db.update(aiChatSessions).set({ lastMessageAt: new Date() }).where(eq(aiChatSessions.id, sessionRow.id));
-    }
-  });
-
-  let streamedAtLeastOneChunk = false;
   try {
-    for await (const chunk of result.textStream) {
-      if (!streamedAtLeastOneChunk) {
-        res.status(200);
-        res.setHeader("content-type", "text/plain; charset=utf-8");
-        res.setHeader("x-ai-session-id", sessionRow.id);
-      }
-      streamedAtLeastOneChunk = true;
-      res.write(chunk);
-    }
-  } catch (error) {
-    console.error("AI provider streaming error:", error);
-    providerStreamError = error instanceof Error ? error.message : "Unknown provider streaming error.";
-  } finally {
-    if (!streamedAtLeastOneChunk) {
-      res.status(502).json({
-        error: providerStreamError ?? "Failed to stream AI response from the provider.",
-        sessionId: sessionRow.id
+    const result = await aiModelStrategy.generate({
+      prompt: latestUserMessage.content,
+      messages: modelMessages as ChatMessage[],
+      system: systemPrompt,
+      maxOutputTokens: MISTRAL_COMPLETION_MAX_TOKENS,
+      temperature: MISTRAL_TEMPERATURE,
+    });
+
+    const assistantText = result.text.trim();
+    if (assistantText.length > 0) {
+      await db.insert(aiMessages).values({
+        sessionId: sessionRow.id,
+        role: "assistant",
+        content: assistantText
       });
-      return;
     }
 
-    if (!res.writableEnded) {
-      res.end();
+    await db.insert(aiUsageLogs).values({
+      userId,
+      sessionId: sessionRow.id,
+      modelTier: result.modelTier,
+      model: result.model,
+      promptTokens: result.promptTokens,
+      completionTokens: result.completionTokens
+    });
+
+    await db.update(aiChatSessions).set({ lastMessageAt: new Date() }).where(eq(aiChatSessions.id, sessionRow.id));
+
+    if (assistantText.length > 0) {
+      try {
+        const extraction = extractConversationConcepts(latestUserMessage.content, assistantText);
+
+        if (extraction.conceptsDiscussed.length > 0) {
+          await aiContextRepository.updateLastConcepts(userId, extraction.conceptsDiscussed);
+        }
+
+        for (const weakTopic of extraction.weakTopicCandidates) {
+          await aiContextRepository.addWeakTopic(userId, weakTopic);
+        }
+
+        if (extraction.hasStrongSignal && extraction.conceptsDiscussed.length > 0) {
+          const ctx = await aiContextRepository.findByUserId(userId);
+          if (ctx) {
+            for (const concept of extraction.conceptsDiscussed) {
+              const normalizedConcept = concept.trim().toLowerCase();
+              if (ctx.weakTopics.includes(normalizedConcept)) {
+                await aiContextRepository.removeWeakTopic(userId, normalizedConcept);
+                await aiContextRepository.addStrongTopic(userId, normalizedConcept);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        logger.error({ error }, "AI concept extraction failed (non-critical)");
+      }
     }
+
+    res.status(200);
+    res.setHeader("content-type", "text/plain; charset=utf-8");
+    res.setHeader("x-ai-session-id", sessionRow.id);
+    res.setHeader("x-ai-model-tier", result.modelTier);
+    if (proactiveHint) {
+      res.setHeader("x-ai-proactive-hint", encodeURIComponent(JSON.stringify(proactiveHint)));
+    }
+    res.write(assistantText);
+    res.end();
+  } catch (error) {
+    logger.error({ error }, "AI provider generation error");
+    providerError = error instanceof Error ? error.message : "Unknown provider generation error.";
+    res.status(502).json({
+      error: providerError ?? "Failed to generate AI response from the provider.",
+      sessionId: sessionRow.id
+    });
+  } finally {
+    endSpan(aiSpan);
   }
 });

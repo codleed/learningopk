@@ -11,6 +11,9 @@ test("All repositories are exported and initialized", () => {
 });
 
 test("LearnRepository has required methods", () => {
+  assert.ok(typeof learnRepository.findAllBoards === "function");
+  assert.ok(typeof learnRepository.findAllBoardClasses === "function");
+  assert.ok(typeof learnRepository.findAllSubjectsWithBoard === "function");
   assert.ok(typeof learnRepository.findAllSubjects === "function");
   assert.ok(typeof learnRepository.findSubjectByRoute === "function");
   assert.ok(typeof learnRepository.findChaptersBySubject === "function");

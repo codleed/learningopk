@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/toast";
 import { ContentRenderer } from "@/components/common/content-renderer";
 import { Sheet, SheetHeader, SheetBody, SheetFooter, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Tabs, TabList, TabTrigger, TabContent } from "@/components/ui/tabs";
@@ -56,6 +57,7 @@ type ForumThreadFormProps = {
 
 export const ForumThreadForm = ({ subjects, chapters, isOpen, closeHref }: ForumThreadFormProps) => {
   const router = useRouter();
+  const { pushToast } = useToast();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [subjectId, setSubjectId] = useState("");
@@ -116,44 +118,54 @@ export const ForumThreadForm = ({ subjects, chapters, isOpen, closeHref }: Forum
     }
 
     setIsPending(true);
-    const response = await fetch(`${backendUrl}/api/forum/threads`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "content-type": "application/json"
-      },
-      body: JSON.stringify(parsed.data)
-    });
-    const responseBody = (await response.json().catch(() => null)) as unknown;
-    setIsPending(false);
+    try {
+      const response = await fetch(`${backendUrl}/api/forum/threads`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(parsed.data)
+      });
+      const responseBody = (await response.json().catch(() => null)) as unknown;
 
-    if (response.status === 401) {
-      setError("You must sign in before creating a thread.");
-      return;
+      if (response.status === 401) {
+        setError("You must sign in before creating a thread.");
+        return;
+      }
+
+      if (!response.ok) {
+        const parsedError = z
+          .object({
+            error: z.string()
+          })
+          .safeParse(responseBody);
+        setError(parsedError.success ? parsedError.data.error : "Thread creation failed.");
+        return;
+      }
+
+      const parsedResponse = createThreadResponseSchema.safeParse(responseBody);
+      if (!parsedResponse.success) {
+        setError("Thread was created but the response payload was invalid.");
+        return;
+      }
+
+      setTitle("");
+      setBody("");
+      setSubjectId("");
+      setChapterId("");
+      router.push(`/forum/${parsedResponse.data.thread.id}`);
+      router.refresh();
+    } catch {
+      setError("Network error. Check your connection and try again.");
+      pushToast({
+        title: "Failed to create thread",
+        description: "The server could not be reached. Please try again.",
+        tone: "error"
+      });
+    } finally {
+      setIsPending(false);
     }
-
-    if (!response.ok) {
-      const parsedError = z
-        .object({
-          error: z.string()
-        })
-        .safeParse(responseBody);
-      setError(parsedError.success ? parsedError.data.error : "Thread creation failed.");
-      return;
-    }
-
-    const parsedResponse = createThreadResponseSchema.safeParse(responseBody);
-    if (!parsedResponse.success) {
-      setError("Thread was created but the response payload was invalid.");
-      return;
-    }
-
-    setTitle("");
-    setBody("");
-    setSubjectId("");
-    setChapterId("");
-    router.push(`/forum/${parsedResponse.data.thread.id}`);
-    router.refresh();
   };
 
   return (

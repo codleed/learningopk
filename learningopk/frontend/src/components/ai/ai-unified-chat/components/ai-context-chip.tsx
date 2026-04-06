@@ -1,6 +1,6 @@
 'use client';
 
-import { Atom, BookOpen, HelpCircle, Layers, FileQuestion } from 'lucide-react';
+import { Atom, BookOpen, HelpCircle, Layers, FileQuestion, NotebookPen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AIContext } from '../types';
 
@@ -11,6 +11,7 @@ type AIContextChipProps = {
 
 const tabIcons = {
   summary: BookOpen,
+  'quick-revision': NotebookPen,
   exercises: HelpCircle,
   flashcards: Layers,
   quiz: FileQuestion,
@@ -19,6 +20,7 @@ const tabIcons = {
 
 const tabLabels = {
   summary: 'Summary',
+  'quick-revision': 'Quick Revision',
   exercises: 'Exercises',
   flashcards: 'Flashcards',
   quiz: 'Quiz',

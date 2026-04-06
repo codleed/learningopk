@@ -1,7 +1,18 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
-import { boards, chapters, quizAttempts, quizzes, subjects, userProgress } from "../lib/db/schema.js";
+import { withOptionalDbFallback } from "../lib/db-schema-compat.js";
+import {
+  boards,
+  chapters,
+  exercises,
+  quizAttempts,
+  quizQuestions,
+  quizzes,
+  subjects,
+  userDailyMomentumGoals,
+  userProgress
+} from "../lib/db/schema.js";
 
 export class ProgressRepository {
   async findChapterById(chapterId: number) {
@@ -13,43 +24,91 @@ export class ProgressRepository {
   }
 
   async findSubjectBySlug(boardSlug: string, grade: "9" | "10", subjectSlug: string) {
-    return db
-      .select({
-        subjectId: subjects.id,
-        subjectSlug: subjects.slug,
-        subjectName: subjects.name,
-        grade: subjects.grade,
-        boardName: boards.name
-      })
-      .from(subjects)
-      .innerJoin(boards, eq(subjects.boardId, boards.id))
-      .where(
-        and(
-          eq(boards.slug, boardSlug),
-          eq(subjects.grade, grade),
-          eq(subjects.slug, subjectSlug)
-        )
-      )
-      .orderBy(asc(subjects.id))
-      .limit(1);
+    return withOptionalDbFallback(
+      "subjects.exam_date.findSubjectBySlug",
+      () =>
+        db
+          .select({
+            subjectId: subjects.id,
+            subjectSlug: subjects.slug,
+            subjectName: subjects.name,
+            grade: subjects.grade,
+            boardName: boards.name,
+            boardSlug: boards.slug,
+            examDate: subjects.examDate
+          })
+          .from(subjects)
+          .innerJoin(boards, eq(subjects.boardId, boards.id))
+          .where(
+            and(
+              eq(boards.slug, boardSlug),
+              eq(subjects.grade, grade),
+              eq(subjects.slug, subjectSlug)
+            )
+          ),
+      () =>
+        db
+          .select({
+            subjectId: subjects.id,
+            subjectSlug: subjects.slug,
+            subjectName: subjects.name,
+            grade: subjects.grade,
+            boardName: boards.name,
+            boardSlug: boards.slug,
+            examDate: sql<Date | null>`null`
+          })
+          .from(subjects)
+          .innerJoin(boards, eq(subjects.boardId, boards.id))
+          .where(
+            and(
+              eq(boards.slug, boardSlug),
+              eq(subjects.grade, grade),
+              eq(subjects.slug, subjectSlug)
+            )
+          )
+    );
   }
 
   async findChaptersBySubject(subjectId: number, userId: string) {
-    return db
-      .select({
-        chapterId: chapters.id,
-        chapterNumber: chapters.chapterNumber,
-        chapterTitle: chapters.title,
-        chapterSlug: chapters.slug,
-        visitedAt: userProgress.visitedAt,
-        exercisesViewed: userProgress.exercisesViewed,
-        quizAttemptsCount: userProgress.quizAttemptsCount,
-        quizBestScore: userProgress.quizBestScore
-      })
-      .from(chapters)
-      .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
-      .where(and(eq(chapters.subjectId, subjectId), eq(chapters.isPublished, true)))
-      .orderBy(asc(chapters.chapterNumber));
+    return withOptionalDbFallback(
+      "subjects.exam_date.findChaptersBySubject",
+      () =>
+        db
+          .select({
+            chapterId: chapters.id,
+            chapterNumber: chapters.chapterNumber,
+            chapterTitle: chapters.title,
+            chapterSlug: chapters.slug,
+            visitedAt: userProgress.visitedAt,
+            exercisesViewed: userProgress.exercisesViewed,
+            quizAttemptsCount: userProgress.quizAttemptsCount,
+            quizBestScore: userProgress.quizBestScore,
+            examDate: subjects.examDate
+          })
+          .from(chapters)
+          .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+          .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+          .where(and(eq(chapters.subjectId, subjectId), eq(chapters.isPublished, true)))
+          .orderBy(asc(chapters.chapterNumber)),
+      () =>
+        db
+          .select({
+            chapterId: chapters.id,
+            chapterNumber: chapters.chapterNumber,
+            chapterTitle: chapters.title,
+            chapterSlug: chapters.slug,
+            visitedAt: userProgress.visitedAt,
+            exercisesViewed: userProgress.exercisesViewed,
+            quizAttemptsCount: userProgress.quizAttemptsCount,
+            quizBestScore: userProgress.quizBestScore,
+            examDate: sql<Date | null>`null`
+          })
+          .from(chapters)
+          .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+          .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+          .where(and(eq(chapters.subjectId, subjectId), eq(chapters.isPublished, true)))
+          .orderBy(asc(chapters.chapterNumber))
+    );
   }
 
   async findQuizTotalMarksBySubject(subjectId: number) {
@@ -73,6 +132,16 @@ export class ProgressRepository {
       })
       .from(userProgress)
       .where(eq(userProgress.userId, userId));
+  }
+
+  async hasActivityInRange(userId: string, startUtc: Date, endUtc: Date) {
+    const rows = await db
+      .select({ id: userProgress.id })
+      .from(userProgress)
+      .where(and(eq(userProgress.userId, userId), gte(userProgress.visitedAt, startUtc), lt(userProgress.visitedAt, endUtc)))
+      .limit(1);
+
+    return rows.length > 0;
   }
 
   async findRecentChapterVisits(userId: string, limit = 5) {
@@ -155,23 +224,163 @@ export class ProgressRepository {
   }
 
   async findSubjectProgress(userId: string) {
+    return withOptionalDbFallback(
+      "subjects.exam_date.findSubjectProgress",
+      () =>
+        db
+          .select({
+            subjectId: subjects.id,
+            subjectSlug: subjects.slug,
+            subjectName: subjects.name,
+            grade: subjects.grade,
+            boardName: boards.name,
+            boardSlug: boards.slug,
+            chapterId: chapters.id,
+            visitedAt: userProgress.visitedAt,
+            quizBestScore: userProgress.quizBestScore,
+            quizAttemptsCount: userProgress.quizAttemptsCount,
+            chapterNumber: chapters.chapterNumber,
+            chapterSlug: chapters.slug,
+            chapterTitle: chapters.title,
+            examDate: subjects.examDate
+          })
+          .from(subjects)
+          .innerJoin(boards, eq(subjects.boardId, boards.id))
+          .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
+          .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+          .orderBy(asc(subjects.name), asc(chapters.chapterNumber)),
+      () =>
+        db
+          .select({
+            subjectId: subjects.id,
+            subjectSlug: subjects.slug,
+            subjectName: subjects.name,
+            grade: subjects.grade,
+            boardName: boards.name,
+            boardSlug: boards.slug,
+            chapterId: chapters.id,
+            visitedAt: userProgress.visitedAt,
+            quizBestScore: userProgress.quizBestScore,
+            quizAttemptsCount: userProgress.quizAttemptsCount,
+            chapterNumber: chapters.chapterNumber,
+            chapterSlug: chapters.slug,
+            chapterTitle: chapters.title,
+            examDate: sql<Date | null>`null`
+          })
+          .from(subjects)
+          .innerJoin(boards, eq(subjects.boardId, boards.id))
+          .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
+          .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+          .orderBy(asc(subjects.name), asc(chapters.chapterNumber))
+    );
+  }
+
+  async findQuizAttemptsForSubjects(userId: string, subjectIds: number[]) {
+    if (subjectIds.length === 0) {
+      return [];
+    }
+
     return db
       .select({
+        attemptId: quizAttempts.id,
+        quizId: quizAttempts.quizId,
+        answers: quizAttempts.answers,
+        completedAt: quizAttempts.completedAt,
         subjectId: subjects.id,
         subjectSlug: subjects.slug,
         subjectName: subjects.name,
         grade: subjects.grade,
-        boardName: boards.name,
         boardSlug: boards.slug,
         chapterId: chapters.id,
-        visitedAt: userProgress.visitedAt,
-        quizBestScore: userProgress.quizBestScore
+        chapterSlug: chapters.slug,
+        chapterTitle: chapters.title
       })
-      .from(subjects)
+      .from(quizAttempts)
+      .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
+      .innerJoin(chapters, eq(quizzes.chapterId, chapters.id))
+      .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
       .innerJoin(boards, eq(subjects.boardId, boards.id))
-      .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
-      .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
-      .orderBy(asc(subjects.name), asc(chapters.chapterNumber));
+      .where(and(eq(quizAttempts.userId, userId), inArray(subjects.id, subjectIds)))
+      .orderBy(desc(quizAttempts.completedAt));
+  }
+
+  async findQuizQuestionsForQuizzes(quizIds: number[]) {
+    if (quizIds.length === 0) {
+      return [];
+    }
+
+    return db
+      .select({
+        questionId: quizQuestions.id,
+        quizId: quizQuestions.quizId,
+        chapterId: quizQuestions.chapterId,
+        question: quizQuestions.question,
+        correctOption: quizQuestions.correctOption
+      })
+      .from(quizQuestions)
+      .where(inArray(quizQuestions.quizId, quizIds));
+  }
+
+  async findExercisesForChapters(chapterIds: number[]) {
+    if (chapterIds.length === 0) {
+      return [];
+    }
+
+    return db
+      .select({
+        exerciseId: exercises.id,
+        chapterId: exercises.chapterId,
+        exerciseNumber: exercises.exerciseNumber,
+        question: exercises.question
+      })
+      .from(exercises)
+      .where(inArray(exercises.chapterId, chapterIds))
+      .orderBy(asc(exercises.chapterId), asc(exercises.exerciseNumber));
+  }
+
+  async findDailyMomentumGoal(userId: string, dateKey: string) {
+    const rows = await db
+      .select({
+        id: userDailyMomentumGoals.id,
+        dateKey: userDailyMomentumGoals.dateKey,
+        focusType: userDailyMomentumGoals.focusType,
+        chapterId: userDailyMomentumGoals.chapterId,
+        xpAwarded: userDailyMomentumGoals.xpAwarded,
+        completedAt: userDailyMomentumGoals.completedAt,
+      })
+      .from(userDailyMomentumGoals)
+      .where(and(eq(userDailyMomentumGoals.userId, userId), eq(userDailyMomentumGoals.dateKey, dateKey)))
+      .limit(1);
+
+    return rows[0] ?? null;
+  }
+
+  async createDailyMomentumGoal(input: {
+    userId: string;
+    dateKey: string;
+    focusType: string;
+    chapterId: number | null;
+    xpAwarded: number;
+  }) {
+    const rows = await db
+      .insert(userDailyMomentumGoals)
+      .values({
+        userId: input.userId,
+        dateKey: input.dateKey,
+        focusType: input.focusType,
+        chapterId: input.chapterId,
+        xpAwarded: input.xpAwarded,
+      })
+      .returning({
+        id: userDailyMomentumGoals.id,
+        dateKey: userDailyMomentumGoals.dateKey,
+        focusType: userDailyMomentumGoals.focusType,
+        chapterId: userDailyMomentumGoals.chapterId,
+        xpAwarded: userDailyMomentumGoals.xpAwarded,
+        completedAt: userDailyMomentumGoals.completedAt,
+      });
+
+    return rows[0] ?? null;
   }
 }
 

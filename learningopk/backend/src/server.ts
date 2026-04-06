@@ -4,27 +4,28 @@ import helmet from "helmet";
 import { pathToFileURL } from "node:url";
 
 import { env } from "./lib/env.js";
+import { logger, createRequestLogger } from "./lib/logger.js";
+import { correlationMiddleware } from "./middleware/correlation.js";
+import { sentryErrorHandler, captureException } from "./lib/sentry.js";
 import { errorResponse } from "./lib/response.js";
 import { isHttpError } from "./lib/errors/index.js";
 import { authRateLimiter, globalRateLimiter } from "./middleware/rate-limits.js";
 import { adminRouter } from "./routes/admin.js";
 import { aiChatRouter } from "./routes/ai-chat.js";
+import { aiContextRouter } from "./routes/ai-context.js";
 import { authRouter } from "./routes/auth.js";
+import { flashcardReviewsRouter } from "./routes/flashcard-reviews.js";
 import { forumRouter } from "./routes/forum.js";
-import { healthRouter } from "./routes/health.js";
+import { formulasRouter } from "./routes/formulas.js";
+import { healthRouter, performanceRouter } from "./routes/health.js";
+import { leaderboardRouter } from "./routes/leaderboard.js";
 import { learnRouter } from "./routes/learn.js";
 import { chapterMediaRouter } from "./routes/chapter-media.js";
 import { profileRouter } from "./routes/profile.js";
 import { progressRouter } from "./routes/progress.js";
 import { quizRouter } from "./routes/quiz.js";
 import { mockExamsRouter } from "./routes/mock-exams.js";
-import { createAnalyticsWorker } from "./workers/analytics.worker.js";
-import { createEmailWorker } from "./workers/email.worker.js";
-import { createCleanupWorker } from "./workers/cleanup.worker.js";
-
-let analyticsWorker: ReturnType<typeof createAnalyticsWorker> | null = null;
-let emailWorker: ReturnType<typeof createEmailWorker> | null = null;
-let cleanupWorker: ReturnType<typeof createCleanupWorker> | null = null;
+import { studyGroupsRouter } from "./routes/study-groups.js";
 
 export const createApp = () => {
   const app = express();
@@ -35,11 +36,17 @@ export const createApp = () => {
   // Security headers
   app.use(helmet());
 
+  // Correlation ID middleware (before everything else so all logs are tagged)
+  app.use(correlationMiddleware);
+
+  // Request logging middleware (logs start/finish with timing)
+  app.use(createRequestLogger());
+
   app.use(
     cors({
       origin: env.FRONTEND_ORIGIN,
       credentials: true,
-      exposedHeaders: ["x-ai-session-id", "x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset"]
+      exposedHeaders: ["x-ai-session-id", "x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset", "x-correlation-id"]
     })
   );
 
@@ -71,18 +78,27 @@ export const createApp = () => {
 
   app.use("/api/health", healthRouter);
   app.use("/api/learn", learnRouter);
+  app.use("/api/leaderboard", leaderboardRouter);
   app.use("/api/ai", aiChatRouter);
+  app.use("/api/ai", aiContextRouter);
   app.use("/api/admin", adminRouter);
   app.use("/api/forum", forumRouter);
+  app.use("/api/formulas", formulasRouter);
   app.use("/api/quiz", quizRouter);
   app.use("/api/mock-exams", mockExamsRouter);
   app.use("/api/progress", progressRouter);
+  app.use("/api/study-groups", studyGroupsRouter);
+  app.use("/api/flashcard-reviews", flashcardReviewsRouter);
   app.use("/api/users", profileRouter);
   app.use("/api/admin/content", chapterMediaRouter);
+  app.use("/api/admin", performanceRouter);
 
   app.get("/api/ready", (_req, res) => {
     res.status(200).json({ ok: true });
   });
+
+  // Sentry error handler (captures errors before the global handler)
+  app.use(sentryErrorHandler);
 
   // Global error handler — catches unhandled errors from route handlers
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -91,7 +107,8 @@ export const createApp = () => {
       return;
     }
 
-    console.error("Unhandled error:", err);
+    logger.error({ error: err }, "Unhandled error");
+    captureException(err);
     res.status(500).json(errorResponse("Internal server error", "INTERNAL_ERROR"));
   });
 
@@ -103,21 +120,33 @@ const isDirectRun = process.argv[1] ? import.meta.url === pathToFileURL(process.
 if (isDirectRun) {
   const app = createApp();
 
-  analyticsWorker = createAnalyticsWorker();
-  emailWorker = createEmailWorker();
-  cleanupWorker = createCleanupWorker();
+  // Workers are loaded dynamically so that importing this module (e.g. in
+  // tests or scripts via createApp) does not start BullMQ workers or open
+  // long-lived Redis connections.
+  const { createAnalyticsWorker } = await import("./workers/analytics.worker.js");
+  const { createEmailWorker } = await import("./workers/email.worker.js");
+  const { createCleanupWorker } = await import("./workers/cleanup.worker.js");
+  const { closeAllQueues } = await import("./lib/queue.js");
+
+  const analyticsWorker = createAnalyticsWorker();
+  const emailWorker = createEmailWorker();
+  const cleanupWorker = createCleanupWorker();
 
   const server = app.listen(Number(env.PORT), () => {
-    console.log(`Backend listening on http://localhost:${env.PORT}`);
+    logger.info(`Backend listening on http://localhost:${env.PORT}`);
   });
 
   const shutdown = () => {
-    console.log("Shutting down workers...");
-    analyticsWorker?.close();
-    emailWorker?.close();
-    cleanupWorker?.close();
-    server.close();
-    process.exit(0);
+    logger.info("Shutting down workers...");
+    Promise.all([
+      analyticsWorker.close(),
+      emailWorker.close(),
+      cleanupWorker.close(),
+      closeAllQueues(),
+    ]).finally(() => {
+      server.close();
+      process.exit(0);
+    });
   };
 
   process.on("SIGINT", shutdown);

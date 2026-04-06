@@ -489,29 +489,21 @@ components/auth/
 ├── hero-illustration.tsx     # Learning theme SVG
 ├── form-field.tsx            # Reusable field wrapper
 ├── password-input.tsx        # Password with toggle
-├── login-form.tsx           # Login form
-├── register-form.tsx        # Registration form
-├── forgot-password-form.tsx # Password reset request
-├── reset-password-form.tsx  # New password form
-├── bento-auth-shell.tsx     # OLD - can be removed
-└── bento-auth-field.tsx     # OLD - can be removed
+├── login-page-client.tsx    # Login page (split-panel layout)
+└── register-page-client.tsx # Registration page (multi-step wizard)
 ```
+
+> **Removed (TASK-57):** `login-form.tsx`, `register-form.tsx`, `bento-auth-shell.tsx`, `bento-auth-field.tsx`, `forgot-password-form.tsx`, `reset-password-form.tsx` — all replaced by the `*-page-client.tsx` components above.
 
 ---
 
 ## Migration from Old Design
 
-If migrating other screens from the old bento design:
+The old bento design components have been removed. The current auth pages use `login-page-client.tsx` and `register-page-client.tsx` directly.
 
-1. Replace `BentoAuthShell` with `AuthLayout`
-2. Replace `BentoAuthField` with `FormField`
-3. Update input classes:
-   - `rounded-full` → `rounded-lg`
-   - `h-11` → `h-12`
-   - `border-[#d7e6c8]` → `border-slate-200`
-   - Add `focus:border-[#7ac943] focus:ring-2 focus:ring-[#7ac943]/20`
-4. Update button classes:
-   - Remove `shadow-[0_14px_24px_-18px_rgba(122,201,67,0.9)]`
-   - Add `shadow-sm hover:shadow-md`
-5. Add HeroIllustration to left panel
-6. Update color tokens to use slate palette
+Previous migration notes (for reference):
+
+1. `BentoAuthShell` and `BentoAuthField` have been removed
+2. `FormField` (from `form-field.tsx`) is still used by `password-input.tsx`
+3. Input classes use the current design system (`Input` from `@/components/ui/input`)
+4. Button classes use the current design system (`Button` from `@/components/ui/button`)

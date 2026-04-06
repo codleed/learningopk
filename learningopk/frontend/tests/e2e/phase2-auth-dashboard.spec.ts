@@ -182,19 +182,18 @@ test("login and register keep left rail hidden for guests", async ({ page }) => 
   await expect(page.getByRole("button", { name: "Log out" })).toHaveCount(0);
 });
 
-test("bento auth shell presents standalone login and register pages", async ({ page }) => {
+test("auth pages present standalone login and register screens", async ({ page }) => {
   await page.goto("/login");
   await expect(page.getByRole("heading", { name: "Welcome Back" })).toBeVisible();
-  await expect(page.getByText("Bento Box", { exact: true })).toBeVisible();
-  await expect(page.getByText("Or continue with")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Create account" })).toBeVisible();
+  await expect(page.getByText("or")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign up" })).toBeVisible();
   await expect(page.getByText(/all rights reserved/i)).toBeVisible();
   await expect(page.getByLabel("Primary navigation")).toHaveCount(0);
 
   await page.goto("/register");
-  await expect(page.getByRole("heading", { name: "Create your student account" })).toBeVisible();
-  await expect(page.getByText("Bento Box", { exact: true })).toBeVisible();
-  await expect(page.getByText(/terms of service/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Create Account" })).toBeVisible();
+  await expect(page.getByText(/Terms of Service/i)).toBeVisible();
   await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
   await expect(page.getByText(/all rights reserved/i)).toBeVisible();
   await expect(page.getByLabel("Primary navigation")).toHaveCount(0);

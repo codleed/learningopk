@@ -181,104 +181,13 @@ _No tasks in progress yet. Pick from Todo below._
 
 ---
 
-#### TASK-62 🔵
-
-**Title:** Preserve forum filter state across search, solved toggles, and advanced filters
-**Phase:** 11 — Code Review Follow-Ups
-**Priority:** Medium
-**Depends on:** TASK-18
-**Acceptance Criteria:**
-
-- [ ] Forum search keeps the active solved, board, class, subject, and chapter filters unless the user changes them
-- [ ] Solved/unsolved quick filters preserve the current board/class/subject/chapter query state
-- [ ] Applying advanced forum filters preserves the active search query when present
-- [ ] Forum E2E coverage verifies combined filter interactions instead of only isolated controls
-- [ ] Forum Playwright assertions use the current UI contract for search and thread-composer entry points
-
-> **Partial Progress:** Forum filter state preservation utilities (`forum-filter-utils.ts`, `useForumFilters.ts`) merged to main (`c32464d`). Remaining: E2E coverage for combined filter interactions and Playwright assertions for search + solved toggle + advanced filters.
-
----
-
-#### TASK-63 🔵
-
-**Title:** Harden forum mutation UX and prevent inflated thread view metrics
-**Phase:** 11 — Code Review Follow-Ups
-**Priority:** Medium
-**Depends on:** TASK-18, TASK-19
-**Acceptance Criteria:**
-
-- [ ] Forum thread/reply/vote/accept actions handle fetch rejection paths without leaving the UI stuck in a pending state
-- [ ] Forum mutations surface a clear user-facing error when the backend is unreachable
-- [ ] Posting, voting, or accepting a reply does not inflate thread view counts purely because the page refreshes server components
-- [ ] Thread-view counting semantics are made explicit in code and verified by automated coverage
-- [ ] Forum mutation failure and post-mutation detail refresh behavior are covered by tests
-
 ---
 
 ### Phase 8 — Growth Features (Medium 🔵)
 
 ---
 
-#### TASK-25 🔵
-
-**Title:** Study groups
-**Phase:** 8 — Growth
-**Priority:** Medium
-**Depends on:** TASK-17
-**Acceptance Criteria:**
-
-- [ ] Students create a group (name + invite by username/email)
-- [ ] Max 6 members per group
-- [ ] Group page shows: each member's chapter completion %, quiz scores, streak
-- [ ] No real-time chat — async only
-- [ ] Notifications when a group member completes a chapter or beats your quiz score
-
 ---
-
-#### TASK-26 🔵
-
-**Title:** Quiz duel — challenge a friend
-**Phase:** 8 — Growth
-**Priority:** Medium
-**Depends on:** TASK-12
-**Acceptance Criteria:**
-
-- [ ] "Challenge a friend" button on chapter quiz result page
-- [ ] Generates a shareable link with `challengeId`
-- [ ] Recipient opens link, takes the same 10 questions
-- [ ] Both scores shown side-by-side on result page
-- [ ] Challenge expires after 48 hours
-
----
-
-#### TASK-27 🔵
-
-**Title:** Adaptive weak-spot detection
-**Phase:** 8 — Growth
-**Priority:** Medium
-**Depends on:** TASK-12, TASK-14
-**Acceptance Criteria:**
-
-- [ ] After 3+ quiz attempts on a subject, analyse wrong answers by topic/exercise tag
-- [ ] Surface "Your weak areas" card on dashboard per subject
-- [ ] Weak areas link directly to relevant exercises
-- [ ] AI teacher context updated to mention weak areas in system prompt
-
----
-
-#### TASK-28 🔵
-
-**Title:** Exam countdown + auto revision schedule
-**Phase:** 8 — Growth
-**Priority:** Medium
-**Depends on:** TASK-17
-**Acceptance Criteria:**
-
-- [ ] Student inputs board exam dates on dashboard
-- [ ] Platform generates a day-by-day revision schedule (which chapters on which day)
-- [ ] Schedule accounts for: remaining chapters, quiz scores, available days
-- [ ] Schedule shown as a calendar grid on dashboard
-- [ ] Daily reminder notification (browser push or email)
 
 ---
 
@@ -386,215 +295,13 @@ _No tasks in progress yet. Pick from Todo below._
 
 ---
 
-#### TASK-40 🟠
-
-**Title:** Structured Content Caching Layer
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-39
-**Acceptance Criteria:**
-
-- [ ] Cache-aside pattern with typed keys, JSON serialization, and TTL management (static: 1hr, user: 5min, analytics: 15min)
-- [ ] Automatic cache purge hooks on content mutations via repository pattern
-- [ ] Cache statistics endpoint exposing hit rates, miss rates, and eviction counts
-- [ ] Dashboard query optimization with background refresh before TTL expiry
-
-> **Note:** TASK-51B delivered the core Redis caching layer (typed keys, TTL management, cache-through pattern). This task covers remaining items: automatic cache purge hooks on content mutations, cache statistics endpoint, and background refresh before TTL expiry.
+---
 
 ---
 
-#### TASK-41 🟠
-
-**Title:** Error Monitoring & Observability Infrastructure
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-04
-**Acceptance Criteria:**
-
-- [ ] Sentry integration with automatic error capture, stack traces, and source map resolution
-- [ ] Structured JSON logs with correlation IDs, log levels, and request timing spans
-- [ ] Performance monitoring: custom spans for DB queries, AI calls, and cache operations with p50/p95/p99 tracking
-- [ ] Health check enhancement: `/api/health/live` and `/api/health/ready` reporting PostgreSQL, Redis, MinIO, AI status
-
 ---
 
-#### TASK-42 🟠
-
-**Title:** Spaced Repetition Flashcard System (SRS)
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-11
-**Acceptance Criteria:**
-
-- [ ] SM-2 algorithm calculating next review date per card
-- [ ] `flashcard_reviews` table: `card_id`, `user_id`, `interval_days`, `ease_factor`, `next_review_date`
-- [ ] Dashboard "Review Now" button shows overdue flashcards based on `next_review_date`
-- [ ] After flip, user rates recall: "Again / Hard / Good / Easy" (4 buttons, CSS-only)
-- [ ] System calculates next review: Easy = +3 days, Good = +2 days, Hard = +1 day, Again = reset to today
-
 ---
-
-#### TASK-43 🟠
-
-**Title:** AI Tutor Memory & Personal Context
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-14
-**Acceptance Criteria:**
-
-- [ ] New `ai_context` table: `user_id`, `weak_topics`, `strong_topics`, `preferred_explanation_style`, `last_concepts_discussed`
-- [ ] System prompt includes user context: "Student struggles with [topic]. Prefers [visual/examples]."
-- [ ] AI messages parsed post-stream to extract concepts and auto-update `weak_topics`/`strong_topics`
-- [ ] Dashboard shows "AI remembers: You struggle with trigonometry" card with edit option
-- [ ] On quiz failure, AI tutor proactively references: "I see you scored 45% on Motion..."
-
----
-
-#### TASK-44 🟠
-
-**Title:** Learning Path from Weak Areas
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-16, TASK-14
-**Acceptance Criteria:**
-
-- [ ] Endpoint `GET /api/ai/learning-path` generates prioritized chapter list based on weak topics
-- [ ] Weighted scoring: quiz scores (50%), exercises viewed (30%), AI session engagement (20%)
-- [ ] Returns `{recommendedChapters: [{chapterId, priority, reason, estimatedTime}]}`
-- [ ] Dashboard displays "Focus Areas" widget with top 3 recommended chapters and one-click "Start practicing"
-- [ ] AI tutor context includes `studentWeakAreas` for proactive intervention
-
----
-
-#### TASK-45 🟠
-
-**Title:** Revision Notes & Quick Reference Cards
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-10
-**Acceptance Criteria:**
-
-- [ ] New `revision_notes` table: `chapter_id`, `key_formulas` (jsonb), `key_definitions` (jsonb), `common_mistakes`, `exam_tips`
-- [ ] Admin panel form to add revision notes per chapter
-- [ ] Chapter page new "Quick Revision" tab showing condensed notes (90% shorter than full summary)
-- [ ] Revision notes render with KaTeX formula highlighting and warning badges for common mistakes
-- [ ] "Download as PDF" button generates single-page cheat sheet for offline printing
-
----
-
-#### TASK-46 🟠
-
-**Title:** Formula Library Centralized Repository
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-07
-**Acceptance Criteria:**
-
-- [ ] New `formulas` table: `subject_id`, `chapter_id`, `name`, `formula_latex`, `description`, `variables`, `tags`
-- [ ] Formula Library page (`/formulas`) with filters: subject, chapter, topic tag
-- [ ] Full-text search by formula name or description (tsvector)
-- [ ] Formula cards render with KaTeX, expandable explanation, and "Copy LaTeX" button
-- [ ] Students can star formulas for personal quick-access (`user_starred_formulas` join table)
-- [ ] Dashboard shows "Your Starred Formulas" widget with top 5 by access frequency
-
----
-
-#### TASK-47 🟠
-
-**Title:** Daily Momentum Micro-Goal Engine
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-17
-**Acceptance Criteria:**
-
-- [ ] On dashboard load, display ONE "Today's Focus" card with a single micro-goal
-- [ ] Micro-goal algorithm prioritizes: (a) chapters with <50% quiz score, (b) streak-at-risk days, (c) unvisited chapters closest to exam date
-- [ ] Goal includes "Quick Start" button that deep-links directly to the action
-- [ ] Completion shows celebratory animation with XP bonus (+5 to +15 XP depending on difficulty)
-- [ ] Ramadan Mode: Micro-goals auto-adjust to shorter sessions (3-5 minutes) during fasting hours
-
----
-
-#### TASK-48 🟠
-
-**Title:** Streak Wager System (Loss Aversion Engine)
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-22
-**Acceptance Criteria:**
-
-- [ ] On streak ≥ 3 days, show "Streak Lock" modal: "Lock in your streak! Wager 25-100 XP to protect it for 24 hours"
-- [ ] Student selects wager amount; wagered XP temporarily deducted from balance
-- [ ] If daily goal completed before midnight PKT, wager returns +50% bonus
-- [ ] If goal missed, wagered XP permanently lost and streak broken
-- [ ] Streak freeze from TASK-22 can be used once to recover from broken wager
-- [ ] "Streak at Risk" warning at 8 PM PKT if no wager set and streak ≥ 5 days
-
----
-
-#### TASK-49 🟠
-
-**Title:** Leaderboard & Competitive Benchmarking
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-22
-**Acceptance Criteria:**
-
-- [ ] Leaderboard API: `GET /api/leaderboard?scope=global|board|school&metric=xp|streak|quizzes`
-- [ ] Leaderboard page (`/leaderboard`) with tabbed views: Global, Your Board, Your Grade
-- [ ] Each entry shows: Rank, Avatar, Name, XP/Level, Streak, Weekly Change
-- [ ] Student sees their rank in context: "You're ranked #847 of 12,391 students"
-- [ ] Leaderboard updates every 5 minutes to reduce DB load
-- [ ] Reward system: Top 100 badges shown on profile (Bronze/Silver/Gold badge CSS)
-- [ ] Privacy: Students can opt out of public leaderboard
-
----
-
-#### TASK-50 🟠
-
-**Title:** Exam Pattern Analysis (Topic Weightage)
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-24, TASK-21
-**Acceptance Criteria:**
-
-- [ ] `exam_analysis` table: `board_id`, `subject_id`, `chapter_id`, `occurrence_count`, `avg_marks`, `last_seen_year`
-- [ ] Chapter page shows "Board Exam Weightage" badge: "This chapter appeared in 85% of past 5 board exams (avg 12 marks)"
-- [ ] Subject page shows chapters sorted by weightage with visual bar indicating importance
-- [ ] Pattern page (`/patterns/[board]/[subject]`) shows 5-year trend graph per topic
-- [ ] Study recommendation: "Focus 60% of your time on these 3 high-weight chapters: [list]"
-
----
-
-#### TASK-51 🟠
-
-**Title:** Model Fallback Strategy for Cost & Reliability
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-14
-**Acceptance Criteria:**
-
-- [ ] Three-tier model strategy: `mistral-tiny` for simple Q&A, `mistral-small` for standard tutoring, `mistral-medium` for complex explanations
-- [ ] Query classification within 50ms: simple (<50 tokens, factual recall) vs. complex (multi-step reasoning)
-- [ ] Automatic fallback chain with 3 retry attempts and exponential backoff
-- [ ] Circuit breaker pattern: after 5 consecutive failures in 1 minute, switch to cached response mode
-- [ ] Cost tracking per tier in `ai_usage_logs` with `modelTier` column
-
----
-
-#### TASK-52 🟠
-
-**Title:** Proactive Confusion Detection & Hints
-**Phase:** 10 — Enhancements
-**Priority:** High
-**Depends on:** TASK-14
-**Acceptance Criteria:**
-
-- [ ] Pattern detection triggers: ≥3 consecutive user messages under 15 characters, ≥2 identical wrong answers, or off-topic keywords
-- [ ] System injects proactive hint: "It looks like you're working through [topic]. Would you like me to break this down differently?"
-- [ ] New `ai_conversation_events` table logs: `sessionId`, `eventType`, `metadata`
-- [ ] Frontend shows subtle "Need a hint?" button that appears after confusion patterns detected
-- [ ] Analytics dashboard shows confusion patterns by chapter for content improvement insights
 
 ---
 
@@ -812,6 +519,34 @@ _Completed tasks are moved here by the coding agent._
 
 ### Phase 8 — Growth Features (Medium 🔵)
 
+#### TASK-25 ✅
+
+**Title:** Study groups
+**Phase:** 8 — Growth
+**Priority:** Medium
+**Evidence:** Added authenticated study groups API and pages with immediate invite resolution by username/email, 6-member cap, member progress/streak summaries, and async group activity notifications
+
+#### TASK-26 ✅
+
+**Title:** Quiz duel — challenge a friend
+**Phase:** 8 — Growth
+**Priority:** Medium
+**Evidence:** Added `quiz_duel_challenges`, shareable challenge links from quiz results, logged-in recipient duel flow using the same chapter quiz, side-by-side duel results, and 48-hour expiry enforcement
+
+#### TASK-27 ✅
+
+**Title:** Adaptive weak-spot detection
+**Phase:** 8 — Growth
+**Priority:** Medium
+**Evidence:** Added historical subject weak-area aggregation after 3+ attempts, dashboard weak-areas card with direct exercise links, and AI tutor prompt context enriched with adaptive weak areas
+
+#### TASK-28 ✅
+
+**Title:** Exam countdown + auto revision schedule
+**Phase:** 8 — Growth
+**Priority:** Medium
+**Evidence:** Reused `subjects.examDate`; added per-subject read-time revision plan generation from chapters, progress, and quiz scores; dashboard planner widget with exam-date input, countdown, calendar grid, and visible today reminder; local in-app reminder toast on dashboard open
+
 #### TASK-29 ✅
 
 **Title:** Admin panel — content management
@@ -921,6 +656,182 @@ _Completed tasks are moved here by the coding agent._
 **Phase:** Frontend — UI Fix
 **Priority:** Low
 **Evidence:** Resolved sidebar icon centering and navigation issues in left rail; PR #11 merged
+
+---
+
+### Phase 11 — Code Review Follow-Ups (Completed)
+
+#### TASK-53 ✅
+
+**Title:** Decouple backend app creation from worker and Redis side effects
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Evidence:** `backend/src/lib/queue.ts` refactored with lazy singleton factories (`getRedisConnection()`, `getAnalyticsQueue()`); workers dynamically imported in `server.ts`; no module-level Redis side effects
+
+#### TASK-54 ✅
+
+**Title:** Separate auth outage handling from unauthenticated redirects
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Evidence:** `ServiceUnavailable` component for auth outage; error boundaries detect `AUTH_SERVICE_UNAVAILABLE`; `session.ts` and `proxy.ts` distinguish auth failures from missing sessions
+
+#### TASK-55 ✅
+
+**Title:** Decouple signup and student routing from forum filter metadata
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Evidence:** New `GET /api/learn/boards` and `GET /api/learn/subjects` endpoints; registration and subjects pages use learn API instead of forum filters
+
+#### TASK-56 ✅
+
+**Title:** Resolve password reset contract mismatch
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Evidence:** Removed "Forgot password?" link from login; created ADR-064 documenting password reset disabled until `sendResetPassword` implemented
+
+#### TASK-57 ✅
+
+**Title:** Repair auth review drift in tests, docs, and dead auth UI
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Evidence:** Deleted 3 dead auth component files; updated api-contracts.md; auth tests use correct locators
+
+#### TASK-58 ✅
+
+**Title:** Fix SSR personalization gaps and formalize student route protection matrix
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Evidence:** `getForumThreadById()` forwards cookies for SSR; created route-protection-matrix.md
+
+#### TASK-59 ✅
+
+**Title:** Lock mock exam solutions behind actual exam completion
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Evidence:** Frontend uses structured `MockExamApiError` for 403 detection; backend already had completion check
+
+#### TASK-60 ✅
+
+**Title:** Replace ambiguous subject-slug progress routing with scoped subject identity
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** High
+**Evidence:** Route restructured from `[subject]` to `[boardSlug]/[grade]/[subjectSlug]`; repository selects `boardSlug`; removed `limit(1)`
+
+#### TASK-61 ✅
+
+**Title:** Fix forum thread validation contracts and preserve accurate error statuses
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Evidence:** Comprehensive integration tests documenting forum thread creation validation contract
+
+#### TASK-62 ✅
+
+**Title:** Preserve forum filter state across search, solved toggles, and advanced filters
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Evidence:** Search form preserves active filters via hidden inputs; E2E tests for 8 combined filter interaction scenarios; Playwright assertions updated to match current UI contract
+
+#### TASK-63 ✅
+
+**Title:** Harden forum mutation UX and prevent inflated thread view metrics
+**Phase:** 11 — Code Review Follow-Ups
+**Priority:** Medium
+**Evidence:** Dedicated `POST /threads/:threadId/view` endpoint; client-side `ForumThreadViewTracker` fires once on mount; all mutation components have try/catch/finally with toast errors; integration tests for view tracking semantics
+
+---
+
+### Phase 10 — Enhancements (Completed)
+
+#### TASK-40 ✅
+
+**Title:** Structured Content Caching Layer
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Cache purge hooks on all 22 admin mutation endpoints + forum mutations; `GET /api/admin/cache/stats` and `POST /api/admin/cache/purge` endpoints; stale-while-revalidate background refresh; `invalidatePattern()` uses SCAN instead of KEYS; 10 unit tests
+
+#### TASK-41 ✅
+
+**Title:** Error Monitoring & Observability Infrastructure
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Pino structured JSON logging with correlation IDs; optional Sentry integration; in-memory p50/p95/p99 performance spans; `/api/health/live`, `/api/health/ready`, and admin performance endpoint with unit coverage
+
+#### TASK-42 ✅
+
+**Title:** Spaced Repetition Flashcard System (SRS)
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added `flashcard_reviews` table and migration; SM-2 review algorithm; `/api/flashcard-reviews` routes; `SrsReviewDeck`, `/review` page, and dashboard `Review Now` widget; initial flashcard review seeding
+
+#### TASK-43 ✅
+
+**Title:** AI Tutor Memory & Personal Context
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added `ai_context` table and repository; system prompt personal context injection; post-stream concept extraction; AI context API routes; dashboard `AiMemoryCard`; quiz-failure weak-topic hook
+
+#### TASK-44 ✅
+
+**Title:** Learning Path from Weak Areas
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added protected `GET /api/ai/learning-path`; weighted weak-area scoring from quiz, progress, and AI engagement signals; dashboard `FocusAreasWidget`; AI tutor context includes `studentWeakAreas`
+
+#### TASK-45 ✅
+
+**Title:** Revision Notes & Quick Reference Cards
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added `revision_notes` table and migration; admin revision-notes manager; student `Quick Revision` tab with KaTeX formulas, common-mistake badges, and print-to-PDF cheat sheet flow
+
+#### TASK-46 ✅
+
+**Title:** Formula Library Centralized Repository
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added `formulas`, `user_starred_formulas`, and `formula_access_events`; `/formulas` page with filters and full-text search; KaTeX formula cards with copy and starring; dashboard top-5 starred formulas by access frequency
+
+#### TASK-47 ✅
+
+**Title:** Daily Momentum Micro-Goal Engine
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added computed `todaysFocus` to dashboard payload; priority order for weak quiz chapters, streak-risk, and nearest unvisited chapters by exam date; protected completion route with XP bonus; dashboard Today\'s Focus card with celebration and Ramadan shortening heuristic
+
+#### TASK-48 ✅
+
+**Title:** Streak Wager System (Loss Aversion Engine)
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added streak wager persistence and PKT settlement logic; dashboard Streak Lock modal and 8 PM warning; explicit streak-freeze recovery flow for missed wager days
+
+#### TASK-49 ✅
+
+**Title:** Leaderboard & Competitive Benchmarking
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added leaderboard API with global/board/school scopes and xp/streak/quizzes metrics; `/leaderboard` page with cohort tabs; 5-minute caching; weekly change, badges, and privacy opt-out settings
+
+#### TASK-50 ✅
+
+**Title:** Exam Pattern Analysis (Topic Weightage)
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added `exam_analysis` table and aggregation repository; chapter weightage badge; subject-level importance ranking and study recommendation; `/patterns/[board]/[subject]` trend page with 5-year topic bars
+
+#### TASK-51 ✅
+
+**Title:** Model Fallback Strategy for Cost & Reliability
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added AI model strategy with prompt classification, tiered model selection, retry fallback chain, circuit breaker, exact normalized-prompt cached-response mode, and `modelTier` persistence on `ai_usage_logs`
+
+#### TASK-52 ✅
+
+**Title:** Proactive Confusion Detection & Hints
+**Phase:** 10 — Enhancements
+**Priority:** High
+**Evidence:** Added `ai_conversation_events` table and confusion detection module using persisted session history; proactive hint payloads and subtle frontend hint CTA; admin analytics chapter-level confusion insights
 
 ---
 

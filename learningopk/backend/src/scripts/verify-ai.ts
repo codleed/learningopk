@@ -152,6 +152,7 @@ const run = async (): Promise<void> => {
   const persistedUsageLogs = await db
     .select({
       id: aiUsageLogs.id,
+      modelTier: aiUsageLogs.modelTier,
       promptTokens: aiUsageLogs.promptTokens,
       completionTokens: aiUsageLogs.completionTokens
     })
@@ -160,6 +161,10 @@ const run = async (): Promise<void> => {
 
   if (persistedUsageLogs.length === 0) {
     throw new Error("ai_usage_logs persistence verification failed.");
+  }
+
+  if (!persistedUsageLogs.every((log) => typeof log.modelTier === "string" && log.modelTier.length > 0)) {
+    throw new Error("ai_usage_logs model_tier persistence verification failed.");
   }
 
   const flaggedResponse = await agent.post("/api/ai/chat").send({

@@ -43,6 +43,55 @@ export interface StreakFreezeResult {
 }
 
 export class XpService {
+  private async adjustXp(
+    userId: string,
+    deltaXp: number,
+    _reason: string
+  ): Promise<XpAwardResult> {
+    const userRows = await db
+      .select({
+        xp: users.xp,
+        level: users.level
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const currentUser = userRows[0];
+
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    const previousXp = currentUser.xp;
+    const previousLevel = currentUser.level;
+    const newXp = previousXp + deltaXp;
+
+    if (newXp < 0) {
+      throw new Error("Insufficient XP balance");
+    }
+
+    const { level: newLevel, name: newLevelName } = this.calculateLevel(newXp);
+    const leveledUp = newLevel > previousLevel;
+
+    await db
+      .update(users)
+      .set({
+        xp: sql`${users.xp} + ${deltaXp}`,
+        level: newLevel
+      })
+      .where(eq(users.id, userId));
+
+    return {
+      xpAwarded: deltaXp,
+      newXp,
+      level: newLevel,
+      levelName: newLevelName,
+      leveledUp,
+      previousLevel
+    };
+  }
+
   /**
    * Calculate the level based on XP
    */
@@ -135,52 +184,18 @@ export class XpService {
     xpAmount: number,
     reason: string
   ): Promise<XpAwardResult> {
-    // Validate XP amount
     if (typeof xpAmount !== "number" || xpAmount < 0) {
       throw new Error("XP amount must be a non-negative number");
     }
+    return this.adjustXp(userId, xpAmount, reason);
+  }
 
-    // Get current user data for level calculation
-    const userRows = await db
-      .select({
-        xp: users.xp,
-        level: users.level
-      })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    const currentUser = userRows[0];
-
-    if (!currentUser) {
-      throw new Error("User not found");
+  async spendXp(userId: string, xpAmount: number, reason: string): Promise<XpAwardResult> {
+    if (typeof xpAmount !== "number" || xpAmount <= 0) {
+      throw new Error("XP amount must be a positive number");
     }
 
-    const previousXp = currentUser.xp;
-    const previousLevel = currentUser.level;
-    const newXp = previousXp + xpAmount;
-
-    // Calculate new level
-    const { level: newLevel, name: newLevelName } = this.calculateLevel(newXp);
-    const leveledUp = newLevel > previousLevel;
-
-    // Update user XP and level using atomic increment to prevent race conditions
-    await db
-      .update(users)
-      .set({
-        xp: sql`${users.xp} + ${xpAmount}`,
-        level: newLevel
-      })
-      .where(eq(users.id, userId));
-
-    return {
-      xpAwarded: xpAmount,
-      newXp,
-      level: newLevel,
-      levelName: newLevelName,
-      leveledUp,
-      previousLevel
-    };
+    return this.adjustXp(userId, -xpAmount, reason);
   }
 
   /**
