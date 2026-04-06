@@ -33,7 +33,7 @@ export function StudyGroupsPanel({ groups }: { groups: StudyGroupsListResponse["
   return (
     <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
       <Card variant="gradient" className="overflow-hidden">
-        <CardHeader className="border-b border-border-default/70 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.14),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.18),transparent_45%)]">
+        <CardHeader className="border-b border-border-default/70 bg-[radial-gradient(circle_at_top_right,var(--accent-info-light),transparent_35%),radial-gradient(circle_at_bottom_left,var(--accent-primary-light),transparent_45%)]">
           <div className="flex items-center justify-between gap-3">
             <div>
               <CardTitle className="flex items-center gap-2 text-xl"><Users className="h-5 w-5 text-accent-primary" />Study Groups</CardTitle>
@@ -64,7 +64,7 @@ export function StudyGroupsPanel({ groups }: { groups: StudyGroupsListResponse["
                   <CardTitle className="text-lg">{group.name}</CardTitle>
                   <CardDescription>{group.memberCount} members • created {new Date(group.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</CardDescription>
                 </div>
-                {group.notificationCount > 0 ? <div className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-xs font-semibold text-amber-200"><Bell className="h-3.5 w-3.5" />{group.notificationCount}</div> : null}
+                {group.notificationCount > 0 ? <div className="inline-flex items-center gap-1 rounded-full border border-accent-warning/30 bg-accent-warning-light px-2.5 py-1 text-xs font-semibold text-accent-warning"><Bell className="h-3.5 w-3.5" />{group.notificationCount}</div> : null}
               </div>
             </CardHeader>
             <CardFooter className="justify-end"><Link href={`/dashboard/groups/${group.id}`}><Button variant="secondary" size="sm">Open group</Button></Link></CardFooter>

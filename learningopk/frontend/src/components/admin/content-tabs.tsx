@@ -36,7 +36,7 @@ export function ContentTabs({ tabs = defaultTabs, activeTab, basePath = "/admin/
   const currentActiveTab = activeTab || tabs.find(tab => pathname.startsWith(tab.href))?.id || "boards";
 
   return (
-    <div className="border-b border-[var(--border)]">
+    <div className="border-b border-[var(--border-default)]">
       <nav
         className="flex items-center gap-1 overflow-x-auto"
         role="tablist"
@@ -56,8 +56,8 @@ export function ContentTabs({ tabs = defaultTabs, activeTab, basePath = "/admin/
                 flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors
                 border-b-2 whitespace-nowrap
                 ${isActive
-                  ? "border-[var(--primary)] text-[var(--foreground)] bg-[var(--muted)]"
-                  : "border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]"
+                  ? "border-[var(--primary)] text-[var(--text-primary)] bg-[var(--bg-subtle)]"
+                  : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
                 }
               `}
             >
@@ -68,8 +68,8 @@ export function ContentTabs({ tabs = defaultTabs, activeTab, basePath = "/admin/
                   className={`
                     ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs
                     ${isActive
-                      ? "bg-[var(--primary)] text-[var(--foreground)]"
-                      : "bg-[var(--muted-foreground)] text-[var(--background)]"
+                      ? "bg-[var(--primary)] text-[var(--text-primary)]"
+                      : "bg-[var(--text-secondary)] text-[var(--bg-base)]"
                     }
                   `}
                 >

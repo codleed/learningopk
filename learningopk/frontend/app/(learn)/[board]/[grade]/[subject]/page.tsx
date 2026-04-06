@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
@@ -6,10 +7,9 @@ import { AppShell } from "@/components/foundation/app-shell";
 import {
   StaggerContainer,
   MotionSection,
-} from "@/components/dashboard/DashboardClient";
+} from "@/components/motion";
 import { PageHeader } from "@/components/common/page-header";
 import { SubjectHeader } from "@/components/learn/subject-header";
-import { SubjectWeightageList } from "@/components/learn/subject-weightage-list";
 import { SubjectViewSwitcher } from "@/components/learn/subject-view-switcher";
 import { getSubjectOverview } from "@/lib/learn-api";
 import { getServerSession } from "@/lib/session";
@@ -28,6 +28,22 @@ type SubjectPageProps = {
   }>;
   searchParams: Promise<{ mockExamId?: string }>;
 };
+
+export async function generateMetadata({ params }: SubjectPageProps): Promise<Metadata> {
+  const { board, grade, subject } = await params;
+  const subjectName = subject.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  const boardName = board.replace(/-/g, " ").toUpperCase();
+  const gradeName = grade.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+
+  return {
+    title: `${subjectName} — ${gradeName} | ${boardName} | LearningoPK`,
+    description: `Study ${subjectName} for ${gradeName} ${boardName} board. Access chapters, exercises, flashcards, and AI-powered tutoring.`,
+    openGraph: {
+      title: `${subjectName} — ${gradeName}`,
+      description: `Study ${subjectName} for ${gradeName} ${boardName} board.`,
+    },
+  };
+}
 
 export default async function SubjectPage({ params, searchParams }: SubjectPageProps) {
   const query = await searchParams;
@@ -82,32 +98,6 @@ export default async function SubjectPage({ params, searchParams }: SubjectPageP
             subject={payload.subject}
             chapterCount={payload.chapters.length}
           />
-        </MotionSection>
-
-        {/* Chapters section */}
-        <MotionSection>
-          <div className="rounded-xl border border-border-default bg-bg-surface p-4 sm:p-6">
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="font-[var(--font-display)] text-lg font-semibold text-text-primary">Board exam weightage</h2>
-                <p className="mt-0.5 text-sm text-text-secondary">Chapters sorted by recurring exam importance.</p>
-              </div>
-              <Link
-                href={`/patterns/${payload.board.slug}/${payload.subject.slug}?grade=${payload.class.slug}`}
-                className="rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-accent-primary transition-colors hover:bg-accent-primary/5"
-              >
-                View patterns
-              </Link>
-            </div>
-
-            <SubjectWeightageList
-              boardSlug={payload.board.slug}
-              classSlug={payload.class.slug}
-              subjectSlug={payload.subject.slug}
-              chapters={payload.chapters}
-              recommendation={payload.recommendation}
-            />
-          </div>
         </MotionSection>
 
         <MotionSection>

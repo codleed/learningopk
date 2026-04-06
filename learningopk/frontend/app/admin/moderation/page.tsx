@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { AdminModerationPanel } from "@/components/admin/admin-moderation-panel";
-import { PageHeader } from "@/components/foundation/page-header";
+import { AdminPageHeader } from "@/components/admin/page-header";
 import { getAdminModerationFlags } from "@/lib/admin-api";
 
 export default async function AdminModerationPage() {
@@ -23,12 +23,12 @@ export default async function AdminModerationPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Admin Moderation"
         title="Flagging & Moderation"
         subtitle="Resolve reported content and review outcomes by status and target type."
         actions={
-          <Link href="/admin" className="text-sm font-medium text-foreground underline underline-offset-4">
+          <Link href="/admin" className="text-sm font-medium text-text-primary underline underline-offset-4">
             Back to admin
           </Link>
         }

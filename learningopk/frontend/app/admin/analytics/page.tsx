@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { AdminAnalyticsPanel } from "@/components/admin/admin-analytics-panel";
-import { PageHeader } from "@/components/foundation/page-header";
+import { AdminPageHeader } from "@/components/admin/page-header";
 import { getAdminAnalyticsOverview } from "@/lib/admin-api";
 
 export default async function AdminAnalyticsPage() {
@@ -27,12 +27,12 @@ export default async function AdminAnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Admin Analytics"
         title="Analytics & Reporting"
         subtitle="Inspect learning and moderation health trends across recent activity windows."
         actions={
-          <Link href="/admin" className="text-sm font-medium text-foreground underline underline-offset-4">
+          <Link href="/admin" className="text-sm font-medium text-text-primary underline underline-offset-4">
             Back to admin
           </Link>
         }

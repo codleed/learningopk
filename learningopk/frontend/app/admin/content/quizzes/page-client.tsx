@@ -29,19 +29,19 @@ export function QuizzesPage({ stats }: QuizzesPageProps) {
 
       <ContentStatsStrip stats={stats} />
 
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)]">
+      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
         <ContentTabs />
 
         <div className="p-6">
           {/* Quizzes List - Stub State */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-heading text-lg font-semibold text-[var(--foreground)]">
+              <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
                 Quizzes
               </h2>
               <button
                 disabled
-                className="inline-flex items-center gap-2 rounded-md bg-[var(--muted)] px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-md bg-[var(--bg-subtle)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] cursor-not-allowed"
                 title="Quiz API not yet available"
               >
                 + Add Quiz
@@ -100,29 +100,29 @@ export function QuizzesPage({ stats }: QuizzesPageProps) {
             </div>
 
             {/* Placeholder Table Structure (visual reference only) */}
-            <div className="overflow-x-auto rounded-lg border border-[var(--border)] bg-[var(--card)]">
+            <div className="overflow-x-auto rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-[var(--border)] bg-[var(--muted)]">
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
+                  <tr className="border-b border-[var(--border-default)] bg-[var(--bg-subtle)]">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                       Title
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                       Chapter
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                       Type
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                       Duration
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                       Questions
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                       Marks
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                       Actions
                     </th>
                   </tr>
@@ -131,8 +131,8 @@ export function QuizzesPage({ stats }: QuizzesPageProps) {
                   <tr>
                     <td colSpan={7} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
-                        <Settings2 className="h-8 w-8 text-[var(--muted-foreground)]" aria-hidden />
-                        <p className="text-sm text-[var(--muted-foreground)]">
+                        <Settings2 className="h-8 w-8 text-[var(--text-secondary)]" aria-hidden />
+                        <p className="text-sm text-[var(--text-secondary)]">
                           Quiz table will appear here once API is available
                         </p>
                       </div>

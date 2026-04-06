@@ -15,8 +15,8 @@ export default async function ChapterManagePage({ params }: PageProps): Promise<
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-destructive">Invalid Chapter ID</h1>
-          <p className="text-muted-foreground mt-2">The chapter ID must be a valid number.</p>
+          <h1 className="text-2xl font-semibold text-accent-danger">Invalid Chapter ID</h1>
+          <p className="text-text-secondary mt-2">The chapter ID must be a valid number.</p>
         </div>
       </div>
     );

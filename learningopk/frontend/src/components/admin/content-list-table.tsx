@@ -60,12 +60,12 @@ export function ContentListTable<T>({
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="font-heading text-lg font-semibold text-[var(--foreground)]">
+        <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
           {title}
         </h2>
         <Link
           href={addHref}
-          className="inline-flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--primary-light)]"
+          className="inline-flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-light)]"
         >
           <Plus className="h-4 w-4" aria-hidden />
           {addLabel}
@@ -73,17 +73,17 @@ export function ContentListTable<T>({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-[var(--border)] bg-[var(--card)]">
+      <div className="overflow-x-auto rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
         {loading ? (
           <div className="flex items-center justify-center p-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--border)] border-t-[var(--primary)]" />
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--border-default)] border-t-[var(--primary)]" />
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center">
-            <p className="text-sm text-[var(--muted-foreground)]">{emptyMessage}</p>
+            <p className="text-sm text-[var(--text-secondary)]">{emptyMessage}</p>
             <Link
               href={addHref}
-              className="mt-4 inline-flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--primary-light)]"
+              className="mt-4 inline-flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-light)]"
             >
               <Plus className="h-4 w-4" aria-hidden />
               {addLabel}
@@ -92,29 +92,29 @@ export function ContentListTable<T>({
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[var(--border)] bg-[var(--muted)]">
+              <tr className="border-b border-[var(--border-default)] bg-[var(--bg-subtle)]">
                 {columns.map((col) => (
                   <th
                     key={col.key}
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]"
+                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]"
                   >
                     {col.header}
                   </th>
                 ))}
                 {(onEdit || editHref || onDelete || deleteHref || onPublish) && (
-                  <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
+                  <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                     Actions
                   </th>
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border)]">
+            <tbody className="divide-y divide-[var(--border-default)]">
               {items.map((item) => {
                 const itemId = getItemId(item);
                 return (
                   <tr
                     key={itemId}
-                    className="transition-colors hover:bg-[var(--muted)]"
+                    className="transition-colors hover:bg-[var(--bg-subtle)]"
                   >
                     {columns.map((col) => (
                       <td key={col.key} className={`px-4 py-3 text-sm ${col.className || ""}`}>
@@ -131,7 +131,7 @@ export function ContentListTable<T>({
                               {editHref ? (
                                 <Link
                                   href={editHref(item)}
-                                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
+                                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-subtle)]"
                                 >
                                   <Pencil className="h-3 w-3" aria-hidden />
                                   Edit
@@ -139,7 +139,7 @@ export function ContentListTable<T>({
                               ) : onEdit ? (
                                 <button
                                   onClick={() => onEdit(item)}
-                                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
+                                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-subtle)]"
                                 >
                                   <Pencil className="h-3 w-3" aria-hidden />
                                   Edit
@@ -149,7 +149,7 @@ export function ContentListTable<T>({
                               {onPublish ? (
                                 <button
                                   onClick={() => onPublish(item)}
-                                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
+                                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-subtle)]"
                                 >
                                   {publishLabel || "Publish"}
                                 </button>
@@ -188,14 +188,14 @@ export function ContentListTable<T>({
       {/* Pagination */}
       {pagination && pagination.total > pagination.pageSize && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-[var(--muted-foreground)]">
+          <p className="text-sm text-[var(--text-secondary)]">
             Showing {startItem}-{endItem} of {pagination.total} {title.toLowerCase()}
           </p>
           <div className="flex items-center gap-2">
             <button
               onClick={() => pagination.onPageChange(pagination.page - 1)}
               disabled={pagination.page <= 1}
-              className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-subtle)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ChevronLeft className="h-4 w-4" aria-hidden />
               Prev
@@ -218,8 +218,8 @@ export function ContentListTable<T>({
                     onClick={() => pagination.onPageChange(pageNum)}
                     className={`h-8 w-8 rounded-md text-sm font-medium transition-colors ${
                       pagination.page === pageNum
-                        ? "bg-[var(--primary)] text-[var(--foreground)]"
-                        : "bg-[var(--card)] text-[var(--foreground)] hover:bg-[var(--muted)]"
+                        ? "bg-[var(--primary)] text-[var(--text-primary)]"
+                        : "bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
                     }`}
                   >
                     {pageNum}
@@ -230,7 +230,7 @@ export function ContentListTable<T>({
             <button
               onClick={() => pagination.onPageChange(pagination.page + 1)}
               disabled={pagination.page >= totalPages}
-              className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-subtle)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Next
               <ChevronRight className="h-4 w-4" aria-hidden />

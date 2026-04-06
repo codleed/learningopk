@@ -28,7 +28,7 @@ export function AdminQuickActions({ actions, className }: AdminQuickActionsProps
         <Link
           key={index}
           href={action.href}
-          className="group block rounded-[var(--radius-lg)] bg-[var(--card)] border border-[var(--border)] p-[var(--space-6)] transition-all duration-200 hover:border-[var(--primary)] hover:shadow-[var(--shadow-md)]"
+          className="group block rounded-[var(--radius-lg)] bg-[var(--bg-surface)] border border-[var(--border-default)] p-[var(--space-6)] transition-all duration-200 hover:border-[var(--primary)] hover:shadow-[var(--shadow-md)]"
         >
           <div className="flex flex-col gap-[var(--space-3)]">
             {action.icon && (
@@ -39,10 +39,10 @@ export function AdminQuickActions({ actions, className }: AdminQuickActionsProps
                 {action.icon}
               </span>
             )}
-            <h3 className="font-heading font-semibold text-[var(--foreground)]" style={{ fontSize: "1rem" }}>
+            <h3 className="font-heading font-semibold text-[var(--text-primary)]" style={{ fontSize: "1rem" }}>
               {action.label}
             </h3>
-            <p className="text-sm text-[var(--muted-foreground)]">
+            <p className="text-sm text-[var(--text-secondary)]">
               {action.description}
             </p>
           </div>

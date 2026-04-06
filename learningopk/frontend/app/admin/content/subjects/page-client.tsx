@@ -73,14 +73,14 @@ export function SubjectsPageClient({ initialBoards, stats }: SubjectsPageClientP
       key: "name",
       header: "Name",
       render: (subject: SubjectRow) => (
-        <span className="font-medium text-[var(--foreground)]">{subject.name}</span>
+        <span className="font-medium text-[var(--text-primary)]">{subject.name}</span>
       ),
     },
     {
       key: "context",
       header: "Board / Class",
       render: (subject: SubjectRow) => (
-        <span className="text-[var(--muted-foreground)]">
+        <span className="text-[var(--text-secondary)]">
           {subject.boardName} / {subject.className}
         </span>
       ),
@@ -89,7 +89,7 @@ export function SubjectsPageClient({ initialBoards, stats }: SubjectsPageClientP
       key: "chapterCount",
       header: "Chapters",
       render: (subject: SubjectRow) => (
-        <span className="text-[var(--foreground)]">{subject.chapterCount}</span>
+        <span className="text-[var(--text-primary)]">{subject.chapterCount}</span>
       ),
     },
   ];
@@ -103,7 +103,7 @@ export function SubjectsPageClient({ initialBoards, stats }: SubjectsPageClientP
 
       <ContentStatsStrip stats={stats} />
 
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)]">
+      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
         <ContentTabs />
 
         <div className="p-6">

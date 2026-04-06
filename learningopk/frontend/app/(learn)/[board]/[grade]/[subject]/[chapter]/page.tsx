@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 
@@ -27,6 +28,21 @@ type ChapterPageProps = {
   }>;
   searchParams: Promise<{ tab?: string; ai?: string; challengeId?: string }>;
 };
+
+export async function generateMetadata({ params }: ChapterPageProps): Promise<Metadata> {
+  const { subject, chapter } = await params;
+  const chapterName = chapter.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  const subjectName = subject.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+
+  return {
+    title: `${chapterName} — ${subjectName} | LearningoPK`,
+    description: `Learn ${chapterName} in ${subjectName}. Interactive exercises, flashcards, and AI tutoring for Pakistani students.`,
+    openGraph: {
+      title: `${chapterName} — ${subjectName}`,
+      description: `Learn ${chapterName} in ${subjectName}. Interactive exercises, flashcards, and AI tutoring for Pakistani students.`,
+    },
+  };
+}
 
 export default async function ChapterPage({ params, searchParams }: ChapterPageProps) {
   const session = await getServerSession();

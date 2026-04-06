@@ -33,11 +33,15 @@ export type AIChatState = {
   isStreaming: boolean;
   isSending: boolean;
   error: string | null;
+  stoppedStatus: string | null;
   proactiveHint: {
     topic: string;
     message: string;
     reasons: string[];
   } | null;
+  
+  rateLimitRemaining: number | null;
+  rateLimitTotal: number | null;
   
   context: AIContext | null;
   
@@ -46,6 +50,9 @@ export type AIChatState = {
   isHistoryOpen: boolean;
   isFirstVisit: boolean;
   
+  /** Whether the crisis-resources banner is visible (triggered by keyword detection). */
+  showCrisisBanner: boolean;
+  
   sessions: ChatSession[];
   activeSessionId: string | null;
   isLoadingSessions: boolean;
@@ -53,6 +60,7 @@ export type AIChatState = {
 
 export type AIChatActions = {
   sendMessage: (content: string) => Promise<void>;
+  stopGenerating: () => void;
   loadSession: (sessionId: string) => Promise<void>;
   startNewSession: () => void;
   toggleVisibility: () => void;
@@ -61,6 +69,9 @@ export type AIChatActions = {
   clearError: () => void;
   updateContext: (context: Partial<AIContext>) => void;
   dismissFirstVisit: () => void;
+  dismissCrisisBanner: () => void;
+  fetchSessionsList: () => Promise<void>;
+  refreshSessionsList: (preferredSessionId?: string | null) => Promise<void>;
 };
 
 export type AIChatContextValue = AIChatState & AIChatActions;

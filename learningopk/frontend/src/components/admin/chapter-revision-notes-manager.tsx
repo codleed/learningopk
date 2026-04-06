@@ -83,7 +83,7 @@ export function ChapterRevisionNotesManager({ chapterId }: Props) {
     return (
       <Card>
         <CardBody className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Loader2 className="h-8 w-8 animate-spin text-text-secondary" />
         </CardBody>
       </Card>
     );
@@ -94,7 +94,7 @@ export function ChapterRevisionNotesManager({ chapterId }: Props) {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Revision Notes</h2>
-          <p className="text-sm text-muted-foreground">Author short formulas, definitions, pitfalls, and exam tips for the student quick revision tab.</p>
+          <p className="text-sm text-text-secondary">Author short formulas, definitions, pitfalls, and exam tips for the student quick revision tab.</p>
         </div>
         <div className="flex items-center gap-2">
           {hasUnsavedChanges ? <Badge variant="warning">Unsaved changes</Badge> : null}

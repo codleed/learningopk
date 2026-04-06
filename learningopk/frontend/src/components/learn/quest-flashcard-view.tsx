@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, CheckCircle2, RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,7 @@ export function QuestFlashcardView({
   statuses,
   onMarkReviewed,
 }: QuestFlashcardViewProps) {
+  const reduced = useReducedMotion();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentSide, setCurrentSide] = useState<typeof CARD_SIDE[keyof typeof CARD_SIDE]>(CARD_SIDE.FRONT);
 
@@ -114,8 +115,9 @@ export function QuestFlashcardView({
 
       <div className="h-2 overflow-hidden rounded-full bg-muted">
         <motion.div
-          initial={{ width: 0 }}
+          initial={reduced ? false : { width: 0 }}
           animate={{ width: `${progress}%` }}
+          transition={reduced ? { duration: 0 } : undefined}
           className="h-full rounded-full bg-gradient-to-r from-purple-400 to-pink-400"
         />
       </div>
@@ -128,9 +130,10 @@ export function QuestFlashcardView({
           <AnimatePresence mode="wait">
             <motion.div
               key={currentCard.id}
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={reduced ? false : { opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
+              exit={reduced ? undefined : { opacity: 0, scale: 0.95 }}
+              transition={reduced ? { duration: 0 } : undefined}
               className="absolute inset-0 rounded-2xl border-2 border-border bg-card p-6 shadow-lg"
             >
               <div className="flex h-full flex-col items-center justify-center text-center">
@@ -153,8 +156,9 @@ export function QuestFlashcardView({
 
       {currentSide === CARD_SIDE.BACK && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={reduced ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={reduced ? { duration: 0 } : undefined}
           className="flex justify-center gap-4"
         >
           <Button
@@ -220,8 +224,9 @@ export function QuestFlashcardView({
 
       {isComplete && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={reduced ? false : { opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
+          transition={reduced ? { duration: 0 } : undefined}
           className="flex flex-col items-center gap-4 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-purple-500/10 to-pink-500/10 p-8 text-center"
         >
           <Sparkles className="h-12 w-12 text-primary" />

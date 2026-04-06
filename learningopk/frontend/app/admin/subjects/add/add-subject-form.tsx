@@ -214,7 +214,7 @@ export function AddSubjectForm({ boards }: AddSubjectFormProps) {
               onChange={(e) => handleNameChange(e.target.value)}
               onBlur={handleNameBlur}
               placeholder="e.g., Physics"
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
               aria-invalid={!!nameError}
               aria-describedby={nameError ? "subject-name-error" : undefined}
             />
@@ -227,7 +227,7 @@ export function AddSubjectForm({ boards }: AddSubjectFormProps) {
               value={slug}
               readOnly
               placeholder="auto-generated-from-name"
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] cursor-not-allowed"
+              className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] cursor-not-allowed"
             />
           </AdminFormField>
 

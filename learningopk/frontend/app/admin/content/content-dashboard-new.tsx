@@ -52,17 +52,17 @@ export function ContentDashboard({ boards, auditLogs, stats }: ContentDashboardP
 
       <ContentStatsStrip stats={stats} />
 
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)]">
+      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
         <ContentTabs />
         
         <div className="p-6">
           {/* Tab Content Area - This would be replaced by actual tab content */}
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <FileText className="mb-4 h-12 w-12 text-[var(--muted-foreground)]" />
-            <h3 className="mb-2 font-heading text-lg font-semibold text-[var(--foreground)]">
+            <FileText className="mb-4 h-12 w-12 text-[var(--text-secondary)]" />
+            <h3 className="mb-2 font-heading text-lg font-semibold text-[var(--text-primary)]">
               Select a content type tab
             </h3>
-            <p className="mb-6 max-w-md text-sm text-[var(--muted-foreground)]">
+            <p className="mb-6 max-w-md text-sm text-[var(--text-secondary)]">
               Choose a tab above to view and manage that content type. Each tab shows a list of items with Edit actions immediately visible.
             </p>
             <div className="flex flex-wrap justify-center gap-2">
@@ -70,7 +70,7 @@ export function ContentDashboard({ boards, auditLogs, stats }: ContentDashboardP
                 <Link
                   key={action.href}
                   href={action.href}
-                  className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
+                  className="inline-flex items-center gap-2 rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-subtle)]"
                 >
                   {action.icon}
                   {action.label}
@@ -84,13 +84,13 @@ export function ContentDashboard({ boards, auditLogs, stats }: ContentDashboardP
       {/* Recent Activity */}
       <section>
         <div className="mb-4 flex items-center gap-2">
-          <Clock className="h-5 w-5 text-[var(--muted-foreground)]" />
-          <h2 className="font-heading text-lg font-semibold text-[var(--foreground)]">
+          <Clock className="h-5 w-5 text-[var(--text-secondary)]" />
+          <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
             Recent Activity
           </h2>
         </div>
         {auditLogs.length === 0 ? (
-          <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6 text-center text-sm text-[var(--muted-foreground)]">
+          <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 text-center text-sm text-[var(--text-secondary)]">
             No recent activity
           </div>
         ) : (
@@ -98,13 +98,13 @@ export function ContentDashboard({ boards, auditLogs, stats }: ContentDashboardP
             {auditLogs.slice(0, 5).map((entry) => (
               <div
                 key={entry.id}
-                className="flex items-start justify-between rounded-lg border border-[var(--border)] bg-[var(--card)] p-4"
+                className="flex items-start justify-between rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-4"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-[var(--foreground)]">
+                  <p className="truncate text-sm font-medium text-[var(--text-primary)]">
                     {entry.action}
                   </p>
-                  <p className="truncate text-xs text-[var(--muted-foreground)]">
+                  <p className="truncate text-xs text-[var(--text-secondary)]">
                     {entry.target}
                   </p>
                 </div>
@@ -118,10 +118,10 @@ export function ContentDashboard({ boards, auditLogs, stats }: ContentDashboardP
                   >
                     {entry.status}
                   </span>
-                  <span className="text-xs text-[var(--muted-foreground)]">
+                  <span className="text-xs text-[var(--text-secondary)]">
                     {entry.actor.name}
                   </span>
-                  <span className="text-xs text-[var(--muted-foreground)]">
+                  <span className="text-xs text-[var(--text-secondary)]">
                     {new Date(entry.occurredAt).toLocaleDateString()}
                   </span>
                 </div>

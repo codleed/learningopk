@@ -4,11 +4,11 @@ import { cn } from "@/lib/utils";
 
 const dashboardSurfaceToneClassNames = {
   shell: "relative overflow-visible bg-transparent",
-  rail: "rounded-2xl border border-border/70 bg-transparent",
-  header: "border-b border-border/75",
-  hero: "border-b border-border/75",
-  panel: "border-b border-border/70",
-  card: "border-b border-border/60",
+  rail: "rounded-2xl border border-border-default/70 bg-transparent",
+  header: "border-b border-border-default/75",
+  hero: "border-b border-border-default/75",
+  panel: "border-b border-border-default/70",
+  card: "border-b border-border-default/60",
   toolbarButton:
     "rounded-full border border-[var(--primary)]/35 bg-[var(--primary)]/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--primary)] transition hover:border-[var(--primary)]/55 hover:bg-[var(--primary)]/15"
 } as const;
@@ -65,8 +65,8 @@ export function DashboardSection({
     <DashboardSurface as="section" tone="panel" className={cn("pb-6", className)}>
       <DashboardToolbar>
         <div>
-          <h2 className="text-[1.1rem] font-semibold tracking-[-0.01em] text-foreground sm:text-xl">{title}</h2>
-          {subtitle ? <p className="mt-1 text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{subtitle}</p> : null}
+          <h2 className="text-[1.1rem] font-semibold tracking-[-0.01em] text-text-primary sm:text-xl">{title}</h2>
+          {subtitle ? <p className="mt-1 text-xs font-medium uppercase tracking-[0.08em] text-text-secondary">{subtitle}</p> : null}
         </div>
         {actions ? <div>{actions}</div> : null}
       </DashboardToolbar>

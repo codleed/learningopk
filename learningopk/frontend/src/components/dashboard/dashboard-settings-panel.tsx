@@ -170,19 +170,19 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
   };
 
   return (
-    <div className="bg-background">
+    <div className="bg-bg-base">
       <DashboardSection
         title="Settings"
         subtitle="Manage your profile details and display theme."
         contentClassName="grid gap-4 xl:grid-cols-2"
       >
-        <div className="rounded-[1.8rem] border border-border bg-card px-4 py-5 sm:px-6 sm:py-7">
-          <h3 className="font-heading text-xl font-extrabold tracking-[-0.04em] text-foreground">Profile management</h3>
-          <p className="mt-2 text-sm text-muted-foreground">Update your photo, name, class, degree, and board.</p>
+        <div className="rounded-[1.8rem] border border-border-default bg-bg-surface px-4 py-5 sm:px-6 sm:py-7">
+          <h3 className="font-heading text-xl font-extrabold tracking-[-0.04em] text-text-primary">Profile management</h3>
+          <p className="mt-2 text-sm text-text-secondary">Update your photo, name, class, degree, and board.</p>
 
-          <div className="mt-5 rounded-[1.2rem] border border-border bg-secondary p-4">
+          <div className="mt-5 rounded-[1.2rem] border border-border-default bg-bg-surface p-4">
             <div className="flex items-center gap-4">
-              <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-muted text-sm font-semibold text-muted-foreground">
+              <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-border-default bg-bg-subtle text-sm font-semibold text-text-secondary">
                 {previewImageUrl ? (
                   <Image src={previewImageUrl} alt="Profile preview" fill unoptimized className="object-cover" />
                 ) : (
@@ -191,7 +191,7 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
               </div>
 
               <div className="flex-1 space-y-2">
-                <label htmlFor="settings-profile-image" className="text-sm font-bold tracking-[-0.02em] text-foreground">
+                <label htmlFor="settings-profile-image" className="text-sm font-bold tracking-[-0.02em] text-text-primary">
                   Profile picture
                 </label>
                 <input
@@ -199,24 +199,24 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/gif"
                   onChange={onProfileImageSelect}
-                  className="flex h-9 w-full text-xs text-muted-foreground file:mr-3 file:inline-flex file:h-9 file:px-3 file:rounded-lg file:border-0 file:bg-secondary file:text-sm file:font-semibold file:text-foreground hover:file:bg-muted transition-colors cursor-pointer"
+                  className="flex h-9 w-full text-xs text-text-secondary file:mr-3 file:inline-flex file:h-9 file:px-3 file:rounded-lg file:border-0 file:bg-bg-surface file:text-sm file:font-semibold file:text-text-primary hover:file:bg-bg-subtle transition-colors cursor-pointer"
                 />
                 <button
                   type="button"
                   onClick={onProfileImageUpload}
                   disabled={isUploadingProfileImage || !selectedProfileImage}
-                  className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-semibold text-foreground transition-all duration-200 hover:border-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex h-9 items-center justify-center rounded-lg border border-border-default bg-bg-surface px-4 text-sm font-semibold text-text-primary transition-all duration-200 hover:border-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUploadingProfileImage ? "Uploading..." : "Upload picture"}
                 </button>
               </div>
             </div>
-            {profileImageError ? <p className="mt-2 text-sm font-medium text-destructive">{profileImageError}</p> : null}
+            {profileImageError ? <p className="mt-2 text-sm font-medium text-accent-danger">{profileImageError}</p> : null}
           </div>
 
           <form className="mt-5 space-y-4" onSubmit={onProfileSubmit} noValidate>
             <div className="space-y-2">
-              <label htmlFor="settings-name" className="text-sm font-bold tracking-[-0.02em] text-foreground">
+              <label htmlFor="settings-name" className="text-sm font-bold tracking-[-0.02em] text-text-primary">
                 Name
               </label>
               <input
@@ -224,47 +224,47 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
                 name="name"
                 defaultValue={initialProfile.name}
                 autoComplete="name"
-                className="flex h-11 w-full rounded-xl border border-border bg-card px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
+                className="flex h-11 w-full rounded-xl border border-border-default bg-bg-surface px-4 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="settings-class" className="text-sm font-bold tracking-[-0.02em] text-foreground">
+              <label htmlFor="settings-class" className="text-sm font-bold tracking-[-0.02em] text-text-primary">
                 Class
               </label>
               <input
                 id="settings-class"
                 name="class"
                 defaultValue={initialProfile.studentClass}
-                className="flex h-11 w-full rounded-xl border border-border bg-card px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
+                className="flex h-11 w-full rounded-xl border border-border-default bg-bg-surface px-4 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="settings-degree" className="text-sm font-bold tracking-[-0.02em] text-foreground">
+              <label htmlFor="settings-degree" className="text-sm font-bold tracking-[-0.02em] text-text-primary">
                 Degree
               </label>
               <input
                 id="settings-degree"
                 name="degree"
                 defaultValue={initialProfile.degree}
-                className="flex h-11 w-full rounded-xl border border-border bg-card px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
+                className="flex h-11 w-full rounded-xl border border-border-default bg-bg-surface px-4 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="settings-board" className="text-sm font-bold tracking-[-0.02em] text-foreground">
+              <label htmlFor="settings-board" className="text-sm font-bold tracking-[-0.02em] text-text-primary">
                 Board
               </label>
               <input
                 id="settings-board"
                 name="board"
                 defaultValue={initialProfile.board}
-                className="flex h-11 w-full rounded-xl border border-border bg-card px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
+                className="flex h-11 w-full rounded-xl border border-border-default bg-bg-surface px-4 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
               />
             </div>
 
-            {profileError ? <p className="text-sm font-medium text-destructive">{profileError}</p> : null}
+            {profileError ? <p className="text-sm font-medium text-accent-danger">{profileError}</p> : null}
 
             <button
               type="submit"
@@ -276,9 +276,9 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
           </form>
         </div>
 
-        <div className="rounded-[1.8rem] border border-border bg-card px-4 py-5 sm:px-6 sm:py-7">
-          <h3 className="font-heading text-xl font-extrabold tracking-[-0.04em] text-foreground">Theme</h3>
-          <p className="mt-2 text-sm text-muted-foreground">Choose between light and dark interface themes.</p>
+        <div className="rounded-[1.8rem] border border-border-default bg-bg-surface px-4 py-5 sm:px-6 sm:py-7">
+          <h3 className="font-heading text-xl font-extrabold tracking-[-0.04em] text-text-primary">Theme</h3>
+          <p className="mt-2 text-sm text-text-secondary">Choose between light and dark interface themes.</p>
           <div className="mt-5 grid grid-cols-2 gap-3" role="group" aria-label="Theme options">
             {(["light", "dark"] as const).map((theme) => {
               const isActive = activeTheme === theme;
@@ -293,8 +293,8 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
                   className={cn(
                     "rounded-xl border px-3 py-2 text-sm font-semibold transition",
                     isActive
-                      ? "border-[var(--primary)] bg-[var(--primary)]/10 text-foreground shadow-md"
-                      : "border-border bg-card text-muted-foreground hover:border-[var(--primary)]/50"
+                      ? "border-[var(--primary)] bg-[var(--primary)]/10 text-text-primary shadow-md"
+                      : "border-border-default bg-bg-surface text-text-secondary hover:border-[var(--primary)]/50"
                   )}
                 >
                   {label}

@@ -1,16 +1,20 @@
 "use client";
 
-import { RouteError } from "@/components/foundation/route-state";
+import { ErrorState } from "@/components/ui/states";
 
 type SubjectErrorProps = {
   error: Error & { digest?: string };
   reset: () => void;
 };
 
-export default function SubjectError({ error, reset }: SubjectErrorProps) {
+export default function SubjectError({ error: _error, reset }: SubjectErrorProps) {
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-10">
-      <RouteError title="Subject page failed to load" description={error.message} onRetry={reset} />
+      <ErrorState
+        title="Subject page failed to load"
+        description="We couldn't load this subject. Please try again or go back to the dashboard."
+        onRetry={reset}
+      />
     </div>
   );
 }

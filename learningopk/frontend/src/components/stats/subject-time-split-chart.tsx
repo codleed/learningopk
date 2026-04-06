@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import type { EChartsOption } from "echarts";
 
+import { ChartDataTable } from "@/components/stats/chart-data-table";
 import { EChartWrapper } from "@/components/stats/echart-wrapper";
+import { useResolvedTokens } from "@/lib/resolve-css-tokens";
 import type { DashboardSummaryResponse } from "@/lib/progress-api";
 
 interface SubjectTimeSplitChartProps {
@@ -28,6 +30,9 @@ const FALLBACK_COLORS = [
 ];
 
 export function SubjectTimeSplitChart({ subjects }: SubjectTimeSplitChartProps) {
+  const tableId = useId();
+  const tokens = useResolvedTokens();
+
   const option = useMemo((): EChartsOption => {
     const sortedSubjects = [...subjects]
       .sort((a, b) => b.chaptersVisitedPercent - a.chaptersVisitedPercent)
@@ -44,11 +49,11 @@ export function SubjectTimeSplitChart({ subjects }: SubjectTimeSplitChartProps) 
     return {
       tooltip: {
         trigger: "item",
-        backgroundColor: "var(--bg-elevated)",
-        borderColor: "var(--border-default)",
+        backgroundColor: tokens.bgElevated,
+        borderColor: tokens.borderDefault,
         borderWidth: 1,
         textStyle: {
-          color: "var(--text-primary)",
+          color: tokens.textPrimary,
           fontSize: 12,
         },
         formatter: (params: unknown) => {
@@ -57,7 +62,7 @@ export function SubjectTimeSplitChart({ subjects }: SubjectTimeSplitChartProps) 
                     <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color}"></span>
                     <span style="font-weight:600">${p.name}</span>
                   </div>
-                  <div style="color:var(--text-secondary)">${p.percent.toFixed(1)}% of activity</div>`;
+                  <div style="color:${tokens.textSecondary}">${p.percent.toFixed(1)}% of tracked coverage</div>`;
         },
       },
       legend: {
@@ -66,14 +71,14 @@ export function SubjectTimeSplitChart({ subjects }: SubjectTimeSplitChartProps) 
         right: 0,
         top: "middle",
         textStyle: {
-          color: "var(--text-secondary)",
+          color: tokens.textSecondary,
           fontSize: 11,
         },
         pageTextStyle: {
-          color: "var(--text-muted)",
+          color: tokens.textMuted,
         },
-        pageIconColor: "var(--text-muted)",
-        pageIconInactiveColor: "var(--border-default)",
+        pageIconColor: tokens.textMuted,
+        pageIconInactiveColor: tokens.borderDefault,
         itemWidth: 10,
         itemHeight: 10,
         itemGap: 12,
@@ -96,7 +101,7 @@ export function SubjectTimeSplitChart({ subjects }: SubjectTimeSplitChartProps) 
               show: true,
               fontSize: 13,
               fontWeight: "bold",
-              color: "var(--text-primary)",
+              color: tokens.textPrimary,
               formatter: "{b}\n{d}%",
             },
             scaleSize: 8,
@@ -111,6 +116,22 @@ export function SubjectTimeSplitChart({ subjects }: SubjectTimeSplitChartProps) 
         },
       ],
     };
+  }, [subjects, tokens]);
+
+  // Build table rows from the same sorted/sliced data the chart uses
+  const tableRows = useMemo(() => {
+    const sorted = [...subjects]
+      .sort((a, b) => b.chaptersVisitedPercent - a.chaptersVisitedPercent)
+      .slice(0, 8);
+    const total = sorted.reduce(
+      (sum, s) => sum + Math.max(s.chaptersVisitedPercent, 1),
+      0,
+    );
+    return sorted.map((s) => {
+      const value = Math.max(s.chaptersVisitedPercent, 1);
+      const pct = total > 0 ? ((value / total) * 100).toFixed(1) : "0.0";
+      return [s.subjectName, `${s.chaptersVisitedPercent}%`, `${pct}%`] as (string | number)[];
+    });
   }, [subjects]);
 
   if (subjects.length === 0) {
@@ -121,5 +142,17 @@ export function SubjectTimeSplitChart({ subjects }: SubjectTimeSplitChartProps) 
     );
   }
 
-  return <EChartWrapper option={option} height="320px" />;
+  return (
+    <div aria-describedby={tableId}>
+      <div aria-hidden="true">
+        <EChartWrapper option={option} height="320px" />
+      </div>
+      <ChartDataTable
+        id={tableId}
+        caption="Subject coverage split by percentage"
+        headers={["Subject", "Chapters visited", "Share of tracked coverage"]}
+        rows={tableRows}
+      />
+    </div>
+  );
 }

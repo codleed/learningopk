@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Check, X } from "lucide-react";
 
 import type { ChapterDetailResponse } from "@/lib/learn-api";
@@ -52,6 +52,8 @@ export function QuizQuestionCard({
   showFeedback = false,
   correctAnswer,
 }: QuizQuestionCardProps) {
+  const reduced = useReducedMotion();
+
   const handleKeyDown = (event: React.KeyboardEvent<HTMLFieldSetElement>) => {
     if (locked || !selectedAnswer) return;
 
@@ -106,9 +108,9 @@ export function QuizQuestionCard({
             return (
               <motion.label
                 key={option.key}
-                initial={{ opacity: 0, y: 8 }}
+                initial={reduced ? false : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05, duration: 0.25, ease: "easeOut" }}
+                transition={reduced ? { duration: 0 } : { delay: index * 0.05, duration: 0.25, ease: "easeOut" }}
                 className={cn(
                   "group relative flex cursor-pointer items-start gap-3 rounded-xl border-2 px-4 py-3.5 text-sm transition-all duration-150",
                   "focus-within:ring-2 focus-within:ring-accent-primary/30 focus-within:ring-offset-1",

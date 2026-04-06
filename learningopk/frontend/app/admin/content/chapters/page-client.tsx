@@ -126,10 +126,10 @@ export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientP
       header: "Chapter",
       render: (chapter: ChapterRow) => (
         <div>
-          <p className="font-medium text-[var(--foreground)]">
+          <p className="font-medium text-[var(--text-primary)]">
             Chapter {chapter.chapterNumber}: {chapter.title}
           </p>
-          <p className="text-xs text-[var(--muted-foreground)]">
+          <p className="text-xs text-[var(--text-secondary)]">
             {chapter.boardName} / {chapter.className}
           </p>
         </div>
@@ -139,7 +139,7 @@ export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientP
       key: "subject",
       header: "Subject",
       render: (chapter: ChapterRow) => (
-        <span className="text-[var(--muted-foreground)]">{chapter.subjectName}</span>
+        <span className="text-[var(--text-secondary)]">{chapter.subjectName}</span>
       ),
     },
     {
@@ -179,7 +179,7 @@ export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientP
 
       <ContentStatsStrip stats={stats} />
 
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)]">
+      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
         <ContentTabs />
 
         <div className="p-6">
@@ -199,7 +199,7 @@ export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientP
               <div className="flex items-center gap-2">
                 <Link
                   href={`/admin/content/chapters/${chapter.id}/manage`}
-                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
+                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-subtle)]"
                 >
                   <Settings className="h-3 w-3" aria-hidden />
                   Manage Content

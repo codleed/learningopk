@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   Atom,
   CheckCircle2,
@@ -72,6 +72,7 @@ export function QuestIllustrationView({
   completedIds,
   onMarkComplete,
 }: QuestIllustrationViewProps) {
+  const reduced = useReducedMotion();
   const completedCount = completedIds.length;
   const totalCount = exercises.length;
   const allCompleted = totalCount > 0 && completedCount >= totalCount;
@@ -104,9 +105,9 @@ export function QuestIllustrationView({
       {/* Progress bar */}
       <div className="h-2 overflow-hidden rounded-full bg-bg-subtle">
         <motion.div
-          initial={{ width: 0 }}
+          initial={reduced ? false : { width: 0 }}
           animate={{ width: `${progressPercent}%` }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={reduced ? { duration: 0 } : { duration: 0.6, ease: "easeOut" }}
           className="h-full rounded-full bg-gradient-to-r from-accent-primary to-accent-info"
         />
       </div>
@@ -127,9 +128,9 @@ export function QuestIllustrationView({
           return (
             <motion.div
               key={exercise.id}
-              initial={{ opacity: 0, y: 8 }}
+              initial={reduced ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{
+              transition={reduced ? { duration: 0 } : {
                 delay: Math.min(index * 0.04, 0.4),
                 duration: 0.35,
                 ease: [0.23, 1, 0.32, 1],
@@ -212,8 +213,9 @@ export function QuestIllustrationView({
                   <div className="flex shrink-0 flex-col items-end gap-2">
                     {isComplete ? (
                       <motion.div
-                        initial={{ scale: 0.8 }}
+                        initial={reduced ? false : { scale: 0.8 }}
                         animate={{ scale: 1 }}
+                        transition={reduced ? { duration: 0 } : undefined}
                         className="flex items-center gap-1.5 rounded-full bg-accent-success px-3 py-1.5 text-xs font-semibold text-white"
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" />
@@ -240,9 +242,9 @@ export function QuestIllustrationView({
       <AnimatePresence>
         {allCompleted && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={reduced ? false : { opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+            exit={reduced ? undefined : { opacity: 0, scale: 0.95 }}
             className={cn(
               "flex flex-col items-center gap-4 rounded-2xl p-8 text-center",
               "border-2 border-accent-primary/25",

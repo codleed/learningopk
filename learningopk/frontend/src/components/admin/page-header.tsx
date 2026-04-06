@@ -15,18 +15,18 @@ export function AdminPageHeader({ eyebrow, title, subtitle, actions, className }
     <header className={cn("flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between", className)}>
       <div className="space-y-2">
         {eyebrow && (
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-secondary)]">
             {eyebrow}
           </p>
         )}
         <h1
-          className="font-heading text-foreground"
+          className="font-heading text-text-primary"
           style={{ fontSize: "2rem", fontWeight: 400 }}
         >
           {title}
         </h1>
         {subtitle && (
-          <p className="max-w-3xl text-sm text-[var(--muted-foreground)]">{subtitle}</p>
+          <p className="max-w-3xl text-sm text-[var(--text-secondary)]">{subtitle}</p>
         )}
       </div>
       {actions && (

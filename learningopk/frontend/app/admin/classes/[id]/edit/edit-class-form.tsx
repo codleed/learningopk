@@ -152,7 +152,7 @@ export function EditClassForm({ classData }: EditClassFormProps) {
               type="text"
               value={classData.boardName}
               readOnly
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm text-[var(--foreground)] cursor-not-allowed"
+              className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-primary)] cursor-not-allowed"
             />
           </AdminFormField>
 
@@ -169,7 +169,7 @@ export function EditClassForm({ classData }: EditClassFormProps) {
               onChange={(e) => handleNameChange(e.target.value)}
               onBlur={handleNameBlur}
               placeholder="e.g., 9th"
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
               aria-invalid={!!nameError}
               aria-describedby={nameError ? "class-name-error" : undefined}
             />
@@ -181,7 +181,7 @@ export function EditClassForm({ classData }: EditClassFormProps) {
               type="text"
               value={slug}
               readOnly
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm text-[var(--foreground)] cursor-not-allowed"
+              className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-primary)] cursor-not-allowed"
             />
           </AdminFormField>
 

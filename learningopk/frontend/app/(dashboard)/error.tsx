@@ -1,7 +1,7 @@
 "use client";
 
 import { ServiceUnavailable } from "@/components/foundation/service-unavailable";
-import { RouteError } from "@/components/foundation/route-state";
+import { ErrorState } from "@/components/ui/states";
 import { isAuthServiceUnavailable } from "@/lib/auth-errors";
 
 type DashboardGroupErrorProps = {
@@ -26,9 +26,9 @@ export default function DashboardGroupError({ error, reset }: DashboardGroupErro
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-10">
-      <RouteError
+      <ErrorState
         title="Something went wrong"
-        description={error.message}
+        description="An unexpected error occurred. Please try again or refresh the page."
         onRetry={reset}
       />
     </div>

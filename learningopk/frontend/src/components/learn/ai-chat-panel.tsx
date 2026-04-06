@@ -81,9 +81,9 @@ interface StreamingIndicatorProps {
 function StreamingIndicator({ className }: StreamingIndicatorProps) {
   return (
     <div className={cn("flex items-center gap-1 px-1", className)}>
-      <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-muted-foreground" />
-      <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-muted-foreground [animation-delay:0.16s]" />
-      <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-muted-foreground [animation-delay:0.32s]" />
+      <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-text-secondary" />
+      <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-text-secondary [animation-delay:0.16s]" />
+      <span className="h-1.5 w-1.5 animate-streaming rounded-full bg-text-secondary [animation-delay:0.32s]" />
     </div>
   );
 }
@@ -103,15 +103,15 @@ function MessageBubble({ message, isStreaming, showAvatar }: MessageBubbleProps)
       className={cn(
         "animate-message-in",
         isUser
-          ? "ml-auto max-w-[80%] rounded-2xl rounded-br-sm bg-primary px-4 py-3 text-[15px] text-primary-foreground"
-          : "mr-auto max-w-[85%] rounded-2xl rounded-bl-sm border border-border bg-card px-4 py-3 text-[15px] text-foreground"
+          ? "ml-auto max-w-[80%] rounded-2xl rounded-br-sm bg-accent-primary px-4 py-3 text-[15px] text-primary-foreground"
+          : "mr-auto max-w-[85%] rounded-2xl rounded-bl-sm border border-border-default bg-bg-surface px-4 py-3 text-[15px] text-text-primary"
       )}
       aria-label={`${isUser ? "You" : "AI Tutor"}: ${message.content.slice(0, 50)}...`}
     >
       {!isUser && showAvatar && (
         <div className="mb-2 flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-primary/10">
+            <Sparkles className="h-3.5 w-3.5 text-accent-primary" />
           </div>
         </div>
       )}
@@ -141,15 +141,15 @@ function EmptyState({ suggestions, onSuggestionClick }: EmptyStateProps) {
   return (
     <div className="flex h-full flex-col items-center justify-center px-4 py-12">
       {/* Icon */}
-      <Sparkles className="mb-4 h-12 w-12 text-primary opacity-90" />
+      <Sparkles className="mb-4 h-12 w-12 text-accent-primary opacity-90" />
       
       {/* Title */}
-      <h2 className="mb-3 text-center font-[family-name:var(--font-heading)] text-2xl font-semibold text-foreground">
+      <h2 className="mb-3 text-center font-[family-name:var(--font-heading)] text-2xl font-semibold text-text-primary">
         How can I help you?
       </h2>
       
       {/* Subtitle */}
-      <p className="mb-8 max-w-[360px] text-center text-[15px] text-muted-foreground">
+      <p className="mb-8 max-w-[360px] text-center text-[15px] text-text-secondary">
         Ask about concepts, get help with exercises, or test your knowledge.
       </p>
       
@@ -160,10 +160,10 @@ function EmptyState({ suggestions, onSuggestionClick }: EmptyStateProps) {
             key={suggestion}
             type="button"
             onClick={() => onSuggestionClick(suggestion)}
-            className="w-full rounded-3xl border border-border bg-card px-4 py-3 
-                       text-left text-sm font-medium text-foreground shadow-sm
+            className="w-full rounded-3xl border border-border-default bg-bg-surface px-4 py-3 
+                       text-left text-sm font-medium text-text-primary shadow-sm
                        transition-all duration-150
-                       hover:-translate-y-0.5 hover:border-primary/50 hover:bg-primary/5 hover:shadow-md
+                       hover:-translate-y-0.5 hover:border-accent-primary/50 hover:bg-accent-primary/5 hover:shadow-md
                        active:translate-y-0 active:shadow-sm"
           >
             {suggestion}
@@ -187,12 +187,12 @@ function ScrollToBottomButton({ isVisible, onClick }: ScrollToBottomButtonProps)
       type="button"
       onClick={onClick}
       className="animate-scroll-btn fixed bottom-24 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 
-                 rounded-full border border-border bg-card px-4 py-2 shadow-md
+                  rounded-full border border-border-default bg-bg-surface px-4 py-2 shadow-md
                  transition-all duration-200 hover:scale-105 active:scale-100"
       aria-label="Scroll to latest messages"
     >
-      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-      <span className="text-[13px] font-medium text-muted-foreground">New messages</span>
+      <ChevronDown className="h-4 w-4 text-text-secondary" />
+      <span className="text-[13px] font-medium text-text-secondary">New messages</span>
     </button>
   );
 }
@@ -502,11 +502,11 @@ export function AIChatPanel({
 
   const panelBody = (
     <div className={cn("flex min-h-0 flex-col", usePanelLevelScroll ? "" : "h-full")}>
-      <header className="border-b border-border px-3 py-3">
+      <header className="border-b border-border-default px-3 py-3">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold text-muted-foreground">AI Tutor</p>
-            <h2 className="text-base font-semibold text-foreground">{chapterTitle}</h2>
+            <p className="text-xs font-semibold text-text-secondary">AI Tutor</p>
+            <h2 className="text-base font-semibold text-text-primary">{chapterTitle}</h2>
           </div>
           {layout === "overlay" && onClose ? (
             <Button type="button" variant="secondary" size="sm" onClick={onClose}>
@@ -536,7 +536,7 @@ export function AIChatPanel({
               Hide
             </Button>
           ) : null}
-          {sessionId ? <p className="self-center text-xs text-muted-foreground">Session active</p> : null}
+          {sessionId ? <p className="self-center text-xs text-text-secondary">Session active</p> : null}
         </div>
       </header>
 
@@ -578,8 +578,8 @@ export function AIChatPanel({
             })}
 
             {error ? (
-              <div className="mx-auto max-w-[85%] rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3">
-                <p className="text-sm text-destructive">{error}</p>
+              <div className="mx-auto max-w-[85%] rounded-xl border border-accent-danger/30 bg-accent-danger/10 px-4 py-3">
+                <p className="text-sm text-accent-danger">{error}</p>
               </div>
             ) : null}
           </>
@@ -592,7 +592,7 @@ export function AIChatPanel({
       <ScrollToBottomButton isVisible={showScrollButton && hasMessages} onClick={scrollToBottom} />
 
       {/* Input area */}
-      <div className="border-t border-border p-3">
+      <div className="border-t border-border-default p-3">
         <form onSubmit={onSubmit} className="relative">
           {proactiveHint ? (
             <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/40 bg-amber-50 px-3 py-2 dark:border-amber-500/20 dark:bg-amber-500/10">
@@ -607,9 +607,9 @@ export function AIChatPanel({
           ) : null}
 
           <div
-            className="flex items-end rounded-2xl border border-border bg-card 
+            className="flex items-end rounded-2xl border border-border-default bg-bg-surface 
                         px-1 py-1 shadow-[0_4px_24px_rgba(0,0,0,0.08)]
-                        focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/20
+                        focus-within:border-accent-primary/70 focus-within:ring-2 focus-within:ring-accent-primary/20
                         transition-all duration-150"
           >
             <textarea
@@ -622,7 +622,7 @@ export function AIChatPanel({
               rows={1}
               disabled={isSending}
               className="flex-1 resize-none rounded-xl bg-transparent px-3 py-2.5 text-[15px] 
-                         outline-none placeholder:text-muted-foreground
+                          outline-none placeholder:text-text-secondary
                          disabled:cursor-not-allowed disabled:opacity-50"
               style={{ minHeight: "44px", maxHeight: "184px" }}
               aria-label="Message input"
@@ -631,7 +631,7 @@ export function AIChatPanel({
               type="submit"
               disabled={!inputValue.trim() || isSending}
               className="m-1 flex h-9 w-9 shrink-0 items-center justify-center 
-                         rounded-full bg-primary text-primary-foreground shadow-sm
+                          rounded-full bg-accent-primary text-primary-foreground shadow-sm
                          transition-all duration-150
                          disabled:cursor-not-allowed disabled:opacity-50
                          hover:bg-[var(--primary-hover)] hover:shadow-md
@@ -646,7 +646,7 @@ export function AIChatPanel({
             </button>
           </div>
         </form>
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="mt-2 text-xs text-text-secondary">
           {isSending ? "Streaming response..." : "Responses are Socratic and concise."}
         </p>
       </div>
@@ -658,7 +658,7 @@ export function AIChatPanel({
       <aside
         id="ai-chat-panel"
         className={cn(
-          "flex w-full flex-col rounded-2xl border border-border bg-card shadow-[var(--elevation-card)] xl:h-[calc(100vh-2.5rem)] xl:min-h-[calc(100vh-2.5rem)]",
+          "flex w-full flex-col rounded-2xl border border-border-default bg-bg-surface shadow-[var(--elevation-card)] xl:h-[calc(100vh-2.5rem)] xl:min-h-[calc(100vh-2.5rem)]",
           isSidebarMaximized
             ? "h-[calc(100vh-2.5rem)] min-h-[calc(100vh-2.5rem)] overflow-y-auto"
             : "h-[32rem] min-h-[32rem] overflow-hidden"
@@ -677,7 +677,7 @@ export function AIChatPanel({
         className="fixed inset-0 z-40 bg-black/40"
         onClick={onClose}
       />
-      <aside id="ai-chat-panel" className="fixed inset-y-0 right-0 z-50 w-full max-w-xl border-l border-border bg-card shadow-[var(--elevation-strong)]">
+      <aside id="ai-chat-panel" className="fixed inset-y-0 right-0 z-50 w-full max-w-xl border-l border-border-default bg-bg-surface shadow-[var(--elevation-strong)]">
         {panelBody}
       </aside>
     </>

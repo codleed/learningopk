@@ -69,28 +69,28 @@ export function ClassesPageClient({ initialBoards, stats }: ClassesPageClientPro
       key: "name",
       header: "Name",
       render: (cls: ClassRow) => (
-        <span className="font-medium text-[var(--foreground)]">{cls.name}</span>
+        <span className="font-medium text-[var(--text-primary)]">{cls.name}</span>
       ),
     },
     {
       key: "boardName",
       header: "Board",
       render: (cls: ClassRow) => (
-        <span className="text-[var(--muted-foreground)]">{cls.boardName}</span>
+        <span className="text-[var(--text-secondary)]">{cls.boardName}</span>
       ),
     },
     {
       key: "subjectCount",
       header: "Subjects",
       render: (cls: ClassRow) => (
-        <span className="text-[var(--foreground)]">{cls.subjectCount}</span>
+        <span className="text-[var(--text-primary)]">{cls.subjectCount}</span>
       ),
     },
     {
       key: "chapterCount",
       header: "Chapters",
       render: (cls: ClassRow) => (
-        <span className="text-[var(--foreground)]">{cls.chapterCount}</span>
+        <span className="text-[var(--text-primary)]">{cls.chapterCount}</span>
       ),
     },
   ];
@@ -104,7 +104,7 @@ export function ClassesPageClient({ initialBoards, stats }: ClassesPageClientPro
 
       <ContentStatsStrip stats={stats} />
 
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)]">
+      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
         <ContentTabs />
 
         <div className="p-6">

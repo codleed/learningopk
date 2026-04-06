@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { RotateCcw, CheckCircle2, Clock, Zap, ChevronRight } from "lucide-react";
+import { CheckCircle2, Clock, Zap, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { LoadingSkeleton, ErrorState } from "@/components/ui/states";
 import {
   fetchDueCards,
   submitReview,
@@ -44,7 +45,7 @@ function SrsFlashcard({
           onFlip();
         }
       }}
-      className="surface-card cursor-pointer select-none rounded-2xl border border-border p-6 transition-all duration-200 hover:shadow-[var(--shadow-card)]"
+      className="surface-card cursor-pointer select-none rounded-2xl border border-border-default p-6 transition-all duration-200 hover:shadow-[var(--shadow-card)]"
     >
       <div className="mb-3 flex items-center justify-between">
         <Badge variant="default" size="sm">
@@ -55,7 +56,7 @@ function SrsFlashcard({
         </span>
       </div>
 
-      <div className="min-h-[120px] text-xl font-semibold text-foreground">
+      <div className="min-h-[120px] text-xl font-semibold text-text-primary">
         <MarkdownRenderer content={isFlipped ? card.back : card.front} />
       </div>
 
@@ -152,7 +153,7 @@ export function SrsReviewDeck() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviewedCount, setReviewedCount] = useState(0);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [_errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const loadDueCards = useCallback(async () => {
     setPhase("loading");
@@ -208,34 +209,19 @@ export function SrsReviewDeck() {
   /* ---- Loading ---- */
   if (phase === "loading") {
     return (
-      <div className="space-y-4">
-        <div className="h-8 w-48 animate-pulse rounded-lg bg-bg-subtle" />
-        <div className="h-64 animate-pulse rounded-2xl bg-bg-subtle" />
-        <div className="grid grid-cols-4 gap-2">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-lg bg-bg-subtle" />
-          ))}
-        </div>
-      </div>
+      <LoadingSkeleton title="Loading flashcards" rows={4} variant="card" />
     );
   }
 
   /* ---- Error ---- */
   if (phase === "error") {
     return (
-      <Card variant="default" className="text-center">
-        <CardBody className="flex flex-col items-center gap-4 py-12">
-          <p className="text-sm text-accent-danger">{errorMessage}</p>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => void loadDueCards()}
-            iconLeft={<RotateCcw />}
-          >
-            Retry
-          </Button>
-        </CardBody>
-      </Card>
+      <ErrorState
+        title="Failed to load review cards"
+        description="We couldn't load your flashcards. Please try again."
+        onRetry={() => void loadDueCards()}
+        retryLabel="Retry"
+      />
     );
   }
 
@@ -263,7 +249,7 @@ export function SrsReviewDeck() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-accent-primary" aria-hidden />
-              <p className="text-sm font-semibold text-foreground">
+              <p className="text-sm font-semibold text-text-primary">
                 Review Session
               </p>
             </div>
@@ -277,7 +263,7 @@ export function SrsReviewDeck() {
               </span>
             </div>
           </div>
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-bg-subtle">
             <div
               className="h-full rounded-full bg-[var(--accent-primary)] transition-all duration-300"
               style={{

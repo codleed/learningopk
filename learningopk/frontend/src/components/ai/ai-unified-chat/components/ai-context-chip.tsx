@@ -36,8 +36,8 @@ export function AIContextChip({ context, className }: AIContextChipProps) {
         'inline-flex items-center gap-1.5',
         'px-3 py-1',
         'rounded-full',
-        'bg-primary/10 border border-primary/25',
-        'text-xs font-medium text-primary',
+        'bg-accent-primary/10 border border-accent-primary/25',
+        'text-xs font-medium text-accent-primary',
         className
       )}
     >
@@ -45,7 +45,7 @@ export function AIContextChip({ context, className }: AIContextChipProps) {
       <span className="truncate max-w-[200px]">
         {context.chapterTitle || `Chapter ${context.chapterNumber}`}
       </span>
-      <span className="text-primary/60">·</span>
+      <span className="text-accent-primary/60">·</span>
       <span>{tabLabels[context.currentTab]}</span>
     </div>
   );

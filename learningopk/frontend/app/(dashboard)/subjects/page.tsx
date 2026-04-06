@@ -1,15 +1,16 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Layers3 } from "lucide-react";
 
+import { StudyCardArt } from "@/components/common/study-card-art";
 import { AppShell } from "@/components/foundation/app-shell";
 import {
   StaggerContainer,
   MotionSection,
   MotionCard,
-} from "@/components/dashboard/DashboardClient";
+} from "@/components/motion";
 import { PageHeader } from "@/components/common/page-header";
 import { BoardBadge } from "@/components/common/board-badge";
 import { ProgressRing } from "@/components/common/progress-ring";
@@ -18,20 +19,17 @@ import { EmptyState, ErrorState } from "@/components/ui/states";
 import { getSubjectsList } from "@/lib/learn-api";
 import { getDashboardSummary } from "@/lib/progress-api";
 import { getServerSession } from "@/lib/session";
-import { cn } from "@/lib/utils";
 
-const subjectIconBySlug: Record<string, string> = {
-  physics: "/subjects/physics.svg",
-  chemistry: "/subjects/chemistry.svg",
-  biology: "/subjects/biology.svg",
-  mathematics: "/subjects/math.svg",
-  math: "/subjects/math.svg",
-  science: "/subjects/science.svg",
-  english: "/subjects/english.svg",
+export const metadata: Metadata = {
+  title: "My Subjects | LearningoPK",
+  description:
+    "Browse and study your enrolled subjects. Access chapters, exercises, and quizzes.",
+  openGraph: {
+    title: "My Subjects | LearningoPK",
+    description:
+      "Browse and study your enrolled subjects. Access chapters, exercises, and quizzes.",
+  },
 };
-
-const resolveSubjectIcon = (subjectSlug: string): string =>
-  subjectIconBySlug[subjectSlug] ?? "/subjects/science.svg";
 
 export default async function SubjectsPage() {
   const session = await getServerSession();
@@ -101,7 +99,6 @@ export default async function SubjectsPage() {
               classSlug: subject.classSlug,
               boardName: subject.boardName,
               boardSlug: subject.boardSlug,
-              iconSrc: resolveSubjectIcon(subject.slug),
               progress: progressBySubjectSlug.get(subject.slug) ?? 0,
             };
           })
@@ -160,57 +157,47 @@ export default async function SubjectsPage() {
                       variant="default"
                       className="group relative overflow-hidden"
                     >
-                      {/* Decorative accent line */}
-                      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-accent-primary/60 via-accent-primary/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
                       <CardBody className="p-5 sm:p-6">
-                        <div className="flex items-start gap-4">
-                          {/* Subject icon */}
-                          <div
-                            className={cn(
-                              "flex h-14 w-14 shrink-0 items-center justify-center rounded-xl",
-                              "border border-border-default bg-bg-subtle",
-                              "transition-colors duration-200 group-hover:border-accent-primary/20"
-                            )}
-                          >
-                            <Image
-                              src={subject.iconSrc}
-                              alt={`${subject.name} icon`}
-                              width={36}
-                              height={36}
-                              className="h-9 w-9"
-                            />
-                          </div>
+                        <div className="space-y-4">
+                          <StudyCardArt
+                            subject={subject.name}
+                            title={`${subject.boardName} • Class ${subject.className}`}
+                          />
 
-                          {/* Subject info */}
-                          <div className="min-w-0 flex-1">
-                            <h2 className="font-[var(--font-display)] text-lg font-semibold tracking-tight text-text-primary">
-                              {subject.name}
-                            </h2>
-                            <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                              <BoardBadge board={subject.boardSlug} size="sm" />
-                              <span className="text-[0.6875rem] font-medium text-text-muted">
-                                Class {subject.className}
-                              </span>
+                          <div className="flex items-start gap-4">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <BoardBadge board={subject.boardSlug} size="sm" />
+                                <span className="inline-flex items-center gap-1 rounded-full bg-bg-base px-2 py-1 text-[0.6875rem] font-medium text-text-muted">
+                                  <Layers3 className="h-3 w-3" aria-hidden />
+                                  Class {subject.className}
+                                </span>
+                              </div>
+
+                              <h2 className="mt-3 font-[var(--font-display)] text-[1.45rem] font-semibold tracking-tight text-text-primary">
+                                {subject.name}
+                              </h2>
+                              <p className="mt-1 text-sm text-text-secondary">
+                                Open chapter summaries, quizzes, flashcards, and practice flows.
+                              </p>
                             </div>
-                          </div>
 
-                          {/* Progress ring */}
-                          <div className="shrink-0">
-                            <ProgressRing
-                              percentage={subject.progress}
-                              size={48}
-                              strokeWidth={4}
-                            />
+                            <div className="shrink-0">
+                              <ProgressRing
+                                percentage={subject.progress}
+                                size={52}
+                                strokeWidth={4}
+                              />
+                            </div>
                           </div>
                         </div>
 
-                        {/* Progress bar */}
-                        <div className="mt-4">
+                        <div className="mt-5 rounded-2xl border border-border-default/70 bg-bg-base px-4 py-3">
                           <div className="flex items-center justify-between text-xs">
                             <span className="font-medium text-text-secondary">
                               {subject.progress}% complete
                             </span>
+                            <span className="text-text-muted">Tracked coverage</span>
                           </div>
                           <div
                             role="progressbar"
@@ -227,13 +214,21 @@ export default async function SubjectsPage() {
                           </div>
                         </div>
 
-                        {/* CTA */}
-                        <div className="mt-4 flex items-center gap-1.5 text-sm font-semibold text-accent-primary transition-colors group-hover:text-accent-primary-hover">
-                          <span>Open chapters</span>
-                          <ArrowRight
-                            className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
-                            aria-hidden
-                          />
+                        <div className="mt-4 flex items-center justify-between border-t border-border-default/70 pt-4">
+                          <div>
+                            <p className="text-[0.6875rem] font-medium uppercase tracking-[0.18em] text-text-muted">
+                              Explore
+                            </p>
+                            <p className="mt-1 text-sm font-medium text-text-primary">Open chapters</p>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 text-sm font-semibold text-accent-primary transition-colors group-hover:text-accent-primary-hover">
+                            <span>Enter</span>
+                            <ArrowRight
+                              className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
+                              aria-hidden
+                            />
+                          </div>
                         </div>
                       </CardBody>
                     </Card>

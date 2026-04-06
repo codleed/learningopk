@@ -21,18 +21,18 @@ export function AdminStatsStrip({ stats, className }: AdminStatsStripProps) {
       {stats.map((stat, index) => (
         <div key={index} className="flex items-center gap-3">
           {stat.icon && (
-            <span className="text-[var(--muted-foreground)]" aria-hidden>
+            <span className="text-[var(--text-secondary)]" aria-hidden>
               {stat.icon}
             </span>
           )}
           <div className="flex flex-col">
             <span
-              className="font-mono text-foreground"
+              className="font-mono text-text-primary"
               style={{ fontSize: "2rem", fontWeight: 700 }}
             >
               {stat.value}
             </span>
-            <span className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
+            <span className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-secondary)]">
               {stat.label}
             </span>
           </div>

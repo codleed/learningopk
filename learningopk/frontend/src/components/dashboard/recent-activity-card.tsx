@@ -1,16 +1,24 @@
-import { BookOpen, FileText, Clock } from "lucide-react";
+import { BookOpen, Clock, FileText } from "lucide-react";
 
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
-import type { DashboardSummaryResponse } from "@/lib/progress-api";
 import { cn } from "@/lib/utils";
+import type { DashboardSummaryResponse } from "@/lib/progress-api";
+
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
 
 type RecentActivity = DashboardSummaryResponse["recentActivity"];
 
-type RecentActivityFeedProps = {
+export interface RecentActivityCardProps {
   activity: RecentActivity;
-};
+}
 
-const formatTimestamp = (isoDate: string): string =>
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+const formatActivityTimestamp = (isoDate: string): string =>
   new Date(isoDate).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
@@ -18,7 +26,7 @@ const formatTimestamp = (isoDate: string): string =>
     minute: "2-digit",
   });
 
-const toLabel = (
+const toActivityLabel = (
   entry: DashboardSummaryResponse["recentActivity"][number]
 ): string => {
   if (entry.type === "chapter_visit") {
@@ -27,13 +35,19 @@ const toLabel = (
   return `Quiz in ${entry.subjectName}: ${entry.chapterTitle} (${entry.percentage}%)`;
 };
 
-export function RecentActivityFeed({ activity }: RecentActivityFeedProps) {
+/* ------------------------------------------------------------------ */
+/*  Component                                                          */
+/* ------------------------------------------------------------------ */
+
+export function RecentActivityCard({
+  activity,
+}: RecentActivityCardProps) {
   return (
     <Card variant="default" className="h-full flex flex-col">
       <CardHeader>
-        <h2 className="font-[var(--font-display)] text-base font-bold text-text-primary">
+        <h3 className="font-[var(--font-display)] text-base font-bold text-text-primary">
           Recent Activity
-        </h2>
+        </h3>
       </CardHeader>
       <CardBody className="flex-1 pt-0">
         {activity.length > 0 ? (
@@ -60,10 +74,10 @@ export function RecentActivityFeed({ activity }: RecentActivityFeedProps) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium text-text-primary leading-snug">
-                      {toLabel(entry)}
+                      {toActivityLabel(entry)}
                     </p>
                     <p className="mt-0.5 text-[10px] text-text-muted">
-                      {formatTimestamp(entry.occurredAt)}
+                      {formatActivityTimestamp(entry.occurredAt)}
                     </p>
                   </div>
                 </div>
@@ -72,9 +86,12 @@ export function RecentActivityFeed({ activity }: RecentActivityFeedProps) {
           </ul>
         ) : (
           <div className="flex flex-col items-center justify-center py-8">
-            <Clock className="h-8 w-8 text-text-muted" aria-hidden />
-            <p className="mt-2 text-sm text-text-secondary">
-              No recent activity. Start a chapter to populate your timeline.
+            <Clock
+              className="h-8 w-8 text-text-muted"
+              aria-hidden
+            />
+            <p className="mt-2 text-xs text-text-secondary">
+              No recent activity. Start a chapter!
             </p>
           </div>
         )}

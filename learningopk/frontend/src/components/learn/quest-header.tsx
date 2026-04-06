@@ -1,22 +1,16 @@
 "use client";
 
 import { Star, Trophy, Target } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 import { ProgressRing } from "@/components/common/progress-ring";
 import { StreakCounter } from "@/components/gamification/streak-counter";
 import { Badge } from "@/components/ui/badge";
 import type { GamificationState } from "@/lib/gamification-types";
 import { cn } from "@/lib/utils";
+import { useChapter } from "./chapter-context";
 
 interface QuestHeaderProps {
-  boardName: string;
-  boardSlug: string;
-  classSlug: string;
-  subjectName: string;
-  subjectSlug: string;
-  chapterNumber: number;
-  chapterTitle: string;
   gamificationState: GamificationState;
   streak: number;
   completionPercent: number;
@@ -24,19 +18,23 @@ interface QuestHeaderProps {
 
 export function QuestHeader(props: QuestHeaderProps) {
   const {
-    boardName,
-    subjectName,
-    chapterNumber,
-    chapterTitle,
     gamificationState,
     streak,
     completionPercent,
   } = props;
+
+  const {
+    boardName,
+    subjectName,
+    chapterNumber,
+    chapterTitle,
+  } = useChapter();
+  const reduced = useReducedMotion();
   return (
     <motion.header
-      initial={{ opacity: 0, y: 10 }}
+      initial={reduced ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+      transition={reduced ? { duration: 0 } : { duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
       className={cn(
         "relative overflow-hidden rounded-2xl",
         "border border-border-default bg-bg-surface",
@@ -70,9 +68,9 @@ export function QuestHeader(props: QuestHeaderProps) {
         <div className="flex items-start gap-5 sm:gap-6">
           {/* Progress ring */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.85 }}
+            initial={reduced ? false : { opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.15, duration: 0.4 }}
+            transition={reduced ? { duration: 0 } : { delay: 0.15, duration: 0.4 }}
             className="shrink-0"
           >
             <ProgressRing
@@ -100,9 +98,9 @@ export function QuestHeader(props: QuestHeaderProps) {
             {/* XP + Level stats */}
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <motion.div
-                initial={{ opacity: 0, x: -8 }}
+                initial={reduced ? false : { opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.25, duration: 0.3 }}
+                transition={reduced ? { duration: 0 } : { delay: 0.25, duration: 0.3 }}
                 className="flex items-center gap-1.5 rounded-lg border border-accent-warning/20 bg-accent-warning-light px-2.5 py-1"
               >
                 <Star className="h-3.5 w-3.5 fill-accent-warning text-accent-warning" aria-hidden />
@@ -112,9 +110,9 @@ export function QuestHeader(props: QuestHeaderProps) {
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, x: -8 }}
+                initial={reduced ? false : { opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3, duration: 0.3 }}
+                transition={reduced ? { duration: 0 } : { delay: 0.3, duration: 0.3 }}
                 className="flex items-center gap-1.5 rounded-lg border border-accent-primary/20 bg-accent-primary-light px-2.5 py-1"
               >
                 <Trophy className="h-3.5 w-3.5 text-accent-primary" aria-hidden />
@@ -130,9 +128,9 @@ export function QuestHeader(props: QuestHeaderProps) {
         <div className="mt-5">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-bg-subtle">
             <motion.div
-              initial={{ width: 0 }}
+              initial={reduced ? false : { width: 0 }}
               animate={{ width: `${completionPercent}%` }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+              transition={reduced ? { duration: 0 } : { duration: 0.8, ease: "easeOut", delay: 0.3 }}
               className="h-full rounded-full bg-gradient-to-r from-accent-primary to-accent-success"
             />
           </div>

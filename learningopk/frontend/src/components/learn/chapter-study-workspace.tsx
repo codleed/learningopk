@@ -8,9 +8,11 @@ import type { TabItem } from "@/components/foundation/tabs";
 import {
   StaggerContainer,
   MotionSection,
-} from "@/components/dashboard/DashboardClient";
+} from "@/components/motion";
 import { cn } from "@/lib/utils";
 
+import { ChapterProvider, type ChapterContextValue } from "./chapter-context";
+import type { ChapterTab } from "./chapter-context";
 import { ChapterStudyContentWithAi } from "./chapter-study-content-with-ai";
 import { AIUnifiedChat } from "@/components/ai/ai-unified-chat";
 import type { AIContext } from "@/components/ai/ai-unified-chat/types";
@@ -22,8 +24,6 @@ import { ConfettiCelebration } from "@/components/gamification/confetti-celebrat
 import { QuestHeader } from "./quest-header";
 import { QuestTabBar } from "./quest-tab-bar";
 import { getChapterProgress } from "@/lib/gamification-storage";
-
-type ChapterTab = "summary" | "quick-revision" | "exercises" | "flashcards" | "quiz" | "illustration";
 
 type ChapterStudyWorkspaceProps = {
   boardName: string;
@@ -129,8 +129,30 @@ export function ChapterStudyWorkspace({
     currentTab: activeTab,
   };
 
+  const chapterContextValue: ChapterContextValue = {
+    boardSlug,
+    classSlug,
+    subjectSlug,
+    chapterSlug,
+    activeTab,
+    boardName,
+    className,
+    subjectName,
+    chapterTitle,
+    chapterNumber,
+    chapterId,
+    chapterSummary,
+    chapterRevisionNotes,
+    exercises,
+    flashcards,
+    quiz,
+    flashcardStorageKey,
+    autoOpenAi,
+    challengeId,
+  };
+
   return (
-    <>
+    <ChapterProvider value={chapterContextValue}>
       <XpToast notifications={visibleNotifications} onDismiss={dismiss} />
       <ConfettiCelebration show={leveledUp} onComplete={() => {}} />
 
@@ -145,13 +167,6 @@ export function ChapterStudyWorkspace({
           <div className="space-y-4">
             {/* Quest header */}
             <QuestHeader
-              boardName={boardName}
-              boardSlug={boardSlug}
-              classSlug={classSlug}
-              subjectName={subjectName}
-              subjectSlug={subjectSlug}
-              chapterNumber={chapterNumber}
-              chapterTitle={chapterTitle}
               gamificationState={state}
               streak={streak}
               completionPercent={completionPercent}
@@ -160,8 +175,6 @@ export function ChapterStudyWorkspace({
             {/* Tab bar */}
             <div className="rounded-xl border border-border-default bg-bg-surface p-1.5">
               <QuestTabBar
-                activeTab={activeTab}
-                baseHref={`/${boardSlug}/${classSlug}/${subjectSlug}/${chapterSlug}`}
                 status={{
                   summary: chapterProgress?.summaryRead ?? false,
                   quickRevision:
@@ -198,21 +211,9 @@ export function ChapterStudyWorkspace({
               </div>
 
               <ChapterStudyContentWithAi
-                activeTab={activeTab}
-                chapterId={chapterId}
-                chapterTitle={chapterTitle}
-                chapterNumber={chapterNumber}
-                summary={chapterSummary}
-                revisionNotes={chapterRevisionNotes}
-                subjectName={subjectName}
-                exercises={trainingExercises}
+                trainingExercises={trainingExercises}
                 illustrationExercises={illustrationExercises}
                 illustrationCompletedIds={illustrationCompletedIds}
-                flashcards={flashcards}
-                quiz={quiz}
-                flashcardStorageKey={flashcardStorageKey}
-                autoOpenAi={autoOpenAi}
-                challengeId={challengeId}
                 onPromptChange={(nextPrompt) => {
                   setPrompt(nextPrompt);
                 }}
@@ -228,6 +229,6 @@ export function ChapterStudyWorkspace({
           </div>
         </MotionSection>
       </StaggerContainer>
-    </>
+    </ChapterProvider>
   );
 }

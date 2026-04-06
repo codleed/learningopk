@@ -26,8 +26,8 @@ export function AIChatHeader({
       className={cn(
         'flex items-center justify-between',
         'px-4 py-3.5',
-        'border-b border-border/50',
-        'bg-card',
+        'border-b border-border-default/50',
+        'bg-bg-surface',
         className
       )}
     >
@@ -39,12 +39,12 @@ export function AIChatHeader({
             size="sm"
             onClick={onHide}
             aria-label="Hide AI Tutor"
-            className="h-7 w-7 rounded-md p-0 hover:bg-primary/10 hover:text-primary"
+            className="h-7 w-7 rounded-md p-0 hover:bg-accent-primary/10 hover:text-accent-primary"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           </Button>
         )}
-        <h2 className="text-sm font-semibold text-foreground">
+        <h2 className="text-sm font-semibold text-text-primary">
           AI Tutor
         </h2>
       </div>
@@ -57,7 +57,7 @@ export function AIChatHeader({
             size="sm"
             onClick={onExpand}
             aria-label={isExpanded ? 'Restore size' : 'Expand'}
-            className="h-7 w-7 rounded-md p-0 hover:bg-primary/10 hover:text-primary"
+            className="h-7 w-7 rounded-md p-0 hover:bg-accent-primary/10 hover:text-accent-primary"
           >
             {isExpanded ? (
               <Minimize2 className="h-4 w-4" aria-hidden="true" />
@@ -74,7 +74,7 @@ export function AIChatHeader({
             size="sm"
             onClick={onClose}
             aria-label="Close AI Chat"
-            className="h-7 w-7 rounded-md p-0 hover:bg-destructive/10 hover:text-destructive"
+            className="h-7 w-7 rounded-md p-0 hover:bg-accent-danger/10 hover:text-accent-danger"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </Button>

@@ -56,21 +56,22 @@ function NavItem({ item, isActive, isExpanded, variant, onNavigate }: NavItemPro
       className={cn(
         "group relative flex items-center rounded-xl transition-all duration-150",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sidebar)]",
-        !isExpanded
-          ? "h-11 w-11 justify-center mx-auto"
-          : isStudentVariant
-            ? "h-11 px-3"
-            : "h-8 px-3",
+        isStudentVariant ? "h-11 px-3" : "h-8 px-3",
         isStudentVariant
           ? isActive
-            ? "bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)]"
-            : "text-[var(--sidebar-nav-default-text)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-nav-hover-text)]"
+            ? "bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)] shadow-[0_8px_18px_-14px_rgba(15,23,42,0.45)]"
+            : "text-[var(--sidebar-nav-default-text)] hover:-translate-y-[1px] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-nav-hover-text)] hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,0.35)]"
           : isActive
             ? "bg-[var(--sidebar-admin-active-bg)] text-[var(--sidebar-admin-active-text)]"
             : "text-[var(--sidebar-admin-default-text)] hover:bg-[var(--sidebar-admin-hover-bg)] hover:text-[var(--sidebar-admin-hover-text)]"
       )}
     >
-      <div className={cn("flex shrink-0", !isExpanded ? "justify-center" : "gap-3", isStudentVariant ? "w-11" : "w-[52px]")}>
+      <div
+        className={cn(
+          "flex shrink-0 items-center justify-center",
+          isStudentVariant ? "w-11" : "w-[52px]"
+        )}
+      >
         <LinkIcon
           className="h-5 w-5 shrink-0"
           strokeWidth={isActive ? 2.5 : 2}
@@ -80,7 +81,7 @@ function NavItem({ item, isActive, isExpanded, variant, onNavigate }: NavItemPro
       {isExpanded && (
         <span
           className={cn(
-            "truncate transition-colors duration-150",
+            "min-w-0 truncate transition-colors duration-150",
             isStudentVariant ? "text-sm font-medium" : "text-[13px] font-medium leading-tight"
           )}
         >
@@ -305,7 +306,7 @@ export function LeftRail({
                 href="/dashboard"
                 aria-label="LearningoPK Home"
                 onClick={handleNavItemClick}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--foreground)] p-2 shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--text-primary)] p-2 shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105"
               >
                 <Image
                   src="/new_logo.png"
@@ -359,7 +360,13 @@ export function LeftRail({
               hideLabel={!actualExpanded}
               className={cn(
                 "group flex h-10 w-full items-center rounded-xl border-0 bg-transparent transition-all duration-150",
-                !actualExpanded ? "justify-center text-[var(--sidebar-utility-default-text)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8" : "gap-3 px-3 text-[var(--sidebar-utility-default-text)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8"
+                viewMode === "student"
+                  ? !actualExpanded
+                    ? "justify-center text-[var(--sidebar-utility-default-text)] hover:-translate-y-[1px] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8 hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,0.35)]"
+                    : "gap-3 px-3 text-[var(--sidebar-utility-default-text)] hover:-translate-y-[1px] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8 hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,0.35)]"
+                  : !actualExpanded
+                    ? "justify-center text-[var(--sidebar-utility-default-text)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8"
+                    : "gap-3 px-3 text-[var(--sidebar-utility-default-text)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/8"
               )}
               labelClassName="truncate text-sm font-medium transition-colors duration-150"
             />
@@ -371,6 +378,7 @@ export function LeftRail({
               onClick={handleNavItemClick}
               className={cn(
                 "group flex items-center rounded-2xl border border-[var(--sidebar-profile-border)] bg-[var(--sidebar-profile-bg)] p-3 transition-all duration-150 hover:border-[var(--sidebar-border)] hover:bg-[var(--sidebar-nav-hover-bg)]",
+                viewMode === "student" && "rounded-xl hover:-translate-y-[1px] hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,0.35)]",
                 !actualExpanded
                   ? "justify-center p-2"
                   : "gap-3"

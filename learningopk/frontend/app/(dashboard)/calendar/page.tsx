@@ -60,17 +60,17 @@ export default async function CalendarPage() {
           className="mb-6"
         />
 
-        <header className="mb-6 border-b border-border/75 pb-4">
-          <h1 className="text-3xl font-semibold text-foreground">Calendar</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+        <header className="mb-6 border-b border-border-default/75 pb-4">
+          <h1 className="text-3xl font-semibold text-text-primary">Calendar</h1>
+          <p className="mt-1 text-sm text-text-secondary">
             Track your learning schedule and upcoming activities
           </p>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-          <section className="rounded-2xl border border-border bg-card p-6">
+          <section className="rounded-2xl border border-border-default bg-bg-surface p-6">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-foreground">
+              <h2 className="text-xl font-semibold text-text-primary">
                 {MONTHS[currentMonth]} {currentYear}
               </h2>
               <div className="flex items-center gap-2">
@@ -85,7 +85,7 @@ export default async function CalendarPage() {
               {DAYS.map((day) => (
                 <div
                   key={day}
-                  className="py-2 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                  className="py-2 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary"
                 >
                   {day}
                 </div>
@@ -108,8 +108,8 @@ export default async function CalendarPage() {
                       "relative flex aspect-square items-center justify-center rounded-lg transition-colors",
                       isToday && "bg-[var(--primary)] text-primary-foreground",
                       !isToday && hasActivity && "bg-[var(--primary)]/10 text-[var(--primary)]",
-                      !isToday && !hasActivity && isPast && "text-muted-foreground/50",
-                      !isToday && !hasActivity && !isPast && "text-foreground hover:bg-muted/50"
+                      !isToday && !hasActivity && isPast && "text-text-secondary/50",
+                      !isToday && !hasActivity && !isPast && "text-text-primary hover:bg-bg-subtle/50"
                     )}
                   >
                     <span className="text-sm font-medium">{day}</span>
@@ -123,9 +123,9 @@ export default async function CalendarPage() {
           </section>
 
           <aside className="space-y-4">
-            <section className="rounded-2xl border border-border bg-card p-5">
-              <h3 className="text-sm font-semibold text-foreground">Today</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
+            <section className="rounded-2xl border border-border-default bg-bg-surface p-5">
+              <h3 className="text-sm font-semibold text-text-primary">Today</h3>
+              <p className="mt-1 text-xs text-text-secondary">
                 {MONTHS[currentMonth]} {currentDay}, {currentYear}
               </p>
               <div className="mt-4 space-y-3">
@@ -133,12 +133,12 @@ export default async function CalendarPage() {
                   events.slice(0, 3).map((event) => (
                     <div
                       key={event.id}
-                      className="rounded-lg border border-border/50 bg-muted/30 p-3"
+                      className="rounded-lg border border-border-default/50 bg-bg-subtle/30 p-3"
                     >
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-sm font-medium text-text-primary">
                         {event.title}
                       </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
+                      <p className="mt-0.5 text-xs text-text-secondary">
                         {new Date(event.date).toLocaleTimeString("en-US", {
                           hour: "numeric",
                           minute: "2-digit",
@@ -147,39 +147,39 @@ export default async function CalendarPage() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-text-secondary">
                     No activities scheduled for today
                   </p>
                 )}
               </div>
             </section>
 
-            <section className="rounded-2xl border border-border bg-card p-5">
-              <h3 className="text-sm font-semibold text-foreground">This Week</h3>
+            <section className="rounded-2xl border border-border-default bg-bg-surface p-5">
+              <h3 className="text-sm font-semibold text-text-primary">This Week</h3>
               <div className="mt-4 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Study hours</span>
-                  <span className="text-sm font-semibold text-foreground">
+                  <span className="text-sm text-text-secondary">Study hours</span>
+                  <span className="text-sm font-semibold text-text-primary">
                     {Math.round(
                       (summary?.weeklyActivity.reduce((acc, a) => acc + a.activityCount, 0) ?? 0) * 0.5
                     )}h
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Active days</span>
-                  <span className="text-sm font-semibold text-foreground">
+                  <span className="text-sm text-text-secondary">Active days</span>
+                  <span className="text-sm font-semibold text-text-primary">
                     {summary?.weeklyActivity.filter((a) => a.activityCount > 0).length ?? 0}/7
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Chapters visited</span>
-                  <span className="text-sm font-semibold text-foreground">
+                  <span className="text-sm text-text-secondary">Chapters visited</span>
+                  <span className="text-sm font-semibold text-text-primary">
                     {summary?.recentActivity.filter((a) => a.type === "chapter_visit").length ?? 0}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Quizzes taken</span>
-                  <span className="text-sm font-semibold text-foreground">
+                  <span className="text-sm text-text-secondary">Quizzes taken</span>
+                  <span className="text-sm font-semibold text-text-primary">
                     {summary?.recentActivity.filter((a) => a.type === "quiz_submit").length ?? 0}
                   </span>
                 </div>

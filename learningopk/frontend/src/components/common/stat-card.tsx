@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { TrendingDown, TrendingUp, Minus } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -18,8 +18,8 @@ export interface StatTrend {
 
 /** Props for the stat card component. */
 export interface StatCardProps {
-  /** Descriptive label shown above the value. */
-  label: string;
+  /** Descriptive label shown above the value. Accepts a string or ReactNode (e.g. MetricLabel). */
+  label: React.ReactNode;
   /** The metric value (number or formatted string). */
   value: string | number;
   /** Lucide icon rendered in the card. */

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Check, X, RotateCcw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
@@ -73,6 +73,7 @@ export function FillInBlanksRenderer({
   onComplete,
   className,
 }: FillInBlanksRendererProps) {
+  const reduced = useReducedMotion();
   const segments = useMemo(() => parseQuestion(question), [question]);
   const blankCount = blanksAnswer.length;
 
@@ -201,10 +202,10 @@ export function FillInBlanksRenderer({
           {!isChecked ? (
             <motion.div
               key="check-btn"
-              initial={{ opacity: 0, y: 8 }}
+              initial={reduced ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
+              exit={reduced ? undefined : { opacity: 0, y: -8 }}
+              transition={reduced ? { duration: 0 } : { duration: 0.2 }}
             >
               <Button
                 variant="primary"
@@ -218,10 +219,10 @@ export function FillInBlanksRenderer({
           ) : (
             <motion.div
               key="try-again-btn"
-              initial={{ opacity: 0, y: 8 }}
+              initial={reduced ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
+              exit={reduced ? undefined : { opacity: 0, y: -8 }}
+              transition={reduced ? { duration: 0 } : { duration: 0.2 }}
               className="flex items-center gap-3"
             >
               <Button
@@ -235,9 +236,9 @@ export function FillInBlanksRenderer({
 
               {checked.allCorrect && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
+                  initial={reduced ? false : { opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.15, type: "spring", stiffness: 400, damping: 25 }}
+                  transition={reduced ? { duration: 0 } : { delay: 0.15, type: "spring", stiffness: 400, damping: 25 }}
                 >
                   <Badge variant="success" size="md">
                     All correct!
@@ -275,6 +276,7 @@ function BlankInput({
   onKeyDown,
   inputRef,
 }: BlankInputProps) {
+  const reduced = useReducedMotion();
   const isCorrect = status === "correct";
   const isIncorrect = status === "incorrect";
   const isChecked = status !== "unanswered";
@@ -320,10 +322,10 @@ function BlankInput({
         <AnimatePresence>
           {isChecked && (
             <motion.span
-              variants={iconVariants}
-              initial="initial"
-              animate="animate"
-              transition={iconTransition}
+              variants={reduced ? undefined : iconVariants}
+              initial={reduced ? false : "initial"}
+              animate={reduced ? undefined : "animate"}
+              transition={reduced ? { duration: 0 } : iconTransition}
               className={cn(
                 "ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full",
                 isCorrect && "bg-emerald-500 text-white",
@@ -346,11 +348,11 @@ function BlankInput({
         {isIncorrect && (
           <motion.span
             id={`blank-${index}-correction`}
-            variants={feedbackVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={feedbackTransition}
+            variants={reduced ? undefined : feedbackVariants}
+            initial={reduced ? false : "initial"}
+            animate={reduced ? undefined : "animate"}
+            exit={reduced ? undefined : "exit"}
+            transition={reduced ? { duration: 0 } : feedbackTransition}
             className="mt-0.5 text-xs text-emerald-600"
             role="status"
           >

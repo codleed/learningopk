@@ -30,14 +30,14 @@ export default async function EditSubjectPage({ params }: EditSubjectPageProps) 
       />
 
       <div
-        className="rounded-[var(--radius-lg)] bg-[var(--card)] shadow-[var(--shadow-sm)]"
+        className="rounded-[var(--radius-lg)] bg-[var(--bg-surface)] shadow-[var(--shadow-sm)]"
         style={{ padding: "var(--space-6)" }}
       >
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--muted)]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-subtle)]">
               <svg
-                className="h-5 w-5 text-[var(--muted-foreground)]"
+                className="h-5 w-5 text-[var(--text-secondary)]"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -51,10 +51,10 @@ export default async function EditSubjectPage({ params }: EditSubjectPageProps) 
               </svg>
             </div>
             <div>
-              <h3 className="font-semibold text-[var(--foreground)]">
+              <h3 className="font-semibold text-[var(--text-primary)]">
                 Edit Subject functionality is not yet available
               </h3>
-              <p className="text-sm text-[var(--muted-foreground)]">
+              <p className="text-sm text-[var(--text-secondary)]">
                 The API does not support updating subjects.
               </p>
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ChevronDown, ChevronUp, Check, X, Minus } from "lucide-react";
 
 import type { QuizResult } from "./quiz-runner";
@@ -35,6 +35,7 @@ type ReviewEntry = QuizResult["questionResults"][number];
 
 function ReviewItem({ entry, index }: { entry: ReviewEntry; index: number }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const reduced = useReducedMotion();
 
   const statusIcon = entry.isCorrect ? (
     <Check className="h-3.5 w-3.5" />
@@ -114,10 +115,10 @@ function ReviewItem({ entry, index }: { entry: ReviewEntry; index: number }) {
       <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
+            initial={reduced ? false : { height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
+            exit={reduced ? undefined : { height: 0, opacity: 0 }}
+            transition={reduced ? { duration: 0 } : { duration: 0.25, ease: "easeInOut" }}
             className="overflow-hidden"
           >
             <div className="border-t border-border-default px-4 py-4 space-y-4">

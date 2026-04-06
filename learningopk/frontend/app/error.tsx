@@ -1,18 +1,18 @@
 "use client";
 
-import { RouteError } from "@/components/foundation/route-state";
+import { ErrorState } from "@/components/ui/states";
 
 type RootErrorProps = {
   error: Error & { digest?: string };
   reset: () => void;
 };
 
-export default function RootError({ error, reset }: RootErrorProps) {
+export default function RootError({ error: _error, reset }: RootErrorProps) {
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-12">
-      <RouteError
+      <ErrorState
         title="Something went wrong"
-        description={error.message || "An unexpected application error occurred."}
+        description="An unexpected error occurred. Please try again or refresh the page."
         onRetry={reset}
       />
     </div>

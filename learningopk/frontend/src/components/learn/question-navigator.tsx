@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,7 @@ export function QuestionNavigator({
   onSelectQuestion,
   isLocked
 }: QuestionNavigatorProps) {
+  const reduced = useReducedMotion();
   const totalQuestions = questions.length;
 
   const questionStatuses = useMemo(() => {
@@ -85,8 +86,8 @@ export function QuestionNavigator({
               <motion.button
                 key={index}
                 type="button"
-                whileTap={{ scale: 0.92 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                whileTap={reduced ? undefined : { scale: 0.92 }}
+                transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 400, damping: 25 }}
                 className={cn(
                   "relative flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold transition-all duration-150",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40 focus-visible:ring-offset-1",
@@ -100,12 +101,15 @@ export function QuestionNavigator({
                 aria-label={`Go to question ${index + 1} (${status})`}
                 aria-current={isCurrent ? "step" : undefined}
               >
-                {isCurrent && (
+                {isCurrent && !reduced && (
                   <motion.span
                     layoutId="nav-ring"
                     className="absolute inset-0 rounded-lg ring-2 ring-accent-primary/40"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
+                )}
+                {isCurrent && reduced && (
+                  <span className="absolute inset-0 rounded-lg ring-2 ring-accent-primary/40" />
                 )}
                 {index + 1}
               </motion.button>

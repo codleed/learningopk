@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { AdminNotificationsPanel } from "@/components/admin/admin-notifications-panel";
-import { PageHeader } from "@/components/foundation/page-header";
+import { AdminPageHeader } from "@/components/admin/page-header";
 import { getAdminNotifications } from "@/lib/admin-api";
 
 export default async function AdminNotificationsPage() {
@@ -22,12 +22,12 @@ export default async function AdminNotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Admin Notifications"
         title="Notifications"
         subtitle="Broadcast operational messages and review recent sends."
         actions={
-          <Link href="/admin" className="text-sm font-medium text-foreground underline underline-offset-4">
+          <Link href="/admin" className="text-sm font-medium text-text-primary underline underline-offset-4">
             Back to admin
           </Link>
         }

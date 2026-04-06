@@ -33,11 +33,13 @@ export default async function StatsPage() {
       summary: data,
       error: null as string | null,
     }))
-    .catch((error: unknown) => ({
-      summary: null,
-      error:
-        error instanceof Error ? error.message : "Unable to load stats.",
-    }));
+    .catch((error: unknown) => {
+      console.error("[Stats]", error);
+      return {
+        summary: null,
+        error: "We couldn't load your stats right now. Please try again.",
+      };
+    });
 
   const summary = result.summary;
   const summaryError = result.error;

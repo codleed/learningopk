@@ -81,7 +81,7 @@ export function ExercisesPage({ boards, initialExercises, stats }: ExercisesPage
       key: "exerciseNumber",
       header: "Exercise",
       render: (ex) => (
-        <span className="font-medium text-[var(--foreground)]">
+        <span className="font-medium text-[var(--text-primary)]">
           Exercise {ex.exerciseNumber}
         </span>
       ),
@@ -90,7 +90,7 @@ export function ExercisesPage({ boards, initialExercises, stats }: ExercisesPage
       key: "chapter",
       header: "Chapter",
       render: (ex) => (
-        <div className="flex items-center gap-1 text-xs text-[var(--muted-foreground)]">
+        <div className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
           <span className="max-w-[200px] truncate">
             {ex.boardName} / {ex.className} / {ex.subjectName} / {ex.chapterTitle}
           </span>
@@ -101,7 +101,7 @@ export function ExercisesPage({ boards, initialExercises, stats }: ExercisesPage
       key: "type",
       header: "Type",
       render: (ex) => (
-        <span className="text-[var(--foreground)]">{typeLabels[ex.type] || ex.type}</span>
+        <span className="text-[var(--text-primary)]">{typeLabels[ex.type] || ex.type}</span>
       ),
     },
     {
@@ -152,7 +152,7 @@ export function ExercisesPage({ boards, initialExercises, stats }: ExercisesPage
 
       <ContentStatsStrip stats={stats} />
 
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)]">
+      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
         <ContentTabs />
 
         <div className="p-6">

@@ -29,7 +29,7 @@ export function AdminFormField({
     <div className={cn("flex flex-col gap-1.5", className)} {...props}>
       <label
         htmlFor={id}
-        className="text-sm font-semibold text-[var(--foreground)]"
+        className="text-sm font-semibold text-[var(--text-primary)]"
         style={{ fontSize: "0.875rem" }}
       >
         {label}
@@ -51,7 +51,7 @@ export function AdminFormField({
         </p>
       )}
       {hint && !error && (
-        <p id={hintId} className="text-[var(--muted-foreground)]" style={{ fontSize: "0.75rem" }}>
+        <p id={hintId} className="text-[var(--text-secondary)]" style={{ fontSize: "0.75rem" }}>
           {hint}
         </p>
       )}

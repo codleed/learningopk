@@ -82,16 +82,16 @@ export function ContentStatsStrip({ stats }: ContentStatsStripProps) {
         <Link
           key={stat.id}
           href={stat.href}
-          className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--card)] p-3 transition-colors hover:bg-[var(--muted)] hover:border-[var(--primary)]"
+          className="flex items-center gap-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-3 transition-colors hover:bg-[var(--bg-subtle)] hover:border-[var(--primary)]"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--primary-light)] text-[var(--primary)]">
             {stat.icon}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-heading text-lg font-semibold text-[var(--foreground)]">
+            <p className="font-heading text-lg font-semibold text-[var(--text-primary)]">
               {stat.value}
             </p>
-            <p className="truncate text-xs text-[var(--muted-foreground)]">
+            <p className="truncate text-xs text-[var(--text-secondary)]">
               {stat.label}
             </p>
           </div>

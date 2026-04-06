@@ -155,16 +155,16 @@ export function FlashcardDeck({ chapterId, flashcards, storageKey }: FlashcardDe
 
   return (
     <div className="space-y-5">
-      <div className="surface-card rounded-xl border border-border p-4">
+      <div className="surface-card rounded-xl border border-border-default p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-semibold text-foreground">
+          <p className="text-sm font-semibold text-text-primary">
             Progress {stats.completed}/{cardCount} ({stats.progressPercent}%)
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-text-secondary">
             Known: {stats.known} | Review: {stats.review}
           </p>
         </div>
-        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-bg-subtle">
           <div className="h-full rounded-full bg-[var(--primary)] transition-all" style={{ width: `${stats.progressPercent}%` }} />
         </div>
       </div>

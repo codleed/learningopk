@@ -29,11 +29,11 @@ export default function AddFlashCardsPage() {
             <AlertCircle className="h-8 w-8 text-amber-600" aria-hidden />
           </div>
           
-          <h3 className="font-heading text-lg font-semibold text-[var(--foreground)] mb-2">
+          <h3 className="font-heading text-lg font-semibold text-[var(--text-primary)] mb-2">
             Flash Card Management Not Available
           </h3>
           
-          <p className="text-sm text-[var(--muted-foreground)] max-w-md mb-6">
+          <p className="text-sm text-[var(--text-secondary)] max-w-md mb-6">
             The Flash Card API is not yet available. Backend API support is needed to enable flash card creation.
           </p>
 
@@ -66,20 +66,20 @@ export default function AddFlashCardsPage() {
         <div className="space-y-6 opacity-50 pointer-events-none select-none">
           {/* Chapter Select */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[var(--foreground)]">
+            <label className="text-sm font-medium text-[var(--text-primary)]">
               Chapter <span className="text-red-600">*</span>
             </label>
-            <div className="w-full rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm text-[var(--muted-foreground)]">
+            <div className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-secondary)]">
               Chapter selection (API needed)
             </div>
           </div>
 
           {/* Deck Title */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[var(--foreground)]">
+            <label className="text-sm font-medium text-[var(--text-primary)]">
               Deck Title <span className="text-red-600">*</span>
             </label>
-            <div className="w-full rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm text-[var(--muted-foreground)]">
+            <div className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-secondary)]">
               Deck title input (API needed)
             </div>
           </div>
@@ -87,19 +87,19 @@ export default function AddFlashCardsPage() {
           {/* Cards Preview */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-heading text-base font-semibold text-[var(--foreground)]">
+              <h3 className="font-heading text-base font-semibold text-[var(--text-primary)]">
                 Cards (0)
               </h3>
               <button
                 disabled
-                className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-1.5 text-sm font-medium text-[var(--muted-foreground)] cursor-not-allowed"
+                className="inline-flex items-center gap-1 rounded-md border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-1.5 text-sm font-medium text-[var(--text-secondary)] cursor-not-allowed"
               >
                 + Add Card
               </button>
             </div>
 
-            <div className="rounded-lg border border-dashed border-[var(--border)] p-6 text-center">
-              <p className="text-sm text-[var(--muted-foreground)]">
+            <div className="rounded-lg border border-dashed border-[var(--border-default)] p-6 text-center">
+              <p className="text-sm text-[var(--text-secondary)]">
                 Card editor will appear here once API is available
               </p>
             </div>
@@ -109,13 +109,13 @@ export default function AddFlashCardsPage() {
           <div className="flex items-center gap-3 pt-2">
             <button
               disabled
-              className="inline-flex items-center rounded-md bg-[var(--muted)] px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] cursor-not-allowed"
+              className="inline-flex items-center rounded-md bg-[var(--bg-subtle)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] cursor-not-allowed"
             >
               Create Flash Cards
             </button>
             <button
               disabled
-              className="inline-flex items-center rounded-md border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] cursor-not-allowed"
+              className="inline-flex items-center rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] cursor-not-allowed"
             >
               Cancel
             </button>

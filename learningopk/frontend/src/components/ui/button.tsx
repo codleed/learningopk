@@ -2,7 +2,6 @@
 
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { motion, type HTMLMotionProps } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 
@@ -124,9 +123,9 @@ export interface ButtonProps
 }
 
 /**
- * Accessible, animated button primitive with CVA variants.
+ * Accessible button primitive with CVA variants.
  *
- * Supports loading state, icon slots, and Framer Motion tap animation.
+ * Supports loading state, icon slots, and an optional press state.
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   function Button(
@@ -180,34 +179,21 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       </>
     );
 
-    if (disableAnimation) {
-      return (
-        <button
-          ref={ref}
-          type={type}
-          disabled={isDisabled}
-          className={cn(buttonVariants({ variant, size, shape, width }), className)}
-          aria-busy={loading || undefined}
-          {...props}
-        >
-          {content}
-        </button>
-      );
-    }
-
     return (
-      <motion.button
+      <button
         ref={ref}
         type={type}
         disabled={isDisabled}
-        className={cn(buttonVariants({ variant, size, shape, width }), className)}
-        whileTap={isDisabled ? undefined : { scale: 0.97 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        className={cn(
+          buttonVariants({ variant, size, shape, width }),
+          !disableAnimation && !isDisabled && "active:scale-[0.97]",
+          className
+        )}
         aria-busy={loading || undefined}
-        {...(props as Omit<HTMLMotionProps<"button">, "ref">)}
+        {...props}
       >
         {content}
-      </motion.button>
+      </button>
     );
   }
 );

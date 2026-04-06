@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ChapterLinkGraph } from "@/components/graph/chapter-link-graph";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EmptyState } from "@/components/ui/states";
+import { EmptyState, LoadingSkeleton } from "@/components/ui/states";
 import { getSubjectGraph, type SubjectResponse } from "@/lib/learn-api";
 
 import { ChapterCard } from "./chapter-card";
@@ -205,7 +205,7 @@ export function SubjectViewSwitcher({ boardSlug, classSlug, subjectSlug, chapter
             data-testid="subject-graph-search"
           />
 
-          {graphState === "loading" ? <p className="text-sm text-muted-foreground">Loading chapter graph...</p> : null}
+          {graphState === "loading" ? <LoadingSkeleton title="Loading chapter graph" rows={2} variant="list" /> : null}
           {graphState === "error" ? (
             <p className="text-sm text-rose-700">Could not load chapter graph right now. Try again in a moment.</p>
           ) : null}

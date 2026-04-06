@@ -183,7 +183,7 @@ function HeadingDropdown({ onSelect, open, onToggle, onClose, disabled }: Headin
           disabled={disabled}
           className={cn(
             "inline-flex items-center gap-0.5 rounded p-1.5",
-            "text-muted-foreground hover:bg-muted hover:text-foreground",
+            "text-text-secondary hover:bg-bg-subtle hover:text-text-primary",
             "transition-colors disabled:pointer-events-none disabled:opacity-50",
           )}
           aria-label="Select heading level"
@@ -202,7 +202,7 @@ function HeadingDropdown({ onSelect, open, onToggle, onClose, disabled }: Headin
             role="listbox"
             className={cn(
               "absolute left-0 top-full z-50 mt-1 min-w-[160px]",
-              "rounded-lg border border-border bg-card shadow-lg",
+              "rounded-lg border border-border-default bg-bg-surface shadow-lg",
               "animate-in fade-in-0 zoom-in-95 py-1",
             )}
           >
@@ -215,11 +215,11 @@ function HeadingDropdown({ onSelect, open, onToggle, onClose, disabled }: Headin
                 onClick={() => handleSelect(level)}
                 className={cn(
                   "flex w-full items-center gap-3 px-3 py-1.5 text-left text-sm",
-                  "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  "text-text-secondary hover:bg-bg-subtle hover:text-text-primary",
                   "transition-colors",
                 )}
               >
-                <span className="font-mono text-xs text-muted-foreground/60">
+                <span className="font-mono text-xs text-text-secondary/60">
                   {"#".repeat(level)}
                 </span>
                 <span>{label}</span>
@@ -253,7 +253,7 @@ function ToolbarButton({ label, shortcutLabel, icon, onClick, disabled }: Toolba
         disabled={disabled}
         className={cn(
           "rounded p-1.5",
-          "text-muted-foreground hover:bg-muted hover:text-foreground",
+          "text-text-secondary hover:bg-bg-subtle hover:text-text-primary",
           "transition-colors disabled:pointer-events-none disabled:opacity-50",
         )}
         aria-label={label}
@@ -701,7 +701,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
           return (
             <div
               key={action.id}
-              className="mx-1 h-4 w-px bg-border"
+              className="mx-1 h-4 w-px bg-border-default"
               role="separator"
               aria-orientation="vertical"
             />
@@ -750,9 +750,9 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
     return (
       <div
         className={cn(
-          "border border-border rounded-lg overflow-hidden",
+          "border border-border-default rounded-lg overflow-hidden",
           "transition-colors",
-          isDragging && "ring-2 ring-primary/40 border-primary/60",
+          isDragging && "ring-2 ring-accent-primary/40 border-accent-primary/60",
           disabled && "opacity-60 pointer-events-none",
           className,
         )}
@@ -762,7 +762,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
         onDrop={handleDrop}
       >
         {/* ── Tab Bar ── */}
-        <div className="bg-card border-b border-border" role="tablist" aria-label="Editor mode">
+        <div className="bg-bg-surface border-b border-border-default" role="tablist" aria-label="Editor mode">
           <div className="flex items-center px-3">
             <button
               type="button"
@@ -778,15 +778,15 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
                 "relative flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium",
                 "transition-colors",
                 isWriteMode
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground",
+                  ? "text-text-primary"
+                  : "text-text-secondary hover:text-text-primary",
               )}
             >
               <Pencil size={14} />
               <span>Write</span>
               {isWriteMode && (
                 <span
-                  className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary"
+                  className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-accent-primary"
                   aria-hidden="true"
                 />
               )}
@@ -806,15 +806,15 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
                 "relative flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium",
                 "transition-colors",
                 !isWriteMode
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground",
+                  ? "text-text-primary"
+                  : "text-text-secondary hover:text-text-primary",
               )}
             >
               <Eye size={14} />
               <span>Preview</span>
               {!isWriteMode && (
                 <span
-                  className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary"
+                  className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-accent-primary"
                   aria-hidden="true"
                 />
               )}
@@ -825,7 +825,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
         {/* ── Formatting Toolbar (Write mode only) ── */}
         {isWriteMode && (
           <div
-            className="bg-card/50 border-b border-border px-3 py-1.5 flex items-center gap-1"
+            className="bg-bg-surface/50 border-b border-border-default px-3 py-1.5 flex items-center gap-1"
             role="toolbar"
             aria-label="Formatting options"
             aria-controls={textareaId}
@@ -852,7 +852,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
               placeholder={placeholder}
               className={cn(
                 "w-full resize-y bg-transparent font-mono text-sm p-4",
-                "text-foreground placeholder:text-muted-foreground",
+                "text-text-primary placeholder:text-text-secondary",
                 "focus:outline-none",
                 "disabled:cursor-not-allowed disabled:opacity-50",
               )}
@@ -866,12 +866,12 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
               <div
                 className={cn(
                   "absolute inset-0 z-10 flex items-center justify-center",
-                  "bg-card/80 backdrop-blur-sm",
-                  "border-2 border-dashed border-primary/40 rounded-lg m-1",
+                  "bg-bg-surface/80 backdrop-blur-sm",
+                  "border-2 border-dashed border-accent-primary/40 rounded-lg m-1",
                 )}
               >
-                <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                  <ImageIcon size={32} className="text-primary/60" />
+                <div className="flex flex-col items-center gap-2 text-text-secondary">
+                  <ImageIcon size={32} className="text-accent-primary/60" />
                   <span className="text-sm font-medium">Drop image to upload</span>
                 </div>
               </div>
@@ -888,7 +888,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
             {value.trim() ? (
               <ContentRenderer content={value} variant="default" />
             ) : (
-              <p className="text-muted-foreground text-sm italic">
+              <p className="text-text-secondary text-sm italic">
                 Nothing to preview
               </p>
             )}
@@ -896,8 +896,8 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
         )}
 
         {/* ── Footer ── */}
-        <div className="bg-card/30 border-t border-border px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div className="bg-bg-surface/30 border-t border-border-default px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-xs text-text-secondary">
             <svg
               width="14"
               height="14"
@@ -917,8 +917,8 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
               onClick={handleFooterUploadClick}
               disabled={disabled}
               className={cn(
-                "flex items-center gap-1.5 text-xs text-muted-foreground",
-                "hover:text-foreground transition-colors",
+                "flex items-center gap-1.5 text-xs text-text-secondary",
+                "hover:text-text-primary transition-colors",
                 "disabled:pointer-events-none disabled:opacity-50",
               )}
             >

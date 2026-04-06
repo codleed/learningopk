@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback, type ReactNode, type Ref } from 'react';
 import { Sparkles, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
@@ -9,7 +9,10 @@ import type { ChatMessage } from '../types';
 type AIChatMessagesProps = {
   messages: ChatMessage[];
   isStreaming: boolean;
+  /** Optional node rendered above all messages (e.g. crisis banner). */
+  topBanner?: ReactNode;
   className?: string;
+  containerRef?: Ref<HTMLDivElement>;
 };
 
 function StreamingIndicator({ className }: { className?: string }) {
@@ -19,9 +22,9 @@ function StreamingIndicator({ className }: { className?: string }) {
       aria-label="AI is typing" 
       role="status"
     >
-      <span className="h-2 w-2 animate-streaming rounded-full bg-primary/60" />
-      <span className="h-2 w-2 animate-streaming rounded-full bg-primary/60 [animation-delay:0.16s]" />
-      <span className="h-2 w-2 animate-streaming rounded-full bg-primary/60 [animation-delay:0.32s]" />
+      <span className="h-2 w-2 animate-streaming rounded-full bg-accent-primary/60" />
+      <span className="h-2 w-2 animate-streaming rounded-full bg-accent-primary/60 [animation-delay:0.16s]" />
+      <span className="h-2 w-2 animate-streaming rounded-full bg-accent-primary/60 [animation-delay:0.32s]" />
     </div>
   );
 }
@@ -55,8 +58,8 @@ function MessageBubble({
           className={cn(
             'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
             isUser 
-              ? 'bg-primary text-primary-foreground' 
-              : 'bg-primary/10 text-primary ring-1 ring-primary/20'
+              ? 'bg-accent-primary text-primary-foreground' 
+              : 'bg-accent-primary/10 text-accent-primary ring-1 ring-accent-primary/20'
           )}
         >
           {isUser ? (
@@ -76,13 +79,13 @@ function MessageBubble({
           'text-[15px] leading-relaxed',
           isUser
             ? [
-                'bg-primary text-primary-foreground',
+                'bg-accent-primary text-primary-foreground',
                 isFirstInGroup && 'rounded-2xl rounded-br-md',
                 !isFirstInGroup && isLastInGroup && 'rounded-2xl rounded-br-md',
                 !isFirstInGroup && !isLastInGroup && 'rounded-2xl rounded-br-sm rounded-tr-sm',
               ]
             : [
-                'bg-muted/50 text-foreground border border-border/50',
+                'bg-bg-subtle/50 text-text-primary border border-border-default/50',
                 isFirstInGroup && 'rounded-2xl rounded-bl-md',
                 !isFirstInGroup && isLastInGroup && 'rounded-2xl rounded-bl-md',
                 !isFirstInGroup && !isLastInGroup && 'rounded-2xl rounded-bl-sm rounded-tl-sm',
@@ -109,9 +112,22 @@ function MessageBubble({
   );
 }
 
-export function AIChatMessages({ messages, isStreaming, className }: AIChatMessagesProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+export function AIChatMessages({ messages, isStreaming, topBanner, className, containerRef }: AIChatMessagesProps) {
+  const internalContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const setContainerRef = useCallback((node: HTMLDivElement | null) => {
+    internalContainerRef.current = node;
+
+    if (!containerRef) return;
+
+    if (typeof containerRef === 'function') {
+      containerRef(node);
+      return;
+    }
+
+    containerRef.current = node;
+  }, [containerRef]);
   
   useEffect(() => {
     if (messages.length > 0) {
@@ -125,17 +141,18 @@ export function AIChatMessages({ messages, isStreaming, className }: AIChatMessa
   
   return (
     <div
-      ref={containerRef}
+      ref={setContainerRef}
       className={cn(
         'flex-1 overflow-y-auto',
         'px-4 py-4',
-        'scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent',
+        'scrollbar-thin scrollbar-thumb-border-default scrollbar-track-transparent',
         className
       )}
       role="log"
       aria-label="Conversation"
       aria-live="polite"
     >
+      {topBanner}
       <div className="space-y-0">
         {messages.map((message, index) => {
           const prevMessage = messages[index - 1];

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,8 @@ type MockExamResultDetailsProps = {
 };
 
 export function MockExamResultDetails({ sectionScores, weakAreas }: MockExamResultDetailsProps) {
+  const reduced = useReducedMotion();
+
   return (
     <div className="grid gap-5 md:grid-cols-2">
       {/* Section-wise scores */}
@@ -62,9 +64,9 @@ export function MockExamResultDetails({ sectionScores, weakAreas }: MockExamResu
             return (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, x: -12 }}
+                initial={reduced ? false : { opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.08 }}
+                transition={reduced ? { duration: 0 } : { delay: index * 0.08 }}
                 className="rounded-lg border border-border-default bg-bg-surface p-3"
               >
                 <div className="flex items-center justify-between">
@@ -115,9 +117,9 @@ export function MockExamResultDetails({ sectionScores, weakAreas }: MockExamResu
             {weakAreas.map((area, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, x: 12 }}
+                initial={reduced ? false : { opacity: 0, x: 12 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.08 }}
+                transition={reduced ? { duration: 0 } : { delay: index * 0.08 }}
                 className="rounded-lg border border-accent-danger/20 bg-accent-danger-light p-3"
               >
                 <div className="flex items-center justify-between">
@@ -141,8 +143,9 @@ export function MockExamResultDetails({ sectionScores, weakAreas }: MockExamResu
           </div>
         ) : (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={reduced ? false : { opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
+            transition={reduced ? { duration: 0 } : undefined}
             className="flex flex-col items-center gap-2 rounded-lg border border-accent-success/20 bg-accent-success-light p-5 text-center"
           >
             <CheckCircle className="h-6 w-6 text-accent-success" />

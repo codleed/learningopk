@@ -242,17 +242,17 @@ export function ContentDashboard({ boards, auditLogs }: ContentDashboardProps) {
       <AdminStatsStrip stats={stats} />
 
       {boards.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--border)] bg-[var(--card)] p-12 text-center">
-          <BookOpen className="mb-4 h-12 w-12 text-[var(--muted-foreground)]" />
-          <h3 className="mb-2 font-heading text-lg font-semibold text-[var(--foreground)]">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-surface)] p-12 text-center">
+          <BookOpen className="mb-4 h-12 w-12 text-[var(--text-secondary)]" />
+          <h3 className="mb-2 font-heading text-lg font-semibold text-[var(--text-primary)]">
             No content yet
           </h3>
-          <p className="mb-6 text-sm text-[var(--muted-foreground)]">
+          <p className="mb-6 text-sm text-[var(--text-secondary)]">
             Start by adding a board.
           </p>
           <Link
             href="/admin/boards/add"
-            className="inline-flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--primary-light)]"
+            className="inline-flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-light)]"
           >
             <Plus className="h-4 w-4" />
             Add Your First Board
@@ -267,7 +267,7 @@ export function ContentDashboard({ boards, auditLogs }: ContentDashboardProps) {
         >
           {/* Left sidebar - Entity Tree */}
           <div
-            className="overflow-y-auto rounded-lg border border-[var(--border)] bg-[var(--card)]"
+            className="overflow-y-auto rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]"
             style={{ maxHeight: "calc(100vh - 320px)" }}
           >
             <AdminEntityTree boards={boards} onSelect={handleSelect} />
@@ -277,7 +277,7 @@ export function ContentDashboard({ boards, auditLogs }: ContentDashboardProps) {
           <div className="space-y-[var(--space-6)]">
             {/* Quick Actions */}
             <section>
-              <h2 className="mb-4 font-heading text-lg font-semibold text-[var(--foreground)]">
+              <h2 className="mb-4 font-heading text-lg font-semibold text-[var(--text-primary)]">
                 Quick Actions
               </h2>
               <AdminQuickActions actions={quickActions} />
@@ -294,13 +294,13 @@ export function ContentDashboard({ boards, auditLogs }: ContentDashboardProps) {
             {/* Recent Audit Log */}
             <section>
               <div className="mb-4 flex items-center gap-2">
-                <Clock className="h-5 w-5 text-[var(--muted-foreground)]" />
-                <h2 className="font-heading text-lg font-semibold text-[var(--foreground)]">
+                <Clock className="h-5 w-5 text-[var(--text-secondary)]" />
+                <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
                   Recent Activity
                 </h2>
               </div>
               {auditLogs.length === 0 ? (
-                <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6 text-center text-sm text-[var(--muted-foreground)]">
+                <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 text-center text-sm text-[var(--text-secondary)]">
                   No recent activity
                 </div>
               ) : (
@@ -308,13 +308,13 @@ export function ContentDashboard({ boards, auditLogs }: ContentDashboardProps) {
                   {auditLogs.slice(0, 5).map((entry) => (
                     <div
                       key={entry.id}
-                      className="flex items-start justify-between rounded-lg border border-[var(--border)] bg-[var(--card)] p-4"
+                      className="flex items-start justify-between rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-4"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-[var(--foreground)] truncate">
+                        <p className="text-sm font-medium text-[var(--text-primary)] truncate">
                           {entry.action}
                         </p>
-                        <p className="text-xs text-[var(--muted-foreground)] truncate">
+                        <p className="text-xs text-[var(--text-secondary)] truncate">
                           {entry.target}
                         </p>
                       </div>
@@ -328,10 +328,10 @@ export function ContentDashboard({ boards, auditLogs }: ContentDashboardProps) {
                         >
                           {entry.status}
                         </span>
-                        <span className="text-xs text-[var(--muted-foreground)]">
+                        <span className="text-xs text-[var(--text-secondary)]">
                           {entry.actor.name}
                         </span>
-                        <span className="text-xs text-[var(--muted-foreground)]">
+                        <span className="text-xs text-[var(--text-secondary)]">
                           {new Date(entry.occurredAt).toLocaleDateString()}
                         </span>
                       </div>
