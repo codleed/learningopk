@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
 import type { Components } from "react-markdown";
 import type { ComponentPropsWithoutRef } from "react";
 
@@ -196,7 +197,7 @@ export function MarkdownRenderer({ content, className, components }: MarkdownRen
     <div className={`md-root ${className ?? ""}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex]}
+        rehypePlugins={[rehypeRaw, rehypeKatex]}
         components={mergedComponents}
       >
         {content}
