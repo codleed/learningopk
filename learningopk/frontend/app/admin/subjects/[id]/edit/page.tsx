@@ -5,6 +5,7 @@ import {
   AdminPageHeader,
   AdminActionButton,
 } from "@/components/admin";
+import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 
 interface EditSubjectPageProps {
   params: Promise<{ id: string }>;
@@ -15,14 +16,16 @@ export default async function EditSubjectPage({ params }: EditSubjectPageProps) 
 
   return (
     <div className="space-y-6">
-      <AdminBreadcrumb
-        segments={[
-          { label: "Admin", href: "/admin" },
-          { label: "Content", href: "/admin/content" },
-          { label: "Subjects", href: "/admin/content" },
-          { label: "Edit Subject" },
-        ]}
-      />
+      <StickyBreadcrumbWrapper className="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <AdminBreadcrumb
+          segments={[
+            { label: "Admin", href: "/admin" },
+            { label: "Content", href: "/admin/content" },
+            { label: "Subjects", href: "/admin/content" },
+            { label: "Edit Subject" },
+          ]}
+        />
+      </StickyBreadcrumbWrapper>
 
       <AdminPageHeader
         title="Edit Subject"

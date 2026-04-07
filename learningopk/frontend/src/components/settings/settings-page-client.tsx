@@ -168,6 +168,8 @@ export function SettingsPageClient({ initialProfile }: SettingsPageClientProps) 
   return (
     <div className="space-y-6">
       <PageHeader
+        sticky
+        stickyClassName="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
         title="Settings"
         subtitle="Manage your profile, preferences, and account settings."
         breadcrumbs={[

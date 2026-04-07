@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 
 /** Single breadcrumb entry — the last item (without href) is the current page. */
 export interface BreadcrumbItem {
@@ -23,6 +24,17 @@ export interface PageHeaderProps {
   actions?: React.ReactNode;
   /** Optional badge displayed inline after the title. */
   badge?: React.ReactNode;
+  /**
+   * When true, the entire header pins to the top with a glassmorphism effect.
+   * @default false
+   */
+  sticky?: boolean;
+  /**
+   * Extra classes forwarded to the sticky wrapper — typically negative-margin /
+   * padding pairs to bleed the bar edge-to-edge within the parent content area.
+   * Only relevant when `sticky` is true.
+   */
+  stickyClassName?: string;
 }
 
 /**
@@ -35,12 +47,14 @@ export function PageHeader({
   breadcrumbs,
   actions,
   badge,
+  sticky = false,
+  stickyClassName,
 }: PageHeaderProps) {
-  return (
+  const content = (
     <header className="space-y-1">
       {/* ── Breadcrumbs ── */}
       {breadcrumbs && breadcrumbs.length > 0 ? (
-        <nav aria-label="Breadcrumb" className="mb-2">
+        <nav aria-label="Breadcrumb" className={cn(!sticky && "mb-2")}>
           <ol className="flex items-center gap-1 text-sm text-text-secondary">
             {breadcrumbs.map((crumb, index) => {
               const isLast = index === breadcrumbs.length - 1;
@@ -79,27 +93,39 @@ export function PageHeader({
       ) : null}
 
       {/* ── Title row ── */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <h1 className="font-display text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
-              {title}
-            </h1>
-            {badge ?? null}
+      {(title || actions || badge) ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <h1 className="font-display text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
+                {title}
+              </h1>
+              {badge ?? null}
+            </div>
+
+            {subtitle ? (
+              <p className="text-sm text-text-secondary leading-relaxed sm:text-base">
+                {subtitle}
+              </p>
+            ) : null}
           </div>
 
-          {subtitle ? (
-            <p className="text-sm text-text-secondary leading-relaxed sm:text-base">
-              {subtitle}
-            </p>
+          {/* ── Actions slot ── */}
+          {actions ? (
+            <div className="flex shrink-0 items-center gap-2">{actions}</div>
           ) : null}
         </div>
-
-        {/* ── Actions slot ── */}
-        {actions ? (
-          <div className="flex shrink-0 items-center gap-2">{actions}</div>
-        ) : null}
-      </div>
+      ) : null}
     </header>
   );
+
+  if (sticky) {
+    return (
+      <StickyBreadcrumbWrapper className={stickyClassName}>
+        {content}
+      </StickyBreadcrumbWrapper>
+    );
+  }
+
+  return content;
 }

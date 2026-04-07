@@ -6,6 +6,7 @@ import { AdminBreadcrumb } from "@/components/admin/breadcrumb";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { AdminFormCard } from "@/components/admin/form-card";
 import { AdminActionButton } from "@/components/admin/action-button";
+import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 
 interface EditQuizPageProps {
   params: Promise<{ id: string }>;
@@ -21,14 +22,16 @@ export default async function EditQuizPage({ params }: EditQuizPageProps) {
 
   return (
     <div className="space-y-6">
-      <AdminBreadcrumb
-        segments={[
-          { label: "Admin", href: "/admin" },
-          { label: "Content", href: "/admin/content" },
-          { label: "Quizzes", href: "/admin/content/quizzes" },
-          { label: `Edit Quiz #${quizId}` },
-        ]}
-      />
+      <StickyBreadcrumbWrapper className="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <AdminBreadcrumb
+          segments={[
+            { label: "Admin", href: "/admin" },
+            { label: "Content", href: "/admin/content" },
+            { label: "Quizzes", href: "/admin/content/quizzes" },
+            { label: `Edit Quiz #${quizId}` },
+          ]}
+        />
+      </StickyBreadcrumbWrapper>
 
       <AdminPageHeader
         title={`Edit Quiz #${quizId}`}

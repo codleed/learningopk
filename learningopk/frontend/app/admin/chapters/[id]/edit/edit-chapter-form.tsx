@@ -10,6 +10,7 @@ import {
   AdminFormField,
   AdminActionButton,
 } from "@/components/admin";
+import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 import { Input } from "@/components/ui/input";
 import {
   updateAdminCurriculumChapter,
@@ -267,15 +268,17 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
 
   return (
     <div className="space-y-6">
-      <AdminBreadcrumb
-        segments={[
-          { label: "Admin", href: "/admin" },
-          { label: "Content", href: "/admin/content" },
-          { label: "Chapters", href: "/admin/content" },
-          { label: chapter.subjectName || chapter.title },
-          { label: "Edit" },
-        ]}
-      />
+      <StickyBreadcrumbWrapper className="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <AdminBreadcrumb
+          segments={[
+            { label: "Admin", href: "/admin" },
+            { label: "Content", href: "/admin/content" },
+            { label: "Chapters", href: "/admin/content" },
+            { label: chapter.subjectName || chapter.title },
+            { label: "Edit" },
+          ]}
+        />
+      </StickyBreadcrumbWrapper>
 
       <AdminPageHeader
         title="Edit Chapter"

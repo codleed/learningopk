@@ -188,15 +188,9 @@ export function StatsPageClient({
       currentPath="/stats"
       contentClassName="max-w-[96rem] px-4 pb-12 pt-6 sm:px-6 lg:px-8"
     >
-      <motion.div
-        variants={stagger}
-        initial="hidden"
-        animate="show"
-        className="space-y-6"
-      >
-        {/* ─── Page Header ─── */}
-        <motion.div variants={fadeUp}>
-          <PageHeader
+      <PageHeader
+            sticky
+            stickyClassName="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
             title="Your Statistics"
             subtitle={`Tracking your learning progress \u2022 ${dateRangeStr}`}
             breadcrumbs={[
@@ -204,8 +198,13 @@ export function StatsPageClient({
               { label: "Statistics" },
             ]}
           />
-        </motion.div>
 
+      <motion.div
+        variants={stagger}
+        initial="hidden"
+        animate="show"
+        className="space-y-6"
+      >
         {summaryError ? (
           <motion.div variants={fadeUp}>
             <ErrorState

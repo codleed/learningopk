@@ -53,6 +53,8 @@ export function LeaderboardPageClient({ session, leaderboards, metric, error }: 
     >
       <div className="space-y-6">
         <PageHeader
+          sticky
+          stickyClassName="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
           title="Leaderboard"
           subtitle="Benchmark your progress against your board, grade, and the wider LearningoPK cohort."
           breadcrumbs={[

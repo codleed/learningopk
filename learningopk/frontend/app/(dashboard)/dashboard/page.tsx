@@ -335,6 +335,8 @@ export default async function DashboardPage({
     >
       <div className="mb-6">
         <PageHeader
+          sticky
+          stickyClassName="-mx-4 -mt-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
           title={`Welcome back, ${displayName}`}
           subtitle="Track your progress, continue learning, and reach your goals."
           breadcrumbs={[

@@ -100,6 +100,8 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
       <AppShell session={session} currentPath="/forum">
         <div className="space-y-6">
           <PageHeader
+            sticky
+            stickyClassName="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
             title="Community Forum"
             subtitle="Ask questions, share hints, and help other students learn faster."
             breadcrumbs={[
@@ -163,6 +165,8 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
       <div className="space-y-6">
         {/* ── Page Header ── */}
         <PageHeader
+          sticky
+          stickyClassName="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
           title="Community Forum"
           subtitle="Ask questions, share hints, and help other students learn faster."
           breadcrumbs={[

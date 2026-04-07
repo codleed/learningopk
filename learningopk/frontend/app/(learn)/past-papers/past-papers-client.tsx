@@ -170,6 +170,8 @@ export function PastPapersClient() {
     return (
       <div className="space-y-6">
         <PageHeader
+          sticky
+          stickyClassName="-mx-3 -mt-3 sm:-mx-5 lg:-mx-6 px-3 sm:px-5 lg:px-6"
           title="Past Papers"
           subtitle="Practice with previous years' exam papers"
           breadcrumbs={[
@@ -189,6 +191,8 @@ export function PastPapersClient() {
     <div className="space-y-6">
       {/* Page header */}
       <PageHeader
+        sticky
+        stickyClassName="-mx-3 -mt-3 sm:-mx-5 lg:-mx-6 px-3 sm:px-5 lg:px-6"
         title="Past Papers"
         subtitle="Practice with previous years' exam papers. Filter by board, grade, subject, and year."
         breadcrumbs={[

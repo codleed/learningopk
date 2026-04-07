@@ -58,6 +58,8 @@ export default async function FormulasPage({
     >
       <div className="space-y-6">
         <PageHeader
+          sticky
+          stickyClassName="-mx-4 -mt-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
           title="Formula Library"
           subtitle="Search and filter a centralized repository of formulas, then star the ones you revisit most."
           breadcrumbs={[

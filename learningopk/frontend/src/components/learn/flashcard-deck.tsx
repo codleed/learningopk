@@ -9,6 +9,7 @@ import type { ChapterDetailResponse } from "@/lib/learn-api";
 import { trackProgressEvent } from "@/lib/progress-client";
 import { seedFlashcardReviews } from "@/lib/srs-api";
 
+import { updateChapterProgress, getChapterProgress } from "@/lib/gamification-storage";
 import { FlashcardCard } from "./flashcard-card";
 
 type Flashcard = ChapterDetailResponse["flashcards"][number];
@@ -145,6 +146,19 @@ export function FlashcardDeck({ chapterId, flashcards, storageKey }: FlashcardDe
         ...persistedStatuses,
         ...next
       });
+
+      // Sync to gamification storage so QuestTabBar progress stays accurate
+      const currentProgress = getChapterProgress(String(chapterId));
+      const updatedReviewed = {
+        ...currentProgress.flashcardsReviewed,
+        [String(currentCard.id)]: status,
+      };
+      updateChapterProgress(String(chapterId), {
+        flashcardsReviewed: updatedReviewed,
+      });
+
+      // Notify the workspace that chapter progress changed
+      window.dispatchEvent(new CustomEvent("chapter-progress-updated"));
 
       return {
         ...previous,

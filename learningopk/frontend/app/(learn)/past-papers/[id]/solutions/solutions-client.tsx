@@ -106,6 +106,8 @@ export function MockExamSolutionsClient({ examId }: MockExamSolutionsClientProps
     return (
       <div className="space-y-6">
         <PageHeader
+          sticky
+          stickyClassName="-mx-3 -mt-3 sm:-mx-5 lg:-mx-6 px-3 sm:px-5 lg:px-6"
           title="Solutions"
           breadcrumbs={[
             { label: "Learn", href: "/dashboard" },
@@ -145,6 +147,8 @@ export function MockExamSolutionsClient({ examId }: MockExamSolutionsClientProps
     <div className="space-y-6">
       {/* Header */}
       <PageHeader
+        sticky
+        stickyClassName="-mx-3 -mt-3 sm:-mx-5 lg:-mx-6 px-3 sm:px-5 lg:px-6"
         title={exam.title}
         subtitle={`${exam.year} \u2022 ${exam.boardName} \u2022 Grade ${exam.grade} \u2022 ${exam.subjectName}`}
         breadcrumbs={[

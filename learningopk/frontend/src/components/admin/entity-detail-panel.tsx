@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BookOpen, Book, GraduationCap, FileText, Pencil, Plus, Trash2, Folder } from "lucide-react";
 import { AdminActionButton } from "./action-button";
 import { AdminBreadcrumb } from "./breadcrumb";
+import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 
 type EntityType = "board" | "class" | "subject" | "chapter";
 
@@ -95,7 +96,9 @@ export function AdminEntityDetailPanel({
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <AdminBreadcrumb segments={breadcrumbSegments} />
+      <StickyBreadcrumbWrapper className="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <AdminBreadcrumb segments={breadcrumbSegments} />
+      </StickyBreadcrumbWrapper>
 
       {/* Main entity card */}
       <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">

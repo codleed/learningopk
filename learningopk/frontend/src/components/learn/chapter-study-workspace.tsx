@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { BookOpen, Dumbbell, Layers, HelpCircle, Atom, NotebookPen } from "lucide-react";
 
 import type { ChapterDetailResponse } from "@/lib/learn-api";
@@ -87,9 +87,20 @@ export function ChapterStudyWorkspace({
   const { streak } = useStreakTracking();
   const { visibleNotifications, dismiss } = useXpNotifications(xpQueue, dismissXpNotification);
 
-  const chapterProgress = useMemo(() => {
-    return getChapterProgress(String(chapterId));
-  }, [chapterId]);
+  const readProgress = useCallback(
+    () => getChapterProgress(String(chapterId)),
+    [chapterId]
+  );
+
+  const [chapterProgress, setChapterProgress] = useState(readProgress);
+
+  // Re-read gamification storage whenever flashcard-deck (or other tabs) fire
+  // the custom "chapter-progress-updated" event.
+  useEffect(() => {
+    const handler = () => setChapterProgress(readProgress());
+    window.addEventListener("chapter-progress-updated", handler);
+    return () => window.removeEventListener("chapter-progress-updated", handler);
+  }, [readProgress]);
 
   /** Split exercises: non-numerical → Training, numerical → Illustration */
   const trainingExercises = useMemo(
@@ -224,7 +235,7 @@ export function ChapterStudyWorkspace({
 
         {/* AI sidebar */}
         <MotionSection>
-          <div className="sticky top-4 min-w-0 overflow-hidden">
+          <div className="min-w-0">
             <AIUnifiedChat context={aiContext} />
           </div>
         </MotionSection>
