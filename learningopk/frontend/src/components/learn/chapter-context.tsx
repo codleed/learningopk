@@ -10,7 +10,6 @@ export type ChapterTab =
   | "summary"
   | "quick-revision"
   | "exercises"
-  | "flashcards"
   | "quiz"
   | "illustration";
 
@@ -38,9 +37,7 @@ export type ChapterContextValue = {
   chapterSummary: string;
   chapterRevisionNotes: ChapterDetailResponse["chapter"]["revisionNotes"];
   exercises: ChapterDetailResponse["exercises"];
-  flashcards: ChapterDetailResponse["flashcards"];
   quiz: ChapterDetailResponse["quiz"];
-  flashcardStorageKey: string;
 
   // Optional flags
   autoOpenAi: boolean;

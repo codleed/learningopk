@@ -154,7 +154,7 @@ const chapterDetailResponseSchema = z.object({
       back: z.string(),
       orderIndex: z.number().int().min(0)
     })
-  ),
+  ).optional().default([]),
   quiz: z
     .object({
       id: z.number().int().positive(),

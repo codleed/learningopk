@@ -12,12 +12,16 @@ type Exercise = ChapterDetailResponse["exercises"][number];
 
 type ExerciseAccordionProps = {
   exercises: Exercise[];
+  completedIds: number[];
+  onMarkComplete: (exerciseId: number, difficulty: "easy" | "medium" | "hard") => void;
   onExerciseExpanded: (chapterId: number) => void;
   chapterId: number;
 };
 
 export function ExerciseAccordion({
   exercises,
+  completedIds,
+  onMarkComplete,
   onExerciseExpanded,
   chapterId,
 }: ExerciseAccordionProps) {
@@ -65,6 +69,8 @@ export function ExerciseAccordion({
         >
           <ExerciseItem
             exercise={exercise}
+            isCompleted={completedIds.includes(exercise.id)}
+            onMarkComplete={onMarkComplete}
             onExpanded={() => onExerciseExpanded(chapterId)}
           />
         </motion.div>

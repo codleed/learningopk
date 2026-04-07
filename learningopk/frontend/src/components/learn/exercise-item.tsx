@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { CheckCircle2, ChevronDown } from "lucide-react";
 
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ContentRenderer } from "@/components/common/content-renderer";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +14,8 @@ type Exercise = ChapterDetailResponse["exercises"][number];
 
 type ExerciseItemProps = {
   exercise: Exercise;
+  isCompleted: boolean;
+  onMarkComplete: (exerciseId: number, difficulty: "easy" | "medium" | "hard") => void;
   onExpanded: () => void;
 };
 
@@ -30,7 +33,7 @@ const typeConfig = {
   fill_in_blanks: { label: "Fill in Blanks", variant: "info" as const },
 } as const;
 
-export function ExerciseItem({ exercise, onExpanded }: ExerciseItemProps) {
+export function ExerciseItem({ exercise, isCompleted, onMarkComplete, onExpanded }: ExerciseItemProps) {
   const difficulty = difficultyConfig[exercise.difficulty] ?? difficultyConfig.easy;
   const exerciseType = typeConfig[exercise.type] ?? typeConfig.short;
 
@@ -82,6 +85,25 @@ export function ExerciseItem({ exercise, onExpanded }: ExerciseItemProps) {
             />
           </div>
         </div>
+
+        {/* Mark complete pill */}
+        {isCompleted ? (
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-accent-success px-2.5 py-1 text-[0.625rem] font-semibold text-white">
+            <CheckCircle2 className="h-3 w-3" />
+            Solved
+          </span>
+        ) : (
+          <Button
+            size="xs"
+            variant="secondary"
+            onClick={(e) => {
+              e.stopPropagation();
+              onMarkComplete(exercise.id, exercise.difficulty);
+            }}
+          >
+            Mark Solved
+          </Button>
+        )}
 
         {/* Expand indicator */}
         <ChevronDown
