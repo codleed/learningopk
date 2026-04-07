@@ -98,6 +98,7 @@ export function getChapterProgress(chapterId: string): ChapterProgress {
     exercisesCompleted: [],
     flashcardsReviewed: {},
     quizAttempts: [],
+    xpEarned: 0,
   };
 }
 
@@ -108,6 +109,7 @@ export function updateChapterProgress(chapterId: string, updates: Partial<Chapte
     exercisesCompleted: [],
     flashcardsReviewed: {},
     quizAttempts: [],
+    xpEarned: 0,
   };
   
   saveGamificationState({
@@ -117,4 +119,9 @@ export function updateChapterProgress(chapterId: string, updates: Partial<Chapte
       [chapterId]: { ...current, ...updates },
     },
   });
+
+  // Notify components that chapter progress has changed
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("chapter-progress-updated"));
+  }
 }

@@ -43,9 +43,13 @@ export function useGamification() {
   const markSummaryRead = useCallback((chapterId: string) => {
     const progress = getChapterProgress(chapterId);
     if (!progress.summaryRead) {
-      updateChapterProgress(chapterId, { summaryRead: true });
+      const xpAmount = XP_REWARDS.SUMMARY_READ;
+      updateChapterProgress(chapterId, {
+        summaryRead: true,
+        xpEarned: (progress.xpEarned ?? 0) + xpAmount,
+      });
       updateStreakStorage();
-      addXp(XP_REWARDS.SUMMARY_READ, "Read chapter summary");
+      addXp(xpAmount, "Read chapter summary");
     }
   }, [addXp]);
 
@@ -57,7 +61,10 @@ export function useGamification() {
         : XP_REWARDS.EXERCISE_HARD;
       
       const newCompleted = [...progress.exercisesCompleted, exerciseId];
-      updateChapterProgress(chapterId, { exercisesCompleted: newCompleted });
+      updateChapterProgress(chapterId, {
+        exercisesCompleted: newCompleted,
+        xpEarned: (progress.xpEarned ?? 0) + xpAmount,
+      });
       updateStreakStorage();
       addXp(xpAmount, `Completed ${difficulty} exercise`);
     }
@@ -67,7 +74,10 @@ export function useGamification() {
     const progress = getChapterProgress(chapterId);
     const xpAmount = status === "known" ? XP_REWARDS.FLASHCARD_KNOWN : XP_REWARDS.FLASHCARD_REVIEW;
     const newReviewed = { ...progress.flashcardsReviewed, [cardId]: status };
-    updateChapterProgress(chapterId, { flashcardsReviewed: newReviewed });
+    updateChapterProgress(chapterId, {
+      flashcardsReviewed: newReviewed,
+      xpEarned: (progress.xpEarned ?? 0) + xpAmount,
+    });
     updateStreakStorage();
     addXp(xpAmount, status === "known" ? "Knew a flashcard" : "Reviewed a flashcard");
   }, [addXp]);
@@ -76,7 +86,15 @@ export function useGamification() {
     const progress = getChapterProgress(chapterId);
     const attempt = { score, percentage, completedAt: new Date().toISOString() };
     const newAttempts = [...progress.quizAttempts, attempt];
-    updateChapterProgress(chapterId, { quizAttempts: newAttempts });
+    
+    let totalXpAwarded = XP_REWARDS.QUIZ_COMPLETE;
+    if (percentage >= 80) totalXpAwarded += XP_REWARDS.QUIZ_HIGH_SCORE;
+    if (percentage === 100) totalXpAwarded += XP_REWARDS.QUIZ_PERFECT;
+
+    updateChapterProgress(chapterId, {
+      quizAttempts: newAttempts,
+      xpEarned: (progress.xpEarned ?? 0) + totalXpAwarded,
+    });
     
     updateStreakStorage();
     addXp(XP_REWARDS.QUIZ_COMPLETE, "Completed quiz");

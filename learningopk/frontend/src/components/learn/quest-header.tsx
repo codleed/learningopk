@@ -14,6 +14,7 @@ interface QuestHeaderProps {
   gamificationState: GamificationState;
   streak: number;
   completionPercent: number;
+  chapterXp: number;
 }
 
 export function QuestHeader(props: QuestHeaderProps) {
@@ -21,6 +22,7 @@ export function QuestHeader(props: QuestHeaderProps) {
     gamificationState,
     streak,
     completionPercent,
+    chapterXp,
   } = props;
 
   const {
@@ -105,7 +107,7 @@ export function QuestHeader(props: QuestHeaderProps) {
               >
                 <Star className="h-3.5 w-3.5 fill-accent-warning text-accent-warning" aria-hidden />
                 <span className="font-[var(--font-mono)] text-xs font-bold text-accent-warning">
-                  {gamificationState.xp} XP
+                  +{chapterXp} XP
                 </span>
               </motion.div>
 

@@ -42,6 +42,7 @@ export interface ChapterProgress {
   exercisesCompleted: number[];
   flashcardsReviewed: Record<string, CardStatus>;
   quizAttempts: QuizAttempt[];
+  xpEarned: number;
 }
 
 export interface QuizAttempt {
