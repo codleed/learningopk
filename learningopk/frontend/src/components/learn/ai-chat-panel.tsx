@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { StreamingText } from "@/components/common/streaming-text";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -118,8 +119,16 @@ function MessageBubble({ message, isStreaming, showAvatar }: MessageBubbleProps)
       
       {isUser ? (
         <div className="break-words [overflow-wrap:anywhere]">{message.content}</div>
-      ) : isEmpty || isStreaming ? (
+      ) : isStreaming && isEmpty ? (
         <StreamingIndicator />
+      ) : isStreaming ? (
+        <div className="[overflow-wrap:anywhere] [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
+          <StreamingText
+            content={message.content}
+            isStreaming
+            className="text-[15px] leading-relaxed"
+          />
+        </div>
       ) : (
         <div className="[overflow-wrap:anywhere] [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
           <MarkdownRenderer

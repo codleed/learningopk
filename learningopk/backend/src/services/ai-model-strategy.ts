@@ -20,7 +20,7 @@ type AiProviderResult = {
   completionTokens: number;
 };
 
-type AiStrategyResult = AiProviderResult & {
+export type AiStrategyResult = AiProviderResult & {
   source: "provider" | "cache";
   classification: AiQueryClassification;
   normalizedPrompt: string;
@@ -35,18 +35,28 @@ type GenerateParams = {
   temperature: number;
 };
 
+type AiStreamingProviderResult = {
+  textStream: AsyncIterable<string>;
+  /** Resolves when the stream completes with usage + model info. */
+  completed: Promise<AiProviderResult>;
+};
+
+type InvokeModelParams = {
+  tier: AiModelTier;
+  system: string;
+  messages: AiStrategyMessage[];
+  maxOutputTokens: number;
+  temperature: number;
+};
+
 type AiModelStrategyDependencies = {
   readCircuitState: (params: { key: string }) => Promise<AiCircuitState>;
   writeCircuitState: (params: { key: string; state: AiCircuitState }) => Promise<void>;
   getCachedResponse: (params: { normalizedPrompt: string }) => Promise<string | null>;
   setCachedResponse: (params: { normalizedPrompt: string; responseText: string }) => Promise<void>;
-  invokeModel: (params: {
-    tier: AiModelTier;
-    system: string;
-    messages: AiStrategyMessage[];
-    maxOutputTokens: number;
-    temperature: number;
-  }) => Promise<AiProviderResult>;
+  invokeModel: (params: InvokeModelParams) => Promise<AiProviderResult>;
+  /** Optional streaming variant. Returns synchronously; streaming happens via textStream. */
+  invokeModelStreaming?: (params: InvokeModelParams) => AiStreamingProviderResult;
   sleep: (delayMs: number) => Promise<void>;
   now?: () => number;
   circuitKey?: string;
@@ -243,8 +253,100 @@ export const createAiModelStrategy = (dependencies: AiModelStrategyDependencies)
     throw lastError instanceof Error ? lastError : new Error("AI generation failed after all retries.");
   };
 
+  /**
+   * Streaming variant of `generate()`. Returns a text stream immediately
+   * and a `completed` promise that resolves with the full result metadata.
+   *
+   * Does NOT retry on failure — the caller should fall back to `generate()`
+   * for retry/circuit-breaker logic if the stream errors.
+   *
+   * Throws synchronously if `invokeModelStreaming` is not configured or
+   * the circuit breaker is open (unless a cached response is available).
+   */
+  const generateStream = async (params: GenerateParams): Promise<{
+    textStream: AsyncIterable<string>;
+    completed: Promise<AiStrategyResult>;
+  }> => {
+    if (!dependencies.invokeModelStreaming) {
+      throw new Error("Streaming is not configured. Provide invokeModelStreaming dependency.");
+    }
+
+    const normalizedPrompt = normalizePrompt(params.prompt);
+    const classificationResult = classifyAiQuery(params.prompt);
+
+    // Check circuit breaker before starting stream
+    const circuitState = await dependencies.readCircuitState({ key: circuitKey });
+    const currentTime = now();
+
+    if (isCircuitOpen(circuitState, currentTime)) {
+      const cachedResponse = await dependencies.getCachedResponse({ normalizedPrompt });
+      if (cachedResponse) {
+        // Return cached response as a single-item async iterable
+        async function* cachedStream() {
+          yield cachedResponse as string;
+        }
+
+        return {
+          textStream: cachedStream(),
+          completed: Promise.resolve({
+            source: "cache" as const,
+            text: cachedResponse as string,
+            model: "cache",
+            modelTier: classificationResult.modelTier,
+            promptTokens: 0,
+            completionTokens: 0,
+            classification: classificationResult.classification,
+            normalizedPrompt,
+            attempts: 0,
+          }),
+        };
+      }
+
+      throw buildCircuitOpenError();
+    }
+
+    const streamingResult = dependencies.invokeModelStreaming({
+      tier: classificationResult.modelTier,
+      system: params.system,
+      messages: params.messages,
+      maxOutputTokens: params.maxOutputTokens,
+      temperature: params.temperature,
+    });
+
+    const completed = streamingResult.completed.then(
+      async (providerResult) => {
+        const text = providerResult.text.trim();
+        if (text.length > 0) {
+          await dependencies.setCachedResponse({ normalizedPrompt, responseText: text });
+        }
+        await dependencies.writeCircuitState({ key: circuitKey, state: resetCircuitState() });
+
+        return {
+          ...providerResult,
+          text,
+          source: "provider" as const,
+          classification: classificationResult.classification,
+          normalizedPrompt,
+          attempts: 1,
+        };
+      },
+      async (error) => {
+        const currentState = await dependencies.readCircuitState({ key: circuitKey });
+        const updatedState = recordFailure(currentState, now());
+        await dependencies.writeCircuitState({ key: circuitKey, state: updatedState });
+        throw error;
+      }
+    );
+
+    return {
+      textStream: streamingResult.textStream,
+      completed,
+    };
+  };
+
   return {
     generate,
+    generateStream,
     primeCachedResponse,
   };
 };
