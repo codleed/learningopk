@@ -14,14 +14,12 @@ type ExerciseAccordionProps = {
   exercises: Exercise[];
   onExerciseExpanded: (chapterId: number) => void;
   chapterId: number;
-  onAskAi: (exercise: Exercise) => void;
 };
 
 export function ExerciseAccordion({
   exercises,
   onExerciseExpanded,
   chapterId,
-  onAskAi,
 }: ExerciseAccordionProps) {
   const reduced = useReducedMotion();
 
@@ -68,7 +66,6 @@ export function ExerciseAccordion({
           <ExerciseItem
             exercise={exercise}
             onExpanded={() => onExerciseExpanded(chapterId)}
-            onAskAi={() => onAskAi(exercise)}
           />
         </motion.div>
       ))}

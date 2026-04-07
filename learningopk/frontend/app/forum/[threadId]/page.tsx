@@ -91,6 +91,8 @@ export default async function ForumThreadDetailPage({ params }: ForumThreadDetai
         <ForumThreadViewTracker threadId={thread.id} />
         {/* ── Page Header with breadcrumbs ── */}
         <PageHeader
+          sticky
+          stickyClassName="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
           title={thread.title}
           breadcrumbs={[
             { label: "Dashboard", href: "/dashboard" },

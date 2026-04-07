@@ -97,7 +97,7 @@ export function QuizQuestionCard({
         <div
           role="radiogroup"
           aria-label={`Options for question ${questionNumber}`}
-          className="grid gap-2.5"
+          className="flex flex-col gap-1"
         >
           {answerOptionEntries.map((option, index) => {
             const isSelected = selectedAnswer === option.key;
@@ -108,24 +108,23 @@ export function QuizQuestionCard({
             return (
               <motion.label
                 key={option.key}
-                initial={reduced ? false : { opacity: 0, y: 8 }}
+                initial={reduced ? false : { opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={reduced ? { duration: 0 } : { delay: index * 0.05, duration: 0.25, ease: "easeOut" }}
+                transition={reduced ? { duration: 0 } : { delay: index * 0.04, duration: 0.2, ease: "easeOut" }}
                 className={cn(
-                  "group relative flex cursor-pointer items-start gap-3 rounded-xl border-2 px-4 py-3.5 text-sm transition-all duration-150",
-                  "focus-within:ring-2 focus-within:ring-accent-primary/30 focus-within:ring-offset-1",
+                  "group relative flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors duration-100",
                   /* Default state */
-                  !isSelected && !showFeedback && "border-border-default bg-bg-surface hover:border-border-strong hover:bg-bg-elevated",
+                  !isSelected && !showFeedback && "hover:bg-bg-subtle",
                   /* Selected (pre-submit) */
-                  isSelected && !showFeedback && "border-accent-primary bg-accent-primary-light",
+                  isSelected && !showFeedback && "bg-accent-primary-light text-accent-primary",
                   /* Post-submit: correct answer selected */
-                  isCorrectSelected && "border-accent-success bg-accent-success-light",
+                  isCorrectSelected && "bg-accent-success-light text-accent-success",
                   /* Post-submit: wrong answer selected */
-                  isWrongSelected && "border-accent-danger bg-accent-danger-light",
+                  isWrongSelected && "bg-accent-danger-light text-accent-danger",
                   /* Post-submit: highlight correct answer if wrong was selected */
-                  isCorrectOption && !isSelected && "border-accent-success bg-accent-success-light",
+                  isCorrectOption && !isSelected && "bg-accent-success-light text-accent-success",
                   /* Post-submit: non-relevant options */
-                  showFeedback && !isCorrectOption && !isSelected && "border-border-default bg-bg-surface opacity-50",
+                  showFeedback && !isCorrectOption && !isSelected && "opacity-40",
                   /* Locked */
                   locked && !showFeedback && "cursor-not-allowed opacity-60"
                 )}
@@ -143,27 +142,27 @@ export function QuizQuestionCard({
                 {/* Option letter indicator */}
                 <span
                   className={cn(
-                    "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-all duration-150",
-                    !isSelected && !showFeedback && "border border-border-default bg-bg-subtle text-text-secondary group-hover:border-border-strong",
+                    "flex h-5 w-5 shrink-0 items-center justify-center rounded text-[11px] font-bold transition-colors duration-100",
+                    !isSelected && !showFeedback && "text-text-muted",
                     isSelected && !showFeedback && "bg-accent-primary text-white",
                     isCorrectSelected && "bg-accent-success text-white",
                     isWrongSelected && "bg-accent-danger text-white",
                     isCorrectOption && !isSelected && "bg-accent-success text-white",
-                    showFeedback && !isCorrectOption && !isSelected && "border border-border-default bg-bg-subtle text-text-secondary"
+                    showFeedback && !isCorrectOption && !isSelected && "text-text-muted"
                   )}
                   aria-hidden="true"
                 >
                   {isCorrectSelected || (isCorrectOption && !isSelected) ? (
-                    <Check className="h-3.5 w-3.5" />
+                    <Check className="h-3 w-3" />
                   ) : isWrongSelected ? (
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-3 w-3" />
                   ) : (
                     option.label
                   )}
                 </span>
 
                 {/* Option text */}
-                <span className="flex-1 pt-0.5 text-text-primary leading-relaxed">
+                <span className="flex-1 text-text-primary text-sm leading-snug">
                   <ContentRenderer content={getOptionText(question, option.key)} variant="compact" />
                 </span>
               </motion.label>

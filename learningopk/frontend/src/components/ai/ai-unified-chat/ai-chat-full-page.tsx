@@ -296,7 +296,7 @@ export function AIChatFullPage() {
 
   return (
     <div
-      className="flex h-[calc(100dvh-var(--shell-header-height,0px))] flex-row bg-bg-base"
+      className="flex h-[calc(100dvh-var(--shell-header-height,0px))] flex-row bg-bg-base -mx-3 sm:-mx-5 lg:-mx-6 -mt-3 -mb-10"
       style={keyboardVisible ? { height: `calc(${viewportHeight}px - var(--shell-header-height, 0px))` } : undefined}
     >
       {/* ====== LEFT: Conversation History Panel ====== */}

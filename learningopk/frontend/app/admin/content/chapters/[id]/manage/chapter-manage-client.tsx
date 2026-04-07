@@ -5,6 +5,7 @@ import { BookOpen, ClipboardList, Layers, Brain, Save, Loader2, NotebookPen } fr
 
 import { AdminBreadcrumb } from "@/components/admin/breadcrumb";
 import { AdminPageHeader } from "@/components/admin/page-header";
+import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -122,7 +123,9 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
       {/* Header */}
       <div className="border-b border-border-default bg-bg-surface">
         <div className="container mx-auto px-4 py-4">
-          <AdminBreadcrumb segments={breadcrumbSegments} className="mb-4" />
+          <StickyBreadcrumbWrapper className="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+            <AdminBreadcrumb segments={breadcrumbSegments} className="mb-4" />
+          </StickyBreadcrumbWrapper>
           <AdminPageHeader
             title={`Chapter ${chapterId}`}
             subtitle="Manage chapter content, quizzes, flashcards, and exercises"

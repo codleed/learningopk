@@ -78,19 +78,18 @@ export default async function SubjectPage({ params, searchParams }: SubjectPageP
       currentPath={`/${payload.board.slug}/${payload.class.slug}/${payload.subject.slug}`}
       contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6"
     >
-      <StaggerContainer className="space-y-6">
-        {/* Breadcrumbs + Subject Header */}
-        <MotionSection>
-          <PageHeader
-            title=""
-            breadcrumbs={[
-              { label: "Dashboard", href: "/dashboard" },
-              { label: "Subjects", href: "/subjects" },
-              { label: payload.subject.name },
-            ]}
-          />
-        </MotionSection>
+      <PageHeader
+        sticky
+        stickyClassName="-mx-3 -mt-3 sm:-mx-5 lg:-mx-6 px-3 sm:px-5 lg:px-6"
+        title=""
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Subjects", href: "/subjects" },
+          { label: payload.subject.name },
+        ]}
+      />
 
+      <StaggerContainer className="space-y-6">
         <MotionSection>
           <SubjectHeader
             board={payload.board}

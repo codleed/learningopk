@@ -17,6 +17,8 @@ export default async function ReviewPage() {
     >
       <div className="mb-6">
         <PageHeader
+          sticky
+          stickyClassName="-mx-4 -mt-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
           title="Spaced Repetition Review"
           subtitle="Review your flashcards using the SM-2 algorithm for optimal retention."
           breadcrumbs={[

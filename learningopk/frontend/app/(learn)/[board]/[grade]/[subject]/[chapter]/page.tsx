@@ -91,8 +91,8 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
       currentPath={basePath}
       contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6"
     >
-      <div className="space-y-4">
-        {/* Breadcrumb navigation */}
+      <div>
+        {/* Breadcrumb navigation — sticky with glassmorphism */}
         <PageHeader
           title=""
           breadcrumbs={[
@@ -101,8 +101,11 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
             { label: payload.subject.name, href: subjectPath },
             { label: `Chapter ${payload.chapter.chapterNumber}` },
           ]}
+          sticky
+          stickyClassName="-mx-3 -mt-3 sm:-mx-5 lg:-mx-6 px-3 sm:px-5 lg:px-6"
         />
 
+        <div className="space-y-4 pt-4">
         {/* Progress tracker (invisible, fires event) */}
         <ChapterProgressTracker chapterId={payload.chapter.id} />
 
@@ -131,6 +134,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
           autoOpenAi={autoOpenAi}
           challengeId={challengeId}
         />
+        </div>
       </div>
     </AppShell>
   );

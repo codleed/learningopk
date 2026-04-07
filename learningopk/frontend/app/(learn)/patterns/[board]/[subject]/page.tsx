@@ -37,6 +37,8 @@ export default async function PatternPage({ params, searchParams }: PatternPageP
     <AppShell session={session} currentPath={`/patterns/${payload.board.slug}/${payload.subject.slug}`} contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6">
       <div className="space-y-6">
         <PageHeader
+          sticky
+          stickyClassName="-mx-3 -mt-3 sm:-mx-5 lg:-mx-6 px-3 sm:px-5 lg:px-6"
           title=""
           breadcrumbs={[
             { label: "Dashboard", href: "/dashboard" },

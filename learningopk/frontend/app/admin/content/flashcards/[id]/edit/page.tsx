@@ -6,6 +6,7 @@ import { AdminBreadcrumb } from "@/components/admin/breadcrumb";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { AdminFormCard } from "@/components/admin/form-card";
 import { AdminActionButton } from "@/components/admin/action-button";
+import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 
 interface EditFlashCardsPageProps {
   params: Promise<{ id: string }>;
@@ -21,14 +22,16 @@ export default async function EditFlashCardsPage({ params }: EditFlashCardsPageP
 
   return (
     <div className="space-y-6">
-      <AdminBreadcrumb
-        segments={[
-          { label: "Admin", href: "/admin" },
-          { label: "Content", href: "/admin/content" },
-          { label: "Flash Cards", href: "/admin/content/flashcards" },
-          { label: `Edit Flash Cards #${deckId}` },
-        ]}
-      />
+      <StickyBreadcrumbWrapper className="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <AdminBreadcrumb
+          segments={[
+            { label: "Admin", href: "/admin" },
+            { label: "Content", href: "/admin/content" },
+            { label: "Flash Cards", href: "/admin/content/flashcards" },
+            { label: `Edit Flash Cards #${deckId}` },
+          ]}
+        />
+      </StickyBreadcrumbWrapper>
 
       <AdminPageHeader
         title={`Edit Flash Cards #${deckId}`}

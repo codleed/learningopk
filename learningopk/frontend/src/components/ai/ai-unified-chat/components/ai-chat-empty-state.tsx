@@ -378,13 +378,13 @@ export function AIChatEmptyState({
     return (
       <div
         className={cn(
-          'flex flex-col items-center justify-center',
+          'flex flex-col items-center',
           'px-5 py-8',
-          'flex-1',
+          'flex-1 min-h-0 overflow-y-auto',
           className,
         )}
       >
-        <div className="mb-6 flex items-center gap-2">
+        <div className="mb-6 flex items-center gap-2 shrink-0">
           <BookOpen className="h-5 w-5 text-accent-primary" aria-hidden="true" />
           <h2 className="text-center font-medium text-lg text-text-primary">
             {resolvedContext
@@ -415,9 +415,9 @@ export function AIChatEmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center',
+        'flex flex-col items-center',
         'px-5 py-8',
-        'flex-1',
+        'flex-1 min-h-0 overflow-y-auto',
         className,
       )}
     >

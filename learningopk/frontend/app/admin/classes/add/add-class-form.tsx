@@ -11,6 +11,7 @@ import {
   AdminFormField,
   AdminActionButton,
 } from "@/components/admin";
+import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 import { Select } from "@/components/ui/select";
 import {
   createAdminCurriculumClass,
@@ -124,14 +125,16 @@ export function AddClassForm({ boards }: AddClassFormProps) {
 
   return (
     <div className="space-y-6">
-      <AdminBreadcrumb
-        segments={[
-          { label: "Admin", href: "/admin" },
-          { label: "Content", href: "/admin/content" },
-          { label: "Classes", href: "/admin/content" },
-          { label: "Add Class" },
-        ]}
-      />
+      <StickyBreadcrumbWrapper className="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <AdminBreadcrumb
+          segments={[
+            { label: "Admin", href: "/admin" },
+            { label: "Content", href: "/admin/content" },
+            { label: "Classes", href: "/admin/content" },
+            { label: "Add Class" },
+          ]}
+        />
+      </StickyBreadcrumbWrapper>
 
       <AdminPageHeader
         title="Add Class"

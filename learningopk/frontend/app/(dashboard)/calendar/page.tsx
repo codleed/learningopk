@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/foundation/app-shell";
+import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
 import { getDashboardSummary } from "@/lib/progress-api";
 import { getServerSession } from "@/lib/session";
@@ -52,13 +53,15 @@ export default async function CalendarPage() {
   return (
     <AppShell session={session} currentPath="/calendar">
       <div className="max-w-7xl animate-fade-in">
-        <Breadcrumbs
-          items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Calendar" },
-          ]}
-          className="mb-6"
-        />
+        <StickyBreadcrumbWrapper className="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+          <Breadcrumbs
+            items={[
+              { label: "Dashboard", href: "/dashboard" },
+              { label: "Calendar" },
+            ]}
+            className="mb-6"
+          />
+        </StickyBreadcrumbWrapper>
 
         <header className="mb-6 border-b border-border-default/75 pb-4">
           <h1 className="text-3xl font-semibold text-text-primary">Calendar</h1>

@@ -11,6 +11,7 @@ import {
   AdminFormField,
   AdminActionButton,
 } from "@/components/admin";
+import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 import { createAdminCurriculumBoard } from "@/lib/admin-api";
 import { useToast } from "@/components/ui/toast";
 
@@ -83,14 +84,16 @@ export function AddBoardForm() {
 
   return (
     <div className="space-y-6">
-      <AdminBreadcrumb
-        segments={[
-          { label: "Admin", href: "/admin" },
-          { label: "Content", href: "/admin/content" },
-          { label: "Boards", href: "/admin/content" },
-          { label: "Add Board" },
-        ]}
-      />
+      <StickyBreadcrumbWrapper className="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <AdminBreadcrumb
+          segments={[
+            { label: "Admin", href: "/admin" },
+            { label: "Content", href: "/admin/content" },
+            { label: "Boards", href: "/admin/content" },
+            { label: "Add Board" },
+          ]}
+        />
+      </StickyBreadcrumbWrapper>
 
       <AdminPageHeader
         title="Add Board"

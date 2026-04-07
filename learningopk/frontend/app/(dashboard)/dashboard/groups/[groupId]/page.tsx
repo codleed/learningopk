@@ -18,7 +18,7 @@ export default async function StudyGroupDetailPage({ params }: { params: Promise
   return (
     <AppShell session={session} currentPath="/dashboard/groups" contentClassName="max-w-7xl mx-auto px-4 pb-10 pt-4 sm:px-6 lg:px-8">
       <div className="space-y-6">
-        <PageHeader title={payload.group.name} subtitle="Shared member progress, async chapter updates, and score rivalry notifications." breadcrumbs={[{ label: "Home", href: "/" }, { label: "Dashboard", href: "/dashboard" }, { label: "Study groups", href: "/dashboard/groups" }, { label: payload.group.name }]} />
+        <PageHeader sticky stickyClassName="-mx-4 -mt-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8" title={payload.group.name} subtitle="Shared member progress, async chapter updates, and score rivalry notifications." breadcrumbs={[{ label: "Home", href: "/" }, { label: "Dashboard", href: "/dashboard" }, { label: "Study groups", href: "/dashboard/groups" }, { label: payload.group.name }]} />
         <StudyGroupDetailClient payload={payload} />
       </div>
     </AppShell>

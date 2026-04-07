@@ -21,6 +21,7 @@ import {
   panelTransition,
 } from "@/components/admin";
 import type { ExerciseSectionType } from "@/components/admin";
+import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { GithubMarkdownEditor } from "@/components/admin/github-markdown-editor";
@@ -295,14 +296,16 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
 
   return (
     <div className="space-y-6">
-      <AdminBreadcrumb
-        segments={[
-          { label: "Admin", href: "/admin" },
-          { label: "Content", href: "/admin/content" },
-          { label: "Exercises", href: "/admin/content/exercises" },
-          { label: "Add Exercise" },
-        ]}
-      />
+      <StickyBreadcrumbWrapper className="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <AdminBreadcrumb
+          segments={[
+            { label: "Admin", href: "/admin" },
+            { label: "Content", href: "/admin/content" },
+            { label: "Exercises", href: "/admin/content/exercises" },
+            { label: "Add Exercise" },
+          ]}
+        />
+      </StickyBreadcrumbWrapper>
 
       <AdminPageHeader
         title="Add Exercise"

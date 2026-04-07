@@ -14,7 +14,6 @@ type Exercise = ChapterDetailResponse["exercises"][number];
 type ExerciseItemProps = {
   exercise: Exercise;
   onExpanded: () => void;
-  onAskAi: () => void;
 };
 
 const difficultyConfig = {
@@ -31,7 +30,7 @@ const typeConfig = {
   fill_in_blanks: { label: "Fill in Blanks", variant: "info" as const },
 } as const;
 
-export function ExerciseItem({ exercise, onExpanded, onAskAi }: ExerciseItemProps) {
+export function ExerciseItem({ exercise, onExpanded }: ExerciseItemProps) {
   const difficulty = difficultyConfig[exercise.difficulty] ?? difficultyConfig.easy;
   const exerciseType = typeConfig[exercise.type] ?? typeConfig.short;
 
@@ -96,7 +95,7 @@ export function ExerciseItem({ exercise, onExpanded, onAskAi }: ExerciseItemProp
       </summary>
 
       {/* Solution panel */}
-      <ExerciseSolutionPanel solution={exercise.solution} onAskAi={onAskAi} />
+      <ExerciseSolutionPanel solution={exercise.solution} />
     </details>
   );
 }

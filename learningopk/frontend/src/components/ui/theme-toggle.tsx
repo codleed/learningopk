@@ -8,10 +8,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════
-   ThemeToggle — Three-state segmented control
+   ThemeToggle — Two-state segmented control
    ═══════════════════════════════════════════ */
 
-type ThemeMode = "light" | "dark" | "system";
+type ThemeMode = "light" | "dark";
 
 const themeConfig: Record<ThemeMode, { icon: typeof Sun; label: string; ariaLabel: string }> = {
   light: {
@@ -24,11 +24,6 @@ const themeConfig: Record<ThemeMode, { icon: typeof Sun; label: string; ariaLabe
     label: "Dark",
     ariaLabel: "Switch to dark theme",
   },
-  system: {
-    icon: Sun, // placeholder, replaced inline
-    label: "System",
-    ariaLabel: "Switch to system theme",
-  },
 };
 
 /** Props for the ThemeToggle component. */
@@ -39,25 +34,37 @@ export interface ThemeToggleProps {
   showLabels?: boolean;
 }
 
+/** Coerce any theme value to a valid ThemeMode, falling back to "dark". */
+function resolveTheme(raw: string | undefined): ThemeMode {
+  if (raw === "light" || raw === "dark") return raw;
+  return "dark";
+}
+
 /**
- * Three-state theme toggle using next-themes.
+ * Two-state theme toggle using next-themes.
  *
- * Renders a segmented control for light/dark/system with animated active indicator.
+ * Renders a segmented control for light/dark with animated active indicator.
  */
 export function ThemeToggle({
   className,
   showLabels = true,
 }: ThemeToggleProps) {
-  const { theme, setTheme } = useTheme();
+  const { theme: rawTheme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(
     () => () => undefined,
     () => true,
     () => false
   );
 
+  // Migrate stale "system" value left over from the old 3-state toggle
+  const theme = resolveTheme(rawTheme);
+  if (mounted && rawTheme !== theme) {
+    setTheme(theme);
+  }
+
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent, currentIndex: number) => {
-      const modes: ThemeMode[] = ["light", "dark", "system"];
+      const modes: ThemeMode[] = ["light", "dark"];
       let newIndex = currentIndex;
 
       switch (event.key) {
@@ -90,7 +97,7 @@ export function ThemeToggle({
     [setTheme]
   );
 
-  const modes: ThemeMode[] = ["light", "dark", "system"];
+  const modes: ThemeMode[] = ["light", "dark"];
 
   if (!mounted) {
     return (
@@ -123,7 +130,7 @@ export function ThemeToggle({
     >
       {modes.map((m, index) => {
         const isActive = theme === m;
-        const Icon = m === "system" ? Sun : themeConfig[m].icon;
+        const Icon = themeConfig[m].icon;
 
         return (
           <button
@@ -153,20 +160,7 @@ export function ThemeToggle({
             ) : null}
 
             <span className="relative z-10 flex items-center gap-1.5">
-              {m === "system" ? (
-                <span className="h-4 w-4 flex items-center justify-center">
-                  <svg
-                    viewBox="0 0 16 16"
-                    fill="currentColor"
-                    className="h-4 w-4"
-                    aria-hidden="true"
-                  >
-                    <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm0 2v12A6 6 0 008 2z" />
-                  </svg>
-                </span>
-              ) : (
-                <Icon className="h-4 w-4" aria-hidden />
-              )}
+              <Icon className="h-4 w-4" aria-hidden />
               {showLabels ? (
                 <span className="hidden sm:inline">
                   {themeConfig[m].label}
@@ -196,23 +190,28 @@ export interface ThemeToggleCompactProps {
 }
 
 /**
- * Compact single-button theme toggle that cycles through light → dark → system.
+ * Compact single-button theme toggle that cycles through light → dark.
  *
  * Uses Framer Motion AnimatePresence for smooth icon swap animation.
  */
-export function ThemeToggleCompact({ className, isCollapsed: _isCollapsed }: ThemeToggleCompactProps) {
-  const { theme, setTheme } = useTheme();
+export function ThemeToggleCompact({ className }: ThemeToggleCompactProps) {
+  const { theme: rawTheme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(
     () => () => undefined,
     () => true,
     () => false
   );
 
+  // Migrate stale "system" value left over from the old 3-state toggle
+  const currentTheme = resolveTheme(rawTheme);
+  if (mounted && rawTheme !== currentTheme) {
+    setTheme(currentTheme);
+  }
+
   const toggle = useCallback(() => {
-    const nextTheme =
-      theme === "light" ? "dark" : theme === "dark" ? "system" : "light";
+    const nextTheme = currentTheme === "light" ? "dark" : "light";
     setTheme(nextTheme);
-  }, [theme, setTheme]);
+  }, [currentTheme, setTheme]);
 
   if (!mounted) {
     return (
@@ -227,7 +226,6 @@ export function ThemeToggleCompact({ className, isCollapsed: _isCollapsed }: The
     );
   }
 
-  const currentTheme = (theme ?? "system") as ThemeMode;
   const label = `Current theme: ${themeConfig[currentTheme].label}. Click to change.`;
 
   return (
@@ -254,7 +252,7 @@ export function ThemeToggleCompact({ className, isCollapsed: _isCollapsed }: The
           >
             <Moon className="h-5 w-5" aria-hidden />
           </motion.span>
-        ) : currentTheme === "light" ? (
+        ) : (
           <motion.span
             key="sun"
             initial={{ rotate: 90, opacity: 0, scale: 0.5 }}
@@ -263,23 +261,6 @@ export function ThemeToggleCompact({ className, isCollapsed: _isCollapsed }: The
             transition={{ duration: 0.2 }}
           >
             <Sun className="h-5 w-5" aria-hidden />
-          </motion.span>
-        ) : (
-          <motion.span
-            key="system"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.2 }}
-          >
-            <svg
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="h-5 w-5"
-              aria-hidden="true"
-            >
-              <path d="M10 0a10 10 0 100 20 10 10 0 000-20zm0 2.5v15a7.5 7.5 0 000-15z" />
-            </svg>
           </motion.span>
         )}
       </AnimatePresence>

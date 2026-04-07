@@ -110,19 +110,18 @@ export default async function SubjectsPage() {
       currentPath="/subjects"
       contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6"
     >
-      <StaggerContainer className="space-y-8">
-        {/* Header */}
-        <MotionSection>
-          <PageHeader
-            title="Subjects"
-            subtitle="Browse and access chapters from your enrolled subjects."
-            breadcrumbs={[
-              { label: "Dashboard", href: "/dashboard" },
-              { label: "Subjects" },
-            ]}
-          />
-        </MotionSection>
+      <PageHeader
+        sticky
+        stickyClassName="-mx-3 -mt-3 sm:-mx-5 lg:-mx-6 px-3 sm:px-5 lg:px-6"
+        title="Subjects"
+        subtitle="Browse and access chapters from your enrolled subjects."
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Subjects" },
+        ]}
+      />
 
+      <StaggerContainer className="space-y-8">
         {/* Error state */}
         {subjectsResult.error ? (
           <MotionSection>

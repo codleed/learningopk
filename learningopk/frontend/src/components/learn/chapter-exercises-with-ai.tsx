@@ -4,24 +4,18 @@ import { useMemo, useState } from "react";
 
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 import { trackProgressEvent } from "@/lib/progress-client";
-import { Button } from "@/components/ui/button";
 
 import { AIChatPanel } from "./ai-chat-panel";
 import { ExerciseAccordion } from "./exercise-accordion";
 
-type Exercise = ChapterDetailResponse["exercises"][number];
-
 type ChapterExercisesWithAiProps = {
   chapterId: number;
   chapterTitle: string;
-  exercises: Exercise[];
+  exercises: ChapterDetailResponse["exercises"];
   initialAiOpen?: boolean;
   showSidebar?: boolean;
   onPromptChange?: (prompt: string) => void;
 };
-
-const buildExercisePrompt = (exercise: Exercise): string =>
-  `Guide me through Exercise ${exercise.exerciseNumber}: ${exercise.question}\n\nPlease use hints first.`;
 
 export function ChapterExercisesWithAi({
   chapterId,
@@ -48,34 +42,15 @@ export function ChapterExercisesWithAi({
     setPrompt(nextPrompt);
   };
 
+  // Suppress unused lint for pushPrompt (kept for future use)
+  void pushPrompt;
+
   const exercisesContent = (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/45 p-4">
-        <div>
-          <p className="text-sm font-semibold text-foreground">AI Tutor Sidebar</p>
-          <p className="text-sm text-muted-foreground">
-            AI is docked on the right side. Expand any exercise to send a guided prompt to the tutor.
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          onClick={() => {
-            pushPrompt("Guide me through solving the first exercise using hints first.");
-          }}
-        >
-          Open AI Tutor
-        </Button>
-      </div>
-
       <ExerciseAccordion
         exercises={exercises}
         chapterId={chapterId}
         onExerciseExpanded={onExerciseExpanded}
-        onAskAi={(exercise) => {
-          pushPrompt(buildExercisePrompt(exercise));
-        }}
       />
     </div>
   );
