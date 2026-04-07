@@ -12,6 +12,8 @@ type ChapterExercisesWithAiProps = {
   chapterId: number;
   chapterTitle: string;
   exercises: ChapterDetailResponse["exercises"];
+  completedIds: number[];
+  onMarkComplete: (exerciseId: number, difficulty: "easy" | "medium" | "hard") => void;
   initialAiOpen?: boolean;
   showSidebar?: boolean;
   onPromptChange?: (prompt: string) => void;
@@ -21,6 +23,8 @@ export function ChapterExercisesWithAi({
   chapterId,
   chapterTitle,
   exercises,
+  completedIds,
+  onMarkComplete,
   initialAiOpen = false,
   showSidebar = true,
   onPromptChange
@@ -49,6 +53,8 @@ export function ChapterExercisesWithAi({
     <div className="space-y-4">
       <ExerciseAccordion
         exercises={exercises}
+        completedIds={completedIds}
+        onMarkComplete={onMarkComplete}
         chapterId={chapterId}
         onExerciseExpanded={onExerciseExpanded}
       />

@@ -185,9 +185,8 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
     return;
   }
 
-  const [chapterExercises, chapterFlashcards, quizRows, chapterRevisionNotes] = await Promise.all([
+  const [chapterExercises, quizRows, chapterRevisionNotes] = await Promise.all([
     learnRepository.findExercisesByChapter(chapterRow.chapterId),
-    learnRepository.findFlashcardsByChapter(chapterRow.chapterId),
     learnRepository.findQuizByChapter(chapterRow.chapterId),
     learnRepository.findRevisionNotesByChapter(chapterRow.chapterId)
   ]);
@@ -238,7 +237,7 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
       }
     },
     exercises: chapterExercises,
-    flashcards: chapterFlashcards,
+    flashcards: [],
     quiz: quiz
   }));
 });

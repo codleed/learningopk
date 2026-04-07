@@ -4,6 +4,7 @@ import { useRef, useEffect, useCallback, type ReactNode, type Ref } from 'react'
 import { Sparkles, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import { StreamingText } from '@/components/common/streaming-text';
 import type { ChatMessage } from '../types';
 
 type AIChatMessagesProps = {
@@ -97,8 +98,16 @@ function MessageBubble({
       >
         {isUser ? (
           <div className="break-words [overflow-wrap:anywhere]">{message.content}</div>
-        ) : isEmpty || isStreaming ? (
+        ) : isStreaming && isEmpty ? (
           <StreamingIndicator />
+        ) : isStreaming ? (
+          <div className="[overflow-wrap:anywhere] [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
+            <StreamingText
+              content={message.content}
+              isStreaming
+              className="text-[15px] leading-relaxed"
+            />
+          </div>
         ) : (
           <div className="[overflow-wrap:anywhere] [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
             <MarkdownRenderer

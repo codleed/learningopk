@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { BookOpen, Dumbbell, Layers, HelpCircle, Atom, NotebookPen } from "lucide-react";
+import { BookOpen, Dumbbell, HelpCircle, Atom, NotebookPen } from "lucide-react";
 
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 import type { TabItem } from "@/components/foundation/tabs";
@@ -41,9 +41,7 @@ type ChapterStudyWorkspaceProps = {
   chapterSummary: string;
   chapterRevisionNotes: ChapterDetailResponse["chapter"]["revisionNotes"];
   exercises: ChapterDetailResponse["exercises"];
-  flashcards: ChapterDetailResponse["flashcards"];
   quiz: ChapterDetailResponse["quiz"];
-  flashcardStorageKey: string;
   autoOpenAi?: boolean;
   challengeId?: string;
 };
@@ -52,7 +50,6 @@ const TAB_ICONS: Record<string, React.ReactNode> = {
   summary: <BookOpen className="h-4 w-4" />,
   "quick-revision": <NotebookPen className="h-4 w-4" />,
   exercises: <Dumbbell className="h-4 w-4" />,
-  flashcards: <Layers className="h-4 w-4" />,
   quiz: <HelpCircle className="h-4 w-4" />,
   illustration: <Atom className="h-4 w-4" />,
 };
@@ -73,9 +70,7 @@ export function ChapterStudyWorkspace({
   chapterSummary,
   chapterRevisionNotes,
   exercises,
-  flashcards,
   quiz,
-  flashcardStorageKey,
   autoOpenAi = false,
   challengeId,
 }: ChapterStudyWorkspaceProps) {
@@ -83,7 +78,7 @@ export function ChapterStudyWorkspace({
     autoOpenAi ? "Guide me through this chapter using hints first." : null,
   );
 
-  const { state, xpQueue, dismissXpNotification, leveledUp } = useGamification();
+  const { state, xpQueue, dismissXpNotification, leveledUp, markExerciseComplete, completeQuiz } = useGamification();
   const { streak } = useStreakTracking();
   const { visibleNotifications, dismiss } = useXpNotifications(xpQueue, dismissXpNotification);
 
@@ -94,8 +89,8 @@ export function ChapterStudyWorkspace({
 
   const [chapterProgress, setChapterProgress] = useState(readProgress);
 
-  // Re-read gamification storage whenever flashcard-deck (or other tabs) fire
-  // the custom "chapter-progress-updated" event.
+  // Re-read gamification storage whenever tabs fire the custom
+  // "chapter-progress-updated" event.
   useEffect(() => {
     const handler = () => setChapterProgress(readProgress());
     window.addEventListener("chapter-progress-updated", handler);
@@ -119,16 +114,77 @@ export function ChapterStudyWorkspace({
     return completedAll.filter((id) => numericalIds.has(id));
   }, [chapterProgress, illustrationExercises]);
 
+  /** Completed training exercise IDs (from gamification progress) */
+  const trainingCompletedIds = useMemo(() => {
+    const completedAll = chapterProgress?.exercisesCompleted ?? [];
+    const trainingIds = new Set(trainingExercises.map((e) => e.id));
+    return completedAll.filter((id) => trainingIds.has(id));
+  }, [chapterProgress, trainingExercises]);
+
+  /** Handler: mark an exercise (training or illustration) as complete via gamification hook */
+  const handleMarkExerciseComplete = useCallback(
+    (exerciseId: number, difficulty: "easy" | "medium" | "hard") => {
+      markExerciseComplete(String(chapterId), exerciseId, difficulty);
+    },
+    [chapterId, markExerciseComplete]
+  );
+
+  /** Handler: record quiz completion via gamification hook */
+  const handleQuizComplete = useCallback(
+    (score: number, percentage: number) => {
+      completeQuiz(String(chapterId), score, percentage);
+    },
+    [chapterId, completeQuiz]
+  );
+
+  /** XP earned in this chapter */
+  const chapterXp = chapterProgress?.xpEarned ?? 0;
+
+  /** Granular completion: each active category gets equal weight,
+   *  with proportional progress within that category. Categories
+   *  with no content are excluded so 100% is always reachable. */
   const completionPercent = useMemo(() => {
-    const parts = 5;
-    let completed = 0;
-    if (chapterProgress?.summaryRead) completed++;
-    if ((chapterProgress?.exercisesCompleted?.length ?? 0) > 0) completed++;
-    if (Object.keys(chapterProgress?.flashcardsReviewed ?? {}).length > 0) completed++;
-    if ((chapterProgress?.quizAttempts?.length ?? 0) > 0) completed++;
-    if (illustrationCompletedIds.length > 0) completed++;
-    return (completed / parts) * 100;
-  }, [chapterProgress, illustrationCompletedIds]);
+    type Category = { progress: number };
+    const categories: Category[] = [];
+
+    // Summary — boolean (always present)
+    categories.push({
+      progress: chapterProgress?.summaryRead ? 1 : 0,
+    });
+
+    // Training exercises — proportional
+    if (trainingExercises.length > 0) {
+      categories.push({
+        progress: trainingCompletedIds.length / trainingExercises.length,
+      });
+    }
+
+    // Quiz — boolean
+    if (quiz != null) {
+      categories.push({
+        progress: (chapterProgress?.quizAttempts?.length ?? 0) > 0 ? 1 : 0,
+      });
+    }
+
+    // Illustration exercises — proportional
+    if (illustrationExercises.length > 0) {
+      categories.push({
+        progress: illustrationCompletedIds.length / illustrationExercises.length,
+      });
+    }
+
+    if (categories.length === 0) return 0;
+
+    const weight = 100 / categories.length;
+    return categories.reduce((sum, c) => sum + c.progress * weight, 0);
+  }, [
+    chapterProgress,
+    trainingExercises,
+    trainingCompletedIds,
+    illustrationExercises,
+    illustrationCompletedIds,
+    quiz,
+  ]);
 
   const aiContext: AIContext | null = {
     chapterId,
@@ -155,9 +211,7 @@ export function ChapterStudyWorkspace({
     chapterSummary,
     chapterRevisionNotes,
     exercises,
-    flashcards,
     quiz,
-    flashcardStorageKey,
     autoOpenAi,
     challengeId,
   };
@@ -181,6 +235,7 @@ export function ChapterStudyWorkspace({
               gamificationState={state}
               streak={streak}
               completionPercent={completionPercent}
+              chapterXp={chapterXp}
             />
 
             {/* Tab bar */}
@@ -193,10 +248,8 @@ export function ChapterStudyWorkspace({
                     chapterRevisionNotes.keyDefinitions.length > 0 ||
                     chapterRevisionNotes.commonMistakes.trim().length > 0 ||
                     chapterRevisionNotes.examTips.trim().length > 0,
-                  exercises: chapterProgress?.exercisesCompleted?.length ?? 0,
+                  exercises: trainingCompletedIds.length,
                   totalExercises: trainingExercises.length,
-                  flashcards: Object.keys(chapterProgress?.flashcardsReviewed ?? {}).length,
-                  totalFlashcards: flashcards?.length ?? 0,
                   quizCompleted: (chapterProgress?.quizAttempts?.length ?? 0) > 0,
                   illustrations: illustrationCompletedIds.length,
                   totalIllustrations: illustrationExercises.length,
@@ -225,6 +278,9 @@ export function ChapterStudyWorkspace({
                 trainingExercises={trainingExercises}
                 illustrationExercises={illustrationExercises}
                 illustrationCompletedIds={illustrationCompletedIds}
+                trainingCompletedIds={trainingCompletedIds}
+                onMarkExerciseComplete={handleMarkExerciseComplete}
+                onQuizComplete={handleQuizComplete}
                 onPromptChange={(nextPrompt) => {
                   setPrompt(nextPrompt);
                 }}

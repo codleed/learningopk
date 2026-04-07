@@ -17,7 +17,7 @@ const routeParamsSchema = z.object({
   chapter: z.string().trim().regex(/^[a-z0-9-]+$/)
 });
 
-const tabSchema = z.enum(["summary", "quick-revision", "exercises", "flashcards", "quiz", "illustration"]).catch("summary");
+const tabSchema = z.enum(["summary", "quick-revision", "exercises", "quiz", "illustration"]).catch("summary");
 
 type ChapterPageProps = {
   params: Promise<{
@@ -36,10 +36,10 @@ export async function generateMetadata({ params }: ChapterPageProps): Promise<Me
 
   return {
     title: `${chapterName} — ${subjectName} | LearningoPK`,
-    description: `Learn ${chapterName} in ${subjectName}. Interactive exercises, flashcards, and AI tutoring for Pakistani students.`,
+    description: `Learn ${chapterName} in ${subjectName}. Interactive exercises and AI tutoring for Pakistani students.`,
     openGraph: {
       title: `${chapterName} — ${subjectName}`,
-      description: `Learn ${chapterName} in ${subjectName}. Interactive exercises, flashcards, and AI tutoring for Pakistani students.`,
+      description: `Learn ${chapterName} in ${subjectName}. Interactive exercises and AI tutoring for Pakistani students.`,
     },
   };
 }
@@ -75,7 +75,6 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
     { key: "summary", label: "Summary", href: `${basePath}?tab=summary` },
     { key: "quick-revision", label: "Quick Revision", href: `${basePath}?tab=quick-revision` },
     { key: "exercises", label: "Exercises", href: `${basePath}?tab=exercises` },
-    { key: "flashcards", label: "Flashcards", href: `${basePath}?tab=flashcards` },
     {
       key: "quiz",
       label: payload.quiz?.type === "mock_exam" ? "Mock Exam" : "Quiz",
@@ -128,9 +127,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
           chapterSummary={payload.chapter.summary}
           chapterRevisionNotes={payload.chapter.revisionNotes}
           exercises={payload.exercises}
-          flashcards={payload.flashcards}
           quiz={payload.quiz}
-          flashcardStorageKey={`learningopk:flashcards:${payload.board.slug}:${payload.class.slug}:${payload.subject.slug}:${payload.chapter.slug}`}
           autoOpenAi={autoOpenAi}
           challengeId={challengeId}
         />

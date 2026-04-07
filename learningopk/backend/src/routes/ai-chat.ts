@@ -1,4 +1,4 @@
-import { type ModelMessage, generateText } from "ai";
+import { type ModelMessage, generateText, streamText } from "ai";
 import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import { Router } from "express";
 import { z } from "zod";
@@ -182,6 +182,32 @@ const aiModelStrategy = createAiModelStrategy({
       modelTier: tier,
       promptTokens: result.usage.inputTokens ?? 0,
       completionTokens: result.usage.outputTokens ?? 0
+    };
+  },
+  invokeModelStreaming: ({ tier, system, messages, maxOutputTokens, temperature }) => {
+    const model = getMistralModel(tier);
+    const modelId = getMistralModelId(tier);
+
+    const result = streamText({
+      model,
+      system,
+      messages: messages as ModelMessage[],
+      maxOutputTokens,
+      temperature
+    });
+
+    return {
+      textStream: result.textStream,
+      completed: (async () => {
+        const [text, usage] = await Promise.all([result.text, result.usage]);
+        return {
+          text,
+          model: modelId,
+          modelTier: tier,
+          promptTokens: usage.inputTokens ?? 0,
+          completionTokens: usage.outputTokens ?? 0
+        };
+      })()
     };
   },
   sleep: async (delayMs) => {
@@ -502,7 +528,8 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
   const aiSpan = startSpan("ai.chat.generate", "ai.call");
 
   try {
-    const result = await aiModelStrategy.generate({
+    // Attempt streaming first
+    const streamResult = await aiModelStrategy.generateStream({
       prompt: latestUserMessage.content,
       messages: modelMessages as ChatMessage[],
       system: systemPrompt,
@@ -510,7 +537,29 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
       temperature: MISTRAL_TEMPERATURE,
     });
 
-    const assistantText = result.text.trim();
+    // Set streaming headers before piping
+    res.status(200);
+    res.setHeader("content-type", "text/plain; charset=utf-8");
+    res.setHeader("transfer-encoding", "chunked");
+    res.setHeader("cache-control", "no-cache");
+    res.setHeader("x-content-type-options", "nosniff");
+    res.setHeader("x-ai-session-id", sessionRow.id);
+    if (proactiveHint) {
+      res.setHeader("x-ai-proactive-hint", encodeURIComponent(JSON.stringify(proactiveHint)));
+    }
+
+    // Pipe text chunks to the response as they arrive
+    let streamedText = "";
+    for await (const chunk of streamResult.textStream) {
+      streamedText += chunk;
+      res.write(chunk);
+    }
+    res.end();
+
+    // Wait for completion metadata (usage, model tier)
+    const result = await streamResult.completed;
+    const assistantText = result.text.trim().length > 0 ? result.text.trim() : streamedText.trim();
+
     if (assistantText.length > 0) {
       await db.insert(aiMessages).values({
         sessionId: sessionRow.id,
@@ -558,23 +607,62 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
         logger.error({ error }, "AI concept extraction failed (non-critical)");
       }
     }
-
-    res.status(200);
-    res.setHeader("content-type", "text/plain; charset=utf-8");
-    res.setHeader("x-ai-session-id", sessionRow.id);
-    res.setHeader("x-ai-model-tier", result.modelTier);
-    if (proactiveHint) {
-      res.setHeader("x-ai-proactive-hint", encodeURIComponent(JSON.stringify(proactiveHint)));
-    }
-    res.write(assistantText);
-    res.end();
   } catch (error) {
-    logger.error({ error }, "AI provider generation error");
-    providerError = error instanceof Error ? error.message : "Unknown provider generation error.";
-    res.status(502).json({
-      error: providerError ?? "Failed to generate AI response from the provider.",
-      sessionId: sessionRow.id
-    });
+    logger.error({ error }, "AI streaming generation error");
+
+    if (!res.headersSent) {
+      // Headers not sent yet — fall back to non-streaming strategy with retries
+      try {
+        const fallbackResult = await aiModelStrategy.generate({
+          prompt: latestUserMessage.content,
+          messages: modelMessages as ChatMessage[],
+          system: systemPrompt,
+          maxOutputTokens: MISTRAL_COMPLETION_MAX_TOKENS,
+          temperature: MISTRAL_TEMPERATURE,
+        });
+
+        const assistantText = fallbackResult.text.trim();
+        if (assistantText.length > 0) {
+          await db.insert(aiMessages).values({
+            sessionId: sessionRow.id,
+            role: "assistant",
+            content: assistantText
+          });
+        }
+
+        await db.insert(aiUsageLogs).values({
+          userId,
+          sessionId: sessionRow.id,
+          modelTier: fallbackResult.modelTier,
+          model: fallbackResult.model,
+          promptTokens: fallbackResult.promptTokens,
+          completionTokens: fallbackResult.completionTokens
+        });
+
+        await db.update(aiChatSessions).set({ lastMessageAt: new Date() }).where(eq(aiChatSessions.id, sessionRow.id));
+
+        res.status(200);
+        res.setHeader("content-type", "text/plain; charset=utf-8");
+        res.setHeader("x-ai-session-id", sessionRow.id);
+        res.setHeader("x-ai-model-tier", fallbackResult.modelTier);
+        if (proactiveHint) {
+          res.setHeader("x-ai-proactive-hint", encodeURIComponent(JSON.stringify(proactiveHint)));
+        }
+        res.write(assistantText);
+        res.end();
+      } catch (fallbackError) {
+        logger.error({ error: fallbackError }, "AI fallback generation also failed");
+        providerError = fallbackError instanceof Error ? fallbackError.message : "Unknown provider generation error.";
+        res.status(502).json({
+          error: providerError ?? "Failed to generate AI response from the provider.",
+          sessionId: sessionRow.id
+        });
+      }
+    } else {
+      // Headers already sent (partial stream was delivered) — end the response
+      logger.error({ error }, "AI stream failed mid-response after headers were sent");
+      res.end();
+    }
   } finally {
     endSpan(aiSpan);
   }

@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import dynamic from "next/dynamic";
 
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 import { EmptyState, LoadingSkeleton } from "@/components/ui/states";
-import { updateChapterProgress, getChapterProgress } from "@/lib/gamification-storage";
+import { getChapterProgress } from "@/lib/gamification-storage";
 
 import { useChapter } from "./chapter-context";
 import { VirtualizedMarkdown } from "@/components/VirtualizedMarkdown";
@@ -20,14 +20,6 @@ const ChapterExercisesWithAi = dynamic(
   {
     ssr: false,
     loading: () => <LoadingSkeleton title="Loading exercises..." rows={4} variant="card" />,
-  }
-);
-
-const FlashcardDeck = dynamic(
-  () => import("./flashcard-deck").then((mod) => mod.FlashcardDeck),
-  {
-    ssr: false,
-    loading: () => <LoadingSkeleton title="Loading flashcards..." rows={3} variant="card" />,
   }
 );
 
@@ -64,6 +56,9 @@ type ChapterStudyContentWithAiProps = {
   trainingExercises: ChapterDetailResponse["exercises"];
   illustrationExercises: ChapterDetailResponse["exercises"];
   illustrationCompletedIds: number[];
+  trainingCompletedIds: number[];
+  onMarkExerciseComplete: (exerciseId: number, difficulty: "easy" | "medium" | "hard") => void;
+  onQuizComplete: (score: number, percentage: number) => void;
   onPromptChange?: (prompt: string) => void;
 };
 
@@ -71,6 +66,9 @@ export function ChapterStudyContentWithAi({
   trainingExercises,
   illustrationExercises,
   illustrationCompletedIds,
+  trainingCompletedIds,
+  onMarkExerciseComplete,
+  onQuizComplete,
   onPromptChange,
 }: ChapterStudyContentWithAiProps) {
   const {
@@ -81,29 +79,10 @@ export function ChapterStudyContentWithAi({
     chapterSummary: summary,
     chapterRevisionNotes: revisionNotes,
     subjectName,
-    flashcards,
     quiz,
-    flashcardStorageKey,
     autoOpenAi,
     challengeId,
   } = useChapter();
-
-  /** Persist illustration exercise completion to gamification storage. */
-  const handleIllustrationComplete = useCallback(
-    (_exerciseId: number, _difficulty: "easy" | "medium" | "hard") => {
-      const current = getChapterProgress(String(chapterId));
-      const alreadyCompleted = current?.exercisesCompleted ?? [];
-      if (alreadyCompleted.includes(_exerciseId)) return;
-
-      updateChapterProgress(String(chapterId), {
-        exercisesCompleted: [...alreadyCompleted, _exerciseId],
-      });
-
-      // XP is tracked at the gamification hook level; this persists the ID.
-      void _difficulty; // difficulty used for XP calc at hook level
-    },
-    [chapterId]
-  );
 
   /** Live completed IDs that reflect localStorage writes within the session. */
   const liveIllustrationCompletedIds = useMemo(() => {
@@ -113,6 +92,15 @@ export function ChapterStudyContentWithAi({
     return completedAll.filter((id) => numericalIds.has(id));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- also recompute when prop changes
   }, [chapterId, illustrationExercises, illustrationCompletedIds]);
+
+  /** Live completed IDs for training exercises within the session. */
+  const liveExerciseCompletedIds = useMemo(() => {
+    const current = getChapterProgress(String(chapterId));
+    const completedAll = current?.exercisesCompleted ?? [];
+    const trainingIds = new Set(trainingExercises.map((e) => e.id));
+    return completedAll.filter((id) => trainingIds.has(id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- also recompute when prop changes
+  }, [chapterId, trainingExercises, trainingCompletedIds]);
 
   return (
     <div className="min-w-0">
@@ -135,23 +123,28 @@ export function ChapterStudyContentWithAi({
           chapterId={chapterId}
           chapterTitle={chapterTitle}
           exercises={trainingExercises}
+          completedIds={liveExerciseCompletedIds}
+          onMarkComplete={onMarkExerciseComplete}
           initialAiOpen={autoOpenAi}
           showSidebar={false}
           onPromptChange={onPromptChange}
         />
       ) : null}
 
-      {activeTab === "flashcards" ? (
-        <FlashcardDeck chapterId={chapterId} flashcards={flashcards} storageKey={flashcardStorageKey} />
-      ) : null}
-
       {activeTab === "quiz" ? (
         quiz ? (
-          <QuizRunner quiz={quiz} subjectName={subjectName} chapterNumber={chapterNumber} chapterTitle={chapterTitle} challengeId={challengeId} />
+          <QuizRunner
+            quiz={quiz}
+            subjectName={subjectName}
+            chapterNumber={chapterNumber}
+            chapterTitle={chapterTitle}
+            challengeId={challengeId}
+            onQuizComplete={onQuizComplete}
+          />
         ) : (
           <EmptyState
             title="Quiz unavailable"
-            description="This chapter does not have a quiz yet. Continue with summary, exercises, and flashcards."
+            description="This chapter does not have a quiz yet. Continue with summary and exercises."
           />
         )
       ) : null}
@@ -160,7 +153,7 @@ export function ChapterStudyContentWithAi({
         <QuestIllustrationView
           exercises={illustrationExercises}
           completedIds={liveIllustrationCompletedIds}
-          onMarkComplete={handleIllustrationComplete}
+          onMarkComplete={onMarkExerciseComplete}
         />
       ) : null}
 

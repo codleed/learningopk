@@ -108,6 +108,7 @@ type QuizRunnerProps = {
   chapterNumber?: number;
   chapterTitle?: string;
   challengeId?: string;
+  onQuizComplete?: (score: number, percentage: number) => void;
 };
 
 const quizChallengeResponseSchema = z.object({
@@ -141,7 +142,7 @@ const slideVariants = {
   }),
 };
 
-export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, challengeId }: QuizRunnerProps) {
+export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, challengeId, onQuizComplete }: QuizRunnerProps) {
   const reduced = useReducedMotion();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerOption>>({});
@@ -242,12 +243,15 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
       const totalCount = parsedResponse.data.questionResults.length;
       setAnnouncementText(`Quiz complete! You got ${correctCount} out of ${totalCount} questions correct.`);
       setResult(parsedResponse.data);
+
+      // Notify parent for gamification (XP, progress, streak)
+      onQuizComplete?.(parsedResponse.data.score, parsedResponse.data.percentage);
     } catch {
       setSubmitError("Unable to submit quiz right now. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  }, [answers, backendUrl, challengeId, isSubmitting, quiz.id, result, startedAtMs]);
+  }, [answers, backendUrl, challengeId, isSubmitting, onQuizComplete, quiz.id, result, startedAtMs]);
 
   const createChallenge = useCallback(async () => {
     if (!result || result.quizType !== "chapter_quiz") {

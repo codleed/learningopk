@@ -39,7 +39,7 @@ export const MISTRAL_MODEL_IDS = {
 
 export const MISTRAL_MODEL_ID = MISTRAL_MODEL_IDS["mistral-small"];
 
-export const MISTRAL_COMPLETION_MAX_TOKENS = 500;
+export const MISTRAL_COMPLETION_MAX_TOKENS = 2048;
 export const MISTRAL_TEMPERATURE = 0.7;
 
 const mistralProvider = createMistral({

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BookOpen, Dumbbell, Layers, HelpCircle, Atom, Check, NotebookPen } from "lucide-react";
+import { BookOpen, Dumbbell, HelpCircle, Atom, Check, NotebookPen } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 
@@ -14,8 +14,6 @@ interface TabStatus {
   quickRevision: boolean;
   exercises: number;
   totalExercises: number;
-  flashcards: number;
-  totalFlashcards: number;
   quizCompleted: boolean;
   illustrations: number;
   totalIllustrations: number;
@@ -33,7 +31,6 @@ const TAB_CONFIG: Array<{
   { key: "summary", label: "Study", icon: BookOpen },
   { key: "quick-revision", label: "Quick Revision", icon: NotebookPen },
   { key: "exercises", label: "Training", icon: Dumbbell },
-  { key: "flashcards", label: "Memory", icon: Layers },
   { key: "quiz", label: "Challenge", icon: HelpCircle },
   { key: "illustration", label: "Illustration", icon: Atom },
 ];
@@ -116,8 +113,6 @@ export function QuestTabBar({ status }: QuestTabBarProps) {
         return status.quickRevision;
       case "exercises":
         return status.totalExercises > 0 && status.exercises >= status.totalExercises;
-      case "flashcards":
-        return status.totalFlashcards > 0 && status.flashcards >= status.totalFlashcards;
       case "quiz":
         return status.quizCompleted;
       case "illustration":
@@ -132,10 +127,6 @@ export function QuestTabBar({ status }: QuestTabBarProps) {
       case "exercises":
         return status.totalExercises > 0
           ? `${status.exercises}/${status.totalExercises}`
-          : null;
-      case "flashcards":
-        return status.totalFlashcards > 0
-          ? `${status.flashcards}/${status.totalFlashcards}`
           : null;
       case "illustration":
         return status.totalIllustrations > 0
