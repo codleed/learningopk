@@ -179,6 +179,7 @@ export const chapters = pgTable(
     title: text("title").notNull(),
     slug: text("slug").notNull(),
     summary: text("summary").notNull(),
+    coverImageUrl: text("cover_image_url"),
     isPublished: boolean("is_published").notNull().default(false),
     sourceId: uuid("source_id").references(() => contentSources.id, { onDelete: "set null" })
   },
@@ -558,6 +559,7 @@ export const userProgress = pgTable(
       .notNull()
       .references(() => chapters.id, { onDelete: "cascade" }),
     visitedAt: timestamp("visited_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    summaryRead: boolean("summary_read").notNull().default(false),
     exercisesViewed: integer("exercises_viewed").notNull().default(0),
     flashcardsCompleted: boolean("flashcards_completed").notNull().default(false),
     quizBestScore: integer("quiz_best_score").notNull().default(0),
@@ -584,7 +586,9 @@ export const mockExams = pgTable("mock_exams", {
   title: text("title").notNull(),
   year: integer("year").notNull(),
   durationMinutes: integer("duration_minutes").notNull(),
-  totalMarks: integer("total_marks").notNull()
+  totalMarks: integer("total_marks").notNull(),
+  paperContent: text("paper_content"),
+  solutionContent: text("solution_content")
 });
 
 export const examAnalysis = pgTable(
@@ -741,6 +745,32 @@ export const formulaAccessEvents = pgTable(
   (table) => [
     index("formula_access_events_user_accessed_idx").on(table.userId, desc(table.accessedAt)),
     index("formula_access_events_formula_idx").on(table.formulaId)
+  ]
+);
+
+export const studentNotes = pgTable(
+  "student_notes",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    subjectId: integer("subject_id").references(() => subjects.id, { onDelete: "set null" }),
+    chapterId: integer("chapter_id").references(() => chapters.id, { onDelete: "set null" }),
+    tags: jsonb("tags").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    index("student_notes_user_created_idx").on(table.userId, desc(table.createdAt)),
+    index("student_notes_user_subject_idx").on(table.userId, table.subjectId),
+    index("student_notes_user_chapter_idx").on(table.userId, table.chapterId),
+    index("student_notes_search_idx").using(
+      "gin",
+      sql`to_tsvector('english', coalesce(${table.title}, '') || ' ' || coalesce(${table.content}, ''))`
+    )
   ]
 );
 

@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BookOpen, PlayCircle } from "lucide-react";
+import { ArrowRight, BookOpen, Sparkles } from "lucide-react";
 
-import { Card, CardHeader, CardBody } from "@/components/ui/card";
+import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SubjectBadge } from "@/components/common/subject-badge";
 import { ProgressRing } from "@/components/common/progress-ring";
@@ -21,6 +21,35 @@ export interface ContinueLearningCardProps {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+/** Return motivational micro-copy based on current progress percentage. */
+function getEncouragement(percent: number): string {
+  if (percent === 0) return "Let\u2019s get started!";
+  if (percent < 25) return "Great start \u2014 keep going!";
+  if (percent < 50) return "You\u2019re building momentum!";
+  if (percent < 75) return "Over halfway \u2014 keep it up!";
+  if (percent < 100) return "Almost there, finish strong!";
+  return "Subject complete \u2014 well done!";
+}
+
+/**
+ * Radial-gradient overlay style that creates a soft glow anchored
+ * at the top-right of the card. Uses only design-system token references.
+ */
+const HERO_OVERLAY_STYLE: React.CSSProperties = {
+  position: "absolute",
+  inset: 0,
+  borderRadius: "inherit",
+  pointerEvents: "none",
+  background: [
+    "radial-gradient(ellipse 60% 50% at 90% 10%, var(--accent-primary-light) 0%, transparent 70%)",
+    "radial-gradient(ellipse 40% 60% at 10% 90%, var(--accent-info-light) 0%, transparent 70%)",
+  ].join(", "),
+};
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -28,59 +57,90 @@ export function ContinueLearningCard({
   subject,
   continueHref,
 }: ContinueLearningCardProps) {
+  /* ── Empty state ── */
   if (!subject) {
     return (
       <Card variant="default" className="h-full">
-        <CardHeader>
-          <h3 className="font-[var(--font-display)] text-base font-bold text-text-primary">
-            Continue Learning
-          </h3>
-        </CardHeader>
-        <CardBody className="flex flex-col items-center justify-center gap-3 py-8">
-          <BookOpen className="h-10 w-10 text-text-muted" aria-hidden />
-          <p className="text-sm text-text-secondary text-center">
-            Start a chapter to track your progress here.
-          </p>
+        <CardBody className="flex flex-col items-center justify-center gap-4 py-12">
+          <div
+            className="flex items-center justify-center rounded-full"
+            style={{
+              width: 56,
+              height: 56,
+              background: "var(--accent-primary-light)",
+            }}
+          >
+            <BookOpen
+              className="h-6 w-6 text-accent-primary"
+              aria-hidden
+            />
+          </div>
+
+          <div className="text-center">
+            <h3 className="font-[var(--font-display)] text-base font-bold text-text-primary">
+              Continue Learning
+            </h3>
+            <p className="mt-1 text-sm text-text-secondary">
+              Start a chapter to track your progress here.
+            </p>
+          </div>
         </CardBody>
       </Card>
     );
   }
 
+  /* ── Hero state ── */
+  const percent = subject.chaptersVisitedPercent;
+
   return (
-    <Card variant="default" className="h-full flex flex-col">
-      <CardHeader className="pb-2">
+    <Card variant="gradient" className="h-full">
+      {/* Radial gradient overlay for depth */}
+      <div style={HERO_OVERLAY_STYLE} aria-hidden />
+
+      <CardBody className="relative flex flex-col gap-5 p-6">
+        {/* Top row: label + sparkle icon */}
         <div className="flex items-center justify-between">
-          <h3 className="font-[var(--font-display)] text-base font-bold text-text-primary">
+          <span className="text-xs font-semibold uppercase tracking-widest text-text-muted">
             Continue Learning
-          </h3>
-          <PlayCircle
-            className="h-5 w-5 text-accent-primary"
+          </span>
+          <Sparkles
+            className="h-4 w-4 text-accent-primary"
             aria-hidden
           />
         </div>
-      </CardHeader>
-      <CardBody className="flex-1 flex flex-col justify-between gap-4">
-        <div className="flex items-start gap-4">
+
+        {/* Center: progress ring + subject info */}
+        <div className="flex items-center gap-5">
           <ProgressRing
-            percentage={subject.chaptersVisitedPercent}
-            size={64}
+            percentage={percent}
+            size={72}
             strokeWidth={5}
           />
-          <div className="min-w-0 flex-1">
+
+          <div className="min-w-0 flex-1 space-y-1.5">
             <SubjectBadge name={subject.subjectName} size="sm" />
-            <h4 className="mt-1.5 text-sm font-semibold text-text-primary leading-snug truncate">
+
+            <h3 className="font-[var(--font-display)] text-lg font-bold leading-snug text-text-primary truncate">
               {subject.subjectName}
-            </h4>
-            <p className="mt-0.5 text-xs text-text-secondary">
+            </h3>
+
+            <p className="text-xs text-text-secondary">
               {subject.boardName} &middot; Class {subject.grade}
             </p>
           </div>
         </div>
+
+        {/* Motivational micro-copy */}
+        <p className="text-sm font-medium text-accent-primary">
+          {getEncouragement(percent)}
+        </p>
+
+        {/* CTA */}
         {continueHref ? (
           <Link href={continueHref} className="block">
             <Button
               variant="primary"
-              size="sm"
+              size="md"
               width="full"
               iconRight={<ArrowRight />}
             >
@@ -88,10 +148,13 @@ export function ContinueLearningCard({
             </Button>
           </Link>
         ) : (
-          <Link href={`/dashboard/${subject.boardSlug}/${subject.grade}/${subject.subjectSlug}`} className="block">
+          <Link
+            href={`/dashboard/${subject.boardSlug}/${subject.grade}/${subject.subjectSlug}`}
+            className="block"
+          >
             <Button
               variant="secondary"
-              size="sm"
+              size="md"
               width="full"
               iconRight={<ArrowRight />}
             >

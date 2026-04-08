@@ -2,13 +2,36 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Brain, ChevronRight } from "lucide-react";
+import { ArrowRight, Brain, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchReviewStats, type ReviewStats } from "@/lib/srs-api";
+
+/* ------------------------------------------------------------------ */
+/*  Stat row                                                           */
+/* ------------------------------------------------------------------ */
+
+function StatRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-2xl border border-border-default bg-bg-base px-3.5 py-2.5">
+      <span className="text-sm text-text-secondary">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Component                                                          */
+/* ------------------------------------------------------------------ */
 
 export function ReviewNowWidget() {
   const [stats, setStats] = useState<ReviewStats | null>(null);
@@ -44,11 +67,18 @@ export function ReviewNowWidget() {
     return (
       <Card variant="default" className="h-full flex flex-col">
         <CardHeader className="pb-2">
-          <Skeleton className="h-5 w-32" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-8 rounded-xl" />
+            <Skeleton className="h-5 w-36" />
+          </div>
         </CardHeader>
-        <CardBody className="flex-1 flex flex-col justify-between gap-4">
-          <Skeleton className="h-20 w-full rounded-lg" />
-          <Skeleton className="h-10 w-full rounded-lg" />
+        <CardBody className="flex-1 flex flex-col justify-between gap-3">
+          <div className="space-y-2">
+            <Skeleton className="h-11 w-full rounded-2xl" />
+            <Skeleton className="h-11 w-full rounded-2xl" />
+            <Skeleton className="h-11 w-full rounded-2xl" />
+          </div>
+          <Skeleton className="h-10 w-full rounded-xl" />
         </CardBody>
       </Card>
     );
@@ -66,36 +96,42 @@ export function ReviewNowWidget() {
   return (
     <Card variant="default" className="h-full flex flex-col">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <h3 className="font-[var(--font-display)] text-base font-bold text-text-primary">
-            Spaced Repetition
-          </h3>
-          <Brain className="h-5 w-5 text-accent-primary" aria-hidden />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent-primary/10">
+              <Brain className="h-4 w-4 text-accent-primary" aria-hidden />
+            </div>
+            <h3 className="font-[var(--font-display)] text-base font-bold text-text-primary">
+              Spaced Repetition
+            </h3>
+          </div>
+          {stats.dueToday > 0 && (
+            <Badge variant="danger" size="sm">
+              {stats.dueToday} due
+            </Badge>
+          )}
         </div>
       </CardHeader>
-      <CardBody className="flex-1 flex flex-col justify-between gap-4">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between rounded-lg border border-border-default bg-bg-base p-3">
-            <span className="text-sm text-text-secondary">Due now</span>
+      <CardBody className="flex-1 flex flex-col justify-between gap-3">
+        <div className="space-y-2">
+          <StatRow label="Due now">
             <Badge
               variant={stats.dueToday > 0 ? "danger" : "success"}
               size="md"
             >
               {stats.dueToday} card{stats.dueToday !== 1 ? "s" : ""}
             </Badge>
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-border-default bg-bg-base p-3">
-            <span className="text-sm text-text-secondary">Due this week</span>
+          </StatRow>
+          <StatRow label="Due this week">
             <Badge variant="default" size="md">
               {stats.dueThisWeek}
             </Badge>
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-border-default bg-bg-base p-3">
-            <span className="text-sm text-text-secondary">Total reviewed</span>
+          </StatRow>
+          <StatRow label="Total reviewed">
             <Badge variant="primary" size="md">
               {stats.totalReviewed}
             </Badge>
-          </div>
+          </StatRow>
         </div>
 
         {stats.dueToday > 0 ? (
@@ -104,7 +140,7 @@ export function ReviewNowWidget() {
               variant="primary"
               size="md"
               width="full"
-              iconRight={<ChevronRight />}
+              iconRight={<ArrowRight />}
             >
               Review Now ({stats.dueToday})
             </Button>

@@ -6,13 +6,13 @@ import { motion } from "framer-motion";
 import {
   Clock,
   FileText,
-  CheckCircle,
   ArrowRight,
   BookOpen,
   Filter,
   X,
   Trophy,
-  Loader2
+  Loader2,
+  ScrollText
 } from "lucide-react";
 
 import { PageHeader } from "@/components/common/page-header";
@@ -341,6 +341,7 @@ export function PastPapersClient() {
                   const bestScore = hasAttempted
                     ? Math.max(...examAttempts.map(a => (a.score / a.totalMarks) * 100))
                     : null;
+                  const hasMarkdownContent = !!exam.paperContent;
 
                   return (
                     <motion.div
@@ -355,6 +356,12 @@ export function PastPapersClient() {
                           <BoardBadge board={exam.boardSlug ?? exam.boardName} size="sm" />
                           <SubjectBadge name={exam.subjectName} size="sm" />
                           <Badge variant="default" size="sm">Class {exam.grade}</Badge>
+                          {hasMarkdownContent && (
+                            <Badge variant="primary" size="sm">
+                              <ScrollText className="mr-1 h-3 w-3" />
+                              Document
+                            </Badge>
+                          )}
                         </div>
 
                         {/* Title & info */}
@@ -364,18 +371,29 @@ export function PastPapersClient() {
 
                         {/* Metadata */}
                         <div className="mt-3 flex flex-wrap gap-3 text-xs text-text-secondary">
-                          <span className="inline-flex items-center gap-1">
-                            <FileText className="h-3.5 w-3.5" />
-                            {exam.totalMarks} marks
-                          </span>
-                          <span className="inline-flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5" />
-                            {exam.durationMinutes} min
-                          </span>
+                          {!hasMarkdownContent && (
+                            <>
+                              <span className="inline-flex items-center gap-1">
+                                <FileText className="h-3.5 w-3.5" />
+                                {exam.totalMarks} marks
+                              </span>
+                              <span className="inline-flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5" />
+                                {exam.durationMinutes} min
+                              </span>
+                            </>
+                          )}
+                          {hasMarkdownContent && (
+                            <span className="inline-flex items-center gap-1">
+                              <ScrollText className="h-3.5 w-3.5" />
+                              Markdown paper
+                              {exam.solutionContent ? " + solution" : ""}
+                            </span>
+                          )}
                         </div>
 
-                        {/* Best score indicator */}
-                        {hasAttempted && bestScore !== null && (
+                        {/* Best score indicator (quiz-based only) */}
+                        {!hasMarkdownContent && hasAttempted && bestScore !== null && (
                           <div className="mt-3 flex items-center gap-2 rounded-lg bg-accent-success-light px-2.5 py-1.5">
                             <Trophy className="h-3.5 w-3.5 text-accent-success" />
                             <span className="text-xs font-semibold text-accent-success">
@@ -386,20 +404,42 @@ export function PastPapersClient() {
 
                         {/* Actions */}
                         <div className="mt-auto flex gap-2 pt-4">
-                          <Link
-                            href={`/${exam.boardSlug}/${exam.grade}/${exam.subjectSlug}?tab=quiz&mockExamId=${exam.id}`}
-                            className="flex-1"
-                          >
-                            <Button width="full" size="sm" iconRight={<ArrowRight />}>
-                              {hasAttempted ? "Attempt Again" : "Attempt"}
-                            </Button>
-                          </Link>
-                          {hasAttempted && (
-                            <Link href={`/past-papers/${exam.id}/solutions`}>
-                              <Button variant="secondary" size="sm" iconLeft={<BookOpen />}>
-                                Solutions
-                              </Button>
-                            </Link>
+                          {hasMarkdownContent ? (
+                            <>
+                              <Link
+                                href={`/past-papers/${exam.id}/view`}
+                                className="flex-1"
+                              >
+                                <Button width="full" size="sm" iconRight={<ArrowRight />}>
+                                  View Paper
+                                </Button>
+                              </Link>
+                              {exam.solutionContent && (
+                                <Link href={`/past-papers/${exam.id}/view?tab=solution`}>
+                                  <Button variant="secondary" size="sm" iconLeft={<BookOpen />}>
+                                    Solution
+                                  </Button>
+                                </Link>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <Link
+                                href={`/${exam.boardSlug}/${exam.grade}/${exam.subjectSlug}?tab=quiz&mockExamId=${exam.id}`}
+                                className="flex-1"
+                              >
+                                <Button width="full" size="sm" iconRight={<ArrowRight />}>
+                                  {hasAttempted ? "Attempt Again" : "Attempt"}
+                                </Button>
+                              </Link>
+                              {hasAttempted && (
+                                <Link href={`/past-papers/${exam.id}/solutions`}>
+                                  <Button variant="secondary" size="sm" iconLeft={<BookOpen />}>
+                                    Solutions
+                                  </Button>
+                                </Link>
+                              )}
+                            </>
                           )}
                         </div>
                       </Card>

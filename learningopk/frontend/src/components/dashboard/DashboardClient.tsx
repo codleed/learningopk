@@ -47,11 +47,25 @@ export interface DashboardClientProps {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Section divider                                                    */
+/* ------------------------------------------------------------------ */
+
+function SectionLabel({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 pt-2 pb-1">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">
+        {label}
+      </span>
+      <div className="h-px flex-1 bg-border-default" />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main DashboardClient component                                     */
 /* ------------------------------------------------------------------ */
 
 export function DashboardClient({
-  displayName,
   summary,
   summaryError,
   featuredSubject,
@@ -74,13 +88,16 @@ export function DashboardClient({
     return <DashboardSkeleton />;
   }
 
+  const hasFocusAreas = focusAreas.length > 0;
+  const hasStarredFormulas = summary.starredFormulas.length > 0;
+
   return (
-    <StaggerContainer className="space-y-6">
+    <StaggerContainer className="space-y-8">
       {/* ============================================================ */}
-      {/*  TOP ROW: 3-column grid                                      */}
+      {/*  HERO ZONE — Primary actions & status at a glance            */}
       {/* ============================================================ */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <MotionCard>
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr]">
+        <MotionCard className="md:col-span-2 xl:col-span-1">
           <ContinueLearningCard
             subject={featuredSubject}
             continueHref={continueHref}
@@ -96,24 +113,28 @@ export function DashboardClient({
           />
         </MotionCard>
 
-        <MotionCard className="md:col-span-2 lg:col-span-1">
+        <MotionCard>
           <TodaysGoalCard summary={summary} />
         </MotionCard>
       </div>
 
       {/* ============================================================ */}
-      {/*  MIDDLE ROW: 2/3 + 1/3                                       */}
+      {/*  INSIGHTS — Weak areas, Focus, Progress                      */}
       {/* ============================================================ */}
-      <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+      <MotionSection>
+        <SectionLabel label="Your Learning" />
+      </MotionSection>
+
+      <div className="grid gap-5 xl:grid-cols-[1fr_380px]">
         <MotionSection>
-          <div className="space-y-6">
+          <div className="space-y-5">
             <SubjectWeakAreasCard subjects={orderedSubjects} />
             <SubjectProgressGrid subjects={orderedSubjects} />
           </div>
         </MotionSection>
 
-        <div className="flex flex-col gap-6">
-          {focusAreas.length > 0 ? (
+        <div className="flex flex-col gap-5">
+          {hasFocusAreas ? (
             <MotionSection>
               <FocusAreasWidget recommendations={focusAreas} />
             </MotionSection>
@@ -121,9 +142,11 @@ export function DashboardClient({
           <MotionSection>
             <ReviewNowWidget />
           </MotionSection>
-          <MotionSection>
-            <StarredFormulasWidget formulas={summary.starredFormulas} />
-          </MotionSection>
+          {hasStarredFormulas ? (
+            <MotionSection>
+              <StarredFormulasWidget formulas={summary.starredFormulas} />
+            </MotionSection>
+          ) : null}
           <MotionSection>
             <QuickActionsCard firstChapterBasePath={firstChapterBasePath} />
           </MotionSection>
@@ -131,9 +154,13 @@ export function DashboardClient({
       </div>
 
       {/* ============================================================ */}
-      {/*  BOTTOM ROW: 2-column                                        */}
+      {/*  ACTIVITY — Weekly heatmap + Recent timeline                  */}
       {/* ============================================================ */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <MotionSection>
+        <SectionLabel label="Activity" />
+      </MotionSection>
+
+      <div className="grid gap-5 lg:grid-cols-2">
         <MotionSection>
           <WeeklyActivityCard weeklyActivity={summary.weeklyActivity} />
         </MotionSection>
@@ -144,8 +171,12 @@ export function DashboardClient({
       </div>
 
       {/* ============================================================ */}
-      {/*  AI MEMORY ROW                                                */}
+      {/*  PERSONALIZATION — AI Memory + Study Groups                   */}
       {/* ============================================================ */}
+      <MotionSection>
+        <SectionLabel label="Personalization" />
+      </MotionSection>
+
       <MotionSection>
         <AiMemoryCard />
       </MotionSection>

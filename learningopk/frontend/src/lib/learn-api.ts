@@ -41,6 +41,7 @@ const chapterListItemSchema = z.object({
   title: z.string(),
   slug: z.string(),
   isPublished: z.boolean(),
+  coverImageUrl: z.string().nullable().optional().default(null),
   weightagePercentage: z.number().int().min(0).max(100).optional().default(0),
   occurrenceCount: z.number().int().min(0).optional().default(0),
   avgMarks: z.number().min(0).optional().default(0),
@@ -119,6 +120,7 @@ const chapterDetailResponseSchema = z.object({
     title: z.string(),
     slug: z.string(),
     summary: z.string(),
+    coverImageUrl: z.string().nullable().optional().default(null),
     examWeightage: z
       .object({
         occurrenceCount: z.number().int().min(0),

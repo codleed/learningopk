@@ -19,7 +19,7 @@ import { streakWagerService } from "./streak-wager.service.js";
 import { xpService } from "./xp.service.js";
 
 export interface ProgressEventInput {
-  eventType: "chapter_visit" | "exercise_view" | "flashcard_complete" | "quiz_submit";
+  eventType: "chapter_visit" | "summary_read" | "exercise_view" | "flashcard_complete" | "quiz_submit";
   chapterId: number;
   userId: string;
   score?: number;
@@ -31,6 +31,7 @@ export interface ProgressEventResult {
   progress: {
     chapterId: number;
     visitedAt: string;
+    summaryRead: boolean;
     exercisesViewed: number;
     flashcardsCompleted: boolean;
     quizBestScore: number;
@@ -108,8 +109,17 @@ export class ProgressService {
           levelName: result.levelName,
           leveledUp: result.leveledUp
         };
+      } else if (input.eventType === "summary_read") {
+        const result = await xpService.awardSummaryReadXp(input.userId);
+        xpResult = {
+          xpAwarded: result.xpAwarded,
+          newXp: result.newXp,
+          level: result.level,
+          levelName: result.levelName,
+          leveledUp: result.leveledUp
+        };
       } else if (input.eventType === "exercise_view") {
-        const result = await xpService.awardExerciseViewXp(input.userId);
+        const result = await xpService.awardExerciseCompleteXp(input.userId);
         xpResult = {
           xpAwarded: result.xpAwarded,
           newXp: result.newXp,
@@ -139,6 +149,7 @@ export class ProgressService {
       progress: {
         chapterId: snapshot.chapterId,
         visitedAt: snapshot.visitedAt.toISOString(),
+        summaryRead: snapshot.summaryRead,
         exercisesViewed: snapshot.exercisesViewed,
         flashcardsCompleted: snapshot.flashcardsCompleted,
         quizBestScore: snapshot.quizBestScore,
@@ -342,7 +353,10 @@ export class ProgressService {
         xp: xpInfo.xp,
         level: xpInfo.level,
         levelName: xpInfo.levelName,
-        xpToNextLevel: xpInfo.xpToNextLevel
+        xpToNextLevel: xpInfo.xpToNextLevel,
+        xpInCurrentLevel: xpInfo.xpInCurrentLevel,
+        xpRequiredForLevel: xpInfo.xpRequiredForLevel,
+        isMaxLevel: xpInfo.isMaxLevel
       } : null,
       streakFreeze: streakFreezeInfo,
       todaysGoal,

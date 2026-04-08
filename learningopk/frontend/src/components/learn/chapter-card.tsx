@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, CheckCircle2, FileText, Target } from "lucide-react";
+import { ArrowRight, CheckCircle2, FileText } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { StudyCardArt } from "@/components/common/study-card-art";
@@ -46,13 +47,25 @@ export function ChapterCard({ chapter, href, index = 0 }: ChapterCardProps) {
       >
         <div className="grid gap-0 sm:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)]">
           <div className="p-3 sm:p-4">
-            <StudyCardArt
-              subject="Science"
-              title={chapter.title}
-              chapterNumber={chapter.chapterNumber}
-              index={index}
-              variant="chapter"
-            />
+            {chapter.coverImageUrl ? (
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
+                <Image
+                  src={chapter.coverImageUrl}
+                  alt={`Cover image for ${chapter.title}`}
+                  fill
+                  sizes="(max-width: 640px) 100vw, 40vw"
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+            ) : (
+              <StudyCardArt
+                subject="Science"
+                title={chapter.title}
+                chapterNumber={chapter.chapterNumber}
+                index={index}
+                variant="chapter"
+              />
+            )}
           </div>
 
           <div className="flex min-w-0 flex-col justify-between p-4 pt-1 sm:p-5 sm:pl-1">
@@ -87,25 +100,7 @@ export function ChapterCard({ chapter, href, index = 0 }: ChapterCardProps) {
                 ) : null}
               </div>
 
-              {chapter.weightagePercentage > 0 ? (
-                <div className="mt-4 rounded-2xl border border-amber-400/25 bg-amber-500/8 px-3.5 py-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="inline-flex items-center gap-1.5 font-[var(--font-mono)] text-[0.625rem] font-medium uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">
-                        <Target className="h-3.5 w-3.5" aria-hidden />
-                        Exam weightage
-                      </p>
-                      <p className="mt-1 text-sm font-medium text-text-primary">
-                        Appears in {chapter.weightagePercentage}% of recent exams
-                        {chapter.avgMarks > 0 ? ` • Avg ${Math.round(chapter.avgMarks)} marks` : ""}
-                      </p>
-                    </div>
-                    <span className="shrink-0 rounded-full bg-white/75 px-2.5 py-1 text-xs font-bold text-amber-700 shadow-sm dark:bg-amber-200/10 dark:text-amber-300">
-                      {chapter.weightagePercentage}%
-                    </span>
-                  </div>
-                </div>
-              ) : null}
+
             </div>
 
             <div className="mt-5 flex items-center justify-between border-t border-border-default/70 pt-4">

@@ -1,5 +1,6 @@
-import { BookOpen, Clock, FileText } from "lucide-react";
+import { BookOpen, Clock, FileText, Sparkles } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { DashboardSummaryResponse } from "@/lib/progress-api";
@@ -9,39 +10,186 @@ import type { DashboardSummaryResponse } from "@/lib/progress-api";
 /* ------------------------------------------------------------------ */
 
 type RecentActivity = DashboardSummaryResponse["recentActivity"];
+type ActivityEntry = RecentActivity[number];
 
 export interface RecentActivityCardProps {
   activity: RecentActivity;
 }
 
 /* ------------------------------------------------------------------ */
+/*  Constants                                                          */
+/* ------------------------------------------------------------------ */
+
+const MAX_ENTRIES = 6;
+
+const SCORE_THRESHOLDS = {
+  success: 70,
+  warning: 40,
+} as const;
+
+/* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-const formatActivityTimestamp = (isoDate: string): string =>
-  new Date(isoDate).toLocaleString("en-US", {
+/**
+ * Formats a timestamp as relative ("2h ago") when same-day,
+ * otherwise as a short date string.
+ */
+const formatActivityTimestamp = (isoDate: string): string => {
+  const date = new Date(isoDate);
+  const now = new Date();
+
+  const isSameDay =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+
+  if (isSameDay) {
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / 60_000);
+
+    if (diffMinutes < 1) return "Just now";
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    return `${diffHours}h ago`;
+  }
+
+  return date.toLocaleString("en-US", {
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
   });
+};
 
-const toActivityLabel = (
-  entry: DashboardSummaryResponse["recentActivity"][number]
-): string => {
+const toActivityLabel = (entry: ActivityEntry): string => {
   if (entry.type === "chapter_visit") {
     return `Visited ${entry.subjectName}: ${entry.chapterTitle}`;
   }
-  return `Quiz in ${entry.subjectName}: ${entry.chapterTitle} (${entry.percentage}%)`;
+  return `Quiz in ${entry.subjectName}: ${entry.chapterTitle}`;
+};
+
+type ScoreBadgeVariant = "success" | "warning" | "danger";
+
+const getScoreBadgeVariant = (percentage: number): ScoreBadgeVariant => {
+  if (percentage >= SCORE_THRESHOLDS.success) return "success";
+  if (percentage >= SCORE_THRESHOLDS.warning) return "warning";
+  return "danger";
 };
 
 /* ------------------------------------------------------------------ */
-/*  Component                                                          */
+/*  Sub-components                                                     */
 /* ------------------------------------------------------------------ */
 
-export function RecentActivityCard({
-  activity,
-}: RecentActivityCardProps) {
+function TimelineDot({ type }: { type: ActivityEntry["type"] }) {
+  return (
+    <span
+      className={cn(
+        "absolute -left-[5px] top-[18px] z-10 block h-2.5 w-2.5 rounded-full ring-2 ring-bg-surface",
+        type === "chapter_visit"
+          ? "bg-accent-primary"
+          : "bg-accent-success"
+      )}
+      aria-hidden
+    />
+  );
+}
+
+function ActivityIcon({ type }: { type: ActivityEntry["type"] }) {
+  return (
+    <div
+      className={cn(
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
+        type === "chapter_visit"
+          ? "bg-accent-primary/10 text-accent-primary"
+          : "bg-accent-success/10 text-accent-success"
+      )}
+    >
+      {type === "chapter_visit" ? (
+        <BookOpen className="h-3.5 w-3.5" aria-hidden />
+      ) : (
+        <FileText className="h-3.5 w-3.5" aria-hidden />
+      )}
+    </div>
+  );
+}
+
+function QuizScoreBadge({ percentage }: { percentage: number }) {
+  const variant = getScoreBadgeVariant(percentage);
+  return (
+    <Badge variant={variant} size="sm" className="shrink-0 tabular-nums">
+      {percentage}%
+    </Badge>
+  );
+}
+
+function ActivityItem({ entry }: { entry: ActivityEntry }) {
+  return (
+    <li className="relative pl-5">
+      <TimelineDot type={entry.type} />
+
+      <div
+        className={cn(
+          "group rounded-lg border border-border-default bg-bg-base px-3 py-2.5",
+          "transition-all duration-150 ease-out",
+          "hover:translate-x-0.5 hover:border-border-strong hover:shadow-[var(--shadow-sm)]"
+        )}
+      >
+        <div className="flex items-start gap-2.5">
+          <ActivityIcon type={entry.type} />
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-xs font-medium leading-snug text-text-primary">
+                {toActivityLabel(entry)}
+              </p>
+              {entry.type === "quiz_submit" && (
+                <QuizScoreBadge percentage={entry.percentage} />
+              )}
+            </div>
+            <p className="mt-0.5 text-[10px] text-text-muted">
+              {formatActivityTimestamp(entry.occurredAt)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center py-10">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-bg-subtle">
+        <div className="relative">
+          <Clock
+            className="h-7 w-7 text-text-muted"
+            aria-hidden
+          />
+          <Sparkles
+            className="absolute -right-2 -top-2 h-3.5 w-3.5 text-accent-primary"
+            aria-hidden
+          />
+        </div>
+      </div>
+      <p className="mt-3 text-sm font-medium text-text-secondary">
+        No activity yet
+      </p>
+      <p className="mt-1 text-xs text-text-muted">
+        Start a chapter and your progress will appear here
+      </p>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main Component                                                     */
+/* ------------------------------------------------------------------ */
+
+export function RecentActivityCard({ activity }: RecentActivityCardProps) {
+  const entries = activity.slice(0, MAX_ENTRIES);
+
   return (
     <Card variant="default" className="h-full flex flex-col">
       <CardHeader>
@@ -49,51 +197,25 @@ export function RecentActivityCard({
           Recent Activity
         </h3>
       </CardHeader>
+
       <CardBody className="flex-1 pt-0">
-        {activity.length > 0 ? (
-          <ul className="space-y-2">
-            {activity.slice(0, 5).map((entry, index) => (
-              <li
+        {entries.length > 0 ? (
+          <ul className="relative space-y-2">
+            {/* Vertical timeline line */}
+            <span
+              className="pointer-events-none absolute bottom-0 left-0 top-0 w-px bg-border-default"
+              aria-hidden
+            />
+
+            {entries.map((entry, index) => (
+              <ActivityItem
                 key={`${entry.type}-${entry.occurredAt}-${index}`}
-                className="rounded-lg border border-border-default bg-bg-base px-3 py-2.5 transition-colors hover:border-border-strong"
-              >
-                <div className="flex items-start gap-2.5">
-                  <div
-                    className={cn(
-                      "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md",
-                      entry.type === "chapter_visit"
-                        ? "bg-accent-primary/10 text-accent-primary"
-                        : "bg-accent-success/10 text-accent-success"
-                    )}
-                  >
-                    {entry.type === "chapter_visit" ? (
-                      <BookOpen className="h-3.5 w-3.5" aria-hidden />
-                    ) : (
-                      <FileText className="h-3.5 w-3.5" aria-hidden />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-text-primary leading-snug">
-                      {toActivityLabel(entry)}
-                    </p>
-                    <p className="mt-0.5 text-[10px] text-text-muted">
-                      {formatActivityTimestamp(entry.occurredAt)}
-                    </p>
-                  </div>
-                </div>
-              </li>
+                entry={entry}
+              />
             ))}
           </ul>
         ) : (
-          <div className="flex flex-col items-center justify-center py-8">
-            <Clock
-              className="h-8 w-8 text-text-muted"
-              aria-hidden
-            />
-            <p className="mt-2 text-xs text-text-secondary">
-              No recent activity. Start a chapter!
-            </p>
-          </div>
+          <EmptyState />
         )}
       </CardBody>
     </Card>

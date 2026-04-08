@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Clock } from "lucide-react";
 
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
@@ -35,12 +35,16 @@ const getFullDayLabel = (dateStr: string): string =>
     timeZone: "UTC",
   });
 
+/**
+ * Richer intensity gradient — from a barely-tinted surface through to a
+ * solid accent fill. Uses only design-system token classes.
+ */
 const getActivityIntensityClass = (count: number): string => {
   if (count === 0) return "bg-bg-subtle";
   if (count <= 1) return "bg-accent-primary/20";
-  if (count <= 3) return "bg-accent-primary/40";
-  if (count <= 5) return "bg-accent-primary/60";
-  return "bg-accent-primary/80";
+  if (count <= 3) return "bg-accent-primary/45";
+  if (count <= 5) return "bg-accent-primary/70";
+  return "bg-accent-primary/90";
 };
 
 const getIntensityLabel = (count: number): string => {
@@ -50,6 +54,28 @@ const getIntensityLabel = (count: number): string => {
   if (count <= 5) return "high activity";
   return "very high activity";
 };
+
+/** Check whether a YYYY-MM-DD string matches today (UTC). */
+const isToday = (dateStr: string): boolean => {
+  const now = new Date();
+  const todayUTC = [
+    now.getUTCFullYear(),
+    String(now.getUTCMonth() + 1).padStart(2, "0"),
+    String(now.getUTCDate()).padStart(2, "0"),
+  ].join("-");
+  return dateStr === todayUTC;
+};
+
+/* ------------------------------------------------------------------ */
+/*  Legend                                                              */
+/* ------------------------------------------------------------------ */
+
+const LEGEND_STEPS: readonly { label: string; className: string }[] = [
+  { label: "None", className: "bg-bg-subtle" },
+  { label: "Low", className: "bg-accent-primary/20" },
+  { label: "Med", className: "bg-accent-primary/45" },
+  { label: "High", className: "bg-accent-primary/90" },
+] as const;
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -61,9 +87,9 @@ export function WeeklyActivityCard({
   const [focusedIndex, setFocusedIndex] = useState(0);
   const cellRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const totalActivities = weeklyActivity.reduce(
-    (sum, entry) => sum + entry.activityCount,
-    0
+  const totalActivities = useMemo(
+    () => weeklyActivity.reduce((sum, entry) => sum + entry.activityCount, 0),
+    [weeklyActivity],
   );
 
   const handleKeyDown = useCallback(
@@ -93,7 +119,7 @@ export function WeeklyActivityCard({
         cellRefs.current[nextIndex]?.focus();
       }
     },
-    [weeklyActivity.length]
+    [weeklyActivity.length],
   );
 
   return (
@@ -108,15 +134,26 @@ export function WeeklyActivityCard({
           </Badge>
         </div>
       </CardHeader>
+
       <CardBody className="pt-0">
         {weeklyActivity.length > 0 ? (
           <>
             {/* Screen reader summary */}
             <p className="sr-only">
               Study activity for the past 7 days. Total:{" "}
-              {totalActivities} {totalActivities === 1 ? "activity" : "activities"}.
+              {totalActivities}{" "}
+              {totalActivities === 1 ? "activity" : "activities"}.
             </p>
 
+            {/* ── Summary stat ── */}
+            <div className="mb-4">
+              <Badge variant="primary" size="sm">
+                {totalActivities}{" "}
+                {totalActivities === 1 ? "activity" : "activities"} this week
+              </Badge>
+            </div>
+
+            {/* ── Heatmap grid ── */}
             <div
               role="grid"
               aria-label="Weekly study activity"
@@ -125,8 +162,11 @@ export function WeeklyActivityCard({
               <div role="row" className="contents">
                 {weeklyActivity.map((entry, index) => {
                   const dayFull = getFullDayLabel(entry.date);
-                  const intensityLabel = getIntensityLabel(entry.activityCount);
+                  const intensityLabel = getIntensityLabel(
+                    entry.activityCount,
+                  );
                   const cellLabel = `${dayFull}: ${entry.activityCount} ${entry.activityCount === 1 ? "activity" : "activities"}, ${intensityLabel}`;
+                  const today = isToday(entry.date);
 
                   return (
                     <div
@@ -134,9 +174,18 @@ export function WeeklyActivityCard({
                       role="gridcell"
                       className="flex flex-col items-center gap-1.5"
                     >
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-text-muted">
+                      {/* Day label — slightly larger and bolder */}
+                      <span
+                        className={cn(
+                          "text-[11px] font-semibold uppercase tracking-wider",
+                          today
+                            ? "text-accent-primary"
+                            : "text-text-muted",
+                        )}
+                      >
                         {getDayLabel(entry.date)}
                       </span>
+
                       <Tooltip
                         content={`${dayFull}: ${entry.activityCount} ${entry.activityCount === 1 ? "activity" : "activities"}`}
                         delayDuration={200}
@@ -150,17 +199,21 @@ export function WeeklyActivityCard({
                           onKeyDown={(e) => handleKeyDown(e, index)}
                           onFocus={() => setFocusedIndex(index)}
                           className={cn(
-                            "flex h-12 w-full items-center justify-center rounded-lg border text-xs font-bold tabular-nums transition-colors",
+                            /* Taller, rounder cells with more visual weight */
+                            "flex h-14 w-full items-center justify-center rounded-xl border text-xs font-bold tabular-nums",
+                            "transition-all duration-200 ease-out",
                             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-primary",
                             entry.active
                               ? "border-accent-primary/20 text-accent-primary"
-                              : "border-border-default text-text-muted"
+                              : "border-border-default text-text-muted",
+                            /* Today highlight ring */
+                            today && "ring-2 ring-accent-primary/30",
                           )}
                         >
                           <div
                             className={cn(
-                              "flex h-full w-full items-center justify-center rounded-lg",
-                              getActivityIntensityClass(entry.activityCount)
+                              "flex h-full w-full items-center justify-center rounded-xl",
+                              getActivityIntensityClass(entry.activityCount),
                             )}
                             aria-hidden="true"
                           >
@@ -172,6 +225,29 @@ export function WeeklyActivityCard({
                   );
                 })}
               </div>
+            </div>
+
+            {/* ── Legend ── */}
+            <div
+              className="mt-4 flex items-center justify-end gap-1.5"
+              aria-hidden="true"
+            >
+              <span className="mr-1 text-[10px] font-medium text-text-muted">
+                Less
+              </span>
+              {LEGEND_STEPS.map((step) => (
+                <div
+                  key={step.label}
+                  className={cn(
+                    "h-3 w-3 rounded-sm border border-border-default",
+                    step.className,
+                  )}
+                  title={step.label}
+                />
+              ))}
+              <span className="ml-1 text-[10px] font-medium text-text-muted">
+                More
+              </span>
             </div>
           </>
         ) : (

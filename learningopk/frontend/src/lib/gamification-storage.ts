@@ -1,5 +1,6 @@
 // frontend/src/lib/gamification-storage.ts
-import type { GamificationState, BadgeId, ChapterProgress, CardStatus } from "./gamification-types";
+import type { GamificationState, BadgeId, ChapterProgress } from "./gamification-types";
+import { computeLevelFromXp } from "./gamification-types";
 
 const STORAGE_KEY = "learningopk-gamification";
 
@@ -34,13 +35,13 @@ export function saveGamificationState(state: GamificationState): void {
 export function addXp(amount: number): GamificationState {
   const state = getGamificationState();
   const newTotalXp = state.totalXp + amount;
-  const newLevel = Math.floor(newTotalXp / 500) + 1;
+  const levelDef = computeLevelFromXp(newTotalXp);
   
   const newState: GamificationState = {
     ...state,
     xp: state.xp + amount,
     totalXp: newTotalXp,
-    level: newLevel,
+    level: levelDef.level,
     lastActivityDate: new Date().toISOString().split("T")[0],
   };
   

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { BookOpen, ClipboardList, Layers, Brain, Save, Loader2, NotebookPen } from "lucide-react";
+import { BookOpen, ClipboardList, Layers, Brain, Save, Loader2, NotebookPen, TextCursorInput } from "lucide-react";
 
 import { AdminBreadcrumb } from "@/components/admin/breadcrumb";
 import { AdminPageHeader } from "@/components/admin/page-header";
@@ -19,8 +19,9 @@ import { ChapterQuizManager } from "@/components/admin/chapter-quiz-manager";
 import { ChapterFlashcardManager } from "@/components/admin/chapter-flashcard-manager";
 import { ChapterExerciseManager } from "@/components/admin/chapter-exercise-manager";
 import { ChapterRevisionNotesManager } from "@/components/admin/chapter-revision-notes-manager";
+import { ChapterFillInBlanksManager } from "@/components/admin/chapter-fill-in-blanks-manager";
 
-type TabId = "summary" | "revision" | "quiz" | "flashcards" | "exercises";
+type TabId = "summary" | "revision" | "quiz" | "flashcards" | "exercises" | "fill-in-blanks";
 
 type Tab = {
   id: TabId;
@@ -34,6 +35,7 @@ const tabs: Tab[] = [
   { id: "quiz", label: "Quiz", icon: ClipboardList },
   { id: "flashcards", label: "Flashcards", icon: Layers },
   { id: "exercises", label: "Exercises", icon: Brain },
+  { id: "fill-in-blanks", label: "Fill in Blanks", icon: TextCursorInput },
 ];
 
 type ChapterManageClientProps = {
@@ -246,6 +248,13 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
         {activeTab === "exercises" && (
           <div className="animate-in fade-in duration-300">
             <ChapterExerciseManager chapterId={chapterId} />
+          </div>
+        )}
+
+        {/* Fill in the Blanks Tab */}
+        {activeTab === "fill-in-blanks" && (
+          <div className="animate-in fade-in duration-300">
+            <ChapterFillInBlanksManager chapterId={chapterId} />
           </div>
         )}
       </div>

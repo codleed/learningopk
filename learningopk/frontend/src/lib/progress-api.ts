@@ -112,9 +112,12 @@ const dashboardSummarySchema = z.object({
   xp: z
     .object({
       xp: z.number().int().nonnegative(),
-      level: z.number().int().min(0).max(4),
+      level: z.number().int().min(0).max(10),
       levelName: z.string(),
-      xpToNextLevel: z.number().int().nonnegative()
+      xpToNextLevel: z.number().int().nonnegative(),
+      xpInCurrentLevel: z.number().int().nonnegative().optional(),
+      xpRequiredForLevel: z.number().int().positive().optional(),
+      isMaxLevel: z.boolean().optional()
     })
     .nullable(),
   streakFreeze: z

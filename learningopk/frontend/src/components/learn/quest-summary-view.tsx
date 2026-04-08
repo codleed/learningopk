@@ -1,9 +1,11 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { CheckCircle2, Clock, Sparkles } from "lucide-react";
+import { CheckCircle2, Clock, NotebookPen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MarkdownContent } from "./markdown-content";
+import { AddToNotesDialog } from "@/components/notes/add-to-notes-dialog";
 
 interface QuestSummaryViewProps {
   summary: string;
@@ -14,11 +16,62 @@ interface QuestSummaryViewProps {
 
 export function QuestSummaryView({
   summary,
+  chapterId,
   isRead,
   onMarkRead,
 }: QuestSummaryViewProps) {
   const estimatedReadTime = Math.max(1, Math.ceil(summary.length / 1000));
   const reduced = useReducedMotion();
+
+  // Text selection "Add to Notes" feature
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [selectedText, setSelectedText] = useState("");
+  const [showFloatingBtn, setShowFloatingBtn] = useState(false);
+  const [floatingPos, setFloatingPos] = useState({ top: 0, left: 0 });
+  const [notesDialogOpen, setNotesDialogOpen] = useState(false);
+
+  const handleMouseUp = useCallback(() => {
+    const selection = window.getSelection();
+    const text = selection?.toString().trim() ?? "";
+
+    if (text.length > 5 && contentRef.current?.contains(selection?.anchorNode ?? null)) {
+      setSelectedText(text);
+
+      const range = selection?.getRangeAt(0);
+      if (range) {
+        const rect = range.getBoundingClientRect();
+        const containerRect = contentRef.current.getBoundingClientRect();
+        setFloatingPos({
+          top: rect.top - containerRect.top - 40,
+          left: rect.left - containerRect.left + rect.width / 2,
+        });
+        setShowFloatingBtn(true);
+      }
+    } else {
+      setShowFloatingBtn(false);
+    }
+  }, []);
+
+  const handleAddToNotes = useCallback(() => {
+    setShowFloatingBtn(false);
+    setNotesDialogOpen(true);
+  }, []);
+
+  // Hide floating btn on click outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      // Small delay to allow button click to register
+      setTimeout(() => {
+        const selection = window.getSelection();
+        if (!selection?.toString().trim()) {
+          setShowFloatingBtn(false);
+        }
+      }, 100);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -36,8 +89,29 @@ export function QuestSummaryView({
         )}
       </div>
 
-      <div className="rounded-2xl border border-border-default/50 bg-bg-surface p-6">
+      <div
+        ref={contentRef}
+        className="relative rounded-2xl border border-border-default/50 bg-bg-surface p-6"
+        onMouseUp={handleMouseUp}
+      >
         <MarkdownContent content={summary} />
+
+        {/* Floating "Add to Notes" button */}
+        {showFloatingBtn && (
+          <div
+            className="absolute z-30 -translate-x-1/2 animate-in fade-in-0 zoom-in-95"
+            style={{ top: floatingPos.top, left: floatingPos.left }}
+          >
+            <button
+              type="button"
+              onClick={handleAddToNotes}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border-default bg-bg-elevated px-2.5 py-1.5 text-xs font-medium text-text-primary shadow-[var(--shadow-elevated)] transition-colors hover:bg-accent-primary hover:text-white"
+            >
+              <NotebookPen className="h-3 w-3" />
+              Add to Notes
+            </button>
+          </div>
+        )}
       </div>
 
       {!isRead && (
@@ -67,6 +141,15 @@ export function QuestSummaryView({
           </Button>
         </motion.div>
       )}
+
+      {/* Add to Notes Dialog */}
+      <AddToNotesDialog
+        open={notesDialogOpen}
+        onOpenChange={setNotesDialogOpen}
+        initialContent={selectedText}
+        chapterId={chapterId}
+        suggestedTitle="Summary Note"
+      />
     </div>
   );
 }

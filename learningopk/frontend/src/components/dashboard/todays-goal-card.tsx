@@ -10,9 +10,11 @@ import {
   FileText,
   Sparkles,
   Target,
+  Trophy,
+  Calendar,
 } from "lucide-react";
 
-import { Card, CardHeader, CardBody } from "@/components/ui/card";
+import { Card, CardHeader, CardBody, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProgressRing } from "@/components/common/progress-ring";
@@ -73,36 +75,49 @@ export function TodaysGoalCard({
     }
   };
 
+  /* ---------------------------------------------------------------- */
+  /*  Focus variant                                                    */
+  /* ---------------------------------------------------------------- */
+
   if (focus) {
     return (
       <>
         <ConfettiCelebration show={showConfetti} onComplete={() => setShowConfetti(false)} />
         <Card variant="gradient" className="h-full overflow-hidden">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
+          <CardHeader className="pb-2">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-primary">
                   Today&apos;s Focus
                 </p>
-                <h3 className="mt-1 font-[var(--font-display)] text-lg font-bold text-text-primary">
+                <h3 className="font-[var(--font-display)] text-lg font-bold leading-snug text-text-primary">
                   {focus.title}
                 </h3>
               </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-accent-primary/20 bg-accent-primary/10 text-accent-primary shadow-[var(--shadow-sm)]">
-                {focus.completed ? <CheckCircle2 className="h-5 w-5" aria-hidden /> : <Target className="h-5 w-5" aria-hidden />}
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-accent-primary/20 bg-accent-primary/10 text-accent-primary shadow-[var(--shadow-sm)]">
+                {focus.completed ? (
+                  <CheckCircle2 className="h-5 w-5" aria-hidden />
+                ) : (
+                  <Target className="h-5 w-5" aria-hidden />
+                )}
               </div>
             </div>
           </CardHeader>
-          <CardBody className="space-y-4 pt-0">
-            <div className="flex flex-wrap gap-2">
+
+          <CardBody className="space-y-3 pt-0">
+            {/* ── Meta badges ── */}
+            <div className="flex flex-wrap items-center gap-2.5">
               <Badge variant={difficultyVariant} size="sm">{focus.difficulty}</Badge>
               <Badge variant="primary" size="sm">+{focus.xpReward} XP</Badge>
               <Badge variant="default" size="sm">{focus.durationMinutes} min</Badge>
-              {focus.isRamadanAdjusted ? <Badge variant="outline" size="sm">Ramadan Mode</Badge> : null}
+              {focus.isRamadanAdjusted ? (
+                <Badge variant="outline" size="sm">Ramadan Mode</Badge>
+              ) : null}
             </div>
 
-            <div className="space-y-2 rounded-2xl border border-white/10 bg-[linear-gradient(135deg,var(--accent-success-light),var(--accent-primary-light))] p-4">
-              <p className="text-sm leading-6 text-text-secondary">{focus.reason}</p>
+            {/* ── Reason card ── */}
+            <div className="space-y-2 rounded-2xl border border-border-default/60 bg-bg-subtle/80 p-4">
+              <p className="text-sm leading-relaxed text-text-secondary">{focus.reason}</p>
               {focus.subjectName ? (
                 <p className="text-xs font-medium text-text-muted">
                   {focus.subjectName}
@@ -111,7 +126,8 @@ export function TodaysGoalCard({
               ) : null}
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-2">
+            {/* ── Action buttons ── */}
+            <div className="grid gap-2 pt-1 sm:grid-cols-2">
               <Link href={focus.href} className="block">
                 <Button variant="primary" width="full" iconRight={<ArrowRight />}>
                   {focus.ctaLabel}
@@ -129,21 +145,33 @@ export function TodaysGoalCard({
               </Button>
             </div>
 
+            {/* ── Completion celebration ── */}
             <AnimatePresence initial={false}>
               {focus.completed ? (
                 <motion.div
                   key="todays-focus-complete"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  className="rounded-2xl border border-accent-success/25 bg-accent-success/10 px-4 py-3"
+                  initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 22 }}
+                  className="flex items-start gap-3 rounded-2xl border border-accent-success/20 bg-accent-success/10 px-4 py-3"
                 >
-                  <p className="text-sm font-semibold text-accent-success">
-                    Momentum locked in{completionXp ? ` · +${completionXp} XP` : ""}
-                  </p>
-                  <p className="mt-1 text-xs text-text-secondary">
-                    Nice work — your daily micro-goal is already cleared for today.
-                  </p>
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent-success/15 text-accent-success">
+                    <Trophy className="h-4 w-4" aria-hidden />
+                  </div>
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="text-sm font-semibold text-accent-success">
+                      Momentum locked in
+                      {completionXp ? (
+                        <span className="ml-1.5 inline-flex items-center rounded-full bg-accent-success/15 px-2 py-0.5 text-xs font-bold tabular-nums">
+                          +{completionXp} XP
+                        </span>
+                      ) : null}
+                    </p>
+                    <p className="text-xs leading-relaxed text-text-secondary">
+                      Nice work — your daily micro-goal is already cleared for today.
+                    </p>
+                  </div>
                 </motion.div>
               ) : null}
             </AnimatePresence>
@@ -153,8 +181,12 @@ export function TodaysGoalCard({
     );
   }
 
+  /* ---------------------------------------------------------------- */
+  /*  Fallback: progress ring variant                                  */
+  /* ---------------------------------------------------------------- */
+
   return (
-    <Card variant="default" className="h-full flex flex-col">
+    <Card variant="default" className="flex h-full flex-col">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <h3 className="font-[var(--font-display)] text-base font-bold text-text-primary">
@@ -163,37 +195,46 @@ export function TodaysGoalCard({
           <Target className="h-5 w-5 text-accent-success" aria-hidden />
         </div>
       </CardHeader>
-      <CardBody className="flex-1 flex flex-col items-center justify-center gap-4">
-        <ProgressRing
-          percentage={goal?.percent ?? 0}
-          size={88}
-          strokeWidth={7}
-          color="var(--accent-success)"
-        />
-        <div className="space-y-1.5 text-center w-full">
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-1.5 text-text-secondary">
-              <BookOpen className="h-3.5 w-3.5" aria-hidden />
-              Chapters
-            </span>
-            <span className="font-semibold tabular-nums text-text-primary">
-              {goal?.chaptersCompleted ?? 0}/{goal?.chaptersTarget ?? 3}
-            </span>
-          </div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-1.5 text-text-secondary">
-              <FileText className="h-3.5 w-3.5" aria-hidden />
-              Quizzes
-            </span>
-            <span className="font-semibold tabular-nums text-text-primary">
-              {goal?.quizzesCompleted ?? 0}/{goal?.quizzesTarget ?? 1}
+
+      <CardBody className="flex flex-1 flex-col items-center justify-center gap-5">
+        {/* ── Progress ring ── */}
+        <div className="py-1">
+          <ProgressRing
+            percentage={goal?.percent ?? 0}
+            size={96}
+            strokeWidth={7}
+            color="var(--accent-success)"
+          />
+        </div>
+
+        {/* ── 2-column stats grid ── */}
+        <div className="grid w-full grid-cols-2 gap-3">
+          <div className="flex flex-col items-center gap-1 rounded-xl border border-border-default bg-bg-subtle/60 px-3 py-2.5">
+            <BookOpen className="h-4 w-4 text-accent-primary" aria-hidden />
+            <span className="text-[11px] font-medium text-text-muted">Chapters</span>
+            <span className="text-sm font-bold tabular-nums text-text-primary">
+              {goal?.chaptersCompleted ?? 0}
+              <span className="text-text-muted font-normal">/{goal?.chaptersTarget ?? 3}</span>
             </span>
           </div>
-          <p className="pt-1 text-[11px] text-text-muted">
-            Evaluated on {summary?.streakWager.currentPktDate ?? "today"} PKT.
-          </p>
+          <div className="flex flex-col items-center gap-1 rounded-xl border border-border-default bg-bg-subtle/60 px-3 py-2.5">
+            <FileText className="h-4 w-4 text-accent-primary" aria-hidden />
+            <span className="text-[11px] font-medium text-text-muted">Quizzes</span>
+            <span className="text-sm font-bold tabular-nums text-text-primary">
+              {goal?.quizzesCompleted ?? 0}
+              <span className="text-text-muted font-normal">/{goal?.quizzesTarget ?? 1}</span>
+            </span>
+          </div>
         </div>
       </CardBody>
+
+      {/* ── Evaluation date footer ── */}
+      <CardFooter className="justify-center border-t border-border-default/60 py-3">
+        <Calendar className="h-3 w-3 text-text-muted" aria-hidden />
+        <p className="text-[11px] text-text-muted">
+          Evaluated on {summary?.streakWager.currentPktDate ?? "today"} PKT
+        </p>
+      </CardFooter>
     </Card>
   );
 }

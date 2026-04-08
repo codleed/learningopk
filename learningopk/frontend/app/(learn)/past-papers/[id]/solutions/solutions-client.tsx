@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -8,7 +8,6 @@ import {
   Check,
   Clock,
   FileText,
-  Loader2,
   Lock,
   ChevronDown,
   ChevronUp,

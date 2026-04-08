@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, GraduationCap, Book, FileText, Brain, ClipboardList, Layers } from "lucide-react";
+import { BookOpen, GraduationCap, Book, FileText, Brain, ClipboardList, Layers, FunctionSquare, ScrollText } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type ContentTab = {
@@ -21,6 +21,8 @@ const defaultTabs: ContentTab[] = [
   { id: "exercises", label: "Exercises", href: "/admin/content/exercises", icon: Brain },
   { id: "quizzes", label: "Quizzes", href: "/admin/content/quizzes", icon: ClipboardList },
   { id: "flashcards", label: "Flash Cards", href: "/admin/content/flashcards", icon: Layers },
+  { id: "formulas", label: "Formulas", href: "/admin/content/formulas", icon: FunctionSquare },
+  { id: "past-papers", label: "Past Papers", href: "/admin/content/past-papers", icon: ScrollText },
 ];
 
 type ContentTabsProps = {
@@ -29,7 +31,7 @@ type ContentTabsProps = {
   basePath?: string;
 };
 
-export function ContentTabs({ tabs = defaultTabs, activeTab, basePath = "/admin/content" }: ContentTabsProps) {
+export function ContentTabs({ tabs = defaultTabs, activeTab }: ContentTabsProps) {
   const pathname = usePathname();
   
   // Determine active tab from URL if not provided
