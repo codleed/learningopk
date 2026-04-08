@@ -14,6 +14,7 @@ import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { StreamingText } from "@/components/common/streaming-text";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { normalizeSessionId } from "@learningopk/shared/utils";
 
 type ChatRole = "user" | "assistant";
 
@@ -416,10 +417,12 @@ export function AIChatPanel({
       content: ""
     };
 
-    const requestMessages = [...messages, userMessage].map((message) => ({
-      role: message.role,
-      content: message.content
-    }));
+    const requestMessages = [...messages, userMessage]
+      .map((message) => ({
+        role: message.role,
+        content: message.content
+      }))
+      .filter((message) => message.content.trim().length > 0);
 
     setMessages((previous) => [...previous, userMessage, pendingAssistantMessage]);
     setInputValue("");
@@ -430,21 +433,32 @@ export function AIChatPanel({
     }
 
     try {
+      const requestBody = {
+        messages: requestMessages,
+        chapterId,
+        sessionId: normalizeSessionId(sessionId) ?? undefined
+      };
+
+      // Diagnostic: log the exact payload to help trace 400 errors
+      if (process.env.NODE_ENV === "development") {
+        console.log("[ai-chat-panel] request body:", JSON.stringify(requestBody, null, 2));
+      }
+
       const response = await fetch(`${backendUrl}/api/ai/chat`, {
         method: "POST",
         credentials: "include",
         headers: {
           "content-type": "application/json"
         },
-        body: JSON.stringify({
-          messages: requestMessages,
-          chapterId,
-          sessionId: sessionId ?? undefined
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as AIChatErrorResponse | null;
+        // Diagnostic: log full error payload including Zod validation details
+        if (process.env.NODE_ENV === "development") {
+          console.error("[ai-chat-panel] error response:", response.status, JSON.stringify(payload, null, 2));
+        }
         const responseSessionId = payload?.sessionId;
         if (responseSessionId) {
           setSessionId(responseSessionId);

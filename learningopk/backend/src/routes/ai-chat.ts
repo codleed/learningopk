@@ -39,10 +39,26 @@ import { progressService } from "../services/progress.service.js";
 import { createAiModelStrategy } from "../services/ai-model-strategy.js";
 import { getCachedAiResponse, readAiCircuitState, setCachedAiResponse, writeAiCircuitState } from "../services/ai-model-strategy.store.js";
 
-const chatMessageSchema = z.object({
-  role: z.enum(["user", "assistant"]),
-  content: z.string().trim().min(1).max(4000)
-});
+/** Max content length for user-authored messages (abuse prevention). */
+const USER_MESSAGE_MAX_LENGTH = 4000;
+
+/**
+ * Max content length for assistant messages echoed back for context.
+ * Must be generous: MISTRAL_COMPLETION_MAX_TOKENS (2 048 tokens) can
+ * produce ~8 000 characters of English text plus markdown formatting.
+ */
+const ASSISTANT_MESSAGE_MAX_LENGTH = 16_000;
+
+const chatMessageSchema = z.discriminatedUnion("role", [
+  z.object({
+    role: z.literal("user"),
+    content: z.string().trim().min(1).max(USER_MESSAGE_MAX_LENGTH)
+  }),
+  z.object({
+    role: z.literal("assistant"),
+    content: z.string().trim().min(1).max(ASSISTANT_MESSAGE_MAX_LENGTH)
+  })
+]);
 
 const chatInputSchema = z.object({
   messages: z.array(chatMessageSchema).min(1).max(40),
@@ -320,9 +336,20 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
 
   const parsed = chatInputSchema.safeParse(req.body);
   if (!parsed.success) {
+    const flattenedErrors = parsed.error.flatten();
+    console.warn("[ai-chat] validation failed:", JSON.stringify(flattenedErrors, null, 2));
+    console.warn("[ai-chat] raw body keys:", Object.keys(req.body ?? {}));
+    if (Array.isArray(req.body?.messages)) {
+      console.warn("[ai-chat] message count:", req.body.messages.length);
+      for (const [i, m] of req.body.messages.entries()) {
+        if (typeof m.content === "string" && m.content.trim().length === 0) {
+          console.warn(`[ai-chat] empty content at messages[${i}]:`, JSON.stringify(m));
+        }
+      }
+    }
     res.status(400).json({
       error: "Invalid AI chat payload",
-      details: parsed.error.flatten()
+      details: flattenedErrors
     });
     return;
   }

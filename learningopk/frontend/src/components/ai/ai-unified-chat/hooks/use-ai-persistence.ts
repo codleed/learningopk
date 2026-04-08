@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { normalizeSessionId, withPersistedChapterSession } from '@learningopk/shared/utils';
 
 const STORAGE_KEYS = {
   visibility: 'learningopk:ai-chat:visibility',
@@ -71,19 +72,23 @@ export function useAIPersistence() {
       const stored = localStorage.getItem(STORAGE_KEYS.chapterSessions);
       if (!stored) return null;
       const map = JSON.parse(stored) as Record<number, string>;
-      return map[chapterId] ?? null;
+      return normalizeSessionId(map[chapterId]);
     } catch {
       return null;
     }
   }, []);
 
-  const setChapterSessionId = useCallback((chapterId: number, sessionId: string) => {
+  const setChapterSessionId = useCallback((chapterId: number, sessionId: string | null) => {
     if (typeof window === 'undefined') return;
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.chapterSessions);
       const map = stored ? JSON.parse(stored) as Record<number, string> : {};
-      map[chapterId] = sessionId;
-      localStorage.setItem(STORAGE_KEYS.chapterSessions, JSON.stringify(map));
+      const nextMap = withPersistedChapterSession(map, chapterId, sessionId);
+      if (Object.keys(nextMap).length === 0) {
+        localStorage.removeItem(STORAGE_KEYS.chapterSessions);
+        return;
+      }
+      localStorage.setItem(STORAGE_KEYS.chapterSessions, JSON.stringify(nextMap));
     } catch {
       // Ignore storage errors
     }
