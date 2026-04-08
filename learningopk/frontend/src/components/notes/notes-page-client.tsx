@@ -268,7 +268,7 @@ function NoteEditor({
         ) : (
           <div className="p-4 sm:p-6">
             {form.content.trim() ? (
-              <div className="rounded-xl border border-border-default/50 bg-bg-surface p-6">
+              <div className="overflow-x-auto rounded-xl border border-border-default/50 bg-bg-surface p-6">
                 <MarkdownRenderer content={form.content} />
               </div>
             ) : (

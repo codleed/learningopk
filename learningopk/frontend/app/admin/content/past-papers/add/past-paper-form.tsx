@@ -13,6 +13,7 @@ import {
 } from "@/components/admin";
 import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 import { Select } from "@/components/ui/select";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import {
   createAdminPastPaper,
   updateAdminPastPaper,
@@ -374,11 +375,12 @@ export function PastPaperForm({ boards, existingPaper }: PastPaperFormProps) {
                 </button>
               </div>
               {showPreview ? (
-                <div className="min-h-[200px] rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-4 prose prose-sm max-w-none dark:prose-invert">
+                <div className="min-h-[200px] rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-4">
                   {paperContent.trim() ? (
-                    <div className="whitespace-pre-wrap text-sm text-[var(--text-primary)]">
-                      {paperContent}
-                    </div>
+                    <MarkdownRenderer
+                      content={paperContent}
+                      className="text-sm"
+                    />
                   ) : (
                     <p className="text-sm text-[var(--text-secondary)] italic">
                       Nothing to preview yet. Write some content first.

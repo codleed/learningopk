@@ -16,6 +16,7 @@ import { SubjectBadge } from "@/components/common/subject-badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import {
   getMockExam,
   type MockExamDetail
@@ -196,11 +197,10 @@ export function PastPaperViewClient({ examId }: PastPaperViewClientProps) {
 
       {/* Content card */}
       <Card className="p-6 sm:p-8">
-        <div className="prose prose-sm max-w-none dark:prose-invert">
-          <div className="whitespace-pre-wrap text-sm text-text-primary leading-relaxed">
-            {displayContent}
-          </div>
-        </div>
+        <MarkdownRenderer
+          content={displayContent ?? ""}
+          className="text-sm leading-relaxed"
+        />
       </Card>
 
       {/* Back button */}
