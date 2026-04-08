@@ -76,7 +76,7 @@ function MessageBubble({
       
       {!showAvatar && <div className="w-8 shrink-0" />}
       
-      <div className="max-w-[85%]">
+      <div className="max-w-[85%] min-w-0">
         <article
           className={cn(
             'animate-message-in',

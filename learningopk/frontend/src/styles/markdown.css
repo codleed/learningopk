@@ -2,6 +2,7 @@
   color: var(--md-color, inherit);
   background: var(--md-bg, inherit);
   line-height: 1.6;
+  overflow-x: auto;
 }
 
 .md-root h1,
@@ -89,6 +90,7 @@
 .md-pre {
   margin: 1em 0;
   position: relative;
+  overflow-x: auto;
 }
 
 .md-pre::before {
@@ -268,6 +270,7 @@
   overflow-x: auto;
   padding: 1em 0;
   max-width: 100%;
+  min-width: 0;
 }
 
 .md-katex-display .katex {
