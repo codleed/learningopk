@@ -9,10 +9,13 @@ import {
   BarChart3,
   BookOpen,
   Calendar,
+  ChevronRight,
   Flame,
   Heart,
   LayoutDashboard,
   ListChecks,
+  Sparkles,
+  Star,
   Target,
   TrendingUp,
   Trophy,
@@ -39,6 +42,8 @@ import { SubjectBadge } from "@/components/common/subject-badge";
 import { AppShell } from "@/components/foundation/app-shell";
 import { ErrorState, LoadingSkeleton } from "@/components/ui/states";
 import { MetricLabel } from "@/components/stats/metric-label";
+import { getLevelDefinition, TIER_COLORS, LEVEL_DEFINITIONS } from "@/lib/gamification-types";
+import { cn } from "@/lib/utils";
 import type { SessionPayload } from "@/lib/session";
 import type { DashboardSummaryResponse } from "@/lib/progress-api";
 import type {
@@ -295,6 +300,11 @@ export function StatsPageClient({
                    Tab 1: Overview
                    ═══════════════════════════════════ */}
                 <TabContent value="overview" className="mt-6 space-y-6">
+                  {/* XP & Level Summary */}
+                  {summary?.xp ? (
+                    <XpSummaryCard xp={summary.xp} />
+                  ) : null}
+
                   {/* Activity Calendar Heatmap */}
                   <Card>
                     <CardHeader>
@@ -692,5 +702,141 @@ export function StatsPageClient({
         )}
       </motion.div>
     </AppShell>
+  );
+}
+
+/* ─── XP Summary Card for Stats Overview ─── */
+
+type XpInfoForStats = NonNullable<DashboardSummaryResponse["xp"]>;
+
+function XpSummaryCard({ xp }: { xp: XpInfoForStats }) {
+  const levelDef = getLevelDefinition(xp.level);
+  const tier = TIER_COLORS[levelDef.tier];
+  const nextLevelDef = LEVEL_DEFINITIONS[xp.level + 1];
+  const isMax = xp.isMaxLevel ?? !nextLevelDef;
+
+  // In-level progress
+  const xpInLevel = xp.xpInCurrentLevel ?? (xp.xp - levelDef.minXp);
+  const xpForLevel = xp.xpRequiredForLevel ?? (nextLevelDef ? nextLevelDef.minXp - levelDef.minXp : 1);
+  const safeForLevel = Math.max(xpForLevel, 1);
+  const percentage = Math.min((xpInLevel / safeForLevel) * 100, 100);
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg border", tier.badgeBg)}>
+            <Sparkles className={cn("h-4 w-4", tier.badge)} />
+          </div>
+          <div>
+            <CardTitle>XP & Level</CardTitle>
+            <CardDescription>
+              Your experience points and progression
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardBody className="space-y-5">
+        {/* Top section: total XP + level info */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            {/* Level badge */}
+            <div
+              className={cn(
+                "relative flex h-14 w-14 items-center justify-center rounded-2xl border font-bold shadow-lg",
+                tier.badgeBg,
+                tier.badge,
+                tier.glow
+              )}
+            >
+              <Star className="h-6 w-6 fill-current" />
+              <span className="absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-bg-surface text-xs font-bold text-text-primary shadow-sm ring-1 ring-border-default">
+                {xp.level}
+              </span>
+            </div>
+            <div>
+              <p className="text-3xl font-bold tabular-nums text-text-primary">
+                {xp.xp.toLocaleString()} <span className="text-base font-medium text-text-muted">XP</span>
+              </p>
+              <div className="flex items-center gap-1.5">
+                <span className={cn("text-sm font-semibold", tier.text)}>
+                  {levelDef.name}
+                </span>
+                {!isMax && nextLevelDef ? (
+                  <>
+                    <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
+                    <span className="text-sm text-text-muted">
+                      {nextLevelDef.name}
+                    </span>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          {/* Quick stats pills */}
+          <div className="flex gap-3">
+            <div className="rounded-xl border border-border-default bg-bg-subtle/50 px-3 py-2 text-center">
+              <p className="text-xs uppercase tracking-wider text-text-muted">Level</p>
+              <p className="text-lg font-bold tabular-nums text-text-primary">{xp.level}<span className="text-xs font-normal text-text-muted">/10</span></p>
+            </div>
+            <div className="rounded-xl border border-border-default bg-bg-subtle/50 px-3 py-2 text-center">
+              <p className="text-xs uppercase tracking-wider text-text-muted">To Next</p>
+              <p className="text-lg font-bold tabular-nums text-text-primary">{isMax ? "—" : xp.xpToNextLevel.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress bar to next level */}
+        {!isMax ? (
+          <div className="space-y-1.5">
+            <div className="h-3.5 w-full overflow-hidden rounded-full bg-bg-subtle">
+              <motion.div
+                className={cn("h-full rounded-full bg-gradient-to-r", tier.progress)}
+                initial={{ width: 0 }}
+                animate={{ width: `${percentage}%` }}
+                transition={{ duration: 1, ease: [0.4, 0, 0.2, 1] }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-xs tabular-nums text-text-muted">
+              <span>{xpInLevel.toLocaleString()} / {safeForLevel.toLocaleString()} XP in this level</span>
+              <span>{Math.round(percentage)}%</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/20 px-4 py-3 text-sm font-medium text-cyan-600 dark:text-cyan-300">
+            <Trophy className="h-4 w-4" />
+            Maximum level achieved! You&apos;re a Board Topper.
+          </div>
+        )}
+
+        {/* Level roadmap — compact view of all levels */}
+        <div>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-text-muted">Level Roadmap</p>
+          <div className="flex gap-1">
+            {LEVEL_DEFINITIONS.map((def) => {
+              const defTier = TIER_COLORS[def.tier];
+              const reached = xp.level >= def.level;
+              return (
+                <Tooltip key={def.level} content={`Lv.${def.level} ${def.name} — ${def.minXp.toLocaleString()} XP`} delayDuration={100}>
+                  <div
+                    className={cn(
+                      "flex-1 h-2 rounded-full transition-all",
+                      reached
+                        ? cn("bg-gradient-to-r", defTier.progress)
+                        : "bg-bg-subtle"
+                    )}
+                  />
+                </Tooltip>
+              );
+            })}
+          </div>
+          <div className="mt-1 flex justify-between text-[10px] tabular-nums text-text-muted">
+            <span>Lv.0</span>
+            <span>Lv.10</span>
+          </div>
+        </div>
+      </CardBody>
+    </Card>
   );
 }

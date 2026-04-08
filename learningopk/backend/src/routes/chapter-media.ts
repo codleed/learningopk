@@ -6,9 +6,11 @@ import { requireAdminRole } from "../lib/admin.js";
 import { db } from "../lib/db/index.js";
 import { chapterSummaryMedia, chapters } from "../lib/db/schema.js";
 import {
+  buildChapterCoverObjectKey,
   buildChapterSummaryObjectKey,
   buildPublicObjectUrl,
   deleteObjectIfExists,
+  extractManagedObjectKeyFromPublicUrl,
   fileExtensionFromMimeType,
   generatePresignedPutUrl,
   objectExists,
@@ -16,6 +18,7 @@ import {
   type SupportedImageMimeType,
   uploadImageBuffer
 } from "../lib/minio.js";
+import { env } from "../lib/env.js";
 import { errorResponse } from "../lib/response.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { createSingleImageUploadMiddleware } from "../middleware/image-upload.js";
@@ -414,5 +417,151 @@ chapterMediaRouter.delete("/chapters/:chapterId/media/:mediaId", requireSession,
   } catch (error) {
     console.error("Failed to delete chapter summary media:", error);
     res.status(500).json(errorResponse("Failed to delete chapter summary media.", "INTERNAL_ERROR"));
+  }
+});
+
+// --------------------------------------------------------------------------
+// POST /chapters/:chapterId/cover-image  (upload cover image)
+// --------------------------------------------------------------------------
+const uploadChapterCoverImage = createSingleImageUploadMiddleware({
+  fieldName: "cover",
+  maxFileSizeBytes: MAX_FILE_SIZE_BYTES
+});
+
+chapterMediaRouter.post("/chapters/:chapterId/cover-image", requireSession, uploadChapterCoverImage, async (req, res) => {
+  const parsedParams = chapterIdParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json(errorResponse("Invalid chapter identifier.", "VALIDATION_ERROR", parsedParams.error.flatten()));
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const file = authedReq.file;
+  if (!file) {
+    res.status(400).json(errorResponse("Missing cover image file.", "VALIDATION_ERROR"));
+    return;
+  }
+
+  const chapterId = parsedParams.data.chapterId;
+  const chapterRows = await db
+    .select({
+      id: chapters.id,
+      coverImageUrl: chapters.coverImageUrl
+    })
+    .from(chapters)
+    .where(eq(chapters.id, chapterId))
+    .limit(1);
+
+  const chapter = chapterRows[0];
+  if (!chapter) {
+    res.status(404).json(errorResponse("Chapter not found.", "NOT_FOUND"));
+    return;
+  }
+
+  const fileExtension = fileExtensionFromMimeType(file.mimetype);
+  if (!fileExtension) {
+    res.status(400).json(errorResponse("Unsupported image type.", "VALIDATION_ERROR"));
+    return;
+  }
+
+  const objectKey = buildChapterCoverObjectKey({
+    chapterId,
+    fileExtension
+  });
+
+  try {
+    const mimeType = file.mimetype as SupportedImageMimeType;
+    const { objectUrl } = await uploadImageBuffer({
+      objectKey,
+      buffer: file.buffer,
+      mimeType
+    });
+
+    // Update the chapter row with the new cover image URL
+    await db
+      .update(chapters)
+      .set({ coverImageUrl: objectUrl })
+      .where(eq(chapters.id, chapterId));
+
+    // Clean up old cover image if it existed and is different
+    if (chapter.coverImageUrl) {
+      const oldKey = extractManagedObjectKeyFromPublicUrl({
+        publicUrl: env.MINIO_PUBLIC_URL,
+        bucket: env.MINIO_BUCKET,
+        objectUrl: chapter.coverImageUrl
+      });
+      if (oldKey && oldKey !== objectKey) {
+        await deleteObjectIfExists({ objectKey: oldKey });
+      }
+    }
+
+    res.status(200).json({
+      coverImageUrl: objectUrl
+    });
+  } catch (error) {
+    console.error("Failed to upload chapter cover image:", error);
+    res.status(500).json(errorResponse("Failed to upload chapter cover image.", "INTERNAL_ERROR"));
+  }
+});
+
+// --------------------------------------------------------------------------
+// DELETE /chapters/:chapterId/cover-image  (remove cover image)
+// --------------------------------------------------------------------------
+chapterMediaRouter.delete("/chapters/:chapterId/cover-image", requireSession, async (req, res) => {
+  const parsedParams = chapterIdParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json(errorResponse("Invalid chapter identifier.", "VALIDATION_ERROR", parsedParams.error.flatten()));
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const chapterId = parsedParams.data.chapterId;
+  const chapterRows = await db
+    .select({
+      id: chapters.id,
+      coverImageUrl: chapters.coverImageUrl
+    })
+    .from(chapters)
+    .where(eq(chapters.id, chapterId))
+    .limit(1);
+
+  const chapter = chapterRows[0];
+  if (!chapter) {
+    res.status(404).json(errorResponse("Chapter not found.", "NOT_FOUND"));
+    return;
+  }
+
+  if (!chapter.coverImageUrl) {
+    res.status(200).json({ success: true });
+    return;
+  }
+
+  try {
+    const oldKey = extractManagedObjectKeyFromPublicUrl({
+      publicUrl: env.MINIO_PUBLIC_URL,
+      bucket: env.MINIO_BUCKET,
+      objectUrl: chapter.coverImageUrl
+    });
+    if (oldKey) {
+      await deleteObjectIfExists({ objectKey: oldKey });
+    }
+
+    await db
+      .update(chapters)
+      .set({ coverImageUrl: null })
+      .where(eq(chapters.id, chapterId));
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("Failed to delete chapter cover image:", error);
+    res.status(500).json(errorResponse("Failed to delete chapter cover image.", "INTERNAL_ERROR"));
   }
 });

@@ -166,15 +166,43 @@
     {
       "idx": 23,
       "version": "7",
-      "when": 1775491200000,
+      "when": 1775484000000,
       "tag": "0022_study_groups",
       "breakpoints": true
     },
     {
       "idx": 24,
       "version": "7",
-      "when": 1775494800000,
+      "when": 1775487600000,
       "tag": "0023_quiz_duel_challenges",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1775498400000,
+      "tag": "0024_chapter_cover_image",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1775498800000,
+      "tag": "0025_user_progress_summary_read",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1775502400000,
+      "tag": "0026_student_notes",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1775506000000,
+      "tag": "0027_past_paper_content",
       "breakpoints": true
     }
   ]

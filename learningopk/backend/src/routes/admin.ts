@@ -19,7 +19,9 @@ import {
   chapters,
   exercises,
   flashcards,
+  formulas,
   forumThreads,
+  mockExams,
   moderationFlags,
   quizAttempts,
   quizQuestions,
@@ -119,13 +121,15 @@ const curriculumChapterCreateBodySchema = z.object({
   title: z.string().trim().min(1),
   slug: z.string().trim().min(1),
   summary: z.string().trim().min(1),
-  isPublished: z.boolean().optional().default(false)
+  isPublished: z.boolean().optional().default(false),
+  coverImageUrl: z.string().trim().url().nullish()
 });
 
 const curriculumChapterUpdateBodySchema = z.object({
   chapterNumber: z.coerce.number().int().positive(),
   title: z.string().trim().min(1),
-  slug: z.string().trim().min(1)
+  slug: z.string().trim().min(1),
+  coverImageUrl: z.string().trim().url().nullish()
 });
 
 export const curriculumExerciseCreateBodySchema = z
@@ -314,6 +318,65 @@ const flashcardParamsSchema = z.object({
 const flashcardReorderBodySchema = z.object({
   chapterId: z.coerce.number().int().positive(),
   orderedIds: z.array(z.coerce.number().int().positive()).min(1)
+});
+
+// Formula schemas
+const formulaVariableSchema = z.object({
+  symbol: z.string().trim().min(1),
+  meaning: z.string().trim().min(1)
+});
+
+const formulaCreateBodySchema = z.object({
+  subjectId: z.coerce.number().int().positive(),
+  chapterId: z.coerce.number().int().positive(),
+  name: z.string().trim().min(1),
+  formulaLatex: z.string().trim().min(1),
+  description: z.string().trim().min(1),
+  variables: z.array(formulaVariableSchema).default([]),
+  tags: z.array(z.string().trim().min(1)).default([])
+});
+
+const formulaUpdateBodySchema = z.object({
+  subjectId: z.coerce.number().int().positive().optional(),
+  chapterId: z.coerce.number().int().positive().optional(),
+  name: z.string().trim().min(1).optional(),
+  formulaLatex: z.string().trim().min(1).optional(),
+  description: z.string().trim().min(1).optional(),
+  variables: z.array(formulaVariableSchema).optional(),
+  tags: z.array(z.string().trim().min(1)).optional()
+});
+
+const formulaListQuerySchema = z.object({
+  subjectId: z.coerce.number().int().positive().optional(),
+  chapterId: z.coerce.number().int().positive().optional()
+});
+
+// Past paper schemas
+const pastPaperCreateBodySchema = z.object({
+  title: z.string().trim().min(1),
+  boardId: z.coerce.number().int().positive(),
+  grade: z.enum(["9", "10"]),
+  subjectId: z.coerce.number().int().positive(),
+  year: z.coerce.number().int().min(2000).max(2099),
+  paperContent: z.string().trim().min(1),
+  solutionContent: z.string().trim().optional()
+});
+
+const pastPaperUpdateBodySchema = z.object({
+  title: z.string().trim().min(1).optional(),
+  boardId: z.coerce.number().int().positive().optional(),
+  grade: z.enum(["9", "10"]).optional(),
+  subjectId: z.coerce.number().int().positive().optional(),
+  year: z.coerce.number().int().min(2000).max(2099).optional(),
+  paperContent: z.string().trim().min(1).optional(),
+  solutionContent: z.string().trim().optional()
+});
+
+const pastPaperListQuerySchema = z.object({
+  boardId: z.coerce.number().int().positive().optional(),
+  grade: z.enum(["9", "10"]).optional(),
+  subjectId: z.coerce.number().int().positive().optional(),
+  year: z.coerce.number().int().min(2000).max(2099).optional()
 });
 
 const adminAuditScopeValues = ["content", "forum", "moderation", "notifications", "settings", "users"] as const;
@@ -2067,7 +2130,8 @@ adminRouter.get("/content/curriculum", requireSession, async (req, res) => {
       chapterNumber: chapters.chapterNumber,
       title: chapters.title,
       slug: chapters.slug,
-      isPublished: chapters.isPublished
+      isPublished: chapters.isPublished,
+      coverImageUrl: chapters.coverImageUrl
     })
     .from(chapters)
     .orderBy(asc(chapters.chapterNumber));
@@ -2115,7 +2179,8 @@ adminRouter.get("/content/curriculum", requireSession, async (req, res) => {
           chapterNumber: chapter.chapterNumber,
           title: chapter.title,
           slug: chapter.slug,
-          isPublished: chapter.isPublished
+          isPublished: chapter.isPublished,
+          coverImageUrl: chapter.coverImageUrl
         }))
       }))
     }))
@@ -2467,7 +2532,8 @@ adminRouter.post("/content/chapters", requireSession, async (req, res) => {
         title,
         slug,
         summary: parsedBody.data.summary.trim(),
-        isPublished: parsedBody.data.isPublished
+        isPublished: parsedBody.data.isPublished,
+        coverImageUrl: parsedBody.data.coverImageUrl ?? null
       })
       .returning({
         id: chapters.id,
@@ -3289,7 +3355,8 @@ adminRouter.post("/content/chapters/:id/update", requireSession, async (req, res
       .set({
         chapterNumber: parsedBody.data.chapterNumber,
         title: parsedBody.data.title.trim(),
-        slug: parsedBody.data.slug.trim().toLowerCase()
+        slug: parsedBody.data.slug.trim().toLowerCase(),
+        ...(parsedBody.data.coverImageUrl !== undefined ? { coverImageUrl: parsedBody.data.coverImageUrl ?? null } : {})
       })
       .where(eq(chapters.id, chapter.id))
       .returning({
@@ -4484,6 +4551,312 @@ adminRouter.post("/content/flashcards/reorder", requireSession, async (req, res)
   res.status(200).json({
     success: true,
     updated: updatedFlashcards
+  });
+});
+
+// ==================== FORMULA LIBRARY CRUD ====================
+
+/**
+ * GET /api/admin/content/formulas - List all formulas
+ * Optional query: ?subjectId=N&chapterId=N
+ */
+adminRouter.get("/content/formulas", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedQuery = formulaListQuerySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid formula query",
+      details: parsedQuery.error.flatten()
+    });
+    return;
+  }
+
+  const conditions: SQL[] = [];
+  if (parsedQuery.data.subjectId) {
+    conditions.push(eq(formulas.subjectId, parsedQuery.data.subjectId));
+  }
+  if (parsedQuery.data.chapterId) {
+    conditions.push(eq(formulas.chapterId, parsedQuery.data.chapterId));
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const formulaRows = await db
+    .select({
+      id: formulas.id,
+      subjectId: formulas.subjectId,
+      chapterId: formulas.chapterId,
+      name: formulas.name,
+      formulaLatex: formulas.formulaLatex,
+      description: formulas.description,
+      variables: formulas.variables,
+      tags: formulas.tags,
+      createdAt: formulas.createdAt,
+      updatedAt: formulas.updatedAt,
+      subjectName: subjects.name,
+      chapterTitle: chapters.title
+    })
+    .from(formulas)
+    .leftJoin(subjects, eq(formulas.subjectId, subjects.id))
+    .leftJoin(chapters, eq(formulas.chapterId, chapters.id))
+    .where(whereClause)
+    .orderBy(desc(formulas.createdAt));
+
+  res.status(200).json({
+    data: formulaRows,
+    total: formulaRows.length
+  });
+});
+
+/**
+ * POST /api/admin/content/formulas - Create a formula
+ */
+adminRouter.post("/content/formulas", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedBody = formulaCreateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid formula payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+
+  const insertedRows = await db
+    .insert(formulas)
+    .values({
+      subjectId: parsedBody.data.subjectId,
+      chapterId: parsedBody.data.chapterId,
+      name: parsedBody.data.name.trim(),
+      formulaLatex: parsedBody.data.formulaLatex.trim(),
+      description: parsedBody.data.description.trim(),
+      variables: parsedBody.data.variables,
+      tags: parsedBody.data.tags
+    })
+    .returning({
+      id: formulas.id,
+      subjectId: formulas.subjectId,
+      chapterId: formulas.chapterId,
+      name: formulas.name,
+      formulaLatex: formulas.formulaLatex,
+      description: formulas.description,
+      variables: formulas.variables,
+      tags: formulas.tags,
+      createdAt: formulas.createdAt,
+      updatedAt: formulas.updatedAt
+    });
+
+  const newFormula = insertedRows[0];
+  if (!newFormula) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create formula",
+      target: `Subject #${parsedBody.data.subjectId}`,
+      status: "failed",
+      message: "Formula creation failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({ error: "Failed to create formula" });
+    return;
+  }
+
+  await persistAuditLog({
+    scope: "content",
+    action: "Create formula",
+    target: `Formula #${newFormula.id}`,
+    status: "success",
+    message: `Created formula "${newFormula.name}" for subject ${newFormula.subjectId}`,
+    actorId,
+    actorName
+  });
+
+  res.status(201).json({
+    data: newFormula
+  });
+});
+
+/**
+ * POST /api/admin/content/formulas/:id/update - Update a formula
+ */
+adminRouter.post("/content/formulas/:id/update", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid formula identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedBody = formulaUpdateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid formula payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+
+  // Check if formula exists
+  const existingRows = await db
+    .select({ id: formulas.id })
+    .from(formulas)
+    .where(eq(formulas.id, parsedParams.data.id))
+    .limit(1);
+
+  const existing = existingRows[0];
+  if (!existing) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Update formula",
+      target: `Formula #${parsedParams.data.id}`,
+      status: "failed",
+      message: "Formula not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({ error: "Formula not found" });
+    return;
+  }
+
+  const updateData: Record<string, unknown> = {};
+  if (parsedBody.data.subjectId !== undefined) updateData.subjectId = parsedBody.data.subjectId;
+  if (parsedBody.data.chapterId !== undefined) updateData.chapterId = parsedBody.data.chapterId;
+  if (parsedBody.data.name !== undefined) updateData.name = parsedBody.data.name.trim();
+  if (parsedBody.data.formulaLatex !== undefined) updateData.formulaLatex = parsedBody.data.formulaLatex.trim();
+  if (parsedBody.data.description !== undefined) updateData.description = parsedBody.data.description.trim();
+  if (parsedBody.data.variables !== undefined) updateData.variables = parsedBody.data.variables;
+  if (parsedBody.data.tags !== undefined) updateData.tags = parsedBody.data.tags;
+  updateData.updatedAt = new Date();
+
+  const updatedRows = await db
+    .update(formulas)
+    .set(updateData)
+    .where(eq(formulas.id, existing.id))
+    .returning({
+      id: formulas.id,
+      subjectId: formulas.subjectId,
+      chapterId: formulas.chapterId,
+      name: formulas.name,
+      formulaLatex: formulas.formulaLatex,
+      description: formulas.description,
+      variables: formulas.variables,
+      tags: formulas.tags,
+      createdAt: formulas.createdAt,
+      updatedAt: formulas.updatedAt
+    });
+
+  const updatedFormula = updatedRows[0];
+  if (!updatedFormula) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Update formula",
+      target: `Formula #${existing.id}`,
+      status: "failed",
+      message: "Formula update failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({ error: "Failed to update formula" });
+    return;
+  }
+
+  await persistAuditLog({
+    scope: "content",
+    action: "Update formula",
+    target: `Formula #${updatedFormula.id}`,
+    status: "success",
+    message: `Updated formula "${updatedFormula.name}"`,
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    data: updatedFormula
+  });
+});
+
+/**
+ * POST /api/admin/content/formulas/:id/delete - Delete a formula
+ */
+adminRouter.post("/content/formulas/:id/delete", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid formula identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+
+  const formulaRows = await db
+    .select({
+      id: formulas.id,
+      name: formulas.name,
+      subjectId: formulas.subjectId
+    })
+    .from(formulas)
+    .where(eq(formulas.id, parsedParams.data.id))
+    .limit(1);
+
+  const formula = formulaRows[0];
+  if (!formula) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Delete formula",
+      target: `Formula #${parsedParams.data.id}`,
+      status: "failed",
+      message: "Formula not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({ error: "Formula not found" });
+    return;
+  }
+
+  await db.delete(formulas).where(eq(formulas.id, formula.id));
+
+  await persistAuditLog({
+    scope: "content",
+    action: "Delete formula",
+    target: `Formula #${formula.id} "${formula.name}"`,
+    status: "success",
+    message: `Deleted formula from subject ${formula.subjectId}`,
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    success: true,
+    deletedId: formula.id
   });
 });
 
@@ -5805,5 +6178,373 @@ adminRouter.post("/cache/purge", requireSession, async (req, res) => {
     success: true,
     deletedCount: deleted,
     timestamp: new Date().toISOString()
+  });
+});
+
+// ==================== PAST PAPER CONTENT CRUD ====================
+
+/**
+ * GET /api/admin/content/past-papers - List all past papers (with markdown content)
+ * Optional query: ?boardId=N&grade=9|10&subjectId=N&year=N
+ */
+adminRouter.get("/content/past-papers", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedQuery = pastPaperListQuerySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid past paper query",
+      details: parsedQuery.error.flatten()
+    });
+    return;
+  }
+
+  const conditions: SQL[] = [];
+  if (parsedQuery.data.boardId) {
+    conditions.push(eq(mockExams.boardId, parsedQuery.data.boardId));
+  }
+  if (parsedQuery.data.grade) {
+    conditions.push(eq(mockExams.grade, parsedQuery.data.grade));
+  }
+  if (parsedQuery.data.subjectId) {
+    conditions.push(eq(mockExams.subjectId, parsedQuery.data.subjectId));
+  }
+  if (parsedQuery.data.year) {
+    conditions.push(eq(mockExams.year, parsedQuery.data.year));
+  }
+  // Only return items that have paperContent (markdown-based past papers)
+  conditions.push(sql`${mockExams.paperContent} IS NOT NULL`);
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const rows = await db
+    .select({
+      id: mockExams.id,
+      title: mockExams.title,
+      boardId: mockExams.boardId,
+      boardName: boards.name,
+      grade: mockExams.grade,
+      subjectId: mockExams.subjectId,
+      subjectName: subjects.name,
+      year: mockExams.year,
+      durationMinutes: mockExams.durationMinutes,
+      totalMarks: mockExams.totalMarks,
+      paperContent: mockExams.paperContent,
+      solutionContent: mockExams.solutionContent
+    })
+    .from(mockExams)
+    .innerJoin(boards, eq(mockExams.boardId, boards.id))
+    .innerJoin(subjects, eq(mockExams.subjectId, subjects.id))
+    .where(whereClause)
+    .orderBy(desc(mockExams.year), asc(mockExams.title));
+
+  res.status(200).json({
+    data: rows,
+    total: rows.length
+  });
+});
+
+/**
+ * POST /api/admin/content/past-papers - Create a past paper with markdown content
+ */
+adminRouter.post("/content/past-papers", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedBody = pastPaperCreateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid past paper payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+
+  // We need a dummy quiz for the NOT NULL quizId constraint.
+  // Find the first chapter for this subject to use as chapterId.
+  const chapterRows = await db
+    .select({ id: chapters.id })
+    .from(chapters)
+    .where(eq(chapters.subjectId, parsedBody.data.subjectId))
+    .limit(1);
+
+  const firstChapter = chapterRows[0];
+  if (!firstChapter) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create past paper",
+      target: `Subject #${parsedBody.data.subjectId}`,
+      status: "failed",
+      message: "No chapters found for subject — needed for placeholder quiz",
+      actorId,
+      actorName
+    });
+    res.status(400).json({ error: "Subject must have at least one chapter before adding a past paper" });
+    return;
+  }
+
+  // Create a placeholder quiz that won't be used for the markdown-based past paper.
+  const placeholderQuizRows = await db
+    .insert(quizzes)
+    .values({
+      title: `[Past Paper] ${parsedBody.data.title}`,
+      chapterId: firstChapter.id,
+      type: "mock_exam",
+      durationMinutes: 0,
+      totalMarks: 0
+    })
+    .returning({ id: quizzes.id });
+
+  const placeholderQuiz = placeholderQuizRows[0];
+  if (!placeholderQuiz) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create past paper",
+      target: `Subject #${parsedBody.data.subjectId}`,
+      status: "failed",
+      message: "Failed to create placeholder quiz for past paper",
+      actorId,
+      actorName
+    });
+    res.status(500).json({ error: "Failed to create past paper" });
+    return;
+  }
+
+  const insertedRows = await db
+    .insert(mockExams)
+    .values({
+      title: parsedBody.data.title.trim(),
+      boardId: parsedBody.data.boardId,
+      grade: parsedBody.data.grade,
+      subjectId: parsedBody.data.subjectId,
+      year: parsedBody.data.year,
+      quizId: placeholderQuiz.id,
+      durationMinutes: 0,
+      totalMarks: 0,
+      paperContent: parsedBody.data.paperContent.trim(),
+      solutionContent: parsedBody.data.solutionContent?.trim() ?? null
+    })
+    .returning({
+      id: mockExams.id,
+      title: mockExams.title,
+      boardId: mockExams.boardId,
+      grade: mockExams.grade,
+      subjectId: mockExams.subjectId,
+      year: mockExams.year,
+      durationMinutes: mockExams.durationMinutes,
+      totalMarks: mockExams.totalMarks,
+      paperContent: mockExams.paperContent,
+      solutionContent: mockExams.solutionContent
+    });
+
+  const newPaper = insertedRows[0];
+  if (!newPaper) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Create past paper",
+      target: `Subject #${parsedBody.data.subjectId}`,
+      status: "failed",
+      message: "Past paper creation failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({ error: "Failed to create past paper" });
+    return;
+  }
+
+  await persistAuditLog({
+    scope: "content",
+    action: "Create past paper",
+    target: `Past Paper #${newPaper.id}`,
+    status: "success",
+    message: `Created past paper "${newPaper.title}" for year ${newPaper.year}`,
+    actorId,
+    actorName
+  });
+
+  res.status(201).json({
+    data: newPaper
+  });
+});
+
+/**
+ * POST /api/admin/content/past-papers/:id/update - Update a past paper
+ */
+adminRouter.post("/content/past-papers/:id/update", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid past paper identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const parsedBody = pastPaperUpdateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid past paper payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+
+  // Check if past paper exists
+  const existingRows = await db
+    .select({ id: mockExams.id })
+    .from(mockExams)
+    .where(eq(mockExams.id, parsedParams.data.id))
+    .limit(1);
+
+  const existing = existingRows[0];
+  if (!existing) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Update past paper",
+      target: `Past Paper #${parsedParams.data.id}`,
+      status: "failed",
+      message: "Past paper not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({ error: "Past paper not found" });
+    return;
+  }
+
+  const updateData: Record<string, unknown> = {};
+  if (parsedBody.data.title !== undefined) updateData.title = parsedBody.data.title.trim();
+  if (parsedBody.data.boardId !== undefined) updateData.boardId = parsedBody.data.boardId;
+  if (parsedBody.data.grade !== undefined) updateData.grade = parsedBody.data.grade;
+  if (parsedBody.data.subjectId !== undefined) updateData.subjectId = parsedBody.data.subjectId;
+  if (parsedBody.data.year !== undefined) updateData.year = parsedBody.data.year;
+  if (parsedBody.data.paperContent !== undefined) updateData.paperContent = parsedBody.data.paperContent.trim();
+  if (parsedBody.data.solutionContent !== undefined) updateData.solutionContent = parsedBody.data.solutionContent.trim();
+
+  const updatedRows = await db
+    .update(mockExams)
+    .set(updateData)
+    .where(eq(mockExams.id, existing.id))
+    .returning({
+      id: mockExams.id,
+      title: mockExams.title,
+      boardId: mockExams.boardId,
+      grade: mockExams.grade,
+      subjectId: mockExams.subjectId,
+      year: mockExams.year,
+      durationMinutes: mockExams.durationMinutes,
+      totalMarks: mockExams.totalMarks,
+      paperContent: mockExams.paperContent,
+      solutionContent: mockExams.solutionContent
+    });
+
+  const updatedPaper = updatedRows[0];
+  if (!updatedPaper) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Update past paper",
+      target: `Past Paper #${existing.id}`,
+      status: "failed",
+      message: "Past paper update failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({ error: "Failed to update past paper" });
+    return;
+  }
+
+  await persistAuditLog({
+    scope: "content",
+    action: "Update past paper",
+    target: `Past Paper #${updatedPaper.id}`,
+    status: "success",
+    message: `Updated past paper "${updatedPaper.title}"`,
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    data: updatedPaper
+  });
+});
+
+/**
+ * POST /api/admin/content/past-papers/:id/delete - Delete a past paper
+ */
+adminRouter.post("/content/past-papers/:id/delete", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid past paper identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+
+  const paperRows = await db
+    .select({
+      id: mockExams.id,
+      title: mockExams.title,
+      quizId: mockExams.quizId,
+      subjectId: mockExams.subjectId
+    })
+    .from(mockExams)
+    .where(eq(mockExams.id, parsedParams.data.id))
+    .limit(1);
+
+  const paper = paperRows[0];
+  if (!paper) {
+    await persistAuditLog({
+      scope: "content",
+      action: "Delete past paper",
+      target: `Past Paper #${parsedParams.data.id}`,
+      status: "failed",
+      message: "Past paper not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({ error: "Past paper not found" });
+    return;
+  }
+
+  // Delete the mock exam (cascade will handle quiz via quizId FK)
+  await db.delete(mockExams).where(eq(mockExams.id, paper.id));
+
+  await persistAuditLog({
+    scope: "content",
+    action: "Delete past paper",
+    target: `Past Paper #${paper.id} "${paper.title}"`,
+    status: "success",
+    message: `Deleted past paper from subject ${paper.subjectId}`,
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({
+    success: true,
+    deletedId: paper.id
   });
 });

@@ -2,7 +2,6 @@ import {
   BookOpen,
   Sigma,
   ChartPie,
-  Trophy,
   MessageCircle,
   Bot,
   House,
@@ -16,6 +15,7 @@ import {
   Bell,
   Settings,
   Files,
+  NotebookPen,
 } from "lucide-react";
 
 import type { NavItem, NavSection } from "./left-rail-types";
@@ -55,6 +55,11 @@ export const studentNavItems: NavItem[] = [
     href: "/ai-tutor",
     label: "AI Tutor",
     icon: Bot,
+  },
+  {
+    href: "/notes",
+    label: "Notes",
+    icon: NotebookPen,
   },
   {
     href: "/stats",

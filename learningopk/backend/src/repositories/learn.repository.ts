@@ -166,6 +166,7 @@ export class LearnRepository {
       title: string;
       slug: string;
       isPublished: boolean;
+      coverImageUrl: string | null;
     }>>(cacheKey);
     if (cached) return cached;
 
@@ -175,7 +176,8 @@ export class LearnRepository {
         chapterNumber: chapters.chapterNumber,
         title: chapters.title,
         slug: chapters.slug,
-        isPublished: chapters.isPublished
+        isPublished: chapters.isPublished,
+        coverImageUrl: chapters.coverImageUrl
       })
       .from(chapters)
       .where(and(eq(chapters.subjectId, subjectId), isPublished ? eq(chapters.isPublished, true) : undefined))
@@ -193,6 +195,7 @@ export class LearnRepository {
         chapterTitle: chapters.title,
         chapterSlug: chapters.slug,
         chapterSummary: chapters.summary,
+        chapterCoverImageUrl: chapters.coverImageUrl,
         boardName: boards.name,
         boardSlug: boards.slug,
         className: boardClasses.name,

@@ -105,7 +105,9 @@ mockExamsRouter.get("/", async (req, res) => {
         subjectId: mockExams.subjectId,
         subjectName: subjects.name,
         subjectSlug: subjects.slug,
-        quizId: mockExams.quizId
+        quizId: mockExams.quizId,
+        paperContent: mockExams.paperContent,
+        solutionContent: mockExams.solutionContent
       })
       .from(mockExams)
       .innerJoin(boards, eq(mockExams.boardId, boards.id))
@@ -146,7 +148,9 @@ mockExamsRouter.get("/:id", async (req, res) => {
         quizId: mockExams.quizId,
         quizTitle: quizzes.title,
         quizType: quizzes.type,
-        quizDurationMinutes: quizzes.durationMinutes
+        quizDurationMinutes: quizzes.durationMinutes,
+        paperContent: mockExams.paperContent,
+        solutionContent: mockExams.solutionContent
       })
       .from(mockExams)
       .innerJoin(boards, eq(mockExams.boardId, boards.id))

@@ -84,6 +84,13 @@ export function FillInBlanksRenderer({
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  const isChecked = checked !== null;
+  const hasAtLeastOneAnswer = userAnswers.some((a) => a.trim().length > 0);
+
+  const correctCount = checked
+    ? checked.statuses.filter((s) => s === "correct").length
+    : 0;
+
   const setInputRef = useCallback(
     (index: number) => (el: HTMLInputElement | null) => {
       inputRefs.current[index] = el;
@@ -98,19 +105,6 @@ export function FillInBlanksRenderer({
         next[index] = value;
         return next;
       });
-    },
-    []
-  );
-
-  const handleKeyDown = useCallback(
-    (index: number, event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        const nextInput = inputRefs.current[index + 1];
-        if (nextInput) {
-          nextInput.focus();
-        }
-      }
     },
     []
   );
@@ -132,6 +126,22 @@ export function FillInBlanksRenderer({
     }
   }, [blanksAnswer, userAnswers, onComplete]);
 
+  const handleKeyDown = useCallback(
+    (index: number, event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        const nextInput = inputRefs.current[index + 1];
+        if (nextInput) {
+          nextInput.focus();
+        } else {
+          // Last blank — trigger check on Enter
+          handleCheckAnswers();
+        }
+      }
+    },
+    [handleCheckAnswers]
+  );
+
   const handleReset = useCallback(() => {
     setUserAnswers(Array.from<string>({ length: blankCount }).fill(""));
     setChecked(null);
@@ -141,9 +151,6 @@ export function FillInBlanksRenderer({
       inputRefs.current[0]?.focus();
     });
   }, [blankCount]);
-
-  const isChecked = checked !== null;
-  const hasAtLeastOneAnswer = userAnswers.some((a) => a.trim().length > 0);
 
   /* ─── Render ─── */
 
@@ -196,8 +203,8 @@ export function FillInBlanksRenderer({
         </p>
       </div>
 
-      {/* Action buttons */}
-      <div className="flex items-center gap-3">
+      {/* Action buttons + score summary */}
+      <div className="flex items-center gap-3 flex-wrap">
         <AnimatePresence mode="wait">
           {!isChecked ? (
             <motion.div
@@ -223,7 +230,7 @@ export function FillInBlanksRenderer({
               animate={{ opacity: 1, y: 0 }}
               exit={reduced ? undefined : { opacity: 0, y: -8 }}
               transition={reduced ? { duration: 0 } : { duration: 0.2 }}
-              className="flex items-center gap-3"
+              className="flex items-center gap-3 flex-wrap"
             >
               <Button
                 variant="secondary"
@@ -234,17 +241,22 @@ export function FillInBlanksRenderer({
                 Try Again
               </Button>
 
-              {checked.allCorrect && (
-                <motion.div
-                  initial={reduced ? false : { opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={reduced ? { duration: 0 } : { delay: 0.15, type: "spring", stiffness: 400, damping: 25 }}
-                >
+              {/* Score summary */}
+              <motion.div
+                initial={reduced ? false : { opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={reduced ? { duration: 0 } : { delay: 0.1, type: "spring", stiffness: 400, damping: 25 }}
+              >
+                {checked.allCorrect ? (
                   <Badge variant="success" size="md">
                     All correct!
                   </Badge>
-                </motion.div>
-              )}
+                ) : (
+                  <Badge variant="warning" size="md">
+                    {correctCount}/{blankCount} correct
+                  </Badge>
+                )}
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

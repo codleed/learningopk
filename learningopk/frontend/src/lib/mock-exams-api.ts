@@ -13,7 +13,9 @@ const mockExamSchema = z.object({
   subjectId: z.number().int(),
   subjectName: z.string(),
   subjectSlug: z.string(),
-  quizId: z.number().int()
+  quizId: z.number().int(),
+  paperContent: z.string().nullable().optional(),
+  solutionContent: z.string().nullable().optional()
 });
 
 const mockExamDetailSchema = z.object({
@@ -32,7 +34,9 @@ const mockExamDetailSchema = z.object({
   quizId: z.number().int(),
   quizTitle: z.string(),
   quizType: z.enum(["chapter_quiz", "mock_exam"]),
-  quizDurationMinutes: z.number().int()
+  quizDurationMinutes: z.number().int(),
+  paperContent: z.string().nullable().optional(),
+  solutionContent: z.string().nullable().optional()
 });
 
 const quizAttemptSchema = z.object({

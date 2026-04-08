@@ -10,6 +10,7 @@ import {
   MotionSection,
 } from "@/components/motion";
 import { cn } from "@/lib/utils";
+import { trackProgressEvent } from "@/lib/progress-client";
 
 import { ChapterProvider, type ChapterContextValue } from "./chapter-context";
 import type { ChapterTab } from "./chapter-context";
@@ -78,7 +79,7 @@ export function ChapterStudyWorkspace({
     autoOpenAi ? "Guide me through this chapter using hints first." : null,
   );
 
-  const { state, xpQueue, dismissXpNotification, leveledUp, markExerciseComplete, completeQuiz } = useGamification();
+  const { state, xpQueue, dismissXpNotification, leveledUp, markSummaryRead, markExerciseComplete, completeQuiz } = useGamification();
   const { streak } = useStreakTracking();
   const { visibleNotifications, dismiss } = useXpNotifications(xpQueue, dismissXpNotification);
 
@@ -136,6 +137,12 @@ export function ChapterStudyWorkspace({
     },
     [chapterId, completeQuiz]
   );
+
+  /** Handler: mark summary as read via gamification + backend tracking */
+  const handleMarkSummaryRead = useCallback(() => {
+    markSummaryRead(String(chapterId));
+    trackProgressEvent({ eventType: "summary_read", chapterId });
+  }, [chapterId, markSummaryRead]);
 
   /** XP earned in this chapter */
   const chapterXp = chapterProgress?.xpEarned ?? 0;
@@ -279,6 +286,8 @@ export function ChapterStudyWorkspace({
                 illustrationExercises={illustrationExercises}
                 illustrationCompletedIds={illustrationCompletedIds}
                 trainingCompletedIds={trainingCompletedIds}
+                summaryRead={chapterProgress?.summaryRead ?? false}
+                onMarkSummaryRead={handleMarkSummaryRead}
                 onMarkExerciseComplete={handleMarkExerciseComplete}
                 onQuizComplete={handleQuizComplete}
                 onPromptChange={(nextPrompt) => {

@@ -35,6 +35,7 @@ export default async function EditChapterPage({ params }: EditChapterPageProps) 
   let subjectName = "";
   let className = "";
   let boardName = "";
+  let coverImageUrl: string | null = null;
 
   for (const board of curriculumBoards) {
     for (const boardClass of board.classes) {
@@ -45,6 +46,7 @@ export default async function EditChapterPage({ params }: EditChapterPageProps) 
           subjectName = subject.name;
           className = boardClass.name;
           boardName = board.name;
+          coverImageUrl = found.coverImageUrl ?? null;
           break;
         }
       }
@@ -70,6 +72,7 @@ export default async function EditChapterPage({ params }: EditChapterPageProps) 
         subjectName,
         className,
         boardName,
+        coverImageUrl,
       }}
       initialSummary={chapterSummary?.chapter.summary ?? ""}
     />

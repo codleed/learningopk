@@ -1,58 +1,75 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { getLevelDefinition, TIER_COLORS } from "@/lib/gamification-types";
 
 /** Props for the gamification XP progress bar. */
 export interface XPBarProps {
-  /** Current experience points accumulated in this level. */
+  /** Current total experience points. */
   currentXP: number;
-  /** Total XP required to reach the next level. */
+  /** Total XP required to reach the next level (currentXP + xpToNextLevel). */
   maxXP: number;
-  /** Current player level. */
+  /** Current player level (0–10). */
   level: number;
+  /** XP already earned within the current level (for precise progress). */
+  xpInCurrentLevel?: number;
+  /** Total XP span of the current level. */
+  xpRequiredForLevel?: number;
   /** Additional CSS class names for the root wrapper. */
   className?: string;
 }
 
 /**
- * Gamification XP progress bar with animated fill, level badge, and XP counter.
- * The fill bar animates on mount and on value changes via Framer Motion.
+ * Compact XP progress bar with level badge, tier coloring, and animated fill.
+ * Shows: level badge · level name · progress bar · XP counter.
  */
 export function XPBar({
   currentXP,
   maxXP,
   level,
+  xpInCurrentLevel,
+  xpRequiredForLevel,
   className,
 }: XPBarProps) {
-  const safeMax = Math.max(maxXP, 1);
-  const percentage = Math.min((currentXP / safeMax) * 100, 100);
+  const levelDef = getLevelDefinition(level);
+  const tier = TIER_COLORS[levelDef.tier];
+
+  // Use precise in-level progress if available, otherwise fall back
+  const progressXp = xpInCurrentLevel ?? currentXP;
+  const totalForLevel = xpRequiredForLevel ?? Math.max(maxXP, 1);
+  const safeTotal = Math.max(totalForLevel, 1);
+  const percentage = Math.min((progressXp / safeTotal) * 100, 100);
 
   return (
-    <div className={cn("flex items-center gap-3", className)}>
+    <div className={cn("flex items-center gap-2.5", className)}>
       {/* Level badge */}
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent-primary-light">
-        <Star
-          className="h-4 w-4 text-accent-primary"
-          fill="var(--accent-primary)"
-          aria-hidden="true"
-        />
+      <div
+        className={cn(
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border",
+          tier.badgeBg
+        )}
+      >
+        <Sparkles className={cn("h-4 w-4", tier.badge)} aria-hidden="true" />
       </div>
-      <span className="text-sm font-bold text-accent-primary tabular-nums">
-        Lv.{level}
-      </span>
+
+      {/* Level label */}
+      <div className="flex shrink-0 flex-col leading-none">
+        <span className={cn("text-[10px] font-semibold uppercase tracking-wider", tier.text)}>
+          {levelDef.name}
+        </span>
+        <span className="text-xs font-bold tabular-nums text-text-primary">
+          Lv.{level}
+        </span>
+      </div>
 
       {/* Progress bar */}
       <div className="relative flex-1">
-        <div className="h-3 w-full overflow-hidden rounded-full bg-bg-subtle">
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-bg-subtle">
           <motion.div
-            className="h-full rounded-full"
-            style={{
-              background:
-                "linear-gradient(90deg, var(--accent-primary), var(--accent-info))",
-            }}
+            className={cn("h-full rounded-full bg-gradient-to-r", tier.progress)}
             initial={{ width: 0 }}
             animate={{ width: `${percentage}%` }}
             transition={{
@@ -63,9 +80,9 @@ export function XPBar({
         </div>
       </div>
 
-      {/* XP text */}
+      {/* XP counter */}
       <span className="shrink-0 text-xs font-medium tabular-nums text-text-secondary">
-        {currentXP.toLocaleString()}/{safeMax.toLocaleString()} XP
+        {currentXP.toLocaleString()} XP
       </span>
     </div>
   );

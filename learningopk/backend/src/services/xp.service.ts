@@ -6,20 +6,32 @@ import { QUIZ_PASS_THRESHOLD_PERCENT } from "../lib/constants.js";
 
 // XP point values for different actions
 export const XP_VALUES = {
-  chapterVisit: 5,
-  exerciseView: 2,
-  flashcardComplete: 10,
-  quizPass: 25,
-  forumAnswerAccepted: 15
+  chapterVisit: 10,
+  summaryRead: 15,
+  exerciseComplete: 5,
+  flashcardComplete: 15,
+  quizPass: 50,
+  quizPerfect: 100,
+  forumAnswerAccepted: 25,
+  dailyLoginBonus: 10,
+  streakBonus3Days: 25,
+  streakBonus7Days: 75,
+  streakBonus30Days: 200
 } as const;
 
-// Level thresholds
+// Level thresholds — more granular, rewarding progression
 export const LEVEL_THRESHOLDS = [
-  { level: 0, name: "Fresher", minXp: 0 },
-  { level: 1, name: "Student", minXp: 100 },
-  { level: 2, name: "Scholar", minXp: 300 },
-  { level: 3, name: "Topper", minXp: 600 },
-  { level: 4, name: "Board Topper", minXp: 1000 }
+  { level: 0, name: "Newcomer", minXp: 0 },
+  { level: 1, name: "Learner", minXp: 50 },
+  { level: 2, name: "Explorer", minXp: 150 },
+  { level: 3, name: "Achiever", minXp: 350 },
+  { level: 4, name: "Scholar", minXp: 600 },
+  { level: 5, name: "Expert", minXp: 1000 },
+  { level: 6, name: "Master", minXp: 1500 },
+  { level: 7, name: "Champion", minXp: 2200 },
+  { level: 8, name: "Legend", minXp: 3000 },
+  { level: 9, name: "Genius", minXp: 4000 },
+  { level: 10, name: "Board Topper", minXp: 5500 }
 ] as const;
 
 export type LevelName = (typeof LEVEL_THRESHOLDS)[number]["name"];
@@ -97,7 +109,7 @@ export class XpService {
    */
   calculateLevel(xp: number): { level: number; name: LevelName } {
     let currentLevel = 0;
-    let levelName: LevelName = "Fresher";
+    let levelName: LevelName = "Newcomer";
 
     for (const threshold of LEVEL_THRESHOLDS) {
       if (xp >= threshold.minXp) {
@@ -206,10 +218,17 @@ export class XpService {
   }
 
   /**
-   * Award XP for exercise view
+   * Award XP for reading the chapter summary
    */
-  async awardExerciseViewXp(userId: string): Promise<XpAwardResult> {
-    return this.awardXp(userId, XP_VALUES.exerciseView, "exercise_view");
+  async awardSummaryReadXp(userId: string): Promise<XpAwardResult> {
+    return this.awardXp(userId, XP_VALUES.summaryRead, "summary_read");
+  }
+
+  /**
+   * Award XP for exercise completion (per exercise)
+   */
+  async awardExerciseCompleteXp(userId: string): Promise<XpAwardResult> {
+    return this.awardXp(userId, XP_VALUES.exerciseComplete, "exercise_complete");
   }
 
   /**
@@ -230,7 +249,22 @@ export class XpService {
       return null;
     }
 
-    return this.awardXp(userId, XP_VALUES.quizPass, "quiz_pass");
+    // Award base quiz pass XP
+    const baseResult = await this.awardXp(userId, XP_VALUES.quizPass, "quiz_pass");
+
+    // If perfect score, award the bonus on top
+    if (percentage >= 100) {
+      return this.awardXp(userId, XP_VALUES.quizPerfect, "quiz_perfect");
+    }
+
+    return baseResult;
+  }
+
+  /**
+   * Award XP for a perfect quiz score (100%)
+   */
+  async awardQuizPerfectXp(userId: string): Promise<XpAwardResult> {
+    return this.awardXp(userId, XP_VALUES.quizPerfect, "quiz_perfect");
   }
 
   /**
@@ -238,6 +272,29 @@ export class XpService {
    */
   async awardForumAnswerAcceptedXp(userId: string): Promise<XpAwardResult> {
     return this.awardXp(userId, XP_VALUES.forumAnswerAccepted, "forum_answer_accepted");
+  }
+
+  /**
+   * Award daily login bonus XP
+   */
+  async awardDailyLoginBonusXp(userId: string): Promise<XpAwardResult> {
+    return this.awardXp(userId, XP_VALUES.dailyLoginBonus, "daily_login_bonus");
+  }
+
+  /**
+   * Award streak milestone bonus XP (3, 7, or 30 day streaks)
+   */
+  async awardStreakBonusXp(userId: string, streakDays: number): Promise<XpAwardResult | null> {
+    if (streakDays === 3) {
+      return this.awardXp(userId, XP_VALUES.streakBonus3Days, "streak_bonus_3_days");
+    }
+    if (streakDays === 7) {
+      return this.awardXp(userId, XP_VALUES.streakBonus7Days, "streak_bonus_7_days");
+    }
+    if (streakDays === 30) {
+      return this.awardXp(userId, XP_VALUES.streakBonus30Days, "streak_bonus_30_days");
+    }
+    return null;
   }
 
   /**
@@ -260,17 +317,25 @@ export class XpService {
       return null;
     }
 
-    const { name: levelName } = this.calculateLevel(user.xp);
+    const { level: computedLevel, name: levelName } = this.calculateLevel(user.xp);
 
     // Calculate next level threshold
-    const nextThreshold = LEVEL_THRESHOLDS.find((t) => t.level === user.level + 1);
+    const nextThreshold = LEVEL_THRESHOLDS.find((t) => t.level === computedLevel + 1);
+    const currentThreshold = LEVEL_THRESHOLDS.find((t) => t.level === computedLevel);
     const xpToNextLevel = nextThreshold ? nextThreshold.minXp - user.xp : 0;
+    const currentLevelMinXp = currentThreshold?.minXp ?? 0;
+    const nextLevelMinXp = nextThreshold?.minXp ?? currentLevelMinXp;
+    const xpInCurrentLevel = user.xp - currentLevelMinXp;
+    const xpRequiredForLevel = nextLevelMinXp - currentLevelMinXp;
 
     return {
       xp: user.xp,
-      level: user.level,
+      level: computedLevel,
       levelName,
       xpToNextLevel: Math.max(0, xpToNextLevel),
+      xpInCurrentLevel: Math.max(0, xpInCurrentLevel),
+      xpRequiredForLevel: Math.max(1, xpRequiredForLevel),
+      isMaxLevel: !nextThreshold,
       streakFreezeUsedAt: user.streakFreezeUsedAt?.toISOString() ?? null
     };
   }

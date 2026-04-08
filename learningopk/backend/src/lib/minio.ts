@@ -63,6 +63,18 @@ export const buildChapterSummaryObjectKey = ({
   return `chapter-summaries/${chapterId}/${sanitizePathSegment(userId)}/${sanitizePathSegment(objectId)}.${fileExtension}`;
 };
 
+export const buildChapterCoverObjectKey = ({
+  chapterId,
+  fileExtension,
+  objectId = randomUUID()
+}: {
+  chapterId: number;
+  fileExtension: "jpg" | "png" | "webp" | "gif";
+  objectId?: string;
+}): string => {
+  return `chapter-covers/${chapterId}/${sanitizePathSegment(objectId)}.${fileExtension}`;
+};
+
 export const buildPublicObjectUrl = ({
   bucket = env.MINIO_BUCKET,
   objectKey

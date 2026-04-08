@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { Brain, Dices, FileText } from "lucide-react";
+import type { ComponentType, SVGProps } from "react";
 
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -13,6 +12,35 @@ export interface QuickActionsCardProps {
   firstChapterBasePath: string | null;
 }
 
+type AccentTone = "primary" | "info" | "success";
+
+interface ActionTile {
+  label: string;
+  description: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  href: string;
+  tone: AccentTone;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Accent helpers                                                     */
+/* ------------------------------------------------------------------ */
+
+const toneStyles: Record<AccentTone, { circle: string; icon: string }> = {
+  primary: {
+    circle: "bg-accent-primary-light",
+    icon: "text-accent-primary",
+  },
+  info: {
+    circle: "bg-accent-info-light",
+    icon: "text-accent-info",
+  },
+  success: {
+    circle: "bg-accent-success-light",
+    icon: "text-accent-success",
+  },
+};
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -20,33 +48,33 @@ export interface QuickActionsCardProps {
 export function QuickActionsCard({
   firstChapterBasePath,
 }: QuickActionsCardProps) {
-  const actions = [
+  const actions: ActionTile[] = [
     {
-      label: "Start Random Quiz",
+      label: "Random Quiz",
       description: "Test your knowledge",
       icon: Dices,
       href: firstChapterBasePath
         ? `${firstChapterBasePath}?tab=quiz`
         : "/dashboard",
-      variant: "primary" as const,
+      tone: "primary",
     },
     {
-      label: "Open AI Tutor",
+      label: "AI Tutor",
       description: "Get personalized help",
       icon: Brain,
       href: firstChapterBasePath
         ? `${firstChapterBasePath}?tab=exercises&ai=1`
         : "/dashboard",
-      variant: "secondary" as const,
+      tone: "info",
     },
     {
-      label: "View Past Papers",
-      description: "Practice with real exams",
+      label: "Past Papers",
+      description: "Practice real exams",
       icon: FileText,
       href: firstChapterBasePath
         ? `${firstChapterBasePath}?tab=exercises`
         : "/dashboard",
-      variant: "secondary" as const,
+      tone: "success",
     },
   ];
 
@@ -57,32 +85,51 @@ export function QuickActionsCard({
           Quick Actions
         </h3>
       </CardHeader>
-      <CardBody className="flex-1 flex flex-col gap-2.5 pt-0">
-        {actions.map((action) => (
-          <Link key={action.label} href={action.href} className="block">
-            <Button
-              variant={action.variant}
-              size="md"
-              width="full"
-              iconLeft={<action.icon />}
-              className="justify-start"
-            >
-              <span className="flex flex-col items-start">
-                <span className="text-sm font-medium">{action.label}</span>
+
+      <CardBody className="flex-1 pt-0">
+        <div className="grid grid-cols-3 gap-3">
+          {actions.map((action) => {
+            const tone = toneStyles[action.tone];
+            const Icon = action.icon;
+
+            return (
+              <Link
+                key={action.label}
+                href={action.href}
+                className={[
+                  "group flex flex-col items-center gap-2.5 rounded-2xl p-4",
+                  "bg-bg-base border border-border-default",
+                  "transition-all duration-200 ease-out",
+                  "hover:border-accent-primary/30 hover:shadow-[var(--shadow-sm)]",
+                  "hover:-translate-y-0.5",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/50",
+                ].join(" ")}
+              >
+                {/* Icon circle */}
                 <span
-                  className={cn(
-                    "text-[11px] font-normal",
-                    action.variant === "primary"
-                      ? "text-white/70"
-                      : "text-text-muted"
-                  )}
+                  className={[
+                    "flex h-10 w-10 items-center justify-center rounded-xl",
+                    "transition-transform duration-200 ease-out",
+                    "group-hover:scale-110",
+                    tone.circle,
+                  ].join(" ")}
                 >
-                  {action.description}
+                  <Icon className={`h-5 w-5 ${tone.icon}`} aria-hidden />
                 </span>
-              </span>
-            </Button>
-          </Link>
-        ))}
+
+                {/* Label + description */}
+                <span className="flex flex-col items-center gap-0.5 text-center">
+                  <span className="text-[13px] font-semibold leading-tight text-text-primary">
+                    {action.label}
+                  </span>
+                  <span className="text-[11px] leading-snug text-text-muted">
+                    {action.description}
+                  </span>
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </CardBody>
     </Card>
   );

@@ -14,6 +14,10 @@ export type ChapterVisitEvent = ProgressEventBase & {
   eventType: "chapter_visit";
 };
 
+export type SummaryReadEvent = ProgressEventBase & {
+  eventType: "summary_read";
+};
+
 export type ExerciseViewEvent = ProgressEventBase & {
   eventType: "exercise_view";
 };
@@ -27,13 +31,14 @@ export type QuizSubmitEvent = ProgressEventBase & {
   score: number;
 };
 
-export type ProgressEventInput = ChapterVisitEvent | ExerciseViewEvent | FlashcardCompleteEvent | QuizSubmitEvent;
+export type ProgressEventInput = ChapterVisitEvent | SummaryReadEvent | ExerciseViewEvent | FlashcardCompleteEvent | QuizSubmitEvent;
 
 export type ProgressSnapshot = {
   id: number;
   userId: string;
   chapterId: number;
   visitedAt: Date;
+  summaryRead: boolean;
   exercisesViewed: number;
   flashcardsCompleted: boolean;
   quizBestScore: number;
@@ -47,6 +52,7 @@ const selectProgressById = async (id: number): Promise<ProgressSnapshot | null> 
       userId: userProgress.userId,
       chapterId: userProgress.chapterId,
       visitedAt: userProgress.visitedAt,
+      summaryRead: userProgress.summaryRead,
       exercisesViewed: userProgress.exercisesViewed,
       flashcardsCompleted: userProgress.flashcardsCompleted,
       quizBestScore: userProgress.quizBestScore,
@@ -82,6 +88,7 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
         userId: input.userId,
         chapterId: input.chapterId,
         visitedAt: occurredAt,
+        summaryRead: input.eventType === "summary_read",
         exercisesViewed: input.eventType === "exercise_view" ? 1 : 0,
         flashcardsCompleted: input.eventType === "flashcard_complete",
         quizBestScore: input.eventType === "quiz_submit" ? input.score : 0,
@@ -109,6 +116,14 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
       .update(userProgress)
       .set({
         visitedAt: occurredAt
+      })
+      .where(eq(userProgress.id, existing.id));
+  } else if (input.eventType === "summary_read") {
+    await db
+      .update(userProgress)
+      .set({
+        visitedAt: occurredAt,
+        summaryRead: true
       })
       .where(eq(userProgress.id, existing.id));
   } else if (input.eventType === "exercise_view") {

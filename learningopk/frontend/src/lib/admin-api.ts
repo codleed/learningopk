@@ -7,7 +7,8 @@ const adminCurriculumChapterSchema = z.object({
   chapterNumber: z.number().int().positive(),
   title: z.string(),
   slug: z.string(),
-  isPublished: z.boolean()
+  isPublished: z.boolean(),
+  coverImageUrl: z.string().nullable().optional().default(null)
 });
 
 const adminCurriculumSubjectSchema = z.object({
@@ -387,6 +388,35 @@ const flashcardReorderResponseSchema = z.object({
   }))
 });
 
+// Formula Schemas
+const formulaVariableSchema = z.object({
+  symbol: z.string(),
+  meaning: z.string()
+});
+
+const formulaResponseSchema = z.object({
+  id: z.number(),
+  subjectId: z.number(),
+  chapterId: z.number(),
+  name: z.string(),
+  formulaLatex: z.string(),
+  description: z.string(),
+  variables: z.array(formulaVariableSchema),
+  tags: z.array(z.string()),
+  createdAt: z.string().datetime().or(z.coerce.string()).optional(),
+  updatedAt: z.string().datetime().or(z.coerce.string()).optional(),
+  subjectName: z.string().nullable().optional(),
+  chapterTitle: z.string().nullable().optional()
+});
+
+const formulaCreateResponseSchema = z.object({
+  data: formulaResponseSchema
+});
+
+const formulaMutationResponseSchema = z.object({
+  data: formulaResponseSchema
+});
+
 const adminAuditLogEntrySchema = z.object({
   id: z.string().uuid(),
   scope: z.enum(["content", "forum", "moderation", "notifications", "settings", "users"]).optional(),
@@ -663,6 +693,10 @@ export type FlashcardCreateResponse = z.infer<typeof flashcardCreateResponseSche
 export type FlashcardMutationResponse = z.infer<typeof flashcardMutationResponseSchema>;
 export type FlashcardReorder = z.infer<typeof flashcardReorderSchema>;
 export type FlashcardReorderResponse = z.infer<typeof flashcardReorderResponseSchema>;
+export type FormulaVariable = z.infer<typeof formulaVariableSchema>;
+export type FormulaResponse = z.infer<typeof formulaResponseSchema>;
+export type FormulaCreateResponse = z.infer<typeof formulaCreateResponseSchema>;
+export type FormulaMutationResponse = z.infer<typeof formulaMutationResponseSchema>;
 
 const fetchAdminJson = async <T>({
   path,
@@ -822,6 +856,7 @@ export const createAdminCurriculumChapter = async (input: {
   slug: string;
   summary: string;
   isPublished?: boolean;
+  coverImageUrl?: string | null;
 }): Promise<AdminCurriculumChapterCreateResponse> => {
   return fetchAdminJson({
     path: "/api/admin/content/chapters",
@@ -835,12 +870,14 @@ export const updateAdminCurriculumChapter = async ({
   chapterId,
   chapterNumber,
   title,
-  slug
+  slug,
+  coverImageUrl
 }: {
   chapterId: number;
   chapterNumber: number;
   title: string;
   slug: string;
+  coverImageUrl?: string | null;
 }): Promise<AdminCurriculumChapterMutationResponse> => {
   return fetchAdminJson({
     path: `/api/admin/content/chapters/${chapterId}/update`,
@@ -849,7 +886,8 @@ export const updateAdminCurriculumChapter = async ({
     body: {
       chapterNumber,
       title,
-      slug
+      slug,
+      ...(coverImageUrl !== undefined ? { coverImageUrl } : {})
     }
   });
 };
@@ -974,6 +1012,62 @@ export const uploadAdminChapterSummaryMedia = async ({
   }
 
   return adminChapterSummaryMediaUploadResponseSchema.parse((await response.json()) as unknown);
+};
+
+export const uploadAdminChapterCoverImage = async ({
+  chapterId,
+  file
+}: {
+  chapterId: number;
+  file: File;
+}): Promise<{ coverImageUrl: string }> => {
+  const formData = new FormData();
+  formData.append("cover", file);
+
+  const response = await fetch(`${backendUrl}/api/admin/content/chapters/${chapterId}/cover-image`, {
+    method: "POST",
+    body: formData,
+    credentials: "include"
+  });
+
+  if (!response.ok) {
+    let message = "Failed to upload chapter cover image.";
+    try {
+      const payload = (await response.json()) as { error?: string };
+      if (payload.error) {
+        message = payload.error;
+      }
+    } catch {
+      // Keep default message when body is not JSON.
+    }
+    throw new Error(message);
+  }
+
+  return z.object({ coverImageUrl: z.string() }).parse((await response.json()) as unknown);
+};
+
+export const deleteAdminChapterCoverImage = async ({
+  chapterId
+}: {
+  chapterId: number;
+}): Promise<void> => {
+  const response = await fetch(`${backendUrl}/api/admin/content/chapters/${chapterId}/cover-image`, {
+    method: "DELETE",
+    credentials: "include"
+  });
+
+  if (!response.ok) {
+    let message = "Failed to delete chapter cover image.";
+    try {
+      const payload = (await response.json()) as { error?: string };
+      if (payload.error) {
+        message = payload.error;
+      }
+    } catch {
+      // Keep default message when body is not JSON.
+    }
+    throw new Error(message);
+  }
 };
 
 export const createAdminCurriculumExercise = async (input: {
@@ -1588,5 +1682,171 @@ export const reorderAdminFlashcards = async (input: {
     schema: flashcardReorderResponseSchema,
     method: "POST",
     body: input
+  });
+};
+
+// Formula Functions
+export const getAdminFormulas = async (params?: {
+  subjectId?: number;
+  chapterId?: number;
+  cookieHeader?: string;
+}): Promise<FormulaResponse[]> => {
+  const searchParams = new URLSearchParams();
+  if (params?.subjectId) searchParams.set("subjectId", String(params.subjectId));
+  if (params?.chapterId) searchParams.set("chapterId", String(params.chapterId));
+  const query = searchParams.toString();
+  const path = `/api/admin/content/formulas${query ? `?${query}` : ""}`;
+  const response = await fetchAdminJson({
+    path,
+    schema: z.object({ data: z.array(formulaResponseSchema), total: z.number() }),
+    ...(params?.cookieHeader ? { cookieHeader: params.cookieHeader } : {})
+  });
+  return response.data;
+};
+
+export const createAdminFormula = async (input: {
+  subjectId: number;
+  chapterId: number;
+  name: string;
+  formulaLatex: string;
+  description: string;
+  variables?: Array<{ symbol: string; meaning: string }>;
+  tags?: string[];
+}): Promise<FormulaCreateResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/content/formulas",
+    schema: formulaCreateResponseSchema,
+    method: "POST",
+    body: input
+  });
+};
+
+export const updateAdminFormula = async ({
+  id,
+  input
+}: {
+  id: number;
+  input: {
+    subjectId?: number;
+    chapterId?: number;
+    name?: string;
+    formulaLatex?: string;
+    description?: string;
+    variables?: Array<{ symbol: string; meaning: string }>;
+    tags?: string[];
+  };
+}): Promise<FormulaMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/formulas/${id}/update`,
+    schema: formulaMutationResponseSchema,
+    method: "POST",
+    body: input
+  });
+};
+
+export const deleteAdminFormula = async (id: number): Promise<void> => {
+  await fetchAdminJson({
+    path: `/api/admin/content/formulas/${id}/delete`,
+    schema: z.object({ success: z.boolean() }),
+    method: "POST"
+  });
+};
+
+// Past Paper Schemas
+const pastPaperResponseSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  boardId: z.number(),
+  boardName: z.string().nullable().optional(),
+  grade: z.enum(["9", "10"]),
+  subjectId: z.number(),
+  subjectName: z.string().nullable().optional(),
+  year: z.number(),
+  durationMinutes: z.number(),
+  totalMarks: z.number(),
+  paperContent: z.string().nullable(),
+  solutionContent: z.string().nullable()
+});
+
+const pastPaperCreateResponseSchema = z.object({
+  data: pastPaperResponseSchema
+});
+
+const pastPaperMutationResponseSchema = z.object({
+  data: pastPaperResponseSchema
+});
+
+export type PastPaperResponse = z.infer<typeof pastPaperResponseSchema>;
+export type PastPaperCreateResponse = z.infer<typeof pastPaperCreateResponseSchema>;
+export type PastPaperMutationResponse = z.infer<typeof pastPaperMutationResponseSchema>;
+
+// Past Paper Functions
+export const getAdminPastPapers = async (params?: {
+  boardId?: number;
+  grade?: "9" | "10";
+  subjectId?: number;
+  year?: number;
+  cookieHeader?: string;
+}): Promise<PastPaperResponse[]> => {
+  const searchParams = new URLSearchParams();
+  if (params?.boardId) searchParams.set("boardId", String(params.boardId));
+  if (params?.grade) searchParams.set("grade", params.grade);
+  if (params?.subjectId) searchParams.set("subjectId", String(params.subjectId));
+  if (params?.year) searchParams.set("year", String(params.year));
+  const query = searchParams.toString();
+  const path = `/api/admin/content/past-papers${query ? `?${query}` : ""}`;
+  const response = await fetchAdminJson({
+    path,
+    schema: z.object({ data: z.array(pastPaperResponseSchema), total: z.number() }),
+    ...(params?.cookieHeader ? { cookieHeader: params.cookieHeader } : {})
+  });
+  return response.data;
+};
+
+export const createAdminPastPaper = async (input: {
+  title: string;
+  boardId: number;
+  grade: "9" | "10";
+  subjectId: number;
+  year: number;
+  paperContent: string;
+  solutionContent?: string;
+}): Promise<PastPaperCreateResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/content/past-papers",
+    schema: pastPaperCreateResponseSchema,
+    method: "POST",
+    body: input
+  });
+};
+
+export const updateAdminPastPaper = async ({
+  id,
+  input
+}: {
+  id: number;
+  input: {
+    title?: string;
+    boardId?: number;
+    grade?: "9" | "10";
+    subjectId?: number;
+    year?: number;
+    paperContent?: string;
+    solutionContent?: string;
+  };
+}): Promise<PastPaperMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/past-papers/${id}/update`,
+    schema: pastPaperMutationResponseSchema,
+    method: "POST",
+    body: input
+  });
+};
+
+export const deleteAdminPastPaper = async (id: number): Promise<void> => {
+  await fetchAdminJson({
+    path: `/api/admin/content/past-papers/${id}/delete`,
+    schema: z.object({ success: z.boolean() }),
+    method: "POST"
   });
 };

@@ -8,12 +8,19 @@ import { EmptyState, LoadingSkeleton } from "@/components/ui/states";
 import { getChapterProgress } from "@/lib/gamification-storage";
 
 import { useChapter } from "./chapter-context";
-import { VirtualizedMarkdown } from "@/components/VirtualizedMarkdown";
 
 // ── Dynamic imports for heavy tab-panel components ──────────────────────────
 // Each tab panel is lazily loaded with next/dynamic so only the active tab's
 // JS is fetched. SSR is disabled because these are interactive client-only
 // components (localStorage, timers, animations, fetch with credentials).
+
+const QuestSummaryView = dynamic(
+  () => import("./quest-summary-view").then((mod) => mod.QuestSummaryView),
+  {
+    ssr: false,
+    loading: () => <LoadingSkeleton title="Loading summary..." rows={4} variant="card" />,
+  }
+);
 
 const ChapterExercisesWithAi = dynamic(
   () => import("./chapter-exercises-with-ai").then((mod) => mod.ChapterExercisesWithAi),
@@ -57,6 +64,8 @@ type ChapterStudyContentWithAiProps = {
   illustrationExercises: ChapterDetailResponse["exercises"];
   illustrationCompletedIds: number[];
   trainingCompletedIds: number[];
+  summaryRead: boolean;
+  onMarkSummaryRead: () => void;
   onMarkExerciseComplete: (exerciseId: number, difficulty: "easy" | "medium" | "hard") => void;
   onQuizComplete: (score: number, percentage: number) => void;
   onPromptChange?: (prompt: string) => void;
@@ -67,6 +76,8 @@ export function ChapterStudyContentWithAi({
   illustrationExercises,
   illustrationCompletedIds,
   trainingCompletedIds,
+  summaryRead,
+  onMarkSummaryRead,
   onMarkExerciseComplete,
   onQuizComplete,
   onPromptChange,
@@ -105,13 +116,17 @@ export function ChapterStudyContentWithAi({
   return (
     <div className="min-w-0">
       {activeTab === "summary" ? (
-        <div data-testid="chapter-summary-markdown">
-          <VirtualizedMarkdown content={summary} threshold={5000} />
-        </div>
+        <QuestSummaryView
+          summary={summary}
+          chapterId={chapterId}
+          isRead={summaryRead}
+          onMarkRead={onMarkSummaryRead}
+        />
       ) : null}
 
       {activeTab === "quick-revision" ? (
         <QuickRevisionView
+          chapterId={chapterId}
           chapterTitle={chapterTitle}
           chapterNumber={chapterNumber}
           revisionNotes={revisionNotes}
