@@ -9,3 +9,5 @@ export function formatDate(date: Date): string {
 export function parseDate(dateString: string): Date {
   return new Date(dateString);
 }
+
+export { normalizeSessionId, withPersistedChapterSession } from "./session-id.js";

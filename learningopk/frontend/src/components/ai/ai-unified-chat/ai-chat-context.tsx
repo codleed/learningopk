@@ -74,7 +74,7 @@ export function AIChatProvider({ children, initialContext = null }: AIChatProvid
     setShowCrisisBanner(false);
     chat.clearMessages();
     if (context?.chapterId) {
-      persistence.setChapterSessionId(context.chapterId, '');
+      persistence.setChapterSessionId(context.chapterId, null);
     }
   }, [chat, context, persistence]);
   

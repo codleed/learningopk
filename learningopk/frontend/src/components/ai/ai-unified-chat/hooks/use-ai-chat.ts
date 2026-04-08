@@ -1,6 +1,7 @@
 // learningopk/frontend/src/components/ai/ai-unified-chat/hooks/use-ai-chat.ts
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { normalizeSessionId } from '@learningopk/shared/utils';
 import type { ChatMessage } from '../types';
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:3001';
@@ -34,7 +35,7 @@ const STOPPED_STATUS_DURATION = 3000;
 
 export function useAIChat(chapterId?: number, existingSessionId?: string | null) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [sessionId, setSessionId] = useState<string | null>(existingSessionId ?? null);
+  const [sessionId, setSessionId] = useState<string | null>(() => normalizeSessionId(existingSessionId));
   const [isSending, setIsSending] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,23 +116,32 @@ export function useAIChat(chapterId?: number, existingSessionId?: string | null)
       content: '',
     };
     
-    const requestMessages = [...messages, userMessage].map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
+    const requestMessages = [...messages, userMessage]
+      .map((m) => ({
+        role: m.role,
+        content: m.content,
+      }))
+      .filter((m) => m.content.trim().length > 0);
     
     setMessages((prev) => [...prev, userMessage, pendingAssistantMessage]);
     
     try {
+      const requestBody = {
+        messages: requestMessages,
+        chapterId,
+        sessionId: normalizeSessionId(sessionId) ?? undefined,
+      };
+      
+      // Diagnostic: log the exact payload to help trace 400 errors
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ai-chat] request body:', JSON.stringify(requestBody, null, 2));
+      }
+      
       const response = await fetch(`${backendUrl}/api/ai/chat`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          messages: requestMessages,
-          chapterId,
-          sessionId: sessionId ?? undefined,
-        }),
+        body: JSON.stringify(requestBody),
         signal: abortController.signal,
       });
       
@@ -140,6 +150,10 @@ export function useAIChat(chapterId?: number, existingSessionId?: string | null)
       
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as AIChatErrorResponse | null;
+        // Diagnostic: log full error payload including Zod validation details
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[ai-chat] error response:', response.status, JSON.stringify(payload, null, 2));
+        }
         if (payload?.sessionId) setSessionId(payload.sessionId);
         setMessages((prev) => prev.filter((m) => m.id !== assistantMessageId));
         setError(formatAssistantError(payload, `AI request failed with status ${response.status}.`));
