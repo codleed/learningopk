@@ -8,7 +8,10 @@ import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 import rehypeHighlight from "rehype-highlight";
+
+import { markdownSanitizeSchema } from "@/lib/markdown-sanitize-schema";
 import { cva } from "class-variance-authority";
 import { Check, Copy, ExternalLink } from "lucide-react";
 
@@ -109,7 +112,13 @@ export function ContentRenderer({
   }, [enableMath, enableGfm]);
 
   const rehypePlugins = useMemo(() => {
-    const plugins: UnifiedPlugin[] = [rehypeRaw as UnifiedPlugin];
+    // rehype-sanitize MUST run immediately after rehype-raw so that any raw
+    // HTML (including from user-submitted forum/notes/AI content) has scripts,
+    // event handlers, and javascript: URLs stripped before rendering.
+    const plugins: UnifiedPlugin[] = [
+      rehypeRaw as UnifiedPlugin,
+      [rehypeSanitize, markdownSanitizeSchema] as unknown as UnifiedPlugin
+    ];
     if (enableMath) plugins.push(rehypeKatex as UnifiedPlugin);
     if (enableCode) plugins.push(rehypeHighlight as UnifiedPlugin);
     return plugins;
