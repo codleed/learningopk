@@ -16,15 +16,15 @@ const extendAttr = (tag: string, extras: AttributeList): AttributeList => [
  *
  * Built on top of rehype-sanitize's GitHub-compatible `defaultSchema`, extended to
  * allow KaTeX (math) and rehype-highlight class names while still stripping
- * `<script>`, inline event handlers (e.g. `onerror`, `onclick`), and
- * `javascript:` URLs injected via raw HTML in user-submitted markdown.
+ * `<script>`, inline event handlers (e.g. `onerror`, `onclick`), `style` attributes,
+ * and `javascript:` URLs injected via raw HTML in user-submitted markdown.
  */
 const attributes: AttributeMap = {
   ...baseAttributes,
-  "*": extendAttr("*", ["className", "style"]),
+  "*": extendAttr("*", ["className"]),
   code: extendAttr("code", ["className"]),
-  span: extendAttr("span", ["className", "style"]),
-  div: extendAttr("div", ["className", "style"]),
+  span: extendAttr("span", ["className"]),
+  div: extendAttr("div", ["className"]),
   a: extendAttr("a", ["target", "rel", "className"])
 };
 

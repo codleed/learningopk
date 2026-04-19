@@ -63,6 +63,16 @@ export const buildChapterSummaryObjectKey = ({
   return `chapter-summaries/${chapterId}/${sanitizePathSegment(userId)}/${sanitizePathSegment(objectId)}.${fileExtension}`;
 };
 
+export const buildChapterSummaryObjectPrefix = ({
+  chapterId,
+  userId
+}: {
+  chapterId: number;
+  userId: string;
+}): string => {
+  return `chapter-summaries/${chapterId}/${sanitizePathSegment(userId)}/`;
+};
+
 export const buildChapterCoverObjectKey = ({
   chapterId,
   fileExtension,

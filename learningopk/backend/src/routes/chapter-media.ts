@@ -8,6 +8,7 @@ import { chapterSummaryMedia, chapters } from "../lib/db/schema.js";
 import {
   buildChapterCoverObjectKey,
   buildChapterSummaryObjectKey,
+  buildChapterSummaryObjectPrefix,
   buildPublicObjectUrl,
   deleteObjectIfExists,
   extractManagedObjectKeyFromPublicUrl,
@@ -252,7 +253,10 @@ chapterMediaRouter.post("/chapters/:chapterId/media/confirm", requireSession, as
   // Reject arbitrary object keys — only accept keys under the chapter-summaries
   // prefix for this chapter, uploaded by this admin. This prevents an admin
   // from claiming an unrelated object in the bucket by confirming a forged key.
-  const expectedPrefix = `chapter-summaries/${chapterId}/${authedReq.session.user.id}/`;
+  const expectedPrefix = buildChapterSummaryObjectPrefix({
+    chapterId,
+    userId: authedReq.session.user.id
+  });
   if (!objectKey.startsWith(expectedPrefix) || objectKey.includes("..") || objectKey.includes("\\")) {
     res.status(400).json(errorResponse("Invalid object key.", "VALIDATION_ERROR"));
     return;

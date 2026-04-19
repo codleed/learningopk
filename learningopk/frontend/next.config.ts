@@ -9,6 +9,8 @@ const frontendDir = dirname(fileURLToPath(import.meta.url));
 // and cross-origin data leakage. CSP is intentionally permissive enough for
 // the existing markdown/KaTeX/highlight.js/MinIO image pipeline but still
 // blocks arbitrary script execution and object/base tags.
+const isDevelopment = process.env.NODE_ENV === "development";
+
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -24,12 +26,12 @@ const securityHeaders = [
       "default-src 'self'",
       // Next.js injects inline runtime bootstrap + hydration scripts; allowing
       // 'unsafe-inline' is unavoidable without nonces. External script CDNs
-      // are not permitted.
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      // are not permitted. 'unsafe-eval' is only allowed in development for HMR.
+      `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: http://localhost:9000 https:",
       "font-src 'self' data:",
-      "connect-src 'self' http://localhost:3001 https:",
+      "connect-src 'self' http://localhost:3001 https: ws: wss:",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
