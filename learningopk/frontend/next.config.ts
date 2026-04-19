@@ -4,11 +4,20 @@ import { fileURLToPath } from "node:url";
 
 const frontendDir = dirname(fileURLToPath(import.meta.url));
 
+const isDev = process.env.NODE_ENV !== "production";
+
 // Baseline security headers applied to every response. These defend against
 // clickjacking (X-Frame-Options), MIME sniffing, protocol downgrade (HSTS),
 // and cross-origin data leakage. CSP is intentionally permissive enough for
 // the existing markdown/KaTeX/highlight.js/MinIO image pipeline but still
 // blocks arbitrary script execution and object/base tags.
+//
+// 'unsafe-eval' is only permitted in development (Turbopack/HMR uses eval).
+// Production builds do not require it.
+const scriptSrc = isDev
+  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+  : "script-src 'self' 'unsafe-inline'";
+
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -22,14 +31,12 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      // Next.js injects inline runtime bootstrap + hydration scripts; allowing
-      // 'unsafe-inline' is unavoidable without nonces. External script CDNs
-      // are not permitted.
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      scriptSrc,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: http://localhost:9000 https:",
       "font-src 'self' data:",
-      "connect-src 'self' http://localhost:3001 https:",
+      // ws: / wss: permitted for Next.js dev HMR and any future WebSocket usage.
+      "connect-src 'self' http://localhost:3001 https: ws: wss:",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

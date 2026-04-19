@@ -63,6 +63,12 @@ export const buildChapterSummaryObjectKey = ({
   return `chapter-summaries/${chapterId}/${sanitizePathSegment(userId)}/${sanitizePathSegment(objectId)}.${fileExtension}`;
 };
 
+// Canonical prefix for any object produced by `buildChapterSummaryObjectKey`.
+// Used by the confirm-upload endpoint to validate user-supplied object keys
+// with the same sanitization that was applied when the key was generated.
+export const buildChapterSummaryObjectPrefix = (chapterId: number, userId: string): string =>
+  `chapter-summaries/${chapterId}/${sanitizePathSegment(userId)}/`;
+
 export const buildChapterCoverObjectKey = ({
   chapterId,
   fileExtension,

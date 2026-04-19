@@ -19,12 +19,15 @@ const extendAttr = (tag: string, extras: AttributeList): AttributeList => [
  * `<script>`, inline event handlers (e.g. `onerror`, `onclick`), and
  * `javascript:` URLs injected via raw HTML in user-submitted markdown.
  */
+// NOTE: `style` is intentionally NOT allowed — inline CSS can be abused for
+// phishing overlays, exfiltration via background-image, or visual spoofing.
+// KaTeX and rehype-highlight only need class names, not inline styles.
 const attributes: AttributeMap = {
   ...baseAttributes,
-  "*": extendAttr("*", ["className", "style"]),
+  "*": extendAttr("*", ["className"]),
   code: extendAttr("code", ["className"]),
-  span: extendAttr("span", ["className", "style"]),
-  div: extendAttr("div", ["className", "style"]),
+  span: extendAttr("span", ["className"]),
+  div: extendAttr("div", ["className"]),
   a: extendAttr("a", ["target", "rel", "className"])
 };
 
