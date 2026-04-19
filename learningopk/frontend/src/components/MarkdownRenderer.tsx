@@ -5,9 +5,11 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 import type { Components } from "react-markdown";
 import type { ComponentPropsWithoutRef } from "react";
 
+import { markdownSanitizeSchema } from "@/lib/markdown-sanitize-schema";
 import "@/styles/markdown.css";
 
 type MarkdownRendererProps = {
@@ -197,7 +199,10 @@ export function MarkdownRenderer({ content, className, components }: MarkdownRen
     <div className={`md-root ${className ?? ""}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeRaw, rehypeKatex]}
+        // rehype-sanitize MUST run after rehype-raw to strip scripts / event
+        // handlers injected via raw HTML in user-controlled markdown (forum,
+        // notes, AI responses). Without this, rehype-raw alone allows stored XSS.
+        rehypePlugins={[rehypeRaw, [rehypeSanitize, markdownSanitizeSchema], rehypeKatex]}
         components={mergedComponents}
       >
         {content}
