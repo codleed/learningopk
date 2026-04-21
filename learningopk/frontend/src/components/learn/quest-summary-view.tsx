@@ -178,19 +178,14 @@ export function QuestSummaryView({
 
           <LinearProgress value={progressValue} barSize="sm" />
 
-          <div
-            className="flex flex-wrap gap-1.5"
-            role="tablist"
-            aria-label="Summary sections"
-          >
+          <nav aria-label="Summary sections" className="flex flex-wrap gap-1.5">
             {sections.map((section, index) => {
               const isActive = index === currentSectionIndex;
               return (
                 <button
                   key={`${index}-${section.title}`}
                   type="button"
-                  role="tab"
-                  aria-selected={isActive}
+                  aria-current={isActive ? "page" : undefined}
                   onClick={() => goToSection(index)}
                   className={
                     "rounded-full border px-3 py-1 text-xs font-medium transition-colors " +
@@ -204,7 +199,7 @@ export function QuestSummaryView({
                 </button>
               );
             })}
-          </div>
+          </nav>
         </div>
       ) : null}
 

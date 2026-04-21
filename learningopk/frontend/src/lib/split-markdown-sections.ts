@@ -28,7 +28,7 @@ export interface MarkdownSection {
 export function splitMarkdownSections(markdown: string): MarkdownSection[] {
   const source = markdown ?? "";
 
-  const headingRegex = /^##\s+(.+?)\s*$/gm;
+  const headingRegex = /^##(?:[ \t]+(.*?))?[ \t]*$/gm;
   const matches: Array<{ index: number; title: string; length: number }> = [];
   let match: RegExpExecArray | null;
   while ((match = headingRegex.exec(source)) !== null) {
