@@ -8,6 +8,7 @@ import { QUIZ_PASS_THRESHOLD_PERCENT } from "../lib/constants.js";
 export const XP_VALUES = {
   chapterVisit: 10,
   summaryRead: 15,
+  subpartRead: 10,
   exerciseComplete: 5,
   flashcardComplete: 15,
   quizPass: 50,
@@ -222,6 +223,10 @@ export class XpService {
    */
   async awardSummaryReadXp(userId: string): Promise<XpAwardResult> {
     return this.awardXp(userId, XP_VALUES.summaryRead, "summary_read");
+  }
+
+  async awardSubpartReadXp(userId: string): Promise<XpAwardResult> {
+    return this.awardXp(userId, XP_VALUES.subpartRead, "subpart_read");
   }
 
   /**

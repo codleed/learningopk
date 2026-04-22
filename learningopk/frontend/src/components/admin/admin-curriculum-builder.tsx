@@ -420,8 +420,9 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     Promise.all([getAdminChapterSummary(chapterId), getAdminChapterLinks(chapterId)])
       .then(([summaryPayload, linksPayload]) => {
         if (!isCancelled) {
-          setSummaryEditorContentImmediate(summaryPayload.chapter.summary);
-          summaryEditorPersistedContentRef.current = summaryPayload.chapter.summary;
+          const summaryValue = summaryPayload.chapter.summary ?? "";
+          setSummaryEditorContentImmediate(summaryValue);
+          summaryEditorPersistedContentRef.current = summaryValue;
           setSummaryEditorOutgoingLinks(linksPayload.links.outgoing);
           setSummaryEditorBacklinks(linksPayload.links.backlinks);
         }
@@ -762,8 +763,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
         subjectId,
         chapterNumber: chapterNumberValue,
         title,
-        slug: toSlug(title),
-        summary
+        slug: toSlug(title)
       });
       setChapterNumber("1");
       setChapterTitle("");

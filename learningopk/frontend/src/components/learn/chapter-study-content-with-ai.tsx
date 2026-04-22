@@ -65,7 +65,7 @@ type ChapterStudyContentWithAiProps = {
   illustrationCompletedIds: number[];
   trainingCompletedIds: number[];
   summaryRead: boolean;
-  onMarkSummaryRead: () => void;
+  onMarkSummaryRead: (subpartId?: number) => void;
   onMarkExerciseComplete: (exerciseId: number, difficulty: "easy" | "medium" | "hard") => void;
   onQuizComplete: (score: number, percentage: number) => void;
   onPromptChange?: (prompt: string) => void;
@@ -88,6 +88,7 @@ export function ChapterStudyContentWithAi({
     chapterTitle,
     chapterNumber,
     chapterSummary: summary,
+    chapterSubparts,
     chapterRevisionNotes: revisionNotes,
     subjectName,
     quiz,
@@ -118,6 +119,7 @@ export function ChapterStudyContentWithAi({
       {activeTab === "summary" ? (
         <QuestSummaryView
           summary={summary}
+          subparts={chapterSubparts}
           chapterId={chapterId}
           isRead={summaryRead}
           onMarkRead={onMarkSummaryRead}

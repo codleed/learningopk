@@ -121,7 +121,7 @@ const adminChapterSummaryResponseSchema = z.object({
   chapter: z.object({
     id: z.number().int().positive(),
     title: z.string(),
-    summary: z.string()
+    summary: z.string().nullable().optional().default("")
   })
 });
 
@@ -143,6 +143,40 @@ const adminChapterSummaryUpdateResponseSchema = z.object({
     title: z.string(),
     summary: z.string()
   }),
+  timestamp: z.string().datetime()
+});
+
+const adminChapterSubpartSchema = z.object({
+  id: z.number().int().positive(),
+  chapterId: z.number().int().positive(),
+  orderIndex: z.number().int().positive(),
+  heading: z.string(),
+  content: z.string(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime()
+});
+
+const adminChapterSubpartsResponseSchema = z.object({
+  chapter: z.object({
+    id: z.number().int().positive(),
+    title: z.string()
+  }),
+  subparts: z.array(adminChapterSubpartSchema)
+});
+
+const adminChapterSubpartMutationResponseSchema = z.object({
+  subpart: adminChapterSubpartSchema,
+  timestamp: z.string().datetime()
+});
+
+const adminChapterSubpartReorderResponseSchema = z.object({
+  subparts: z.array(adminChapterSubpartSchema),
+  timestamp: z.string().datetime()
+});
+
+const adminChapterSubpartDeleteResponseSchema = z.object({
+  success: z.boolean(),
+  deletedId: z.number().int().positive(),
   timestamp: z.string().datetime()
 });
 
@@ -648,6 +682,11 @@ export type AdminChapterSummaryResponse = z.infer<typeof adminChapterSummaryResp
 export type AdminChapterRevisionNotesResponse = z.infer<typeof adminChapterRevisionNotesResponseSchema>;
 export type AdminChapterRevisionNotes = z.infer<typeof adminRevisionNotesSchema>;
 export type AdminChapterSummaryUpdateResponse = z.infer<typeof adminChapterSummaryUpdateResponseSchema>;
+export type AdminChapterSubpart = z.infer<typeof adminChapterSubpartSchema>;
+export type AdminChapterSubpartsResponse = z.infer<typeof adminChapterSubpartsResponseSchema>;
+export type AdminChapterSubpartMutationResponse = z.infer<typeof adminChapterSubpartMutationResponseSchema>;
+export type AdminChapterSubpartReorderResponse = z.infer<typeof adminChapterSubpartReorderResponseSchema>;
+export type AdminChapterSubpartDeleteResponse = z.infer<typeof adminChapterSubpartDeleteResponseSchema>;
 export type AdminChapterLinksResponse = z.infer<typeof adminChapterLinksResponseSchema>;
 export type AdminChapterLinkSuggestionsResponse = z.infer<typeof adminChapterLinkSuggestionsResponseSchema>;
 export type AdminChapterGraphResponse = z.infer<typeof adminChapterGraphResponseSchema>;
@@ -854,7 +893,6 @@ export const createAdminCurriculumChapter = async (input: {
   chapterNumber: number;
   title: string;
   slug: string;
-  summary: string;
   isPublished?: boolean;
   coverImageUrl?: string | null;
 }): Promise<AdminCurriculumChapterCreateResponse> => {
@@ -919,6 +957,89 @@ export const updateAdminChapterSummary = async ({
     schema: adminChapterSummaryUpdateResponseSchema,
     method: "POST",
     body: { summary }
+  });
+};
+
+export const getAdminChapterSubparts = async (chapterId: number): Promise<AdminChapterSubpartsResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/${chapterId}/subparts`,
+    schema: adminChapterSubpartsResponseSchema
+  });
+};
+
+export const createAdminChapterSubpart = async ({
+  chapterId,
+  heading,
+  content,
+  orderIndex
+}: {
+  chapterId: number;
+  heading: string;
+  content: string;
+  orderIndex?: number;
+}): Promise<AdminChapterSubpartMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/${chapterId}/subparts`,
+    schema: adminChapterSubpartMutationResponseSchema,
+    method: "POST",
+    body: {
+      heading,
+      content,
+      ...(orderIndex !== undefined ? { orderIndex } : {})
+    }
+  });
+};
+
+export const updateAdminChapterSubpart = async ({
+  chapterId,
+  subpartId,
+  heading,
+  content
+}: {
+  chapterId: number;
+  subpartId: number;
+  heading: string;
+  content: string;
+}): Promise<AdminChapterSubpartMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/${chapterId}/subparts/${subpartId}`,
+    schema: adminChapterSubpartMutationResponseSchema,
+    method: "POST",
+    body: {
+      heading,
+      content
+    }
+  });
+};
+
+export const reorderAdminChapterSubparts = async ({
+  chapterId,
+  subpartIds
+}: {
+  chapterId: number;
+  subpartIds: number[];
+}): Promise<AdminChapterSubpartReorderResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/${chapterId}/subparts/reorder`,
+    schema: adminChapterSubpartReorderResponseSchema,
+    method: "POST",
+    body: {
+      subpartIds
+    }
+  });
+};
+
+export const deleteAdminChapterSubpart = async ({
+  chapterId,
+  subpartId
+}: {
+  chapterId: number;
+  subpartId: number;
+}): Promise<AdminChapterSubpartDeleteResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/chapters/${chapterId}/subparts/${subpartId}/delete`,
+    schema: adminChapterSubpartDeleteResponseSchema,
+    method: "POST"
   });
 };
 

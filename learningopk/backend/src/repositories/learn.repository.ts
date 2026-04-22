@@ -5,6 +5,7 @@ import { withOptionalDbFallback } from "../lib/db-schema-compat.js";
 import {
   boardClasses,
   boards,
+  chapterSubparts,
   chapters,
   exercises,
   flashcards,
@@ -218,6 +219,20 @@ export class LearnRepository {
         )
       )
       .limit(1);
+  }
+
+  async findChapterSubparts(chapterId: number) {
+    return db
+      .select({
+        id: chapterSubparts.id,
+        chapterId: chapterSubparts.chapterId,
+        orderIndex: chapterSubparts.orderIndex,
+        heading: chapterSubparts.heading,
+        content: chapterSubparts.content
+      })
+      .from(chapterSubparts)
+      .where(eq(chapterSubparts.chapterId, chapterId))
+      .orderBy(asc(chapterSubparts.orderIndex), asc(chapterSubparts.id));
   }
 
   async findExercisesByChapter(chapterId: number) {

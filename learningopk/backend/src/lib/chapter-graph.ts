@@ -1,7 +1,8 @@
-import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, isNotNull, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 import { db } from "./db/index.js";
-import { chapterSummaryLinks, chapters, userProgress } from "./db/schema.js";
+import { chapterSubparts, chapterSummaryLinks, chapters, userProgress } from "./db/schema.js";
 
 type AdminGraphNode = {
   id: number;
@@ -16,6 +17,9 @@ type AdminGraphEdge = {
 };
 
 export const listAdminChapterGraph = async ({ query }: { query: string }) => {
+  const sourceSubparts = alias(chapterSubparts, "source_subparts");
+  const targetSubparts = alias(chapterSubparts, "target_subparts");
+
   const allNodes = await db
     .select({
       id: chapters.id,
@@ -30,18 +34,35 @@ export const listAdminChapterGraph = async ({ query }: { query: string }) => {
       count: sql<number>`count(*)::int`
     })
     .from(chapterSummaryLinks)
-    .where(isNull(chapterSummaryLinks.targetChapterId));
+    .where(isNull(chapterSummaryLinks.targetSubpartId));
   const unresolvedEdgeCount = unresolvedEdgeCountRows[0]?.count ?? 0;
 
-  const resolvedEdges = await db
+  const resolvedEdgeRows = await db
     .select({
-      sourceChapterId: chapterSummaryLinks.sourceChapterId,
-      targetChapterId: chapterSummaryLinks.targetChapterId,
+      sourceChapterId: sourceSubparts.chapterId,
+      targetChapterId: targetSubparts.chapterId,
       isResolved: chapterSummaryLinks.isResolved
     })
     .from(chapterSummaryLinks)
-    .where(sql`${chapterSummaryLinks.targetChapterId} is not null`)
-    .orderBy(asc(chapterSummaryLinks.sourceChapterId), asc(chapterSummaryLinks.targetChapterId));
+    .innerJoin(sourceSubparts, eq(chapterSummaryLinks.sourceSubpartId, sourceSubparts.id))
+    .innerJoin(targetSubparts, eq(chapterSummaryLinks.targetSubpartId, targetSubparts.id))
+    .where(isNotNull(chapterSummaryLinks.targetSubpartId))
+    .orderBy(asc(sourceSubparts.chapterId), asc(targetSubparts.chapterId));
+
+  const resolvedEdges: AdminGraphEdge[] = [];
+  const seenResolvedEdges = new Set<string>();
+  for (const edge of resolvedEdgeRows) {
+    const edgeKey = `${edge.sourceChapterId}-${edge.targetChapterId}`;
+    if (seenResolvedEdges.has(edgeKey)) {
+      continue;
+    }
+    seenResolvedEdges.add(edgeKey);
+    resolvedEdges.push({
+      sourceChapterId: edge.sourceChapterId,
+      targetChapterId: edge.targetChapterId,
+      isResolved: edge.isResolved
+    });
+  }
 
   const loweredQuery = query.trim().toLowerCase();
   const filteredNodes = loweredQuery.length
@@ -100,6 +121,9 @@ export const listSubjectChapterGraph = async ({
   subjectId: number;
   userId: string;
 }): Promise<{ nodes: SubjectGraphNode[]; edges: SubjectGraphEdge[] }> => {
+  const sourceSubparts = alias(chapterSubparts, "source_subparts");
+  const targetSubparts = alias(chapterSubparts, "target_subparts");
+
   const nodeRows = await db
     .select({
       id: chapters.id,
@@ -134,20 +158,37 @@ export const listSubjectChapterGraph = async ({
   }
 
   const scopedNodeIds = nodes.map((node) => node.id);
-  const edges = await db
+  const edgeRows = await db
     .select({
-      sourceChapterId: chapterSummaryLinks.sourceChapterId,
-      targetChapterId: chapterSummaryLinks.targetChapterId,
+      sourceChapterId: sourceSubparts.chapterId,
+      targetChapterId: targetSubparts.chapterId,
       isResolved: chapterSummaryLinks.isResolved
     })
     .from(chapterSummaryLinks)
+    .innerJoin(sourceSubparts, eq(chapterSummaryLinks.sourceSubpartId, sourceSubparts.id))
+    .leftJoin(targetSubparts, eq(chapterSummaryLinks.targetSubpartId, targetSubparts.id))
     .where(
       and(
-        inArray(chapterSummaryLinks.sourceChapterId, scopedNodeIds),
-        or(isNull(chapterSummaryLinks.targetChapterId), inArray(chapterSummaryLinks.targetChapterId, scopedNodeIds))
+        inArray(sourceSubparts.chapterId, scopedNodeIds),
+        or(isNull(targetSubparts.chapterId), inArray(targetSubparts.chapterId, scopedNodeIds))
       )
     )
-    .orderBy(asc(chapterSummaryLinks.sourceChapterId), asc(chapterSummaryLinks.targetChapterId));
+    .orderBy(asc(sourceSubparts.chapterId), asc(targetSubparts.chapterId));
+
+  const edges: SubjectGraphEdge[] = [];
+  const seenEdges = new Set<string>();
+  for (const edge of edgeRows) {
+    const edgeKey = `${edge.sourceChapterId}-${edge.targetChapterId ?? "unresolved"}`;
+    if (seenEdges.has(edgeKey)) {
+      continue;
+    }
+    seenEdges.add(edgeKey);
+    edges.push({
+      sourceChapterId: edge.sourceChapterId,
+      targetChapterId: edge.targetChapterId,
+      isResolved: edge.isResolved
+    });
+  }
 
   return {
     nodes,

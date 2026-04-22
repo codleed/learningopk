@@ -147,7 +147,7 @@ const loadChapterContext = async (chapterId: number, latestPrompt: string): Prom
       grade: chapterRow.grade ?? "9",
       subject: chapterRow.subjectName,
       chapterTitle: chapterRow.chapterTitle,
-      chapterSummary: chapterRow.chapterSummary,
+      chapterSummary: chapterRow.chapterSummary ?? "No chapter summary available for this chapter.",
       ...(focusExerciseQuestion ? { focusExerciseQuestion } : {})
     }
   };

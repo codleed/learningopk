@@ -17,6 +17,7 @@ import {
   aiUsageLogs,
   boardClasses,
   boards,
+  chapterSubparts,
   chapters,
   contentSources,
   examAnalysis,
@@ -39,6 +40,7 @@ import {
   subjects,
   userDailyMomentumGoals,
   userProgress,
+  userProgressSubparts,
   users,
   userStarredFormulas
 } from "./src/lib/db/schema.js";
@@ -216,6 +218,111 @@ async function seed() {
       }
     ])
     .returning();
+
+  const chapterSubpartsByChapterId = new Map<number, number[]>();
+  const insertedChapterSubparts = await db
+    .insert(chapterSubparts)
+    .values([
+      {
+        chapterId: physicsCh1.id,
+        orderIndex: 1,
+        heading: "Physical quantities and SI units",
+        content: "Physical quantities are measurable properties. Use SI units consistently in numerical solutions."
+      },
+      {
+        chapterId: physicsCh1.id,
+        orderIndex: 2,
+        heading: "Accuracy, precision, and measurement error",
+        content: "Accuracy compares with the true value, while precision measures repeatability. Track absolute and percentage error."
+      },
+      {
+        chapterId: physicsCh1.id,
+        orderIndex: 3,
+        heading: "Significant figures and scientific notation",
+        content: "Keep the correct significant figures through calculations and present final answers in standard scientific notation."
+      },
+      {
+        chapterId: physicsCh2.id,
+        orderIndex: 1,
+        heading: "Distance and displacement",
+        content: "Distance is scalar and displacement is vector. Always set direction before solving motion problems."
+      },
+      {
+        chapterId: physicsCh2.id,
+        orderIndex: 2,
+        heading: "Velocity and acceleration",
+        content: "Use sign convention consistently for velocity and acceleration, especially in retardation cases."
+      },
+      {
+        chapterId: physicsCh2.id,
+        orderIndex: 3,
+        heading: "Equations of motion and graph interpretation",
+        content: "Apply equations of motion only for constant acceleration and read slope/area correctly from motion graphs."
+      },
+      {
+        chapterId: physicsCh3.id,
+        orderIndex: 1,
+        heading: "Force and Newton's laws",
+        content: "Newton's laws connect force, inertia, and acceleration. Start free-body analysis before equations."
+      },
+      {
+        chapterId: physicsCh3.id,
+        orderIndex: 2,
+        heading: "Momentum and impulse",
+        content: "Momentum depends on mass and velocity. Impulse changes momentum over interaction time."
+      },
+      {
+        chapterId: chemistryCh1.id,
+        orderIndex: 1,
+        heading: "Atoms, molecules, elements, and compounds",
+        content: "Differentiate element vs compound clearly and support each definition with one textbook example."
+      },
+      {
+        chapterId: chemistryCh1.id,
+        orderIndex: 2,
+        heading: "Mixtures and separation",
+        content: "Identify mixture types and choose suitable separation methods based on physical properties."
+      },
+      {
+        chapterId: biologyCh1.id,
+        orderIndex: 1,
+        heading: "Human respiratory system",
+        content: "Air pathway and gas exchange occur through alveoli with diffusion driven by concentration differences."
+      },
+      {
+        chapterId: biologyCh1.id,
+        orderIndex: 2,
+        heading: "Plant gaseous exchange",
+        content: "Plants exchange gases through stomata, with rates changing between day and night conditions."
+      },
+      {
+        chapterId: mathCh1.id,
+        orderIndex: 1,
+        heading: "Matrix basics",
+        content: "Represent data in rows and columns, then classify matrices by order and type."
+      },
+      {
+        chapterId: mathCh1.id,
+        orderIndex: 2,
+        heading: "Determinants and properties",
+        content: "Use determinant properties to simplify calculation and verify singular vs non-singular matrices."
+      }
+    ])
+    .returning({
+      id: chapterSubparts.id,
+      chapterId: chapterSubparts.chapterId
+    });
+
+  for (const subpart of insertedChapterSubparts) {
+    const existing = chapterSubpartsByChapterId.get(subpart.chapterId) ?? [];
+    existing.push(subpart.id);
+    chapterSubpartsByChapterId.set(subpart.chapterId, existing);
+  }
+
+  const physicsCh1SubpartIds = chapterSubpartsByChapterId.get(physicsCh1.id) ?? [];
+  const physicsCh2SubpartIds = chapterSubpartsByChapterId.get(physicsCh2.id) ?? [];
+  const physicsCh3SubpartIds = chapterSubpartsByChapterId.get(physicsCh3.id) ?? [];
+  const biologyCh1SubpartIds = chapterSubpartsByChapterId.get(biologyCh1.id) ?? [];
 
   await db.insert(revisionNotes).values([
     {
@@ -979,6 +1086,8 @@ async function seed() {
       userId: studentAyesha.id,
       chapterId: physicsCh1.id,
       visitedAt: daysAgo(4, 10),
+      summaryRead: true,
+      subpartsReadCount: physicsCh1SubpartIds.length,
       exercisesViewed: 2,
       flashcardsCompleted: true,
       quizBestScore: 4,
@@ -988,6 +1097,8 @@ async function seed() {
       userId: studentAyesha.id,
       chapterId: physicsCh2.id,
       visitedAt: daysAgo(1, 12),
+      summaryRead: true,
+      subpartsReadCount: physicsCh2SubpartIds.length,
       exercisesViewed: 2,
       flashcardsCompleted: false,
       quizBestScore: 4,
@@ -997,6 +1108,8 @@ async function seed() {
       userId: studentAyesha.id,
       chapterId: physicsCh3.id,
       visitedAt: daysAgo(0, 8),
+      summaryRead: true,
+      subpartsReadCount: physicsCh3SubpartIds.length,
       exercisesViewed: 1,
       flashcardsCompleted: false,
       quizBestScore: 0,
@@ -1006,6 +1119,8 @@ async function seed() {
       userId: studentBilal.id,
       chapterId: physicsCh1.id,
       visitedAt: daysAgo(5, 8),
+      summaryRead: true,
+      subpartsReadCount: physicsCh1SubpartIds.length,
       exercisesViewed: 1,
       flashcardsCompleted: true,
       quizBestScore: 2,
@@ -1015,6 +1130,8 @@ async function seed() {
       userId: studentBilal.id,
       chapterId: physicsCh2.id,
       visitedAt: daysAgo(1, 7),
+      summaryRead: true,
+      subpartsReadCount: physicsCh2SubpartIds.length,
       exercisesViewed: 1,
       flashcardsCompleted: false,
       quizBestScore: 0,
@@ -1024,11 +1141,35 @@ async function seed() {
       userId: studentHina.id,
       chapterId: biologyCh1.id,
       visitedAt: daysAgo(2, 9),
+      summaryRead: true,
+      subpartsReadCount: biologyCh1SubpartIds.length,
       exercisesViewed: 1,
       flashcardsCompleted: false,
       quizBestScore: 0,
       quizAttemptsCount: 0
     }
+  ]);
+
+  const buildSubpartProgressRows = (
+    userId: string,
+    chapterId: number,
+    readAt: Date,
+    subpartIds: number[]
+  ) =>
+    subpartIds.map((subpartId) => ({
+      userId,
+      chapterId,
+      subpartId,
+      readAt
+    }));
+
+  await db.insert(userProgressSubparts).values([
+    ...buildSubpartProgressRows(studentAyesha.id, physicsCh1.id, daysAgo(4, 10), physicsCh1SubpartIds),
+    ...buildSubpartProgressRows(studentAyesha.id, physicsCh2.id, daysAgo(1, 12), physicsCh2SubpartIds),
+    ...buildSubpartProgressRows(studentAyesha.id, physicsCh3.id, daysAgo(0, 8), physicsCh3SubpartIds),
+    ...buildSubpartProgressRows(studentBilal.id, physicsCh1.id, daysAgo(5, 8), physicsCh1SubpartIds),
+    ...buildSubpartProgressRows(studentBilal.id, physicsCh2.id, daysAgo(1, 7), physicsCh2SubpartIds),
+    ...buildSubpartProgressRows(studentHina.id, biologyCh1.id, daysAgo(2, 9), biologyCh1SubpartIds)
   ]);
 
   await db.insert(flashcardReviews).values([
