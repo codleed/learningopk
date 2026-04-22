@@ -57,6 +57,7 @@ export type ProgressSnapshot = {
   flashcardsCompleted: boolean;
   quizBestScore: number;
   quizAttemptsCount: number;
+  isNewRead?: boolean;
 };
 
 const selectProgressById = async (id: number): Promise<ProgressSnapshot | null> => {
@@ -129,7 +130,7 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
   };
 
   if (input.eventType === "subpart_read") {
-    const updatedProgress = await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       const chapterSubpartRows = await tx
         .select({
           id: chapterSubparts.id,
@@ -143,7 +144,7 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
         throw new Error("Subpart does not belong to the provided chapter.");
       }
 
-      await tx
+      const insertedSubpartRows = await tx
         .insert(userProgressSubparts)
         .values({
           userId: input.userId,
@@ -153,7 +154,13 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
         })
         .onConflictDoNothing({
           target: [userProgressSubparts.userId, userProgressSubparts.subpartId]
+        })
+        .returning({
+          subpartId: userProgressSubparts.subpartId
         });
+
+      // Track if this was a new subpart read (insert succeeded)
+      const isNewRead = insertedSubpartRows.length > 0;
 
       const { summaryRead, subpartsReadCount } = await computeSummaryRead({
         chapterId: input.chapterId,
@@ -191,15 +198,16 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
         throw new Error("Could not persist chapter progress.");
       }
 
-      return upserted;
+      return { progressId: upserted.id, isNewRead };
     });
 
-    const snapshot = await selectProgressById(updatedProgress.id);
+    const snapshot = await selectProgressById(result.progressId);
     if (!snapshot) {
       throw new Error("Could not fetch updated user progress.");
     }
 
-    return snapshot;
+    // Attach isNewRead flag to snapshot for XP awarding logic
+    return { ...snapshot, isNewRead: result.isNewRead };
   }
 
   if (!existing) {

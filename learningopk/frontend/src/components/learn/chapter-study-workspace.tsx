@@ -149,7 +149,11 @@ export function ChapterStudyWorkspace({
   /** Handler: mark summary as read via gamification + backend tracking */
   const handleMarkSummaryRead = useCallback(
     (subpartId?: number) => {
-      markSummaryRead(String(chapterId));
+      // Only mark summary as read when completing the entire summary (no subpartId)
+      // For individual subparts, only track backend progress without touching summary state
+      if (typeof subpartId !== "number") {
+        markSummaryRead(String(chapterId));
+      }
       void trackProgressEvent(
         typeof subpartId === "number"
           ? { eventType: "subpart_read", chapterId, subpartId }

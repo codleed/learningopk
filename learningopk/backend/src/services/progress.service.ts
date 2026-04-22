@@ -125,14 +125,35 @@ export class ProgressService {
           leveledUp: result.leveledUp
         };
       } else if (input.eventType === "subpart_read") {
-        const result = await xpService.awardSubpartReadXp(input.userId);
-        xpResult = {
-          xpAwarded: result.xpAwarded,
-          newXp: result.newXp,
-          level: result.level,
-          levelName: result.levelName,
-          leveledUp: result.leveledUp
-        };
+        // Only award XP if this was a new subpart read (not a duplicate submission)
+        if ("isNewRead" in snapshot && snapshot.isNewRead) {
+          const result = await xpService.awardSubpartReadXp(input.userId);
+          xpResult = {
+            xpAwarded: result.xpAwarded,
+            newXp: result.newXp,
+            level: result.level,
+            levelName: result.levelName,
+            leveledUp: result.leveledUp
+          };
+        } else {
+          // No XP awarded for duplicate read
+          const userXpInfo = await xpService.getUserXpInfo(input.userId);
+          xpResult = userXpInfo
+            ? {
+                xpAwarded: 0,
+                newXp: userXpInfo.xp,
+                level: userXpInfo.level,
+                levelName: userXpInfo.levelName,
+                leveledUp: false
+              }
+            : {
+                xpAwarded: 0,
+                newXp: 0,
+                level: 1,
+                levelName: "Beginner",
+                leveledUp: false
+              };
+        }
       } else if (input.eventType === "summary_read") {
         const result = await xpService.awardSummaryReadXp(input.userId);
         xpResult = {

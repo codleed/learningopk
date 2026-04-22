@@ -769,6 +769,67 @@ const rebuildChapterSummaryLinks = async ({
   await db.insert(chapterSummaryLinks).values(insertRows);
 };
 
+const rebuildInboundChapterLinks = async ({
+  targetChapterId
+}: {
+  targetChapterId: number;
+}): Promise<void> => {
+  // Find all subparts that belong to the target chapter
+  const targetSubpartRows = await db
+    .select({
+      id: chapterSubparts.id
+    })
+    .from(chapterSubparts)
+    .where(eq(chapterSubparts.chapterId, targetChapterId));
+
+  const targetSubpartIds = targetSubpartRows.map((subpart) => subpart.id);
+  if (targetSubpartIds.length === 0) {
+    return;
+  }
+
+  // Find all chapters that have links pointing to any of the target subparts
+  const inboundLinkRows = await db
+    .select({
+      sourceSubpartId: chapterSummaryLinks.sourceSubpartId
+    })
+    .from(chapterSummaryLinks)
+    .where(inArray(chapterSummaryLinks.targetSubpartId, targetSubpartIds));
+
+  if (inboundLinkRows.length === 0) {
+    return;
+  }
+
+  const sourceSubpartIds = inboundLinkRows.map((link) => link.sourceSubpartId);
+
+  // Get the chapters that own these source subparts
+  const sourceChapterRows = await db
+    .select({
+      chapterId: chapterSubparts.chapterId,
+      subjectId: chapters.subjectId
+    })
+    .from(chapterSubparts)
+    .innerJoin(chapters, eq(chapterSubparts.chapterId, chapters.id))
+    .where(inArray(chapterSubparts.id, sourceSubpartIds));
+
+  // Get unique chapters
+  const uniqueSourceChapters = Array.from(
+    new Map(
+      sourceChapterRows.map((row) => [row.chapterId, { chapterId: row.chapterId, subjectId: row.subjectId }])
+    ).values()
+  );
+
+  // Rebuild links for each source chapter
+  for (const { chapterId, subjectId } of uniqueSourceChapters) {
+    await rebuildChapterSummaryLinks({
+      sourceChapterId: chapterId,
+      sourceSubjectId: subjectId
+    });
+
+    // Invalidate cache for inbound chapters
+    await cacheService.delete(CacheKeys.chapterContent(chapterId));
+  }
+};
+
 const refreshLinksForChapterAliases = async ({
   chapterId
 }: {
@@ -5742,13 +5803,7 @@ adminRouter.post("/content/chapters/:id/subparts", requireSession, async (req, r
       return inserted;
     });
 
-    await rebuildChapterSummaryLinks({
-      sourceChapterId: chapter.id,
-      sourceSubjectId: chapter.subjectId
-    });
-
-    await cacheService.delete(CacheKeys.chapterContent(chapter.id));
-
+    // Transaction committed successfully - persist success audit log and send response
     await persistAuditLog({
       scope: "content",
       action,
@@ -5763,6 +5818,24 @@ adminRouter.post("/content/chapters/:id/subparts", requireSession, async (req, r
       subpart: createdSubpart,
       timestamp: new Date().toISOString()
     });
+
+    // Post-commit work: rebuild links and invalidate cache (failures here won't affect the response)
+    try {
+      await rebuildChapterSummaryLinks({
+        sourceChapterId: chapter.id,
+        sourceSubjectId: chapter.subjectId
+      });
+
+      await cacheService.delete(CacheKeys.chapterContent(chapter.id));
+
+      // Rebuild inbound chapters that link to this chapter
+      await rebuildInboundChapterLinks({
+        targetChapterId: chapter.id
+      });
+    } catch (postCommitError) {
+      // Log the error but don't change the response
+      console.error("Post-commit work failed for subpart create:", postCommitError);
+    }
   } catch (error) {
     await persistAuditLog({
       scope: "content",
@@ -5888,6 +5961,11 @@ adminRouter.post("/content/chapters/:id/subparts/reorder", requireSession, async
     });
 
     await cacheService.delete(CacheKeys.chapterContent(chapter.id));
+
+    // Rebuild inbound chapters that link to this chapter
+    await rebuildInboundChapterLinks({
+      targetChapterId: chapter.id
+    });
 
     await persistAuditLog({
       scope: "content",
@@ -6030,6 +6108,11 @@ adminRouter.post("/content/chapters/:id/subparts/:subpartId", requireSession, as
 
     await cacheService.delete(CacheKeys.chapterContent(subpart.chapterId));
 
+    // Rebuild inbound chapters that link to this chapter
+    await rebuildInboundChapterLinks({
+      targetChapterId: subpart.chapterId
+    });
+
     await persistAuditLog({
       scope: "content",
       action,
@@ -6142,6 +6225,11 @@ adminRouter.post("/content/chapters/:id/subparts/:subpartId/delete", requireSess
     });
 
     await cacheService.delete(CacheKeys.chapterContent(subpart.chapterId));
+
+    // Rebuild inbound chapters that link to this chapter
+    await rebuildInboundChapterLinks({
+      targetChapterId: subpart.chapterId
+    });
 
     await persistAuditLog({
       scope: "content",

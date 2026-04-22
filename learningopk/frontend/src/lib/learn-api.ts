@@ -124,7 +124,7 @@ const chapterDetailResponseSchema = z.object({
       z.object({
         id: z.number().int().positive(),
         chapterId: z.number().int().positive(),
-        orderIndex: z.number().int().positive(),
+        orderIndex: z.number().int().nonnegative(),
         heading: z.string(),
         content: z.string()
       })

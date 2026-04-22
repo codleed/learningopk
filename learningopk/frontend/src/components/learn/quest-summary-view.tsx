@@ -86,9 +86,13 @@ export function QuestSummaryView({
 
   const goToNext = useCallback(() => {
     if (canGoNext) {
+      // Mark current subpart as read before navigating
+      if (activeSubpart?.id) {
+        onMarkRead(activeSubpart.id);
+      }
       goToSubpart(currentIndex + 1);
     }
-  }, [canGoNext, currentIndex, goToSubpart]);
+  }, [canGoNext, currentIndex, goToSubpart, activeSubpart, onMarkRead]);
 
   const handleMouseUp = useCallback(() => {
     const selection = window.getSelection();
@@ -166,6 +170,28 @@ export function QuestSummaryView({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Track previous subpart to mark as read when navigating away
+  const prevSubpartIdRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const currentSubpartId = activeSubpart?.id ?? null;
+
+    // If we have a previous subpart and we're now on a different one, mark the previous as read
+    if (prevSubpartIdRef.current !== null && prevSubpartIdRef.current !== currentSubpartId) {
+      onMarkRead(prevSubpartIdRef.current);
+    }
+
+    // Update the ref to track the current subpart
+    prevSubpartIdRef.current = currentSubpartId;
+
+    // On unmount, mark the last viewed subpart as read
+    return () => {
+      if (prevSubpartIdRef.current !== null) {
+        onMarkRead(prevSubpartIdRef.current);
+      }
+    };
+  }, [activeSubpart?.id, onMarkRead]);
 
   return (
     <div ref={summaryViewRef} className="space-y-6">

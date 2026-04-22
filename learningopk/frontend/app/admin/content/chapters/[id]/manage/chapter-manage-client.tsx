@@ -270,6 +270,16 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
         return;
       }
 
+      // Guard against unsaved edits
+      if (hasUnsavedChanges) {
+        pushToast({
+          title: "Cannot reorder with unsaved changes",
+          description: "Please save or discard your changes before reordering subparts.",
+          tone: "error",
+        });
+        return;
+      }
+
       const currentIndex = subparts.findIndex((subpart) => subpart.id === selectedSubpartId);
       if (currentIndex === -1) {
         return;
@@ -305,7 +315,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
         setIsReorderingSubparts(false);
       }
     },
-    [chapterId, pushToast, selectedSubpartId, sortSubparts, subparts]
+    [chapterId, hasUnsavedChanges, pushToast, selectedSubpartId, sortSubparts, subparts]
   );
 
   const handleImageUpload = useCallback(async (file: File) => {
