@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "./db/index.js";
 import { chapterSubparts, userProgress, userProgressSubparts } from "./db/schema.js";
@@ -144,6 +144,39 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
         throw new Error("Subpart does not belong to the provided chapter.");
       }
 
+      await tx
+        .insert(userProgress)
+        .values({
+          userId: input.userId,
+          chapterId: input.chapterId,
+          visitedAt: occurredAt,
+          summaryRead: false,
+          subpartsReadCount: 0,
+          exercisesViewed: 0,
+          flashcardsCompleted: false,
+          quizBestScore: 0,
+          quizAttemptsCount: 0
+        })
+        .onConflictDoNothing({
+          target: [userProgress.userId, userProgress.chapterId]
+        });
+
+      const lockedProgressRows = await tx.execute<{
+        id: number;
+        summary_read: boolean;
+        subparts_read_count: number;
+      }>(sql`
+        select id, summary_read, subparts_read_count
+        from user_progress
+        where user_id = ${input.userId}
+          and chapter_id = ${input.chapterId}
+        for update
+      `);
+      const lockedProgress = lockedProgressRows.rows[0];
+      if (!lockedProgress) {
+        throw new Error("Could not lock chapter progress row.");
+      }
+
       const insertedSubpartRows = await tx
         .insert(userProgressSubparts)
         .values({
@@ -159,46 +192,37 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
           subpartId: userProgressSubparts.subpartId
         });
 
-      // Track if this was a new subpart read (insert succeeded)
       const isNewRead = insertedSubpartRows.length > 0;
 
-      const { summaryRead, subpartsReadCount } = await computeSummaryRead({
-        chapterId: input.chapterId,
-        userId: input.userId,
-        tx
-      });
+      const { summaryRead, subpartsReadCount } = isNewRead
+        ? await computeSummaryRead({
+            chapterId: input.chapterId,
+            userId: input.userId,
+            tx
+          })
+        : {
+            summaryRead: lockedProgress.summary_read,
+            subpartsReadCount: lockedProgress.subparts_read_count
+          };
 
-      const upsertedRows = await tx
-        .insert(userProgress)
-        .values({
-          userId: input.userId,
-          chapterId: input.chapterId,
+      const updatedRows = await tx
+        .update(userProgress)
+        .set({
           visitedAt: occurredAt,
           summaryRead,
-          subpartsReadCount,
-          exercisesViewed: 0,
-          flashcardsCompleted: false,
-          quizBestScore: 0,
-          quizAttemptsCount: 0
+          subpartsReadCount
         })
-        .onConflictDoUpdate({
-          target: [userProgress.userId, userProgress.chapterId],
-          set: {
-            visitedAt: occurredAt,
-            summaryRead,
-            subpartsReadCount
-          }
-        })
+        .where(eq(userProgress.id, lockedProgress.id))
         .returning({
           id: userProgress.id
         });
 
-      const upserted = upsertedRows[0];
-      if (!upserted) {
+      const updated = updatedRows[0];
+      if (!updated) {
         throw new Error("Could not persist chapter progress.");
       }
 
-      return { progressId: upserted.id, isNewRead };
+      return { progressId: updated.id, isNewRead };
     });
 
     const snapshot = await selectProgressById(result.progressId);
@@ -206,7 +230,6 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
       throw new Error("Could not fetch updated user progress.");
     }
 
-    // Attach isNewRead flag to snapshot for XP awarding logic
     return { ...snapshot, isNewRead: result.isNewRead };
   }
 

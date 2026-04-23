@@ -11,8 +11,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MarkdownContent } from "./markdown-content";
-import { AddToNotesDialog } from "@/components/notes/add-to-notes-dialog";
+import { MarkdownContent } from "./markdown-content.js";
+import { AddToNotesDialog } from "@/components/notes/add-to-notes-dialog.js";
 
 interface QuestSummaryViewProps {
   summary: string;
@@ -86,13 +86,9 @@ export function QuestSummaryView({
 
   const goToNext = useCallback(() => {
     if (canGoNext) {
-      // Mark current subpart as read before navigating
-      if (activeSubpart?.id) {
-        onMarkRead(activeSubpart.id);
-      }
       goToSubpart(currentIndex + 1);
     }
-  }, [canGoNext, currentIndex, goToSubpart, activeSubpart, onMarkRead]);
+  }, [canGoNext, currentIndex, goToSubpart]);
 
   const handleMouseUp = useCallback(() => {
     const selection = window.getSelection();

@@ -787,13 +787,29 @@ const rebuildInboundChapterLinks = async ({
     return;
   }
 
+  const aliasRows = await db
+    .select({
+      normalizedAlias: chapterTitleAliases.normalizedAlias
+    })
+    .from(chapterTitleAliases)
+    .where(eq(chapterTitleAliases.chapterId, targetChapterId));
+  const normalizedAliases = aliasRows.map((row) => row.normalizedAlias);
+
+  const inboundLinksPredicate =
+    normalizedAliases.length > 0
+      ? or(
+          inArray(chapterSummaryLinks.targetSubpartId, targetSubpartIds),
+          and(isNull(chapterSummaryLinks.targetSubpartId), inArray(chapterSummaryLinks.normalizedTarget, normalizedAliases))
+        )
+      : inArray(chapterSummaryLinks.targetSubpartId, targetSubpartIds);
+
   // Find all chapters that have links pointing to any of the target subparts
   const inboundLinkRows = await db
     .select({
       sourceSubpartId: chapterSummaryLinks.sourceSubpartId
     })
     .from(chapterSummaryLinks)
-    .where(inArray(chapterSummaryLinks.targetSubpartId, targetSubpartIds));
+    .where(inboundLinksPredicate);
 
   if (inboundLinkRows.length === 0) {
     return;
@@ -5740,8 +5756,20 @@ adminRouter.post("/content/chapters/:id/subparts", requireSession, async (req, r
     return;
   }
 
+  let createdSubpart:
+    | {
+        id: number;
+        chapterId: number;
+        orderIndex: number;
+        heading: string;
+        content: string;
+        createdAt: Date;
+        updatedAt: Date;
+      }
+    | null = null;
+
   try {
-    const createdSubpart = await db.transaction(async (tx) => {
+    createdSubpart = await db.transaction(async (tx) => {
       const existingRows = await tx
         .select({
           id: chapterSubparts.id,
@@ -5802,40 +5830,6 @@ adminRouter.post("/content/chapters/:id/subparts", requireSession, async (req, r
 
       return inserted;
     });
-
-    // Transaction committed successfully - persist success audit log and send response
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: `${chapter.subjectName} / ${chapter.title}`,
-      status: "success",
-      message: `Created subpart ${createdSubpart.id} (${createdSubpart.heading})`,
-      actorId,
-      actorName
-    });
-
-    res.status(201).json({
-      subpart: createdSubpart,
-      timestamp: new Date().toISOString()
-    });
-
-    // Post-commit work: rebuild links and invalidate cache (failures here won't affect the response)
-    try {
-      await rebuildChapterSummaryLinks({
-        sourceChapterId: chapter.id,
-        sourceSubjectId: chapter.subjectId
-      });
-
-      await cacheService.delete(CacheKeys.chapterContent(chapter.id));
-
-      // Rebuild inbound chapters that link to this chapter
-      await rebuildInboundChapterLinks({
-        targetChapterId: chapter.id
-      });
-    } catch (postCommitError) {
-      // Log the error but don't change the response
-      console.error("Post-commit work failed for subpart create:", postCommitError);
-    }
   } catch (error) {
     await persistAuditLog({
       scope: "content",
@@ -5849,6 +5843,48 @@ adminRouter.post("/content/chapters/:id/subparts", requireSession, async (req, r
     res.status(500).json({
       error: "Failed to create chapter subpart"
     });
+    return;
+  }
+
+  if (!createdSubpart) {
+    res.status(500).json({
+      error: "Failed to create chapter subpart"
+    });
+    return;
+  }
+
+  res.status(201).json({
+    subpart: createdSubpart,
+    timestamp: new Date().toISOString()
+  });
+
+  try {
+    await rebuildChapterSummaryLinks({
+      sourceChapterId: chapter.id,
+      sourceSubjectId: chapter.subjectId
+    });
+
+    await cacheService.delete(CacheKeys.chapterContent(chapter.id));
+
+    await rebuildInboundChapterLinks({
+      targetChapterId: chapter.id
+    });
+  } catch (error) {
+    console.error("Post-commit chapter subpart create hooks failed:", error);
+  }
+
+  try {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${chapter.subjectName} / ${chapter.title}`,
+      status: "success",
+      message: `Created subpart ${createdSubpart.id} (${createdSubpart.heading})`,
+      actorId,
+      actorName
+    });
+  } catch (error) {
+    console.error("Failed to write chapter subpart create audit log:", error);
   }
 });
 
@@ -5942,58 +5978,54 @@ adminRouter.post("/content/chapters/:id/subparts/reorder", requireSession, async
     return;
   }
 
+  let reorderedRows:
+    | Array<{
+        id: number;
+        chapterId: number;
+        orderIndex: number;
+        heading: string;
+        content: string;
+        createdAt: Date;
+        updatedAt: Date;
+      }>
+    | null = null;
+
   try {
-    await db.transaction(async (tx) => {
+    reorderedRows = await db.transaction(async (tx) => {
+      const reorderOffset = proposedIds.length + 1;
+      const reorderedAt = new Date();
+
+      await tx
+        .update(chapterSubparts)
+        .set({
+          orderIndex: sql`${chapterSubparts.orderIndex} + ${reorderOffset}`,
+          updatedAt: reorderedAt
+        })
+        .where(eq(chapterSubparts.chapterId, chapter.id));
+
       for (const [index, subpartId] of proposedIds.entries()) {
         await tx
           .update(chapterSubparts)
           .set({
             orderIndex: index + 1,
-            updatedAt: new Date()
+            updatedAt: reorderedAt
           })
-          .where(eq(chapterSubparts.id, subpartId));
+          .where(and(eq(chapterSubparts.chapterId, chapter.id), eq(chapterSubparts.id, subpartId)));
       }
-    });
 
-    await rebuildChapterSummaryLinks({
-      sourceChapterId: chapter.id,
-      sourceSubjectId: chapter.subjectId
-    });
-
-    await cacheService.delete(CacheKeys.chapterContent(chapter.id));
-
-    // Rebuild inbound chapters that link to this chapter
-    await rebuildInboundChapterLinks({
-      targetChapterId: chapter.id
-    });
-
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: `${chapter.subjectName} / ${chapter.title}`,
-      status: "success",
-      message: `Reordered ${proposedIds.length} subparts`,
-      actorId,
-      actorName
-    });
-
-    const reorderedRows = await db
-      .select({
-        id: chapterSubparts.id,
-        chapterId: chapterSubparts.chapterId,
-        orderIndex: chapterSubparts.orderIndex,
-        heading: chapterSubparts.heading,
-        content: chapterSubparts.content,
-        createdAt: chapterSubparts.createdAt,
-        updatedAt: chapterSubparts.updatedAt
-      })
-      .from(chapterSubparts)
-      .where(eq(chapterSubparts.chapterId, chapter.id))
-      .orderBy(asc(chapterSubparts.orderIndex), asc(chapterSubparts.id));
-
-    res.status(200).json({
-      subparts: reorderedRows,
-      timestamp: new Date().toISOString()
+      return tx
+        .select({
+          id: chapterSubparts.id,
+          chapterId: chapterSubparts.chapterId,
+          orderIndex: chapterSubparts.orderIndex,
+          heading: chapterSubparts.heading,
+          content: chapterSubparts.content,
+          createdAt: chapterSubparts.createdAt,
+          updatedAt: chapterSubparts.updatedAt
+        })
+        .from(chapterSubparts)
+        .where(eq(chapterSubparts.chapterId, chapter.id))
+        .orderBy(asc(chapterSubparts.orderIndex), asc(chapterSubparts.id));
     });
   } catch (error) {
     await persistAuditLog({
@@ -6008,6 +6040,48 @@ adminRouter.post("/content/chapters/:id/subparts/reorder", requireSession, async
     res.status(500).json({
       error: "Failed to reorder chapter subparts"
     });
+    return;
+  }
+
+  if (!reorderedRows) {
+    res.status(500).json({
+      error: "Failed to reorder chapter subparts"
+    });
+    return;
+  }
+
+  res.status(200).json({
+    subparts: reorderedRows,
+    timestamp: new Date().toISOString()
+  });
+
+  try {
+    await rebuildChapterSummaryLinks({
+      sourceChapterId: chapter.id,
+      sourceSubjectId: chapter.subjectId
+    });
+
+    await cacheService.delete(CacheKeys.chapterContent(chapter.id));
+
+    await rebuildInboundChapterLinks({
+      targetChapterId: chapter.id
+    });
+  } catch (error) {
+    console.error("Post-commit chapter subpart reorder hooks failed:", error);
+  }
+
+  try {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${chapter.subjectName} / ${chapter.title}`,
+      status: "success",
+      message: `Reordered ${proposedIds.length} subparts`,
+      actorId,
+      actorName
+    });
+  } catch (error) {
+    console.error("Failed to write chapter subpart reorder audit log:", error);
   }
 });
 
@@ -6074,6 +6148,18 @@ adminRouter.post("/content/chapters/:id/subparts/:subpartId", requireSession, as
     return;
   }
 
+  let updatedSubpart:
+    | {
+        id: number;
+        chapterId: number;
+        orderIndex: number;
+        heading: string;
+        content: string;
+        createdAt: Date;
+        updatedAt: Date;
+      }
+    | null = null;
+
   try {
     const updatedRows = await db
       .update(chapterSubparts)
@@ -6093,40 +6179,13 @@ adminRouter.post("/content/chapters/:id/subparts/:subpartId", requireSession, as
         updatedAt: chapterSubparts.updatedAt
       });
 
-    const updatedSubpart = updatedRows[0];
+    updatedSubpart = updatedRows[0] ?? null;
     if (!updatedSubpart) {
       res.status(500).json({
         error: "Failed to update chapter subpart"
       });
       return;
     }
-
-    await rebuildChapterSummaryLinks({
-      sourceChapterId: subpart.chapterId,
-      sourceSubjectId: subpart.subjectId
-    });
-
-    await cacheService.delete(CacheKeys.chapterContent(subpart.chapterId));
-
-    // Rebuild inbound chapters that link to this chapter
-    await rebuildInboundChapterLinks({
-      targetChapterId: subpart.chapterId
-    });
-
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: `${subpart.subjectName} / ${subpart.chapterTitle}`,
-      status: "success",
-      message: `Updated subpart ${updatedSubpart.id} (${updatedSubpart.heading})`,
-      actorId,
-      actorName
-    });
-
-    res.status(200).json({
-      subpart: updatedSubpart,
-      timestamp: new Date().toISOString()
-    });
   } catch (error) {
     await persistAuditLog({
       scope: "content",
@@ -6140,6 +6199,48 @@ adminRouter.post("/content/chapters/:id/subparts/:subpartId", requireSession, as
     res.status(500).json({
       error: "Failed to update chapter subpart"
     });
+    return;
+  }
+
+  if (!updatedSubpart) {
+    res.status(500).json({
+      error: "Failed to update chapter subpart"
+    });
+    return;
+  }
+
+  res.status(200).json({
+    subpart: updatedSubpart,
+    timestamp: new Date().toISOString()
+  });
+
+  try {
+    await rebuildChapterSummaryLinks({
+      sourceChapterId: subpart.chapterId,
+      sourceSubjectId: subpart.subjectId
+    });
+
+    await cacheService.delete(CacheKeys.chapterContent(subpart.chapterId));
+
+    await rebuildInboundChapterLinks({
+      targetChapterId: subpart.chapterId
+    });
+  } catch (error) {
+    console.error("Post-commit chapter subpart update hooks failed:", error);
+  }
+
+  try {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${subpart.subjectName} / ${subpart.chapterTitle}`,
+      status: "success",
+      message: `Updated subpart ${updatedSubpart.id} (${updatedSubpart.heading})`,
+      actorId,
+      actorName
+    });
+  } catch (error) {
+    console.error("Failed to write chapter subpart update audit log:", error);
   }
 });
 
@@ -6218,34 +6319,6 @@ adminRouter.post("/content/chapters/:id/subparts/:subpartId/delete", requireSess
           .where(eq(chapterSubparts.id, row.id));
       }
     });
-
-    await rebuildChapterSummaryLinks({
-      sourceChapterId: subpart.chapterId,
-      sourceSubjectId: subpart.subjectId
-    });
-
-    await cacheService.delete(CacheKeys.chapterContent(subpart.chapterId));
-
-    // Rebuild inbound chapters that link to this chapter
-    await rebuildInboundChapterLinks({
-      targetChapterId: subpart.chapterId
-    });
-
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: `${subpart.subjectName} / ${subpart.chapterTitle}`,
-      status: "success",
-      message: `Deleted subpart ${subpart.id} (${subpart.heading})`,
-      actorId,
-      actorName
-    });
-
-    res.status(200).json({
-      success: true,
-      deletedId: subpart.id,
-      timestamp: new Date().toISOString()
-    });
   } catch (error) {
     await persistAuditLog({
       scope: "content",
@@ -6259,6 +6332,42 @@ adminRouter.post("/content/chapters/:id/subparts/:subpartId/delete", requireSess
     res.status(500).json({
       error: "Failed to delete chapter subpart"
     });
+    return;
+  }
+
+  res.status(200).json({
+    success: true,
+    deletedId: subpart.id,
+    timestamp: new Date().toISOString()
+  });
+
+  try {
+    await rebuildChapterSummaryLinks({
+      sourceChapterId: subpart.chapterId,
+      sourceSubjectId: subpart.subjectId
+    });
+
+    await cacheService.delete(CacheKeys.chapterContent(subpart.chapterId));
+
+    await rebuildInboundChapterLinks({
+      targetChapterId: subpart.chapterId
+    });
+  } catch (error) {
+    console.error("Post-commit chapter subpart delete hooks failed:", error);
+  }
+
+  try {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${subpart.subjectName} / ${subpart.chapterTitle}`,
+      status: "success",
+      message: `Deleted subpart ${subpart.id} (${subpart.heading})`,
+      actorId,
+      actorName
+    });
+  } catch (error) {
+    console.error("Failed to write chapter subpart delete audit log:", error);
   }
 });
 

@@ -68,6 +68,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
   const [activeTab, setActiveTab] = useState<TabId>("summary");
   const [subparts, setSubparts] = useState<AdminChapterSubpart[]>([]);
   const [persistedSubparts, setPersistedSubparts] = useState<AdminChapterSubpart[]>([]);
+  const [dirtySubpartIds, setDirtySubpartIds] = useState<Set<number>>(new Set());
   const [selectedSubpartId, setSelectedSubpartId] = useState<number | null>(null);
   const [isLoadingSubparts, setIsLoadingSubparts] = useState(true);
   const [isSavingSubpart, setIsSavingSubpart] = useState(false);
@@ -91,6 +92,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
       const ordered = sortSubparts(payload.subparts);
       setSubparts(ordered);
       setPersistedSubparts(ordered);
+      setDirtySubpartIds(new Set());
       setSelectedSubpartId((current) => {
         if (ordered.length === 0) {
           return null;
@@ -104,6 +106,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
       console.error("Failed to fetch chapter subparts:", error);
       setSubparts([]);
       setPersistedSubparts([]);
+      setDirtySubpartIds(new Set());
       setSelectedSubpartId(null);
       pushToast({
         title: "Failed to load subparts",
@@ -124,37 +127,91 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
     [selectedSubpartId, subparts]
   );
 
-  const persistedSelectedSubpart = useMemo(
-    () => persistedSubparts.find((subpart) => subpart.id === selectedSubpartId) ?? null,
-    [persistedSubparts, selectedSubpartId]
-  );
+  const persistedSubpartsById = useMemo(() => {
+    return new Map(persistedSubparts.map((subpart) => [subpart.id, subpart]));
+  }, [persistedSubparts]);
 
-  const hasUnsavedChanges =
-    selectedSubpart !== null &&
-    persistedSelectedSubpart !== null &&
-    (selectedSubpart.heading !== persistedSelectedSubpart.heading ||
-      selectedSubpart.content !== persistedSelectedSubpart.content);
+  const hasAnyUnsavedChanges = dirtySubpartIds.size > 0;
+
+  const isSubpartDirty = useCallback(
+    (subpart: Pick<AdminChapterSubpart, "id" | "heading" | "content">) => {
+      const persisted = persistedSubpartsById.get(subpart.id);
+      return !persisted || subpart.heading !== persisted.heading || subpart.content !== persisted.content;
+    },
+    [persistedSubpartsById]
+  );
 
   const handleSelectedSubpartChange = useCallback(
     (field: "heading" | "content", value: string) => {
       if (!selectedSubpartId) {
         return;
       }
+
+      const nextSelectedSubpart = selectedSubpart
+        ? {
+            ...selectedSubpart,
+            [field]: value,
+          }
+        : null;
+
+      if (nextSelectedSubpart) {
+        setDirtySubpartIds((current) => {
+          const next = new Set(current);
+          if (isSubpartDirty(nextSelectedSubpart)) {
+            next.add(nextSelectedSubpart.id);
+          } else {
+            next.delete(nextSelectedSubpart.id);
+          }
+          return next;
+        });
+      }
+
       setSubparts((current) =>
-        current.map((subpart) =>
-          subpart.id === selectedSubpartId
-            ? {
-                ...subpart,
-                [field]: value,
-              }
-            : subpart
-        )
+        current.map((subpart) => {
+          if (subpart.id !== selectedSubpartId) {
+            return subpart;
+          }
+
+          return {
+            ...subpart,
+            [field]: value,
+          };
+        })
       );
     },
-    [selectedSubpartId]
+    [isSubpartDirty, selectedSubpart, selectedSubpartId]
+  );
+
+  const handleSelectSubpart = useCallback(
+    (nextSubpartId: number) => {
+      if (nextSubpartId === selectedSubpartId) {
+        return;
+      }
+
+      if (hasAnyUnsavedChanges) {
+        pushToast({
+          title: "Save changes before switching sections",
+          description: "You have unsaved edits in one or more subparts.",
+          tone: "warning",
+        });
+        return;
+      }
+
+      setSelectedSubpartId(nextSubpartId);
+    },
+    [hasAnyUnsavedChanges, pushToast, selectedSubpartId]
   );
 
   const handleAddSubpart = useCallback(async () => {
+    if (hasAnyUnsavedChanges) {
+      pushToast({
+        title: "Save changes before adding a new subpart",
+        description: "You have unsaved edits in one or more subparts.",
+        tone: "warning",
+      });
+      return;
+    }
+
     setIsCreatingSubpart(true);
     try {
       const response = await createAdminChapterSubpart({
@@ -165,6 +222,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
       const nextSubparts = sortSubparts([...subparts, response.subpart]);
       setSubparts(nextSubparts);
       setPersistedSubparts(nextSubparts);
+      setDirtySubpartIds(new Set());
       setSelectedSubpartId(response.subpart.id);
       pushToast({
         title: "Subpart added",
@@ -179,53 +237,77 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
     } finally {
       setIsCreatingSubpart(false);
     }
-  }, [chapterId, pushToast, sortSubparts, subparts]);
+  }, [chapterId, hasAnyUnsavedChanges, pushToast, sortSubparts, subparts]);
 
   const handleSaveSubpart = useCallback(async () => {
-    if (!selectedSubpart) {
+    const dirtyIds = Array.from(dirtySubpartIds);
+    if (dirtyIds.length === 0) {
       return;
     }
 
-    const heading = selectedSubpart.heading.trim();
-    const content = selectedSubpart.content.trim();
-    if (!heading || !content) {
+    const dirtySubparts = subparts.filter((subpart) => dirtySubpartIds.has(subpart.id));
+    const firstInvalid = dirtySubparts.find((subpart) => !subpart.heading.trim() || !subpart.content.trim());
+    if (firstInvalid) {
       pushToast({
         title: "Heading and content are required",
         tone: "error",
       });
+      setSelectedSubpartId(firstInvalid.id);
       return;
     }
 
     setIsSavingSubpart(true);
+    const savedSubparts: AdminChapterSubpart[] = [];
+    let saveError: unknown = null;
+
     try {
-      const response = await updateAdminChapterSubpart({
-        chapterId,
-        subpartId: selectedSubpart.id,
-        heading,
-        content,
-      });
+      for (const subpart of dirtySubparts) {
+        try {
+          const response = await updateAdminChapterSubpart({
+            chapterId,
+            subpartId: subpart.id,
+            heading: subpart.heading.trim(),
+            content: subpart.content.trim(),
+          });
+          savedSubparts.push(response.subpart);
+        } catch (error) {
+          saveError = error;
+          break;
+        }
+      }
 
-      setSubparts((current) =>
-        sortSubparts(current.map((subpart) => (subpart.id === response.subpart.id ? response.subpart : subpart)))
-      );
-      setPersistedSubparts((current) =>
-        sortSubparts(current.map((subpart) => (subpart.id === response.subpart.id ? response.subpart : subpart)))
-      );
+      if (savedSubparts.length > 0) {
+        const savedById = new Map(savedSubparts.map((subpart) => [subpart.id, subpart]));
+
+        setSubparts((current) => sortSubparts(current.map((subpart) => savedById.get(subpart.id) ?? subpart)));
+        setPersistedSubparts((current) => sortSubparts(current.map((subpart) => savedById.get(subpart.id) ?? subpart)));
+        setDirtySubpartIds((current) => {
+          const next = new Set(current);
+          for (const subpart of savedSubparts) {
+            next.delete(subpart.id);
+          }
+          return next;
+        });
+      }
+
+      if (saveError) {
+        console.error("Failed to save chapter subparts:", saveError);
+        pushToast({
+          title: "Saved some changes",
+          description: "At least one subpart could not be saved. Please try again.",
+          tone: "warning",
+        });
+        return;
+      }
 
       pushToast({
-        title: "Subpart saved",
+        title: dirtySubparts.length === 1 ? "Subpart saved" : "All changes saved",
         tone: "success",
-      });
-    } catch (error) {
-      console.error("Failed to save chapter subpart:", error);
-      pushToast({
-        title: "Failed to save subpart",
-        tone: "error",
       });
     } finally {
       setIsSavingSubpart(false);
     }
-  }, [chapterId, pushToast, selectedSubpart, sortSubparts]);
+  }, [chapterId, dirtySubpartIds, pushToast, sortSubparts, subparts]);
 
   const handleDeleteSubpart = useCallback(async () => {
     if (!selectedSubpart) {
@@ -247,6 +329,11 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
       const remainingPersisted = persistedSubparts.filter((subpart) => subpart.id !== selectedSubpart.id);
       setSubparts(remaining);
       setPersistedSubparts(remainingPersisted);
+      setDirtySubpartIds((current) => {
+        const next = new Set(current);
+        next.delete(selectedSubpart.id);
+        return next;
+      });
       setSelectedSubpartId(remaining[0]?.id ?? null);
 
       pushToast({
@@ -270,12 +357,11 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
         return;
       }
 
-      // Guard against unsaved edits
-      if (hasUnsavedChanges) {
+      if (hasAnyUnsavedChanges) {
         pushToast({
-          title: "Cannot reorder with unsaved changes",
-          description: "Please save or discard your changes before reordering subparts.",
-          tone: "error",
+          title: "Save changes before reordering",
+          description: "You have unsaved edits in one or more subparts.",
+          tone: "warning",
         });
         return;
       }
@@ -304,6 +390,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
         const ordered = sortSubparts(response.subparts);
         setSubparts(ordered);
         setPersistedSubparts(ordered);
+        setDirtySubpartIds(new Set());
       } catch (error) {
         console.error("Failed to reorder chapter subparts:", error);
         setSubparts(previous);
@@ -315,7 +402,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
         setIsReorderingSubparts(false);
       }
     },
-    [chapterId, hasUnsavedChanges, pushToast, selectedSubpartId, sortSubparts, subparts]
+    [chapterId, hasAnyUnsavedChanges, pushToast, selectedSubpartId, sortSubparts, subparts]
   );
 
   const handleImageUpload = useCallback(async (file: File) => {
@@ -404,7 +491,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
               </div>
               <div className="flex items-center gap-2 flex-wrap justify-end">
                 <Badge variant="neutral">{subparts.length} sections</Badge>
-                {hasUnsavedChanges ? <Badge variant="warning">Unsaved changes</Badge> : null}
+                {hasAnyUnsavedChanges ? <Badge variant="warning">Unsaved changes</Badge> : null}
                 <Button
                   variant="secondary"
                   size="sm"
@@ -445,7 +532,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
                   variant="primary"
                   size="sm"
                   onClick={() => void handleSaveSubpart()}
-                  disabled={!selectedSubpart || isSavingSubpart || !hasUnsavedChanges}
+                  disabled={isSavingSubpart || !hasAnyUnsavedChanges}
                   className="gap-2"
                 >
                   {isSavingSubpart ? (
@@ -456,7 +543,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
                   ) : (
                     <>
                       <Save className="h-4 w-4" />
-                      Save Subpart
+                      Save Changes
                     </>
                   )}
                 </Button>
@@ -490,7 +577,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
                           <button
                             key={subpart.id}
                             type="button"
-                            onClick={() => setSelectedSubpartId(subpart.id)}
+                            onClick={() => handleSelectSubpart(subpart.id)}
                             className={cn(
                               "w-full rounded-md border px-3 py-2 text-left transition",
                               isActive
@@ -499,7 +586,10 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
                             )}
                           >
                             <p className="text-xs text-text-secondary">Section {subpart.orderIndex}</p>
-                            <p className="text-sm font-medium truncate">{subpart.heading}</p>
+                            <p className="text-sm font-medium truncate">
+                              {subpart.heading}
+                              {dirtySubpartIds.has(subpart.id) ? " *" : ""}
+                            </p>
                           </button>
                         );
                       })}
