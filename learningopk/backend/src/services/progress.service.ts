@@ -19,9 +19,10 @@ import { streakWagerService } from "./streak-wager.service.js";
 import { xpService } from "./xp.service.js";
 
 export interface ProgressEventInput {
-  eventType: "chapter_visit" | "summary_read" | "exercise_view" | "flashcard_complete" | "quiz_submit";
+  eventType: "chapter_visit" | "summary_read" | "subpart_read" | "exercise_view" | "flashcard_complete" | "quiz_submit";
   chapterId: number;
   userId: string;
+  subpartId?: number;
   score?: number;
   occurredAt?: Date;
 }
@@ -72,22 +73,36 @@ export class ProgressService {
   }
 
   async recordProgressEvent(input: ProgressEventInput): Promise<ProgressEventResult> {
-    const snapshot = await applyProgressEvent(
-      input.eventType === "quiz_submit"
-        ? {
-            eventType: "quiz_submit",
-            userId: input.userId,
-            chapterId: input.chapterId,
-            score: input.score ?? 0,
-            occurredAt: input.occurredAt ?? new Date()
-          }
-        : {
-            eventType: input.eventType,
-            userId: input.userId,
-            chapterId: input.chapterId,
-            occurredAt: input.occurredAt ?? new Date()
-          }
-    );
+    let snapshot: Awaited<ReturnType<typeof applyProgressEvent>>;
+    const occurredAt = input.occurredAt ?? new Date();
+
+    if (input.eventType === "quiz_submit") {
+      snapshot = await applyProgressEvent({
+        eventType: "quiz_submit",
+        userId: input.userId,
+        chapterId: input.chapterId,
+        score: input.score ?? 0,
+        occurredAt
+      });
+    } else if (input.eventType === "subpart_read") {
+      if (typeof input.subpartId !== "number") {
+        throw new Error("subpartId is required for subpart_read events.");
+      }
+      snapshot = await applyProgressEvent({
+        eventType: "subpart_read",
+        userId: input.userId,
+        chapterId: input.chapterId,
+        subpartId: input.subpartId,
+        occurredAt
+      });
+    } else {
+      snapshot = await applyProgressEvent({
+        eventType: input.eventType,
+        userId: input.userId,
+        chapterId: input.chapterId,
+        occurredAt
+      });
+    }
 
     // Award XP based on event type
     // Note: quiz_submit XP is handled by quiz service to avoid double awards
@@ -109,6 +124,36 @@ export class ProgressService {
           levelName: result.levelName,
           leveledUp: result.leveledUp
         };
+      } else if (input.eventType === "subpart_read") {
+        // Only award XP if this was a new subpart read (not a duplicate submission)
+        if ("isNewRead" in snapshot && snapshot.isNewRead) {
+          const result = await xpService.awardSubpartReadXp(input.userId);
+          xpResult = {
+            xpAwarded: result.xpAwarded,
+            newXp: result.newXp,
+            level: result.level,
+            levelName: result.levelName,
+            leveledUp: result.leveledUp
+          };
+        } else {
+          // No XP awarded for duplicate read
+          const userXpInfo = await xpService.getUserXpInfo(input.userId);
+          xpResult = userXpInfo
+            ? {
+                xpAwarded: 0,
+                newXp: userXpInfo.xp,
+                level: userXpInfo.level,
+                levelName: userXpInfo.levelName,
+                leveledUp: false
+              }
+            : {
+                xpAwarded: 0,
+                newXp: 0,
+                level: 1,
+                levelName: "Beginner",
+                leveledUp: false
+              };
+        }
       } else if (input.eventType === "summary_read") {
         const result = await xpService.awardSummaryReadXp(input.userId);
         xpResult = {

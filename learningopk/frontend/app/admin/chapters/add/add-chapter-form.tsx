@@ -220,7 +220,6 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
         chapterNumber: parseInt(chapterNumber, 10),
         title: title.trim(),
         slug,
-        summary: summary.trim(),
       });
       pushToast({
         title: "Chapter created",

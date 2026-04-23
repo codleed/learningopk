@@ -16,6 +16,11 @@ export const progressEventSchema = z.discriminatedUnion("eventType", [
     chapterId: z.number().int().positive()
   }),
   z.object({
+    eventType: z.literal("subpart_read"),
+    chapterId: z.number().int().positive(),
+    subpartId: z.number().int().positive()
+  }),
+  z.object({
     eventType: z.literal("exercise_view"),
     chapterId: z.number().int().positive()
   }),

@@ -8,6 +8,7 @@ import { db, pool } from "../../lib/db/index.js";
 import {
   boardClasses,
   boards,
+  chapterSubparts,
   chapterSummaryLinks,
   chapters,
   subjects,
@@ -180,45 +181,87 @@ const createSubjectScopedGraphFixture = async () => {
   assert.ok(hiddenChapter, "Expected hidden chapter insert.");
   assert.ok(foreignChapter, "Expected foreign chapter insert.");
 
+  const insertedSubparts = await db
+    .insert(chapterSubparts)
+    .values([
+      {
+        chapterId: sourceChapter.id,
+        orderIndex: 1,
+        heading: `${sourceTitle} Subpart`,
+        content: "Source subpart content."
+      },
+      {
+        chapterId: targetChapter.id,
+        orderIndex: 1,
+        heading: `${targetTitle} Subpart`,
+        content: "Target subpart content."
+      },
+      {
+        chapterId: hiddenChapter.id,
+        orderIndex: 1,
+        heading: `${hiddenTitle} Subpart`,
+        content: "Hidden subpart content."
+      },
+      {
+        chapterId: foreignChapter.id,
+        orderIndex: 1,
+        heading: `${foreignTitle} Subpart`,
+        content: "Foreign subpart content."
+      }
+    ])
+    .returning({
+      id: chapterSubparts.id,
+      chapterId: chapterSubparts.chapterId
+    });
+
+  const sourceSubpart = insertedSubparts.find((subpart) => subpart.chapterId === sourceChapter.id);
+  const targetSubpart = insertedSubparts.find((subpart) => subpart.chapterId === targetChapter.id);
+  const hiddenSubpart = insertedSubparts.find((subpart) => subpart.chapterId === hiddenChapter.id);
+  const foreignSubpart = insertedSubparts.find((subpart) => subpart.chapterId === foreignChapter.id);
+  assert.ok(sourceSubpart, "Expected source subpart insert.");
+  assert.ok(targetSubpart, "Expected target subpart insert.");
+  assert.ok(hiddenSubpart, "Expected hidden subpart insert.");
+  assert.ok(foreignSubpart, "Expected foreign subpart insert.");
+
   await db.insert(chapterSummaryLinks).values([
     {
-      sourceChapterId: sourceChapter.id,
-      targetChapterId: targetChapter.id,
+      sourceSubpartId: sourceSubpart.id,
+      targetSubpartId: targetSubpart.id,
       targetTitle: targetTitle,
       normalizedTarget: `target-${suffix}`,
       isResolved: true
     },
     {
-      sourceChapterId: sourceChapter.id,
-      targetChapterId: foreignChapter.id,
+      sourceSubpartId: sourceSubpart.id,
+      targetSubpartId: foreignSubpart.id,
       targetTitle: foreignTitle,
       normalizedTarget: `cross-subject-${suffix}`,
       isResolved: true
     },
     {
-      sourceChapterId: sourceChapter.id,
-      targetChapterId: hiddenChapter.id,
+      sourceSubpartId: sourceSubpart.id,
+      targetSubpartId: hiddenSubpart.id,
       targetTitle: hiddenTitle,
       normalizedTarget: `hidden-target-${suffix}`,
       isResolved: true
     },
     {
-      sourceChapterId: sourceChapter.id,
-      targetChapterId: null,
+      sourceSubpartId: sourceSubpart.id,
+      targetSubpartId: null,
       targetTitle: `Unresolved ${suffix}`,
       normalizedTarget: `unresolved-${suffix}`,
       isResolved: false
     },
     {
-      sourceChapterId: foreignChapter.id,
-      targetChapterId: targetChapter.id,
+      sourceSubpartId: foreignSubpart.id,
+      targetSubpartId: targetSubpart.id,
       targetTitle: targetTitle,
       normalizedTarget: `foreign-source-${suffix}`,
       isResolved: true
     },
     {
-      sourceChapterId: foreignChapter.id,
-      targetChapterId: null,
+      sourceSubpartId: foreignSubpart.id,
+      targetSubpartId: null,
       targetTitle: `Foreign Unresolved ${suffix}`,
       normalizedTarget: `foreign-unresolved-${suffix}`,
       isResolved: false

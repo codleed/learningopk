@@ -178,7 +178,7 @@ export const chapters = pgTable(
     chapterNumber: integer("chapter_number").notNull(),
     title: text("title").notNull(),
     slug: text("slug").notNull(),
-    summary: text("summary").notNull(),
+    summary: text("summary"),
     coverImageUrl: text("cover_image_url"),
     isPublished: boolean("is_published").notNull().default(false),
     sourceId: uuid("source_id").references(() => contentSources.id, { onDelete: "set null" })
@@ -189,14 +189,33 @@ export const chapters = pgTable(
   ]
 );
 
+export const chapterSubparts = pgTable(
+  "chapter_subparts",
+  {
+    id: serial("id").primaryKey(),
+    chapterId: integer("chapter_id")
+      .notNull()
+      .references(() => chapters.id, { onDelete: "cascade" }),
+    orderIndex: integer("order_index").notNull(),
+    heading: text("heading").notNull(),
+    content: text("content").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    uniqueIndex("chapter_subparts_chapter_order_idx").on(table.chapterId, table.orderIndex),
+    index("chapter_subparts_chapter_idx").on(table.chapterId)
+  ]
+);
+
 export const chapterSummaryLinks = pgTable(
   "chapter_summary_links",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    sourceChapterId: integer("source_chapter_id")
+    sourceSubpartId: integer("source_subpart_id")
       .notNull()
-      .references(() => chapters.id, { onDelete: "cascade" }),
-    targetChapterId: integer("target_chapter_id").references(() => chapters.id, { onDelete: "set null" }),
+      .references(() => chapterSubparts.id, { onDelete: "cascade" }),
+    targetSubpartId: integer("target_subpart_id").references(() => chapterSubparts.id, { onDelete: "set null" }),
     targetTitle: text("target_title").notNull(),
     normalizedTarget: text("normalized_target").notNull(),
     isResolved: boolean("is_resolved").notNull().default(false),
@@ -204,9 +223,9 @@ export const chapterSummaryLinks = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
   },
   (table) => [
-    uniqueIndex("chapter_summary_links_source_normalized_idx").on(table.sourceChapterId, table.normalizedTarget),
-    index("chapter_summary_links_source_idx").on(table.sourceChapterId),
-    index("chapter_summary_links_target_idx").on(table.targetChapterId),
+    uniqueIndex("chapter_summary_links_source_subpart_normalized_idx").on(table.sourceSubpartId, table.normalizedTarget),
+    index("chapter_summary_links_source_subpart_idx").on(table.sourceSubpartId),
+    index("chapter_summary_links_target_subpart_idx").on(table.targetSubpartId),
     index("chapter_summary_links_normalized_idx").on(table.normalizedTarget)
   ]
 );
@@ -560,6 +579,7 @@ export const userProgress = pgTable(
       .references(() => chapters.id, { onDelete: "cascade" }),
     visitedAt: timestamp("visited_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
     summaryRead: boolean("summary_read").notNull().default(false),
+    subpartsReadCount: integer("subparts_read_count").notNull().default(0),
     exercisesViewed: integer("exercises_viewed").notNull().default(0),
     flashcardsCompleted: boolean("flashcards_completed").notNull().default(false),
     quizBestScore: integer("quiz_best_score").notNull().default(0),
@@ -568,6 +588,27 @@ export const userProgress = pgTable(
   (table) => [
     uniqueIndex("user_progress_user_chapter_idx").on(table.userId, table.chapterId),
     index("user_progress_user_visited_idx").on(table.userId, desc(table.visitedAt))
+  ]
+);
+
+export const userProgressSubparts = pgTable(
+  "user_progress_subparts",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    chapterId: integer("chapter_id")
+      .notNull()
+      .references(() => chapters.id, { onDelete: "cascade" }),
+    subpartId: integer("subpart_id")
+      .notNull()
+      .references(() => chapterSubparts.id, { onDelete: "cascade" }),
+    readAt: timestamp("read_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    uniqueIndex("user_progress_subparts_user_subpart_idx").on(table.userId, table.subpartId),
+    index("user_progress_subparts_user_chapter_idx").on(table.userId, table.chapterId),
+    index("user_progress_subparts_subpart_idx").on(table.subpartId)
   ]
 );
 

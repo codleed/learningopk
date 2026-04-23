@@ -120,6 +120,15 @@ const chapterDetailResponseSchema = z.object({
     title: z.string(),
     slug: z.string(),
     summary: z.string(),
+    subparts: z.array(
+      z.object({
+        id: z.number().int().positive(),
+        chapterId: z.number().int().positive(),
+        orderIndex: z.number().int().nonnegative(),
+        heading: z.string(),
+        content: z.string()
+      })
+    ),
     coverImageUrl: z.string().nullable().optional().default(null),
     examWeightage: z
       .object({

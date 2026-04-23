@@ -1,7 +1,20 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { BookOpen, ClipboardList, Layers, Brain, Save, Loader2, NotebookPen, TextCursorInput } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  BookOpen,
+  ClipboardList,
+  Layers,
+  Brain,
+  Save,
+  Loader2,
+  NotebookPen,
+  TextCursorInput,
+  Plus,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 
 import { AdminBreadcrumb } from "@/components/admin/breadcrumb";
 import { AdminPageHeader } from "@/components/admin/page-header";
@@ -9,10 +22,18 @@ import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-w
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { GithubMarkdownEditor } from "@/components/admin/github-markdown-editor";
 import { useToast } from "@/components/ui/toast";
-import { getAdminChapterSummary, updateAdminChapterSummary, uploadAdminChapterSummaryMedia } from "@/lib/admin-api";
-import type { AdminChapterSummaryResponse } from "@/lib/admin-api";
+import {
+  createAdminChapterSubpart,
+  deleteAdminChapterSubpart,
+  getAdminChapterSubparts,
+  reorderAdminChapterSubparts,
+  updateAdminChapterSubpart,
+  uploadAdminChapterSummaryMedia,
+} from "@/lib/admin-api";
+import type { AdminChapterSubpart } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 
 import { ChapterQuizManager } from "@/components/admin/chapter-quiz-manager";
@@ -45,54 +66,344 @@ type ChapterManageClientProps = {
 export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
   const { pushToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabId>("summary");
-  const [summary, setSummary] = useState("");
-  const [originalSummary, setOriginalSummary] = useState("");
-  const [isLoadingSummary, setIsLoadingSummary] = useState(true);
-  const [isSavingSummary, setIsSavingSummary] = useState(false);
+  const [subparts, setSubparts] = useState<AdminChapterSubpart[]>([]);
+  const [persistedSubparts, setPersistedSubparts] = useState<AdminChapterSubpart[]>([]);
+  const [dirtySubpartIds, setDirtySubpartIds] = useState<Set<number>>(new Set());
+  const [selectedSubpartId, setSelectedSubpartId] = useState<number | null>(null);
+  const [isLoadingSubparts, setIsLoadingSubparts] = useState(true);
+  const [isSavingSubpart, setIsSavingSubpart] = useState(false);
+  const [isCreatingSubpart, setIsCreatingSubpart] = useState(false);
+  const [isDeletingSubpart, setIsDeletingSubpart] = useState(false);
+  const [isReorderingSubparts, setIsReorderingSubparts] = useState(false);
 
-  // Fetch chapter summary
-  useEffect(() => {
-    const fetchSummary = async () => {
-      setIsLoadingSummary(true);
-      try {
-        const data: AdminChapterSummaryResponse = await getAdminChapterSummary(chapterId);
-        setSummary(data.chapter.summary || "");
-        setOriginalSummary(data.chapter.summary || "");
-      } catch (error) {
-        console.error("Failed to fetch chapter summary:", error);
-        setSummary("");
-        setOriginalSummary("");
-        pushToast({
-          title: "Failed to load summary",
-          description: "Please try again.",
-          tone: "error",
-        });
-      } finally {
-        setIsLoadingSummary(false);
+  const sortSubparts = useCallback((items: AdminChapterSubpart[]) => {
+    return [...items].sort((left, right) => {
+      if (left.orderIndex !== right.orderIndex) {
+        return left.orderIndex - right.orderIndex;
       }
-    };
-    fetchSummary();
-  }, [chapterId, pushToast]);
+      return left.id - right.id;
+    });
+  }, []);
 
-  const handleSaveSummary = useCallback(async () => {
-    setIsSavingSummary(true);
+  const fetchSubparts = useCallback(async () => {
+    setIsLoadingSubparts(true);
     try {
-      await updateAdminChapterSummary({ chapterId, summary });
-      setOriginalSummary(summary);
-      pushToast({
-        title: "Summary saved",
-        tone: "success",
+      const payload = await getAdminChapterSubparts(chapterId);
+      const ordered = sortSubparts(payload.subparts);
+      setSubparts(ordered);
+      setPersistedSubparts(ordered);
+      setDirtySubpartIds(new Set());
+      setSelectedSubpartId((current) => {
+        if (ordered.length === 0) {
+          return null;
+        }
+        if (current && ordered.some((subpart) => subpart.id === current)) {
+          return current;
+        }
+        return ordered[0]?.id ?? null;
       });
     } catch (error) {
-      console.error("Failed to save chapter summary:", error);
+      console.error("Failed to fetch chapter subparts:", error);
+      setSubparts([]);
+      setPersistedSubparts([]);
+      setDirtySubpartIds(new Set());
+      setSelectedSubpartId(null);
       pushToast({
-        title: "Failed to save summary",
+        title: "Failed to load subparts",
+        description: "Please try again.",
         tone: "error",
       });
     } finally {
-      setIsSavingSummary(false);
+      setIsLoadingSubparts(false);
     }
-  }, [chapterId, summary, pushToast]);
+  }, [chapterId, pushToast, sortSubparts]);
+
+  useEffect(() => {
+    void fetchSubparts();
+  }, [fetchSubparts]);
+
+  const selectedSubpart = useMemo(
+    () => subparts.find((subpart) => subpart.id === selectedSubpartId) ?? null,
+    [selectedSubpartId, subparts]
+  );
+
+  const persistedSubpartsById = useMemo(() => {
+    return new Map(persistedSubparts.map((subpart) => [subpart.id, subpart]));
+  }, [persistedSubparts]);
+
+  const hasAnyUnsavedChanges = dirtySubpartIds.size > 0;
+
+  const isSubpartDirty = useCallback(
+    (subpart: Pick<AdminChapterSubpart, "id" | "heading" | "content">) => {
+      const persisted = persistedSubpartsById.get(subpart.id);
+      return !persisted || subpart.heading !== persisted.heading || subpart.content !== persisted.content;
+    },
+    [persistedSubpartsById]
+  );
+
+  const handleSelectedSubpartChange = useCallback(
+    (field: "heading" | "content", value: string) => {
+      if (!selectedSubpartId) {
+        return;
+      }
+
+      const nextSelectedSubpart = selectedSubpart
+        ? {
+            ...selectedSubpart,
+            [field]: value,
+          }
+        : null;
+
+      if (nextSelectedSubpart) {
+        setDirtySubpartIds((current) => {
+          const next = new Set(current);
+          if (isSubpartDirty(nextSelectedSubpart)) {
+            next.add(nextSelectedSubpart.id);
+          } else {
+            next.delete(nextSelectedSubpart.id);
+          }
+          return next;
+        });
+      }
+
+      setSubparts((current) =>
+        current.map((subpart) => {
+          if (subpart.id !== selectedSubpartId) {
+            return subpart;
+          }
+
+          return {
+            ...subpart,
+            [field]: value,
+          };
+        })
+      );
+    },
+    [isSubpartDirty, selectedSubpart, selectedSubpartId]
+  );
+
+  const handleSelectSubpart = useCallback(
+    (nextSubpartId: number) => {
+      if (nextSubpartId === selectedSubpartId) {
+        return;
+      }
+
+      if (hasAnyUnsavedChanges) {
+        pushToast({
+          title: "Save changes before switching sections",
+          description: "You have unsaved edits in one or more subparts.",
+          tone: "warning",
+        });
+        return;
+      }
+
+      setSelectedSubpartId(nextSubpartId);
+    },
+    [hasAnyUnsavedChanges, pushToast, selectedSubpartId]
+  );
+
+  const handleAddSubpart = useCallback(async () => {
+    if (hasAnyUnsavedChanges) {
+      pushToast({
+        title: "Save changes before adding a new subpart",
+        description: "You have unsaved edits in one or more subparts.",
+        tone: "warning",
+      });
+      return;
+    }
+
+    setIsCreatingSubpart(true);
+    try {
+      const response = await createAdminChapterSubpart({
+        chapterId,
+        heading: `Section ${subparts.length + 1}`,
+        content: "Write section content here...",
+      });
+      const nextSubparts = sortSubparts([...subparts, response.subpart]);
+      setSubparts(nextSubparts);
+      setPersistedSubparts(nextSubparts);
+      setDirtySubpartIds(new Set());
+      setSelectedSubpartId(response.subpart.id);
+      pushToast({
+        title: "Subpart added",
+        tone: "success",
+      });
+    } catch (error) {
+      console.error("Failed to create chapter subpart:", error);
+      pushToast({
+        title: "Failed to add subpart",
+        tone: "error",
+      });
+    } finally {
+      setIsCreatingSubpart(false);
+    }
+  }, [chapterId, hasAnyUnsavedChanges, pushToast, sortSubparts, subparts]);
+
+  const handleSaveSubpart = useCallback(async () => {
+    const dirtyIds = Array.from(dirtySubpartIds);
+    if (dirtyIds.length === 0) {
+      return;
+    }
+
+    const dirtySubparts = subparts.filter((subpart) => dirtySubpartIds.has(subpart.id));
+    const firstInvalid = dirtySubparts.find((subpart) => !subpart.heading.trim() || !subpart.content.trim());
+    if (firstInvalid) {
+      pushToast({
+        title: "Heading and content are required",
+        tone: "error",
+      });
+      setSelectedSubpartId(firstInvalid.id);
+      return;
+    }
+
+    setIsSavingSubpart(true);
+    const savedSubparts: AdminChapterSubpart[] = [];
+    let saveError: unknown = null;
+
+    try {
+      for (const subpart of dirtySubparts) {
+        try {
+          const response = await updateAdminChapterSubpart({
+            chapterId,
+            subpartId: subpart.id,
+            heading: subpart.heading.trim(),
+            content: subpart.content.trim(),
+          });
+          savedSubparts.push(response.subpart);
+        } catch (error) {
+          saveError = error;
+          break;
+        }
+      }
+
+      if (savedSubparts.length > 0) {
+        const savedById = new Map(savedSubparts.map((subpart) => [subpart.id, subpart]));
+
+        setSubparts((current) => sortSubparts(current.map((subpart) => savedById.get(subpart.id) ?? subpart)));
+        setPersistedSubparts((current) => sortSubparts(current.map((subpart) => savedById.get(subpart.id) ?? subpart)));
+        setDirtySubpartIds((current) => {
+          const next = new Set(current);
+          for (const subpart of savedSubparts) {
+            next.delete(subpart.id);
+          }
+          return next;
+        });
+      }
+
+      if (saveError) {
+        console.error("Failed to save chapter subparts:", saveError);
+        pushToast({
+          title: "Saved some changes",
+          description: "At least one subpart could not be saved. Please try again.",
+          tone: "warning",
+        });
+        return;
+      }
+
+      pushToast({
+        title: dirtySubparts.length === 1 ? "Subpart saved" : "All changes saved",
+        tone: "success",
+      });
+    } finally {
+      setIsSavingSubpart(false);
+    }
+  }, [chapterId, dirtySubpartIds, pushToast, sortSubparts, subparts]);
+
+  const handleDeleteSubpart = useCallback(async () => {
+    if (!selectedSubpart) {
+      return;
+    }
+
+    if (!window.confirm(`Delete "${selectedSubpart.heading}"?`)) {
+      return;
+    }
+
+    setIsDeletingSubpart(true);
+    try {
+      await deleteAdminChapterSubpart({
+        chapterId,
+        subpartId: selectedSubpart.id,
+      });
+
+      const remaining = subparts.filter((subpart) => subpart.id !== selectedSubpart.id);
+      const remainingPersisted = persistedSubparts.filter((subpart) => subpart.id !== selectedSubpart.id);
+      setSubparts(remaining);
+      setPersistedSubparts(remainingPersisted);
+      setDirtySubpartIds((current) => {
+        const next = new Set(current);
+        next.delete(selectedSubpart.id);
+        return next;
+      });
+      setSelectedSubpartId(remaining[0]?.id ?? null);
+
+      pushToast({
+        title: "Subpart deleted",
+        tone: "success",
+      });
+    } catch (error) {
+      console.error("Failed to delete chapter subpart:", error);
+      pushToast({
+        title: "Failed to delete subpart",
+        tone: "error",
+      });
+    } finally {
+      setIsDeletingSubpart(false);
+    }
+  }, [chapterId, persistedSubparts, pushToast, selectedSubpart, subparts]);
+
+  const handleMoveSelectedSubpart = useCallback(
+    async (direction: "up" | "down") => {
+      if (!selectedSubpartId) {
+        return;
+      }
+
+      if (hasAnyUnsavedChanges) {
+        pushToast({
+          title: "Save changes before reordering",
+          description: "You have unsaved edits in one or more subparts.",
+          tone: "warning",
+        });
+        return;
+      }
+
+      const currentIndex = subparts.findIndex((subpart) => subpart.id === selectedSubpartId);
+      if (currentIndex === -1) {
+        return;
+      }
+
+      const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= subparts.length) {
+        return;
+      }
+
+      const previous = subparts;
+      const reordered = [...subparts];
+      [reordered[currentIndex], reordered[targetIndex]] = [reordered[targetIndex], reordered[currentIndex]];
+      setSubparts(reordered);
+
+      setIsReorderingSubparts(true);
+      try {
+        const response = await reorderAdminChapterSubparts({
+          chapterId,
+          subpartIds: reordered.map((subpart) => subpart.id),
+        });
+        const ordered = sortSubparts(response.subparts);
+        setSubparts(ordered);
+        setPersistedSubparts(ordered);
+        setDirtySubpartIds(new Set());
+      } catch (error) {
+        console.error("Failed to reorder chapter subparts:", error);
+        setSubparts(previous);
+        pushToast({
+          title: "Failed to reorder subparts",
+          tone: "error",
+        });
+      } finally {
+        setIsReorderingSubparts(false);
+      }
+    },
+    [chapterId, hasAnyUnsavedChanges, pushToast, selectedSubpartId, sortSubparts, subparts]
+  );
 
   const handleImageUpload = useCallback(async (file: File) => {
     try {
@@ -110,8 +421,6 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
       throw error;
     }
   }, [chapterId, pushToast]);
-
-  const hasUnsavedChanges = summary !== originalSummary;
 
   const breadcrumbSegments = [
     { label: "Admin", href: "/admin" },
@@ -176,22 +485,57 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
               <div className="flex items-center gap-3">
                 <div className="w-1 h-8 bg-gradient-to-b from-[var(--primary)] to-[var(--primary-hover)] rounded-full" />
                 <div>
-                  <h2 className="text-xl font-semibold tracking-tight">Chapter Summary</h2>
-                  <p className="text-sm text-text-secondary">Write or edit the chapter content in Markdown</p>
+                  <h2 className="text-xl font-semibold tracking-tight">Chapter Subparts</h2>
+                  <p className="text-sm text-text-secondary">Create, reorder, and edit chapter sections in Markdown</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                {hasUnsavedChanges && (
-                  <Badge variant="warning" className="animate-pulse">Unsaved changes</Badge>
-                )}
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                <Badge variant="neutral">{subparts.length} sections</Badge>
+                {hasAnyUnsavedChanges ? <Badge variant="warning">Unsaved changes</Badge> : null}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => void handleMoveSelectedSubpart("up")}
+                  disabled={!selectedSubpart || isReorderingSubparts || isLoadingSubparts}
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => void handleMoveSelectedSubpart("down")}
+                  disabled={!selectedSubpart || isReorderingSubparts || isLoadingSubparts}
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => void handleDeleteSubpart()}
+                  disabled={!selectedSubpart || isDeletingSubpart || isLoadingSubparts}
+                  className="gap-2"
+                >
+                  {isDeletingSubpart ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  Delete
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => void handleAddSubpart()}
+                  disabled={isCreatingSubpart || isLoadingSubparts}
+                  className="gap-2"
+                >
+                  {isCreatingSubpart ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  Add Subpart
+                </Button>
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={handleSaveSummary}
-                  disabled={isSavingSummary || !hasUnsavedChanges}
+                  onClick={() => void handleSaveSubpart()}
+                  disabled={isSavingSubpart || !hasAnyUnsavedChanges}
                   className="gap-2"
                 >
-                  {isSavingSummary ? (
+                  {isSavingSubpart ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Saving...
@@ -199,27 +543,77 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
                   ) : (
                     <>
                       <Save className="h-4 w-4" />
-                      Save Summary
+                      Save Changes
                     </>
                   )}
                 </Button>
               </div>
             </div>
 
-            {isLoadingSummary ? (
+            {isLoadingSubparts ? (
               <Card>
                 <CardContent className="flex items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-text-secondary" />
                 </CardContent>
               </Card>
+            ) : subparts.length === 0 ? (
+              <Card>
+                <CardContent className="py-10 text-center space-y-4">
+                  <p className="text-sm text-text-secondary">No subparts yet. Add your first section to begin writing chapter content.</p>
+                  <Button variant="primary" size="sm" onClick={() => void handleAddSubpart()} disabled={isCreatingSubpart}>
+                    {isCreatingSubpart ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} 
+                    Add First Subpart
+                  </Button>
+                </CardContent>
+              </Card>
             ) : (
-              <GithubMarkdownEditor
-                value={summary}
-                onChange={setSummary}
-                onImageUpload={handleImageUpload}
-                placeholder="Write chapter content in markdown..."
-                minHeight={500}
-              />
+              <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
+                <Card>
+                  <CardContent className="p-3">
+                    <div className="space-y-2">
+                      {subparts.map((subpart) => {
+                        const isActive = subpart.id === selectedSubpartId;
+                        return (
+                          <button
+                            key={subpart.id}
+                            type="button"
+                            onClick={() => handleSelectSubpart(subpart.id)}
+                            className={cn(
+                              "w-full rounded-md border px-3 py-2 text-left transition",
+                              isActive
+                                ? "border-[var(--primary)] bg-[var(--primary)]/10"
+                                : "border-border-default hover:border-[var(--primary)]/40"
+                            )}
+                          >
+                            <p className="text-xs text-text-secondary">Section {subpart.orderIndex}</p>
+                            <p className="text-sm font-medium truncate">
+                              {subpart.heading}
+                              {dirtySubpartIds.has(subpart.id) ? " *" : ""}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {selectedSubpart ? (
+                  <div className="space-y-3">
+                    <Input
+                      value={selectedSubpart.heading}
+                      onChange={(event) => handleSelectedSubpartChange("heading", event.target.value)}
+                      placeholder="Subpart heading"
+                    />
+                    <GithubMarkdownEditor
+                      value={selectedSubpart.content}
+                      onChange={(value) => handleSelectedSubpartChange("content", value)}
+                      onImageUpload={handleImageUpload}
+                      placeholder="Write subpart content in markdown..."
+                      minHeight={500}
+                    />
+                  </div>
+                ) : null}
+              </div>
             )}
           </div>
         )}

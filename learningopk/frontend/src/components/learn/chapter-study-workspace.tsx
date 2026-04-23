@@ -40,6 +40,13 @@ type ChapterStudyWorkspaceProps = {
   chapterNumber: number;
   chapterTitle: string;
   chapterSummary: string;
+  chapterSubparts: Array<{
+    id: number;
+    chapterId: number;
+    orderIndex: number;
+    heading: string;
+    content: string;
+  }>;
   chapterRevisionNotes: ChapterDetailResponse["chapter"]["revisionNotes"];
   exercises: ChapterDetailResponse["exercises"];
   quiz: ChapterDetailResponse["quiz"];
@@ -69,6 +76,7 @@ export function ChapterStudyWorkspace({
   chapterNumber,
   chapterTitle,
   chapterSummary,
+  chapterSubparts,
   chapterRevisionNotes,
   exercises,
   quiz,
@@ -139,10 +147,21 @@ export function ChapterStudyWorkspace({
   );
 
   /** Handler: mark summary as read via gamification + backend tracking */
-  const handleMarkSummaryRead = useCallback(() => {
-    markSummaryRead(String(chapterId));
-    trackProgressEvent({ eventType: "summary_read", chapterId });
-  }, [chapterId, markSummaryRead]);
+  const handleMarkSummaryRead = useCallback(
+    (subpartId?: number) => {
+      // Only mark summary as read when completing the entire summary (no subpartId)
+      // For individual subparts, only track backend progress without touching summary state
+      if (typeof subpartId !== "number") {
+        markSummaryRead(String(chapterId));
+      }
+      void trackProgressEvent(
+        typeof subpartId === "number"
+          ? { eventType: "subpart_read", chapterId, subpartId }
+          : { eventType: "summary_read", chapterId }
+      );
+    },
+    [chapterId, markSummaryRead]
+  );
 
   /** XP earned in this chapter */
   const chapterXp = chapterProgress?.xpEarned ?? 0;
@@ -216,6 +235,7 @@ export function ChapterStudyWorkspace({
     chapterNumber,
     chapterId,
     chapterSummary,
+    chapterSubparts,
     chapterRevisionNotes,
     exercises,
     quiz,

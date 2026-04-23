@@ -10,6 +10,12 @@ type SummaryReadEvent = {
   chapterId: number;
 };
 
+type SubpartReadEvent = {
+  eventType: "subpart_read";
+  chapterId: number;
+  subpartId: number;
+};
+
 type ExerciseViewEvent = {
   eventType: "exercise_view";
   chapterId: number;
@@ -20,7 +26,12 @@ type FlashcardCompleteEvent = {
   chapterId: number;
 };
 
-export type ProgressClientEvent = ChapterVisitEvent | SummaryReadEvent | ExerciseViewEvent | FlashcardCompleteEvent;
+export type ProgressClientEvent =
+  | ChapterVisitEvent
+  | SummaryReadEvent
+  | SubpartReadEvent
+  | ExerciseViewEvent
+  | FlashcardCompleteEvent;
 
 type ProgressClientResponse = {
   error?: string;

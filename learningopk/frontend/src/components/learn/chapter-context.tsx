@@ -35,6 +35,13 @@ export type ChapterContextValue = {
 
   // Chapter content
   chapterSummary: string;
+  chapterSubparts: Array<{
+    id: number;
+    chapterId: number;
+    orderIndex: number;
+    heading: string;
+    content: string;
+  }>;
   chapterRevisionNotes: ChapterDetailResponse["chapter"]["revisionNotes"];
   exercises: ChapterDetailResponse["exercises"];
   quiz: ChapterDetailResponse["quiz"];

@@ -125,6 +125,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
           chapterNumber={payload.chapter.chapterNumber}
           chapterTitle={payload.chapter.title}
           chapterSummary={payload.chapter.summary}
+          chapterSubparts={payload.chapter.subparts}
           chapterRevisionNotes={payload.chapter.revisionNotes}
           exercises={payload.exercises}
           quiz={payload.quiz}

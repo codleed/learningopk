@@ -376,10 +376,11 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
     return;
   }
 
-  const [chapterExercises, quizRows, chapterRevisionNotes] = await Promise.all([
+  const [chapterExercises, quizRows, chapterRevisionNotes, chapterSubparts] = await Promise.all([
     learnRepository.findExercisesByChapter(chapterRow.chapterId),
     learnRepository.findQuizByChapter(chapterRow.chapterId),
-    learnRepository.findRevisionNotesByChapter(chapterRow.chapterId)
+    learnRepository.findRevisionNotesByChapter(chapterRow.chapterId),
+    learnRepository.findChapterSubparts(chapterRow.chapterId)
   ]);
   const chapterPattern = await examPatternRepository.findChapterPatternByRoute(parsed.data);
 
@@ -410,7 +411,8 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
       chapterNumber: chapterRow.chapterNumber,
       title: chapterRow.chapterTitle,
       slug: chapterRow.chapterSlug,
-      summary: chapterRow.chapterSummary,
+      summary: chapterRow.chapterSummary ?? "",
+      subparts: chapterSubparts,
       coverImageUrl: chapterRow.chapterCoverImageUrl,
       examWeightage: chapterPattern
         ? {
