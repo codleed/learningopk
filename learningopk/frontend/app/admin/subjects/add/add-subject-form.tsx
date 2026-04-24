@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, type ChangeEvent } from "react";
+import { useState, useRef, useEffect, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -119,6 +119,11 @@ export function AddSubjectForm({ boards }: AddSubjectFormProps) {
       return;
     }
 
+    // Revoke existing preview URL to avoid memory leak
+    if (coverImagePreview) {
+      URL.revokeObjectURL(coverImagePreview);
+    }
+
     setCoverImage(file);
     setCoverImagePreview(URL.createObjectURL(file));
   };
@@ -160,6 +165,15 @@ export function AddSubjectForm({ boards }: AddSubjectFormProps) {
     }
   };
 
+  // Cleanup blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (coverImagePreview) {
+        URL.revokeObjectURL(coverImagePreview);
+      }
+    };
+  }, [coverImagePreview]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -197,8 +211,15 @@ export function AddSubjectForm({ boards }: AddSubjectFormProps) {
             subjectId: result.subject.id,
             file: coverImage
           });
-        } catch {
+        } catch (uploadError) {
           // Image upload failed, but subject was created
+          pushToast({
+            title: "Subject created, but cover image upload failed",
+            description: uploadError instanceof Error ? uploadError.message : "Failed to upload cover image",
+            tone: "error",
+          });
+          setIsSubmitting(false);
+          return;
         }
       }
 

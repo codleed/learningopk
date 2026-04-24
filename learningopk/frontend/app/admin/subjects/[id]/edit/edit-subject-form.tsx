@@ -353,6 +353,7 @@ export function EditSubjectForm({ subject }: EditSubjectFormProps) {
                       alt="Cover image"
                       fill
                       className="object-cover"
+                      unoptimized
                     />
                   </div>
                   <div className="mt-2 flex items-center gap-2">

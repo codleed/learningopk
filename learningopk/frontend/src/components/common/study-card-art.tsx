@@ -208,13 +208,21 @@ export function StudyCardArt({
       aria-hidden="true"
     >
       {hasCustomImage && (
-        <Image
-          src={coverImageUrl}
-          alt=""
-          fill
-          className="object-cover"
-          unoptimized
-        />
+        <>
+          <Image
+            src={coverImageUrl}
+            alt=""
+            fill
+            className="object-cover"
+            unoptimized
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(135deg, rgba(0,0,0,0.35), transparent 48%, rgba(0,0,0,0.25))`
+            }}
+          />
+        </>
       )}
       {!hasCustomImage && (
         <>

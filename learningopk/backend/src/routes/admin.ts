@@ -137,8 +137,8 @@ const curriculumSubjectCreateBodySchema = z.object({
 const curriculumSubjectUpdateBodySchema = z.object({
   name: z.string().trim().min(1),
   slug: z.string().trim().min(1),
-  icon: z.string().trim().optional(),
-  description: z.string().trim().optional(),
+  icon: z.string().trim().nullish(),
+  description: z.string().trim().nullish(),
   coverImageUrl: z.string().trim().url().nullish()
 });
 
@@ -2312,7 +2312,8 @@ adminRouter.get("/content/curriculum", requireSession, async (req, res) => {
       name: subjects.name,
       slug: subjects.slug,
       icon: subjects.icon,
-      description: subjects.description
+      description: subjects.description,
+      coverImageUrl: subjects.coverImageUrl
     })
     .from(subjects)
     .where(sql`${subjects.boardClassId} is not null`)
@@ -2369,6 +2370,7 @@ adminRouter.get("/content/curriculum", requireSession, async (req, res) => {
         slug: subject.slug,
         icon: subject.icon,
         description: subject.description,
+        coverImageUrl: subject.coverImageUrl,
         chapters: (chaptersBySubjectId.get(subject.id) ?? []).map((chapter) => ({
           id: chapter.id,
           chapterNumber: chapter.chapterNumber,

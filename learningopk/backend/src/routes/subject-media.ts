@@ -87,10 +87,23 @@ subjectMediaRouter.post("/subjects/:subjectId/cover-image", requireSession, uplo
       mimeType: file.mimetype as SupportedImageMimeType
     });
 
-    await db
-      .update(subjects)
-      .set({ coverImageUrl: objectUrl })
-      .where(eq(subjects.id, subjectId));
+    try {
+      await db
+        .update(subjects)
+        .set({ coverImageUrl: objectUrl })
+        .where(eq(subjects.id, subjectId));
+    } catch (dbError) {
+      console.error("Failed to update subject cover image in DB:", dbError);
+
+      // Cleanup: delete the uploaded object since DB update failed
+      try {
+        await deleteObjectIfExists({ objectKey });
+      } catch (deleteError) {
+        console.error("Failed to cleanup uploaded object after DB error:", deleteError);
+      }
+
+      throw dbError;
+    }
 
     if (subject.coverImageUrl && subject.coverImageUrl !== objectUrl) {
       const oldObjectKey = extractManagedObjectKeyFromPublicUrl({
@@ -99,7 +112,11 @@ subjectMediaRouter.post("/subjects/:subjectId/cover-image", requireSession, uplo
         objectUrl: subject.coverImageUrl
       });
       if (oldObjectKey) {
-        void deleteObjectIfExists({ objectKey: oldObjectKey });
+        try {
+          await deleteObjectIfExists({ objectKey: oldObjectKey });
+        } catch (deleteError) {
+          console.error("Failed to delete old cover image:", deleteError);
+        }
       }
     }
 
@@ -149,7 +166,13 @@ subjectMediaRouter.delete("/subjects/:subjectId/cover-image", requireSession, as
         objectUrl: subject.coverImageUrl
       });
       if (objectKey) {
-        void deleteObjectIfExists({ objectKey });
+        try {
+          await deleteObjectIfExists({ objectKey });
+        } catch (deleteError) {
+          console.error("Failed to delete cover image from storage:", deleteError);
+          res.status(500).json(errorResponse("Failed to delete cover image from storage.", "INTERNAL_ERROR"));
+          return;
+        }
       }
     }
 

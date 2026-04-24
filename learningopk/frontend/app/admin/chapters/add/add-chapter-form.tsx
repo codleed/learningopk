@@ -134,6 +134,11 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
       return;
     }
 
+    // Revoke existing preview URL to avoid memory leak
+    if (coverImagePreview) {
+      URL.revokeObjectURL(coverImagePreview);
+    }
+
     setCoverImage(file);
     setCoverImagePreview(URL.createObjectURL(file));
   };
