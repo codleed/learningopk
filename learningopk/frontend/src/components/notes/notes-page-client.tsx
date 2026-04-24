@@ -250,7 +250,7 @@ function NoteEditor({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-hidden">
         {mode === "edit" ? (
           <div className="p-4 sm:p-6">
             <MarkdownToolbar
@@ -268,7 +268,7 @@ function NoteEditor({
         ) : (
           <div className="p-4 sm:p-6">
             {form.content.trim() ? (
-              <div className="overflow-x-auto rounded-xl border border-border-default/50 bg-bg-surface p-6">
+              <div className="rounded-xl border border-border-default/50 bg-bg-surface p-6">
                 <MarkdownRenderer content={form.content} />
               </div>
             ) : (
@@ -469,7 +469,7 @@ export function NotesPageClient({ initialNotes }: NotesPageClientProps) {
   const showEditor = isCreating || selectedNoteId !== null;
 
   return (
-    <div className="flex h-[calc(100vh-10rem)] gap-0 overflow-hidden rounded-2xl border border-border-default bg-bg-surface shadow-[var(--shadow-sm)]">
+    <div className="flex gap-0 overflow-hidden rounded-2xl border border-border-default bg-bg-surface shadow-[var(--shadow-sm)]">
       {/* ── Sidebar ── */}
       <div
         className={cn(
@@ -528,7 +528,7 @@ export function NotesPageClient({ initialNotes }: NotesPageClientProps) {
       {/* ── Editor / Placeholder ── */}
       <div
         className={cn(
-          "flex-1",
+          "flex-1 overflow-y-auto",
           !showEditor && "hidden sm:flex sm:items-center sm:justify-center"
         )}
       >
