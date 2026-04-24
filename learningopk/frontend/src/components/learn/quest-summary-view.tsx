@@ -11,8 +11,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MarkdownContent } from "./markdown-content.js";
-import { AddToNotesDialog } from "@/components/notes/add-to-notes-dialog.js";
+import { MarkdownContent } from "./markdown-content";
+import { AddToNotesDialog } from "@/components/notes/add-to-notes-dialog";
 
 interface QuestSummaryViewProps {
   summary: string;
