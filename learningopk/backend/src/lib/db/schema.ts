@@ -141,6 +141,7 @@ export const subjects = pgTable(
     slug: text("slug").notNull(),
     icon: text("icon"),
     description: text("description"),
+    coverImageUrl: text("cover_image_url"),
     examDate: timestamp("exam_date", { withTimezone: true, mode: "date" })
   },
   (table) => [

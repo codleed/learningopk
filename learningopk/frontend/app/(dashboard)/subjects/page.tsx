@@ -100,6 +100,7 @@ export default async function SubjectsPage() {
               boardName: subject.boardName,
               boardSlug: subject.boardSlug,
               progress: progressBySubjectSlug.get(subject.slug) ?? 0,
+              coverImageUrl: subject.coverImageUrl,
             };
           })
           .filter((subject): subject is NonNullable<typeof subject> => subject !== null);
@@ -161,6 +162,7 @@ export default async function SubjectsPage() {
                           <StudyCardArt
                             subject={subject.name}
                             title={`${subject.boardName} • Class ${subject.className}`}
+                            coverImageUrl={subject.coverImageUrl}
                           />
 
                           <div className="flex items-start gap-4">

@@ -130,7 +130,16 @@ const curriculumSubjectCreateBodySchema = z.object({
   name: z.string().trim().min(1),
   slug: z.string().trim().min(1),
   icon: z.string().trim().optional(),
-  description: z.string().trim().optional()
+  description: z.string().trim().optional(),
+  coverImageUrl: z.string().trim().url().nullish()
+});
+
+const curriculumSubjectUpdateBodySchema = z.object({
+  name: z.string().trim().min(1),
+  slug: z.string().trim().min(1),
+  icon: z.string().trim().optional(),
+  description: z.string().trim().optional(),
+  coverImageUrl: z.string().trim().url().nullish()
 });
 
 const curriculumChapterCreateBodySchema = z.object({
@@ -2611,7 +2620,8 @@ adminRouter.post("/content/subjects", requireSession, async (req, res) => {
         name,
         slug,
         ...(parsedBody.data.icon ? { icon: parsedBody.data.icon.trim() } : {}),
-        ...(parsedBody.data.description ? { description: parsedBody.data.description.trim() } : {})
+        ...(parsedBody.data.description ? { description: parsedBody.data.description.trim() } : {}),
+        ...(parsedBody.data.coverImageUrl ? { coverImageUrl: parsedBody.data.coverImageUrl } : {})
       })
       .returning({
         id: subjects.id,
@@ -2619,7 +2629,8 @@ adminRouter.post("/content/subjects", requireSession, async (req, res) => {
         name: subjects.name,
         slug: subjects.slug,
         icon: subjects.icon,
-        description: subjects.description
+        description: subjects.description,
+        coverImageUrl: subjects.coverImageUrl
       });
 
     const subject = insertedRows[0];
@@ -3471,6 +3482,129 @@ adminRouter.post("/content/subjects/:id/delete", requireSession, async (req, res
     },
     timestamp: new Date().toISOString()
   });
+});
+
+adminRouter.post("/content/subjects/:id/update", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({
+      error: "Invalid subject identifier",
+      details: parsedParams.error.flatten()
+    });
+    return;
+  }
+
+  const parsedBody = curriculumSubjectUpdateBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({
+      error: "Invalid subject payload",
+      details: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) {
+    return;
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  const action = "Update subject";
+  const fallbackTarget = `Subject #${parsedParams.data.id}`;
+
+  const subjectRows = await db
+    .select({
+      id: subjects.id,
+      name: subjects.name,
+      slug: subjects.slug,
+      icon: subjects.icon,
+      description: subjects.description,
+      coverImageUrl: subjects.coverImageUrl,
+      boardClassId: subjects.boardClassId,
+      className: boardClasses.name,
+      boardName: boards.name
+    })
+    .from(subjects)
+    .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
+    .innerJoin(boards, eq(subjects.boardId, boards.id))
+    .where(eq(subjects.id, parsedParams.data.id))
+    .limit(1);
+
+  const subject = subjectRows[0];
+  if (!subject) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: fallbackTarget,
+      status: "failed",
+      message: "Subject not found",
+      actorId,
+      actorName
+    });
+    res.status(404).json({
+      error: "Subject not found"
+    });
+    return;
+  }
+
+  try {
+    const updatedRows = await db
+      .update(subjects)
+      .set({
+        name: parsedBody.data.name.trim(),
+        slug: parsedBody.data.slug.trim().toLowerCase(),
+        ...(parsedBody.data.icon !== undefined ? { icon: parsedBody.data.icon?.trim() ?? null } : {}),
+        ...(parsedBody.data.description !== undefined ? { description: parsedBody.data.description?.trim() ?? null } : {}),
+        ...(parsedBody.data.coverImageUrl !== undefined ? { coverImageUrl: parsedBody.data.coverImageUrl } : {})
+      })
+      .where(eq(subjects.id, parsedParams.data.id))
+      .returning({
+        id: subjects.id,
+        name: subjects.name,
+        slug: subjects.slug,
+        icon: subjects.icon,
+        description: subjects.description,
+        coverImageUrl: subjects.coverImageUrl
+      });
+
+    const updatedSubject = updatedRows[0];
+    if (!updatedSubject) {
+      throw new Error("Failed to update subject");
+    }
+
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${subject.boardName} / ${subject.className || "unassigned"} / ${subject.name}`,
+      status: "success",
+      message: `Updated subject ${subject.slug}`,
+      actorId,
+      actorName
+    });
+
+    // Purge cached subject/chapter lists
+    void cacheService.delete(CacheKeys.subjectList());
+    void cacheService.delete(CacheKeys.subjectDetail(subject.id));
+    void cacheService.invalidatePattern("learn:*");
+    void cacheService.invalidatePattern("chapters:list:*");
+
+    res.status(200).json({
+      subject: updatedSubject,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    await persistAuditLog({
+      scope: "content",
+      action,
+      target: `${subject.boardName} / ${subject.className || "unassigned"} / ${subject.name}`,
+      status: "failed",
+      message: error instanceof Error ? error.message : "Subject update failed",
+      actorId,
+      actorName
+    });
+    res.status(500).json({ error: "Failed to update subject" });
+  }
 });
 
 adminRouter.post("/content/chapters/:id/update", requireSession, async (req, res) => {

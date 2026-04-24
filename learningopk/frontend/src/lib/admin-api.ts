@@ -17,6 +17,7 @@ const adminCurriculumSubjectSchema = z.object({
   slug: z.string(),
   icon: z.string().nullable(),
   description: z.string().nullable(),
+  coverImageUrl: z.string().nullable().optional().default(null),
   chapters: z.array(adminCurriculumChapterSchema)
 });
 
@@ -81,7 +82,8 @@ const adminCurriculumSubjectCreateResponseSchema = z.object({
     name: z.string(),
     slug: z.string(),
     icon: z.string().nullable(),
-    description: z.string().nullable()
+    description: z.string().nullable(),
+    coverImageUrl: z.string().nullable()
   })
 });
 
@@ -89,7 +91,22 @@ const adminCurriculumSubjectMutationResponseSchema = z.object({
   subject: z.object({
     id: z.number().int().positive(),
     name: z.string(),
-    slug: z.string()
+    slug: z.string(),
+    icon: z.string().nullable(),
+    description: z.string().nullable(),
+    coverImageUrl: z.string().nullable()
+  }),
+  timestamp: z.string().datetime()
+});
+
+const adminCurriculumSubjectUpdateResponseSchema = z.object({
+  subject: z.object({
+    id: z.number().int().positive(),
+    name: z.string(),
+    slug: z.string(),
+    icon: z.string().nullable(),
+    description: z.string().nullable(),
+    coverImageUrl: z.string().nullable()
   }),
   timestamp: z.string().datetime()
 });
@@ -676,6 +693,7 @@ export type AdminCurriculumClassCreateResponse = z.infer<typeof adminCurriculumC
 export type AdminCurriculumClassMutationResponse = z.infer<typeof adminCurriculumClassMutationResponseSchema>;
 export type AdminCurriculumSubjectCreateResponse = z.infer<typeof adminCurriculumSubjectCreateResponseSchema>;
 export type AdminCurriculumSubjectMutationResponse = z.infer<typeof adminCurriculumSubjectMutationResponseSchema>;
+export type AdminCurriculumSubjectUpdateResponse = z.infer<typeof adminCurriculumSubjectUpdateResponseSchema>;
 export type AdminCurriculumChapterCreateResponse = z.infer<typeof adminCurriculumChapterCreateResponseSchema>;
 export type AdminCurriculumChapterMutationResponse = z.infer<typeof adminCurriculumChapterMutationResponseSchema>;
 export type AdminChapterSummaryResponse = z.infer<typeof adminChapterSummaryResponseSchema>;
@@ -871,6 +889,7 @@ export const createAdminCurriculumSubject = async (input: {
   slug: string;
   icon?: string;
   description?: string;
+  coverImageUrl?: string | null;
 }): Promise<AdminCurriculumSubjectCreateResponse> => {
   return fetchAdminJson({
     path: "/api/admin/content/subjects",
@@ -885,6 +904,35 @@ export const deleteAdminCurriculumSubject = async (subjectId: number): Promise<A
     path: `/api/admin/content/subjects/${subjectId}/delete`,
     schema: adminCurriculumSubjectMutationResponseSchema,
     method: "POST"
+  });
+};
+
+export const updateAdminCurriculumSubject = async ({
+  subjectId,
+  name,
+  slug,
+  icon,
+  description,
+  coverImageUrl
+}: {
+  subjectId: number;
+  name: string;
+  slug: string;
+  icon?: string | null;
+  description?: string | null;
+  coverImageUrl?: string | null;
+}): Promise<AdminCurriculumSubjectUpdateResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/subjects/${subjectId}/update`,
+    schema: adminCurriculumSubjectUpdateResponseSchema,
+    method: "POST",
+    body: {
+      name,
+      slug,
+      ...(icon !== undefined ? { icon } : {}),
+      ...(description !== undefined ? { description } : {}),
+      ...(coverImageUrl !== undefined ? { coverImageUrl } : {})
+    }
   });
 };
 
@@ -1179,6 +1227,62 @@ export const deleteAdminChapterCoverImage = async ({
 
   if (!response.ok) {
     let message = "Failed to delete chapter cover image.";
+    try {
+      const payload = (await response.json()) as { error?: string };
+      if (payload.error) {
+        message = payload.error;
+      }
+    } catch {
+      // Keep default message when body is not JSON.
+    }
+    throw new Error(message);
+  }
+};
+
+export const uploadAdminSubjectCoverImage = async ({
+  subjectId,
+  file
+}: {
+  subjectId: number;
+  file: File;
+}): Promise<{ coverImageUrl: string }> => {
+  const formData = new FormData();
+  formData.append("cover", file);
+
+  const response = await fetch(`${backendUrl}/api/admin/content/subjects/${subjectId}/cover-image`, {
+    method: "POST",
+    body: formData,
+    credentials: "include"
+  });
+
+  if (!response.ok) {
+    let message = "Failed to upload subject cover image.";
+    try {
+      const payload = (await response.json()) as { error?: string };
+      if (payload.error) {
+        message = payload.error;
+      }
+    } catch {
+      // Keep default message when body is not JSON.
+    }
+    throw new Error(message);
+  }
+
+  return z.object({ coverImageUrl: z.string() }).parse((await response.json()) as unknown);
+};
+
+export const deleteAdminSubjectCoverImage = async ({
+  subjectId
+}: {
+  subjectId: number;
+}): Promise<void> => {
+  const response = await fetch(`${backendUrl}/api/admin/content/subjects/${subjectId}/cover-image`, {
+    method: "DELETE",
+    credentials: "include"
+  });
+
+  if (!response.ok) {
+    let message = "Failed to delete subject cover image.";
     try {
       const payload = (await response.json()) as { error?: string };
       if (payload.error) {
