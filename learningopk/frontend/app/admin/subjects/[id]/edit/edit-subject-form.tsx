@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, type ChangeEvent } from "react";
+import { useState, useRef, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -88,7 +88,7 @@ export function EditSubjectForm({ subject }: EditSubjectFormProps) {
     }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     // Validate
@@ -102,6 +102,16 @@ export function EditSubjectForm({ subject }: EditSubjectFormProps) {
     }
     if (description.length > 500) {
       setDescriptionError("Description must be 500 characters or less");
+      return;
+    }
+
+    // Prevent save if media operations are in progress
+    if (isUploadingCover || isDeletingCover) {
+      pushToast({
+        title: "Please wait",
+        description: "Cover image operation is in progress. Please wait for it to complete.",
+        tone: "warning",
+      });
       return;
     }
 
@@ -396,7 +406,7 @@ export function EditSubjectForm({ subject }: EditSubjectFormProps) {
               variant="primary"
               type="submit"
               loading={isSaving}
-              disabled={isSaving || isDeleting}
+              disabled={isSaving || isDeleting || isUploadingCover || isDeletingCover}
             >
               Save Changes
             </AdminActionButton>

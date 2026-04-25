@@ -3596,6 +3596,15 @@ adminRouter.post("/content/subjects/:id/update", requireSession, async (req, res
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    // Check if this is a unique constraint violation on slug
+    const isSlugConflict = error instanceof Error &&
+      (error.message.includes("unique constraint") || error.message.includes("duplicate key")) &&
+      error.message.toLowerCase().includes("slug");
+
+    // Also check for PostgreSQL error code 23505 (unique_violation)
+    const isUniqueViolation = typeof error === 'object' && error !== null &&
+      ('code' in error && error.code === '23505');
+
     await persistAuditLog({
       scope: "content",
       action,
@@ -3605,7 +3614,12 @@ adminRouter.post("/content/subjects/:id/update", requireSession, async (req, res
       actorId,
       actorName
     });
-    res.status(500).json({ error: "Failed to update subject" });
+
+    if (isSlugConflict || (isUniqueViolation && error instanceof Error && error.message.toLowerCase().includes("slug"))) {
+      res.status(409).json({ error: "Subject slug already in use" });
+    } else {
+      res.status(500).json({ error: "Failed to update subject" });
+    }
   }
 });
 
