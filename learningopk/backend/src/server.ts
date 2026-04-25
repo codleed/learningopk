@@ -21,6 +21,7 @@ import { healthRouter, performanceRouter } from "./routes/health.js";
 import { leaderboardRouter } from "./routes/leaderboard.js";
 import { learnRouter } from "./routes/learn.js";
 import { chapterMediaRouter } from "./routes/chapter-media.js";
+import { subjectMediaRouter } from "./routes/subject-media.js";
 import { profileRouter } from "./routes/profile.js";
 import { progressRouter } from "./routes/progress.js";
 import { quizRouter } from "./routes/quiz.js";
@@ -93,6 +94,7 @@ export const createApp = () => {
   app.use("/api/notes", notesRouter);
   app.use("/api/users", profileRouter);
   app.use("/api/admin/content", chapterMediaRouter);
+  app.use("/api/admin/content", subjectMediaRouter);
   app.use("/api/admin", performanceRouter);
 
   app.get("/api/ready", (_req, res) => {

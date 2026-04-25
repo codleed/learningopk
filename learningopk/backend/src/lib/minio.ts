@@ -81,6 +81,18 @@ export const buildChapterCoverObjectKey = ({
   return `chapter-covers/${chapterId}/${sanitizePathSegment(objectId)}.${fileExtension}`;
 };
 
+export const buildSubjectCoverObjectKey = ({
+  subjectId,
+  fileExtension,
+  objectId = randomUUID()
+}: {
+  subjectId: number;
+  fileExtension: "jpg" | "png" | "webp" | "gif";
+  objectId?: string;
+}): string => {
+  return `subject-covers/${subjectId}/${sanitizePathSegment(objectId)}.${fileExtension}`;
+};
+
 export const buildPublicObjectUrl = ({
   bucket = env.MINIO_BUCKET,
   objectKey

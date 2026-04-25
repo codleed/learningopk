@@ -3,6 +3,7 @@
 import { useState, useRef, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 import {
   AdminBreadcrumb,
@@ -16,11 +17,13 @@ import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import {
   createAdminCurriculumChapter,
+  uploadAdminChapterCoverImage,
   type AdminCurriculumBoard,
 } from "@/lib/admin-api";
 import { useToast } from "@/components/ui/toast";
 import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
 import { CodeMirrorMarkdownEditor } from "@/components/admin/codemirror-markdown-editor";
+import { X } from "lucide-react";
 
 const toSlug = (value: string) =>
   value
@@ -66,6 +69,8 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
   const [slug, setSlug] = useState<string>("");
   const [summary, setSummary] = useState<string>("");
   const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
 
   const [subjectError, setSubjectError] = useState<string>("");
   const [chapterNumberError, setChapterNumberError] = useState<string>("");
@@ -73,6 +78,8 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
   const [summaryError, setSummaryError] = useState<string>("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const coverImageInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubjectChange = (value: string) => {
     setSubjectId(value);
@@ -100,6 +107,50 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
     setSummary(value);
     if (summaryError) {
       setSummaryError("");
+    }
+  };
+
+  const handleCoverImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      pushToast({
+        title: "Invalid file type",
+        description: "Please upload a JPG, PNG, or WebP image.",
+        tone: "error"
+      });
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      pushToast({
+        title: "File too large",
+        description: "Please upload an image smaller than 10MB.",
+        tone: "error"
+      });
+      event.target.value = "";
+      return;
+    }
+
+    // Revoke existing preview URL to avoid memory leak
+    if (coverImagePreview) {
+      URL.revokeObjectURL(coverImagePreview);
+    }
+
+    setCoverImage(file);
+    setCoverImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleRemoveCoverImage = () => {
+    setCoverImage(null);
+    if (coverImagePreview) {
+      URL.revokeObjectURL(coverImagePreview);
+    }
+    setCoverImagePreview(null);
+    if (coverImageInputRef.current) {
+      coverImageInputRef.current.value = "";
     }
   };
 
@@ -215,12 +266,24 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
     setIsSubmitting(true);
 
     try {
-      await createAdminCurriculumChapter({
+      const result = await createAdminCurriculumChapter({
         subjectId: parseInt(subjectId, 10),
         chapterNumber: parseInt(chapterNumber, 10),
         title: title.trim(),
         slug,
       });
+
+      if (coverImage && result.chapter?.id) {
+        try {
+          await uploadAdminChapterCoverImage({
+            chapterId: result.chapter.id,
+            file: coverImage
+          });
+        } catch {
+          // Image upload failed, but chapter was created
+        }
+      }
+
       pushToast({
         title: "Chapter created",
         description: `"${title}" has been created successfully.`,
@@ -330,6 +393,55 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
               placeholder="auto-generated-from-title"
               className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] cursor-not-allowed"
             />
+          </AdminFormField>
+
+          <AdminFormField
+            id="chapter-cover-image"
+            label="Cover Image"
+            hint="Optional, JPG/PNG/WebP, max 10MB"
+          >
+            <input
+              ref={coverImageInputRef}
+              type="file"
+              id="chapter-cover-image"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleCoverImageChange}
+              className="hidden"
+            />
+            {coverImagePreview ? (
+              <div className="relative w-full max-w-[240px]">
+                <div className="relative aspect-video overflow-hidden rounded-lg border border-[var(--border-default)]">
+                  <Image
+                    src={coverImagePreview}
+                    alt="Cover image preview"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveCoverImage}
+                  className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--bg-danger)] text-white shadow-md hover:bg-[var(--bg-danger-hover)]"
+                  aria-label="Remove cover image"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+                <p className="mt-1.5 truncate text-xs text-[var(--text-secondary)]">
+                  {coverImage?.name}
+                </p>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => coverImageInputRef.current?.click()}
+                className="inline-flex items-center gap-2 rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] px-4 py-3 text-sm text-[var(--text-secondary)] transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--bg-surface)]"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                </svg>
+                Upload cover image
+              </button>
+            )}
           </AdminFormField>
 
           <AdminFormField

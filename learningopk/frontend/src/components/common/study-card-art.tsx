@@ -24,6 +24,7 @@ type StudyCardArtProps = {
   index?: number;
   variant?: StudyCardArtVariant;
   className?: string;
+  coverImageUrl?: string | null;
 };
 
 type SubjectArtConfig = {
@@ -183,12 +184,14 @@ export function StudyCardArt({
   index = 0,
   variant = "subject",
   className,
+  coverImageUrl,
 }: StudyCardArtProps) {
   const art = resolveArt(subject);
   const Icon = art.icon;
   const seed = (chapterNumber ?? index + 1) % 12;
   const isChapter = variant === "chapter";
   const isCompact = variant === "compact";
+  const hasCustomImage = !!coverImageUrl;
 
   return (
     <div
@@ -198,24 +201,47 @@ export function StudyCardArt({
         className,
       )}
       style={{
-        background: `radial-gradient(circle at 18% 18%, ${art.accentSoft}, transparent 38%), linear-gradient(135deg, rgba(255,255,255,0.96), rgba(248,250,252,0.88) 48%, ${art.accentSoft} 100%)`,
+        background: hasCustomImage
+          ? undefined
+          : `radial-gradient(circle at 18% 18%, ${art.accentSoft}, transparent 38%), linear-gradient(135deg, rgba(255,255,255,0.96), rgba(248,250,252,0.88) 48%, ${art.accentSoft} 100%)`,
       }}
       aria-hidden="true"
     >
-      <div className="absolute inset-0">
-        <Motif motif={art.motif} accent={art.accent} seed={seed} />
-      </div>
+      {hasCustomImage && (
+        <>
+          <Image
+            src={coverImageUrl}
+            alt=""
+            fill
+            className="object-cover"
+            unoptimized
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(135deg, rgba(0,0,0,0.35), transparent 48%, rgba(0,0,0,0.25))`
+            }}
+          />
+        </>
+      )}
+      {!hasCustomImage && (
+        <>
+          <div className="absolute inset-0">
+            <Motif motif={art.motif} accent={art.accent} seed={seed} />
+          </div>
 
-      <div
-        className="absolute -right-8 -top-8 h-28 w-28 rounded-full blur-2xl"
-        style={{ backgroundColor: `${art.accent}22` }}
-      />
-      <div
-        className="absolute -bottom-10 left-4 h-24 w-24 rounded-full blur-2xl"
-        style={{ backgroundColor: `${art.accent}1a` }}
-      />
+          <div
+            className="absolute -right-8 -top-8 h-28 w-28 rounded-full blur-2xl"
+            style={{ backgroundColor: `${art.accent}22` }}
+          />
+          <div
+            className="absolute -bottom-10 left-4 h-24 w-24 rounded-full blur-2xl"
+            style={{ backgroundColor: `${art.accent}1a` }}
+          />
 
-      <div className="absolute inset-x-0 top-0 h-px bg-white/70" />
+          <div className="absolute inset-x-0 top-0 h-px bg-white/70" />
+        </>
+      )}
 
       <div className="relative flex h-full flex-col justify-between p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">

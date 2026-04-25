@@ -78,6 +78,7 @@ export class LearnRepository {
       boardId: number;
       boardName: string;
       boardSlug: string;
+      coverImageUrl: string | null;
     }>>(cacheKey);
     if (cached) return cached;
 
@@ -92,7 +93,8 @@ export class LearnRepository {
         boardClassId: subjects.boardClassId,
         boardId: subjects.boardId,
         boardName: boards.name,
-        boardSlug: boards.slug
+        boardSlug: boards.slug,
+        coverImageUrl: subjects.coverImageUrl
       })
       .from(subjects)
       .innerJoin(boards, eq(subjects.boardId, boards.id))

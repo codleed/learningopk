@@ -28,7 +28,8 @@ const subjectListItemSchema = z.object({
   boardClassId: z.number().int().positive().nullable(),
   boardId: z.number().int().positive(),
   boardName: z.string(),
-  boardSlug: z.string()
+  boardSlug: z.string(),
+  coverImageUrl: z.string().nullable().optional().default(null)
 });
 
 const subjectsListResponseSchema = z.object({

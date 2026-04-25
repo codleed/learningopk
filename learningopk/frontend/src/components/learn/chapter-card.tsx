@@ -55,6 +55,7 @@ export function ChapterCard({ chapter, href, index = 0 }: ChapterCardProps) {
                   fill
                   sizes="(max-width: 640px) 100vw, 40vw"
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  unoptimized
                 />
               </div>
             ) : (

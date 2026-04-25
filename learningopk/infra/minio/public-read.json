@@ -9,7 +9,9 @@
       "Action": ["s3:GetObject"],
       "Resource": [
         "arn:aws:s3:::learningo-media/profile-images/*",
-        "arn:aws:s3:::learningo-media/chapter-summaries/*"
+        "arn:aws:s3:::learningo-media/chapter-summaries/*",
+        "arn:aws:s3:::learningo-media/subject-covers/*",
+        "arn:aws:s3:::learningo-media/chapter-covers/*"
       ]
     }
   ]
