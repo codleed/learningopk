@@ -176,6 +176,7 @@ const adminChapterSubpartSchema = z.object({
 const adminChapterSubpartsResponseSchema = z.object({
   chapter: z.object({
     id: z.number().int().positive(),
+    chapterNumber: z.number().int().positive(),
     title: z.string()
   }),
   subparts: z.array(adminChapterSubpartSchema)
