@@ -5814,6 +5814,7 @@ adminRouter.get("/content/chapters/:id/subparts", requireSession, async (req, re
   const chapterRows = await db
     .select({
       id: chapters.id,
+      chapterNumber: chapters.chapterNumber,
       title: chapters.title
     })
     .from(chapters)
