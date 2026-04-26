@@ -75,6 +75,8 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
   const [isCreatingSubpart, setIsCreatingSubpart] = useState(false);
   const [isDeletingSubpart, setIsDeletingSubpart] = useState(false);
   const [isReorderingSubparts, setIsReorderingSubparts] = useState(false);
+  const [chapterNumber, setChapterNumber] = useState<number | null>(null);
+  const [chapterTitle, setChapterTitle] = useState<string | null>(null);
 
   const sortSubparts = useCallback((items: AdminChapterSubpart[]) => {
     return [...items].sort((left, right) => {
@@ -89,6 +91,8 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
     setIsLoadingSubparts(true);
     try {
       const payload = await getAdminChapterSubparts(chapterId);
+      setChapterNumber(payload.chapter.chapterNumber);
+      setChapterTitle(payload.chapter.title);
       const ordered = sortSubparts(payload.subparts);
       setSubparts(ordered);
       setPersistedSubparts(ordered);
@@ -426,7 +430,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
     { label: "Admin", href: "/admin" },
     { label: "Content", href: "/admin/content" },
     { label: "Chapters", href: "/admin/content/chapters" },
-    { label: `Chapter ${chapterId}` },
+    { label: chapterNumber !== null && chapterTitle ? `Chapter ${chapterNumber}: ${chapterTitle}` : `Chapter ${chapterId}` },
   ];
 
   return (
@@ -438,7 +442,7 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
             <AdminBreadcrumb segments={breadcrumbSegments} className="mb-4" />
           </StickyBreadcrumbWrapper>
           <AdminPageHeader
-            title={`Chapter ${chapterId}`}
+            title={chapterNumber !== null && chapterTitle ? `Chapter ${chapterNumber}: ${chapterTitle}` : `Chapter ${chapterId}`}
             subtitle="Manage chapter content, quizzes, flashcards, and exercises"
           />
         </div>
