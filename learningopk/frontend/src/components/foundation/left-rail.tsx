@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
+import { Avatar } from "@/components/ui";
 import { ThemeToggleCompact } from "@/components/ui/theme-toggle";
 import type { SessionPayload } from "@/lib/session";
 import { cn } from "@/lib/utils";
@@ -25,15 +26,6 @@ type LeftRailProps = {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
 };
-
-const getInitials = (name: string): string =>
-  name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
 
 interface NavItemProps {
   item: NavItemType;
@@ -187,8 +179,6 @@ export function LeftRail({
   const truncatedName = useMemo(() => {
     return displayName.length > 20 ? displayName.slice(0, 20) + "..." : displayName;
   }, [displayName]);
-
-  const avatarInitials = getInitials(displayName);
 
   const renderStudentNav = () => (
     <div className="flex w-full flex-col gap-1">
@@ -384,12 +374,12 @@ export function LeftRail({
                   : "gap-3"
               )}
             >
-              <div className={cn(
-                "flex shrink-0 items-center justify-center rounded-full bg-[var(--sidebar-profile-avatar-bg)] text-[var(--sidebar-profile-avatar-text)] font-bold transition-all duration-150 group-hover:scale-105",
-                !actualExpanded ? "h-10 w-10 text-sm" : "h-10 w-10 text-sm"
-              )}>
-                {avatarInitials}
-              </div>
+              <Avatar
+                src={session.user.image}
+                name={displayName}
+                size="md"
+                className="shrink-0 transition-all duration-150 group-hover:scale-105"
+              />
               {actualExpanded && (
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-[var(--sidebar-profile-text)]">
