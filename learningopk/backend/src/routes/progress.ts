@@ -185,6 +185,6 @@ progressRouter.post("/todays-focus/complete", requireSession, async (req, res) =
     res.status(200).json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    res.status(400).json(errorResponse(message, "INTERNAL_ERROR"));
+    res.status(500).json(errorResponse(message, "INTERNAL_ERROR"));
   }
 });
