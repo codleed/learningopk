@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 
+import { errorResponse } from "../lib/response.js";
 import { requireSession } from "../lib/session.js";
 import type { AuthenticatedRequest } from "../lib/session.js";
 import { progressService } from "../services/progress.service.js";
@@ -84,7 +85,7 @@ progressRouter.get("/dashboard", requireSession, async (req, res) => {
   const userBoard = authedReq.session.user.board;
 
   if (!userBoard) {
-    res.status(400).json({ error: "User board not set. Complete onboarding to view your dashboard." });
+    res.status(400).json(errorResponse("User board not set. Complete onboarding to view your dashboard.", "VALIDATION_ERROR"));
     return;
   }
 
@@ -93,7 +94,7 @@ progressRouter.get("/dashboard", requireSession, async (req, res) => {
     res.status(200).json(dashboard);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    res.status(500).json({ error: message });
+    res.status(500).json(errorResponse(message, "INTERNAL_ERROR"));
   }
 });
 
@@ -175,7 +176,7 @@ progressRouter.post("/todays-focus/complete", requireSession, async (req, res) =
   const userBoard = authedReq.session.user.board;
 
   if (!userBoard) {
-    res.status(400).json({ error: "User board not set. Complete onboarding to view your dashboard." });
+    res.status(400).json(errorResponse("User board not set. Complete onboarding to view your dashboard.", "VALIDATION_ERROR"));
     return;
   }
 
@@ -184,6 +185,6 @@ progressRouter.post("/todays-focus/complete", requireSession, async (req, res) =
     res.status(200).json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    res.status(400).json({ error: message });
+    res.status(400).json(errorResponse(message, "INTERNAL_ERROR"));
   }
 });
