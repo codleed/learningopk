@@ -159,7 +159,7 @@ function NoteEditor({
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-border-default px-4 py-3 sm:px-6">
         <button
@@ -250,7 +250,7 @@ function NoteEditor({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">
+      <div>
         {mode === "edit" ? (
           <div className="p-4 sm:p-6">
             <MarkdownToolbar
@@ -469,7 +469,7 @@ export function NotesPageClient({ initialNotes }: NotesPageClientProps) {
   const showEditor = isCreating || selectedNoteId !== null;
 
   return (
-    <div className="flex gap-0 overflow-hidden rounded-2xl border border-border-default bg-bg-surface shadow-[var(--shadow-sm)]">
+    <div className="flex gap-0 rounded-2xl border border-border-default bg-bg-surface shadow-[var(--shadow-sm)]">
       {/* ── Sidebar ── */}
       <div
         className={cn(
@@ -500,7 +500,7 @@ export function NotesPageClient({ initialNotes }: NotesPageClientProps) {
         </div>
 
         {/* Notes list */}
-        <div className="flex-1 space-y-2 overflow-y-auto p-3 scrollbar-thin scrollbar-thumb-border-default scrollbar-track-transparent">
+        <div className="flex-1 space-y-2 overflow-y-auto p-3 sm:max-h-[calc(100vh-16rem)] scrollbar-thin scrollbar-thumb-border-default scrollbar-track-transparent">
           {filteredNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <NotebookPen className="mb-2 h-8 w-8 text-text-muted" />
@@ -528,7 +528,7 @@ export function NotesPageClient({ initialNotes }: NotesPageClientProps) {
       {/* ── Editor / Placeholder ── */}
       <div
         className={cn(
-          "flex-1 overflow-y-auto",
+          "flex-1 min-w-0",
           !showEditor && "hidden sm:flex sm:items-center sm:justify-center"
         )}
       >
