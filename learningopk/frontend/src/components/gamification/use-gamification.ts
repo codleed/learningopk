@@ -56,8 +56,8 @@ export function useGamification() {
 
   const markSubpartRead = useCallback((chapterId: string, subpartId: number, totalSubparts: number) => {
     const result = markSubpartReadStorage(chapterId, subpartId, totalSubparts);
+    updateStreakStorage();
     if (result.xpAwarded > 0) {
-      updateStreakStorage();
       addXp(result.xpAwarded, "Read chapter subpart");
     }
     return result;
