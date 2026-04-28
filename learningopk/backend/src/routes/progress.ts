@@ -169,7 +169,8 @@ progressRouter.post("/todays-focus/complete", requireSession, async (req, res) =
   const authedReq = req as AuthenticatedRequest;
 
   try {
-    const result = await progressService.completeTodaysFocus(authedReq.session.user.id);
+    const userBoard = authedReq.session.user.board as string | undefined;
+    const result = await progressService.completeTodaysFocus(authedReq.session.user.id, userBoard);
     res.status(200).json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

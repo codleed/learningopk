@@ -466,7 +466,7 @@ export class ProgressService {
     };
   }
 
-  async completeTodaysFocus(userId: string) {
+  async completeTodaysFocus(userId: string, boardSlug?: string) {
     const todayKey = getCurrentPktContext().todayKey;
     const existing = await progressRepository.findDailyMomentumGoal(userId, todayKey);
 
@@ -497,7 +497,7 @@ export class ProgressService {
         () => []
       )
     });
-    const subjectProgressRows = await progressRepository.findSubjectProgress(userId);
+    const subjectProgressRows = await progressRepository.findSubjectProgress(userId, boardSlug);
 
     const focus = buildTodaysFocus({
       streakDays,
