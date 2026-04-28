@@ -87,7 +87,7 @@ export function ChapterStudyWorkspace({
     autoOpenAi ? "Guide me through this chapter using hints first." : null,
   );
 
-  const { state, xpQueue, dismissXpNotification, leveledUp, markSummaryRead, markExerciseComplete, completeQuiz } = useGamification();
+  const { state, xpQueue, dismissXpNotification, leveledUp, markSummaryRead, markSubpartRead, markExerciseComplete, completeQuiz } = useGamification();
   const { streak } = useStreakTracking();
   const { visibleNotifications, dismiss } = useXpNotifications(xpQueue, dismissXpNotification);
 
@@ -149,9 +149,15 @@ export function ChapterStudyWorkspace({
   /** Handler: mark summary as read via gamification + backend tracking */
   const handleMarkSummaryRead = useCallback(
     (subpartId?: number) => {
-      // Only mark summary as read when completing the entire summary (no subpartId)
-      // For individual subparts, only track backend progress without touching summary state
-      if (typeof subpartId !== "number") {
+      // For individual subparts: track backend progress + update localStorage
+      if (typeof subpartId === "number") {
+        const totalSubparts = chapterSubparts.length;
+        const result = markSubpartRead(String(chapterId), subpartId, totalSubparts);
+        if (result.summaryRead) {
+          markSummaryRead(String(chapterId));
+        }
+      } else {
+        // Only mark summary as read when explicitly completing the summary
         markSummaryRead(String(chapterId));
       }
       void trackProgressEvent(
@@ -160,7 +166,7 @@ export function ChapterStudyWorkspace({
           : { eventType: "summary_read", chapterId }
       );
     },
-    [chapterId, markSummaryRead]
+    [chapterId, chapterSubparts.length, markSummaryRead, markSubpartRead]
   );
 
   /** XP earned in this chapter */
