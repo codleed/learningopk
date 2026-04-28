@@ -81,7 +81,12 @@ progressRouter.post("/events", requireSession, async (req, res) => {
 progressRouter.get("/dashboard", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   const userId = authedReq.session.user.id;
-  const userBoard = authedReq.session.user.board as string | undefined;
+  const userBoard = authedReq.session.user.board;
+
+  if (!userBoard) {
+    res.status(400).json({ error: "User board not set. Complete onboarding to view your dashboard." });
+    return;
+  }
 
   try {
     const dashboard = await progressService.getDashboard(userId, authedReq.session.user.name, userBoard);
@@ -167,9 +172,14 @@ progressRouter.post("/todays-focus/complete", requireSession, async (req, res) =
   }
 
   const authedReq = req as AuthenticatedRequest;
+  const userBoard = authedReq.session.user.board;
+
+  if (!userBoard) {
+    res.status(400).json({ error: "User board not set. Complete onboarding to view your dashboard." });
+    return;
+  }
 
   try {
-    const userBoard = authedReq.session.user.board as string | undefined;
     const result = await progressService.completeTodaysFocus(authedReq.session.user.id, userBoard);
     res.status(200).json(result);
   } catch (error) {

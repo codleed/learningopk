@@ -125,8 +125,8 @@ export default async function DashboardPage({
   /* ---- Derive summary-dependent values ---- */
   const subjects = summary?.subjects ?? [];
   const scopedSummarySubjects = subjects.filter((subject) => {
-    if (session.user.board && subject.boardSlug !== session.user.board)
-      return false;
+    if (!session.user.board) return false;
+    if (subject.boardSlug !== session.user.board) return false;
     return true;
   });
   const orderedSubjects = [...scopedSummarySubjects].sort(

@@ -205,7 +205,7 @@ export class ProgressService {
     };
   }
 
-  async getDashboard(userId: string, studentName: string, boardSlug?: string) {
+  async getDashboard(userId: string, studentName: string, boardSlug: string) {
     const chapterQuizRows = await progressRepository.findChapterQuizTotalMarks();
 
     const chapterTotalMarks = new Map<number, number>();
@@ -466,7 +466,7 @@ export class ProgressService {
     };
   }
 
-  async completeTodaysFocus(userId: string, boardSlug?: string) {
+  async completeTodaysFocus(userId: string, boardSlug: string) {
     const todayKey = getCurrentPktContext().todayKey;
     const existing = await progressRepository.findDailyMomentumGoal(userId, todayKey);
 
