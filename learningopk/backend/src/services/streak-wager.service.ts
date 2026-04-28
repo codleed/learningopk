@@ -124,15 +124,15 @@ export class StreakWagerService {
   }
 
   async computeEffectiveStreakDays(userId: string): Promise<number> {
-    const progressRows = await progressRepository.findProgressByUserId(userId);
+    const activityLogRows = await progressRepository.findActivityLogByUserId(userId);
     const recoveredProtectedDateKeys = await this.getRecoveredProtectedDateKeys(userId);
     const lostProtectedDateKeys = new Set(await this.getLostProtectedDateKeys(userId));
     const currentPktDate = getCurrentPktContext().todayKey;
+    const activityDateKeys = new Set(
+      activityLogRows.map((row) => getPktDateKey(row.occurredAt))
+    );
     const activityDates = [
-      ...progressRows
-        .map((row) => row.activityAt)
-        .filter((value): value is Date => value instanceof Date)
-        .map((value) => getPktDateKey(value))
+      ...[...activityDateKeys]
         .filter((value) => !lostProtectedDateKeys.has(value))
         .map((value) => new Date(`${value}T00:00:00.000Z`)),
       ...recoveredProtectedDateKeys.map((dateKey) => new Date(`${dateKey}T00:00:00.000Z`))
