@@ -205,7 +205,7 @@ export class ProgressService {
     };
   }
 
-  async getDashboard(userId: string, studentName: string) {
+  async getDashboard(userId: string, studentName: string, boardSlug: string) {
     const chapterQuizRows = await progressRepository.findChapterQuizTotalMarks();
 
     const chapterTotalMarks = new Map<number, number>();
@@ -215,7 +215,7 @@ export class ProgressService {
       }
     }
 
-    const subjectProgressRows = await progressRepository.findSubjectProgress(userId);
+    const subjectProgressRows = await progressRepository.findSubjectProgress(userId, boardSlug);
 
     const subjectAggregates = this.aggregateSubjectProgress(subjectProgressRows, chapterTotalMarks);
 
@@ -466,7 +466,7 @@ export class ProgressService {
     };
   }
 
-  async completeTodaysFocus(userId: string) {
+  async completeTodaysFocus(userId: string, boardSlug: string) {
     const todayKey = getCurrentPktContext().todayKey;
     const existing = await progressRepository.findDailyMomentumGoal(userId, todayKey);
 
@@ -497,7 +497,7 @@ export class ProgressService {
         () => []
       )
     });
-    const subjectProgressRows = await progressRepository.findSubjectProgress(userId);
+    const subjectProgressRows = await progressRepository.findSubjectProgress(userId, boardSlug);
 
     const focus = buildTodaysFocus({
       streakDays,

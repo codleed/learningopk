@@ -262,7 +262,7 @@ export class ProgressRepository {
       .limit(1);
   }
 
-  async findSubjectProgress(userId: string) {
+  async findSubjectProgress(userId: string, boardSlug?: string) {
     return withOptionalDbFallback(
       "subjects.exam_date.findSubjectProgress",
       () =>
@@ -287,6 +287,7 @@ export class ProgressRepository {
           .innerJoin(boards, eq(subjects.boardId, boards.id))
           .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
           .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+          .where(boardSlug ? eq(boards.slug, boardSlug) : undefined)
           .orderBy(asc(subjects.name), asc(chapters.chapterNumber)),
       () =>
         db
@@ -310,6 +311,7 @@ export class ProgressRepository {
           .innerJoin(boards, eq(subjects.boardId, boards.id))
           .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
           .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+          .where(boardSlug ? eq(boards.slug, boardSlug) : undefined)
           .orderBy(asc(subjects.name), asc(chapters.chapterNumber))
     );
   }
