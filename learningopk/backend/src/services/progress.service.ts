@@ -221,12 +221,12 @@ export class ProgressService {
 
     await streakWagerService.settleOutstandingWagers(userId);
 
-    const progressActivityRows = await progressRepository.findProgressByUserId(userId);
+    const activityLogRows = await progressRepository.findActivityLogByUserId(userId);
     const recoveredProtectedDateKeys = await streakWagerService.getRecoveredProtectedDateKeys(userId);
     const lostProtectedDateKeys = await streakWagerService.getLostProtectedDateKeys(userId);
 
     const { streakDays, longestStreakDays, weeklyActivity, activityCalendar } = this.calculateActivityMetrics(
-      progressActivityRows,
+      activityLogRows,
       {
         recoveredProtectedDateKeys,
         lostProtectedDateKeys
@@ -486,8 +486,8 @@ export class ProgressService {
       }
     }
 
-    const progressActivityRows = await progressRepository.findProgressByUserId(userId);
-    const { streakDays } = this.calculateActivityMetrics(progressActivityRows);
+    const activityLogRows = await progressRepository.findActivityLogByUserId(userId);
+    const { streakDays } = this.calculateActivityMetrics(activityLogRows);
     const context = getCurrentPktContext();
     const hasActivityToday = await progressRepository.hasActivityInRange(userId, context.dayStartUtc, context.nextDayStartUtc);
     const ramadanConfig = resolveRamadanConfig({
@@ -613,10 +613,8 @@ export class ProgressService {
   }
 
   private calculateActivityMetrics(
-    progressActivityRows: Array<{
-      activityAt: Date | null;
-      exercisesViewed: number;
-      quizAttemptsCount: number;
+    activityLogRows: Array<{
+      occurredAt: Date;
     }>,
     options?: {
       recoveredProtectedDateKeys?: string[];
@@ -624,11 +622,9 @@ export class ProgressService {
     }
   ) {
     const activityDailyCounts = new Map<string, number>();
-    for (const row of progressActivityRows) {
-      if (!row.activityAt) continue;
-      const key = getPktDateKey(row.activityAt);
-      const count = 1 + row.exercisesViewed + row.quizAttemptsCount;
-      activityDailyCounts.set(key, (activityDailyCounts.get(key) ?? 0) + count);
+    for (const row of activityLogRows) {
+      const key = getPktDateKey(row.occurredAt);
+      activityDailyCounts.set(key, (activityDailyCounts.get(key) ?? 0) + 1);
     }
 
     for (const recoveredProtectedDateKey of options?.recoveredProtectedDateKeys ?? []) {

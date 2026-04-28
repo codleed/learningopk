@@ -613,6 +613,34 @@ export const userProgressSubparts = pgTable(
   ]
 );
 
+export const activityEventTypeEnum = pgEnum("activity_event_type", [
+  "chapter_visit",
+  "summary_read",
+  "subpart_read",
+  "exercise_view",
+  "flashcard_complete",
+  "quiz_submit"
+]);
+
+export const userActivityLog = pgTable(
+  "user_activity_log",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    eventType: activityEventTypeEnum("event_type").notNull(),
+    chapterId: integer("chapter_id")
+      .notNull()
+      .references(() => chapters.id, { onDelete: "cascade" }),
+    occurredAt: timestamp("occurred_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [
+    index("user_activity_log_user_occurred_idx").on(table.userId, desc(table.occurredAt)),
+    index("user_activity_log_user_date_idx").on(table.userId)
+  ]
+);
+
 export const mockExams = pgTable("mock_exams", {
   id: serial("id").primaryKey(),
   boardId: integer("board_id")

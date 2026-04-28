@@ -1,7 +1,8 @@
 import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "./db/index.js";
-import { chapterSubparts, userProgress, userProgressSubparts } from "./db/schema.js";
+import { chapterSubparts, userActivityLog, userProgress, userProgressSubparts } from "./db/schema.js";
+import { isMissingOptionalDbFeatureError } from "./db-schema-compat.js";
 import { studyGroupsService } from "../services/study-groups.service.js";
 
 type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -79,6 +80,18 @@ const selectProgressById = async (id: number): Promise<ProgressSnapshot | null> 
     .limit(1);
 
   return rows[0] ?? null;
+};
+
+const logActivityEvent = async (userId: string, eventType: ProgressEventInput["eventType"], chapterId: number, occurredAt: Date): Promise<void> => {
+  try {
+    await db
+      .insert(userActivityLog)
+      .values({ userId, eventType, chapterId, occurredAt });
+  } catch (error) {
+    if (!isMissingOptionalDbFeatureError(error)) {
+      throw error;
+    }
+  }
 };
 
 export const applyProgressEvent = async (input: ProgressEventInput): Promise<ProgressSnapshot> => {
@@ -230,6 +243,10 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
       throw new Error("Could not fetch updated user progress.");
     }
 
+    if (result.isNewRead) {
+      await logActivityEvent(input.userId, "subpart_read", input.chapterId, occurredAt);
+    }
+
     return { ...snapshot, isNewRead: result.isNewRead };
   }
 
@@ -260,6 +277,8 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
     if (!snapshot) {
       throw new Error("Could not fetch inserted user progress.");
     }
+
+    await logActivityEvent(input.userId, input.eventType, input.chapterId, occurredAt);
 
     return snapshot;
   }
@@ -310,6 +329,8 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
   if (!snapshot) {
     throw new Error("Could not fetch updated user progress.");
   }
+
+  await logActivityEvent(input.userId, input.eventType, input.chapterId, occurredAt);
 
   if (input.eventType === "quiz_submit") {
     await studyGroupsService.recordQuizScore({
