@@ -58,6 +58,12 @@ export function QuestSummaryView({
   const isLastPart = currentIndex >= totalParts - 1;
   const progressPercent = (currentIndex + 1) / totalParts * 100;
 
+  // Track which subparts have been read in this session
+  const [readSubpartIds, setReadSubpartIds] = useState<Set<number>>(new Set());
+
+  const allSubpartsRead = hasSubparts && readSubpartIds.size >= orderedSubparts.length;
+  const effectivelyRead = isRead || allSubpartsRead;
+
   const summaryViewRef = useRef<HTMLDivElement>(null);
 
   // Text selection "Add to Notes" feature
@@ -173,15 +179,17 @@ export function QuestSummaryView({
   useEffect(() => {
     const currentSubpartId = activeSubpart?.id ?? null;
 
-    // If we have a previous subpart and we're now on a different one, mark the previous as read
     if (prevSubpartIdRef.current !== null && prevSubpartIdRef.current !== currentSubpartId) {
       onMarkRead(prevSubpartIdRef.current);
+      setReadSubpartIds((prev) => {
+        const next = new Set(prev);
+        next.add(prevSubpartIdRef.current!);
+        return next;
+      });
     }
 
-    // Update the ref to track the current subpart
     prevSubpartIdRef.current = currentSubpartId;
 
-    // On unmount, mark the last viewed subpart as read
     return () => {
       if (prevSubpartIdRef.current !== null) {
         onMarkRead(prevSubpartIdRef.current);
@@ -204,7 +212,7 @@ export function QuestSummaryView({
             </span>
           ) : null}
 
-          {isRead ? (
+          {effectivelyRead ? (
             <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="h-3.5 w-3.5" />
               <span>Completed</span>
@@ -256,6 +264,7 @@ export function QuestSummaryView({
             >
               {orderedSubparts.map((part, index) => {
                 const isActive = index === currentIndex;
+                const isSubpartRead = readSubpartIds.has(part.id);
 
                 return (
                   <button
@@ -275,7 +284,7 @@ export function QuestSummaryView({
                     ].join(" ")}
                   >
                     <p className="font-[var(--font-mono)] text-[0.625rem] uppercase tracking-[0.08em] text-text-muted">
-                      Part {index + 1}
+                      Part {index + 1}{isSubpartRead ? " ✓" : ""}
                     </p>
                     <p className="max-w-[12rem] truncate text-xs font-medium">{part.heading}</p>
                   </button>
@@ -366,7 +375,7 @@ export function QuestSummaryView({
         </div>
       ) : null}
 
-      {!isRead && (
+      {!effectivelyRead && (
         <motion.div
           initial={reduced ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -385,7 +394,19 @@ export function QuestSummaryView({
           </div>
 
           {isLastPart ? (
-            <Button onClick={() => onMarkRead(activeSubpart?.id)} className="gap-2">
+            <Button onClick={() => {
+              const currentId = activeSubpart?.id;
+              if (typeof currentId === "number") {
+                onMarkRead(currentId);
+                setReadSubpartIds((prev) => {
+                  const next = new Set(prev);
+                  next.add(currentId);
+                  return next;
+                });
+              } else {
+                onMarkRead();
+              }
+            }} className="gap-2">
               <CheckCircle2 className="h-4 w-4" />
               I&apos;ve Read This
               <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">

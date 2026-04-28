@@ -7,6 +7,7 @@ import {
   updateStreak as updateStreakStorage,
   getChapterProgress,
   updateChapterProgress,
+  markSubpartRead as markSubpartReadStorage,
 } from "@/lib/gamification-storage";
 import {
   type GamificationState,
@@ -51,6 +52,15 @@ export function useGamification() {
       updateStreakStorage();
       addXp(xpAmount, "Read chapter summary");
     }
+  }, [addXp]);
+
+  const markSubpartRead = useCallback((chapterId: string, subpartId: number, totalSubparts: number) => {
+    const result = markSubpartReadStorage(chapterId, subpartId, totalSubparts);
+    setState(updateStreakStorage());
+    if (result.xpAwarded > 0) {
+      addXp(result.xpAwarded, "Read chapter subpart");
+    }
+    return result;
   }, [addXp]);
 
   const markExerciseComplete = useCallback((chapterId: string, exerciseId: number, difficulty: "easy" | "medium" | "hard") => {
@@ -117,6 +127,7 @@ export function useGamification() {
     leveledUp,
     addXp,
     markSummaryRead,
+    markSubpartRead,
     markExerciseComplete,
     markFlashcardReviewed,
     completeQuiz,

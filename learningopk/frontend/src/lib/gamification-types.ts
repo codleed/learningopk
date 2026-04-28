@@ -39,6 +39,7 @@ export interface XpReward {
 
 export interface ChapterProgress {
   summaryRead: boolean;
+  subpartsRead: number[];
   exercisesCompleted: number[];
   flashcardsReviewed: Record<string, CardStatus>;
   quizAttempts: QuizAttempt[];
@@ -63,6 +64,7 @@ export interface GamificationState {
 }
 
 export const XP_REWARDS = {
+  SUBPART_READ: 10,
   SUMMARY_READ: 15,
   EXERCISE_COMPLETE: 5,
   EXERCISE_MEDIUM: 10,

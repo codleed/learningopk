@@ -1,6 +1,6 @@
 // frontend/src/lib/gamification-storage.ts
 import type { GamificationState, BadgeId, ChapterProgress } from "./gamification-types";
-import { computeLevelFromXp } from "./gamification-types";
+import { computeLevelFromXp, XP_REWARDS } from "./gamification-types";
 
 const STORAGE_KEY = "learningopk-gamification";
 
@@ -96,6 +96,7 @@ export function getChapterProgress(chapterId: string): ChapterProgress {
   const state = getGamificationState();
   return state.chapterProgress[chapterId] ?? {
     summaryRead: false,
+    subpartsRead: [],
     exercisesCompleted: [],
     flashcardsReviewed: {},
     quizAttempts: [],
@@ -107,12 +108,13 @@ export function updateChapterProgress(chapterId: string, updates: Partial<Chapte
   const state = getGamificationState();
   const current = state.chapterProgress[chapterId] ?? {
     summaryRead: false,
+    subpartsRead: [],
     exercisesCompleted: [],
     flashcardsReviewed: {},
     quizAttempts: [],
     xpEarned: 0,
   };
-  
+
   saveGamificationState({
     ...state,
     chapterProgress: {
@@ -125,4 +127,29 @@ export function updateChapterProgress(chapterId: string, updates: Partial<Chapte
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("chapter-progress-updated"));
   }
+}
+
+export function markSubpartRead(
+  chapterId: string,
+  subpartId: number,
+  totalSubparts: number
+): { summaryRead: boolean; xpAwarded: number } {
+  const progress = getChapterProgress(chapterId);
+  const alreadyRead = progress.subpartsRead.includes(subpartId);
+
+  if (alreadyRead) {
+    return { summaryRead: progress.summaryRead, xpAwarded: 0 };
+  }
+
+  const subpartsRead = [...progress.subpartsRead, subpartId];
+  const summaryRead = subpartsRead.length >= totalSubparts;
+  const xpAwarded = XP_REWARDS.SUBPART_READ;
+
+  updateChapterProgress(chapterId, {
+    subpartsRead,
+    summaryRead,
+    xpEarned: (progress.xpEarned ?? 0) + xpAwarded,
+  });
+
+  return { summaryRead, xpAwarded };
 }
