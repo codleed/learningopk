@@ -124,7 +124,12 @@ export default async function DashboardPage({
 
   /* ---- Derive summary-dependent values ---- */
   const subjects = summary?.subjects ?? [];
-  const orderedSubjects = [...subjects].sort(
+  const scopedSummarySubjects = subjects.filter((subject) => {
+    if (session.user.board && subject.boardSlug !== session.user.board)
+      return false;
+    return true;
+  });
+  const orderedSubjects = [...scopedSummarySubjects].sort(
     (a, b) =>
       b.chaptersVisitedPercent - a.chaptersVisitedPercent ||
       b.bestQuizScorePercent - a.bestQuizScorePercent

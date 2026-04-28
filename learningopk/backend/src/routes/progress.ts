@@ -81,9 +81,10 @@ progressRouter.post("/events", requireSession, async (req, res) => {
 progressRouter.get("/dashboard", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   const userId = authedReq.session.user.id;
+  const userBoard = authedReq.session.user.board as string | undefined;
 
   try {
-    const dashboard = await progressService.getDashboard(userId, authedReq.session.user.name);
+    const dashboard = await progressService.getDashboard(userId, authedReq.session.user.name, userBoard);
     res.status(200).json(dashboard);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
