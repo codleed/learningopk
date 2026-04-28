@@ -10,6 +10,7 @@ import {
   quizQuestions,
   quizzes,
   subjects,
+  userActivityLog,
   userDailyMomentumGoals,
   userProgress
 } from "../lib/db/schema.js";
@@ -134,14 +135,52 @@ export class ProgressRepository {
       .where(eq(userProgress.userId, userId));
   }
 
-  async hasActivityInRange(userId: string, startUtc: Date, endUtc: Date) {
-    const rows = await db
-      .select({ id: userProgress.id })
-      .from(userProgress)
-      .where(and(eq(userProgress.userId, userId), gte(userProgress.visitedAt, startUtc), lt(userProgress.visitedAt, endUtc)))
-      .limit(1);
+  async findActivityLogByUserId(userId: string) {
+    return withOptionalDbFallback(
+      "user_activity_log.findByUserId",
+      () =>
+        db
+          .select({
+            occurredAt: userActivityLog.occurredAt
+          })
+          .from(userActivityLog)
+          .where(eq(userActivityLog.userId, userId)),
+      async () => {
+        const rows = await db
+          .select({
+            activityAt: userProgress.visitedAt,
+            exercisesViewed: userProgress.exercisesViewed,
+            quizAttemptsCount: userProgress.quizAttemptsCount
+          })
+          .from(userProgress)
+          .where(eq(userProgress.userId, userId));
+        return rows
+          .filter((row): row is typeof row & { activityAt: Date } => row.activityAt instanceof Date)
+          .map((row) => ({ occurredAt: row.activityAt }));
+      }
+    );
+  }
 
-    return rows.length > 0;
+  async hasActivityInRange(userId: string, startUtc: Date, endUtc: Date) {
+    return withOptionalDbFallback(
+      "user_activity_log.hasActivityInRange",
+      async () => {
+        const rows = await db
+          .select({ id: userActivityLog.id })
+          .from(userActivityLog)
+          .where(and(eq(userActivityLog.userId, userId), gte(userActivityLog.occurredAt, startUtc), lt(userActivityLog.occurredAt, endUtc)))
+          .limit(1);
+        return rows.length > 0;
+      },
+      async () => {
+        const rows = await db
+          .select({ id: userProgress.id })
+          .from(userProgress)
+          .where(and(eq(userProgress.userId, userId), gte(userProgress.visitedAt, startUtc), lt(userProgress.visitedAt, endUtc)))
+          .limit(1);
+        return rows.length > 0;
+      }
+    );
   }
 
   async findRecentChapterVisits(userId: string, limit = 5) {
