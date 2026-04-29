@@ -127,7 +127,6 @@ export default async function DashboardPage({
   const scopedSummarySubjects = subjects.filter((subject) => {
     if (!session.user.board) return false;
     if (subject.boardSlug !== session.user.board) return false;
-    if (session.user.class && subject.grade !== session.user.class) return false;
     return true;
   });
   const orderedSubjects = [...scopedSummarySubjects].sort(
