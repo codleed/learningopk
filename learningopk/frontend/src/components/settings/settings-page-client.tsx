@@ -165,6 +165,13 @@ const fadeIn = {
 export function SettingsPageClient({ initialProfile }: SettingsPageClientProps) {
   const [activeTab, setActiveTab] = useState("profile");
 
+  const tabPanels = [
+    { value: "profile" as const, render: () => <ProfileTab initialProfile={initialProfile} /> },
+    { value: "preferences" as const, render: () => <PreferencesTab initialBoard={initialProfile.board} /> },
+    { value: "notifications" as const, render: () => <NotificationsTab initialLeaderboard={initialProfile.leaderboard} /> },
+    { value: "account" as const, render: () => <AccountTab email={initialProfile.email} /> },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -195,29 +202,13 @@ export function SettingsPageClient({ initialProfile }: SettingsPageClientProps) 
         </TabList>
 
         {/* ── Tab panels ── */}
-        <TabContent value="profile" className="mt-6">
-          <motion.div key="profile" variants={fadeIn} initial="hidden" animate="visible">
-            <ProfileTab initialProfile={initialProfile} />
-          </motion.div>
-        </TabContent>
-
-        <TabContent value="preferences" className="mt-6">
-          <motion.div key="preferences" variants={fadeIn} initial="hidden" animate="visible">
-            <PreferencesTab initialBoard={initialProfile.board} />
-          </motion.div>
-        </TabContent>
-
-        <TabContent value="notifications" className="mt-6">
-          <motion.div key="notifications" variants={fadeIn} initial="hidden" animate="visible">
-            <NotificationsTab initialLeaderboard={initialProfile.leaderboard} />
-          </motion.div>
-        </TabContent>
-
-        <TabContent value="account" className="mt-6">
-          <motion.div key="account" variants={fadeIn} initial="hidden" animate="visible">
-            <AccountTab email={initialProfile.email} />
-          </motion.div>
-        </TabContent>
+        {tabPanels.map(({ value, render }) => (
+          <TabContent key={value} value={value} className="mt-6">
+            <motion.div key={value} variants={fadeIn} initial="hidden" animate="visible">
+              {render()}
+            </motion.div>
+          </TabContent>
+        ))}
       </Tabs>
     </div>
   );
