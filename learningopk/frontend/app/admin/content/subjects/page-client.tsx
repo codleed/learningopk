@@ -55,9 +55,10 @@ export function SubjectsPageClient({ initialBoards, stats }: SubjectsPageClientP
 
   const totalSubjects = allSubjects.length;
   const totalPages = Math.max(1, Math.ceil(totalSubjects / PAGE_SIZE));
+  const clampedPage = Math.max(1, Math.min(page, totalPages));
   const pagedSubjects = useMemo(
-    () => allSubjects.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [allSubjects, page]
+    () => allSubjects.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE),
+    [allSubjects, clampedPage]
   );
 
   const handleDelete = async (subject: SubjectRow) => {
@@ -135,7 +136,7 @@ export function SubjectsPageClient({ initialBoards, stats }: SubjectsPageClientP
             emptyMessage="No subjects found. Create your first subject to get started."
             getItemId={(subject) => subject.id}
             pagination={{
-              page,
+              page: clampedPage,
               pageSize: PAGE_SIZE,
               total: totalSubjects,
               onPageChange: handlePageChange,

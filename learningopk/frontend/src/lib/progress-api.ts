@@ -209,6 +209,16 @@ const todaysFocusCompletionSchema = z.object({
 
 export type TodaysFocusCompletionResponse = z.infer<typeof todaysFocusCompletionSchema>;
 
+const parseApiErrorMessage = async (response: Response, fallback: string): Promise<string> => {
+  try {
+    const body = await response.json().catch(() => null) as { error?: string } | null;
+    if (body?.error) return body.error;
+  } catch {
+    // Use fallback if body is not JSON
+  }
+  return fallback;
+};
+
 export const getDashboardSummary = async (cookieHeader: string): Promise<DashboardSummaryResponse> => {
   const response = await fetch(`${backendUrl}/api/progress/dashboard`, {
     method: "GET",
@@ -219,16 +229,7 @@ export const getDashboardSummary = async (cookieHeader: string): Promise<Dashboa
   });
 
   if (!response.ok) {
-    let errorMessage = `Progress dashboard request failed: ${response.status}`;
-    try {
-      const body = await response.json().catch(() => null) as { error?: string } | null;
-      if (body?.error) {
-        errorMessage = body.error;
-      }
-    } catch {
-      // Use default message
-    }
-    throw new Error(errorMessage);
+    throw new Error(await parseApiErrorMessage(response, `Progress dashboard request failed: ${response.status}`));
   }
 
   return dashboardSummarySchema.parse((await response.json()) as unknown);
@@ -248,16 +249,7 @@ export const getSubjectProgress = async (boardSlug: string, grade: "9" | "10", s
   }
 
   if (!response.ok) {
-    let errorMessage = `Subject progress request failed: ${response.status}`;
-    try {
-      const body = await response.json().catch(() => null) as { error?: string } | null;
-      if (body?.error) {
-        errorMessage = body.error;
-      }
-    } catch {
-      // Use default message
-    }
-    throw new Error(errorMessage);
+    throw new Error(await parseApiErrorMessage(response, `Subject progress request failed: ${response.status}`));
   }
 
   return subjectProgressResponseSchema.parse((await response.json()) as unknown);

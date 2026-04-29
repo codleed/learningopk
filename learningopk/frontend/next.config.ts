@@ -15,7 +15,7 @@ const isDev = process.env.NODE_ENV !== "production";
 // 'unsafe-eval' is only permitted in development (Turbopack/HMR uses eval).
 // Production builds do not require it.
 const scriptSrc = isDev
-  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:"
   : "script-src 'self' 'unsafe-inline'";
 
 const securityHeaders = [

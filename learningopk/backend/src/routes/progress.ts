@@ -85,17 +85,13 @@ progressRouter.get("/dashboard", requireSession, async (req, res) => {
   const userBoard = authedReq.session.user.board;
   const userClass = authedReq.session.user.class;
 
-  if (!userBoard) {
-    res.status(400).json(errorResponse("User board not set. Complete onboarding to view your dashboard.", "VALIDATION_ERROR"));
-    return;
-  }
-  if (!userClass) {
-    res.status(400).json(errorResponse("User class not set. Complete onboarding to view your dashboard.", "VALIDATION_ERROR"));
-    return;
-  }
-
   try {
-    const dashboard = await progressService.getDashboard(userId, authedReq.session.user.name, userBoard, userClass);
+    const dashboard = await progressService.getDashboard(
+      userId,
+      authedReq.session.user.name,
+      userBoard ?? "",
+      userClass ?? ""
+    );
     res.status(200).json(dashboard);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
