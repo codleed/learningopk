@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt, sql, type SQL } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
 import { withOptionalDbFallback } from "../lib/db-schema-compat.js";
@@ -262,7 +262,11 @@ export class ProgressRepository {
       .limit(1);
   }
 
-  async findSubjectProgress(userId: string, boardSlug?: string) {
+  async findSubjectProgress(userId: string, boardSlug?: string, grade?: string) {
+    const conditions: SQL[] = [];
+    if (boardSlug) conditions.push(eq(boards.slug, boardSlug));
+    if (grade) conditions.push(sql`${subjects.grade} = ${grade}`);
+
     return withOptionalDbFallback(
       "subjects.exam_date.findSubjectProgress",
       () =>
@@ -287,7 +291,7 @@ export class ProgressRepository {
           .innerJoin(boards, eq(subjects.boardId, boards.id))
           .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
           .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
-          .where(boardSlug ? eq(boards.slug, boardSlug) : undefined)
+          .where(conditions.length > 0 ? and(...conditions) : undefined)
           .orderBy(asc(subjects.name), asc(chapters.chapterNumber)),
       () =>
         db
@@ -311,7 +315,7 @@ export class ProgressRepository {
           .innerJoin(boards, eq(subjects.boardId, boards.id))
           .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
           .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
-          .where(boardSlug ? eq(boards.slug, boardSlug) : undefined)
+          .where(conditions.length > 0 ? and(...conditions) : undefined)
           .orderBy(asc(subjects.name), asc(chapters.chapterNumber))
     );
   }
