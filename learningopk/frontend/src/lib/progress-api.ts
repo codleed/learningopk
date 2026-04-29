@@ -219,7 +219,16 @@ export const getDashboardSummary = async (cookieHeader: string): Promise<Dashboa
   });
 
   if (!response.ok) {
-    throw new Error(`Progress dashboard request failed: ${response.status}`);
+    let errorMessage = `Progress dashboard request failed: ${response.status}`;
+    try {
+      const body = await response.json().catch(() => null) as { error?: string } | null;
+      if (body?.error) {
+        errorMessage = body.error;
+      }
+    } catch {
+      // Use default message
+    }
+    throw new Error(errorMessage);
   }
 
   return dashboardSummarySchema.parse((await response.json()) as unknown);
@@ -239,7 +248,16 @@ export const getSubjectProgress = async (boardSlug: string, grade: "9" | "10", s
   }
 
   if (!response.ok) {
-    throw new Error(`Subject progress request failed: ${response.status}`);
+    let errorMessage = `Subject progress request failed: ${response.status}`;
+    try {
+      const body = await response.json().catch(() => null) as { error?: string } | null;
+      if (body?.error) {
+        errorMessage = body.error;
+      }
+    } catch {
+      // Use default message
+    }
+    throw new Error(errorMessage);
   }
 
   return subjectProgressResponseSchema.parse((await response.json()) as unknown);

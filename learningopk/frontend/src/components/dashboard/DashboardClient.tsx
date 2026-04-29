@@ -1,5 +1,8 @@
 "use client";
 
+import { useCallback } from "react";
+import { useRouter } from "next/navigation";
+
 import { ErrorState } from "@/components/ui/states";
 import { ReviewNowWidget } from "@/components/dashboard/review-now-widget";
 import { AiMemoryCard } from "@/components/dashboard/ai-memory-card";
@@ -75,11 +78,19 @@ export function DashboardClient({
   focusAreas,
   studyGroups,
 }: DashboardClientProps) {
+  const router = useRouter();
+
+  const handleRetry = useCallback(() => {
+    router.refresh();
+  }, [router]);
+
   if (summaryError && !summary) {
     return (
       <ErrorState
         title="Progress data is temporarily unavailable"
         description="We couldn't load your dashboard data right now. Please try again in a moment."
+        onRetry={handleRetry}
+        retryLabel="Retry"
       />
     );
   }

@@ -10,7 +10,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Bell,
   BellRing,
@@ -195,31 +195,29 @@ export function SettingsPageClient({ initialProfile }: SettingsPageClientProps) 
         </TabList>
 
         {/* ── Tab panels ── */}
-        <AnimatePresence mode="wait">
-          <TabContent value="profile" className="mt-6">
-            <motion.div key="profile" variants={fadeIn} initial="hidden" animate="visible">
-              <ProfileTab initialProfile={initialProfile} />
-            </motion.div>
-          </TabContent>
+        <TabContent value="profile" className="mt-6">
+          <motion.div key="profile" variants={fadeIn} initial="hidden" animate="visible">
+            <ProfileTab initialProfile={initialProfile} />
+          </motion.div>
+        </TabContent>
 
-          <TabContent value="preferences" className="mt-6">
-            <motion.div key="preferences" variants={fadeIn} initial="hidden" animate="visible">
-              <PreferencesTab initialBoard={initialProfile.board} />
-            </motion.div>
-          </TabContent>
+        <TabContent value="preferences" className="mt-6">
+          <motion.div key="preferences" variants={fadeIn} initial="hidden" animate="visible">
+            <PreferencesTab initialBoard={initialProfile.board} />
+          </motion.div>
+        </TabContent>
 
-          <TabContent value="notifications" className="mt-6">
-            <motion.div key="notifications" variants={fadeIn} initial="hidden" animate="visible">
-              <NotificationsTab initialLeaderboard={initialProfile.leaderboard} />
-            </motion.div>
-          </TabContent>
+        <TabContent value="notifications" className="mt-6">
+          <motion.div key="notifications" variants={fadeIn} initial="hidden" animate="visible">
+            <NotificationsTab initialLeaderboard={initialProfile.leaderboard} />
+          </motion.div>
+        </TabContent>
 
-          <TabContent value="account" className="mt-6">
-            <motion.div key="account" variants={fadeIn} initial="hidden" animate="visible">
-              <AccountTab email={initialProfile.email} />
-            </motion.div>
-          </TabContent>
-        </AnimatePresence>
+        <TabContent value="account" className="mt-6">
+          <motion.div key="account" variants={fadeIn} initial="hidden" animate="visible">
+            <AccountTab email={initialProfile.email} />
+          </motion.div>
+        </TabContent>
       </Tabs>
     </div>
   );
