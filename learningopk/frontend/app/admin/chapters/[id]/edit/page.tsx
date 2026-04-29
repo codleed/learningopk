@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 
 import {
   getAdminCurriculumTree,
-  getAdminChapterSummary,
   type AdminCurriculumBoard,
   type AdminCurriculumChapter,
 } from "@/lib/admin-api";
@@ -24,13 +23,8 @@ export default async function EditChapterPage({ params }: EditChapterPageProps) 
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
-  // Fetch curriculum tree and chapter summary in parallel
-  const [curriculumBoards, chapterSummary] = await Promise.all([
-    getAdminCurriculumTree(cookieHeader).catch(() => [] as AdminCurriculumBoard[]),
-    getAdminChapterSummary(chapterId).catch(() => null),
-  ]);
+  const curriculumBoards = await getAdminCurriculumTree(cookieHeader).catch(() => [] as AdminCurriculumBoard[]);
 
-  // Find the chapter in the curriculum tree
   let chapter: AdminCurriculumChapter | undefined;
   let subjectName = "";
   let className = "";
@@ -55,10 +49,7 @@ export default async function EditChapterPage({ params }: EditChapterPageProps) 
     if (chapter) break;
   }
 
-  // Also check if we got the chapter from the summary endpoint
-  const summaryTitle = chapterSummary?.chapter.title ?? chapter?.title ?? "";
-
-  if (!chapter && !chapterSummary) {
+  if (!chapter) {
     notFound();
   }
 
@@ -66,15 +57,14 @@ export default async function EditChapterPage({ params }: EditChapterPageProps) 
     <EditChapterForm
       chapter={{
         id: chapterId,
-        chapterNumber: chapter?.chapterNumber ?? 1,
-        title: summaryTitle || chapter?.title || "",
-        slug: chapter?.slug || "",
+        chapterNumber: chapter.chapterNumber,
+        title: chapter.title,
+        slug: chapter.slug,
         subjectName,
         className,
         boardName,
         coverImageUrl,
       }}
-      initialSummary={chapterSummary?.chapter.summary ?? ""}
     />
   );
 }

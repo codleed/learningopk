@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, type ChangeEvent } from "react";
+import { useState, useRef, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ImagePlus, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { ImagePlus, Trash2, Settings } from "lucide-react";
 
 import {
   AdminBreadcrumb,
@@ -16,14 +17,11 @@ import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-w
 import { Input } from "@/components/ui/input";
 import {
   updateAdminCurriculumChapter,
-  updateAdminChapterSummary,
   deleteAdminCurriculumChapter,
   uploadAdminChapterCoverImage,
   deleteAdminChapterCoverImage,
 } from "@/lib/admin-api";
 import { useToast } from "@/components/ui/toast";
-import { CodeMirrorMarkdownEditor } from "@/components/admin/codemirror-markdown-editor";
-import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
 
 const toSlug = (value: string) =>
   value
@@ -43,15 +41,11 @@ interface EditChapterFormProps {
     boardName: string;
     coverImageUrl: string | null;
   };
-  initialSummary: string;
 }
 
-type TabType = "metadata" | "summary";
-
-export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProps) {
+export function EditChapterForm({ chapter }: EditChapterFormProps) {
   const router = useRouter();
   const { pushToast } = useToast();
-  const markdownInputRef = useRef<HTMLInputElement>(null);
   const coverImageInputRef = useRef<HTMLInputElement>(null);
 
   const [chapterNumber, setChapterNumber] = useState<string>(String(chapter.chapterNumber));
@@ -59,25 +53,13 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
   const [slug, setSlug] = useState<string>(chapter.slug);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(chapter.coverImageUrl);
 
-  const [summary, setSummary] = useState<string>(initialSummary);
-  const [showPreview, setShowPreview] = useState<boolean>(false);
-
-  const [activeTab, setActiveTab] = useState<TabType>("metadata");
-
   const [chapterNumberError, setChapterNumberError] = useState<string>("");
   const [titleError, setTitleError] = useState<string>("");
-  const [summaryError, setSummaryError] = useState<string>("");
 
   const [isSavingMetadata, setIsSavingMetadata] = useState(false);
-  const [isSavingSummary, setIsSavingSummary] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isDeletingCover, setIsDeletingCover] = useState(false);
-
-  // Update slug when title changes
-  useEffect(() => {
-    setSlug(toSlug(title));
-  }, [title]);
 
   const handleChapterNumberChange = (value: string) => {
     setChapterNumber(value);
@@ -88,15 +70,9 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
+    setSlug(toSlug(value));
     if (titleError) {
       setTitleError("");
-    }
-  };
-
-  const handleSummaryChange = (value: string) => {
-    setSummary(value);
-    if (summaryError) {
-      setSummaryError("");
     }
   };
 
@@ -126,7 +102,6 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
   const handleSaveMetadata = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate
     let hasError = false;
 
     if (!chapterNumber) {
@@ -174,74 +149,6 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
       });
     } finally {
       setIsSavingMetadata(false);
-    }
-  };
-
-  const handleSaveSummary = async () => {
-    if (!summary.trim()) {
-      setSummaryError("Summary is required");
-      return;
-    }
-
-    setIsSavingSummary(true);
-
-    try {
-      await updateAdminChapterSummary({
-        chapterId: chapter.id,
-        summary: summary.trim(),
-      });
-      pushToast({
-        title: "Summary saved",
-        description: "Chapter summary has been updated successfully.",
-        tone: "success",
-      });
-    } catch (error) {
-      pushToast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update summary",
-        tone: "error",
-      });
-    } finally {
-      setIsSavingSummary(false);
-    }
-  };
-
-  const handleMarkdownFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const input = event.currentTarget;
-    const file = input.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    try {
-      const importedMarkdown = await file.text();
-      if (importedMarkdown.trim().length === 0) {
-        pushToast({
-          title: "Markdown file is empty",
-          tone: "error"
-        });
-        return;
-      }
-
-      if (
-        summary.trim().length > 0 &&
-        !window.confirm("Importing a Markdown file will replace the current summary. Continue?")
-      ) {
-        return;
-      }
-
-      setSummary(importedMarkdown);
-      pushToast({
-        title: "Markdown imported successfully",
-        tone: "success"
-      });
-    } catch {
-      pushToast({
-        title: "Could not read Markdown file",
-        tone: "error"
-      });
-    } finally {
-      input.value = "";
     }
   };
 
@@ -351,236 +258,155 @@ export function EditChapterForm({ chapter, initialSummary }: EditChapterFormProp
       <AdminPageHeader
         title="Edit Chapter"
         subtitle={chapter.title}
+        actions={
+          <Link
+            href={`/admin/content/chapters/${chapter.id}/manage`}
+            className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-subtle)]"
+          >
+            <Settings className="h-3.5 w-3.5" />
+            Manage Content
+          </Link>
+        }
       />
 
-      {/* Tab buttons */}
-      <div className="flex items-center gap-1 border-b border-[var(--border-default)]">
-        <button
-          type="button"
-          onClick={() => setActiveTab("metadata")}
-          className={`px-4 py-2.5 text-sm font-medium transition-colors ${
-            activeTab === "metadata"
-              ? "border-b-2 border-[var(--primary)] text-[var(--text-primary)]"
-              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-          }`}
-        >
-          Metadata
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("summary")}
-          className={`px-4 py-2.5 text-sm font-medium transition-colors ${
-            activeTab === "summary"
-              ? "border-b-2 border-[var(--primary)] text-[var(--text-primary)]"
-              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-          }`}
-        >
-          Summary Editor
-        </button>
-      </div>
-
-      {/* Tab content */}
-      {activeTab === "metadata" && (
-        <AdminFormCard>
-          <form onSubmit={handleSaveMetadata} className="space-y-6">
-            <AdminFormField
+      <AdminFormCard>
+        <form onSubmit={handleSaveMetadata} className="space-y-6">
+          <AdminFormField
+            id="chapter-subject"
+            label="Subject"
+          >
+            <input
               id="chapter-subject"
-              label="Subject"
-            >
-              <input
-                id="chapter-subject"
-                type="text"
-                value={breadcrumbSubject}
-                readOnly
-                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-primary)] cursor-not-allowed"
-              />
-            </AdminFormField>
+              type="text"
+              value={breadcrumbSubject}
+              readOnly
+              className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-primary)] cursor-not-allowed"
+            />
+          </AdminFormField>
 
-            <AdminFormField
+          <AdminFormField
+            id="chapter-number"
+            label="Chapter Number"
+            required
+            error={chapterNumberError}
+          >
+            <input
               id="chapter-number"
-              label="Chapter Number"
-              required
-              error={chapterNumberError}
-            >
-              <input
-                id="chapter-number"
-                type="number"
-                min="1"
-                max="99"
-                value={chapterNumber}
-                onChange={(e) => handleChapterNumberChange(e.target.value)}
-                onBlur={handleChapterNumberBlur}
-                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
-                aria-invalid={!!chapterNumberError}
-                aria-describedby={chapterNumberError ? "chapter-number-error" : undefined}
-              />
-            </AdminFormField>
+              type="number"
+              min="1"
+              max="99"
+              value={chapterNumber}
+              onChange={(e) => handleChapterNumberChange(e.target.value)}
+              onBlur={handleChapterNumberBlur}
+              className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
+              aria-invalid={!!chapterNumberError}
+              aria-describedby={chapterNumberError ? "chapter-number-error" : undefined}
+            />
+          </AdminFormField>
 
-            <AdminFormField
+          <AdminFormField
+            id="chapter-title"
+            label="Chapter Title"
+            required
+            error={titleError}
+          >
+            <input
               id="chapter-title"
-              label="Chapter Title"
-              required
-              error={titleError}
-            >
-              <input
-                id="chapter-title"
-                type="text"
-                value={title}
-                onChange={(e) => handleTitleChange(e.target.value)}
-                onBlur={handleTitleBlur}
-                placeholder="e.g., Introduction to Physics"
-                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
-                aria-invalid={!!titleError}
-                aria-describedby={titleError ? "chapter-title-error" : undefined}
-              />
-            </AdminFormField>
+              type="text"
+              value={title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              onBlur={handleTitleBlur}
+              placeholder="e.g., Introduction to Physics"
+              className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
+              aria-invalid={!!titleError}
+              aria-describedby={titleError ? "chapter-title-error" : undefined}
+            />
+          </AdminFormField>
 
-            <AdminFormField id="chapter-slug" label="Slug">
-              <input
-                id="chapter-slug"
-                type="text"
-                value={slug}
-                readOnly
-                placeholder="auto-generated-from-title"
-                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] cursor-not-allowed"
-              />
-            </AdminFormField>
+          <AdminFormField id="chapter-slug" label="Slug">
+            <input
+              id="chapter-slug"
+              type="text"
+              value={slug}
+              readOnly
+              placeholder="auto-generated-from-title"
+              className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] cursor-not-allowed"
+            />
+          </AdminFormField>
 
-            <AdminFormField id="chapter-cover-image" label="Cover Image">
-              <div className="space-y-3">
-                {coverImageUrl ? (
-                  <div className="relative group/cover w-full max-w-xs">
-                    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-[var(--border-default)]">
-                      <Image
-                        src={coverImageUrl}
-                        alt="Chapter cover preview"
-                        fill
-                        sizes="320px"
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="mt-2 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => coverImageInputRef.current?.click()}
-                        disabled={isUploadingCover}
-                        className="inline-flex items-center gap-1.5 rounded-md border border-border-default bg-bg-surface px-3 py-1.5 text-xs font-medium text-text-primary transition hover:bg-bg-subtle/50 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <ImagePlus className="h-3.5 w-3.5" aria-hidden />
-                        {isUploadingCover ? "Uploading..." : "Replace"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleRemoveCoverImage}
-                        disabled={isDeletingCover}
-                        className="inline-flex items-center gap-1.5 rounded-md border border-[var(--destructive)]/30 bg-[var(--destructive)]/10 px-3 py-1.5 text-xs font-medium text-[var(--destructive)] transition hover:bg-[var(--destructive)]/20 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                        {isDeletingCover ? "Removing..." : "Remove"}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => coverImageInputRef.current?.click()}
-                    disabled={isUploadingCover}
-                    className="flex w-full max-w-xs flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--border-default)] bg-[var(--bg-base)] p-8 text-center transition hover:border-[var(--primary)]/50 hover:bg-[var(--bg-subtle)]/50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <ImagePlus className="h-8 w-8 text-[var(--text-secondary)]" aria-hidden />
-                    <span className="text-sm font-medium text-[var(--text-secondary)]">
-                      {isUploadingCover ? "Uploading..." : "Click to upload cover image"}
-                    </span>
-                    <span className="text-xs text-[var(--text-muted)]">
-                      JPG, PNG, WebP or GIF — max 10 MB
-                    </span>
-                  </button>
-                )}
-                <Input
-                  ref={coverImageInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  onChange={handleCoverImageUpload}
-                  className="hidden"
-                />
-              </div>
-            </AdminFormField>
-
-            <div className="flex items-center gap-3 pt-2">
-              <AdminActionButton
-                variant="primary"
-                type="submit"
-                loading={isSavingMetadata}
-                disabled={isSavingMetadata}
-              >
-                Save Changes
-              </AdminActionButton>
-            </div>
-          </form>
-        </AdminFormCard>
-      )}
-
-      {activeTab === "summary" && (
-        <AdminFormCard>
-          <div className="space-y-6">
+          <AdminFormField id="chapter-cover-image" label="Cover Image">
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowPreview(!showPreview)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border-default bg-bg-surface px-3 py-1.5 text-xs font-medium text-text-primary transition hover:bg-bg-subtle/50"
-                >
-                  {showPreview ? "Edit" : "Preview"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => markdownInputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border-default bg-bg-surface px-3 py-1.5 text-xs font-medium text-text-primary transition hover:bg-bg-subtle/50"
-                >
-                  Upload .md file
-                </button>
-                <Input
-                  ref={markdownInputRef}
-                  type="file"
-                  accept=".md,text/markdown,text/plain"
-                  onChange={handleMarkdownFileUpload}
-                  className="hidden"
-                />
-              </div>
-
-              {showPreview ? (
-                <div className="min-h-48 rounded-lg border border-[var(--border-default)] bg-bg-surface p-4">
-                  {summary ? (
-                    <MarkdownMathRenderer content={summary} />
-                  ) : (
-                    <p className="text-sm text-[var(--text-secondary)]">No content to preview</p>
-                  )}
+              {coverImageUrl ? (
+                <div className="relative group/cover w-full max-w-xs">
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-[var(--border-default)]">
+                    <Image
+                      src={coverImageUrl}
+                      alt="Chapter cover preview"
+                      fill
+                      sizes="320px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => coverImageInputRef.current?.click()}
+                      disabled={isUploadingCover}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-border-default bg-bg-surface px-3 py-1.5 text-xs font-medium text-text-primary transition hover:bg-bg-subtle/50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <ImagePlus className="h-3.5 w-3.5" aria-hidden />
+                      {isUploadingCover ? "Uploading..." : "Replace"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoverImage}
+                      disabled={isDeletingCover}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-[var(--destructive)]/30 bg-[var(--destructive)]/10 px-3 py-1.5 text-xs font-medium text-[var(--destructive)] transition hover:bg-[var(--destructive)]/20 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                      {isDeletingCover ? "Removing..." : "Remove"}
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div>
-                  <CodeMirrorMarkdownEditor
-                    value={summary}
-                    onChange={handleSummaryChange}
-                    placeholderText="Write chapter summary in markdown..."
-                    className="min-h-64"
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => coverImageInputRef.current?.click()}
+                  disabled={isUploadingCover}
+                  className="flex w-full max-w-xs flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--border-default)] bg-[var(--bg-base)] p-8 text-center transition hover:border-[var(--primary)]/50 hover:bg-[var(--bg-subtle)]/50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <ImagePlus className="h-8 w-8 text-[var(--text-secondary)]" aria-hidden />
+                  <span className="text-sm font-medium text-[var(--text-secondary)]">
+                    {isUploadingCover ? "Uploading..." : "Click to upload cover image"}
+                  </span>
+                  <span className="text-xs text-[var(--text-muted)]">
+                    JPG, PNG, WebP or GIF — max 10 MB
+                  </span>
+                </button>
               )}
+              <Input
+                ref={coverImageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={handleCoverImageUpload}
+                className="hidden"
+              />
             </div>
+          </AdminFormField>
 
+          <div className="flex items-center gap-3 pt-2">
             <AdminActionButton
               variant="primary"
-              onClick={handleSaveSummary}
-              loading={isSavingSummary}
-              disabled={isSavingSummary}
+              type="submit"
+              loading={isSavingMetadata}
+              disabled={isSavingMetadata}
             >
-              Save Summary
+              Save Changes
             </AdminActionButton>
           </div>
-        </AdminFormCard>
-      )}
+        </form>
+      </AdminFormCard>
 
-      {/* Delete button */}
       <div className="pt-4 border-t border-[var(--border-default)]">
         <button
           type="button"
