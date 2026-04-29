@@ -14,15 +14,12 @@ import {
 } from "@/components/admin";
 import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 import { Select } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import {
   createAdminCurriculumChapter,
   uploadAdminChapterCoverImage,
   type AdminCurriculumBoard,
 } from "@/lib/admin-api";
 import { useToast } from "@/components/ui/toast";
-import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
-import { CodeMirrorMarkdownEditor } from "@/components/admin/codemirror-markdown-editor";
 import { X } from "lucide-react";
 
 const toSlug = (value: string) =>
@@ -48,7 +45,6 @@ interface SubjectOption {
 export function AddChapterForm({ boards }: AddChapterFormProps) {
   const router = useRouter();
   const { pushToast } = useToast();
-  const markdownInputRef = useRef<HTMLInputElement>(null);
 
   const subjectOptions: SubjectOption[] = boards.flatMap((board) =>
     board.classes.flatMap((boardClass) =>
@@ -67,15 +63,12 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
   const [chapterNumber, setChapterNumber] = useState<string>("");
   const [title, setTitle] = useState<string>("");
   const [slug, setSlug] = useState<string>("");
-  const [summary, setSummary] = useState<string>("");
-  const [showPreview, setShowPreview] = useState<boolean>(false);
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
 
   const [subjectError, setSubjectError] = useState<string>("");
   const [chapterNumberError, setChapterNumberError] = useState<string>("");
   const [titleError, setTitleError] = useState<string>("");
-  const [summaryError, setSummaryError] = useState<string>("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -103,13 +96,6 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
     }
   };
 
-  const handleSummaryChange = (value: string) => {
-    setSummary(value);
-    if (summaryError) {
-      setSummaryError("");
-    }
-  };
-
   const handleCoverImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -134,7 +120,6 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
       return;
     }
 
-    // Revoke existing preview URL to avoid memory leak
     if (coverImagePreview) {
       URL.revokeObjectURL(coverImagePreview);
     }
@@ -185,49 +170,9 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
     }
   };
 
-  const handleMarkdownFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const input = event.currentTarget;
-    const file = input.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    try {
-      const importedMarkdown = await file.text();
-      if (importedMarkdown.trim().length === 0) {
-        pushToast({
-          title: "Markdown file is empty",
-          tone: "error"
-        });
-        return;
-      }
-
-      if (
-        summary.trim().length > 0 &&
-        !window.confirm("Importing a Markdown file will replace the current summary. Continue?")
-      ) {
-        return;
-      }
-
-      setSummary(importedMarkdown);
-      pushToast({
-        title: "Markdown imported successfully",
-        tone: "success"
-      });
-    } catch {
-      pushToast({
-        title: "Could not read Markdown file",
-        tone: "error"
-      });
-    } finally {
-      input.value = "";
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate
     let hasError = false;
 
     if (!subjectId) {
@@ -251,11 +196,6 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
       hasError = true;
     } else if (title.length > 200) {
       setTitleError("Chapter title must be 200 characters or less");
-      hasError = true;
-    }
-
-    if (!summary.trim()) {
-      setSummaryError("Summary is required");
       hasError = true;
     }
 
@@ -286,10 +226,10 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
 
       pushToast({
         title: "Chapter created",
-        description: `"${title}" has been created successfully.`,
+        description: `"${title}" has been created successfully. You can now add content sections.`,
         tone: "success",
       });
-      router.push("/admin/content");
+      router.push(`/admin/content/chapters/${result.chapter.id}/manage`);
     } catch (error) {
       pushToast({
         title: "Error",
@@ -316,7 +256,7 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
 
       <AdminPageHeader
         title="Add Chapter"
-        subtitle="Create a new chapter under a subject"
+        subtitle="Create a new chapter and then add content sections on the next screen"
       />
 
       <AdminFormCard>
@@ -442,57 +382,6 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
                 Upload cover image
               </button>
             )}
-          </AdminFormField>
-
-          <AdminFormField
-            id="chapter-summary"
-            label="Summary"
-            required
-            error={summaryError}
-            hint="Supports Markdown, images, and math notation."
-          >
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowPreview(!showPreview)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border-default bg-bg-surface px-3 py-1.5 text-xs font-medium text-text-primary transition hover:bg-bg-subtle/50"
-                >
-                  {showPreview ? "Edit" : "Preview"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => markdownInputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border-default bg-bg-surface px-3 py-1.5 text-xs font-medium text-text-primary transition hover:bg-bg-subtle/50"
-                >
-                  Upload .md file
-                </button>
-                <Input
-                  ref={markdownInputRef}
-                  type="file"
-                  accept=".md,text/markdown,text/plain"
-                  onChange={handleMarkdownFileUpload}
-                  className="hidden"
-                />
-              </div>
-              {showPreview ? (
-                <div className="min-h-48 rounded-lg border border-[var(--border-default)] bg-bg-surface p-4">
-                  {summary ? (
-                    <MarkdownMathRenderer content={summary} />
-                  ) : (
-                    <p className="text-sm text-[var(--text-secondary)]">No content to preview</p>
-                  )}
-                </div>
-              ) : (
-                <CodeMirrorMarkdownEditor
-                  value={summary}
-                  onChange={handleSummaryChange}
-                  placeholderText="Write chapter summary in markdown..."
-                  className="min-h-64"
-                  testId="add-chapter-summary-editor"
-                />
-              )}
-            </div>
           </AdminFormField>
 
           <div className="flex items-center gap-3 pt-2">

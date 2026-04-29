@@ -987,6 +987,7 @@ export const deleteAdminCurriculumChapter = async (chapterId: number): Promise<A
   });
 };
 
+/** @deprecated Use {@link getAdminChapterSubparts} instead. Chapter summaries are now managed via subparts. */
 export const getAdminChapterSummary = async (chapterId: number): Promise<AdminChapterSummaryResponse> => {
   return fetchAdminJson({
     path: `/api/admin/content/chapters/${chapterId}/summary`,
@@ -994,6 +995,7 @@ export const getAdminChapterSummary = async (chapterId: number): Promise<AdminCh
   });
 };
 
+/** @deprecated Use {@link createAdminChapterSubpart} or {@link updateAdminChapterSubpart} instead. Chapter summaries are now managed via subparts. */
 export const updateAdminChapterSummary = async ({
   chapterId,
   summary
