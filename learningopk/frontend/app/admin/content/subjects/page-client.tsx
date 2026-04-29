@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { AdminPageHeader, ContentTabs, ContentStatsStrip, ContentListTable } from "@/components/admin";
 import { deleteAdminCurriculumSubject } from "@/lib/admin-api";
@@ -29,25 +29,36 @@ type SubjectRow = {
   chapterCount: number;
 };
 
+const PAGE_SIZE = 25;
+
 export function SubjectsPageClient({ initialBoards, stats }: SubjectsPageClientProps) {
-  // Flatten subjects with board/class context
-  const [subjects] = useState<SubjectRow[]>(
-    initialBoards.flatMap((board) =>
-      board.classes.flatMap((cls) =>
-        cls.subjects.map((subject) => ({
-          id: subject.id,
-          name: subject.name,
-          boardId: board.id,
-          boardName: board.name,
-          classId: cls.id,
-          className: cls.name,
-          chapterCount: subject.chapters.length,
-        }))
-      )
-    )
+  const [page, setPage] = useState(1);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const allSubjects = useMemo<SubjectRow[]>(
+    () =>
+      initialBoards.flatMap((board) =>
+        board.classes.flatMap((cls) =>
+          cls.subjects.map((subject) => ({
+            id: subject.id,
+            name: subject.name,
+            boardId: board.id,
+            boardName: board.name,
+            classId: cls.id,
+            className: cls.name,
+            chapterCount: subject.chapters.length,
+          }))
+        )
+      ),
+    [initialBoards]
   );
 
-  const [isDeleting, setIsDeleting] = useState(false);
+  const totalSubjects = allSubjects.length;
+  const totalPages = Math.max(1, Math.ceil(totalSubjects / PAGE_SIZE));
+  const pagedSubjects = useMemo(
+    () => allSubjects.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [allSubjects, page]
+  );
 
   const handleDelete = async (subject: SubjectRow) => {
     if (
@@ -66,6 +77,10 @@ export function SubjectsPageClient({ initialBoards, stats }: SubjectsPageClientP
         setIsDeleting(false);
       }
     }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(Math.max(1, Math.min(newPage, totalPages)));
   };
 
   const columns = [
@@ -109,7 +124,7 @@ export function SubjectsPageClient({ initialBoards, stats }: SubjectsPageClientP
         <div className="p-6">
           <ContentListTable
             title="Subjects"
-            items={subjects}
+            items={pagedSubjects}
             columns={columns}
             onEdit={(subject) => {
               window.location.href = `/admin/subjects/${subject.id}/edit`;
@@ -119,6 +134,12 @@ export function SubjectsPageClient({ initialBoards, stats }: SubjectsPageClientP
             addLabel="+ Add Subject"
             emptyMessage="No subjects found. Create your first subject to get started."
             getItemId={(subject) => subject.id}
+            pagination={{
+              page,
+              pageSize: PAGE_SIZE,
+              total: totalSubjects,
+              onPageChange: handlePageChange,
+            }}
           />
         </div>
       </div>
