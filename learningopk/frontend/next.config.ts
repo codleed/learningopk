@@ -16,7 +16,7 @@ const isDev = process.env.NODE_ENV !== "production";
 // Production builds do not require it.
 const scriptSrc = isDev
   ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:"
-  : "script-src 'self' 'unsafe-inline' blob:";
+  : "script-src 'self' 'unsafe-inline'";
 
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
