@@ -3,6 +3,7 @@ import { and, asc, desc, eq, gte, inArray, lt, sql, type SQL } from "drizzle-orm
 import { db } from "../lib/db/index.js";
 import { withOptionalDbFallback } from "../lib/db-schema-compat.js";
 import {
+  boardClasses,
   boards,
   chapters,
   exercises,
@@ -265,7 +266,7 @@ export class ProgressRepository {
   async findSubjectProgress(userId: string, boardSlug?: string, grade?: string) {
     const conditions: SQL[] = [];
     if (boardSlug) conditions.push(eq(boards.slug, boardSlug));
-    if (grade) conditions.push(sql`${subjects.grade} = ${grade}`);
+    if (grade) conditions.push(sql`coalesce(${boardClasses.slug}, ${subjects.grade}::text) = ${grade}`);
 
     return withOptionalDbFallback(
       "subjects.exam_date.findSubjectProgress",
@@ -289,6 +290,7 @@ export class ProgressRepository {
           })
           .from(subjects)
           .innerJoin(boards, eq(subjects.boardId, boards.id))
+          .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
           .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
           .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
           .where(conditions.length > 0 ? and(...conditions) : undefined)
@@ -313,6 +315,7 @@ export class ProgressRepository {
           })
           .from(subjects)
           .innerJoin(boards, eq(subjects.boardId, boards.id))
+          .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
           .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
           .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
           .where(conditions.length > 0 ? and(...conditions) : undefined)
