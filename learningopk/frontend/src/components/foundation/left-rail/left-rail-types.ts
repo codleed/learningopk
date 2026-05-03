@@ -21,7 +21,7 @@ export interface LeftRailProps {
       email: string;
       name?: string | null;
       image?: string | null;
-      role?: "student" | "admin";
+      role?: "student" | "admin" | "moderator";
     };
   };
   currentPath?: string;

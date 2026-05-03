@@ -7,8 +7,15 @@ export type AdminSession = SessionPayload & {
   user: SessionPayload["user"] & { role: "admin" };
 };
 
+export type StaffSession = SessionPayload & {
+  user: SessionPayload["user"] & { role: "admin" | "moderator" };
+};
+
 export const isAdminSession = (session: SessionPayload | null): session is AdminSession =>
   Boolean(session && session.user.role === "admin");
+
+export const isStaffSession = (session: SessionPayload | null): session is StaffSession =>
+  Boolean(session && (session.user.role === "admin" || session.user.role === "moderator"));
 
 type AdminGuardProps = {
   session: SessionPayload | null;
@@ -17,15 +24,15 @@ type AdminGuardProps = {
 
 export function AdminGuard({ session, children }: AdminGuardProps) {
   if (!session) {
-    return <AuthGuardMessage variant="auth" title="Admin login required" />;
+    return <AuthGuardMessage variant="auth" title="Staff login required" />;
   }
 
-  if (session.user.role !== "admin") {
+  if (!isStaffSession(session)) {
     return (
       <AuthGuardMessage
         variant="permission"
-        title="Admin access only"
-        description="Your account is authenticated but does not have admin privileges."
+        title="Staff access only"
+        description="Your account does not have staff privileges."
         backHref="/dashboard"
       />
     );
@@ -33,4 +40,3 @@ export function AdminGuard({ session, children }: AdminGuardProps) {
 
   return <>{children ?? null}</>;
 }
-

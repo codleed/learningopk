@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { AdminGuard, isAdminSession } from "@/components/admin/admin-guard";
+import { AdminGuard, isStaffSession } from "@/components/admin/admin-guard";
 import { AppShell } from "@/components/foundation/app-shell";
 import { getServerSession } from "@/lib/session";
 
@@ -11,7 +11,7 @@ type AdminLayoutProps = {
 export default async function AdminLayout({ children }: AdminLayoutProps) {
   const session = await getServerSession();
 
-  if (!isAdminSession(session)) {
+  if (!isStaffSession(session)) {
     return <AdminGuard session={session} />;
   }
 
