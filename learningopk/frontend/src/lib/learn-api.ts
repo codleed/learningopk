@@ -156,7 +156,11 @@ const chapterDetailResponseSchema = z.object({
       difficulty: z.enum(["easy", "medium", "hard"]),
       type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]),
       visualizationHtml: z.string().nullable().optional(),
-      blanksAnswer: z.array(z.string()).nullable().optional()
+      blanksAnswer: z.array(z.string()).nullable().optional(),
+      statements: z.array(z.object({
+        text: z.string().min(1),
+        blanksAnswer: z.array(z.string().min(1)).min(1)
+      })).nullable().optional()
     })
   ),
   flashcards: z.array(

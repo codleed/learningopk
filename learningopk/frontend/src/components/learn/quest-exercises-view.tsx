@@ -125,31 +125,22 @@ export function QuestExercisesView({
                   </div>
 
                   {/* Question content */}
-                  <div className="text-sm text-text-primary">
-                    <ContentRenderer
-                      content={exercise.question}
-                      variant="compact"
-                      enableMath
-                      enableCode={false}
-                    />
-                  </div>
-
-                  {/* Numerical visualization */}
-                  {exercise.type === "numerical" && exercise.visualizationHtml && (
-                    <div className="mt-3">
-                      <NumericalVisualizationRenderer
-                        visualizationHtml={exercise.visualizationHtml}
-                      />
-                    </div>
-                  )}
-
-                  {/* Fill in the blanks interactive */}
-                  {exercise.type === "fill_in_blanks" && exercise.blanksAnswer && exercise.blanksAnswer.length > 0 && (
-                    <div className="mt-3">
+                  {exercise.type === "fill_in_blanks" ? (
+                    <div className="text-sm text-text-primary">
                       <FillInBlanksRenderer
                         question={exercise.question}
                         blanksAnswer={exercise.blanksAnswer}
+                        statements={exercise.statements}
                         onComplete={() => onMarkComplete(exercise.id, difficulty)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-sm text-text-primary">
+                      <ContentRenderer
+                        content={exercise.question}
+                        variant="compact"
+                        enableMath
+                        enableCode={false}
                       />
                     </div>
                   )}

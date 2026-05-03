@@ -26,6 +26,7 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { GithubMarkdownEditor } from "@/components/admin/github-markdown-editor";
 import { FillInBlanksEditor } from "@/components/admin/fill-in-blanks-editor";
+import type { BlankStatement } from "@/components/admin/fill-in-blanks-editor";
 import { NumericalVisualizationEditor } from "@/components/admin/numerical-visualization-editor";
 import {
   createAdminCurriculumExercise,
@@ -74,7 +75,7 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
   const [difficulty, setDifficulty] = useState<string>("medium");
   const [question, setQuestion] = useState<string>("");
   const [solution, setSolution] = useState<string>("");
-  const [blanksAnswer, setBlanksAnswer] = useState<string[]>([]);
+  const [statements, setStatements] = useState<BlankStatement[]>([]);
   const [visualizationHtml, setVisualizationHtml] = useState<string>("");
 
   /* ── Errors ── */
@@ -142,18 +143,18 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
       hasError = true;
     }
 
-    if (!question.trim()) {
+    if (apiType !== "fill_in_blanks" && !question.trim()) {
       setQuestionError("Question is required");
       hasError = true;
     }
 
-    if (!solution.trim()) {
+    if (apiType !== "fill_in_blanks" && !solution.trim()) {
       setSolutionError("Solution is required");
       hasError = true;
     }
 
-    if (apiType === "fill_in_blanks" && blanksAnswer.length === 0) {
-      setQuestionError("At least one {{blank}} answer is required");
+    if (apiType === "fill_in_blanks" && statements.length === 0) {
+      setQuestionError("At least one statement with blanks is required");
       hasError = true;
     }
 
@@ -180,7 +181,8 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
         problemMarkdown: apiType === "numerical" ? question.trim() : undefined,
         solutionCode: apiType === "numerical" ? solution.trim() : undefined,
         visualizationHtml: apiType === "numerical" ? visualizationHtml : undefined,
-        blanksAnswer: apiType === "fill_in_blanks" ? blanksAnswer : undefined,
+        blanksAnswer: apiType === "fill_in_blanks" ? undefined : undefined,
+        statements: apiType === "fill_in_blanks" ? statements : undefined,
       });
 
       pushToast({
@@ -207,19 +209,17 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
     if (activeSection === "blanks") {
       return (
         <AdminFormField
-          id="exercise-question"
-          label="Question"
+          id="exercise-blanks"
+          label="Fill in the Blanks"
           required
           error={questionError}
         >
           <FillInBlanksEditor
-            questionValue={question}
-            onQuestionChange={(value) => {
-              setQuestion(value);
+            statementsValue={statements}
+            onStatementsChange={(stmts) => {
+              setStatements(stmts);
               setQuestionError("");
             }}
-            answersValue={blanksAnswer}
-            onAnswersChange={setBlanksAnswer}
           />
         </AdminFormField>
       );
@@ -246,25 +246,29 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
     );
   };
 
-  const renderSolutionEditor = () => (
-    <AdminFormField
-      id="exercise-solution"
-      label="Solution"
-      required
-      error={solutionError}
-    >
-      <GithubMarkdownEditor
-        value={solution}
-        onChange={(value) => {
-          setSolution(value);
-          setSolutionError("");
-        }}
-        onImageUpload={handleImageUpload}
-        placeholder="Enter the solution in markdown..."
-        minHeight={activeSection === "short" ? 128 : 200}
-      />
-    </AdminFormField>
-  );
+  const renderSolutionEditor = () => {
+    if (activeSection === "blanks") return null;
+
+    return (
+      <AdminFormField
+        id="exercise-solution"
+        label="Solution"
+        required
+        error={solutionError}
+      >
+        <GithubMarkdownEditor
+          value={solution}
+          onChange={(value) => {
+            setSolution(value);
+            setSolutionError("");
+          }}
+          onImageUpload={handleImageUpload}
+          placeholder="Enter the solution in markdown..."
+          minHeight={activeSection === "short" ? 128 : 200}
+        />
+      </AdminFormField>
+    );
+  };
 
   const renderVisualizationEditor = () => {
     if (activeSection !== "physics") return null;

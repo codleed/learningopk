@@ -247,7 +247,8 @@ export class LearnRepository {
         difficulty: exercises.difficulty,
         type: exercises.type,
         visualizationHtml: exercises.visualizationHtml,
-        blanksAnswer: exercises.blanksAnswer
+        blanksAnswer: exercises.blanksAnswer,
+        statements: exercises.statements
       })
       .from(exercises)
       .where(eq(exercises.chapterId, chapterId))

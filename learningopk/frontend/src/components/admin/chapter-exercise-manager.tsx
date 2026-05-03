@@ -37,6 +37,7 @@ import type { AdminCurriculumExerciseRead } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 import { NumericalVisualizationEditor } from "@/components/admin/numerical-visualization-editor";
 import { FillInBlanksEditor } from "@/components/admin/fill-in-blanks-editor";
+import type { BlankStatement } from "@/components/admin/fill-in-blanks-editor";
 import { GithubMarkdownEditor } from "@/components/admin/github-markdown-editor";
 import { MarkdownMathRenderer } from "@/components/learn/markdown-math-renderer";
 
@@ -53,6 +54,7 @@ type ExerciseFormData = {
   difficulty: "easy" | "medium" | "hard";
   visualizationHtml: string;
   blanksAnswer: string[];
+  statements: BlankStatement[];
 };
 
 const initialFormData: ExerciseFormData = {
@@ -62,6 +64,7 @@ const initialFormData: ExerciseFormData = {
   difficulty: "medium",
   visualizationHtml: "",
   blanksAnswer: [],
+  statements: [],
 };
 
 const typeFilters: { id: ExerciseFilterType; label: string; icon: typeof Brain }[] = [
@@ -145,7 +148,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
       });
       return;
     }
-    if (!formData.question.trim()) {
+    if (apiType !== "fill_in_blanks" && !formData.question.trim()) {
       pushToast({
         title: "Validation Error",
         description: "Question is required",
@@ -153,7 +156,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
       });
       return;
     }
-    if (!formData.solution.trim()) {
+    if (apiType !== "fill_in_blanks" && !formData.solution.trim()) {
       pushToast({
         title: "Validation Error",
         description: "Solution is required",
@@ -161,10 +164,10 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
       });
       return;
     }
-    if (apiType === "fill_in_blanks" && formData.blanksAnswer.length === 0) {
+    if (apiType === "fill_in_blanks" && formData.statements.length === 0) {
       pushToast({
         title: "Validation Error",
-        description: "At least one blank answer is required for fill in the blanks",
+        description: "At least one statement with blanks is required for fill in the blanks",
         tone: "error",
       });
       return;
@@ -183,6 +186,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
           solutionCode: apiType === "numerical" ? formData.solution : undefined,
           visualizationHtml: apiType === "numerical" ? formData.visualizationHtml || undefined : undefined,
           blanksAnswer: apiType === "fill_in_blanks" ? formData.blanksAnswer : undefined,
+          statements: apiType === "fill_in_blanks" ? formData.statements : undefined,
         });
         setExercises((prev) =>
           prev.map((e) => (e.id === editingExercise.id ? { ...e, ...updated.exercise } : e))
@@ -203,6 +207,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
           solutionCode: apiType === "numerical" ? formData.solution : undefined,
           visualizationHtml: apiType === "numerical" ? formData.visualizationHtml || undefined : undefined,
           blanksAnswer: apiType === "fill_in_blanks" ? formData.blanksAnswer : undefined,
+          statements: apiType === "fill_in_blanks" ? formData.statements : undefined,
         });
         setExercises((prev) => [
           ...prev,
@@ -248,6 +253,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
       difficulty: exercise.difficulty,
       visualizationHtml: exercise.visualizationHtml || "",
       blanksAnswer: exercise.blanksAnswer || [],
+      statements: exercise.statements || [],
     });
     setShowForm(true);
   };
@@ -489,13 +495,11 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                       {activeSection === "blanks" ? (
                         <div className="space-y-2">
                           <label className="text-sm font-medium flex items-center gap-2">
-                            Question <span className="text-accent-danger">*</span>
+                            Fill in the Blanks <span className="text-accent-danger">*</span>
                           </label>
                           <FillInBlanksEditor
-                            questionValue={formData.question}
-                            onQuestionChange={(value) => setFormData(prev => ({ ...prev, question: value }))}
-                            answersValue={formData.blanksAnswer}
-                            onAnswersChange={(answers) => setFormData(prev => ({ ...prev, blanksAnswer: answers }))}
+                            statementsValue={formData.statements}
+                            onStatementsChange={(statements) => setFormData(prev => ({ ...prev, statements }))}
                           />
                         </div>
                       ) : (
@@ -514,18 +518,20 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                       )}
 
                       {/* Solution Editor */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium flex items-center gap-2">
-                          Solution <span className="text-accent-danger">*</span>
-                        </label>
-                        <GithubMarkdownEditor
-                          value={formData.solution}
-                          onChange={(value) => setFormData(prev => ({ ...prev, solution: value }))}
-                          onImageUpload={handleImageUpload}
-                          placeholder="Enter the solution in markdown..."
-                          minHeight={activeSection === "short" ? 128 : 200}
-                        />
-                      </div>
+                      {activeSection !== "blanks" && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium flex items-center gap-2">
+                            Solution <span className="text-accent-danger">*</span>
+                          </label>
+                          <GithubMarkdownEditor
+                            value={formData.solution}
+                            onChange={(value) => setFormData(prev => ({ ...prev, solution: value }))}
+                            onImageUpload={handleImageUpload}
+                            placeholder="Enter the solution in markdown..."
+                            minHeight={activeSection === "short" ? 128 : 200}
+                          />
+                        </div>
+                      )}
 
                       {/* Physics: Visualization Editor */}
                       {activeSection === "physics" && (
@@ -656,7 +662,23 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
 
                       {/* Question */}
                       <div className="text-sm font-medium mb-3 leading-relaxed prose prose-sm dark:prose-invert max-w-none">
-                        <MarkdownMathRenderer content={exercise.question} />
+                        {exercise.type === "fill_in_blanks" && exercise.statements && exercise.statements.length > 0 ? (
+                          <div className="space-y-1.5 not-prose">
+                            <p className="text-text-primary flex items-center gap-1.5">
+                              <TextCursorInput className="h-3.5 w-3.5 text-violet-500" />
+                              {exercise.question || "Fill in the Blanks"}
+                            </p>
+                            <div className="pl-5 space-y-0.5">
+                              {exercise.statements.map((stmt, i) => (
+                                <p key={i} className="text-text-secondary text-xs">
+                                  {i + 1}. {stmt.text.replace(/\{\{blank\}\}/g, "_______")}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <MarkdownMathRenderer content={exercise.question} />
+                        )}
                       </div>
 
                       {/* Solution Preview */}
