@@ -94,26 +94,32 @@ export function unlockBadge(badgeId: BadgeId): boolean {
 
 export function getChapterProgress(chapterId: string): ChapterProgress {
   const state = getGamificationState();
-  return state.chapterProgress[chapterId] ?? {
-    summaryRead: false,
-    subpartsRead: [],
-    exercisesCompleted: [],
-    flashcardsReviewed: {},
-    quizAttempts: [],
-    xpEarned: 0,
-  };
+  return Object.assign(
+    {
+      summaryRead: false,
+      subpartsRead: [],
+      exercisesCompleted: [],
+      flashcardsReviewed: {},
+      quizAttempts: [],
+      xpEarned: 0,
+    },
+    state.chapterProgress[chapterId],
+  );
 }
 
 export function updateChapterProgress(chapterId: string, updates: Partial<ChapterProgress>): void {
   const state = getGamificationState();
-  const current = state.chapterProgress[chapterId] ?? {
-    summaryRead: false,
-    subpartsRead: [],
-    exercisesCompleted: [],
-    flashcardsReviewed: {},
-    quizAttempts: [],
-    xpEarned: 0,
-  };
+  const current: ChapterProgress = Object.assign(
+    {
+      summaryRead: false,
+      subpartsRead: [],
+      exercisesCompleted: [],
+      flashcardsReviewed: {},
+      quizAttempts: [],
+      xpEarned: 0,
+    },
+    state.chapterProgress[chapterId],
+  );
 
   saveGamificationState({
     ...state,
