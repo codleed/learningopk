@@ -144,11 +144,12 @@ export function QuestExercisesView({
                   )}
 
                   {/* Fill in the blanks interactive */}
-                  {exercise.type === "fill_in_blanks" && exercise.blanksAnswer && exercise.blanksAnswer.length > 0 && (
+                  {exercise.type === "fill_in_blanks" && (
                     <div className="mt-3">
                       <FillInBlanksRenderer
                         question={exercise.question}
                         blanksAnswer={exercise.blanksAnswer}
+                        statements={exercise.statements}
                         onComplete={() => onMarkComplete(exercise.id, difficulty)}
                       />
                     </div>

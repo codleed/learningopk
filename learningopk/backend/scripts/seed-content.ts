@@ -42,7 +42,12 @@ const chapterSchema = z.object({
         question: z.string().trim().min(1),
         solution: z.string().trim().min(1),
         difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
-        type: z.enum(["mcq", "short", "long", "numerical"]).default("short")
+        type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]).default("short"),
+        blanksAnswer: z.array(z.string()).optional(),
+        statements: z.array(z.object({
+          text: z.string().trim().min(1),
+          blanksAnswer: z.array(z.string().trim().min(1)).min(1)
+        })).optional()
       })
     )
     .default([]),
@@ -483,7 +488,9 @@ const seedParsedFiles = async (parsedFiles: Pass2File[]): Promise<WriteSummary> 
             solution: exercise.solution,
             difficulty: exercise.difficulty,
             type: exercise.type,
-            sourceId: createdSource.id
+            sourceId: createdSource.id,
+            blanksAnswer: exercise.type === "fill_in_blanks" ? (exercise.blanksAnswer ?? null) : null,
+            statements: exercise.type === "fill_in_blanks" ? (exercise.statements ?? null) : null
           });
           summary.exercisesInserted += 1;
         } else {
@@ -494,7 +501,9 @@ const seedParsedFiles = async (parsedFiles: Pass2File[]): Promise<WriteSummary> 
               solution: exercise.solution,
               difficulty: exercise.difficulty,
               type: exercise.type,
-              sourceId: createdSource.id
+              sourceId: createdSource.id,
+              blanksAnswer: exercise.type === "fill_in_blanks" ? (exercise.blanksAnswer ?? null) : null,
+              statements: exercise.type === "fill_in_blanks" ? (exercise.statements ?? null) : null
             })
             .where(eq(exercises.id, existingExercise.id));
           summary.exercisesUpdated += 1;

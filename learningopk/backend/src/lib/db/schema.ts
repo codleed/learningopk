@@ -304,7 +304,8 @@ export const exercises = pgTable(
     problemMarkdown: text("problem_markdown"),
     solutionCode: text("solution_code"),
     visualizationHtml: text("visualization_html"),
-    blanksAnswer: jsonb("blanks_answer").$type<string[]>()
+    blanksAnswer: jsonb("blanks_answer").$type<string[]>(),
+    statements: jsonb("statements").$type<Array<{ text: string; blanksAnswer: string[] }>>()
   },
   (table) => [uniqueIndex("exercises_chapter_exercise_number_idx").on(table.chapterId, table.exerciseNumber)]
 );

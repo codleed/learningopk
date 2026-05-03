@@ -9,6 +9,7 @@ import { ContentRenderer } from "@/components/common/content-renderer";
 import { cn } from "@/lib/utils";
 
 import { ExerciseSolutionPanel } from "./exercise-solution-panel";
+import { FillInBlanksRenderer } from "./fill-in-blanks-renderer";
 
 type Exercise = ChapterDetailResponse["exercises"][number];
 
@@ -76,13 +77,22 @@ export function ExerciseItem({ exercise, isCompleted, onMarkComplete, onExpanded
           </div>
 
           {/* Question preview */}
-          <div className="text-sm leading-relaxed text-text-primary sm:text-base">
-            <ContentRenderer
-              content={exercise.question}
-              variant="compact"
-              enableMath
-              enableCode={false}
-            />
+          <div className="text-sm leading-relaxed text-text-primary sm:text-base" onClick={(e) => e.stopPropagation()}>
+            {exercise.type === "fill_in_blanks" ? (
+              <FillInBlanksRenderer
+                question={exercise.question}
+                blanksAnswer={exercise.blanksAnswer}
+                statements={exercise.statements}
+                onComplete={() => onMarkComplete(exercise.id, exercise.difficulty)}
+              />
+            ) : (
+              <ContentRenderer
+                content={exercise.question}
+                variant="compact"
+                enableMath
+                enableCode={false}
+              />
+            )}
           </div>
         </div>
 

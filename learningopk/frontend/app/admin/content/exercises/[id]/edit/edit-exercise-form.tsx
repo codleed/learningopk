@@ -27,6 +27,7 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { GithubMarkdownEditor } from "@/components/admin/github-markdown-editor";
 import { FillInBlanksEditor } from "@/components/admin/fill-in-blanks-editor";
+import type { BlankStatement } from "@/components/admin/fill-in-blanks-editor";
 import { NumericalVisualizationEditor } from "@/components/admin/numerical-visualization-editor";
 import {
   updateAdminCurriculumExercise,
@@ -81,7 +82,7 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
   const [difficulty, setDifficulty] = useState<string>(exercise.difficulty);
   const [question, setQuestion] = useState<string>(exercise.question);
   const [solution, setSolution] = useState<string>(exercise.solution);
-  const [blanksAnswer, setBlanksAnswer] = useState<string[]>(exercise.blanksAnswer ?? []);
+  const [statements, setStatements] = useState<BlankStatement[]>(exercise.statements ?? []);
   const [visualizationHtml, setVisualizationHtml] = useState<string>(exercise.visualizationHtml ?? "");
 
   /* ── Errors ── */
@@ -153,8 +154,8 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
       hasError = true;
     }
 
-    if (apiType === "fill_in_blanks" && blanksAnswer.length === 0) {
-      setQuestionError("At least one {{blank}} answer is required");
+    if (apiType === "fill_in_blanks" && statements.length === 0) {
+      setQuestionError("At least one statement with blanks is required");
       hasError = true;
     }
 
@@ -181,7 +182,8 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
         problemMarkdown: apiType === "numerical" ? question.trim() : undefined,
         solutionCode: apiType === "numerical" ? solution.trim() : undefined,
         visualizationHtml: apiType === "numerical" ? visualizationHtml : undefined,
-        blanksAnswer: apiType === "fill_in_blanks" ? blanksAnswer : undefined,
+        blanksAnswer: apiType === "fill_in_blanks" ? undefined : undefined,
+        statements: apiType === "fill_in_blanks" ? statements : undefined,
       });
 
       pushToast({
@@ -238,13 +240,11 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
           error={questionError}
         >
           <FillInBlanksEditor
-            questionValue={question}
-            onQuestionChange={(value) => {
-              setQuestion(value);
+            statementsValue={statements}
+            onStatementsChange={(stmts) => {
+              setStatements(stmts);
               setQuestionError("");
             }}
-            answersValue={blanksAnswer}
-            onAnswersChange={setBlanksAnswer}
           />
         </AdminFormField>
       );

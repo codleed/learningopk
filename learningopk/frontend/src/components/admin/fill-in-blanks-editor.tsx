@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useCallback, type ChangeEvent, type ReactNode } from "react";
-import { Eye, TextCursorInput, CheckCircle } from "lucide-react";
+import { useCallback, type ChangeEvent, type ReactNode } from "react";
+import { Plus, Trash2, Eye, TextCursorInput, CheckCircle } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /* ─── Constants ─── */
@@ -14,41 +15,33 @@ const BLANK_PATTERN = /\{\{blank\}\}/g;
 const HINT_TEXT =
   "Use {{blank}} to mark fill-in positions. Example: The force is {{blank}} Newtons.";
 
-/* ─── Props ─── */
+/* ─── Types ─── */
+
+export type BlankStatement = {
+  text: string;
+  blanksAnswer: string[];
+};
 
 type FillInBlanksEditorProps = {
-  questionValue: string;
-  onQuestionChange: (value: string) => void;
-  answersValue: string[];
-  onAnswersChange: (answers: string[]) => void;
+  statementsValue: BlankStatement[];
+  onStatementsChange: (statements: BlankStatement[]) => void;
   disabled?: boolean;
   className?: string;
 };
 
 /* ─── Helpers ─── */
 
-/** Count how many `{{blank}}` tokens appear in a string. */
 function countBlanks(text: string): number {
   const matches = text.match(BLANK_PATTERN);
   return matches ? matches.length : 0;
 }
 
-/**
- * Split the question text around `{{blank}}` placeholders.
- * Returns an alternating array of text-segments and blank-indices.
- *
- * E.g. "A is {{blank}} and B is {{blank}}" →
- *   [{ type: "text", value: "A is " },
- *    { type: "blank", index: 0 },
- *    { type: "text", value: " and B is " },
- *    { type: "blank", index: 1 }]
- */
 type PreviewSegment =
   | { type: "text"; value: string }
   | { type: "blank"; index: number };
 
-function parseSegments(question: string): PreviewSegment[] {
-  const parts = question.split(BLANK_PATTERN);
+function parseSegments(text: string): PreviewSegment[] {
+  const parts = text.split(BLANK_PATTERN);
   const segments: PreviewSegment[] = [];
   let blankIdx = 0;
 
@@ -57,7 +50,6 @@ function parseSegments(question: string): PreviewSegment[] {
     if (part !== undefined && part.length > 0) {
       segments.push({ type: "text", value: part });
     }
-    // Insert a blank marker between each split part (not after the last one)
     if (i < parts.length - 1) {
       segments.push({ type: "blank", index: blankIdx });
       blankIdx++;
@@ -67,173 +59,250 @@ function parseSegments(question: string): PreviewSegment[] {
   return segments;
 }
 
+function createEmptyStatement(): BlankStatement {
+  return { text: "", blanksAnswer: [] };
+}
+
 /* ─── Component ─── */
 
 export function FillInBlanksEditor({
-  questionValue,
-  onQuestionChange,
-  answersValue,
-  onAnswersChange,
+  statementsValue,
+  onStatementsChange,
   disabled = false,
   className,
 }: FillInBlanksEditorProps) {
-  /* ── Derived state ── */
-
-  const blankCount = useMemo(() => countBlanks(questionValue), [questionValue]);
-
-  const previewSegments = useMemo(
-    () => parseSegments(questionValue),
-    [questionValue],
-  );
-
   /* ── Handlers ── */
 
-  const handleQuestionChange = useCallback(
-    (e: ChangeEvent<HTMLTextAreaElement>) => {
-      const next = e.target.value;
-      onQuestionChange(next);
+  const handleAddStatement = useCallback(() => {
+    onStatementsChange([...statementsValue, createEmptyStatement()]);
+  }, [statementsValue, onStatementsChange]);
 
-      // Sync answers array length to new blank count
-      const nextCount = countBlanks(next);
-      if (nextCount !== answersValue.length) {
-        const synced: string[] = Array.from({ length: nextCount }, (_, i) =>
-          i < answersValue.length ? (answersValue[i] ?? "") : "",
-        );
-        onAnswersChange(synced);
-      }
+  const handleRemoveStatement = useCallback(
+    (index: number) => {
+      onStatementsChange(statementsValue.filter((_, i) => i !== index));
     },
-    [onQuestionChange, onAnswersChange, answersValue],
+    [statementsValue, onStatementsChange]
   );
 
-  const handleAnswerChange = useCallback(
+  const handleStatementTextChange = useCallback(
     (index: number, value: string) => {
-      const updated = answersValue.map((v, i) => (i === index ? value : v));
-      onAnswersChange(updated);
+      const updated = statementsValue.map((stmt, i) => {
+        if (i !== index) return stmt;
+        const nextCount = countBlanks(value);
+        const synced: string[] = Array.from({ length: nextCount }, (_, j) =>
+          j < stmt.blanksAnswer.length ? (stmt.blanksAnswer[j] ?? "") : ""
+        );
+        return { ...stmt, text: value, blanksAnswer: synced };
+      });
+      onStatementsChange(updated);
     },
-    [answersValue, onAnswersChange],
+    [statementsValue, onStatementsChange]
+  );
+
+  const handleStatementAnswerChange = useCallback(
+    (stmtIndex: number, blankIndex: number, value: string) => {
+      const updated = statementsValue.map((stmt, i) => {
+        if (i !== stmtIndex) return stmt;
+        const newAnswers = stmt.blanksAnswer.map((v, j) =>
+          j === blankIndex ? value : v
+        );
+        return { ...stmt, blanksAnswer: newAnswers };
+      });
+      onStatementsChange(updated);
+    },
+    [statementsValue, onStatementsChange]
   );
 
   /* ── Render helpers ── */
 
-  const renderPreviewBlank = (index: number): ReactNode => {
-    const answer = answersValue[index] ?? "";
+  const renderPreviewBlank = (answer: string): ReactNode => {
     const hasAnswer = answer.trim().length > 0;
 
     return (
-      <span key={`blank-${index}`} className="inline-flex flex-col items-center mx-1">
+      <span className="inline-flex flex-col items-center mx-1">
         <span
           className={cn(
             "inline-block border-b-2 border-accent-primary min-w-[80px] text-center",
             "px-2 py-0.5 text-sm font-medium",
-            hasAnswer ? "text-text-primary" : "text-text-muted",
+            hasAnswer ? "text-text-primary" : "text-text-muted"
           )}
         >
           {hasAnswer ? answer : "_______"}
         </span>
-        {hasAnswer && (
-          <span className="text-xs text-accent-success mt-0.5 font-medium">
-            {answer}
-          </span>
-        )}
       </span>
     );
   };
 
   /* ── JSX ── */
 
+  const totalBlanks = statementsValue.reduce(
+    (sum, s) => sum + s.blanksAnswer.length,
+    0
+  );
+
   return (
-    <div className={cn("space-y-4", className)}>
-      {/* ── 1. Question Editor ── */}
-      <section className="space-y-1">
-        <div className="flex items-center gap-2 mb-1.5">
+    <div className={cn("space-y-5", className)}>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <TextCursorInput className="h-4 w-4 text-text-muted" />
           <span className="text-sm font-semibold text-text-primary">
-            Question
+            Statements
           </span>
-          {blankCount > 0 && (
+          {totalBlanks > 0 && (
             <Badge variant="primary" size="sm">
-              {blankCount} {blankCount === 1 ? "blank" : "blanks"}
+              {totalBlanks} {totalBlanks === 1 ? "blank" : "blanks"} across{" "}
+              {statementsValue.length}{" "}
+              {statementsValue.length === 1 ? "statement" : "statements"}
             </Badge>
           )}
         </div>
-
-        <Textarea
-          value={questionValue}
-          onChange={handleQuestionChange}
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={handleAddStatement}
           disabled={disabled}
-          placeholder='Enter question with {{blank}} placeholders…'
-          rows={4}
-          className="min-h-[120px]"
-          aria-label="Fill-in-the-blanks question"
-        />
+          className="gap-1.5"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add Statement
+        </Button>
+      </div>
 
-        <p className="text-xs text-text-muted mt-1">{HINT_TEXT}</p>
-      </section>
-
-      {/* ── 2. Answers Section ── */}
-      {blankCount > 0 && (
-        <section className="space-y-3">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-text-muted" />
-            <span className="text-sm font-semibold text-text-primary">
-              Answers
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {Array.from({ length: blankCount }, (_, i) => (
-              <Input
-                key={`answer-${i}`}
-                id={`fill-blank-answer-${i}`}
-                label={`Answer for blank ${i + 1}:`}
-                value={answersValue[i] ?? ""}
-                onChange={(e) => handleAnswerChange(i, e.target.value)}
-                disabled={disabled}
-                placeholder={`Blank ${i + 1} answer`}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ── 3. Preview Section ── */}
-      {questionValue.trim().length > 0 && (
-        <section className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Eye className="h-4 w-4 text-text-muted" />
-            <span className="text-sm font-semibold text-text-primary">
-              Preview
-            </span>
-          </div>
-
-          <div
-            className={cn(
-              "rounded-lg border border-border-default bg-bg-subtle/30 p-4",
-              "text-sm leading-relaxed text-text-primary",
-            )}
-            role="region"
-            aria-label="Question preview"
+      {/* Statements list */}
+      {statementsValue.length === 0 && (
+        <div className="rounded-lg border border-dashed border-border-default bg-bg-subtle/5 p-6 text-center">
+          <p className="text-sm text-text-secondary mb-3">
+            No statements yet. Click &quot;Add Statement&quot; to create one.
+          </p>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleAddStatement}
+            disabled={disabled}
+            className="gap-1.5"
           >
-            {previewSegments.map((segment, segIdx) => {
-              if (segment.type === "text") {
-                return (
-                  <span key={`seg-${segIdx}`}>
-                    {segment.value}
-                  </span>
-                );
-              }
-              return renderPreviewBlank(segment.index);
-            })}
-
-            {blankCount === 0 && questionValue.trim().length > 0 && (
-              <p className="text-xs text-text-muted italic mt-2">
-                No blanks detected. Add {"{{blank}}"} to create fill-in
-                positions.
-              </p>
-            )}
-          </div>
-        </section>
+            <Plus className="h-3.5 w-3.5" />
+            Add Statement
+          </Button>
+        </div>
       )}
+
+      <div className="space-y-4">
+        {statementsValue.map((statement, stmtIdx) => {
+          const blankCount = statement.blanksAnswer.length;
+          const segments = parseSegments(statement.text);
+
+          return (
+            <div
+              key={stmtIdx}
+              className="rounded-lg border border-border-default bg-bg-surface p-4 space-y-3"
+            >
+              {/* Statement header */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-text-muted">
+                  Statement {stmtIdx + 1}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemoveStatement(stmtIdx)}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0 text-text-muted hover:text-accent-danger"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+
+              {/* Statement text */}
+              <Textarea
+                value={statement.text}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                  handleStatementTextChange(stmtIdx, e.target.value)
+                }
+                disabled={disabled}
+                placeholder='Enter statement with {{blank}} placeholders…'
+                rows={2}
+                className="min-h-[60px]"
+                aria-label={`Statement ${stmtIdx + 1} text`}
+              />
+
+              {/* Answers for each blank */}
+              {blankCount > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-3.5 w-3.5 text-text-muted" />
+                    <span className="text-xs font-medium text-text-secondary">
+                      Answers
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {statement.blanksAnswer.map((answer, blankIdx) => (
+                      <Input
+                        key={`stmt-${stmtIdx}-blank-${blankIdx}`}
+                        id={`stmt-${stmtIdx}-blank-${blankIdx}`}
+                        label={`Blank ${blankIdx + 1}:`}
+                        value={answer}
+                        onChange={(e) =>
+                          handleStatementAnswerChange(
+                            stmtIdx,
+                            blankIdx,
+                            e.target.value
+                          )
+                        }
+                        disabled={disabled}
+                        placeholder={`Answer for blank ${blankIdx + 1}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Live preview */}
+              {statement.text.trim().length > 0 && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Eye className="h-3.5 w-3.5 text-text-muted" />
+                    <span className="text-xs text-text-muted">Preview</span>
+                  </div>
+                  <div
+                    className={cn(
+                      "rounded-md border border-border-default bg-bg-subtle/30 p-3",
+                      "text-sm leading-relaxed text-text-primary"
+                    )}
+                    role="region"
+                    aria-label={`Statement ${stmtIdx + 1} preview`}
+                  >
+                    {blankCount === 0 ? (
+                      <p className="text-xs text-text-muted italic">
+                        No blanks detected. Add {"{{blank}}"} to create fill-in
+                        positions.
+                      </p>
+                    ) : (
+                      <p className="flex flex-wrap items-baseline gap-y-2">
+                        {segments.map((segment, segIdx) => {
+                          if (segment.type === "text") {
+                            return (
+                              <span key={`seg-${segIdx}`}>
+                                {segment.value}
+                              </span>
+                            );
+                          }
+                          return renderPreviewBlank(
+                            statement.blanksAnswer[segment.index] ?? ""
+                          );
+                        })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="text-xs text-text-muted">{HINT_TEXT}</p>
     </div>
   );
 }

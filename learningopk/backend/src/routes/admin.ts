@@ -158,6 +158,11 @@ const curriculumChapterUpdateBodySchema = z.object({
   coverImageUrl: z.string().trim().url().nullish()
 });
 
+const blankStatementSchema = z.object({
+  text: z.string().trim().min(1, "Statement text is required"),
+  blanksAnswer: z.array(z.string().trim().min(1)).min(1, "At least one answer per statement is required")
+});
+
 export const curriculumExerciseCreateBodySchema = z
   .object({
     chapterId: z.coerce.number().int().positive(),
@@ -169,7 +174,8 @@ export const curriculumExerciseCreateBodySchema = z
     problemMarkdown: z.string().trim().optional(),
     solutionCode: z.string().trim().optional(),
     visualizationHtml: z.string().trim().optional(),
-    blanksAnswer: z.array(z.string()).optional()
+    blanksAnswer: z.array(z.string()).optional(),
+    statements: z.array(blankStatementSchema).optional()
   })
   .refine(
     (data) => {
@@ -200,13 +206,15 @@ export const curriculumExerciseCreateBodySchema = z
   .refine(
     (data) => {
       if (data.type === "fill_in_blanks") {
-        return data.blanksAnswer !== undefined && data.blanksAnswer.length > 0;
+        const hasStatements = data.statements !== undefined && data.statements.length > 0;
+        const hasLegacyBlanks = data.blanksAnswer !== undefined && data.blanksAnswer.length > 0;
+        return hasStatements || hasLegacyBlanks;
       }
       return true;
     },
     {
-      message: "blanksAnswer is required when type is 'fill_in_blanks'",
-      path: ["blanksAnswer"]
+      message: "statements or blanksAnswer is required when type is 'fill_in_blanks'",
+      path: ["statements"]
     }
   );
 
@@ -220,7 +228,8 @@ export const curriculumExerciseUpdateBodySchema = z
     problemMarkdown: z.string().trim().optional(),
     solutionCode: z.string().trim().optional(),
     visualizationHtml: z.string().trim().optional(),
-    blanksAnswer: z.array(z.string()).optional()
+    blanksAnswer: z.array(z.string()).optional(),
+    statements: z.array(blankStatementSchema).optional()
   })
   .refine(
     (data) => {
@@ -251,13 +260,15 @@ export const curriculumExerciseUpdateBodySchema = z
   .refine(
     (data) => {
       if (data.type === "fill_in_blanks") {
-        return data.blanksAnswer !== undefined && data.blanksAnswer.length > 0;
+        const hasStatements = data.statements !== undefined && data.statements.length > 0;
+        const hasLegacyBlanks = data.blanksAnswer !== undefined && data.blanksAnswer.length > 0;
+        return hasStatements || hasLegacyBlanks;
       }
       return true;
     },
     {
-      message: "blanksAnswer is required when type is 'fill_in_blanks'",
-      path: ["blanksAnswer"]
+      message: "statements or blanksAnswer is required when type is 'fill_in_blanks'",
+      path: ["statements"]
     }
   );
 
@@ -2873,6 +2884,9 @@ adminRouter.post("/content/exercises", requireSession, async (req, res) => {
           : null,
         blanksAnswer: parsedBody.data.type === "fill_in_blanks"
           ? (parsedBody.data.blanksAnswer ?? null)
+          : null,
+        statements: parsedBody.data.type === "fill_in_blanks"
+          ? (parsedBody.data.statements ?? null)
           : null
       })
       .returning({
@@ -2886,7 +2900,8 @@ adminRouter.post("/content/exercises", requireSession, async (req, res) => {
         problemMarkdown: exercises.problemMarkdown,
         solutionCode: exercises.solutionCode,
         visualizationHtml: exercises.visualizationHtml,
-        blanksAnswer: exercises.blanksAnswer
+        blanksAnswer: exercises.blanksAnswer,
+        statements: exercises.statements
       });
 
     const exercise = insertedRows[0];
@@ -2958,7 +2973,8 @@ adminRouter.get("/content/exercises", requireSession, async (req, res) => {
       problemMarkdown: exercises.problemMarkdown,
       solutionCode: exercises.solutionCode,
       visualizationHtml: exercises.visualizationHtml,
-      blanksAnswer: exercises.blanksAnswer
+      blanksAnswer: exercises.blanksAnswer,
+      statements: exercises.statements
     })
     .from(exercises)
     .innerJoin(chapters, eq(exercises.chapterId, chapters.id))
@@ -3886,6 +3902,7 @@ adminRouter.post("/content/exercises/:id/update", requireSession, async (req, re
       solutionCode: exercises.solutionCode,
       visualizationHtml: exercises.visualizationHtml,
       blanksAnswer: exercises.blanksAnswer,
+      statements: exercises.statements,
       chapterTitle: chapters.title,
       subjectName: subjects.name
     })
@@ -3961,6 +3978,11 @@ adminRouter.post("/content/exercises/:id/update", requireSession, async (req, re
           ? null
           : parsedBody.data.type === "fill_in_blanks"
             ? (parsedBody.data.blanksAnswer ?? null)
+            : null,
+        statements: isChangingFromBlanks
+          ? null
+          : parsedBody.data.type === "fill_in_blanks"
+            ? (parsedBody.data.statements ?? null)
             : null
       })
       .where(eq(exercises.id, exercise.id))
@@ -3975,7 +3997,8 @@ adminRouter.post("/content/exercises/:id/update", requireSession, async (req, re
         problemMarkdown: exercises.problemMarkdown,
         solutionCode: exercises.solutionCode,
         visualizationHtml: exercises.visualizationHtml,
-        blanksAnswer: exercises.blanksAnswer
+        blanksAnswer: exercises.blanksAnswer,
+        statements: exercises.statements
       });
     const updatedExercise = updatedRows[0];
     if (!updatedExercise) {

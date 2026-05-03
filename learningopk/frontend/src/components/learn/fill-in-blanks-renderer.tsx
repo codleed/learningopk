@@ -15,9 +15,15 @@ import { Badge } from "@/components/ui/badge";
 
 type BlankStatus = "unanswered" | "correct" | "incorrect";
 
-type FillInBlanksRendererProps = {
-  question: string;
+type Statement = {
+  text: string;
   blanksAnswer: string[];
+};
+
+type FillInBlanksRendererProps = {
+  question?: string;
+  blanksAnswer?: string[] | null;
+  statements?: Statement[] | null;
   onComplete?: () => void;
   className?: string;
 };
@@ -65,207 +71,7 @@ function normalizeAnswer(value: string): string {
   return value.trim().toLowerCase();
 }
 
-/* ─── Component ─── */
-
-export function FillInBlanksRenderer({
-  question,
-  blanksAnswer,
-  onComplete,
-  className,
-}: FillInBlanksRendererProps) {
-  const reduced = useReducedMotion();
-  const segments = useMemo(() => parseQuestion(question), [question]);
-  const blankCount = blanksAnswer.length;
-
-  const [userAnswers, setUserAnswers] = useState<string[]>(() =>
-    Array.from<string>({ length: blankCount }).fill("")
-  );
-  const [checked, setChecked] = useState<CheckedState | null>(null);
-
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  const isChecked = checked !== null;
-  const hasAtLeastOneAnswer = userAnswers.some((a) => a.trim().length > 0);
-
-  const correctCount = checked
-    ? checked.statuses.filter((s) => s === "correct").length
-    : 0;
-
-  const setInputRef = useCallback(
-    (index: number) => (el: HTMLInputElement | null) => {
-      inputRefs.current[index] = el;
-    },
-    []
-  );
-
-  const handleInputChange = useCallback(
-    (index: number, value: string) => {
-      setUserAnswers((prev) => {
-        const next = [...prev];
-        next[index] = value;
-        return next;
-      });
-    },
-    []
-  );
-
-  const handleCheckAnswers = useCallback(() => {
-    const statuses: BlankStatus[] = blanksAnswer.map((correct, index) => {
-      const userValue = userAnswers[index] ?? "";
-      return normalizeAnswer(userValue) === normalizeAnswer(correct)
-        ? "correct"
-        : "incorrect";
-    });
-
-    const allCorrect = statuses.every((s) => s === "correct");
-
-    setChecked({ statuses, allCorrect });
-
-    if (allCorrect) {
-      onComplete?.();
-    }
-  }, [blanksAnswer, userAnswers, onComplete]);
-
-  const handleKeyDown = useCallback(
-    (index: number, event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        const nextInput = inputRefs.current[index + 1];
-        if (nextInput) {
-          nextInput.focus();
-        } else {
-          // Last blank — trigger check on Enter
-          handleCheckAnswers();
-        }
-      }
-    },
-    [handleCheckAnswers]
-  );
-
-  const handleReset = useCallback(() => {
-    setUserAnswers(Array.from<string>({ length: blankCount }).fill(""));
-    setChecked(null);
-
-    // Focus the first input after reset
-    requestAnimationFrame(() => {
-      inputRefs.current[0]?.focus();
-    });
-  }, [blankCount]);
-
-  /* ─── Render ─── */
-
-  let blankIndex = 0;
-
-  return (
-    <div className={cn("space-y-4", className)}>
-      {/* Question text with inline blanks */}
-      <div className="text-sm leading-relaxed text-text-primary">
-        <p className="flex flex-wrap items-baseline gap-y-2">
-          {segments.map((segment, segIdx) => {
-            const currentBlankIndex = blankIndex;
-            const isLastSegment = segIdx === segments.length - 1;
-
-            // Increment blank index for every segment except the last
-            if (!isLastSegment) {
-              blankIndex++;
-            }
-
-            return (
-              <span key={segIdx} className="contents">
-                {/* Text segment rendered with inline markdown + math */}
-                {segment && (
-                  <span className="inline md-root [&_p]:inline [&_p]:m-0">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkMath]}
-                      rehypePlugins={[rehypeKatex]}
-                    >
-                      {segment}
-                    </ReactMarkdown>
-                  </span>
-                )}
-
-                {/* Blank input (one fewer blank than segments) */}
-                {!isLastSegment && (
-                  <BlankInput
-                    index={currentBlankIndex}
-                    value={userAnswers[currentBlankIndex] ?? ""}
-                    status={checked?.statuses[currentBlankIndex] ?? "unanswered"}
-                    correctAnswer={blanksAnswer[currentBlankIndex] ?? ""}
-                    disabled={isChecked}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    inputRef={setInputRef(currentBlankIndex)}
-                  />
-                )}
-              </span>
-            );
-          })}
-        </p>
-      </div>
-
-      {/* Action buttons + score summary */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <AnimatePresence mode="wait">
-          {!isChecked ? (
-            <motion.div
-              key="check-btn"
-              initial={reduced ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduced ? undefined : { opacity: 0, y: -8 }}
-              transition={reduced ? { duration: 0 } : { duration: 0.2 }}
-            >
-              <Button
-                variant="primary"
-                size="sm"
-                disabled={!hasAtLeastOneAnswer}
-                onClick={handleCheckAnswers}
-              >
-                Check Answers
-              </Button>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="try-again-btn"
-              initial={reduced ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduced ? undefined : { opacity: 0, y: -8 }}
-              transition={reduced ? { duration: 0 } : { duration: 0.2 }}
-              className="flex items-center gap-3 flex-wrap"
-            >
-              <Button
-                variant="secondary"
-                size="sm"
-                iconLeft={<RotateCcw />}
-                onClick={handleReset}
-              >
-                Try Again
-              </Button>
-
-              {/* Score summary */}
-              <motion.div
-                initial={reduced ? false : { opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={reduced ? { duration: 0 } : { delay: 0.1, type: "spring", stiffness: 400, damping: 25 }}
-              >
-                {checked.allCorrect ? (
-                  <Badge variant="success" size="md">
-                    All correct!
-                  </Badge>
-                ) : (
-                  <Badge variant="warning" size="md">
-                    {correctCount}/{blankCount} correct
-                  </Badge>
-                )}
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Blank Input Sub-component ─── */
+/* ─── Sub-components ─── */
 
 type BlankInputProps = {
   index: number;
@@ -295,7 +101,6 @@ function BlankInput({
 
   return (
     <span className="relative mx-1 inline-flex flex-col items-center">
-      {/* Number badge */}
       <span
         className="absolute -top-2.5 left-0.5 select-none text-[10px] font-medium text-text-muted"
         aria-hidden="true"
@@ -303,7 +108,6 @@ function BlankInput({
         {index + 1}
       </span>
 
-      {/* Input wrapper with feedback icon */}
       <span className="relative inline-flex items-center">
         <input
           ref={inputRef}
@@ -319,18 +123,13 @@ function BlankInput({
           className={cn(
             "inline-block w-24 border-b-2 bg-transparent text-center text-sm py-0.5",
             "focus:outline-none transition-colors duration-200",
-            /* Default state */
             !isChecked && "border-border-default focus:border-accent-primary",
-            /* Correct */
             isCorrect && "border-emerald-500 bg-emerald-500/10",
-            /* Incorrect */
             isIncorrect && "border-rose-500 bg-rose-500/10",
-            /* Disabled */
             disabled && "cursor-not-allowed opacity-80"
           )}
         />
 
-        {/* Feedback icon */}
         <AnimatePresence>
           {isChecked && (
             <motion.span
@@ -355,7 +154,6 @@ function BlankInput({
         </AnimatePresence>
       </span>
 
-      {/* Correct answer hint for incorrect answers */}
       <AnimatePresence>
         {isIncorrect && (
           <motion.span
@@ -373,5 +171,345 @@ function BlankInput({
         )}
       </AnimatePresence>
     </span>
+  );
+}
+
+/* ─── Statement Reader ─── */
+
+type StatementBlockProps = {
+  stmtIndex: number;
+  statement: Statement;
+  userAnswers: string[];
+  checked: CheckedState | null;
+  disabled: boolean;
+  onChange: (stmtIndex: number, blankIndex: number, value: string) => void;
+  onKeyDown: (stmtIndex: number, blankIndex: number, event: React.KeyboardEvent<HTMLInputElement>) => void;
+  inputRefs: React.MutableRefObject<(HTMLInputElement | null)[][]>;
+};
+
+function StatementBlock({
+  stmtIndex,
+  statement,
+  userAnswers,
+  checked,
+  disabled,
+  onChange,
+  onKeyDown,
+  inputRefs,
+}: StatementBlockProps) {
+  const segments = useMemo(() => parseQuestion(statement.text), [statement.text]);
+
+  const setInputRef = useCallback(
+    (blankIndex: number) => (el: HTMLInputElement | null) => {
+      if (!inputRefs.current[stmtIndex]) {
+        inputRefs.current[stmtIndex] = [];
+      }
+      inputRefs.current[stmtIndex][blankIndex] = el;
+    },
+    [stmtIndex, inputRefs]
+  );
+
+  let blankIndex = 0;
+
+  return (
+    <div className="text-sm leading-relaxed text-text-primary">
+      <span className="text-xs font-semibold text-text-muted mr-2 select-none">
+        {stmtIndex + 1}.
+      </span>
+      <p className="inline flex-wrap items-baseline gap-y-2">
+        {segments.map((segment, segIdx) => {
+          const currentBlankIndex = blankIndex;
+          const isLastSegment = segIdx === segments.length - 1;
+
+          if (!isLastSegment) {
+            blankIndex++;
+          }
+
+          return (
+            <span key={segIdx} className="contents">
+              {segment && (
+                <span className="inline md-root [&_p]:inline [&_p]:m-0">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                  >
+                    {segment}
+                  </ReactMarkdown>
+                </span>
+              )}
+
+              {!isLastSegment && (
+                <BlankInput
+                  index={currentBlankIndex}
+                  value={userAnswers[currentBlankIndex] ?? ""}
+                  status={checked?.statuses[currentBlankIndex] ?? "unanswered"}
+                  correctAnswer={statement.blanksAnswer[currentBlankIndex] ?? ""}
+                  disabled={disabled}
+                  onChange={(idx, val) => onChange(stmtIndex, idx, val)}
+                  onKeyDown={(idx, e) => onKeyDown(stmtIndex, idx, e)}
+                  inputRef={setInputRef(currentBlankIndex)}
+                />
+              )}
+            </span>
+          );
+        })}
+      </p>
+    </div>
+  );
+}
+
+/* ─── Main Component ─── */
+
+export function FillInBlanksRenderer({
+  question,
+  blanksAnswer,
+  statements,
+  onComplete,
+  className,
+}: FillInBlanksRendererProps) {
+  const reduced = useReducedMotion();
+
+  // Normalize to internal statements array (support both legacy and new format)
+  const internalStatements: Statement[] = useMemo(() => {
+    if (statements && statements.length > 0) {
+      return statements.filter((s) => s.text && s.blanksAnswer.length > 0);
+    }
+    if (question && blanksAnswer && blanksAnswer.length > 0) {
+      return [{ text: question, blanksAnswer }];
+    }
+    return [];
+  }, [question, blanksAnswer, statements]);
+
+  const totalBlanks = useMemo(
+    () => internalStatements.reduce((sum, s) => sum + s.blanksAnswer.length, 0),
+    [internalStatements]
+  );
+
+  // Per-statement user answers: array of arrays, each with the correct number of blanks
+  const [userAnswers, setUserAnswers] = useState<string[][]>(() =>
+    internalStatements.map((s) =>
+      Array.from<string>({ length: s.blanksAnswer.length }).fill("")
+    )
+  );
+  // Per-statement checked state
+  const [checkedStates, setCheckedStates] = useState<CheckedState[]>(() =>
+    internalStatements.map(() => ({
+      statuses: [],
+      allCorrect: false,
+    }))
+  );
+
+  const inputRefs = useRef<(HTMLInputElement | null)[][]>(
+    internalStatements.map(() => [])
+  );
+
+  const anyChecked = checkedStates.some((cs) => cs.statuses.length > 0);
+  const hasAtLeastOneAnswer = useMemo(
+    () => userAnswers.some((stmtAnswers) => stmtAnswers.some((a) => a.trim().length > 0)),
+    [userAnswers]
+  );
+
+  // Per-statement correct counts
+  const stmtScores = useMemo(
+    () =>
+      checkedStates.map((cs, i) => {
+        const stmt = internalStatements[i];
+        const correct = cs.statuses.filter((s) => s === "correct").length;
+        return { total: stmt?.blanksAnswer.length ?? 0, correct };
+      }),
+    [checkedStates, internalStatements]
+  );
+
+  const totalCorrect = stmtScores.reduce((sum, s) => sum + s.correct, 0);
+  const allCorrect = totalBlanks > 0 && totalCorrect === totalBlanks;
+
+  const handleInputChange = useCallback(
+    (stmtIndex: number, blankIndex: number, value: string) => {
+      setUserAnswers((prev) => {
+        const next = prev.map((arr) => [...arr]);
+        if (next[stmtIndex]) {
+          next[stmtIndex][blankIndex] = value;
+        }
+        return next;
+      });
+    },
+    []
+  );
+
+  const handleCheckAll = useCallback(() => {
+    const newCheckedStates: CheckedState[] = internalStatements.map(
+      (statement, stmtIndex) => {
+        const statuses: BlankStatus[] = statement.blanksAnswer.map(
+          (correct, blankIndex) => {
+            const userValue = userAnswers[stmtIndex]?.[blankIndex] ?? "";
+            return normalizeAnswer(userValue) === normalizeAnswer(correct)
+              ? "correct"
+              : "incorrect";
+          }
+        );
+        return {
+          statuses,
+          allCorrect: statuses.every((s) => s === "correct"),
+        };
+      }
+    );
+
+    setCheckedStates(newCheckedStates);
+
+    const allCorrectNow = newCheckedStates.every((s) => s.allCorrect);
+    if (allCorrectNow) {
+      onComplete?.();
+    }
+  }, [internalStatements, userAnswers, onComplete]);
+
+  const handleKeyDown = useCallback(
+    (stmtIndex: number, blankIndex: number, event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        // Navigate to next blank in same statement, or next statement's first blank
+        const currentStmt = internalStatements[stmtIndex];
+        if (!currentStmt) return;
+
+        if (blankIndex + 1 < currentStmt.blanksAnswer.length) {
+          // Next blank in same statement
+          inputRefs.current[stmtIndex]?.[blankIndex + 1]?.focus();
+        } else if (stmtIndex + 1 < internalStatements.length) {
+          // First blank of next statement
+          inputRefs.current[stmtIndex + 1]?.[0]?.focus();
+        } else {
+          // Last blank — check all
+          handleCheckAll();
+        }
+      }
+    },
+    [internalStatements, handleCheckAll]
+  );
+
+  const handleReset = useCallback(() => {
+    setUserAnswers(
+      internalStatements.map((s) =>
+        Array.from<string>({ length: s.blanksAnswer.length }).fill("")
+      )
+    );
+    setCheckedStates(
+      internalStatements.map(() => ({
+        statuses: [],
+        allCorrect: false,
+      }))
+    );
+
+    requestAnimationFrame(() => {
+      inputRefs.current[0]?.[0]?.focus();
+    });
+  }, [internalStatements]);
+
+  /* ─── Empty state ─── */
+
+  if (internalStatements.length === 0) {
+    return null;
+  }
+
+  /* ─── Render ─── */
+
+  return (
+    <div className={cn("space-y-4", className)}>
+      {/* Statement blocks */}
+      <div className="space-y-3">
+        {internalStatements.map((statement, stmtIndex) => {
+          // Collect answers for this statement from the per-statement arrays
+          const stmtAnswers: string[] = [];
+
+          return (
+            <div
+              key={stmtIndex}
+              className={cn(
+                "rounded-lg border p-3 transition-colors duration-200",
+                checkedStates[stmtIndex]?.allCorrect
+                  ? "border-emerald-500/30 bg-emerald-500/[0.03]"
+                  : anyChecked &&
+                    checkedStates[stmtIndex]?.statuses.some(
+                      (s) => s === "incorrect"
+                    )
+                  ? "border-rose-500/30 bg-rose-500/[0.03]"
+                  : "border-border-default bg-bg-surface"
+              )}
+            >
+              <StatementBlock
+                stmtIndex={stmtIndex}
+                statement={statement}
+                userAnswers={userAnswers[stmtIndex] ?? stmtAnswers}
+                checked={checkedStates[stmtIndex] ?? null}
+                disabled={anyChecked}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                inputRefs={inputRefs}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Action buttons + score summary */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <AnimatePresence mode="wait">
+          {!anyChecked ? (
+            <motion.div
+              key="check-btn"
+              initial={reduced ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduced ? undefined : { opacity: 0, y: -8 }}
+              transition={reduced ? { duration: 0 } : { duration: 0.2 }}
+            >
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={!hasAtLeastOneAnswer}
+                onClick={handleCheckAll}
+              >
+                Check Answers
+              </Button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="try-again-btn"
+              initial={reduced ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduced ? undefined : { opacity: 0, y: -8 }}
+              transition={reduced ? { duration: 0 } : { duration: 0.2 }}
+              className="flex items-center gap-3 flex-wrap"
+            >
+              <Button
+                variant="secondary"
+                size="sm"
+                iconLeft={<RotateCcw />}
+                onClick={handleReset}
+              >
+                Try Again
+              </Button>
+
+              <motion.div
+                initial={reduced ? false : { opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={
+                  reduced
+                    ? { duration: 0 }
+                    : { delay: 0.1, type: "spring", stiffness: 400, damping: 25 }
+                }
+              >
+                {allCorrect ? (
+                  <Badge variant="success" size="md">
+                    All {totalBlanks} correct!
+                  </Badge>
+                ) : (
+                  <Badge variant="warning" size="md">
+                    {totalCorrect}/{totalBlanks} correct
+                  </Badge>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
   );
 }

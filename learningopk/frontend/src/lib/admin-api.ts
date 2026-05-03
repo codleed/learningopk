@@ -280,6 +280,11 @@ const adminChapterSummaryMediaUploadResponseSchema = z.object({
   markdown: z.string().min(1)
 });
 
+const blankStatementSchema = z.object({
+  text: z.string(),
+  blanksAnswer: z.array(z.string())
+});
+
 const adminCurriculumExerciseCreateResponseSchema = z.object({
   exercise: z.object({
     id: z.number().int().positive(),
@@ -292,7 +297,8 @@ const adminCurriculumExerciseCreateResponseSchema = z.object({
     difficulty: z.enum(["easy", "medium", "hard"]),
     type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]),
     visualizationHtml: z.string().nullable().optional(),
-    blanksAnswer: z.array(z.string()).nullable().optional()
+    blanksAnswer: z.array(z.string()).nullable().optional(),
+    statements: z.array(blankStatementSchema).nullable().optional()
   })
 });
 
@@ -309,7 +315,8 @@ const adminCurriculumExerciseReadSchema = z.object({
   difficulty: z.enum(["easy", "medium", "hard"]),
   type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]),
   visualizationHtml: z.string().nullable().optional(),
-  blanksAnswer: z.array(z.string()).nullable().optional()
+  blanksAnswer: z.array(z.string()).nullable().optional(),
+  statements: z.array(blankStatementSchema).nullable().optional()
 });
 
 const adminCurriculumExerciseListResponseSchema = z.object({
@@ -328,7 +335,8 @@ const adminCurriculumExerciseMutationResponseSchema = z.object({
     difficulty: z.enum(["easy", "medium", "hard"]),
     type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]),
     visualizationHtml: z.string().nullable().optional(),
-    blanksAnswer: z.array(z.string()).nullable().optional()
+    blanksAnswer: z.array(z.string()).nullable().optional(),
+    statements: z.array(blankStatementSchema).nullable().optional()
   }),
   timestamp: z.string().datetime()
 });
@@ -1309,6 +1317,7 @@ export const createAdminCurriculumExercise = async (input: {
   solutionCode?: string;
   visualizationHtml?: string | null;
   blanksAnswer?: string[] | null;
+  statements?: Array<{ text: string; blanksAnswer: string[] }> | null;
 }): Promise<AdminCurriculumExerciseCreateResponse> => {
   return fetchAdminJson({
     path: "/api/admin/content/exercises",
@@ -1325,6 +1334,7 @@ export const createAdminCurriculumExercise = async (input: {
       ...(input.solutionCode && { solutionCode: input.solutionCode }),
       ...(input.visualizationHtml !== undefined && { visualizationHtml: input.visualizationHtml }),
       ...(input.blanksAnswer !== undefined && { blanksAnswer: input.blanksAnswer }),
+      ...(input.statements !== undefined && { statements: input.statements }),
     }
   });
 };
@@ -1354,7 +1364,8 @@ export const updateAdminCurriculumExercise = async ({
   problemMarkdown,
   solutionCode,
   visualizationHtml,
-  blanksAnswer
+  blanksAnswer,
+  statements
 }: {
   exerciseId: number;
   exerciseNumber: string;
@@ -1366,6 +1377,7 @@ export const updateAdminCurriculumExercise = async ({
   solutionCode?: string;
   visualizationHtml?: string | null;
   blanksAnswer?: string[] | null;
+  statements?: Array<{ text: string; blanksAnswer: string[] }> | null;
 }): Promise<AdminCurriculumExerciseMutationResponse> => {
   return fetchAdminJson({
     path: `/api/admin/content/exercises/${exerciseId}/update`,
@@ -1380,7 +1392,8 @@ export const updateAdminCurriculumExercise = async ({
       ...(problemMarkdown !== undefined ? { problemMarkdown } : {}),
       ...(solutionCode !== undefined ? { solutionCode } : {}),
       ...(visualizationHtml !== undefined ? { visualizationHtml } : {}),
-      ...(blanksAnswer !== undefined ? { blanksAnswer } : {})
+      ...(blanksAnswer !== undefined ? { blanksAnswer } : {}),
+      ...(statements !== undefined ? { statements } : {})
     }
   });
 };
