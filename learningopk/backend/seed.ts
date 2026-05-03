@@ -813,7 +813,7 @@ async function seed() {
     }
   ]);
 
-  const [adminUser, studentAyesha, studentBilal, studentHina, suspendedUser] = await db
+  const [adminUser, moderatorUser, studentAyesha, studentBilal, studentHina, suspendedUser] = await db
     .insert(users)
     .values([
       {
@@ -826,6 +826,16 @@ async function seed() {
         board: "fbise",
         xp: 850,
         level: 3
+      },
+      {
+        id: "user_mod_001",
+        name: "Moderator User",
+        email: "moderator@example.com",
+        emailVerified: true,
+        role: "moderator",
+        board: "fbise",
+        xp: 200,
+        level: 1
       },
       {
         id: "user_student_001",
@@ -879,6 +889,7 @@ async function seed() {
   const passwordHash = await hashPassword("password");
   await db.insert(accounts).values([
     { id: "account_admin_001", accountId: adminUser.id, providerId: "credential", userId: adminUser.id, password: passwordHash },
+    { id: "account_mod_001", accountId: moderatorUser.id, providerId: "credential", userId: moderatorUser.id, password: passwordHash },
     { id: "account_student_001", accountId: studentAyesha.id, providerId: "credential", userId: studentAyesha.id, password: passwordHash },
     { id: "account_student_002", accountId: studentBilal.id, providerId: "credential", userId: studentBilal.id, password: passwordHash },
     { id: "account_student_003", accountId: studentHina.id, providerId: "credential", userId: studentHina.id, password: passwordHash }
@@ -1475,6 +1486,7 @@ async function seed() {
   console.log("Seed complete.");
   console.log("Manual test users:");
   console.log("- admin@example.com / password");
+  console.log("- moderator@example.com / password");
   console.log("- ayesha.khan@example.com / password");
   console.log("- bilal.ahmed@example.com / password");
   console.log("- hina.tariq@example.com / password");

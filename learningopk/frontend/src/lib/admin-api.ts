@@ -1550,7 +1550,7 @@ export const getAdminUsers = async ({
   page: number;
   pageSize: number;
   q: string;
-  role?: "" | "student" | "admin";
+  role?: "" | "student" | "admin" | "moderator";
   status?: "" | "active" | "suspended";
   cookieHeader?: string;
 }): Promise<AdminUsersResponse> => {
@@ -1649,6 +1649,34 @@ export const getAdminAnalyticsOverview = async ({
   return fetchAdminJson({
     path: `/api/admin/analytics/overview?${query.toString()}`,
     schema: adminAnalyticsOverviewSchema,
+    ...(cookieHeader ? { cookieHeader } : {})
+  });
+};
+
+const moderatorOverviewResponseSchema = z.object({
+  openFlags: z.number(),
+  recentResolved: z.array(
+    z.object({
+      id: z.string(),
+      targetType: z.enum(["thread", "reply", "chapter"]),
+      targetLabel: z.string(),
+      reason: z.string(),
+      resolvedAt: z.string().nullable(),
+      resolutionNote: z.string().nullable()
+    })
+  )
+});
+
+export type ModeratorOverviewResponse = z.infer<typeof moderatorOverviewResponseSchema>;
+
+export const getModeratorOverview = async ({
+  cookieHeader
+}: {
+  cookieHeader?: string;
+} = {}): Promise<ModeratorOverviewResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/moderator/overview",
+    schema: moderatorOverviewResponseSchema,
     ...(cookieHeader ? { cookieHeader } : {})
   });
 };
