@@ -49,7 +49,7 @@ export interface VoteInput {
 
 export class ForumService {
   buildFilters(filters: ThreadFeedFilters): SQL | undefined {
-    const clauses: SQL[] = [];
+    const clauses: SQL[] = [eq(forumThreads.isDeleted, false)];
 
     if (filters.board) {
       clauses.push(eq(boards.slug, filters.board));

@@ -16,7 +16,6 @@ import {
   Settings,
   Files,
   NotebookPen,
-  ShieldCheck,
 } from "lucide-react";
 
 import type { NavItem, NavSection } from "./left-rail-types";

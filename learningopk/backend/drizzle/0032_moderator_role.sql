@@ -4,7 +4,7 @@ ALTER TYPE "user_role" ADD VALUE 'moderator';
 CREATE TABLE "moderation_warnings" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
-  "warned_by" text NOT NULL REFERENCES "user"("id") ON DELETE SET NULL,
+  "warned_by" text REFERENCES "user"("id") ON DELETE SET NULL,
   "reason" text NOT NULL,
   "acknowledged" boolean NOT NULL DEFAULT false,
   "created_at" timestamp with time zone NOT NULL DEFAULT now()

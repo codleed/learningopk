@@ -535,7 +535,6 @@ export const moderationWarnings = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     warnedBy: text("warned_by")
-      .notNull()
       .references(() => users.id, { onDelete: "set null" }),
     reason: text("reason").notNull(),
     acknowledged: boolean("acknowledged").notNull().default(false),

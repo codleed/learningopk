@@ -4,6 +4,7 @@ import { alias } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
 import { requireAdminRole, requireStaffRole } from "../lib/admin.js";
+import { moderateForumInput } from "../lib/ai-guardrails.js";
 import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
 import { listAdminChapterGraph } from "../lib/chapter-graph.js";
 import { db } from "../lib/db/index.js";
@@ -1264,7 +1265,7 @@ const listAdminCommunityThreads = async ({
 }) => {
   const offset = (page - 1) * pageSize;
   const threadIdAsText = sql`${forumThreads.id}::text`;
-  const predicates: SQL[] = [];
+  const predicates: SQL[] = [eq(forumThreads.isDeleted, false)];
 
   if (solved === "solved") {
     predicates.push(eq(forumThreads.isSolved, true));
@@ -1310,10 +1311,12 @@ const listAdminCommunityThreads = async ({
       createdAt: forumThreads.createdAt,
       isPinned: forumThreads.isPinned,
       isSolved: forumThreads.isSolved,
+      isDeleted: forumThreads.isDeleted,
       replyCount: sql<number>`(
         select count(*)::int
         from forum_replies
         where forum_replies.thread_id = ${forumThreads.id}
+          and forum_replies.is_deleted = false
       )`,
       views: forumThreads.views,
       openFlagCount: sql<number>`(
@@ -1347,6 +1350,7 @@ const listAdminCommunityThreads = async ({
       createdAt: row.createdAt.toISOString(),
       isPinned: row.isPinned,
       isSolved: row.isSolved,
+      isDeleted: row.isDeleted,
       replyCount: row.replyCount,
       views: row.views,
       openFlagCount: row.openFlagCount
@@ -2020,6 +2024,17 @@ adminRouter.post("/moderation/threads/:threadId/edit", requireSession, async (re
   if (parsedBody.data.title !== undefined) updates.title = parsedBody.data.title;
   if (parsedBody.data.body !== undefined) updates.body = parsedBody.data.body;
 
+  if (parsedBody.data.body) {
+    const moderationResult = moderateForumInput(parsedBody.data.body);
+    if (moderationResult.blocked) {
+      res.status(400).json({
+        error: `Content blocked: ${moderationResult.reason}`,
+        code: "CONTENT_MODERATED"
+      });
+      return;
+    }
+  }
+
   if (Object.keys(updates).length === 0) {
     res.status(400).json({ error: "No fields to update" });
     return;
@@ -2095,6 +2110,17 @@ adminRouter.post("/moderation/replies/:replyId/edit", requireSession, async (req
   }
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireStaffRole(authedReq, res))) return;
+
+  if (parsedBody.data.body) {
+    const moderationResult = moderateForumInput(parsedBody.data.body);
+    if (moderationResult.blocked) {
+      res.status(400).json({
+        error: `Content blocked: ${moderationResult.reason}`,
+        code: "CONTENT_MODERATED"
+      });
+      return;
+    }
+  }
 
   const updated = await db
     .update(forumReplies)
@@ -2516,7 +2542,20 @@ adminRouter.get("/moderation/user-history/:id", requireSession, async (req, res)
         resolutionNote: moderationFlags.resolutionNote
       })
       .from(moderationFlags)
-      .where(eq(moderationFlags.targetId, userId))
+      .leftJoin(forumThreads, and(
+        eq(moderationFlags.targetType, sql`'thread'`),
+        eq(moderationFlags.targetId, forumThreads.id)
+      ))
+      .leftJoin(forumReplies, and(
+        eq(moderationFlags.targetType, sql`'reply'`),
+        eq(moderationFlags.targetId, forumReplies.id)
+      ))
+      .where(
+        or(
+          eq(forumThreads.userId, userId),
+          eq(forumReplies.userId, userId)
+        )
+      )
       .orderBy(desc(moderationFlags.createdAt))
       .limit(50),
     db
@@ -2547,7 +2586,7 @@ adminRouter.get("/moderation/user-history/:id", requireSession, async (req, res)
 
 adminRouter.get("/community/threads", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
+  if (!(await requireStaffRole(authedReq, res))) {
     return;
   }
 
@@ -7362,7 +7401,7 @@ adminRouter.post("/forum/threads/:threadId/pin", requireSession, async (req, res
   }
 
   const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
+  if (!(await requireStaffRole(authedReq, res))) {
     return;
   }
 
