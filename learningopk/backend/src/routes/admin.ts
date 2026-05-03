@@ -3,7 +3,7 @@ import { Router, type Response } from "express";
 import { alias } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
-import { requireAdminRole } from "../lib/admin.js";
+import { requireAdminRole, requireStaffRole } from "../lib/admin.js";
 import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
 import { listAdminChapterGraph } from "../lib/chapter-graph.js";
 import { db } from "../lib/db/index.js";
@@ -499,7 +499,7 @@ const adminUsersQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
   q: z.string().trim().optional().default(""),
-  role: z.enum(["student", "admin"]).optional(),
+  role: z.enum(["student", "admin", "moderator"]).optional(),
   status: z.enum(["active", "suspended"]).optional()
 });
 
@@ -508,7 +508,7 @@ const adminUserParamsSchema = z.object({
 });
 
 const adminUserRoleUpdateBodySchema = z.object({
-  role: z.enum(["student", "admin"])
+  role: z.enum(["student", "admin", "moderator"])
 });
 
 const adminUserSuspensionBodySchema = z.discriminatedUnion("action", [
@@ -1166,7 +1166,7 @@ const listAdminUsers = async ({
   page: number;
   pageSize: number;
   q: string;
-  role?: "student" | "admin";
+  role?: "student" | "admin" | "moderator";
   status?: "active" | "suspended";
 }) => {
   const offset = (page - 1) * pageSize;
@@ -1837,7 +1837,7 @@ adminRouter.post("/settings/:key", requireSession, async (req, res) => {
 
 adminRouter.get("/moderation/flags", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
+  if (!(await requireStaffRole(authedReq, res))) {
     return;
   }
 
@@ -1887,7 +1887,7 @@ adminRouter.post("/moderation/flags/:id/resolve", requireSession, async (req, re
   }
 
   const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
+  if (!(await requireStaffRole(authedReq, res))) {
     return;
   }
 
