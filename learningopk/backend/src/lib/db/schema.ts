@@ -15,7 +15,7 @@ import {
   uuid
 } from "drizzle-orm/pg-core";
 
-export const userRoleEnum = pgEnum("user_role", ["student", "admin"]);
+export const userRoleEnum = pgEnum("user_role", ["student", "admin", "moderator"]);
 export const gradeEnum = pgEnum("grade", ["9", "10"]);
 export const difficultyEnum = pgEnum("difficulty", ["easy", "medium", "hard"]);
 export const exerciseTypeEnum = pgEnum("exercise_type", ["mcq", "short", "long", "numerical", "fill_in_blanks"]);
@@ -461,6 +461,7 @@ export const forumThreads = pgTable(
     body: text("body").notNull(),
     isPinned: boolean("is_pinned").notNull().default(false),
     isSolved: boolean("is_solved").notNull().default(false),
+    isDeleted: boolean("is_deleted").notNull().default(false),
     views: integer("views").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
@@ -484,8 +485,9 @@ export const forumReplies = pgTable("forum_replies", {
     .references(() => users.id, { onDelete: "cascade" }),
   parentReplyId: uuid("parent_reply_id").references((): AnyPgColumn => forumReplies.id, { onDelete: "set null" }),
   body: text("body").notNull(),
-  isAcceptedAnswer: boolean("is_accepted_answer").notNull().default(false),
-  upvotes: integer("upvotes").notNull().default(0),
+    isAcceptedAnswer: boolean("is_accepted_answer").notNull().default(false),
+    isDeleted: boolean("is_deleted").notNull().default(false),
+    upvotes: integer("upvotes").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
 }, (table) => [
@@ -523,6 +525,23 @@ export const moderationFlags = pgTable(
     resolutionNote: text("resolution_note")
   },
   (table) => [index("moderation_flags_status_target_type_created_at_idx").on(table.status, table.targetType, table.createdAt)]
+);
+
+export const moderationWarnings = pgTable(
+  "moderation_warnings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    warnedBy: text("warned_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "set null" }),
+    reason: text("reason").notNull(),
+    acknowledged: boolean("acknowledged").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
+  },
+  (table) => [index("moderation_warnings_user_id_idx").on(table.userId, desc(table.createdAt))]
 );
 
 export const adminAuditLogs = pgTable(
