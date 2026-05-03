@@ -158,8 +158,8 @@ const chapterDetailResponseSchema = z.object({
       visualizationHtml: z.string().nullable().optional(),
       blanksAnswer: z.array(z.string()).nullable().optional(),
       statements: z.array(z.object({
-        text: z.string(),
-        blanksAnswer: z.array(z.string())
+        text: z.string().min(1),
+        blanksAnswer: z.array(z.string().min(1)).min(1)
       })).nullable().optional()
     })
   ),

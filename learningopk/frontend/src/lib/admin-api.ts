@@ -281,8 +281,8 @@ const adminChapterSummaryMediaUploadResponseSchema = z.object({
 });
 
 const blankStatementSchema = z.object({
-  text: z.string(),
-  blanksAnswer: z.array(z.string())
+  text: z.string().min(1),
+  blanksAnswer: z.array(z.string().min(1)).min(1)
 });
 
 const adminCurriculumExerciseCreateResponseSchema = z.object({

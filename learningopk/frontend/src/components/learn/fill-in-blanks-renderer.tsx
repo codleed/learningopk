@@ -416,9 +416,6 @@ export function FillInBlanksRenderer({
       {/* Statement blocks */}
       <div className="space-y-3">
         {internalStatements.map((statement, stmtIndex) => {
-          // Collect answers for this statement from the per-statement arrays
-          const stmtAnswers: string[] = [];
-
           return (
             <div
               key={stmtIndex}
@@ -437,7 +434,7 @@ export function FillInBlanksRenderer({
               <StatementBlock
                 stmtIndex={stmtIndex}
                 statement={statement}
-                userAnswers={userAnswers[stmtIndex] ?? stmtAnswers}
+                userAnswers={userAnswers[stmtIndex] ?? []}
                 checked={checkedStates[stmtIndex] ?? null}
                 disabled={anyChecked}
                 onChange={handleInputChange}
