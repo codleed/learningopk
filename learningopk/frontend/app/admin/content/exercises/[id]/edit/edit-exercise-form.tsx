@@ -144,12 +144,12 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
       hasError = true;
     }
 
-    if (!question.trim()) {
+    if (apiType !== "fill_in_blanks" && !question.trim()) {
       setQuestionError("Question is required");
       hasError = true;
     }
 
-    if (!solution.trim()) {
+    if (apiType !== "fill_in_blanks" && !solution.trim()) {
       setSolutionError("Solution is required");
       hasError = true;
     }
@@ -234,8 +234,8 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
     if (activeSection === "blanks") {
       return (
         <AdminFormField
-          id="exercise-question"
-          label="Question"
+          id="exercise-blanks"
+          label="Fill in the Blanks"
           required
           error={questionError}
         >
@@ -271,25 +271,29 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
     );
   };
 
-  const renderSolutionEditor = () => (
-    <AdminFormField
-      id="exercise-solution"
-      label="Solution"
-      required
-      error={solutionError}
-    >
-      <GithubMarkdownEditor
-        value={solution}
-        onChange={(value) => {
-          setSolution(value);
-          setSolutionError("");
-        }}
-        onImageUpload={handleImageUpload}
-        placeholder="Enter the solution in markdown..."
-        minHeight={activeSection === "short" ? 128 : 200}
-      />
-    </AdminFormField>
-  );
+  const renderSolutionEditor = () => {
+    if (activeSection === "blanks") return null;
+
+    return (
+      <AdminFormField
+        id="exercise-solution"
+        label="Solution"
+        required
+        error={solutionError}
+      >
+        <GithubMarkdownEditor
+          value={solution}
+          onChange={(value) => {
+            setSolution(value);
+            setSolutionError("");
+          }}
+          onImageUpload={handleImageUpload}
+          placeholder="Enter the solution in markdown..."
+          minHeight={activeSection === "short" ? 128 : 200}
+        />
+      </AdminFormField>
+    );
+  };
 
   const renderVisualizationEditor = () => {
     if (activeSection !== "physics") return null;

@@ -148,7 +148,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
       });
       return;
     }
-    if (!formData.question.trim()) {
+    if (apiType !== "fill_in_blanks" && !formData.question.trim()) {
       pushToast({
         title: "Validation Error",
         description: "Question is required",
@@ -156,7 +156,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
       });
       return;
     }
-    if (!formData.solution.trim()) {
+    if (apiType !== "fill_in_blanks" && !formData.solution.trim()) {
       pushToast({
         title: "Validation Error",
         description: "Solution is required",
@@ -518,18 +518,20 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                       )}
 
                       {/* Solution Editor */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium flex items-center gap-2">
-                          Solution <span className="text-accent-danger">*</span>
-                        </label>
-                        <GithubMarkdownEditor
-                          value={formData.solution}
-                          onChange={(value) => setFormData(prev => ({ ...prev, solution: value }))}
-                          onImageUpload={handleImageUpload}
-                          placeholder="Enter the solution in markdown..."
-                          minHeight={activeSection === "short" ? 128 : 200}
-                        />
-                      </div>
+                      {activeSection !== "blanks" && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium flex items-center gap-2">
+                            Solution <span className="text-accent-danger">*</span>
+                          </label>
+                          <GithubMarkdownEditor
+                            value={formData.solution}
+                            onChange={(value) => setFormData(prev => ({ ...prev, solution: value }))}
+                            onImageUpload={handleImageUpload}
+                            placeholder="Enter the solution in markdown..."
+                            minHeight={activeSection === "short" ? 128 : 200}
+                          />
+                        </div>
+                      )}
 
                       {/* Physics: Visualization Editor */}
                       {activeSection === "physics" && (

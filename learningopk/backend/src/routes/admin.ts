@@ -167,8 +167,8 @@ export const curriculumExerciseCreateBodySchema = z
   .object({
     chapterId: z.coerce.number().int().positive(),
     exerciseNumber: z.string().trim().min(1),
-    question: z.string().trim().min(1),
-    solution: z.string().trim().min(1),
+    question: z.string().trim().optional(),
+    solution: z.string().trim().optional(),
     difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
     type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]).optional().default("short"),
     problemMarkdown: z.string().trim().optional(),
@@ -177,6 +177,30 @@ export const curriculumExerciseCreateBodySchema = z
     blanksAnswer: z.array(z.string()).optional(),
     statements: z.array(blankStatementSchema).optional()
   })
+  .refine(
+    (data) => {
+      if (data.type !== "fill_in_blanks") {
+        return data.question !== undefined && data.question.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Question is required",
+      path: ["question"]
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.type !== "fill_in_blanks") {
+        return data.solution !== undefined && data.solution.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Solution is required",
+      path: ["solution"]
+    }
+  )
   .refine(
     (data) => {
       if (data.type === "numerical") {
@@ -221,8 +245,8 @@ export const curriculumExerciseCreateBodySchema = z
 export const curriculumExerciseUpdateBodySchema = z
   .object({
     exerciseNumber: z.string().trim().min(1),
-    question: z.string().trim().min(1),
-    solution: z.string().trim().min(1),
+    question: z.string().trim().optional(),
+    solution: z.string().trim().optional(),
     difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
     type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]).optional().default("short"),
     problemMarkdown: z.string().trim().optional(),
@@ -231,6 +255,30 @@ export const curriculumExerciseUpdateBodySchema = z
     blanksAnswer: z.array(z.string()).optional(),
     statements: z.array(blankStatementSchema).optional()
   })
+  .refine(
+    (data) => {
+      if (data.type !== "fill_in_blanks") {
+        return data.question !== undefined && data.question.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Question is required",
+      path: ["question"]
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.type !== "fill_in_blanks") {
+        return data.solution !== undefined && data.solution.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Solution is required",
+      path: ["solution"]
+    }
+  )
   .refine(
     (data) => {
       if (data.type === "numerical") {
@@ -2873,8 +2921,8 @@ adminRouter.post("/content/exercises", requireSession, async (req, res) => {
       .values({
         chapterId: chapter.id,
         exerciseNumber,
-        question: parsedBody.data.question.trim(),
-        solution: parsedBody.data.solution.trim(),
+        question: parsedBody.data.question?.trim() || "Fill in the Blanks",
+        solution: parsedBody.data.solution?.trim() || "See statements below",
         difficulty: parsedBody.data.difficulty,
         type: parsedBody.data.type,
         problemMarkdown: parsedBody.data.problemMarkdown?.trim() || null,
@@ -3958,8 +4006,8 @@ adminRouter.post("/content/exercises/:id/update", requireSession, async (req, re
       .update(exercises)
       .set({
         exerciseNumber: parsedBody.data.exerciseNumber.trim(),
-        question: parsedBody.data.question.trim(),
-        solution: parsedBody.data.solution.trim(),
+        question: parsedBody.data.question?.trim() || exercise.question,
+        solution: parsedBody.data.solution?.trim() || exercise.solution,
         difficulty: parsedBody.data.difficulty,
         type: parsedBody.data.type,
         // Clear if changing away from numerical, otherwise set to new values
