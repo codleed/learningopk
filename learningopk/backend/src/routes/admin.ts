@@ -22,9 +22,11 @@ import {
   exercises,
   flashcards,
   formulas,
+  forumReplies,
   forumThreads,
   mockExams,
   moderationFlags,
+  moderationWarnings,
   quizAttempts,
   quizQuestions,
   quizzes,
@@ -528,6 +530,27 @@ const adminCommunityThreadsQuerySchema = z.object({
   solved: z.enum(["all", "solved", "unsolved"]).optional().default("all"),
   pinned: z.enum(["all", "pinned", "unpinned"]).optional().default("all"),
   flagState: z.enum(["all", "openFlags", "noOpenFlags"]).optional().default("all")
+});
+
+const editThreadBodySchema = z.object({
+  title: z.string().trim().min(5).max(160).optional(),
+  body: z.string().trim().min(10).max(50000).optional()
+});
+
+const replyEditBodySchema = z.object({
+  body: z.string().trim().min(2).max(50000)
+});
+
+const replyParamsSchema = z.object({
+  replyId: z.string().uuid()
+});
+
+const warnUserBodySchema = z.object({
+  reason: z.string().trim().min(10).max(500)
+});
+
+const warnUserParamsSchema = z.object({
+  id: z.string().trim().min(1)
 });
 
 const adminAnalyticsOverviewQuerySchema = z.object({
@@ -1978,6 +2001,158 @@ adminRouter.post("/moderation/flags/:id/resolve", requireSession, async (req, re
   });
 });
 
+adminRouter.post("/moderation/threads/:threadId/edit", requireSession, async (req, res) => {
+  const parsedParams = threadParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({ error: "Invalid thread identifier", details: parsedParams.error.flatten() });
+    return;
+  }
+  const parsedBody = editThreadBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({ error: "Invalid edit payload", details: parsedBody.error.flatten() });
+    return;
+  }
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireStaffRole(authedReq, res))) return;
+
+  const { threadId } = parsedParams.data;
+  const updates: Record<string, unknown> = {};
+  if (parsedBody.data.title !== undefined) updates.title = parsedBody.data.title;
+  if (parsedBody.data.body !== undefined) updates.body = parsedBody.data.body;
+
+  if (Object.keys(updates).length === 0) {
+    res.status(400).json({ error: "No fields to update" });
+    return;
+  }
+
+  const updated = await db
+    .update(forumThreads)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(eq(forumThreads.id, threadId))
+    .returning({ id: forumThreads.id, title: forumThreads.title });
+
+  if (!updated[0]) {
+    res.status(404).json({ error: "Thread not found" });
+    return;
+  }
+
+  await persistAuditLog({
+    scope: "moderation",
+    action: "Edit thread",
+    target: `thread:${updated[0].title}`,
+    status: "success",
+    message: `Staff edited thread ${threadId}`,
+    actorId: authedReq.session.user.id,
+    actorName: authedReq.session.user.name ?? "Unknown"
+  });
+
+  res.status(200).json({ thread: updated[0] });
+});
+
+adminRouter.post("/moderation/threads/:threadId/delete", requireSession, async (req, res) => {
+  const parsedParams = threadParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({ error: "Invalid thread identifier", details: parsedParams.error.flatten() });
+    return;
+  }
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireStaffRole(authedReq, res))) return;
+
+  const updated = await db
+    .update(forumThreads)
+    .set({ isDeleted: true, updatedAt: new Date() })
+    .where(eq(forumThreads.id, parsedParams.data.threadId))
+    .returning({ id: forumThreads.id, title: forumThreads.title });
+
+  if (!updated[0]) {
+    res.status(404).json({ error: "Thread not found" });
+    return;
+  }
+
+  await persistAuditLog({
+    scope: "moderation",
+    action: "Delete thread",
+    target: `thread:${updated[0].title}`,
+    status: "success",
+    message: `Staff soft-deleted thread ${parsedParams.data.threadId}`,
+    actorId: authedReq.session.user.id,
+    actorName: authedReq.session.user.name ?? "Unknown"
+  });
+
+  res.status(200).json({ deleted: true });
+});
+
+adminRouter.post("/moderation/replies/:replyId/edit", requireSession, async (req, res) => {
+  const parsedParams = replyParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({ error: "Invalid reply identifier", details: parsedParams.error.flatten() });
+    return;
+  }
+  const parsedBody = replyEditBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({ error: "Invalid edit payload", details: parsedBody.error.flatten() });
+    return;
+  }
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireStaffRole(authedReq, res))) return;
+
+  const updated = await db
+    .update(forumReplies)
+    .set({ body: parsedBody.data.body, updatedAt: new Date() })
+    .where(eq(forumReplies.id, parsedParams.data.replyId))
+    .returning({ id: forumReplies.id, threadId: forumReplies.threadId });
+
+  if (!updated[0]) {
+    res.status(404).json({ error: "Reply not found" });
+    return;
+  }
+
+  await persistAuditLog({
+    scope: "moderation",
+    action: "Edit reply",
+    target: `reply:${parsedParams.data.replyId}`,
+    status: "success",
+    message: `Staff edited reply ${parsedParams.data.replyId}`,
+    actorId: authedReq.session.user.id,
+    actorName: authedReq.session.user.name ?? "Unknown"
+  });
+
+  res.status(200).json({ reply: updated[0] });
+});
+
+adminRouter.post("/moderation/replies/:replyId/delete", requireSession, async (req, res) => {
+  const parsedParams = replyParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({ error: "Invalid reply identifier", details: parsedParams.error.flatten() });
+    return;
+  }
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireStaffRole(authedReq, res))) return;
+
+  const updated = await db
+    .update(forumReplies)
+    .set({ isDeleted: true, updatedAt: new Date() })
+    .where(eq(forumReplies.id, parsedParams.data.replyId))
+    .returning({ id: forumReplies.id, threadId: forumReplies.threadId });
+
+  if (!updated[0]) {
+    res.status(404).json({ error: "Reply not found" });
+    return;
+  }
+
+  await persistAuditLog({
+    scope: "moderation",
+    action: "Delete reply",
+    target: `reply:${parsedParams.data.replyId}`,
+    status: "success",
+    message: `Staff soft-deleted reply ${parsedParams.data.replyId}`,
+    actorId: authedReq.session.user.id,
+    actorName: authedReq.session.user.name ?? "Unknown"
+  });
+
+  res.status(200).json({ deleted: true });
+});
+
 adminRouter.get("/users", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireAdminRole(authedReq, res))) {
@@ -2262,6 +2437,114 @@ adminRouter.post("/users/:id/suspension", requireSession, async (req, res) => {
   });
 });
 
+adminRouter.post("/moderation/users/:id/warn", requireSession, async (req, res) => {
+  const parsedParams = warnUserParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({ error: "Invalid user identifier", details: parsedParams.error.flatten() });
+    return;
+  }
+  const parsedBody = warnUserBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({ error: "Invalid warning payload", details: parsedBody.error.flatten() });
+    return;
+  }
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireStaffRole(authedReq, res))) return;
+
+  const existingUser = await db
+    .select({ id: users.id, name: users.name })
+    .from(users)
+    .where(eq(users.id, parsedParams.data.id))
+    .limit(1);
+
+  if (!existingUser[0]) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  const [warning] = await db
+    .insert(moderationWarnings)
+    .values({
+      userId: parsedParams.data.id,
+      warnedBy: authedReq.session.user.id,
+      reason: parsedBody.data.reason
+    })
+    .returning();
+
+  await persistAuditLog({
+    scope: "moderation",
+    action: "Warn user",
+    target: `user:${existingUser[0].name}`,
+    status: "success",
+    message: parsedBody.data.reason,
+    actorId: authedReq.session.user.id,
+    actorName: authedReq.session.user.name ?? "Unknown"
+  });
+
+  res.status(200).json({
+    warning: {
+      id: warning!.id,
+      userId: warning!.userId,
+      reason: warning!.reason,
+      acknowledged: warning!.acknowledged,
+      createdAt: warning!.createdAt.toISOString()
+    }
+  });
+});
+
+adminRouter.get("/moderation/user-history/:id", requireSession, async (req, res) => {
+  const parsedParams = warnUserParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({ error: "Invalid user identifier", details: parsedParams.error.flatten() });
+    return;
+  }
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireStaffRole(authedReq, res))) return;
+
+  const userId = parsedParams.data.id;
+
+  const [flags, warnings] = await Promise.all([
+    db
+      .select({
+        id: moderationFlags.id,
+        targetType: moderationFlags.targetType,
+        targetLabel: moderationFlags.targetLabel,
+        reason: moderationFlags.reason,
+        status: moderationFlags.status,
+        createdAt: moderationFlags.createdAt,
+        resolvedAt: moderationFlags.resolvedAt,
+        resolutionNote: moderationFlags.resolutionNote
+      })
+      .from(moderationFlags)
+      .where(eq(moderationFlags.targetId, userId))
+      .orderBy(desc(moderationFlags.createdAt))
+      .limit(50),
+    db
+      .select({
+        id: moderationWarnings.id,
+        reason: moderationWarnings.reason,
+        acknowledged: moderationWarnings.acknowledged,
+        createdAt: moderationWarnings.createdAt
+      })
+      .from(moderationWarnings)
+      .where(eq(moderationWarnings.userId, userId))
+      .orderBy(desc(moderationWarnings.createdAt))
+      .limit(50)
+  ]);
+
+  res.status(200).json({
+    flags: flags.map((f) => ({
+      ...f,
+      createdAt: f.createdAt.toISOString(),
+      resolvedAt: f.resolvedAt?.toISOString() ?? null
+    })),
+    warnings: warnings.map((w) => ({
+      ...w,
+      createdAt: w.createdAt.toISOString()
+    }))
+  });
+});
+
 adminRouter.get("/community/threads", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireAdminRole(authedReq, res))) {
@@ -2315,6 +2598,46 @@ adminRouter.get("/overview", requireSession, async (req, res) => {
   });
 
   res.status(200).json(payload);
+});
+
+adminRouter.get("/moderator/overview", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireStaffRole(authedReq, res))) {
+    return;
+  }
+
+  const [openFlagsCount, recentResolved] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(moderationFlags)
+      .where(eq(moderationFlags.status, "open"))
+      .then((r) => r[0]?.count ?? 0),
+    db
+      .select({
+        id: moderationFlags.id,
+        targetType: moderationFlags.targetType,
+        targetLabel: moderationFlags.targetLabel,
+        reason: moderationFlags.reason,
+        resolvedAt: moderationFlags.resolvedAt,
+        resolutionNote: moderationFlags.resolutionNote
+      })
+      .from(moderationFlags)
+      .where(eq(moderationFlags.status, "resolved"))
+      .orderBy(desc(moderationFlags.resolvedAt))
+      .limit(10)
+  ]);
+
+  res.status(200).json({
+    openFlags: openFlagsCount,
+    recentResolved: recentResolved.map((f) => ({
+      id: f.id,
+      targetType: f.targetType,
+      targetLabel: f.targetLabel,
+      reason: f.reason,
+      resolvedAt: f.resolvedAt?.toISOString() ?? null,
+      resolutionNote: f.resolutionNote
+    }))
+  });
 });
 
 adminRouter.get("/analytics/overview", requireSession, async (req, res) => {
