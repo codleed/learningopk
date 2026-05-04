@@ -2183,7 +2183,7 @@ adminRouter.post("/moderation/replies/:replyId/delete", requireSession, async (r
 
 adminRouter.get("/users", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
+  if (!(await requireStaffRole(authedReq, res))) {
     return;
   }
 
