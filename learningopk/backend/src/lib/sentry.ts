@@ -17,12 +17,19 @@ if (dsn && dsn.length > 0) {
       dsn,
       environment: process.env.NODE_ENV ?? "development",
       tracesSampleRate: process.env.NODE_ENV === "production" ? 0.2 : 1.0,
+      sendDefaultPii: true,
+      enableLogs: true,
       // Source maps: Sentry CLI / CI will upload them.
       // The `release` tag lets Sentry match uploaded maps to events.
       release: process.env.SENTRY_RELEASE ?? undefined,
       integrations: [
-        // Capture unhandled promise rejections
         Sentry.onUnhandledRejectionIntegration(),
+        Sentry.vercelAIIntegration({
+          force: true,
+          recordInputs: process.env.NODE_ENV === "development",
+          recordOutputs: process.env.NODE_ENV === "development",
+        }),
+        Sentry.pinoIntegration(),
       ],
     });
     sentryInitialized = true;

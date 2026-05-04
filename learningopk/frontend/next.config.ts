@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const frontendDir = dirname(fileURLToPath(import.meta.url));
 
@@ -69,4 +70,15 @@ const nextConfig: NextConfig = {
   }
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: "zegoop-ot",
+  project: "javascript-nextjs",
+
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  widenClientFileUpload: true,
+
+  tunnelRoute: "/monitoring",
+
+  silent: !process.env.CI,
+});
