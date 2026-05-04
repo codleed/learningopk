@@ -2,6 +2,7 @@
 
 import type { AdminModerationFlag } from "@/lib/admin-api";
 
+import { Button } from "@/components/ui/button";
 import { ModerationResolveAction } from "./moderation-resolve-action";
 
 type ModerationQueueTableProps = {
@@ -49,7 +50,33 @@ export function ModerationQueueTable({ rows, onResolved }: ModerationQueueTableP
               <td className="px-3 py-2 text-foreground/90">{flag.resolutionNote ?? "—"}</td>
               <td className="px-3 py-2">
                 {flag.status === "open" ? (
-                  <ModerationResolveAction flagId={flag.id} targetLabel={flag.targetLabel} onResolved={onResolved} />
+                  <div className="flex flex-col gap-1">
+                    <ModerationResolveAction flagId={flag.id} targetLabel={flag.targetLabel} onResolved={onResolved} />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={async () => {
+                        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
+                        const deletePath = flag.targetType === "thread"
+                          ? `/api/admin/moderation/threads/${flag.targetId}/delete`
+                          : `/api/admin/moderation/replies/${flag.targetId}/delete`;
+                        try {
+                          const res = await fetch(`${backendUrl}${deletePath}`, { method: "POST", credentials: "include" });
+                          if (!res.ok) throw new Error("Delete failed");
+                          await fetch(`${backendUrl}/api/admin/moderation/flags/${flag.id}/resolve`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ note: "Content deleted by moderator" }),
+                            credentials: "include"
+                          });
+                          onResolved(flag);
+                        } catch { /* silently ignore */ }
+                      }}
+                    >
+                      Delete Content
+                    </Button>
+                  </div>
                 ) : (
                   <span className="text-xs text-muted-foreground">Resolved</span>
                 )}

@@ -2,6 +2,7 @@ import {
   BookOpen,
   Sigma,
   ChartPie,
+  Globe,
   MessageCircle,
   Bot,
   House,
@@ -142,6 +143,7 @@ export const moderatorNavSections: NavSection[] = [
     items: [
       { href: "/admin/forum", label: "Forum", icon: MessageCircle },
       { href: "/admin/community", label: "Community", icon: MessagesSquare },
+      { href: "/forum", label: "View Forum", icon: Globe },
     ],
   },
   {

@@ -27,7 +27,8 @@ export const requireSession: RequestHandler = async (req, res, next) => {
 
     const userRows = await db
       .select({
-        status: users.status
+        status: users.status,
+        suspendedUntil: users.suspendedUntil
       })
       .from(users)
       .where(eq(users.id, session.user.id))
@@ -40,11 +41,18 @@ export const requireSession: RequestHandler = async (req, res, next) => {
     }
 
     if (user.status === "suspended") {
-      res.status(403).json({
-        error: "Account suspended",
-        code: "ACCOUNT_SUSPENDED"
-      });
-      return;
+      if (user.suspendedUntil && user.suspendedUntil < new Date()) {
+        await db
+          .update(users)
+          .set({ status: "active", suspendedUntil: null })
+          .where(eq(users.id, session.user.id));
+      } else {
+        res.status(403).json({
+          error: "Account suspended",
+          code: "ACCOUNT_SUSPENDED"
+        });
+        return;
+      }
     }
 
     (req as AuthenticatedRequest).session = session;

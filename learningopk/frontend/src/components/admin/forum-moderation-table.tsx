@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { ThreadPinToggle } from "./thread-pin-toggle";
 
 export type ForumModerationRow = {
@@ -65,19 +66,41 @@ export function ForumModerationTable({ rows, onMutationComplete }: ForumModerati
                 </span>
               </td>
               <td className="px-3 py-2">
-                <ThreadPinToggle
-                  threadId={thread.id}
-                  threadTitle={thread.title}
-                  isPinned={thread.isPinned}
-                  onComplete={(result) => {
-                    setItems((previous) =>
-                      previous.map((item) =>
-                        item.id === thread.id ? { ...item, isPinned: result.nextPinned } : item
-                      )
-                    );
-                    onMutationComplete();
-                  }}
-                />
+                <div className="flex gap-2">
+                  <ThreadPinToggle
+                    threadId={thread.id}
+                    threadTitle={thread.title}
+                    isPinned={thread.isPinned}
+                    onComplete={(result) => {
+                      setItems((previous) =>
+                        previous.map((item) =>
+                          item.id === thread.id ? { ...item, isPinned: result.nextPinned } : item
+                        )
+                      );
+                      onMutationComplete();
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001"}/api/admin/moderation/threads/${thread.id}/delete`, {
+                          method: "POST",
+                          credentials: "include"
+                        });
+                        if (!res.ok) throw new Error("Delete failed");
+                        setItems(prev => prev.filter(item => item.id !== thread.id));
+                        onMutationComplete();
+                      } catch {
+                        // silently fail
+                      }
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
               </td>
             </tr>
           ))}

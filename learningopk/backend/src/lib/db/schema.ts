@@ -57,6 +57,7 @@ export const users = pgTable("user", {
   suspendedAt: timestamp("suspended_at", { withTimezone: true, mode: "date" }),
   suspendedReason: text("suspended_reason"),
   suspendedBy: text("suspended_by").references((): AnyPgColumn => users.id, { onDelete: "set null" }),
+  suspendedUntil: timestamp("suspended_until", { withTimezone: true, mode: "date" }),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
 });

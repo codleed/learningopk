@@ -1681,6 +1681,22 @@ export const getModeratorOverview = async ({
   });
 };
 
+export const deleteModerationThread = async (threadId: string): Promise<void> => {
+  await fetchAdminJson({
+    path: `/api/admin/moderation/threads/${threadId}/delete`,
+    schema: z.object({ deleted: z.boolean() }),
+    method: "POST"
+  });
+};
+
+export const deleteModerationReply = async (replyId: string): Promise<void> => {
+  await fetchAdminJson({
+    path: `/api/admin/moderation/replies/${replyId}/delete`,
+    schema: z.object({ deleted: z.boolean() }),
+    method: "POST"
+  });
+};
+
 export const getAdminOverview = async ({
   windowDays,
   cookieHeader

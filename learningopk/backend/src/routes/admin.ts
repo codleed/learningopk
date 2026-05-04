@@ -2518,6 +2518,68 @@ adminRouter.post("/moderation/users/:id/warn", requireSession, async (req, res) 
   });
 });
 
+const tempBanBodySchema = z.object({
+  reason: z.string().trim().min(10).max(500),
+  durationHours: z.coerce.number().int().min(1).max(720)
+});
+
+adminRouter.post("/moderation/users/:id/temp-ban", requireSession, async (req, res) => {
+  const parsedParams = warnUserParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({ error: "Invalid user identifier", details: parsedParams.error.flatten() });
+    return;
+  }
+  const parsedBody = tempBanBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({ error: "Invalid temp-ban payload", details: parsedBody.error.flatten() });
+    return;
+  }
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireStaffRole(authedReq, res))) return;
+
+  const existingUser = await db
+    .select({ id: users.id, name: users.name, status: users.status })
+    .from(users)
+    .where(eq(users.id, parsedParams.data.id))
+    .limit(1);
+
+  if (!existingUser[0]) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  const { reason, durationHours } = parsedBody.data;
+  const now = new Date();
+  const until = new Date(now.getTime() + durationHours * 60 * 60 * 1000);
+
+  await db
+    .update(users)
+    .set({
+      status: "suspended",
+      suspendedAt: now,
+      suspendedReason: reason,
+      suspendedBy: authedReq.session.user.id,
+      suspendedUntil: until
+    })
+    .where(eq(users.id, parsedParams.data.id));
+
+  await persistAuditLog({
+    scope: "moderation",
+    action: "Temp ban user",
+    target: `user:${existingUser[0].name}`,
+    status: "success",
+    message: `${reason} (${durationHours}h, until ${until.toISOString()})`,
+    actorId: authedReq.session.user.id,
+    actorName: authedReq.session.user.name ?? "Unknown"
+  });
+
+  res.status(200).json({
+    banned: true,
+    suspendedUntil: until.toISOString(),
+    durationHours
+  });
+});
+
 adminRouter.get("/moderation/user-history/:id", requireSession, async (req, res) => {
   const parsedParams = warnUserParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
