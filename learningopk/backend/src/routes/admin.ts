@@ -1214,6 +1214,7 @@ const listAdminUsers = async ({
       email: users.email,
       role: users.role,
       status: users.status,
+      suspendedUntil: users.suspendedUntil,
       suspendedAt: users.suspendedAt,
       suspendedReason: users.suspendedReason,
       suspendedBy: users.suspendedBy,
@@ -1240,6 +1241,7 @@ const listAdminUsers = async ({
       email: row.email,
       role: row.role,
       status: row.status,
+      suspendedUntil: row.suspendedUntil?.toISOString() ?? null,
       suspendedAt: row.suspendedAt ? row.suspendedAt.toISOString() : null,
       suspendedReason: row.suspendedReason,
       suspendedBy: row.suspendedBy,
@@ -2538,13 +2540,18 @@ adminRouter.post("/moderation/users/:id/temp-ban", requireSession, async (req, r
   if (!(await requireStaffRole(authedReq, res))) return;
 
   const existingUser = await db
-    .select({ id: users.id, name: users.name, status: users.status })
+    .select({ id: users.id, name: users.name, status: users.status, role: users.role })
     .from(users)
     .where(eq(users.id, parsedParams.data.id))
     .limit(1);
 
   if (!existingUser[0]) {
     res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  if (existingUser[0].role !== "student") {
+    res.status(400).json({ error: "Only student accounts can be temporarily banned" });
     return;
   }
 

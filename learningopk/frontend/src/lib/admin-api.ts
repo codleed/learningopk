@@ -528,8 +528,9 @@ const adminUserSchema = z.object({
   id: z.string(),
   name: z.string(),
   email: z.string().email(),
-  role: z.enum(["student", "admin"]),
+  role: z.enum(["student", "admin", "moderator"]),
   status: z.enum(["active", "suspended"]).optional(),
+  suspendedUntil: z.string().datetime().nullable().optional(),
   suspendedAt: z.string().datetime().nullable().optional(),
   suspendedReason: z.string().nullable().optional(),
   suspendedBy: z.string().nullable().optional(),
@@ -1578,7 +1579,7 @@ export const updateAdminUserRole = async ({
   role
 }: {
   id: string;
-  role: "student" | "admin";
+  role: "student" | "admin" | "moderator";
 }): Promise<AdminUserRoleUpdateResponse> => {
   return fetchAdminJson({
     path: `/api/admin/users/${encodeURIComponent(id)}/role`,

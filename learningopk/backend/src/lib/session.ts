@@ -41,12 +41,20 @@ export const requireSession: RequestHandler = async (req, res, next) => {
     }
 
     if (user.status === "suspended") {
-      if (user.suspendedUntil && user.suspendedUntil < new Date()) {
-        await db
-          .update(users)
-          .set({ status: "active", suspendedUntil: null })
-          .where(eq(users.id, session.user.id));
-      } else {
+      try {
+        if (user.suspendedUntil && user.suspendedUntil < new Date()) {
+          await db
+            .update(users)
+            .set({ status: "active", suspendedUntil: null })
+            .where(eq(users.id, session.user.id));
+        } else {
+          res.status(403).json({
+            error: "Account suspended",
+            code: "ACCOUNT_SUSPENDED"
+          });
+          return;
+        }
+      } catch {
         res.status(403).json({
           error: "Account suspended",
           code: "ACCOUNT_SUSPENDED"

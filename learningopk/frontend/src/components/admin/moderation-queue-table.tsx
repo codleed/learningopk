@@ -1,6 +1,6 @@
 "use client";
 
-import type { AdminModerationFlag } from "@/lib/admin-api";
+import { deleteModerationReply, deleteModerationThread, type AdminModerationFlag } from "@/lib/admin-api";
 
 import { Button } from "@/components/ui/button";
 import { ModerationResolveAction } from "./moderation-resolve-action";
@@ -57,21 +57,20 @@ export function ModerationQueueTable({ rows, onResolved }: ModerationQueueTableP
                       size="sm"
                       variant="ghost"
                       onClick={async () => {
-                        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
-                        const deletePath = flag.targetType === "thread"
-                          ? `/api/admin/moderation/threads/${flag.targetId}/delete`
-                          : `/api/admin/moderation/replies/${flag.targetId}/delete`;
                         try {
-                          const res = await fetch(`${backendUrl}${deletePath}`, { method: "POST", credentials: "include" });
-                          if (!res.ok) throw new Error("Delete failed");
-                          await fetch(`${backendUrl}/api/admin/moderation/flags/${flag.id}/resolve`, {
+                          if (flag.targetType === "thread") {
+                            await deleteModerationThread(flag.targetId);
+                          } else {
+                            await deleteModerationReply(flag.targetId);
+                          }
+                          await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001"}/api/admin/moderation/flags/${flag.id}/resolve`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ note: "Content deleted by moderator" }),
                             credentials: "include"
                           });
                           onResolved(flag);
-                        } catch { /* silently ignore */ }
+                        } catch (err) { console.error("Delete content failed:", err); }
                       }}
                     >
                       Delete Content

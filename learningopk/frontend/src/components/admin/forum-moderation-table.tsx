@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { deleteModerationThread } from "@/lib/admin-api";
 import { Button } from "@/components/ui/button";
 import { ThreadPinToggle } from "./thread-pin-toggle";
 
@@ -86,16 +87,10 @@ export function ForumModerationTable({ rows, onMutationComplete }: ForumModerati
                     variant="ghost"
                     onClick={async () => {
                       try {
-                        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001"}/api/admin/moderation/threads/${thread.id}/delete`, {
-                          method: "POST",
-                          credentials: "include"
-                        });
-                        if (!res.ok) throw new Error("Delete failed");
+                        await deleteModerationThread(thread.id);
                         setItems(prev => prev.filter(item => item.id !== thread.id));
                         onMutationComplete();
-                      } catch {
-                        // silently fail
-                      }
+                      } catch (err) { console.error("Delete thread failed:", err); }
                     }}
                   >
                     Delete
