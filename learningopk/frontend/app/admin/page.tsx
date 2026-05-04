@@ -1,11 +1,28 @@
-import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { AdminCommandCenterPanel } from "@/components/admin/admin-command-center-panel";
+import { ModeratorDashboardPanel } from "@/components/admin/moderator-dashboard-panel";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { getAdminOverview } from "@/lib/admin-api";
+import { getServerSession } from "@/lib/session";
 
 export default async function AdminPage() {
+  const session = await getServerSession();
+  const isModerator = session?.user.role === "moderator";
+
+  if (isModerator) {
+    return (
+      <div className="space-y-6">
+        <AdminPageHeader
+          eyebrow="Moderator"
+          title="Dashboard"
+          subtitle="Quick overview of moderation activity and pending actions."
+        />
+        <ModeratorDashboardPanel />
+      </div>
+    );
+  }
+
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
   const overviewPayload = await getAdminOverview({
@@ -32,11 +49,7 @@ export default async function AdminPage() {
         eyebrow="Admin"
         title="Command Center"
         subtitle="Track operational risk, admin activity, and response priorities in real time."
-        actions={
-          <Link href="/admin/audit" className="text-sm font-medium text-text-primary underline underline-offset-4">
-            Open operations log
-          </Link>
-        }
+        actions={null}
       />
       <AdminCommandCenterPanel initialPayload={overviewPayload} />
     </div>

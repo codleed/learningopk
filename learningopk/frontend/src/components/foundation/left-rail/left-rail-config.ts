@@ -2,6 +2,7 @@ import {
   BookOpen,
   Sigma,
   ChartPie,
+  Globe,
   MessageCircle,
   Bot,
   House,
@@ -126,6 +127,30 @@ export const adminOperationsItems: NavItem[] = [
     href: "/admin/settings",
     label: "Settings",
     icon: Settings,
+  },
+];
+
+export const moderatorNavSections: NavSection[] = [
+  {
+    label: "Monitor",
+    items: [
+      { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/admin/moderation", label: "Moderation Queue", icon: Flag },
+    ],
+  },
+  {
+    label: "Content",
+    items: [
+      { href: "/admin/forum", label: "Forum", icon: MessageCircle },
+      { href: "/admin/community", label: "Community", icon: MessagesSquare },
+      { href: "/forum", label: "View Forum", icon: Globe },
+    ],
+  },
+  {
+    label: "Users",
+    items: [
+      { href: "/admin/users", label: "Users", icon: Users },
+    ],
   },
 ];
 

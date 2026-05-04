@@ -10,7 +10,7 @@ import { getAdminUsers, type AdminUser, updateAdminUserRole, updateAdminUserSusp
 
 import { AdminUsersTable } from "./admin-users-table";
 
-type UsersRoleFilter = "" | "student" | "admin";
+type UsersRoleFilter = "" | "student" | "admin" | "moderator";
 type UsersStatusFilter = "" | "active" | "suspended";
 
 type AdminUsersPanelProps = {
@@ -207,6 +207,32 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
     }
   };
 
+  const warnUser = async (user: AdminUser, reason: string): Promise<void> => {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
+    const res = await fetch(`${backendUrl}/api/admin/moderation/users/${user.id}/warn`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason }),
+      credentials: "include"
+    });
+    if (!res.ok) throw new Error("Warn failed");
+    pushToast({ tone: "success", title: "Warning issued", description: `${user.name} has been warned.` });
+  };
+
+  const tempBanUser = async (user: AdminUser, reason: string, durationHours: number): Promise<boolean> => {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
+    const res = await fetch(`${backendUrl}/api/admin/moderation/users/${user.id}/temp-ban`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason, durationHours }),
+      credentials: "include"
+    });
+    if (!res.ok) throw new Error("Temp ban failed");
+    pushToast({ tone: "success", title: "Temporary ban applied", description: `${user.name} banned for ${durationHours}h.` });
+    await runFetch({ nextPage: 1, append: false });
+    return true;
+  };
+
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/75 pb-4">
@@ -242,6 +268,7 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
             <Select id="users-role" value={role} onChange={(event) => setRole(event.target.value as UsersRoleFilter)} disabled={isApplying}>
               <option value="">All roles</option>
               <option value="admin">Admin</option>
+              <option value="moderator">Moderator</option>
               <option value="student">Student</option>
             </Select>
           </div>
@@ -272,6 +299,8 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
           onToggleRole={toggleRole}
           onSuspend={suspendUser}
           onReactivate={reactivateUser}
+          onWarn={warnUser}
+          onTempBan={tempBanUser}
         />
       </div>
     </section>

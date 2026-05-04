@@ -1,7 +1,8 @@
 "use client";
 
-import type { AdminModerationFlag } from "@/lib/admin-api";
+import { deleteModerationReply, deleteModerationThread, type AdminModerationFlag } from "@/lib/admin-api";
 
+import { Button } from "@/components/ui/button";
 import { ModerationResolveAction } from "./moderation-resolve-action";
 
 type ModerationQueueTableProps = {
@@ -49,7 +50,32 @@ export function ModerationQueueTable({ rows, onResolved }: ModerationQueueTableP
               <td className="px-3 py-2 text-foreground/90">{flag.resolutionNote ?? "—"}</td>
               <td className="px-3 py-2">
                 {flag.status === "open" ? (
-                  <ModerationResolveAction flagId={flag.id} targetLabel={flag.targetLabel} onResolved={onResolved} />
+                  <div className="flex flex-col gap-1">
+                    <ModerationResolveAction flagId={flag.id} targetLabel={flag.targetLabel} onResolved={onResolved} />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={async () => {
+                        try {
+                          if (flag.targetType === "thread") {
+                            await deleteModerationThread(flag.targetId);
+                          } else {
+                            await deleteModerationReply(flag.targetId);
+                          }
+                          await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001"}/api/admin/moderation/flags/${flag.id}/resolve`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ note: "Content deleted by moderator" }),
+                            credentials: "include"
+                          });
+                          onResolved(flag);
+                        } catch (err) { console.error("Delete content failed:", err); }
+                      }}
+                    >
+                      Delete Content
+                    </Button>
+                  </div>
                 ) : (
                   <span className="text-xs text-muted-foreground">Resolved</span>
                 )}

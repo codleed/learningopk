@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import type { AdminUser } from "@/lib/admin-api";
 
 type AdminUsersTableProps = {
@@ -13,6 +14,8 @@ type AdminUsersTableProps = {
   onToggleRole: (user: AdminUser) => Promise<void>;
   onSuspend: (user: AdminUser, reason: string) => Promise<boolean>;
   onReactivate: (user: AdminUser) => Promise<void>;
+  onWarn: (user: AdminUser, reason: string) => Promise<void>;
+  onTempBan: (user: AdminUser, reason: string, durationHours: number) => Promise<boolean>;
 };
 
 export function AdminUsersTable({
@@ -21,10 +24,17 @@ export function AdminUsersTable({
   suspensionMutatingUserIds,
   onToggleRole,
   onSuspend,
-  onReactivate
+  onReactivate,
+  onWarn,
+  onTempBan
 }: AdminUsersTableProps) {
   const [suspensionUserId, setSuspensionUserId] = useState<string | null>(null);
   const [suspensionReason, setSuspensionReason] = useState("");
+  const [warnUserId, setWarnUserId] = useState<string | null>(null);
+  const [warnReason, setWarnReason] = useState("");
+  const [tempBanUserId, setTempBanUserId] = useState<string | null>(null);
+  const [tempBanReason, setTempBanReason] = useState("");
+  const [tempBanDuration, setTempBanDuration] = useState(24);
 
   if (rows.length === 0) {
     return <p className="text-sm text-muted-foreground">No users match the current filters.</p>;
@@ -151,6 +161,141 @@ export function AdminUsersTable({
                         </Button>
                       </div>
                     </div>
+                  ) : null}
+                  {user.role === "student" && userStatus === "active" ? (
+                    <>
+                      {warnUserId === user.id ? (
+                        <div className="space-y-2">
+                          <label
+                            htmlFor={`warn-reason-${user.id}`}
+                            className="text-xs font-semibold uppercase tracking-wide text-foreground"
+                          >
+                            Warning reason
+                          </label>
+                          <Input
+                            id={`warn-reason-${user.id}`}
+                            aria-label="Warning reason"
+                            value={warnReason}
+                            onChange={(event) => setWarnReason(event.target.value)}
+                            minLength={10}
+                          />
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={async () => {
+                                await onWarn(user, warnReason.trim());
+                                setWarnUserId(null);
+                                setWarnReason("");
+                              }}
+                              disabled={warnReason.trim().length < 10}
+                            >
+                              Confirm warn
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setWarnUserId(null);
+                                setWarnReason("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => {
+                            setWarnUserId(user.id);
+                            setWarnReason("");
+                          }}
+                        >
+                          Warn
+                        </Button>
+                      )}
+                      {tempBanUserId === user.id ? (
+                        <div className="space-y-2">
+                          <label
+                            htmlFor={`temp-ban-reason-${user.id}`}
+                            className="text-xs font-semibold uppercase tracking-wide text-foreground"
+                          >
+                            Ban reason
+                          </label>
+                          <Input
+                            id={`temp-ban-reason-${user.id}`}
+                            aria-label="Temp ban reason"
+                            value={tempBanReason}
+                            onChange={(event) => setTempBanReason(event.target.value)}
+                            minLength={10}
+                          />
+                          <label
+                            htmlFor={`temp-ban-duration-${user.id}`}
+                            className="text-xs font-semibold uppercase tracking-wide text-foreground"
+                          >
+                            Duration
+                          </label>
+                          <Select
+                            id={`temp-ban-duration-${user.id}`}
+                            value={String(tempBanDuration)}
+                            onChange={(event) => setTempBanDuration(Number(event.target.value))}
+                          >
+                            <option value="1">1 hour</option>
+                            <option value="6">6 hours</option>
+                            <option value="12">12 hours</option>
+                            <option value="24">24 hours</option>
+                            <option value="72">3 days</option>
+                            <option value="168">1 week</option>
+                          </Select>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={async () => {
+                                const success = await onTempBan(user, tempBanReason.trim(), tempBanDuration);
+                                if (success) {
+                                  setTempBanUserId(null);
+                                  setTempBanReason("");
+                                  setTempBanDuration(24);
+                                }
+                              }}
+                              disabled={tempBanReason.trim().length < 10}
+                            >
+                              Confirm temp ban
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setTempBanUserId(null);
+                                setTempBanReason("");
+                                setTempBanDuration(24);
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => {
+                            setTempBanUserId(user.id);
+                            setTempBanReason("");
+                            setTempBanDuration(24);
+                          }}
+                        >
+                          Temp Ban
+                        </Button>
+                      )}
+                    </>
                   ) : null}
                 </div>
               </td>

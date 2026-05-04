@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { deleteModerationThread } from "@/lib/admin-api";
+import { Button } from "@/components/ui/button";
 import { ThreadPinToggle } from "./thread-pin-toggle";
 
 export type ForumModerationRow = {
@@ -65,19 +67,35 @@ export function ForumModerationTable({ rows, onMutationComplete }: ForumModerati
                 </span>
               </td>
               <td className="px-3 py-2">
-                <ThreadPinToggle
-                  threadId={thread.id}
-                  threadTitle={thread.title}
-                  isPinned={thread.isPinned}
-                  onComplete={(result) => {
-                    setItems((previous) =>
-                      previous.map((item) =>
-                        item.id === thread.id ? { ...item, isPinned: result.nextPinned } : item
-                      )
-                    );
-                    onMutationComplete();
-                  }}
-                />
+                <div className="flex gap-2">
+                  <ThreadPinToggle
+                    threadId={thread.id}
+                    threadTitle={thread.title}
+                    isPinned={thread.isPinned}
+                    onComplete={(result) => {
+                      setItems((previous) =>
+                        previous.map((item) =>
+                          item.id === thread.id ? { ...item, isPinned: result.nextPinned } : item
+                        )
+                      );
+                      onMutationComplete();
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={async () => {
+                      try {
+                        await deleteModerationThread(thread.id);
+                        setItems(prev => prev.filter(item => item.id !== thread.id));
+                        onMutationComplete();
+                      } catch (err) { console.error("Delete thread failed:", err); }
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
               </td>
             </tr>
           ))}

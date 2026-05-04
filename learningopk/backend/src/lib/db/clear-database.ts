@@ -35,6 +35,7 @@ export const CLEAR_TABLES = [
   "user_progress",
   "admin_notifications",
   "admin_settings",
+  "moderation_warnings",
   "moderation_flags",
   "institutes",
   "chapters",

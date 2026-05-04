@@ -92,6 +92,7 @@ export class ForumRepository {
           select count(*)::int
           from forum_replies
           where forum_replies.thread_id = ${forumThreads.id}
+            and forum_replies.is_deleted = false
         )`
       })
       .from(forumThreads)
@@ -99,7 +100,7 @@ export class ForumRepository {
       .leftJoin(subjects, eq(forumThreads.subjectId, subjects.id))
       .leftJoin(boards, eq(subjects.boardId, boards.id))
       .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
-      .where(filters)
+      .where(filters ? and(eq(forumThreads.isDeleted, false), filters) : eq(forumThreads.isDeleted, false))
       .orderBy(...orderByClauses)
       .limit(limit)
       .offset(offset);
@@ -143,7 +144,7 @@ export class ForumRepository {
       .leftJoin(subjects, eq(forumThreads.subjectId, subjects.id))
       .leftJoin(boards, eq(subjects.boardId, boards.id))
       .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
-      .where(eq(forumThreads.id, threadId))
+      .where(and(eq(forumThreads.id, threadId), eq(forumThreads.isDeleted, false)))
       .limit(1);
   }
 
@@ -164,7 +165,7 @@ export class ForumRepository {
       })
       .from(forumReplies)
       .innerJoin(users, eq(forumReplies.userId, users.id))
-      .where(eq(forumReplies.threadId, threadId))
+      .where(and(eq(forumReplies.threadId, threadId), eq(forumReplies.isDeleted, false)))
       .orderBy(asc(forumReplies.createdAt), asc(forumReplies.id));
   }
 
@@ -186,7 +187,7 @@ export class ForumRepository {
         threadId: forumReplies.threadId
       })
       .from(forumReplies)
-      .where(eq(forumReplies.id, replyId))
+      .where(and(eq(forumReplies.id, replyId), eq(forumReplies.isDeleted, false)))
       .limit(1);
   }
 
@@ -194,7 +195,7 @@ export class ForumRepository {
     const replyRows = await db
       .select({ id: forumReplies.id, threadId: forumReplies.threadId })
       .from(forumReplies)
-      .where(eq(forumReplies.id, params.replyId))
+      .where(and(eq(forumReplies.id, params.replyId), eq(forumReplies.isDeleted, false)))
       .limit(1);
 
     if (replyRows.length === 0) {

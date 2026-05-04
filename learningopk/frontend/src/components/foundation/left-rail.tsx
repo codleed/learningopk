@@ -15,6 +15,7 @@ import type { ViewMode, NavItem as NavItemType } from "./left-rail/left-rail-typ
 import {
   studentNavItems,
   adminNavSections,
+  moderatorNavSections,
   isNavItemActive,
 } from "./left-rail/left-rail-config";
 
@@ -95,6 +96,7 @@ export function LeftRail({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isAdmin = session.user.role === "admin";
+  const isModerator = session.user.role === "moderator";
   const suppressExpandRef = useRef(false);
 
   /* ── Set CSS variable for main content offset ── */
@@ -198,6 +200,38 @@ export function LeftRail({
   const renderAdminNav = () => (
     <div className="flex w-full flex-col gap-1">
       {adminNavSections.map((section, sectionIndex) => (
+        <div key={section.label}>
+          {sectionIndex > 0 && (
+            <div
+              className={cn(
+                "my-3 h-px bg-[var(--sidebar-border)]",
+                !actualExpanded ? "mx-auto w-8 opacity-30" : "w-full opacity-50"
+              )}
+            />
+          )}
+          {actualExpanded && section.label && (
+            <div className="mb-1 mt-3 px-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--sidebar-admin-default-text)] opacity-70">
+              {section.label}
+            </div>
+          )}
+          {section.items.map((item) => (
+            <NavItem
+              key={item.href}
+              item={item}
+              isActive={isNavItemActive(currentPath, item)}
+              isExpanded={actualExpanded}
+              variant="admin"
+              onNavigate={handleNavItemClick}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderModeratorNav = () => (
+    <div className="flex w-full flex-col gap-1">
+      {moderatorNavSections.map((section, sectionIndex) => (
         <div key={section.label}>
           {sectionIndex > 0 && (
             <div
@@ -332,7 +366,7 @@ export function LeftRail({
 
           <div className="flex-1 px-[var(--sidebar-padding-x)]">
             <div className="flex items-center justify-center">
-              {viewMode === "student" ? renderStudentNav() : renderAdminNav()}
+              {isModerator ? renderModeratorNav() : viewMode === "student" ? renderStudentNav() : renderAdminNav()}
             </div>
           </div>
 

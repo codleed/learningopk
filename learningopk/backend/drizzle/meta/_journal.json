@@ -209,7 +209,7 @@
       "idx": 29,
       "version": "7",
       "when": 1775509600000,
-      "tag": "0028_offline_mode",
+      "tag": "0028_subpart_progress_graph",
       "breakpoints": true
     },
     {
@@ -231,6 +231,20 @@
       "version": "7",
       "when": 1776300120000,
       "tag": "0031_exercise_statements",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1776400000000,
+      "tag": "0032_moderator_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1776500000000,
+      "tag": "0033_temp_ban",
       "breakpoints": true
     }
   ]

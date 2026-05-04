@@ -528,8 +528,9 @@ const adminUserSchema = z.object({
   id: z.string(),
   name: z.string(),
   email: z.string().email(),
-  role: z.enum(["student", "admin"]),
+  role: z.enum(["student", "admin", "moderator"]),
   status: z.enum(["active", "suspended"]).optional(),
+  suspendedUntil: z.string().datetime().nullable().optional(),
   suspendedAt: z.string().datetime().nullable().optional(),
   suspendedReason: z.string().nullable().optional(),
   suspendedBy: z.string().nullable().optional(),
@@ -1550,7 +1551,7 @@ export const getAdminUsers = async ({
   page: number;
   pageSize: number;
   q: string;
-  role?: "" | "student" | "admin";
+  role?: "" | "student" | "admin" | "moderator";
   status?: "" | "active" | "suspended";
   cookieHeader?: string;
 }): Promise<AdminUsersResponse> => {
@@ -1578,7 +1579,7 @@ export const updateAdminUserRole = async ({
   role
 }: {
   id: string;
-  role: "student" | "admin";
+  role: "student" | "admin" | "moderator";
 }): Promise<AdminUserRoleUpdateResponse> => {
   return fetchAdminJson({
     path: `/api/admin/users/${encodeURIComponent(id)}/role`,
@@ -1650,6 +1651,50 @@ export const getAdminAnalyticsOverview = async ({
     path: `/api/admin/analytics/overview?${query.toString()}`,
     schema: adminAnalyticsOverviewSchema,
     ...(cookieHeader ? { cookieHeader } : {})
+  });
+};
+
+const moderatorOverviewResponseSchema = z.object({
+  openFlags: z.number(),
+  recentResolved: z.array(
+    z.object({
+      id: z.string(),
+      targetType: z.enum(["thread", "reply", "chapter"]),
+      targetLabel: z.string(),
+      reason: z.string(),
+      resolvedAt: z.string().nullable(),
+      resolutionNote: z.string().nullable()
+    })
+  )
+});
+
+export type ModeratorOverviewResponse = z.infer<typeof moderatorOverviewResponseSchema>;
+
+export const getModeratorOverview = async ({
+  cookieHeader
+}: {
+  cookieHeader?: string;
+} = {}): Promise<ModeratorOverviewResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/moderator/overview",
+    schema: moderatorOverviewResponseSchema,
+    ...(cookieHeader ? { cookieHeader } : {})
+  });
+};
+
+export const deleteModerationThread = async (threadId: string): Promise<void> => {
+  await fetchAdminJson({
+    path: `/api/admin/moderation/threads/${threadId}/delete`,
+    schema: z.object({ deleted: z.boolean() }),
+    method: "POST"
+  });
+};
+
+export const deleteModerationReply = async (replyId: string): Promise<void> => {
+  await fetchAdminJson({
+    path: `/api/admin/moderation/replies/${replyId}/delete`,
+    schema: z.object({ deleted: z.boolean() }),
+    method: "POST"
   });
 };
 
