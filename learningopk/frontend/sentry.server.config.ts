@@ -13,8 +13,8 @@ Sentry.init({
   integrations: [
     Sentry.vercelAIIntegration({
       force: true,
-      recordInputs: true,
-      recordOutputs: true,
+      recordInputs: process.env.NODE_ENV === "development",
+      recordOutputs: process.env.NODE_ENV === "development",
     }),
     Sentry.pinoIntegration(),
   ],
