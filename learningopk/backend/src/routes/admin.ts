@@ -2555,6 +2555,11 @@ adminRouter.post("/moderation/users/:id/temp-ban", requireSession, async (req, r
     return;
   }
 
+  if (existingUser[0].status === "suspended") {
+    res.status(400).json({ error: "User is already suspended" });
+    return;
+  }
+
   const { reason, durationHours } = parsedBody.data;
   const now = new Date();
   const until = new Date(now.getTime() + durationHours * 60 * 60 * 1000);
