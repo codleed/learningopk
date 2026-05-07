@@ -46,8 +46,14 @@ async function runDockerExec(args: string[], stdin?: string): Promise<{ stdout: 
     );
 
     if (stdin !== undefined && child.stdin) {
-      child.stdin.write(stdin);
-      child.stdin.end();
+      child.stdin.write(stdin, (err) => {
+        if (err) {
+          child.stdin?.destroy();
+          reject(new Error(`Failed to write stdin: ${err.message}`));
+          return;
+        }
+        child.stdin?.end();
+      });
     }
   });
 }
