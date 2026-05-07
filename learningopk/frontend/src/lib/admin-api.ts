@@ -775,7 +775,7 @@ const fetchAdminJson = async <T>({
   path: string;
   schema: z.ZodType<T>;
   cookieHeader?: string;
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "DELETE";
   body?: unknown;
 }): Promise<T> => {
   const headers: Record<string, string> = {};
@@ -2134,5 +2134,66 @@ export const deleteAdminPastPaper = async (id: number): Promise<void> => {
     path: `/api/admin/content/past-papers/${id}/delete`,
     schema: z.object({ success: z.boolean() }),
     method: "POST"
+  });
+};
+
+// Database Backup Functions
+
+const adminBackupEntrySchema = z.object({
+  name: z.string(),
+  sizeBytes: z.number(),
+  createdAt: z.string()
+});
+
+const adminBackupsResponseSchema = z.object({
+  backups: z.array(adminBackupEntrySchema)
+});
+
+const adminBackupCreateResponseSchema = z.object({
+  backup: adminBackupEntrySchema
+});
+
+export type AdminBackupEntry = z.infer<typeof adminBackupEntrySchema>;
+export type AdminBackupsResponse = z.infer<typeof adminBackupsResponseSchema>;
+export type AdminBackupCreateResponse = z.infer<typeof adminBackupCreateResponseSchema>;
+
+export const getAdminBackups = async ({
+  cookieHeader
+}: {
+  cookieHeader?: string;
+} = {}): Promise<AdminBackupsResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/backup",
+    schema: adminBackupsResponseSchema,
+    ...(cookieHeader ? { cookieHeader } : {})
+  });
+};
+
+export const createAdminBackup = async ({
+  label
+}: {
+  label?: string;
+} = {}): Promise<AdminBackupCreateResponse> => {
+  return fetchAdminJson({
+    path: "/api/admin/backup",
+    schema: adminBackupCreateResponseSchema,
+    method: "POST",
+    body: label ? { label } : {}
+  });
+};
+
+export const restoreAdminBackup = async (name: string): Promise<{ success: boolean }> => {
+  return fetchAdminJson({
+    path: `/api/admin/backup/${encodeURIComponent(name)}/restore`,
+    schema: z.object({ success: z.boolean() }),
+    method: "POST"
+  });
+};
+
+export const deleteAdminBackup = async (name: string): Promise<{ success: boolean }> => {
+  return fetchAdminJson({
+    path: `/api/admin/backup/${encodeURIComponent(name)}`,
+    schema: z.object({ success: z.boolean() }),
+    method: "DELETE"
   });
 };
