@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { requireAdminRole, requireStaffRole } from "../lib/admin.js";
 import { moderateForumInput } from "../lib/ai-guardrails.js";
+import { pastPaperRepository } from "../repositories/past-paper.repository.js";
 import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
 import { listAdminChapterGraph } from "../lib/chapter-graph.js";
 import { db } from "../lib/db/index.js";
@@ -447,8 +448,17 @@ const pastPaperCreateBodySchema = z.object({
   grade: z.enum(["9", "10"]),
   subjectId: z.coerce.number().int().positive(),
   year: z.coerce.number().int().min(2000).max(2099),
-  paperContent: z.string().trim().min(1),
-  solutionContent: z.string().trim().optional()
+  paperContent: z.string().trim().optional(),
+  solutionContent: z.string().trim().optional(),
+  published: z.boolean().optional().default(false),
+  description: z.string().trim().optional(),
+  durationMinutes: z.coerce.number().int().min(0).optional().default(60),
+  totalMarks: z.coerce.number().int().min(0).optional().default(0),
+  exercises: z.array(z.object({
+    exerciseId: z.coerce.number().int().positive(),
+    orderIndex: z.coerce.number().int().min(0),
+    marks: z.coerce.number().int().positive().optional()
+  })).optional().default([])
 });
 
 const pastPaperUpdateBodySchema = z.object({
@@ -458,7 +468,11 @@ const pastPaperUpdateBodySchema = z.object({
   subjectId: z.coerce.number().int().positive().optional(),
   year: z.coerce.number().int().min(2000).max(2099).optional(),
   paperContent: z.string().trim().min(1).optional(),
-  solutionContent: z.string().trim().optional()
+  solutionContent: z.string().trim().optional(),
+  published: z.boolean().optional(),
+  description: z.string().trim().optional(),
+  durationMinutes: z.coerce.number().int().min(0).optional(),
+  totalMarks: z.coerce.number().int().min(0).optional()
 });
 
 const pastPaperListQuerySchema = z.object({
@@ -7748,7 +7762,9 @@ adminRouter.get("/content/past-papers", requireSession, async (req, res) => {
       durationMinutes: mockExams.durationMinutes,
       totalMarks: mockExams.totalMarks,
       paperContent: mockExams.paperContent,
-      solutionContent: mockExams.solutionContent
+      solutionContent: mockExams.solutionContent,
+      published: mockExams.published,
+      description: mockExams.description
     })
     .from(mockExams)
     .innerJoin(boards, eq(mockExams.boardId, boards.id))
@@ -7842,10 +7858,12 @@ adminRouter.post("/content/past-papers", requireSession, async (req, res) => {
       subjectId: parsedBody.data.subjectId,
       year: parsedBody.data.year,
       quizId: placeholderQuiz.id,
-      durationMinutes: 0,
-      totalMarks: 0,
-      paperContent: parsedBody.data.paperContent.trim(),
-      solutionContent: parsedBody.data.solutionContent?.trim() ?? null
+      durationMinutes: parsedBody.data.durationMinutes ?? 60,
+      totalMarks: parsedBody.data.totalMarks ?? 0,
+      paperContent: parsedBody.data.paperContent?.trim() ?? null,
+      solutionContent: parsedBody.data.solutionContent?.trim() ?? null,
+      published: parsedBody.data.published ?? false,
+      description: parsedBody.data.description?.trim() ?? null
     })
     .returning({
       id: mockExams.id,
@@ -7857,7 +7875,9 @@ adminRouter.post("/content/past-papers", requireSession, async (req, res) => {
       durationMinutes: mockExams.durationMinutes,
       totalMarks: mockExams.totalMarks,
       paperContent: mockExams.paperContent,
-      solutionContent: mockExams.solutionContent
+      solutionContent: mockExams.solutionContent,
+      published: mockExams.published,
+      description: mockExams.description
     });
 
   const newPaper = insertedRows[0];
@@ -7884,6 +7904,11 @@ adminRouter.post("/content/past-papers", requireSession, async (req, res) => {
     actorId,
     actorName
   });
+
+  // Link exercises if provided
+  for (const ex of parsedBody.data.exercises) {
+    await pastPaperRepository.linkExercise(newPaper.id, ex.exerciseId, ex.orderIndex, ex.marks);
+  }
 
   res.status(201).json({
     data: newPaper
@@ -7950,6 +7975,10 @@ adminRouter.post("/content/past-papers/:id/update", requireSession, async (req, 
   if (parsedBody.data.year !== undefined) updateData.year = parsedBody.data.year;
   if (parsedBody.data.paperContent !== undefined) updateData.paperContent = parsedBody.data.paperContent.trim();
   if (parsedBody.data.solutionContent !== undefined) updateData.solutionContent = parsedBody.data.solutionContent.trim();
+  if (parsedBody.data.published !== undefined) updateData.published = parsedBody.data.published;
+  if (parsedBody.data.description !== undefined) updateData.description = parsedBody.data.description?.trim() ?? null;
+  if (parsedBody.data.durationMinutes !== undefined) updateData.durationMinutes = parsedBody.data.durationMinutes;
+  if (parsedBody.data.totalMarks !== undefined) updateData.totalMarks = parsedBody.data.totalMarks;
 
   const updatedRows = await db
     .update(mockExams)
@@ -7965,7 +7994,9 @@ adminRouter.post("/content/past-papers/:id/update", requireSession, async (req, 
       durationMinutes: mockExams.durationMinutes,
       totalMarks: mockExams.totalMarks,
       paperContent: mockExams.paperContent,
-      solutionContent: mockExams.solutionContent
+      solutionContent: mockExams.solutionContent,
+      published: mockExams.published,
+      description: mockExams.description
     });
 
   const updatedPaper = updatedRows[0];
@@ -8062,6 +8093,110 @@ adminRouter.post("/content/past-papers/:id/delete", requireSession, async (req, 
     success: true,
     deletedId: paper.id
   });
+});
+
+// GET /api/admin/content/past-papers/:id/exercises
+adminRouter.get("/content/past-papers/:id/exercises", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({ error: "Invalid paper ID", details: parsedParams.error.flatten() });
+    return;
+  }
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) return;
+
+  const exerciseRows = await pastPaperRepository.getPaperExercises(parsedParams.data.id);
+  res.status(200).json({ data: exerciseRows });
+});
+
+// POST /api/admin/content/past-papers/:id/exercises
+adminRouter.post("/content/past-papers/:id/exercises", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({ error: "Invalid paper ID", details: parsedParams.error.flatten() });
+    return;
+  }
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) return;
+
+  const linkSchema = z.object({
+    exercises: z.array(z.object({
+      exerciseId: z.coerce.number().int().positive(),
+      orderIndex: z.coerce.number().int().min(0),
+      marks: z.coerce.number().int().positive().optional()
+    }))
+  });
+
+  const parsedBody = linkSchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({ error: "Invalid payload", details: parsedBody.error.flatten() });
+    return;
+  }
+
+  for (const ex of parsedBody.data.exercises) {
+    await pastPaperRepository.linkExercise(parsedParams.data.id, ex.exerciseId, ex.orderIndex, ex.marks);
+  }
+
+  const actorId = authedReq.session.user.id;
+  const actorName = authedReq.session.user.name;
+  await persistAuditLog({
+    scope: "content",
+    action: "Link exercises to past paper",
+    target: `Past Paper #${parsedParams.data.id}`,
+    status: "success",
+    message: `Linked ${parsedBody.data.exercises.length} exercises`,
+    actorId,
+    actorName
+  });
+
+  res.status(200).json({ success: true, count: parsedBody.data.exercises.length });
+});
+
+// POST /api/admin/content/past-papers/:id/exercises/:exerciseId/remove
+adminRouter.post("/content/past-papers/:id/exercises/:exerciseId/remove", requireSession, async (req, res) => {
+  const paramsSchema = z.object({
+    id: z.coerce.number().int().positive(),
+    exerciseId: z.coerce.number().int().positive()
+  });
+  const parsed = paramsSchema.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid parameters", details: parsed.error.flatten() });
+    return;
+  }
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) return;
+
+  await pastPaperRepository.unlinkExercise(parsed.data.id, parsed.data.exerciseId);
+  res.status(200).json({ success: true });
+});
+
+// POST /api/admin/content/past-papers/:id/publish
+adminRouter.post("/content/past-papers/:id/publish", requireSession, async (req, res) => {
+  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    res.status(400).json({ error: "Invalid paper ID", details: parsedParams.error.flatten() });
+    return;
+  }
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) return;
+
+  try {
+    const published = await pastPaperRepository.togglePublish(parsedParams.data.id);
+
+    await persistAuditLog({
+      scope: "content",
+      action: published ? "Publish past paper" : "Unpublish past paper",
+      target: `Past Paper #${parsedParams.data.id}`,
+      status: "success",
+      message: published ? "Published" : "Unpublished",
+      actorId: authedReq.session.user.id,
+      actorName: authedReq.session.user.name
+    });
+
+    res.status(200).json({ data: { published } });
+  } catch (err) {
+    res.status(404).json({ error: "Past paper not found" });
+  }
 });
 
 // ==================== DATABASE BACKUP & RESTORE ====================

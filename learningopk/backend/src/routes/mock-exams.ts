@@ -33,6 +33,7 @@ mockExamsRouter.get("/filters/options", async (_req, res) => {
       })
       .from(boards)
       .innerJoin(mockExams, eq(boards.id, mockExams.boardId))
+      .where(eq(mockExams.published, true))
       .groupBy(boards.id, boards.name, boards.slug)
       .orderBy(boards.name);
 
@@ -40,6 +41,7 @@ mockExamsRouter.get("/filters/options", async (_req, res) => {
     const gradeRows = await db
       .selectDistinct({ grade: mockExams.grade })
       .from(mockExams)
+      .where(eq(mockExams.published, true))
       .orderBy(mockExams.grade);
 
     // Get available subjects
@@ -51,6 +53,7 @@ mockExamsRouter.get("/filters/options", async (_req, res) => {
       })
       .from(subjects)
       .innerJoin(mockExams, eq(subjects.id, mockExams.subjectId))
+      .where(eq(mockExams.published, true))
       .groupBy(subjects.id, subjects.name, subjects.slug)
       .orderBy(subjects.name);
 
@@ -58,6 +61,7 @@ mockExamsRouter.get("/filters/options", async (_req, res) => {
     const yearRows = await db
       .selectDistinct({ year: mockExams.year })
       .from(mockExams)
+      .where(eq(mockExams.published, true))
       .orderBy(desc(mockExams.year));
 
     res.json(successResponse({
@@ -85,7 +89,7 @@ mockExamsRouter.get("/", async (req, res) => {
 
     const { boardId, grade, subjectId, year } = parsed.data;
 
-    const conditions = [];
+    const conditions: ReturnType<typeof eq>[] = [eq(mockExams.published, true)];
     if (boardId) conditions.push(eq(mockExams.boardId, boardId));
     if (grade) conditions.push(eq(mockExams.grade, grade));
     if (subjectId) conditions.push(eq(mockExams.subjectId, subjectId));
@@ -107,7 +111,9 @@ mockExamsRouter.get("/", async (req, res) => {
         subjectSlug: subjects.slug,
         quizId: mockExams.quizId,
         paperContent: mockExams.paperContent,
-        solutionContent: mockExams.solutionContent
+        solutionContent: mockExams.solutionContent,
+        published: mockExams.published,
+        description: mockExams.description
       })
       .from(mockExams)
       .innerJoin(boards, eq(mockExams.boardId, boards.id))

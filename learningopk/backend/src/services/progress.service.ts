@@ -19,11 +19,12 @@ import { streakWagerService } from "./streak-wager.service.js";
 import { xpService } from "./xp.service.js";
 
 export interface ProgressEventInput {
-  eventType: "chapter_visit" | "summary_read" | "subpart_read" | "exercise_view" | "flashcard_complete" | "quiz_submit";
-  chapterId: number;
+  eventType: "chapter_visit" | "summary_read" | "subpart_read" | "exercise_view" | "flashcard_complete" | "quiz_submit" | "past_paper_attempt";
+  chapterId?: number;
   userId: string;
   subpartId?: number;
   score?: number;
+  mockExamId?: number;
   occurredAt?: Date;
 }
 
@@ -80,10 +81,23 @@ export class ProgressService {
       snapshot = await applyProgressEvent({
         eventType: "quiz_submit",
         userId: input.userId,
-        chapterId: input.chapterId,
+        chapterId: input.chapterId!,
         score: input.score ?? 0,
         occurredAt
       });
+    } else if (input.eventType === "past_paper_attempt") {
+      snapshot = {
+        id: 0,
+        userId: input.userId,
+        chapterId: input.chapterId ?? 0,
+        visitedAt: occurredAt,
+        summaryRead: false,
+        subpartsReadCount: 0,
+        exercisesViewed: 0,
+        flashcardsCompleted: false,
+        quizBestScore: 0,
+        quizAttemptsCount: 0
+      };
     } else if (input.eventType === "subpart_read") {
       if (typeof input.subpartId !== "number") {
         throw new Error("subpartId is required for subpart_read events.");
@@ -91,11 +105,14 @@ export class ProgressService {
       snapshot = await applyProgressEvent({
         eventType: "subpart_read",
         userId: input.userId,
-        chapterId: input.chapterId,
+        chapterId: input.chapterId!,
         subpartId: input.subpartId,
         occurredAt
       });
     } else {
+      if (typeof input.chapterId !== "number") {
+        throw new Error("chapterId is required for progress events");
+      }
       snapshot = await applyProgressEvent({
         eventType: input.eventType,
         userId: input.userId,
@@ -556,6 +573,19 @@ export class ProgressService {
       .sort((left, right) => right.wrongAnswerCount - left.wrongAnswerCount);
 
     return rankedWeakAreas.slice(0, limit).map((area) => area.label);
+  }
+
+  async recordPastPaperAttempt(userId: string, mockExamId: number, percentage: number): Promise<void> {
+    try {
+      await this.recordProgressEvent({
+        eventType: "past_paper_attempt",
+        userId,
+        score: percentage,
+        occurredAt: new Date()
+      });
+    } catch (err) {
+      console.error("Failed to record past paper progress:", err);
+    }
   }
 
   private aggregateSubjectProgress(

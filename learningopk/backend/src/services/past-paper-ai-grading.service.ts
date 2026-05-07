@@ -1,0 +1,78 @@
+import { generateText } from "ai";
+import { getMistralModel, getMistralModelId } from "../lib/mistral.js";
+
+export interface AiGradingRequest {
+  exerciseId: number;
+  question: string;
+  studentAnswer: string;
+  modelSolution: string;
+  maxMarks: number;
+}
+
+export interface AiGradingResult {
+  exerciseId: number;
+  score: number;
+  feedback: string;
+}
+
+export async function gradeWithAI(requests: AiGradingRequest[]): Promise<AiGradingResult[]> {
+  if (requests.length === 0) return [];
+
+  const results: AiGradingResult[] = [];
+
+  for (const req of requests) {
+    try {
+      const prompt = `You are an exam grader. Grade the following student answer against the model solution.
+
+Question: ${req.question}
+
+Model Solution: ${req.modelSolution}
+
+Student Answer: ${req.studentAnswer}
+
+Maximum Marks: ${req.maxMarks}
+
+Respond with a JSON object:
+{
+  "score": <number between 0 and ${req.maxMarks}>,
+  "feedback": "<brief constructive feedback, 2-3 sentences>"
+}
+
+ONLY return JSON, no other text.`;
+
+      const model = getMistralModel("mistral-medium");
+      const modelId = getMistralModelId("mistral-medium");
+
+      const result = await generateText({
+        model,
+        messages: [{ role: "user", content: prompt }]
+      });
+
+      const text = result.text;
+      if (text) {
+        const trimmed = text.trim().replace(/```json|```/g, "").trim();
+        const parsed = JSON.parse(trimmed) as { score: number; feedback: string };
+        results.push({
+          exerciseId: req.exerciseId,
+          score: Math.min(Math.max(0, Math.round(parsed.score)), req.maxMarks),
+          feedback: parsed.feedback
+        });
+      } else {
+        results.push({
+          exerciseId: req.exerciseId,
+          score: Math.round(req.maxMarks / 2),
+          feedback: "AI grading unavailable — awarded partial credit."
+        });
+      }
+    } catch (err) {
+      console.error(`AI grading failed for exercise ${req.exerciseId}:`, err);
+      results.push({
+        exerciseId: req.exerciseId,
+        score: 0,
+        feedback: "AI grading encountered an error."
+      });
+    }
+  }
+
+  return results;
+}

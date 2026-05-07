@@ -38,6 +38,11 @@ export const adminAuditStatusEnum = pgEnum("admin_audit_status", ["success", "fa
 export const notificationAudienceEnum = pgEnum("notification_audience", ["all", "students", "admins"]);
 export const notificationStatusEnum = pgEnum("notification_status", ["sent"]);
 export const streakWagerStatusEnum = pgEnum("streak_wager_status", ["active", "won", "lost"]);
+export const pastPaperAttemptStatusEnum = pgEnum("past_paper_attempt_status", [
+  "in_progress",
+  "submitted",
+  "timed_out"
+]);
 
 export const users = pgTable("user", {
   id: text("id").primaryKey(),
@@ -306,9 +311,29 @@ export const exercises = pgTable(
     solutionCode: text("solution_code"),
     visualizationHtml: text("visualization_html"),
     blanksAnswer: jsonb("blanks_answer").$type<string[]>(),
-    statements: jsonb("statements").$type<Array<{ text: string; blanksAnswer: string[] }>>()
+    statements: jsonb("statements").$type<Array<{ text: string; blanksAnswer: string[] }>>(),
+    options: jsonb("options").$type<Array<{ key: string; text: string }>>(),
+    correctOption: text("correct_option")
   },
   (table) => [uniqueIndex("exercises_chapter_exercise_number_idx").on(table.chapterId, table.exerciseNumber)]
+);
+
+export const pastPaperExercises = pgTable(
+  "past_paper_exercises",
+  {
+    id: serial("id").primaryKey(),
+    mockExamId: integer("mock_exam_id")
+      .notNull()
+      .references(() => mockExams.id, { onDelete: "cascade" }),
+    exerciseId: integer("exercise_id")
+      .notNull()
+      .references(() => exercises.id, { onDelete: "cascade" }),
+    orderIndex: integer("order_index").notNull(),
+    marks: integer("marks")
+  },
+  (table) => [
+    uniqueIndex("past_paper_exercises_mock_exam_exercise_idx").on(table.mockExamId, table.exerciseId)
+  ]
 );
 
 export const flashcards = pgTable("flashcards", {
@@ -639,7 +664,8 @@ export const activityEventTypeEnum = pgEnum("activity_event_type", [
   "subpart_read",
   "exercise_view",
   "flashcard_complete",
-  "quiz_submit"
+  "quiz_submit",
+  "past_paper_attempt"
 ]);
 
 export const userActivityLog = pgTable(
@@ -678,7 +704,9 @@ export const mockExams = pgTable("mock_exams", {
   durationMinutes: integer("duration_minutes").notNull(),
   totalMarks: integer("total_marks").notNull(),
   paperContent: text("paper_content"),
-  solutionContent: text("solution_content")
+  solutionContent: text("solution_content"),
+  published: boolean("published").notNull().default(false),
+  description: text("description")
 });
 
 export const examAnalysis = pgTable(
@@ -702,6 +730,42 @@ export const examAnalysis = pgTable(
     uniqueIndex("exam_analysis_board_subject_chapter_idx").on(table.boardId, table.subjectId, table.chapterId),
     index("exam_analysis_board_subject_idx").on(table.boardId, table.subjectId),
     index("exam_analysis_chapter_idx").on(table.chapterId)
+  ]
+);
+
+export const pastPaperAttempts = pgTable("past_paper_attempts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  mockExamId: integer("mock_exam_id")
+    .notNull()
+    .references(() => mockExams.id, { onDelete: "cascade" }),
+  startedAt: timestamp("started_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  submittedAt: timestamp("submitted_at", { withTimezone: true, mode: "date" }),
+  timeLimitSeconds: integer("time_limit_seconds").notNull(),
+  status: pastPaperAttemptStatusEnum("status").notNull().default("in_progress"),
+  totalMarks: integer("total_marks"),
+  score: integer("score"),
+  percentage: real("percentage")
+});
+
+export const pastPaperAttemptAnswers = pgTable(
+  "past_paper_attempt_answers",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    attemptId: uuid("attempt_id")
+      .notNull()
+      .references(() => pastPaperAttempts.id, { onDelete: "cascade" }),
+    exerciseId: integer("exercise_id")
+      .notNull()
+      .references(() => exercises.id),
+    answer: jsonb("answer"),
+    score: integer("score"),
+    aiFeedback: text("ai_feedback")
+  },
+  (table) => [
+    uniqueIndex("past_paper_attempt_answers_attempt_exercise_idx").on(table.attemptId, table.exerciseId)
   ]
 );
 
