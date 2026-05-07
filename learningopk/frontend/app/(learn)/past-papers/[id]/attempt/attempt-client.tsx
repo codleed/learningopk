@@ -108,7 +108,7 @@ export function AttemptClient({ paperId }: { paperId: string }) {
   const handleTimeout = useCallback(async () => {
     if (!attempt || attempt.status !== "in_progress") return;
     try {
-      await submitAttempt({ paperId: paperIdNum, attemptId: attempt.id });
+      await submitAttempt({ paperId: paperIdNum, attemptId: attempt.id, timedOut: true });
     } catch {
       // silent catch — redirect anyway
     }
@@ -204,6 +204,7 @@ export function AttemptClient({ paperId }: { paperId: string }) {
                 <FillBlanksInput
                   statements={currentExercise.statements}
                   blanksAnswer={currentExercise.blanksAnswer}
+                  blankCount={currentExercise.blankCount}
                   onChange={(vals) => handleAnswerChange(currentExercise.id, vals)}
                 />
               )}

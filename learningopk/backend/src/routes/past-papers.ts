@@ -88,7 +88,13 @@ pastPapersRouter.get("/:id/attempt/start", requireSession, async (req, res) => {
       return;
     }
 
-    const result = await pastPaperService.startAttempt(authedReq.session.user.id, parsed.data.id);
+    const user = authedReq.session.user;
+    const result = await pastPaperService.startAttempt(
+      user.id,
+      parsed.data.id,
+      user.class as string | undefined,
+      user.board as string | undefined
+    );
     res.json(successResponse({
       attempt: result.attempt,
       exercises: result.exercises.map(e => ({
@@ -98,8 +104,8 @@ pastPapersRouter.get("/:id/attempt/start", requireSession, async (req, res) => {
         type: e.type,
         difficulty: e.difficulty,
         options: e.options,
-        blanksAnswer: e.blanksAnswer,
-        statements: e.statements,
+        blankCount: e.blanksAnswer?.length ?? 0,
+        statements: e.statements?.map(s => ({ text: s.text, blankCount: s.blanksAnswer.length })) ?? null,
         problemMarkdown: e.problemMarkdown,
         orderIndex: e.orderIndex,
         marks: e.marks
@@ -110,6 +116,10 @@ pastPapersRouter.get("/:id/attempt/start", requireSession, async (req, res) => {
     const msg = error instanceof Error ? error.message : "Unknown error";
     if (msg === "PAST_PAPER_NOT_FOUND") {
       res.status(404).json(errorResponse("Past paper not found", "NOT_FOUND"));
+      return;
+    }
+    if (msg === "PAST_PAPER_NOT_AVAILABLE") {
+      res.status(403).json(errorResponse("This paper is not available for your class or board", "ACCESS_DENIED"));
       return;
     }
     if (msg === "NO_EXERCISES_LINKED") {
@@ -137,11 +147,19 @@ pastPapersRouter.post("/:id/attempt/save", requireSession, async (req, res) => {
       return;
     }
 
+    const paramsSchema = z.object({ id: z.coerce.number().int().positive() });
+    const pathParsed = paramsSchema.safeParse(req.params);
+    if (!pathParsed.success) {
+      res.status(400).json(errorResponse("Invalid paper ID", "VALIDATION_ERROR"));
+      return;
+    }
+
     await pastPaperService.saveAnswer(
       authedReq.session.user.id,
       parsed.data.attemptId,
       parsed.data.exerciseId,
-      parsed.data.answer
+      parsed.data.answer,
+      pathParsed.data.id
     );
 
     res.json(successResponse({ saved: true }));
@@ -161,7 +179,8 @@ pastPapersRouter.post("/:id/attempt/submit", requireSession, async (req, res) =>
   try {
     const authedReq = req as AuthenticatedRequest;
     const submitSchema = z.object({
-      attemptId: z.string().uuid()
+      attemptId: z.string().uuid(),
+      timedOut: z.boolean().optional().default(false)
     });
 
     const parsed = submitSchema.safeParse(req.body);
@@ -170,7 +189,19 @@ pastPapersRouter.post("/:id/attempt/submit", requireSession, async (req, res) =>
       return;
     }
 
-    const result = await pastPaperService.submitAttempt(authedReq.session.user.id, parsed.data.attemptId);
+    const paramsSchema = z.object({ id: z.coerce.number().int().positive() });
+    const pathParsed = paramsSchema.safeParse(req.params);
+    if (!pathParsed.success) {
+      res.status(400).json(errorResponse("Invalid paper ID", "VALIDATION_ERROR"));
+      return;
+    }
+
+    const result = await pastPaperService.submitAttempt(
+      authedReq.session.user.id,
+      parsed.data.attemptId,
+      parsed.data.timedOut ? "timed_out" : "submitted",
+      pathParsed.data.id
+    );
     res.json(successResponse(result));
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Unknown error";

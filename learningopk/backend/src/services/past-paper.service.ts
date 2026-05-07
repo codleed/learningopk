@@ -4,12 +4,26 @@ import { autoGradeExercises, calculateTotalScore } from "./past-paper-grading.se
 import { gradeWithAI } from "./past-paper-ai-grading.service.js";
 import { xpService } from "./xp.service.js";
 import { progressService } from "./progress.service.js";
+import { db } from "../lib/db/index.js";
+import { boards } from "../lib/db/schema.js";
+import { eq } from "drizzle-orm";
 
 export const pastPaperService = {
-  async startAttempt(userId: string, mockExamId: number) {
+  async startAttempt(userId: string, mockExamId: number, userClass?: string, userBoardSlug?: string) {
     const paper = await pastPaperRepository.getPaperById(mockExamId);
     if (!paper) throw new Error("PAST_PAPER_NOT_FOUND");
     if (!paper.published) throw new Error("PAST_PAPER_NOT_AVAILABLE");
+
+    if (userClass !== undefined && userBoardSlug !== undefined) {
+      if (paper.grade !== userClass) throw new Error("PAST_PAPER_NOT_AVAILABLE");
+      const boardRows = await db
+        .select({ id: boards.id })
+        .from(boards)
+        .where(eq(boards.slug, userBoardSlug))
+        .limit(1);
+      const board = boardRows[0];
+      if (!board || paper.boardId !== board.id) throw new Error("PAST_PAPER_NOT_AVAILABLE");
+    }
 
     const existing = await pastPaperRepository.getActiveAttempt(userId, mockExamId);
     if (existing) {
@@ -38,18 +52,20 @@ export const pastPaperService = {
     return { attempt, exercises, savedAnswers: {} as Record<number, unknown> };
   },
 
-  async saveAnswer(userId: string, attemptId: string, exerciseId: number, answer: unknown) {
+  async saveAnswer(userId: string, attemptId: string, exerciseId: number, answer: unknown, mockExamId?: number) {
     const data = await pastPaperRepository.getAttemptWithAnswers(attemptId, userId);
     if (!data) throw new Error("ATTEMPT_NOT_FOUND");
     if (data.attempt.status !== "in_progress") throw new Error("ATTEMPT_ALREADY_COMPLETED");
+    if (mockExamId !== undefined && data.attempt.mockExamId !== mockExamId) throw new Error("ATTEMPT_NOT_FOUND");
 
     await pastPaperRepository.upsertAnswer({ attemptId, exerciseId, answer });
   },
 
-  async submitAttempt(userId: string, attemptId: string, status: "submitted" | "timed_out" = "submitted") {
+  async submitAttempt(userId: string, attemptId: string, status: "submitted" | "timed_out" = "submitted", mockExamId?: number) {
     const data = await pastPaperRepository.getAttemptWithAnswers(attemptId, userId);
     if (!data) throw new Error("ATTEMPT_NOT_FOUND");
     if (data.attempt.status !== "in_progress") throw new Error("ATTEMPT_ALREADY_COMPLETED");
+    if (mockExamId !== undefined && data.attempt.mockExamId !== mockExamId) throw new Error("ATTEMPT_NOT_FOUND");
 
     const answersMap: Record<number, unknown> = {};
     for (const a of data.answers) {

@@ -30,9 +30,11 @@ const exerciseBaseSchema = z.object({
   options: z.array(z.object({ key: z.string(), text: z.string() })).nullable().optional(),
   correctOption: z.string().nullable().optional(),
   blanksAnswer: z.array(z.string()).nullable().optional(),
+  blankCount: z.number().int().optional(),
   statements: z.array(z.object({
     text: z.string(),
-    blanksAnswer: z.array(z.string())
+    blanksAnswer: z.array(z.string()).optional(),
+    blankCount: z.number().int().optional()
   })).nullable().optional(),
   problemMarkdown: z.string().nullable().optional(),
   orderIndex: z.number().int(),
@@ -164,6 +166,7 @@ export async function saveAnswer(params: {
 export async function submitAttempt(params: {
   paperId: number;
   attemptId: string;
+  timedOut?: boolean;
 }): Promise<{
   attemptId: string;
   totalScore: number;
@@ -204,7 +207,7 @@ export async function submitAttempt(params: {
     resultSchema,
     {
       method: "POST",
-      body: JSON.stringify({ attemptId: params.attemptId })
+      body: JSON.stringify({ attemptId: params.attemptId, timedOut: params.timedOut ?? false })
     }
   ).then(r => r.data);
 }
