@@ -13,6 +13,7 @@ import {
 } from "@/components/admin";
 import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 import { Select } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import {
   createAdminPastPaper,
@@ -73,6 +74,18 @@ export function PastPaperForm({ boards, existingPaper }: PastPaperFormProps) {
   );
   const [solutionContent, setSolutionContent] = useState(
     existingPaper?.solutionContent ?? ""
+  );
+  const [description, setDescription] = useState(
+    existingPaper?.description ?? ""
+  );
+  const [durationMinutes, setDurationMinutes] = useState<string>(
+    existingPaper?.durationMinutes?.toString() ?? "60"
+  );
+  const [totalMarks, setTotalMarks] = useState<string>(
+    existingPaper?.totalMarks?.toString() ?? "0"
+  );
+  const [published, setPublished] = useState(
+    existingPaper?.published ?? false
   );
   const [showPreview, setShowPreview] = useState(false);
 
@@ -159,6 +172,10 @@ export function PastPaperForm({ boards, existingPaper }: PastPaperFormProps) {
             year: parseInt(year, 10),
             paperContent: paperContent.trim(),
             solutionContent: solutionContent.trim() || undefined,
+            description: description.trim() || undefined,
+            durationMinutes: parseInt(durationMinutes, 10) || 60,
+            totalMarks: parseInt(totalMarks, 10) || 0,
+            published,
           },
         });
         pushToast({
@@ -175,6 +192,10 @@ export function PastPaperForm({ boards, existingPaper }: PastPaperFormProps) {
           year: parseInt(year, 10),
           paperContent: paperContent.trim(),
           solutionContent: solutionContent.trim() || undefined,
+          description: description.trim() || undefined,
+          durationMinutes: parseInt(durationMinutes, 10) || 60,
+          totalMarks: parseInt(totalMarks, 10) || 0,
+          published,
         });
         pushToast({
           title: "Past paper created",
@@ -400,6 +421,74 @@ export function PastPaperForm({ boards, existingPaper }: PastPaperFormProps) {
                   className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 font-mono text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
                 />
               )}
+            </div>
+          </AdminFormField>
+
+          {/* Description */}
+          <AdminFormField
+            id="pp-description"
+            label="Description"
+            hint="A short description shown to students on the paper card"
+          >
+            <textarea
+              id="pp-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g., Official BISE Quetta board exam paper"
+              rows={2}
+              className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] resize-y"
+            />
+          </AdminFormField>
+
+          {/* Duration + Total Marks row */}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <AdminFormField
+              id="pp-duration"
+              label="Duration (minutes)"
+              hint="How long students have to complete the attempt"
+            >
+              <input
+                id="pp-duration"
+                type="number"
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(e.target.value)}
+                placeholder="60"
+                min={1}
+                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+              />
+            </AdminFormField>
+            <AdminFormField
+              id="pp-marks"
+              label="Total Marks"
+              hint="Sum of all exercise marks in the paper"
+            >
+              <input
+                id="pp-marks"
+                type="number"
+                value={totalMarks}
+                onChange={(e) => setTotalMarks(e.target.value)}
+                placeholder="0"
+                min={0}
+                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+              />
+            </AdminFormField>
+          </div>
+
+          {/* Published toggle */}
+          <AdminFormField
+            id="pp-published"
+            label="Published"
+            hint="Only published papers are visible to students"
+          >
+            <div className="flex items-center gap-3">
+              <Switch
+                id="pp-published"
+                checked={published}
+                onCheckedChange={setPublished}
+              />
+              <label htmlFor="pp-published" className="text-sm text-[var(--text-primary)] cursor-pointer">
+                {published ? "Published" : "Draft"}
+              </label>
             </div>
           </AdminFormField>
 
