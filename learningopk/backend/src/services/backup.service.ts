@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { clearDatabase } from "../lib/db/clear-database.js";
 import { db } from "../lib/db/index.js";
 
@@ -25,36 +25,22 @@ function sanitizeFilename(input: string): string {
   return input.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
-async function runDockerExec(args: string[], stdin?: string): Promise<{ stdout: string; stderr: string }> {
+async function runDocker(args: string[]): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
-    const child = execFile(
+    execFile(
       "docker",
-      ["exec", CONTAINER_NAME, ...args],
-      {
-        maxBuffer: 500 * 1024 * 1024,
-        encoding: "buffer"
-      },
+      args,
+      { maxBuffer: 500 * 1024 * 1024, encoding: "buffer" },
       (error, stdout, stderr) => {
         const out = stdout?.toString() ?? "";
         const err = stderr?.toString() ?? "";
         if (error) {
-          reject(new Error(`Docker exec failed: ${err || error.message}`));
+          reject(new Error(`Docker command failed: ${err || error.message}`));
           return;
         }
         resolve({ stdout: out, stderr: err });
       }
     );
-
-    if (stdin !== undefined && child.stdin) {
-      child.stdin.write(stdin, (err) => {
-        if (err) {
-          child.stdin?.destroy();
-          reject(new Error(`Failed to write stdin: ${err.message}`));
-          return;
-        }
-        child.stdin?.end();
-      });
-    }
   });
 }
 
@@ -84,17 +70,29 @@ export async function createBackup(label?: string): Promise<BackupEntry> {
   const filename = `backup-${timestamp}${safeLabel}.sql`;
   const filepath = path.join(BACKUPS_DIR, filename);
 
-  const { stdout } = await runDockerExec([
-    "pg_dump",
-    "-U", DB_USER,
-    "-d", DB_NAME,
-    "--clean",
-    "--if-exists",
-    "--no-owner",
-    "--no-acl"
-  ]);
-
-  fs.writeFileSync(filepath, stdout, "utf-8");
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn("docker", [
+      "exec", CONTAINER_NAME,
+      "pg_dump",
+      "-U", DB_USER,
+      "-d", DB_NAME,
+      "--clean",
+      "--if-exists",
+      "--no-owner",
+      "--no-acl"
+    ]);
+    const stream = fs.createWriteStream(filepath);
+    child.stdout.pipe(stream);
+    child.stderr.on("data", () => {});
+    child.on("error", reject);
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`pg_dump exited with code ${code}`));
+      }
+    });
+  });
 
   const stat = fs.statSync(filepath);
   return {
@@ -104,31 +102,44 @@ export async function createBackup(label?: string): Promise<BackupEntry> {
   };
 }
 
+const CONTAINER_RESTORE_PATH = "/tmp/learningo_restore.sql";
+
 export async function restoreBackup(filename: string): Promise<void> {
   ensureBackupsDir();
 
-  const filepath = path.join(BACKUPS_DIR, filename);
+  const safeFilename = path.basename(filename);
+  const filepath = path.join(BACKUPS_DIR, safeFilename);
   if (!fs.existsSync(filepath)) {
-    throw new Error(`Backup file not found: ${filename}`);
+    throw new Error(`Backup file not found: ${safeFilename}`);
   }
-
-  const sql = fs.readFileSync(filepath, "utf-8");
 
   await clearDatabase(db);
 
-  await runDockerExec([
-    "psql",
-    "-U", DB_USER,
-    "-d", DB_NAME
-  ], sql);
+  await runDocker(["cp", filepath, `${CONTAINER_NAME}:${CONTAINER_RESTORE_PATH}`]);
+
+  try {
+    await runDocker([
+      "exec", CONTAINER_NAME,
+      "psql",
+      "-U", DB_USER,
+      "-d", DB_NAME,
+      "-f", CONTAINER_RESTORE_PATH
+    ]);
+  } finally {
+    await runDocker([
+      "exec", CONTAINER_NAME,
+      "rm", "-f", CONTAINER_RESTORE_PATH
+    ]).catch(() => {});
+  }
 }
 
 export async function deleteBackup(filename: string): Promise<void> {
   ensureBackupsDir();
 
-  const filepath = path.join(BACKUPS_DIR, filename);
+  const safeFilename = path.basename(filename);
+  const filepath = path.join(BACKUPS_DIR, safeFilename);
   if (!fs.existsSync(filepath)) {
-    throw new Error(`Backup file not found: ${filename}`);
+    throw new Error(`Backup file not found: ${safeFilename}`);
   }
 
   fs.unlinkSync(filepath);
