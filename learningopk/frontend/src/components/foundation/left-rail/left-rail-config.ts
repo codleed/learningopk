@@ -17,6 +17,7 @@ import {
   Settings,
   Files,
   NotebookPen,
+  Database,
 } from "lucide-react";
 
 import type { NavItem, NavSection } from "./left-rail-types";
@@ -127,6 +128,11 @@ export const adminOperationsItems: NavItem[] = [
     href: "/admin/settings",
     label: "Settings",
     icon: Settings,
+  },
+  {
+    href: "/admin/backup",
+    label: "Backup",
+    icon: Database,
   },
 ];
 
