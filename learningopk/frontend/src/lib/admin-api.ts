@@ -2050,6 +2050,8 @@ const pastPaperResponseSchema = z.object({
   year: z.number(),
   durationMinutes: z.number(),
   totalMarks: z.number(),
+  published: z.boolean().default(false),
+  description: z.string().nullable(),
   paperContent: z.string().nullable(),
   solutionContent: z.string().nullable()
 });
@@ -2097,6 +2099,10 @@ export const createAdminPastPaper = async (input: {
   year: number;
   paperContent: string;
   solutionContent?: string;
+  description?: string;
+  durationMinutes?: number;
+  totalMarks?: number;
+  published?: boolean;
 }): Promise<PastPaperCreateResponse> => {
   return fetchAdminJson({
     path: "/api/admin/content/past-papers",
@@ -2119,6 +2125,10 @@ export const updateAdminPastPaper = async ({
     year?: number;
     paperContent?: string;
     solutionContent?: string;
+    description?: string;
+    durationMinutes?: number;
+    totalMarks?: number;
+    published?: boolean;
   };
 }): Promise<PastPaperMutationResponse> => {
   return fetchAdminJson({
@@ -2133,6 +2143,14 @@ export const deleteAdminPastPaper = async (id: number): Promise<void> => {
   await fetchAdminJson({
     path: `/api/admin/content/past-papers/${id}/delete`,
     schema: z.object({ success: z.boolean() }),
+    method: "POST"
+  });
+};
+
+export const togglePublishAdminPastPaper = async (id: number): Promise<PastPaperMutationResponse> => {
+  return fetchAdminJson({
+    path: `/api/admin/content/past-papers/${id}/publish`,
+    schema: pastPaperMutationResponseSchema,
     method: "POST"
   });
 };

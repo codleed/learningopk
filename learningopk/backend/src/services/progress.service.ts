@@ -19,11 +19,12 @@ import { streakWagerService } from "./streak-wager.service.js";
 import { xpService } from "./xp.service.js";
 
 export interface ProgressEventInput {
-  eventType: "chapter_visit" | "summary_read" | "subpart_read" | "exercise_view" | "flashcard_complete" | "quiz_submit";
-  chapterId: number;
+  eventType: "chapter_visit" | "summary_read" | "subpart_read" | "exercise_view" | "flashcard_complete" | "quiz_submit" | "past_paper_attempt";
+  chapterId?: number;
   userId: string;
   subpartId?: number;
   score?: number;
+  mockExamId?: number;
   occurredAt?: Date;
 }
 
@@ -80,7 +81,15 @@ export class ProgressService {
       snapshot = await applyProgressEvent({
         eventType: "quiz_submit",
         userId: input.userId,
-        chapterId: input.chapterId,
+        chapterId: input.chapterId!,
+        score: input.score ?? 0,
+        occurredAt
+      });
+    } else if (input.eventType === "past_paper_attempt") {
+      snapshot = await applyProgressEvent({
+        eventType: "past_paper_attempt",
+        userId: input.userId,
+        chapterId: input.chapterId ?? 0,
         score: input.score ?? 0,
         occurredAt
       });
@@ -91,11 +100,14 @@ export class ProgressService {
       snapshot = await applyProgressEvent({
         eventType: "subpart_read",
         userId: input.userId,
-        chapterId: input.chapterId,
+        chapterId: input.chapterId!,
         subpartId: input.subpartId,
         occurredAt
       });
     } else {
+      if (typeof input.chapterId !== "number") {
+        throw new Error("chapterId is required for progress events");
+      }
       snapshot = await applyProgressEvent({
         eventType: input.eventType,
         userId: input.userId,
@@ -556,6 +568,19 @@ export class ProgressService {
       .sort((left, right) => right.wrongAnswerCount - left.wrongAnswerCount);
 
     return rankedWeakAreas.slice(0, limit).map((area) => area.label);
+  }
+
+  async recordPastPaperAttempt(userId: string, mockExamId: number, percentage: number): Promise<void> {
+    try {
+      await this.recordProgressEvent({
+        eventType: "past_paper_attempt",
+        userId,
+        score: percentage,
+        occurredAt: new Date()
+      });
+    } catch (err) {
+      console.error("Failed to record past paper progress:", err);
+    }
   }
 
   private aggregateSubjectProgress(
