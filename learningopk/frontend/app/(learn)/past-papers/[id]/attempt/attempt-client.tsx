@@ -103,7 +103,7 @@ export function AttemptClient({ paperId }: { paperId: string }) {
     } finally {
       setSubmitting(false);
     }
-  }, [attempt, paperIdNum, router]);
+  }, [attempt, paperIdNum, paperId, router]);
 
   const handleTimeout = useCallback(async () => {
     if (!attempt || attempt.status !== "in_progress") return;
@@ -113,7 +113,7 @@ export function AttemptClient({ paperId }: { paperId: string }) {
       // silent catch — redirect anyway
     }
     router.push(`/past-papers/${paperId}/attempts/${attempt.id}`);
-  }, [attempt, paperIdNum, router]);
+  }, [attempt, paperIdNum, paperId, router]);
 
   if (loading) {
     return (
