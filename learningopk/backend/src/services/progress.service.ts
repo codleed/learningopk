@@ -86,18 +86,13 @@ export class ProgressService {
         occurredAt
       });
     } else if (input.eventType === "past_paper_attempt") {
-      snapshot = {
-        id: 0,
+      snapshot = await applyProgressEvent({
+        eventType: "past_paper_attempt",
         userId: input.userId,
         chapterId: input.chapterId ?? 0,
-        visitedAt: occurredAt,
-        summaryRead: false,
-        subpartsReadCount: 0,
-        exercisesViewed: 0,
-        flashcardsCompleted: false,
-        quizBestScore: 0,
-        quizAttemptsCount: 0
-      };
+        score: input.score ?? 0,
+        occurredAt
+      });
     } else if (input.eventType === "subpart_read") {
       if (typeof input.subpartId !== "number") {
         throw new Error("subpartId is required for subpart_read events.");

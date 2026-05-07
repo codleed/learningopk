@@ -67,6 +67,10 @@ export const pastPaperService = {
     if (data.attempt.status !== "in_progress") throw new Error("ATTEMPT_ALREADY_COMPLETED");
     if (mockExamId !== undefined && data.attempt.mockExamId !== mockExamId) throw new Error("ATTEMPT_NOT_FOUND");
 
+    // Atomically claim the attempt to prevent concurrent processing
+    const claimed = await pastPaperRepository.claimAttempt(attemptId);
+    if (!claimed) throw new Error("ATTEMPT_ALREADY_COMPLETED");
+
     const answersMap: Record<number, unknown> = {};
     for (const a of data.answers) {
       answersMap[a.exerciseId] = a.answer;

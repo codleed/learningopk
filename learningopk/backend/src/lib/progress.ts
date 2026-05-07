@@ -39,13 +39,22 @@ export type QuizSubmitEvent = ProgressEventBase & {
   score: number;
 };
 
+export type PastPaperAttemptEvent = {
+  eventType: "past_paper_attempt";
+  userId: string;
+  chapterId: number;
+  score: number;
+  occurredAt?: Date;
+};
+
 export type ProgressEventInput =
   | ChapterVisitEvent
   | SummaryReadEvent
   | SubpartReadEvent
   | ExerciseViewEvent
   | FlashcardCompleteEvent
-  | QuizSubmitEvent;
+  | QuizSubmitEvent
+  | PastPaperAttemptEvent;
 
 export type ProgressSnapshot = {
   id: number;
@@ -248,6 +257,23 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
     }
 
     return { ...snapshot, isNewRead: result.isNewRead };
+  }
+
+  if (input.eventType === "past_paper_attempt") {
+    await logActivityEvent(input.userId, "past_paper_attempt", input.chapterId, occurredAt);
+    // Past papers don't map to a specific chapter progress row
+    return {
+      id: 0,
+      userId: input.userId,
+      chapterId: input.chapterId,
+      visitedAt: occurredAt,
+      summaryRead: false,
+      subpartsReadCount: 0,
+      exercisesViewed: 0,
+      flashcardsCompleted: false,
+      quizBestScore: input.score,
+      quizAttemptsCount: 1
+    };
   }
 
   if (!existing) {

@@ -223,6 +223,20 @@ export const pastPaperRepository = {
       );
   },
 
+  async claimAttempt(attemptId: string): Promise<boolean> {
+    const result = await db
+      .update(pastPaperAttempts)
+      .set({ status: "submitted" })
+      .where(
+        and(
+          eq(pastPaperAttempts.id, attemptId),
+          eq(pastPaperAttempts.status, "in_progress")
+        )
+      )
+      .returning({ id: pastPaperAttempts.id });
+    return result.length > 0;
+  },
+
   async finalizeAttempt(attemptId: string, data: {
     status: "submitted" | "timed_out";
     score: number;

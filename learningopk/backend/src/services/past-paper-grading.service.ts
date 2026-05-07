@@ -67,7 +67,7 @@ export function autoGradeExercises(
   return exercises.map(exercise => {
     const userAnswer = answers[exercise.id];
     const maxMarks = exercise.marks ?? 1;
-    const needsAiGrading = exercise.type === "short" || exercise.type === "long";
+    const needsAiGrading = exercise.type === "short" || exercise.type === "long" || exercise.type === "numerical";
 
     if (exercise.type === "mcq") {
       const { score, isCorrect } = gradeMcq(exercise, userAnswer);

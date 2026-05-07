@@ -27,7 +27,7 @@ CREATE TABLE "past_paper_attempts" (
 CREATE TABLE "past_paper_attempt_answers" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   "attempt_id" uuid NOT NULL REFERENCES "past_paper_attempts"("id") ON DELETE CASCADE,
-  "exercise_id" integer NOT NULL REFERENCES "exercises"("id"),
+  "exercise_id" integer NOT NULL REFERENCES "exercises"("id") ON DELETE CASCADE,
   "answer" jsonb,
   "score" integer,
   "ai_feedback" text

@@ -759,7 +759,7 @@ export const pastPaperAttemptAnswers = pgTable(
       .references(() => pastPaperAttempts.id, { onDelete: "cascade" }),
     exerciseId: integer("exercise_id")
       .notNull()
-      .references(() => exercises.id),
+      .references(() => exercises.id, { onDelete: "cascade" }),
     answer: jsonb("answer"),
     score: integer("score"),
     aiFeedback: text("ai_feedback")
