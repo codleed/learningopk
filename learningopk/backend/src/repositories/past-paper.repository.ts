@@ -38,7 +38,7 @@ export const pastPaperRepository = {
       .from(mockExams)
       .where(whereClause);
 
-    const total = countResult[0]?.count ?? 0;
+    const total = Number(countResult[0]?.count ?? 0);
 
     const rows = await db
       .select({
