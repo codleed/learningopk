@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+
 import {
   getMockExam,
   type MockExamDetail
@@ -103,7 +104,7 @@ export function PastPaperViewClient({ examId }: PastPaperViewClientProps) {
     );
   }
 
-  /* ─── No markdown content ─── */
+  /* ─── No content ─── */
   if (!exam.paperContent) {
     return (
       <div className="space-y-6">
@@ -125,7 +126,7 @@ export function PastPaperViewClient({ examId }: PastPaperViewClientProps) {
             No Content Available
           </h3>
           <p className="mt-2 text-sm text-text-secondary">
-            This paper does not have markdown content. It may be a quiz-based mock exam.
+            This paper does not have any content yet.
           </p>
           <div className="mt-5">
             <Link href="/past-papers">
@@ -197,10 +198,7 @@ export function PastPaperViewClient({ examId }: PastPaperViewClientProps) {
 
       {/* Content card */}
       <Card className="p-6 sm:p-8">
-        <MarkdownRenderer
-          content={displayContent ?? ""}
-          className="text-sm leading-relaxed"
-        />
+        <MarkdownRenderer content={displayContent ?? ""} className="text-base" />
       </Card>
 
       {/* Back button */}
