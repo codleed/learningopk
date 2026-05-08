@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql, inArray } from "drizzle-orm";
 import { db } from "../lib/db/index.js";
 import {
   mockExams,
@@ -76,7 +76,7 @@ export const pastPaperRepository = {
             count: sql<number>`count(*)`
           })
           .from(pastPaperExercises)
-          .where(sql`${pastPaperExercises.mockExamId} = any(${paperIds})`)
+          .where(inArray(pastPaperExercises.mockExamId, paperIds))
           .groupBy(pastPaperExercises.mockExamId)
       : [];
 
