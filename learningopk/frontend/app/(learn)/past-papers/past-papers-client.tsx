@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Clock, Filter, X, Eye, Play, UserCircle } from "lucide-react";
+import { Clock, Filter, X, Eye, UserCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/common/page-header";
 import { BoardBadge } from "@/components/common/board-badge";
@@ -222,7 +222,6 @@ export function PastPapersClient() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {yearPapers.map((paper, paperIndex) => {
                   const hasMarkdownContent = !!paper.paperContent;
-                  const hasExercises = (paper.exerciseCount ?? 0) > 0;
 
                   return (
                     <motion.div
@@ -236,8 +235,6 @@ export function PastPapersClient() {
                           <BoardBadge board={paper.boardSlug ?? paper.boardName} size="sm" />
                           <SubjectBadge name={paper.subjectName} size="sm" />
                           <Badge variant="default" size="sm">Class {paper.grade}</Badge>
-                          {hasMarkdownContent && <Badge variant="primary" size="sm">Paper</Badge>}
-                          {hasExercises && <Badge variant="success" size="sm">{paper.exerciseCount} exercises</Badge>}
                         </div>
 
                         <h3 className="mt-3 font-display text-base font-semibold text-text-primary leading-snug">{paper.title}</h3>
@@ -254,23 +251,15 @@ export function PastPapersClient() {
                         </div>
 
                         <div className="mt-auto flex gap-2 pt-4">
-                          {hasMarkdownContent && (
+                          {hasMarkdownContent ? (
                             <Link href={`/past-papers/${paper.id}/view`} className="flex-1">
-                              <Button width="full" size="sm" variant="secondary" iconLeft={<Eye className="h-4 w-4" />}>
+                              <Button width="full" size="sm" iconRight={<Eye className="h-4 w-4" />}>
                                 View
                               </Button>
                             </Link>
-                          )}
-                          {hasExercises && (
-                            <Link href={`/past-papers/${paper.id}/attempt`} className="flex-1">
-                              <Button width="full" size="sm" iconRight={<Play className="h-4 w-4" />}>
-                                Attempt
-                              </Button>
-                            </Link>
-                          )}
-                          {!hasMarkdownContent && !hasExercises && (
+                          ) : (
                             <Button width="full" size="sm" disabled>
-                              Coming Soon
+                              No Content
                             </Button>
                           )}
                         </div>
