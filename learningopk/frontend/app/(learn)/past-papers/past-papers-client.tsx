@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Clock, Filter, X, Eye, Play } from "lucide-react";
+import { Clock, Filter, X, Eye, Play, UserCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/common/page-header";
 import { BoardBadge } from "@/components/common/board-badge";
@@ -14,12 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Skeleton, SkeletonCard } from "@/components/ui/skeleton";
 import { EmptyState, ErrorState } from "@/components/ui/states";
-import { getPastPapers, type PastPaper } from "@/lib/past-papers-api";
+import { getPastPapers, PastPaperApiError, type PastPaper } from "@/lib/past-papers-api";
 
 export function PastPapersClient() {
   const [papers, setPapers] = useState<PastPaper[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [incompleteProfile, setIncompleteProfile] = useState(false);
 
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [selectedYear, setSelectedYear] = useState<string>("");
@@ -41,9 +42,15 @@ export function PastPapersClient() {
         const result = await getPastPapers(params);
         setPapers(result.data);
         setError(null);
+        setIncompleteProfile(false);
       } catch (err) {
-        console.error("Failed to load past papers:", err);
-        setError("Failed to load past papers. Please ensure your profile has a class and board selected.");
+        if (err instanceof PastPaperApiError && err.code === "INCOMPLETE_PROFILE") {
+          setIncompleteProfile(true);
+          setError(null);
+        } else {
+          console.error("Failed to load past papers:", err);
+          setError("Failed to load past papers. Please ensure the backend is running.");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -99,6 +106,35 @@ export function PastPapersClient() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <SkeletonCard /><SkeletonCard /><SkeletonCard />
         </div>
+      </div>
+    );
+  }
+
+  if (incompleteProfile) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          sticky
+          stickyClassName="-mx-3 -mt-3 sm:-mx-5 lg:-mx-6 px-3 sm:px-5 lg:px-6"
+          title="Past Papers"
+          subtitle="Practice with previous years' exam papers"
+          breadcrumbs={[{ label: "Learn", href: "/dashboard" }, { label: "Past Papers" }]}
+        />
+        <Card className="p-8 text-center">
+          <UserCircle className="mx-auto mb-4 h-12 w-12 text-text-secondary" />
+          <h3 className="font-display text-lg font-semibold text-text-primary">Complete Your Profile</h3>
+          <p className="mt-2 max-w-md mx-auto text-sm text-text-secondary">
+            To access past papers, please set your class and board in your profile settings.
+            This helps us show you the right papers for your curriculum.
+          </p>
+          <div className="mt-4">
+            <Link href="/settings">
+              <Button size="sm" iconRight={<UserCircle className="h-4 w-4" />}>
+                Go to Settings
+              </Button>
+            </Link>
+          </div>
+        </Card>
       </div>
     );
   }
