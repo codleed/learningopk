@@ -7744,8 +7744,6 @@ adminRouter.get("/content/past-papers", requireSession, async (req, res) => {
   if (parsedQuery.data.year) {
     conditions.push(eq(mockExams.year, parsedQuery.data.year));
   }
-  // Only return items that have paperContent (markdown-based past papers)
-  conditions.push(sql`${mockExams.paperContent} IS NOT NULL`);
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
