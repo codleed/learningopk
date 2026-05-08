@@ -2155,44 +2155,6 @@ export const togglePublishAdminPastPaper = async (id: number): Promise<PastPaper
   });
 };
 
-// Past Paper Exercise Management
-const linkedExerciseSchema = z.object({
-  id: z.number(),
-  exerciseNumber: z.string(),
-  question: z.string(),
-  difficulty: z.string(),
-  type: z.string(),
-  orderIndex: z.number(),
-  marks: z.number().nullable()
-});
-
-export type LinkedExercise = z.infer<typeof linkedExerciseSchema>;
-
-export const getLinkedExercises = async (paperId: number, cookieHeader?: string): Promise<LinkedExercise[]> => {
-  return fetchAdminJson({
-    path: `/api/admin/content/past-papers/${paperId}/exercises`,
-    schema: z.object({ data: z.array(linkedExerciseSchema) }),
-    ...(cookieHeader ? { cookieHeader } : {})
-  }).then(r => (r as { data: LinkedExercise[] }).data);
-};
-
-export const linkExercisesToPaper = async (paperId: number, exercises: Array<{ exerciseId: number; orderIndex: number; marks?: number }>): Promise<void> => {
-  await fetchAdminJson({
-    path: `/api/admin/content/past-papers/${paperId}/exercises`,
-    schema: z.object({ success: z.boolean() }),
-    method: "POST",
-    body: { exercises }
-  });
-};
-
-export const unlinkExerciseFromPaper = async (paperId: number, exerciseId: number): Promise<void> => {
-  await fetchAdminJson({
-    path: `/api/admin/content/past-papers/${paperId}/exercises/${exerciseId}/remove`,
-    schema: z.object({ success: z.boolean() }),
-    method: "POST"
-  });
-};
-
 // Database Backup Functions
 
 const adminBackupEntrySchema = z.object({
