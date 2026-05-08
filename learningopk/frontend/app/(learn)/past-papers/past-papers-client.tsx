@@ -44,7 +44,7 @@ export function PastPapersClient() {
         setError(null);
         setIncompleteProfile(false);
       } catch (err) {
-        if (err instanceof PastPaperApiError && err.code === "INCOMPLETE_PROFILE") {
+        if (err instanceof PastPaperApiError && (err.code === "INCOMPLETE_PROFILE" || err.code === "INVALID_CLASS")) {
           setIncompleteProfile(true);
           setError(null);
         } else {

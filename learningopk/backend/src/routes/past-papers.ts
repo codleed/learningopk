@@ -32,6 +32,11 @@ pastPapersRouter.get("/", requireSession, async (req, res) => {
       return;
     }
 
+    if (userClass !== "9" && userClass !== "10") {
+      res.status(400).json(errorResponse("Your class must be set to '9' or '10' in your profile settings to access past papers.", "INVALID_CLASS"));
+      return;
+    }
+
     const boardRows = await db
       .select({ id: boards.id })
       .from(boards)
