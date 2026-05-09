@@ -5,8 +5,6 @@ services:
       dockerfile: backend/Dockerfile
     container_name: learningopk_backend
     restart: unless-stopped
-    ports:
-      - "3001:3001"
     env_file:
       - .env
     environment:
@@ -22,6 +20,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    networks:
+      - learningopk_net
 
   redis:
     image: redis:7-alpine
@@ -32,3 +32,40 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    networks:
+      - learningopk_net
+
+  nginx:
+    image: nginx:alpine
+    container_name: learningopk_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - certbot_www:/var/www/certbot
+      - certbot_certs:/etc/letsencrypt
+    depends_on:
+      - backend
+    networks:
+      - learningopk_net
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: learningopk_certbot
+    restart: unless-stopped
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_certs:/etc/letsencrypt
+    entrypoint: ["/bin/sh", "-c", "trap exit TERM; while :; do certbot renew; sleep 12h; done"]
+    networks:
+      - learningopk_net
+
+networks:
+  learningopk_net:
+    driver: bridge
+
+volumes:
+  certbot_www:
+  certbot_certs:
