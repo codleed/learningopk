@@ -2,41 +2,39 @@
   "name": "learningopk",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@10.30.1",
+  "workspaces": ["frontend", "backend", "packages/shared"],
   "scripts": {
-    "dev:frontend": "pnpm --filter frontend dev",
-    "dev:backend": "pnpm --filter backend dev",
-    "dev:all": "concurrently -n frontend,backend -c blue,green \"pnpm dev:frontend\" \"pnpm dev:backend\"",
-    "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck",
+    "dev:frontend": "npm --workspace frontend run dev",
+    "dev:backend": "npm --workspace backend run dev",
+    "dev:all": "concurrently -n frontend,backend -c blue,green \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "lint": "npm --workspaces --if-present run lint",
+    "typecheck": "npm --workspaces --if-present run typecheck",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:clear": "pnpm --filter backend db:clear",
-    "db:seed": "pnpm --filter backend db:seed",
-    "verify:services": "pnpm --filter backend healthcheck"
+    "db:clear": "npm --workspace backend run db:clear",
+    "db:seed": "npm --workspace backend run db:seed",
+    "verify:services": "npm --workspace backend run healthcheck"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
     "drizzle-kit": "^0.31.4"
   },
-  "pnpm": {
-    "overrides": {
-      "path-to-regexp@>=8.0.0 <8.4.0": "8.4.0",
-      "fast-xml-parser@>=5.0.0 <5.5.7": "5.5.7",
-      "lodash@<4.17.21": "4.17.21",
-      "cookie@<0.7.2": "0.7.2",
-      "minimatch@<10.2.5": "10.2.5",
-      "brace-expansion@<5.0.5": "5.0.5",
-      "flatted@<3.4.2": "3.4.2",
-      "hono@<4.12.14": "4.12.14",
-      "@hono/node-server@<1.19.14": "1.19.14",
-      "express-rate-limit@<8.3.2": "8.3.2",
-      "defu@<=6.1.4": "6.1.5",
-      "esbuild@<=0.24.2": "0.25.0"
-    }
+  "overrides": {
+    "path-to-regexp": "8.4.0",
+    "fast-xml-parser": "5.5.7",
+    "lodash": "4.17.21",
+    "cookie": "0.7.2",
+    "minimatch": "10.2.5",
+    "brace-expansion": "5.0.5",
+    "flatted": "3.4.2",
+    "hono": "4.12.14",
+    "@hono/node-server": "1.19.14",
+    "express-rate-limit": "8.3.2",
+    "defu": "6.1.5",
+    "esbuild": "0.25.0"
   }
 }

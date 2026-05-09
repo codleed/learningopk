@@ -5,45 +5,45 @@
 ### Root Commands (from `learningopk/`)
 
 ```bash
-pnpm dev:all          # Start frontend + backend concurrently
-pnpm lint             # Lint all packages
-pnpm typecheck        # TypeScript check all packages
-pnpm db:generate      # Generate Drizzle migrations
-pnpm db:migrate       # Run pending migrations
-pnpm db:seed          # Seed database
+npm run dev:all       # Start frontend + backend concurrently
+npm run lint          # Lint all packages
+npm run typecheck     # TypeScript check all packages
+npm run db:generate   # Generate Drizzle migrations
+npm run db:migrate    # Run pending migrations
+npm run db:seed       # Seed database
 ```
 
 ### Backend Commands (from `learningopk/backend/`)
 
 ```bash
-pnpm dev              # Start with tsx watch (port 3001)
-pnpm build            # Compile to dist/
-pnpm lint             # TypeScript check only
-pnpm typecheck        # Same as lint
+npm run dev           # Start with tsx watch (port 3001)
+npm run build         # Compile to dist/
+npm run lint          # TypeScript check only
+npm run typecheck     # Same as lint
 
 # Testing
-pnpm test                    # Run all tests
-pnpm test:unit               # Unit tests only
-pnpm test:integration        # Integration tests only
-pnpm test src/tests/unit/validators.unit.test.ts  # Single test
+npm run test                 # Run all tests
+npm run test:unit            # Unit tests only
+npm run test:integration     # Integration tests only
+npm run test src/tests/unit/validators.unit.test.ts  # Single test
 
 # Verification
-pnpm healthcheck             # Verify services running
-pnpm ai:verify               # Test AI chat
-pnpm quiz:verify             # Test quiz submission
-pnpm auth:verify             # Test authentication
+npm run healthcheck          # Verify services running
+npm run ai:verify            # Test AI chat
+npm run quiz:verify          # Test quiz submission
+npm run auth:verify          # Test authentication
 ```
 
 ### Frontend Commands (from `learningopk/frontend/`)
 
 ```bash
-pnpm dev              # Start Next.js dev server (port 3000)
-pnpm build            # Production build
-pnpm lint             # ESLint check
-pnpm typecheck        # TypeScript check
-pnpm test:e2e                       # Run all e2e tests
-pnpm test:e2e:smoke                 # Smoke tests only
-pnpm test:e2e tests/e2e/smoke.spec.ts  # Single e2e test
+npm run dev           # Start Next.js dev server (port 3000)
+npm run build         # Production build
+npm run lint          # ESLint check
+npm run typecheck     # TypeScript check
+npm run test:e2e                    # Run all e2e tests
+npm run test:e2e:smoke              # Smoke tests only
+npm run test:e2e tests/e2e/smoke.spec.ts  # Single e2e test
 ```
 
 ---
@@ -152,7 +152,7 @@ import { Button } from "@/components/ui";
 
 1. Copy `backend/.env.example` → `backend/.env`, add `DATABASE_URL`, `REDIS_URL`, `MISTRAL_API_KEY`
 2. Copy `frontend/.env.local.example` → `frontend/.env.local`
-3. Run `pnpm docker:up` to start PostgreSQL (port 5433) + Redis
+3. Run `npm run docker:up` to start PostgreSQL (port 5433) + Redis
 
 ---
 

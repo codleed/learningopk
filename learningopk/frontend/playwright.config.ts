@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 
-const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -21,14 +21,14 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: `${pnpmCommand} --filter backend dev`,
+      command: `${npmCommand} --workspace backend run dev`,
       url: "http://localhost:3001/api/ready",
       cwd: "..",
       reuseExistingServer: false,
       timeout: 180_000
     },
     {
-      command: `${pnpmCommand} --filter frontend dev`,
+      command: `${npmCommand} --workspace frontend run dev`,
       url: "http://localhost:3000",
       cwd: "..",
       reuseExistingServer: false,

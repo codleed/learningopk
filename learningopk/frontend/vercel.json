@@ -1,5 +1,7 @@
 {
   "framework": "nextjs",
-  "installCommand": "corepack enable && pnpm install --no-frozen-lockfile",
-  "buildCommand": "pnpm --filter @learningopk/shared build && next build"
+  "nodeVersion": "22.x",
+  "installCommand": "npm ci",
+  "buildCommand": "npm --workspace @learningopk/shared run build && npm --workspace frontend run build",
+  "outputDirectory": "frontend/.next"
 }
