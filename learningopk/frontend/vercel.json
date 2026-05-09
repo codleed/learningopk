@@ -1,0 +1,4 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "pnpm --filter @learningopk/shared build && next build"
+}

@@ -57,9 +57,34 @@ const nextConfig: NextConfig = {
         hostname: "localhost",
         port: "9000",
         pathname: "/**"
+      },
+      {
+        protocol: "https",
+        hostname: "*.s3.amazonaws.com",
+        pathname: "/**"
+      },
+      {
+        protocol: "https",
+        hostname: "*.s3.*.amazonaws.com",
+        pathname: "/**"
       }
     ]
   },
+  // Vercel proxy: When BACKEND_URL is set, proxy /api/* to the backend.
+  // This avoids CORS and mixed-content issues when frontend is on HTTPS
+  // (Vercel) and backend is on HTTP (EC2 without domain/SSL).
+  // In development (BACKEND_URL not set), the app calls the backend directly.
+  async rewrites() {
+    const backendUrl = process.env.BACKEND_URL;
+    if (!backendUrl) return [];
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${backendUrl}/api/:path*`
+      }
+    ];
+  },
+
   async headers() {
     return [
       {

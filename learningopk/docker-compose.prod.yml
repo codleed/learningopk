@@ -1,0 +1,71 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: learningopk_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - SENTRY_DSN=${SENTRY_DSN:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - learningopk_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: learningopk_redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - learningopk_net
+
+  nginx:
+    image: nginx:alpine
+    container_name: learningopk_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - certbot_www:/var/www/certbot
+      - certbot_certs:/etc/letsencrypt
+    depends_on:
+      - backend
+    networks:
+      - learningopk_net
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: learningopk_certbot
+    restart: unless-stopped
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_certs:/etc/letsencrypt
+    entrypoint: ["/bin/sh", "-c", "trap exit TERM; while :; do certbot renew; sleep 12h; done"]
+    networks:
+      - learningopk_net
+
+networks:
+  learningopk_net:
+    driver: bridge
+
+volumes:
+  certbot_www:
+  certbot_certs:
