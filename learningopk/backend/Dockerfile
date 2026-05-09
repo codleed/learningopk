@@ -9,15 +9,14 @@ COPY frontend/package.json frontend/
 COPY packages/shared/package.json packages/shared/
 COPY backend/package.json backend/
 
-# Install all dependencies
+# Copy shared source (needed by prepare script during npm ci)
+COPY packages/shared/ packages/shared/
+
+# Install all dependencies (prepare auto-builds shared package)
 RUN npm ci
 
-# Copy source
-COPY packages/shared/ packages/shared/
+# Copy backend source
 COPY backend/ backend/
-
-# Build shared package first
-RUN npm --workspace @learningopk/shared run build
 
 # Build backend
 RUN npm --workspace backend run build
