@@ -4,13 +4,13 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
 const execAsync = promisify(exec);
-const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDirectory = path.dirname(currentFilePath);
 const workspaceRoot = path.resolve(currentDirectory, "../../..");
 
 export default async function globalSetup() {
-  await execAsync(`${pnpmCommand} --filter backend db:seed`, {
+  await execAsync(`${npmCommand} --workspace backend run db:seed`, {
     cwd: workspaceRoot,
     env: process.env,
     maxBuffer: 10 * 1024 * 1024,

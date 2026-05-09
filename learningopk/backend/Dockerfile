@@ -1,30 +1,29 @@
 # Stage 1: Build
 FROM node:22-alpine AS builder
 
-RUN corepack enable && corepack prepare pnpm@10.30.1 --activate
-
 WORKDIR /app
 
 # Copy workspace root files
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY package.json package-lock.json ./
+COPY frontend/package.json frontend/
 COPY packages/shared/package.json packages/shared/
 COPY backend/package.json backend/
 
 # Install all dependencies
-RUN pnpm install --frozen-lockfile
+RUN npm ci
 
 # Copy source
 COPY packages/shared/ packages/shared/
 COPY backend/ backend/
 
 # Build shared package first
-RUN pnpm --filter @learningopk/shared build
+RUN npm --workspace @learningopk/shared run build
 
 # Build backend
-RUN pnpm --filter backend build
+RUN npm --workspace backend run build
 
 # Prune production dependencies
-RUN pnpm --filter backend deploy --prod /app/prod
+RUN npm prune --omit=dev --workspaces
 
 # Stage 2: Runtime
 FROM node:22-alpine
@@ -32,7 +31,7 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Copy production node_modules and built dist
-COPY --from=builder /app/prod/node_modules ./node_modules
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/drizzle ./drizzle
 COPY --from=builder /app/backend/package.json ./

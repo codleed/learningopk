@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@ai-sdk/mistral": "^3.0.20",
-    "@learningopk/shared": "workspace:*",
+    "@learningopk/shared": "*",
     "@sentry/node": "^10.47.0",
     "ai": "^6.0.97",
     "better-auth": "^1.4.0",
