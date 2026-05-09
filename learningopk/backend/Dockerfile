@@ -5,6 +5,7 @@ WORKDIR /app
 
 # Copy workspace root files
 COPY package.json package-lock.json ./
+COPY frontend/package.json frontend/
 COPY packages/shared/package.json packages/shared/
 COPY backend/package.json backend/
 
