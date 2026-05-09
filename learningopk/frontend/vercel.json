@@ -2,5 +2,5 @@
   "framework": "nextjs",
   "installCommand": "npm ci",
   "buildCommand": "npm --workspace @learningopk/shared run build && npm --workspace frontend run build",
-  "outputDirectory": "frontend/.next"
+  "outputDirectory": ".next"
 }
