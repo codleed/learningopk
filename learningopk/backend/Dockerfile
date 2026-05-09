@@ -3,8 +3,6 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Increase heap limit for TypeScript compilation
-ENV NODE_OPTIONS="--max-old-space-size=768"
 
 # Copy workspace root files
 COPY package.json package-lock.json ./
