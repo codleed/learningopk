@@ -712,7 +712,7 @@ sudo docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 This command:
-1. Builds the backend Docker image (Node.js 22 Alpine, pnpm install, compile TypeScript, prune dev deps)
+1. Builds the backend Docker image (Node.js 22 Alpine, npm install, compile TypeScript, prune dev deps)
 2. Starts the backend container on port 3001 (internal only, not exposed to the internet)
 3. Starts nginx on ports 80 and 443 (exposed to the internet)
 4. Starts certbot in the background for automatic certificate renewal (checks every 12 hours)
@@ -788,26 +788,25 @@ Connect to the EC2 instance:
 ssh -i ~/.ssh/learningopk.pem ubuntu@54.123.45.67
 ```
 
-Install Node.js and pnpm on the EC2 host (not inside Docker):
+Install Node.js and npm on the EC2 host (not inside Docker):
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
-sudo npm install -g pnpm@10.30.1
 ```
 
 Navigate to the project and install dependencies:
 
 ```bash
 cd ~/Learningo/learningopk
-pnpm install --frozen-lockfile --filter '...'
+npm ci
 ```
 
 Set the DATABASE_URL environment variable to point to RDS and run migrations:
 
 ```bash
 export DATABASE_URL="postgresql://postgres:<rds-password>@<rds-endpoint>:5432/learningo"
-pnpm db:migrate
+npm run db:migrate
 ```
 
 Replace `<rds-password>` and `<rds-endpoint>` with your actual RDS values.
@@ -845,7 +844,7 @@ To seed the database with sample data (subjects, quiz templates, etc.):
 
 ```bash
 export DATABASE_URL="postgresql://postgres:<rds-password>@<rds-endpoint>:5432/learningo"
-pnpm db:seed
+npm run db:seed
 ```
 
 Check the seed script output for any errors.
@@ -902,19 +901,19 @@ On the "Configure Project" screen:
 | Root Directory | `learningopk/frontend` |
 | Build Command | `next build` (auto-detected, leave as is) |
 | Output Directory | `.next` (auto-detected, leave as is) |
-| Install Command | `pnpm install` (auto-detected) |
+| Install Command | `npm ci` (auto-detected) |
 
-If Vercel doesn't auto-detect pnpm, scroll to **Build and Output Settings**, toggle the override, and set:
+If Vercel doesn't auto-detect the settings, scroll to **Build and Output Settings**, toggle the override, and set:
 
 | Setting | Value |
 |---|---|
 | Framework Preset | Next.js |
 | Root Directory | `learningopk/frontend` |
-| Build Command | `cd ../.. && pnpm install --frozen-lockfile && cd learningopk/frontend && pnpm build` |
+| Build Command | `cd ../.. && npm ci && npm run build --workspace=@learningopk/shared && npm run build --workspace=frontend` |
 | Output Directory | `learningopk/frontend/.next` |
 | Install Command | (leave empty, handled by build command) |
 
-**Explanation**: Since LearningoPK is a pnpm monorepo, the frontend depends on the `@learningopk/shared` workspace package. The build command navigates to the monorepo root, installs all dependencies, then builds the frontend.
+**Explanation**: Since LearningoPK is an npm monorepo, the frontend depends on the `@learningopk/shared` workspace package. The build command navigates to the monorepo root, installs all dependencies, then builds the frontend.
 
 ### 5.3 Environment Variables
 
@@ -1119,7 +1118,7 @@ If you have new database migrations:
 ```bash
 export DATABASE_URL="postgresql://postgres:<rds-password>@<rds-endpoint>:5432/learningo"
 cd ~/Learningo/learningopk
-pnpm db:migrate
+npm run db:migrate
 ```
 
 ### 7.4 Database Backups
@@ -1373,9 +1372,9 @@ If you need to run migrations from your local machine but cannot reach RDS:
 
 3. Run migrations from local:
    ```bash
-   export DATABASE_URL="postgresql://postgres:<password>@<rds-public-endpoint>:5432/learningo"
-   cd learningopk
-   pnpm db:migrate
+    export DATABASE_URL="postgresql://postgres:<password>@<rds-public-endpoint>:5432/learningo"
+    cd learningopk
+    npm run db:migrate
    ```
 
 4. **After migrating, revert to private access**:
@@ -1394,7 +1393,7 @@ The Docker build context is the `learningopk/` root directory. The `backend/Dock
 
 2. Check that all required files exist:
    ```bash
-   ls -la pnpm-workspace.yaml package.json pnpm-lock.yaml backend/Dockerfile backend/docker-entrypoint.sh
+   ls -la package.json package-lock.json backend/Dockerfile backend/docker-entrypoint.sh
    ```
 
 ### Vercel build fails
@@ -1447,7 +1446,7 @@ curl http://localhost/api/ready
 
 # Apply database migrations
 export DATABASE_URL="postgresql://postgres:<password>@<rds-endpoint>:5432/learningo"
-pnpm db:migrate
+npm run db:migrate
 
 # Database backup
 pg_dump "postgresql://postgres:<password>@<rds-endpoint>:5432/learningo" > backup_$(date +%Y%m%d).sql
