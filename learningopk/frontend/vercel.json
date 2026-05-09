@@ -1,6 +1,5 @@
 {
   "framework": "nextjs",
-  "nodeVersion": "22.x",
   "installCommand": "corepack enable && pnpm install --no-frozen-lockfile",
   "buildCommand": "pnpm --filter @learningopk/shared build && next build"
 }
