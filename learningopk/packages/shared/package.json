@@ -18,9 +18,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "typescript": "^5.9.3",
     "zod": "^4.1.12"
-  },
-  "devDependencies": {
-    "typescript": "^5.9.3"
   }
 }
