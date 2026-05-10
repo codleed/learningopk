@@ -2,4 +2,4 @@
 set -e
 
 echo "Starting LearningoPK backend..."
-exec node dist/server.js
+exec node dist/src/server.js
