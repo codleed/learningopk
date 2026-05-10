@@ -36,6 +36,10 @@ COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/drizzle ./drizzle
 COPY --from=builder /app/backend/package.json ./
 
+# Copy seed script and source (needed by tsx for db:seed)
+COPY --from=builder /app/backend/seed.ts ./
+COPY --from=builder /app/backend/src ./src
+
 # Copy shared package dist (needed at runtime)
 COPY --from=builder /app/packages/shared/dist ./node_modules/@learningopk/shared/dist
 COPY --from=builder /app/packages/shared/package.json ./node_modules/@learningopk/shared/package.json
