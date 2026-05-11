@@ -29,6 +29,7 @@ const minioClient = new Client({
 });
 
 const normalizedPublicUrl = env.MINIO_PUBLIC_URL.replace(/\/+$/, "");
+const defaultBucketInPublicUrl = env.MINIO_BUCKET_IN_PUBLIC_URL === "true";
 let ensureBucketPromise: Promise<void> | null = null;
 
 const sanitizePathSegment = (value: string) => value.trim().replace(/[^a-zA-Z0-9_-]/g, "_");
@@ -95,27 +96,35 @@ export const buildSubjectCoverObjectKey = ({
 
 export const buildPublicObjectUrl = ({
   bucket = env.MINIO_BUCKET,
-  objectKey
+  objectKey,
+  bucketInPublicUrl = defaultBucketInPublicUrl
 }: {
   bucket?: string;
   objectKey: string;
+  bucketInPublicUrl?: boolean;
 }): string => {
   const encodedKey = objectKey
     .split("/")
     .map((segment) => encodeURIComponent(segment))
     .join("/");
 
-  return `${normalizedPublicUrl}/${bucket}/${encodedKey}`;
+  if (bucketInPublicUrl) {
+    return `${normalizedPublicUrl}/${bucket}/${encodedKey}`;
+  }
+
+  return `${normalizedPublicUrl}/${encodedKey}`;
 };
 
 export const extractManagedObjectKeyFromPublicUrl = ({
   publicUrl,
   bucket,
-  objectUrl
+  objectUrl,
+  bucketInPublicUrl = defaultBucketInPublicUrl
 }: {
   publicUrl: string;
   bucket: string;
   objectUrl: string;
+  bucketInPublicUrl?: boolean;
 }): string | null => {
   try {
     const parsedPublic = new URL(publicUrl);
@@ -124,14 +133,18 @@ export const extractManagedObjectKeyFromPublicUrl = ({
       return null;
     }
 
-    const prefix = `/${bucket}/`;
+    const prefix = bucketInPublicUrl ? `/${bucket}/` : "/";
     if (!parsedObject.pathname.startsWith(prefix)) {
       return null;
     }
 
-    const encodedObjectKey = parsedObject.pathname.slice(prefix.length);
+    let encodedObjectKey = parsedObject.pathname.slice(prefix.length);
     if (!encodedObjectKey) {
       return null;
+    }
+
+    if (!bucketInPublicUrl && encodedObjectKey.startsWith(`${bucket}/`)) {
+      encodedObjectKey = encodedObjectKey.slice(bucket.length + 1);
     }
 
     return encodedObjectKey
