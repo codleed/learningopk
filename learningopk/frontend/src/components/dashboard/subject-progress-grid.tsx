@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, Trophy } from "lucide-react";
 
-import { StudyCardArt } from "@/components/common/study-card-art";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LinearProgress } from "@/components/ui/progress";
@@ -28,6 +27,12 @@ function getProgressColorVariant(
   if (percent >= 80) return "success";
   if (percent >= 40) return "primary";
   return "warning";
+}
+
+function getAccentColor(percent: number): string {
+  if (percent >= 80) return "var(--accent-success)";
+  if (percent >= 40) return "var(--accent-primary)";
+  return "var(--accent-warning)";
 }
 
 /* ------------------------------------------------------------------ */
@@ -73,7 +78,7 @@ export function SubjectProgressGrid({
         </div>
       </CardHeader>
 
-      <CardBody className="p-3 pt-0">
+      <CardBody className="p-4 pt-0">
         <div
           className={
             useThreeColGrid
@@ -97,33 +102,23 @@ export function SubjectProgressGrid({
 function SubjectCard({ subject }: { subject: SubjectSummary }) {
   const colorVariant = getProgressColorVariant(subject.chaptersVisitedPercent);
   const hasQuizScore = subject.bestQuizScorePercent > 0;
+  const accentColor = getAccentColor(subject.chaptersVisitedPercent);
 
   return (
     <Link
       href={`/dashboard/${subject.boardSlug}/${subject.grade}/${subject.subjectSlug}`}
       className="group block"
     >
-      <div className="overflow-hidden rounded-2xl border border-border-default bg-bg-base shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-0.5 hover:border-accent-primary/30 hover:shadow-[var(--shadow-card)]">
-        {/* ── Art area with gradient fade ── */}
-        <div className="relative p-3 pb-0">
-          <StudyCardArt
-            subject={subject.subjectName}
-            title={`${subject.boardName} • Class ${subject.grade}`}
-            variant="compact"
-          />
-          {/* Gradient overlay: transparent → card bg */}
-          <div
-            className="pointer-events-none absolute inset-x-3 bottom-0 h-12 rounded-b-[1.25rem]"
-            style={{
-              background:
-                "linear-gradient(to bottom, transparent 0%, var(--bg-base) 100%)",
-            }}
-            aria-hidden="true"
-          />
-        </div>
+      <div className="overflow-hidden rounded-xl border border-border-default bg-bg-base shadow-[var(--shadow-sm)] transition-all duration-200 hover:border-accent-primary/30 hover:shadow-[var(--shadow-card)]">
+        {/* Color-coded top accent bar */}
+        <div
+          className="h-1.5 w-full"
+          style={{ backgroundColor: accentColor }}
+          aria-hidden="true"
+        />
 
-        {/* ── Content ── */}
-        <div className="p-4 pt-2">
+        {/* Content */}
+        <div className="p-4">
           {/* Subject identity */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -132,7 +127,7 @@ function SubjectCard({ subject }: { subject: SubjectSummary }) {
                 {subject.subjectName}
               </h4>
               <p className="mt-0.5 text-xs text-text-secondary">
-                {subject.boardName} &middot; Class {subject.grade}
+                {subject.boardName} · Class {subject.grade}
               </p>
             </div>
 
@@ -169,11 +164,8 @@ function SubjectCard({ subject }: { subject: SubjectSummary }) {
             </div>
           ) : null}
 
-          {/* Footer action */}
-          <div className="mt-4 flex items-center justify-between border-t border-border-default/70 pt-3">
-            <p className="text-xs font-medium text-text-secondary">
-              Open subject workspace
-            </p>
+          {/* Arrow indicator */}
+          <div className="mt-3 flex items-center justify-end">
             <span
               className="inline-flex h-6 w-6 items-center justify-center rounded-full text-text-muted transition-all duration-200 group-hover:bg-accent-primary/10 group-hover:text-accent-primary"
               aria-hidden="true"

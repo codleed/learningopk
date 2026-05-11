@@ -97,24 +97,22 @@ export function QuickActionsCard({
                 key={action.label}
                 href={action.href}
                 className={[
-                  "group flex flex-col items-center gap-2.5 rounded-2xl p-4",
-                  "bg-bg-base border border-border-default",
+                  "group flex flex-col items-center gap-2 rounded-xl p-3",
+                  "bg-bg-subtle",
                   "transition-all duration-200 ease-out",
-                  "hover:border-accent-primary/30 hover:shadow-[var(--shadow-sm)]",
-                  "hover:-translate-y-0.5",
+                  "hover:bg-bg-elevated",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/50",
                 ].join(" ")}
               >
                 {/* Icon circle */}
                 <span
                   className={[
-                    "flex h-10 w-10 items-center justify-center rounded-xl",
+                    "flex h-9 w-9 items-center justify-center rounded-lg",
                     "transition-transform duration-200 ease-out",
-                    "group-hover:scale-110",
                     tone.circle,
                   ].join(" ")}
                 >
-                  <Icon className={`h-5 w-5 ${tone.icon}`} aria-hidden />
+                  <Icon className={`h-4 w-4 ${tone.icon}`} aria-hidden />
                 </span>
 
                 {/* Label + description */}

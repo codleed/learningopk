@@ -20,7 +20,6 @@ import { RecentActivityCard } from "@/components/dashboard/recent-activity-card"
 import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton";
 import type { DashboardSummaryResponse } from "@/lib/progress-api";
 import type { StudyGroupsListResponse } from "@/lib/study-groups-api";
-import { StaggerContainer, MotionSection, MotionCard } from "@/components/motion";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -47,21 +46,6 @@ export interface DashboardClientProps {
   focusAreas: FocusAreaItem[];
   /** User study groups */
   studyGroups: StudyGroupsListResponse["groups"];
-}
-
-/* ------------------------------------------------------------------ */
-/*  Section divider                                                    */
-/* ------------------------------------------------------------------ */
-
-function SectionLabel({ label }: { label: string }) {
-  return (
-    <div className="flex items-center gap-3 pt-2 pb-1">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">
-        {label}
-      </span>
-      <div className="h-px flex-1 bg-border-default" />
-    </div>
-  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -103,98 +87,62 @@ export function DashboardClient({
   const hasStarredFormulas = summary.starredFormulas.length > 0;
 
   return (
-    <StaggerContainer className="space-y-8">
+    <div className="space-y-10">
       {/* ============================================================ */}
       {/*  HERO ZONE — Primary actions & status at a glance            */}
       {/* ============================================================ */}
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr]">
-        <MotionCard className="md:col-span-2 xl:col-span-1">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="md:col-span-2 xl:col-span-1">
           <ContinueLearningCard
             subject={featuredSubject}
             continueHref={continueHref}
           />
-        </MotionCard>
+        </div>
 
-        <MotionCard>
-          <StreakXPCard
-            streakDays={summary.streakDays}
-            longestStreakDays={summary.longestStreakDays}
-            xp={summary.xp}
-            summary={summary}
-          />
-        </MotionCard>
+        <StreakXPCard
+          streakDays={summary.streakDays}
+          longestStreakDays={summary.longestStreakDays}
+          xp={summary.xp}
+          summary={summary}
+        />
 
-        <MotionCard>
-          <TodaysGoalCard summary={summary} />
-        </MotionCard>
+        <TodaysGoalCard summary={summary} />
       </div>
 
       {/* ============================================================ */}
-      {/*  INSIGHTS — Weak areas, Focus, Progress                      */}
+      {/*  MAIN CONTENT — Subject progress + Weak areas                */}
       {/* ============================================================ */}
-      <MotionSection>
-        <SectionLabel label="Your Learning" />
-      </MotionSection>
+      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+        <div className="space-y-6">
+          <SubjectProgressGrid subjects={orderedSubjects} />
+          <SubjectWeakAreasCard subjects={orderedSubjects} />
+        </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_380px]">
-        <MotionSection>
-          <div className="space-y-5">
-            <SubjectWeakAreasCard subjects={orderedSubjects} />
-            <SubjectProgressGrid subjects={orderedSubjects} />
-          </div>
-        </MotionSection>
-
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-6">
           {hasFocusAreas ? (
-            <MotionSection>
-              <FocusAreasWidget recommendations={focusAreas} />
-            </MotionSection>
+            <FocusAreasWidget recommendations={focusAreas} />
           ) : null}
-          <MotionSection>
-            <ReviewNowWidget />
-          </MotionSection>
+          <ReviewNowWidget />
           {hasStarredFormulas ? (
-            <MotionSection>
-              <StarredFormulasWidget formulas={summary.starredFormulas} />
-            </MotionSection>
+            <StarredFormulasWidget formulas={summary.starredFormulas} />
           ) : null}
-          <MotionSection>
-            <QuickActionsCard firstChapterBasePath={firstChapterBasePath} />
-          </MotionSection>
+          <QuickActionsCard firstChapterBasePath={firstChapterBasePath} />
+          <AiMemoryCard />
         </div>
       </div>
 
       {/* ============================================================ */}
       {/*  ACTIVITY — Weekly heatmap + Recent timeline                  */}
       {/* ============================================================ */}
-      <MotionSection>
-        <SectionLabel label="Activity" />
-      </MotionSection>
-
-      <div className="grid gap-5 lg:grid-cols-2">
-        <MotionSection>
-          <WeeklyActivityCard weeklyActivity={summary.weeklyActivity} />
-        </MotionSection>
-
-        <MotionSection>
-          <RecentActivityCard activity={summary.recentActivity} />
-        </MotionSection>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <WeeklyActivityCard weeklyActivity={summary.weeklyActivity} />
+        <RecentActivityCard activity={summary.recentActivity} />
       </div>
 
       {/* ============================================================ */}
-      {/*  PERSONALIZATION — AI Memory + Study Groups                   */}
+      {/*  STUDY GROUPS — Full width at bottom                         */}
       {/* ============================================================ */}
-      <MotionSection>
-        <SectionLabel label="Personalization" />
-      </MotionSection>
-
-      <MotionSection>
-        <AiMemoryCard />
-      </MotionSection>
-
-      <MotionSection>
-        <StudyGroupsPanel groups={studyGroups} />
-      </MotionSection>
-    </StaggerContainer>
+      <StudyGroupsPanel groups={studyGroups} />
+    </div>
   );
 }

@@ -31,10 +31,6 @@ const SCORE_THRESHOLDS = {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-/**
- * Formats a timestamp as relative ("2h ago") when same-day,
- * otherwise as a short date string.
- */
 const formatActivityTimestamp = (isoDate: string): string => {
   const date = new Date(isoDate);
   const now = new Date();
@@ -82,20 +78,6 @@ const getScoreBadgeVariant = (percentage: number): ScoreBadgeVariant => {
 /*  Sub-components                                                     */
 /* ------------------------------------------------------------------ */
 
-function TimelineDot({ type }: { type: ActivityEntry["type"] }) {
-  return (
-    <span
-      className={cn(
-        "absolute -left-[5px] top-[18px] z-10 block h-2.5 w-2.5 rounded-full ring-2 ring-bg-surface",
-        type === "chapter_visit"
-          ? "bg-accent-primary"
-          : "bg-accent-success"
-      )}
-      aria-hidden
-    />
-  );
-}
-
 function ActivityIcon({ type }: { type: ActivityEntry["type"] }) {
   return (
     <div
@@ -126,32 +108,22 @@ function QuizScoreBadge({ percentage }: { percentage: number }) {
 
 function ActivityItem({ entry }: { entry: ActivityEntry }) {
   return (
-    <li className="relative pl-5">
-      <TimelineDot type={entry.type} />
+    <li className="py-2.5 border-b border-border-default/40 last:border-0">
+      <div className="flex items-start gap-2.5">
+        <ActivityIcon type={entry.type} />
 
-      <div
-        className={cn(
-          "group rounded-lg border border-border-default bg-bg-base px-3 py-2.5",
-          "transition-all duration-150 ease-out",
-          "hover:translate-x-0.5 hover:border-border-strong hover:shadow-[var(--shadow-sm)]"
-        )}
-      >
-        <div className="flex items-start gap-2.5">
-          <ActivityIcon type={entry.type} />
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-xs font-medium leading-snug text-text-primary">
-                {toActivityLabel(entry)}
-              </p>
-              {entry.type === "quiz_submit" && (
-                <QuizScoreBadge percentage={entry.percentage} />
-              )}
-            </div>
-            <p className="mt-0.5 text-[10px] text-text-muted">
-              {formatActivityTimestamp(entry.occurredAt)}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-xs font-medium leading-snug text-text-primary">
+              {toActivityLabel(entry)}
             </p>
+            {entry.type === "quiz_submit" && (
+              <QuizScoreBadge percentage={entry.percentage} />
+            )}
           </div>
+          <p className="mt-0.5 text-[10px] text-text-muted">
+            {formatActivityTimestamp(entry.occurredAt)}
+          </p>
         </div>
       </div>
     </li>
@@ -161,7 +133,7 @@ function ActivityItem({ entry }: { entry: ActivityEntry }) {
 function EmptyState() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center py-10">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-bg-subtle">
+      <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-bg-subtle">
         <div className="relative">
           <Clock
             className="h-7 w-7 text-text-muted"
@@ -200,13 +172,7 @@ export function RecentActivityCard({ activity }: RecentActivityCardProps) {
 
       <CardBody className="flex-1 pt-0">
         {entries.length > 0 ? (
-          <ul className="relative space-y-2">
-            {/* Vertical timeline line */}
-            <span
-              className="pointer-events-none absolute bottom-0 left-0 top-0 w-px bg-border-default"
-              aria-hidden
-            />
-
+          <ul>
             {entries.map((entry, index) => (
               <ActivityItem
                 key={`${entry.type}-${entry.occurredAt}-${index}`}

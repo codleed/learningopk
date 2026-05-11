@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BookOpen, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,28 +26,13 @@ export interface ContinueLearningCardProps {
 
 /** Return motivational micro-copy based on current progress percentage. */
 function getEncouragement(percent: number): string {
-  if (percent === 0) return "Let\u2019s get started!";
-  if (percent < 25) return "Great start \u2014 keep going!";
-  if (percent < 50) return "You\u2019re building momentum!";
-  if (percent < 75) return "Over halfway \u2014 keep it up!";
+  if (percent === 0) return "Let's get started!";
+  if (percent < 25) return "Great start — keep going!";
+  if (percent < 50) return "You're building momentum!";
+  if (percent < 75) return "Over halfway — keep it up!";
   if (percent < 100) return "Almost there, finish strong!";
-  return "Subject complete \u2014 well done!";
+  return "Subject complete — well done!";
 }
-
-/**
- * Radial-gradient overlay style that creates a soft glow anchored
- * at the top-right of the card. Uses only design-system token references.
- */
-const HERO_OVERLAY_STYLE: React.CSSProperties = {
-  position: "absolute",
-  inset: 0,
-  borderRadius: "inherit",
-  pointerEvents: "none",
-  background: [
-    "radial-gradient(ellipse 60% 50% at 90% 10%, var(--accent-primary-light) 0%, transparent 70%)",
-    "radial-gradient(ellipse 40% 60% at 10% 90%, var(--accent-info-light) 0%, transparent 70%)",
-  ].join(", "),
-};
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -63,7 +48,7 @@ export function ContinueLearningCard({
       <Card variant="default" className="h-full">
         <CardBody className="flex flex-col items-center justify-center gap-4 py-12">
           <div
-            className="flex items-center justify-center rounded-full"
+            className="flex items-center justify-center rounded-xl"
             style={{
               width: 56,
               height: 56,
@@ -93,21 +78,12 @@ export function ContinueLearningCard({
   const percent = subject.chaptersVisitedPercent;
 
   return (
-    <Card variant="gradient" className="h-full">
-      {/* Radial gradient overlay for depth */}
-      <div style={HERO_OVERLAY_STYLE} aria-hidden />
-
-      <CardBody className="relative flex flex-col gap-5 p-6">
-        {/* Top row: label + sparkle icon */}
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-widest text-text-muted">
-            Continue Learning
-          </span>
-          <Sparkles
-            className="h-4 w-4 text-accent-primary"
-            aria-hidden
-          />
-        </div>
+    <Card variant="default" className="h-full">
+      <CardBody className="flex flex-col gap-5 p-5">
+        {/* Top row: label */}
+        <span className="text-xs font-semibold uppercase tracking-widest text-text-muted">
+          Continue Learning
+        </span>
 
         {/* Center: progress ring + subject info */}
         <div className="flex items-center gap-5">
@@ -125,7 +101,7 @@ export function ContinueLearningCard({
             </h3>
 
             <p className="text-xs text-text-secondary">
-              {subject.boardName} &middot; Class {subject.grade}
+              {subject.boardName} · Class {subject.grade}
             </p>
           </div>
         </div>

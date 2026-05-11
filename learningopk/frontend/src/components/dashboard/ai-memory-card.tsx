@@ -170,14 +170,12 @@ export function AiMemoryCard() {
   /* ---- Remove weak topic ---- */
   const handleRemoveWeakTopic = useCallback(async (topic: string) => {
     if (!context) return;
-    // Optimistic update
     setContext((prev) =>
       prev ? { ...prev, weakTopics: prev.weakTopics.filter((t) => t !== topic) } : prev
     );
     try {
       await removeWeakTopic(topic);
     } catch {
-      // Revert on failure
       setContext((prev) =>
         prev ? { ...prev, weakTopics: [...prev.weakTopics, topic] } : prev
       );
@@ -187,14 +185,12 @@ export function AiMemoryCard() {
   /* ---- Remove strong topic ---- */
   const handleRemoveStrongTopic = useCallback(async (topic: string) => {
     if (!context) return;
-    // Optimistic update
     setContext((prev) =>
       prev ? { ...prev, strongTopics: prev.strongTopics.filter((t) => t !== topic) } : prev
     );
     try {
       await removeStrongTopic(topic);
     } catch {
-      // Revert on failure
       setContext((prev) =>
         prev ? { ...prev, strongTopics: [...prev.strongTopics, topic] } : prev
       );
@@ -205,14 +201,12 @@ export function AiMemoryCard() {
   const handleStyleChange = useCallback(async (style: string) => {
     if (!context) return;
     const prevStyle = context.preferredExplanationStyle;
-    // Optimistic update
     setContext((prev) =>
       prev ? { ...prev, preferredExplanationStyle: style } : prev
     );
     try {
       await updateAiContext({ preferredExplanationStyle: style });
     } catch {
-      // Revert on failure
       setContext((prev) =>
         prev ? { ...prev, preferredExplanationStyle: prevStyle } : prev
       );
@@ -274,7 +268,7 @@ export function AiMemoryCard() {
       </CardHeader>
 
       <CardBody className="flex-1 space-y-4 pt-0">
-        {/* ── Weak topics ── */}
+        {/* Weak topics */}
         {hasWeakTopics && (
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5">
@@ -296,7 +290,7 @@ export function AiMemoryCard() {
           </div>
         )}
 
-        {/* ── Strong topics ── */}
+        {/* Strong topics */}
         {hasStrongTopics && (
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5">
@@ -318,7 +312,7 @@ export function AiMemoryCard() {
           </div>
         )}
 
-        {/* ── Preferred explanation style ── */}
+        {/* Preferred explanation style */}
         <div className="space-y-1.5">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
             Explanation Style
@@ -340,7 +334,7 @@ export function AiMemoryCard() {
           </RadixSelect>
         </div>
 
-        {/* ── Recent concepts ── */}
+        {/* Recent concepts */}
         {hasRecentConcepts && (
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5">

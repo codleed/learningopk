@@ -83,7 +83,7 @@ export function TodaysGoalCard({
     return (
       <>
         <ConfettiCelebration show={showConfetti} onComplete={() => setShowConfetti(false)} />
-        <Card variant="gradient" className="h-full overflow-hidden">
+        <Card variant="default" className="h-full overflow-hidden">
           <CardHeader className="pb-2">
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1">
@@ -94,7 +94,7 @@ export function TodaysGoalCard({
                   {focus.title}
                 </h3>
               </div>
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-accent-primary/20 bg-accent-primary/10 text-accent-primary shadow-[var(--shadow-sm)]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-accent-primary/20 bg-accent-primary/10 text-accent-primary">
                 {focus.completed ? (
                   <CheckCircle2 className="h-5 w-5" aria-hidden />
                 ) : (
@@ -105,18 +105,14 @@ export function TodaysGoalCard({
           </CardHeader>
 
           <CardBody className="space-y-3 pt-0">
-            {/* ── Meta badges ── */}
-            <div className="flex flex-wrap items-center gap-2.5">
+            {/* Meta badges */}
+            <div className="flex flex-wrap items-center gap-2">
               <Badge variant={difficultyVariant} size="sm">{focus.difficulty}</Badge>
               <Badge variant="primary" size="sm">+{focus.xpReward} XP</Badge>
-              <Badge variant="default" size="sm">{focus.durationMinutes} min</Badge>
-              {focus.isRamadanAdjusted ? (
-                <Badge variant="outline" size="sm">Ramadan Mode</Badge>
-              ) : null}
             </div>
 
-            {/* ── Reason card ── */}
-            <div className="space-y-2 rounded-2xl border border-border-default/60 bg-bg-subtle/80 p-4">
+            {/* Reason card */}
+            <div className="space-y-2 rounded-xl border border-border-default/60 bg-bg-subtle/80 p-4">
               <p className="text-sm leading-relaxed text-text-secondary">{focus.reason}</p>
               {focus.subjectName ? (
                 <p className="text-xs font-medium text-text-muted">
@@ -126,7 +122,7 @@ export function TodaysGoalCard({
               ) : null}
             </div>
 
-            {/* ── Action buttons ── */}
+            {/* Action buttons */}
             <div className="grid gap-2 pt-1 sm:grid-cols-2">
               <Link href={focus.href} className="block">
                 <Button variant="primary" width="full" iconRight={<ArrowRight />}>
@@ -145,7 +141,7 @@ export function TodaysGoalCard({
               </Button>
             </div>
 
-            {/* ── Completion celebration ── */}
+            {/* Completion celebration */}
             <AnimatePresence initial={false}>
               {focus.completed ? (
                 <motion.div
@@ -154,9 +150,9 @@ export function TodaysGoalCard({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.97 }}
                   transition={{ type: "spring", stiffness: 260, damping: 22 }}
-                  className="flex items-start gap-3 rounded-2xl border border-accent-success/20 bg-accent-success/10 px-4 py-3"
+                  className="flex items-start gap-3 rounded-xl border border-accent-success/20 bg-accent-success/10 px-4 py-3"
                 >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent-success/15 text-accent-success">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent-success/15 text-accent-success">
                     <Trophy className="h-4 w-4" aria-hidden />
                   </div>
                   <div className="min-w-0 space-y-0.5">
@@ -196,8 +192,8 @@ export function TodaysGoalCard({
         </div>
       </CardHeader>
 
-      <CardBody className="flex flex-1 flex-col items-center justify-center gap-5">
-        {/* ── Progress ring ── */}
+      <CardBody className="flex flex-1 flex-col items-center justify-center gap-4">
+        {/* Progress ring */}
         <div className="py-1">
           <ProgressRing
             percentage={goal?.percent ?? 0}
@@ -207,28 +203,26 @@ export function TodaysGoalCard({
           />
         </div>
 
-        {/* ── 2-column stats grid ── */}
-        <div className="grid w-full grid-cols-2 gap-3">
-          <div className="flex flex-col items-center gap-1 rounded-xl border border-border-default bg-bg-subtle/60 px-3 py-2.5">
+        {/* Inline stats */}
+        <div className="flex w-full items-center justify-center gap-6">
+          <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-accent-primary" aria-hidden />
-            <span className="text-[11px] font-medium text-text-muted">Chapters</span>
-            <span className="text-sm font-bold tabular-nums text-text-primary">
-              {goal?.chaptersCompleted ?? 0}
-              <span className="text-text-muted font-normal">/{goal?.chaptersTarget ?? 3}</span>
+            <span className="text-sm text-text-secondary">
+              <span className="font-bold text-text-primary">{goal?.chaptersCompleted ?? 0}</span>
+              <span className="text-text-muted">/{goal?.chaptersTarget ?? 3}</span> chapters
             </span>
           </div>
-          <div className="flex flex-col items-center gap-1 rounded-xl border border-border-default bg-bg-subtle/60 px-3 py-2.5">
+          <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-accent-primary" aria-hidden />
-            <span className="text-[11px] font-medium text-text-muted">Quizzes</span>
-            <span className="text-sm font-bold tabular-nums text-text-primary">
-              {goal?.quizzesCompleted ?? 0}
-              <span className="text-text-muted font-normal">/{goal?.quizzesTarget ?? 1}</span>
+            <span className="text-sm text-text-secondary">
+              <span className="font-bold text-text-primary">{goal?.quizzesCompleted ?? 0}</span>
+              <span className="text-text-muted">/{goal?.quizzesTarget ?? 1}</span> quizzes
             </span>
           </div>
         </div>
       </CardBody>
 
-      {/* ── Evaluation date footer ── */}
+      {/* Evaluation date footer */}
       <CardFooter className="justify-center border-t border-border-default/60 py-3">
         <Calendar className="h-3 w-3 text-text-muted" aria-hidden />
         <p className="text-[11px] text-text-muted">
