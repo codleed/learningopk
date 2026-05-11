@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { CheckCircle2, Flame, Sparkles, Trophy, ChevronDown, GripVertical, ArrowUp, ArrowDown } from "lucide-react";
 
@@ -49,21 +49,26 @@ export function QuestExercisesView({
   chapterId,
 }: QuestExercisesViewProps) {
   const reduced = useReducedMotion();
-  const [orderOverride, setOrderOverride] = useState<number[] | null>(() => {
-    if (!chapterId) return null;
+  const [orderOverride, setOrderOverride] = useState<number[] | null>(null);
+
+  useEffect(() => {
+    if (!chapterId) {
+      setOrderOverride(null);
+      return;
+    }
     try {
       const raw = localStorage.getItem(STORAGE_KEY(chapterId));
       if (raw) {
         const parsed = JSON.parse(raw) as number[];
-        // Validate: all exercise IDs must be present
         const allIds = new Set(exercises.map((e) => e.id));
         if (parsed.length === exercises.length && parsed.every((id) => allIds.has(id))) {
-          return parsed;
+          setOrderOverride(parsed);
+          return;
         }
       }
     } catch { /* ignore */ }
-    return null;
-  });
+    setOrderOverride(null);
+  }, [chapterId, exercises]);
 
   const orderedExercises = useMemo(() => {
     if (!orderOverride || orderOverride.length !== exercises.length) return exercises;
