@@ -20,7 +20,7 @@ export function StarredFormulasWidget({ formulas }: StarredFormulasWidgetProps) 
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent-warning/10">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-warning/10">
               <Star className="h-4 w-4 text-accent-warning" aria-hidden />
             </div>
             <div>
@@ -37,11 +37,11 @@ export function StarredFormulasWidget({ formulas }: StarredFormulasWidgetProps) 
           </Badge>
         </div>
       </CardHeader>
-      <CardBody className="flex-1 space-y-2.5 pt-0">
+      <CardBody className="flex-1 space-y-2 pt-0">
         {formulas.map((formula) => (
           <div
             key={formula.formulaId}
-            className="rounded-2xl border border-border-default bg-bg-base p-3.5 transition-all duration-200 hover:border-accent-warning/30 hover:shadow-[var(--shadow-sm)]"
+            className="rounded-xl border border-border-default bg-bg-base p-3 transition-all duration-200 hover:border-accent-warning/30 hover:shadow-[var(--shadow-sm)]"
           >
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="min-w-0">
@@ -56,7 +56,7 @@ export function StarredFormulasWidget({ formulas }: StarredFormulasWidgetProps) 
                 {formula.accessCount} opens
               </Badge>
             </div>
-            <div className="overflow-hidden rounded-xl border border-border-default bg-bg-surface px-3 py-2">
+            <div className="overflow-hidden rounded-lg border border-border-default bg-bg-surface px-3 py-2">
               <BlockMath math={formula.formulaLatex} />
             </div>
           </div>

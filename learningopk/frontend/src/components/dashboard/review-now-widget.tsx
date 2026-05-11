@@ -22,7 +22,7 @@ function StatRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-border-default bg-bg-base px-3.5 py-2.5">
+    <div className="flex items-center justify-between rounded-xl border border-border-default bg-bg-base px-3 py-2">
       <span className="text-sm text-text-secondary">{label}</span>
       {children}
     </div>
@@ -68,17 +68,17 @@ export function ReviewNowWidget() {
       <Card variant="default" className="h-full flex flex-col">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
-            <Skeleton className="h-8 w-8 rounded-xl" />
+            <Skeleton className="h-8 w-8 rounded-lg" />
             <Skeleton className="h-5 w-36" />
           </div>
         </CardHeader>
         <CardBody className="flex-1 flex flex-col justify-between gap-3">
           <div className="space-y-2">
-            <Skeleton className="h-11 w-full rounded-2xl" />
-            <Skeleton className="h-11 w-full rounded-2xl" />
-            <Skeleton className="h-11 w-full rounded-2xl" />
+            <Skeleton className="h-9 w-full rounded-xl" />
+            <Skeleton className="h-9 w-full rounded-xl" />
+            <Skeleton className="h-9 w-full rounded-xl" />
           </div>
-          <Skeleton className="h-10 w-full rounded-xl" />
+          <Skeleton className="h-10 w-full rounded-lg" />
         </CardBody>
       </Card>
     );
@@ -98,7 +98,7 @@ export function ReviewNowWidget() {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent-primary/10">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-primary/10">
               <Brain className="h-4 w-4 text-accent-primary" aria-hidden />
             </div>
             <h3 className="font-[var(--font-display)] text-base font-bold text-text-primary">
@@ -117,18 +117,18 @@ export function ReviewNowWidget() {
           <StatRow label="Due now">
             <Badge
               variant={stats.dueToday > 0 ? "danger" : "success"}
-              size="md"
+              size="sm"
             >
               {stats.dueToday} card{stats.dueToday !== 1 ? "s" : ""}
             </Badge>
           </StatRow>
           <StatRow label="Due this week">
-            <Badge variant="default" size="md">
+            <Badge variant="default" size="sm">
               {stats.dueThisWeek}
             </Badge>
           </StatRow>
           <StatRow label="Total reviewed">
-            <Badge variant="primary" size="md">
+            <Badge variant="primary" size="sm">
               {stats.totalReviewed}
             </Badge>
           </StatRow>

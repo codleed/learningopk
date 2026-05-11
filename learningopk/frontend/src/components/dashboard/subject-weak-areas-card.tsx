@@ -37,20 +37,20 @@ export function SubjectWeakAreasCard({ subjects }: { subjects: SubjectSummary[] 
       </CardHeader>
       <CardBody className="space-y-4 pt-0">
         {subjectsWithWeakAreas.map((subject) => (
-          <div key={subject.subjectId} className="rounded-2xl border border-border-default bg-bg-base p-4">
-            <div className="flex items-start justify-between gap-3">
+          <div key={subject.subjectId}>
+            <div className="flex items-start justify-between gap-3 pb-3">
               <div>
                 <p className="text-sm font-semibold text-text-primary">{subject.subjectName}</p>
                 <p className="mt-1 text-xs text-text-secondary">Practice the repeated mistake patterns first.</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-warning/10 text-accent-warning">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-warning/10 text-accent-warning">
                 <BrainCircuit className="h-4 w-4" aria-hidden />
               </div>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {subject.weakAreas.map((area) => (
-                <div key={`${subject.subjectId}-${area.chapterId}-${area.exerciseId ?? area.label}`} className="rounded-xl border border-border-default bg-bg-surface p-4">
+                <div key={`${subject.subjectId}-${area.chapterId}-${area.exerciseId ?? area.label}`} className="rounded-xl border border-border-default bg-bg-surface p-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="warning" size="sm">{area.wrongAnswerCount} wrong</Badge>
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">{area.quizAttemptsCount} attempts</span>
@@ -60,7 +60,7 @@ export function SubjectWeakAreasCard({ subjects }: { subjects: SubjectSummary[] 
                     {area.exerciseNumber ? `Exercise ${area.exerciseNumber}` : area.chapterTitle}
                     {area.exerciseQuestion ? ` · ${area.exerciseQuestion}` : ""}
                   </p>
-                  <div className="mt-4">
+                  <div className="mt-3">
                     <Link href={area.href} className="block">
                       <Button variant="primary" size="sm" width="full" iconRight={<ArrowRight />}>
                         Practice now

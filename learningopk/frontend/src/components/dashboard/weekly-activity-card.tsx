@@ -35,10 +35,6 @@ const getFullDayLabel = (dateStr: string): string =>
     timeZone: "UTC",
   });
 
-/**
- * Richer intensity gradient — from a barely-tinted surface through to a
- * solid accent fill. Uses only design-system token classes.
- */
 const getActivityIntensityClass = (count: number): string => {
   if (count === 0) return "bg-bg-subtle";
   if (count <= 1) return "bg-accent-primary/20";
@@ -55,7 +51,6 @@ const getIntensityLabel = (count: number): string => {
   return "very high activity";
 };
 
-/** Check whether a YYYY-MM-DD string matches today (UTC). */
 const isToday = (dateStr: string): boolean => {
   const now = new Date();
   const todayUTC = [
@@ -65,17 +60,6 @@ const isToday = (dateStr: string): boolean => {
   ].join("-");
   return dateStr === todayUTC;
 };
-
-/* ------------------------------------------------------------------ */
-/*  Legend                                                              */
-/* ------------------------------------------------------------------ */
-
-const LEGEND_STEPS: readonly { label: string; className: string }[] = [
-  { label: "None", className: "bg-bg-subtle" },
-  { label: "Low", className: "bg-accent-primary/20" },
-  { label: "Med", className: "bg-accent-primary/45" },
-  { label: "High", className: "bg-accent-primary/90" },
-] as const;
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -129,9 +113,14 @@ export function WeeklyActivityCard({
           <h3 className="font-[var(--font-display)] text-base font-bold text-text-primary">
             Weekly Activity
           </h3>
-          <Badge variant="default" size="sm">
-            Last 7 days
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant="primary" size="sm">
+              {totalActivities} {totalActivities === 1 ? "activity" : "activities"} this week
+            </Badge>
+            <Badge variant="default" size="sm">
+              Last 7 days
+            </Badge>
+          </div>
         </div>
       </CardHeader>
 
@@ -145,15 +134,7 @@ export function WeeklyActivityCard({
               {totalActivities === 1 ? "activity" : "activities"}.
             </p>
 
-            {/* ── Summary stat ── */}
-            <div className="mb-4">
-              <Badge variant="primary" size="sm">
-                {totalActivities}{" "}
-                {totalActivities === 1 ? "activity" : "activities"} this week
-              </Badge>
-            </div>
-
-            {/* ── Heatmap grid ── */}
+            {/* Heatmap grid */}
             <div
               role="grid"
               aria-label="Weekly study activity"
@@ -174,7 +155,6 @@ export function WeeklyActivityCard({
                       role="gridcell"
                       className="flex flex-col items-center gap-1.5"
                     >
-                      {/* Day label — slightly larger and bolder */}
                       <span
                         className={cn(
                           "text-[11px] font-semibold uppercase tracking-wider",
@@ -199,20 +179,18 @@ export function WeeklyActivityCard({
                           onKeyDown={(e) => handleKeyDown(e, index)}
                           onFocus={() => setFocusedIndex(index)}
                           className={cn(
-                            /* Taller, rounder cells with more visual weight */
-                            "flex h-14 w-full items-center justify-center rounded-xl border text-xs font-bold tabular-nums",
+                            "flex h-10 w-full items-center justify-center rounded-lg border text-xs font-bold tabular-nums",
                             "transition-all duration-200 ease-out",
                             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-primary",
                             entry.active
                               ? "border-accent-primary/20 text-accent-primary"
                               : "border-border-default text-text-muted",
-                            /* Today highlight ring */
                             today && "ring-2 ring-accent-primary/30",
                           )}
                         >
                           <div
                             className={cn(
-                              "flex h-full w-full items-center justify-center rounded-xl",
+                              "flex h-full w-full items-center justify-center rounded-lg",
                               getActivityIntensityClass(entry.activityCount),
                             )}
                             aria-hidden="true"
@@ -227,24 +205,18 @@ export function WeeklyActivityCard({
               </div>
             </div>
 
-            {/* ── Legend ── */}
+            {/* Legend */}
             <div
-              className="mt-4 flex items-center justify-end gap-1.5"
+              className="mt-3 flex items-center justify-end gap-1.5"
               aria-hidden="true"
             >
               <span className="mr-1 text-[10px] font-medium text-text-muted">
                 Less
               </span>
-              {LEGEND_STEPS.map((step) => (
-                <div
-                  key={step.label}
-                  className={cn(
-                    "h-3 w-3 rounded-sm border border-border-default",
-                    step.className,
-                  )}
-                  title={step.label}
-                />
-              ))}
+              <div className="h-3 w-3 rounded-sm border border-border-default bg-bg-subtle" title="None" />
+              <div className="h-3 w-3 rounded-sm border border-border-default bg-accent-primary/20" title="Low" />
+              <div className="h-3 w-3 rounded-sm border border-border-default bg-accent-primary/45" title="Med" />
+              <div className="h-3 w-3 rounded-sm border border-border-default bg-accent-primary/90" title="High" />
               <span className="ml-1 text-[10px] font-medium text-text-muted">
                 More
               </span>

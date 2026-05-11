@@ -15,7 +15,7 @@ const cardVariants = cva(
         default: [
           "bg-bg-surface border border-border-default",
           "shadow-[var(--shadow-sm)]",
-          "hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]",
+          "hover:shadow-[var(--shadow-card)]",
         ].join(" "),
         elevated: [
           "bg-bg-surface border border-border-default",

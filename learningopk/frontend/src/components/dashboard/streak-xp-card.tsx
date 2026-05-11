@@ -9,7 +9,6 @@ import {
   Shield,
   ShieldAlert,
   Sparkles,
-  Star,
   Trophy,
 } from "lucide-react";
 
@@ -19,7 +18,6 @@ import { Dialog, DialogBody, DialogDescription, DialogFooter, DialogHeader, Dial
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
-import { StreakCounter } from "@/components/common/streak-counter";
 import { placeStreakWager, recoverStreakWager, type DashboardSummaryResponse } from "@/lib/progress-api";
 import { getLevelDefinition, TIER_COLORS, LEVEL_DEFINITIONS } from "@/lib/gamification-types";
 import { cn } from "@/lib/utils";
@@ -45,26 +43,21 @@ function LevelBadge({ level, size = "md" }: { level: number; size?: "sm" | "md" 
   const def = getLevelDefinition(level);
   const tier = TIER_COLORS[def.tier];
   const sizeClasses = {
-    sm: "h-8 w-8 text-xs",
-    md: "h-12 w-12 text-sm",
-    lg: "h-16 w-16 text-lg",
+    sm: "h-7 w-7 text-[11px]",
+    md: "h-9 w-9 text-xs",
+    lg: "h-11 w-11 text-sm",
   };
 
   return (
     <div
       className={cn(
-        "relative flex items-center justify-center rounded-2xl border font-bold",
+        "flex items-center justify-center rounded-lg border font-bold",
         tier.badgeBg,
         tier.badge,
-        tier.glow,
-        sizeClasses[size],
-        size === "lg" && "shadow-lg"
+        sizeClasses[size]
       )}
     >
-      <Star className={cn("fill-current", size === "lg" ? "h-7 w-7" : size === "md" ? "h-5 w-5" : "h-4 w-4")} />
-      <span className="absolute -bottom-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-bg-surface text-[10px] font-bold text-text-primary shadow-sm ring-1 ring-border-default">
-        {level}
-      </span>
+      {level}
     </div>
   );
 }
@@ -86,18 +79,18 @@ function XpProgressSection({ xp }: { xp: XpInfo }) {
   const isMax = xp.isMaxLevel ?? !nextLevelDef;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       {/* Total XP display + Level badge */}
       <div className="flex items-center gap-3">
         <LevelBadge level={xp.level} size="md" />
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl font-bold tabular-nums text-text-primary">
+            <span className="text-xl font-bold tabular-nums text-text-primary">
               {xp.xp.toLocaleString()}
             </span>
-            <span className="text-sm font-medium text-text-muted">XP</span>
+            <span className="text-xs font-medium text-text-muted">XP</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <span className={cn("text-xs font-semibold", tier.text)}>
               {levelDef.name}
             </span>
@@ -117,8 +110,8 @@ function XpProgressSection({ xp }: { xp: XpInfo }) {
 
       {/* Progress bar to next level */}
       {!isMax ? (
-        <div className="space-y-1.5">
-          <div className="h-3 w-full overflow-hidden rounded-full bg-bg-subtle">
+        <div className="space-y-1">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-bg-subtle">
             <motion.div
               className={cn("h-full rounded-full bg-gradient-to-r", tier.progress)}
               initial={{ width: 0 }}
@@ -132,7 +125,7 @@ function XpProgressSection({ xp }: { xp: XpInfo }) {
           </div>
         </div>
       ) : (
-        <div className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/20 px-3 py-2 text-xs font-medium text-cyan-600 dark:text-cyan-300">
+        <div className="flex items-center gap-2 rounded-xl bg-cyan-500/10 border border-cyan-400/20 px-3 py-2 text-xs font-medium text-cyan-600 dark:text-cyan-300">
           <Trophy className="h-3.5 w-3.5" />
           Maximum level achieved!
         </div>
@@ -230,16 +223,21 @@ export function StreakXPCard({
             Streak & XP
           </h3>
         </CardHeader>
-        <CardBody className="flex-1 flex flex-col justify-between gap-4">
+        <CardBody className="flex-1 flex flex-col justify-between gap-3">
           {/* Streak display */}
-          <div className="flex items-center justify-center">
-            <StreakCounter count={streakDays} size="lg" />
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-warning/10 text-accent-warning">
+              <span className="text-lg font-bold">{streakDays}</span>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-text-primary">{streakDays}-day streak</p>
+              {longestStreakDays > 0 && (
+                <p className="text-xs text-text-muted">
+                  Longest: {longestStreakDays} days
+                </p>
+              )}
+            </div>
           </div>
-          {longestStreakDays > 0 && (
-            <p className="text-center text-xs text-text-muted">
-              Longest streak: {longestStreakDays} days
-            </p>
-          )}
 
           {/* XP & Level section */}
           {xp ? (
@@ -247,20 +245,20 @@ export function StreakXPCard({
           ) : (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <Skeleton className="h-12 w-12 rounded-2xl" />
+                <Skeleton className="h-9 w-9 rounded-lg" />
                 <div className="flex-1 space-y-1.5">
-                  <Skeleton className="h-6 w-24 rounded" />
+                  <Skeleton className="h-5 w-24 rounded" />
                   <Skeleton className="h-3 w-32 rounded" />
                 </div>
               </div>
-              <Skeleton className="h-3 w-full rounded-full" />
+              <Skeleton className="h-2 w-full rounded-full" />
               <Skeleton className="h-3 w-1/3 rounded" />
             </div>
           )}
 
           {/* Streak wager warnings & actions */}
           {summary.streakWager.warningAtRisk ? (
-            <div className="rounded-2xl border border-accent-warning/30 bg-accent-warning-light p-3 text-xs text-text-secondary shadow-[var(--shadow-sm)]">
+            <div className="rounded-xl border border-accent-warning/30 bg-accent-warning-light p-3 text-xs text-text-secondary">
               <div className="flex items-start gap-2">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-accent-warning" aria-hidden />
                 <div>
@@ -274,7 +272,7 @@ export function StreakXPCard({
           ) : null}
 
           {summary.streakWager.activeWager ? (
-            <div className="rounded-2xl border border-accent-success/20 bg-accent-success-light p-3 text-xs text-text-secondary">
+            <div className="rounded-xl border border-accent-success/20 bg-accent-success-light p-3 text-xs text-text-secondary">
               <div className="flex items-start gap-2">
                 <Shield className="mt-0.5 h-4 w-4 shrink-0 text-accent-success" aria-hidden />
                 <div>
@@ -300,7 +298,7 @@ export function StreakXPCard({
           ) : null}
 
           {summary.streakWager.brokenWager ? (
-            <div className="rounded-2xl border border-accent-danger/25 bg-accent-danger/8 p-3 text-xs text-text-secondary">
+            <div className="rounded-xl border border-accent-danger/25 bg-accent-danger/8 p-3 text-xs text-text-secondary">
               <div className="flex items-start gap-2">
                 <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-accent-danger" aria-hidden />
                 <div className="space-y-2">
@@ -330,7 +328,7 @@ export function StreakXPCard({
       <Dialog open={lockModalOpen} onOpenChange={setLockModalOpen} size="md">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-primary/12 text-accent-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-primary/12 text-accent-primary">
               <Sparkles className="h-5 w-5" aria-hidden />
             </div>
             <div>
@@ -343,7 +341,7 @@ export function StreakXPCard({
         </DialogHeader>
         <form onSubmit={handleWagerSubmit} aria-describedby={wagerError ? "wager-amount-error" : undefined}>
           <DialogBody className="space-y-4">
-            <div className="rounded-2xl border border-border-default bg-bg-base p-4 text-sm text-text-secondary">
+            <div className="rounded-xl border border-border-default bg-bg-base p-4 text-sm text-text-secondary">
               Complete today&apos;s goal before midnight PKT and your wager returns with a 50% XP bonus.
             </div>
             <Input

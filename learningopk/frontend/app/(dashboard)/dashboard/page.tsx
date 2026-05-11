@@ -336,7 +336,7 @@ export default async function DashboardPage({
     <AppShell
       session={session}
       currentPath="/dashboard"
-      contentClassName="max-w-7xl mx-auto px-4 pb-10 pt-4 sm:px-6 lg:px-8"
+      contentClassName="max-w-6xl mx-auto px-5 pb-10 pt-4 sm:px-8 lg:px-10"
     >
       <div className="mb-6">
         <PageHeader
