@@ -469,6 +469,7 @@ MINIO_ACCESS_KEY=<aws-access-key-id>
 MINIO_SECRET_KEY=<aws-secret-access-key>
 MINIO_BUCKET=<your-s3-bucket-name>
 MINIO_PUBLIC_URL=https://<your-s3-bucket-name>.s3.amazonaws.com
+MINIO_BUCKET_IN_PUBLIC_URL=false
 
 # ===== AI (Mistral) =====
 MISTRAL_API_KEY=<your-mistral-api-key>
@@ -504,6 +505,7 @@ MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
 MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 MINIO_BUCKET=learningopk-media-abc123
 MINIO_PUBLIC_URL=https://learningopk-media-abc123.s3.amazonaws.com
+MINIO_BUCKET_IN_PUBLIC_URL=false
 
 # ===== AI (Mistral) =====
 MISTRAL_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

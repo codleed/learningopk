@@ -19,6 +19,7 @@ const schema = z.object({
   MINIO_SECRET_KEY: z.string().min(1),
   MINIO_BUCKET: z.string().min(1).default("learningo-media"),
   MINIO_PUBLIC_URL: z.string().url().default("http://localhost:9000"),
+  MINIO_BUCKET_IN_PUBLIC_URL: z.enum(["true", "false"]).default("true"),
   MISTRAL_API_KEY: z.string().min(1).optional().default("not-configured"),
   PORT: z
     .string()
