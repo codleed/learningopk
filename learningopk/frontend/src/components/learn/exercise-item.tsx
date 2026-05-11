@@ -54,20 +54,20 @@ export function ExerciseItem({ exercise, isCompleted, onMarkComplete, onExpanded
     >
       <summary
         className={cn(
-          "flex cursor-pointer list-none items-start gap-3 p-4 sm:p-5",
+          "flex cursor-pointer list-none items-start gap-2 sm:gap-3 p-3 sm:p-4",
           "select-none",
           "[&::-webkit-details-marker]:hidden"
         )}
       >
         {/* Exercise number badge */}
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-bg-subtle font-[var(--font-mono)] text-xs font-bold text-text-secondary">
+        <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-bg-subtle font-[var(--font-mono)] text-xs font-bold text-text-secondary">
           {exercise.exerciseNumber}
         </div>
 
         {/* Content */}
         <div className="min-w-0 flex-1">
           {/* Meta row */}
-          <div className="mb-2 flex flex-wrap items-center gap-1.5">
+          <div className="mb-1.5 sm:mb-2 flex flex-wrap items-center gap-1.5">
             <Badge variant={exerciseType.variant} size="sm">
               {exerciseType.label}
             </Badge>
@@ -77,7 +77,7 @@ export function ExerciseItem({ exercise, isCompleted, onMarkComplete, onExpanded
           </div>
 
           {/* Question preview */}
-          <div className="text-sm leading-relaxed text-text-primary sm:text-base" onClick={(e) => e.stopPropagation()}>
+          <div className="text-sm leading-relaxed text-text-primary" onClick={(e) => e.stopPropagation()}>
             {exercise.type === "fill_in_blanks" ? (
               <FillInBlanksRenderer
                 question={exercise.question}
@@ -96,16 +96,48 @@ export function ExerciseItem({ exercise, isCompleted, onMarkComplete, onExpanded
           </div>
         </div>
 
-        {/* Mark complete pill */}
-        {isCompleted ? (
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-accent-success px-2.5 py-1 text-[0.625rem] font-semibold text-white">
-            <CheckCircle2 className="h-3 w-3" />
-            Solved
-          </span>
-        ) : (
+        {/* Mark complete pill + expand indicator */}
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          {isCompleted ? (
+            <span className="flex shrink-0 items-center gap-1 rounded-full bg-accent-success px-2 py-0.5 sm:px-2.5 sm:py-1 text-[0.625rem] font-semibold text-white">
+              <CheckCircle2 className="h-3 w-3" />
+              <span className="hidden sm:inline">Solved</span>
+            </span>
+          ) : (
+            <Button
+              size="xs"
+              variant="secondary"
+              className="hidden sm:inline-flex"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkComplete(exercise.id, exercise.difficulty);
+              }}
+            >
+              Mark Solved
+            </Button>
+          )}
+
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 shrink-0 text-text-muted",
+              "transition-transform duration-200",
+              "group-open/details:rotate-180 group-open/details:text-accent-primary"
+            )}
+            aria-hidden
+          />
+        </div>
+      </summary>
+
+      {/* Solution panel */}
+      <ExerciseSolutionPanel solution={exercise.solution} />
+
+      {/* Mobile-only mark solved button inside details */}
+      {!isCompleted && (
+        <div className="sm:hidden px-3 pb-3">
           <Button
-            size="xs"
+            size="sm"
             variant="secondary"
+            width="full"
             onClick={(e) => {
               e.stopPropagation();
               onMarkComplete(exercise.id, exercise.difficulty);
@@ -113,21 +145,8 @@ export function ExerciseItem({ exercise, isCompleted, onMarkComplete, onExpanded
           >
             Mark Solved
           </Button>
-        )}
-
-        {/* Expand indicator */}
-        <ChevronDown
-          className={cn(
-            "mt-1 h-4 w-4 shrink-0 text-text-muted",
-            "transition-transform duration-200",
-            "group-open/details:rotate-180 group-open/details:text-accent-primary"
-          )}
-          aria-hidden
-        />
-      </summary>
-
-      {/* Solution panel */}
-      <ExerciseSolutionPanel solution={exercise.solution} />
+        </div>
+      )}
     </details>
   );
 }
