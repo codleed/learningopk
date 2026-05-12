@@ -88,7 +88,7 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
     <AppShell
       session={session}
       currentPath={basePath}
-      contentClassName="max-w-[96rem] px-3 pb-10 pt-3 sm:px-5 lg:px-6"
+      contentClassName="max-w-[96rem] px-3 pb-6 pt-2 sm:px-4 sm:pb-8 sm:pt-3 lg:px-6"
     >
       <div>
         {/* Breadcrumb navigation — sticky with glassmorphism */}
@@ -101,10 +101,10 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
             { label: `Chapter ${payload.chapter.chapterNumber}` },
           ]}
           sticky
-          stickyClassName="-mx-3 -mt-3 sm:-mx-5 lg:-mx-6 px-3 sm:px-5 lg:px-6"
+          stickyClassName="-mx-3 -mt-2 sm:-mx-4 sm:-mt-3 lg:-mx-6 px-3 sm:px-4 lg:px-6"
         />
 
-        <div className="space-y-4 pt-4">
+        <div className="space-y-3 pt-3 sm:space-y-4 sm:pt-4">
         {/* Progress tracker (invisible, fires event) */}
         <ChapterProgressTracker chapterId={payload.chapter.id} />
 

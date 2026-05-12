@@ -38,9 +38,9 @@ export function QuestHeader(props: QuestHeaderProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={reduced ? { duration: 0 } : { duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
       className={cn(
-        "relative overflow-hidden rounded-2xl",
+        "relative overflow-hidden rounded-xl",
         "border border-border-default bg-bg-surface",
-        "p-5 sm:p-6 lg:p-8"
+        "p-4 sm:p-5 lg:p-6"
       )}
     >
       {/* Background effects */}
@@ -57,7 +57,7 @@ export function QuestHeader(props: QuestHeaderProps) {
 
       <div className="relative">
         {/* Top row: breadcrumb + streak */}
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-3 sm:mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-text-secondary">
             <span className="font-medium">{boardName}</span>
             <span className="text-text-muted">/</span>
@@ -67,7 +67,7 @@ export function QuestHeader(props: QuestHeaderProps) {
         </div>
 
         {/* Main content row */}
-        <div className="flex items-start gap-5 sm:gap-6">
+        <div className="flex items-start gap-4 sm:gap-6">
           {/* Progress ring */}
           <motion.div
             initial={reduced ? false : { opacity: 0, scale: 0.85 }}
@@ -77,15 +77,23 @@ export function QuestHeader(props: QuestHeaderProps) {
           >
             <ProgressRing
               percentage={completionPercent}
-              size={76}
-              strokeWidth={6}
+              size={64}
+              strokeWidth={5}
+              className="sm:hidden"
             />
+            <div className="hidden sm:block">
+              <ProgressRing
+                percentage={completionPercent}
+                size={76}
+                strokeWidth={6}
+              />
+            </div>
           </motion.div>
 
           {/* Title and meta */}
           <div className="min-w-0 flex-1">
             {/* Chapter badge */}
-            <div className="mb-2 flex items-center gap-2">
+            <div className="mb-1.5 sm:mb-2 flex items-center gap-2">
               <Badge variant="primary" size="sm">
                 <Target className="mr-0.5 h-3 w-3" aria-hidden />
                 Chapter {chapterNumber}
@@ -93,12 +101,12 @@ export function QuestHeader(props: QuestHeaderProps) {
             </div>
 
             {/* Chapter title */}
-            <h1 className="font-[var(--font-display)] text-xl font-bold tracking-tight text-text-primary sm:text-2xl lg:text-3xl">
+            <h1 className="font-[var(--font-display)] text-lg font-bold tracking-tight text-text-primary sm:text-xl lg:text-2xl">
               {chapterTitle}
             </h1>
 
             {/* XP + Level stats */}
-            <div className="mt-3 flex flex-wrap items-center gap-3">
+            <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-2 sm:gap-3">
               <motion.div
                 initial={reduced ? false : { opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}

@@ -256,8 +256,8 @@ export function ChapterStudyWorkspace({
 
       <StaggerContainer
         className={cn(
-          "grid gap-5 xl:items-start",
-          "xl:grid-cols-[minmax(0,1fr)_minmax(22rem,26rem)]"
+          "grid gap-4 lg:gap-5 lg:items-start",
+          "lg:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)]"
         )}
       >
         {/* Main content column */}
@@ -272,7 +272,7 @@ export function ChapterStudyWorkspace({
             />
 
             {/* Tab bar */}
-            <div className="rounded-xl border border-border-default bg-bg-surface p-1.5">
+            <div className="rounded-xl border border-border-default bg-bg-surface p-1">
               <QuestTabBar
                 status={{
                   summary: chapterProgress?.summaryRead ?? false,
@@ -294,8 +294,8 @@ export function ChapterStudyWorkspace({
             <div
               className={cn(
                 "rounded-xl border border-border-default bg-bg-surface",
-                "p-4 sm:p-6",
-                "min-h-[400px]"
+                "p-3 sm:p-5",
+                "min-h-[200px] sm:min-h-[300px] lg:min-h-[400px]"
               )}
             >
               <div className="mb-4 flex items-center gap-2 border-b border-border-default pb-3">

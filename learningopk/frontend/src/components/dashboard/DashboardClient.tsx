@@ -28,23 +28,14 @@ import type { StudyGroupsListResponse } from "@/lib/study-groups-api";
 type SubjectSummary = DashboardSummaryResponse["subjects"][number];
 
 export interface DashboardClientProps {
-  /** Student display name */
   displayName: string;
-  /** Summary data from server, null if fetch failed */
   summary: DashboardSummaryResponse | null;
-  /** Error message if summary fetch failed */
   summaryError: string | null;
-  /** Featured subject (highest progress) */
   featuredSubject: SubjectSummary | null;
-  /** Continue learning href */
   continueHref: string | null;
-  /** All subjects ordered by progress */
   orderedSubjects: SubjectSummary[];
-  /** First chapter base path for quick actions */
   firstChapterBasePath: string | null;
-  /** Top weak-area recommendations */
   focusAreas: FocusAreaItem[];
-  /** User study groups */
   studyGroups: StudyGroupsListResponse["groups"];
 }
 
@@ -85,56 +76,63 @@ export function DashboardClient({
 
   const hasFocusAreas = focusAreas.length > 0;
   const hasStarredFormulas = summary.starredFormulas.length > 0;
+  const hasWeakAreas = orderedSubjects.some((s) => s.weakAreas.length > 0);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       {/* ============================================================ */}
-      {/*  HERO ZONE — Primary actions & status at a glance            */}
+      {/*  HERO ZONE — Equal columns, no spanning                      */}
       {/* ============================================================ */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <div className="md:col-span-2 xl:col-span-1">
-          <ContinueLearningCard
-            subject={featuredSubject}
-            continueHref={continueHref}
-          />
-        </div>
-
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ContinueLearningCard
+          subject={featuredSubject}
+          continueHref={continueHref}
+        />
         <StreakXPCard
           streakDays={summary.streakDays}
           longestStreakDays={summary.longestStreakDays}
           xp={summary.xp}
           summary={summary}
         />
-
         <TodaysGoalCard summary={summary} />
       </div>
 
       {/* ============================================================ */}
-      {/*  MAIN CONTENT — Subject progress + Weak areas                */}
+      {/*  MAIN CONTENT — Subject progress (full width)                */}
       {/* ============================================================ */}
-      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-        <div className="space-y-6">
-          <SubjectProgressGrid subjects={orderedSubjects} />
+      <SubjectProgressGrid subjects={orderedSubjects} />
+
+      {/* ============================================================ */}
+      {/*  INSIGHTS + SIDEBAR — Weak areas + Widgets                   */}
+      {/* ============================================================ */}
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3 items-start">
+        <div className="xl:col-span-2">
           <SubjectWeakAreasCard subjects={orderedSubjects} />
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           {hasFocusAreas ? (
             <FocusAreasWidget recommendations={focusAreas} />
           ) : null}
           <ReviewNowWidget />
-          {hasStarredFormulas ? (
-            <StarredFormulasWidget formulas={summary.starredFormulas} />
-          ) : null}
-          <QuickActionsCard firstChapterBasePath={firstChapterBasePath} />
-          <AiMemoryCard />
         </div>
+      </div>
+
+      {/* ============================================================ */}
+      {/*  WIDGETS ROW — Formulas, Quick Actions, AI Memory            */}
+      {/* ============================================================ */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 items-start">
+        {hasStarredFormulas ? (
+          <StarredFormulasWidget formulas={summary.starredFormulas} />
+        ) : null}
+        <QuickActionsCard firstChapterBasePath={firstChapterBasePath} />
+        <AiMemoryCard />
       </div>
 
       {/* ============================================================ */}
       {/*  ACTIVITY — Weekly heatmap + Recent timeline                  */}
       {/* ============================================================ */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <WeeklyActivityCard weeklyActivity={summary.weeklyActivity} />
         <RecentActivityCard activity={summary.recentActivity} />
       </div>
