@@ -16,6 +16,7 @@ import { listSubjectChapterGraph } from "../lib/chapter-graph.js";
 import { progressService } from "../services/progress.service.js";
 import { learningPathService } from "../services/learning-path.service.js";
 import { errorResponse, successResponse } from "../lib/response.js";
+import { inferLegacyGrade } from "../lib/grade-utils.js";
 
 const paramsSchema = z.object({
   board: z.string().trim().regex(/^[a-z0-9-]+$/),
@@ -152,7 +153,9 @@ learnRouter.get("/:board/:grade/:subject/graph", requireSession, async (req, res
       });
       return;
     }
-    if (authedReq.session.user.class && authedReq.session.user.class !== grade) {
+    const rawClass = authedReq.session.user.class;
+    const normalizedUserClass = rawClass ? inferLegacyGrade(rawClass) : null;
+    if (normalizedUserClass && normalizedUserClass !== grade) {
       res.status(403).json({
         error: "Forbidden"
       });

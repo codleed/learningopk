@@ -7,6 +7,7 @@ import { pastPaperRepository } from "../repositories/past-paper.repository.js";
 import { pastPaperService } from "../services/past-paper.service.js";
 import { db } from "../lib/db/index.js";
 import { boards } from "../lib/db/schema.js";
+import { inferLegacyGrade } from "../lib/grade-utils.js";
 
 export const pastPapersRouter = Router();
 
@@ -24,16 +25,17 @@ pastPapersRouter.get("/", requireSession, async (req, res) => {
     const authedReq = req as AuthenticatedRequest;
     const user = authedReq.session.user;
 
-    const userClass = user.class as string | undefined;
+    const rawUserClass = user.class as string | undefined;
     const userBoard = user.board as string | undefined;
 
-    if (!userClass || !userBoard) {
+    if (!rawUserClass || !userBoard) {
       res.status(400).json(errorResponse("Please complete your profile with class and board to access past papers.", "INCOMPLETE_PROFILE"));
       return;
     }
 
-    if (userClass !== "9" && userClass !== "10") {
-      res.status(400).json(errorResponse("Your class must be set to '9' or '10' in your profile settings to access past papers.", "INVALID_CLASS"));
+    const userClass = inferLegacyGrade(rawUserClass);
+    if (!userClass) {
+      res.status(400).json(errorResponse(`Your class "${rawUserClass}" is not recognized. Accepted values are "9" or "10".`, "INVALID_CLASS"));
       return;
     }
 
