@@ -366,7 +366,7 @@ After the instance is running, assign a static public IP so the address does not
 3. Select the Elastic IP → **Actions → Associate Elastic IP address**
 4. Select your instance `learningopk-backend` → **Associate**
 
-Note the Elastic IP address (e.g., `54.123.45.67`). This will be your API server's public IP.
+Note the Elastic IP address (e.g., `54.164.108.139`). This will be your API server's public IP.
 
 #### 1.5.6 Set PEM File Permissions
 
@@ -385,7 +385,7 @@ icacls ~/.ssh/learningopk.pem /inheritance:r /grant "%USERNAME%:R"
 ---
 
 **EC2 Summary** — Save these values:
-- **EC2 Public IP (Elastic IP)**: `54.123.45.67`
+- **EC2 Public IP (Elastic IP)**: `54.164.108.139`
 - **SSH Key Path**: `~/.ssh/learningopk.pem`
 
 ## Part 2: EC2 Setup
@@ -395,10 +395,10 @@ icacls ~/.ssh/learningopk.pem /inheritance:r /grant "%USERNAME%:R"
 Connect to your EC2 instance:
 
 ```bash
-ssh -i ~/.ssh/learningopk.pem ubuntu@54.123.45.67
+ssh -i ~/.ssh/learningopk.pem ubuntu@54.164.108.139
 ```
 
-Replace `54.123.45.67` with your actual EC2 public IP.
+Replace `54.164.108.139` with your actual EC2 public IP.
 
 Once connected, update the system and install Docker:
 
@@ -787,7 +787,7 @@ The Docker container runs the backend server but does **not** automatically run 
 Connect to the EC2 instance:
 
 ```bash
-ssh -i ~/.ssh/learningopk.pem ubuntu@54.123.45.67
+ssh -i ~/.ssh/learningopk.pem ubuntu@54.164.108.139
 ```
 
 Install Node.js and npm on the EC2 host (not inside Docker):
@@ -865,7 +865,7 @@ Go to your DNS provider (e.g., Namecheap, Cloudflare, Route53, GoDaddy) and add 
 |---|---|
 | Type | A |
 | Name/Host | `api` |
-| Value/Points to | `<ec2-public-ip>` (e.g., `54.123.45.67`) |
+| Value/Points to | `<ec2-public-ip>` (e.g., `54.164.108.139`) |
 | TTL | 300 (5 minutes) |
 
 If your DNS provider uses a full domain notation (Cloudflare), the name would be `api.yourdomain.com`. If using relative notation (Namecheap), the name would be just `api`.
