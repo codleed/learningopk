@@ -10,6 +10,7 @@ import {
   aiMessages,
   aiUsageLogs,
   boards,
+  chapterSubparts,
   chapters,
   exercises,
   subjects
@@ -130,6 +131,28 @@ const loadChapterContext = async (chapterId: number, latestPrompt: string): Prom
     return null;
   }
 
+  let summary = chapterRow.chapterSummary ?? "";
+
+  // If the legacy summary column is empty, fall back to concatenated subparts
+  if (summary.trim().length === 0) {
+    const subpartRows = await db
+      .select({
+        heading: chapterSubparts.heading,
+        content: chapterSubparts.content
+      })
+      .from(chapterSubparts)
+      .where(eq(chapterSubparts.chapterId, chapterId))
+      .orderBy(asc(chapterSubparts.orderIndex), asc(chapterSubparts.id));
+
+    if (subpartRows.length > 0) {
+      // Limit context injection size to prevent token blowup and model context window limits
+      summary = subpartRows
+        .map((sp) => `# ${sp.heading}\n${sp.content}`)
+        .join("\n\n")
+        .slice(0, 12000);
+    }
+  }
+
   const exerciseRows = await db
     .select({
       question: exercises.question
@@ -147,7 +170,7 @@ const loadChapterContext = async (chapterId: number, latestPrompt: string): Prom
       grade: chapterRow.grade ?? "9",
       subject: chapterRow.subjectName,
       chapterTitle: chapterRow.chapterTitle,
-      chapterSummary: chapterRow.chapterSummary ?? "No chapter summary available for this chapter.",
+      chapterSummary: summary.trim().length > 0 ? summary : "No chapter summary available for this chapter.",
       ...(focusExerciseQuestion ? { focusExerciseQuestion } : {})
     }
   };
