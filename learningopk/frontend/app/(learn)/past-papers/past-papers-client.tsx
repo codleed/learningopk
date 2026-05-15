@@ -21,6 +21,7 @@ export function PastPapersClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [incompleteProfile, setIncompleteProfile] = useState(false);
+  const [invalidClassMessage, setInvalidClassMessage] = useState<string | null>(null);
 
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [selectedYear, setSelectedYear] = useState<string>("");
@@ -43,13 +44,28 @@ export function PastPapersClient() {
         setPapers(result.data);
         setError(null);
         setIncompleteProfile(false);
+        setInvalidClassMessage(null);
       } catch (err) {
-        if (err instanceof PastPaperApiError && (err.code === "INCOMPLETE_PROFILE" || err.code === "INVALID_CLASS")) {
-          setIncompleteProfile(true);
-          setError(null);
+        if (err instanceof PastPaperApiError) {
+          if (err.code === "INCOMPLETE_PROFILE") {
+            setIncompleteProfile(true);
+            setInvalidClassMessage(null);
+            setError(null);
+          } else if (err.code === "INVALID_CLASS") {
+            setInvalidClassMessage(err.message);
+            setIncompleteProfile(false);
+            setError(null);
+          } else {
+            console.error("Failed to load past papers:", err);
+            setError("Failed to load past papers. Please ensure the backend is running.");
+            setIncompleteProfile(false);
+            setInvalidClassMessage(null);
+          }
         } else {
           console.error("Failed to load past papers:", err);
           setError("Failed to load past papers. Please ensure the backend is running.");
+          setIncompleteProfile(false);
+          setInvalidClassMessage(null);
         }
       } finally {
         setIsLoading(false);
@@ -126,6 +142,34 @@ export function PastPapersClient() {
           <p className="mt-2 max-w-md mx-auto text-sm text-text-secondary">
             To access past papers, please set your class and board in your profile settings.
             This helps us show you the right papers for your curriculum.
+          </p>
+          <div className="mt-4">
+            <Link href="/settings">
+              <Button size="sm" iconRight={<UserCircle className="h-4 w-4" />}>
+                Go to Settings
+              </Button>
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (invalidClassMessage) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          sticky
+          stickyClassName="-mx-3 -mt-3 sm:-mx-5 lg:-mx-6 px-3 sm:px-5 lg:px-6"
+          title="Past Papers"
+          subtitle="Practice with previous years' exam papers"
+          breadcrumbs={[{ label: "Learn", href: "/dashboard" }, { label: "Past Papers" }]}
+        />
+        <Card className="p-8 text-center">
+          <UserCircle className="mx-auto mb-4 h-12 w-12 text-text-secondary" />
+          <h3 className="font-display text-lg font-semibold text-text-primary">Class Not Recognized</h3>
+          <p className="mt-2 max-w-md mx-auto text-sm text-text-secondary">
+            {invalidClassMessage}
           </p>
           <div className="mt-4">
             <Link href="/settings">

@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { requireAdminRole, requireStaffRole } from "../lib/admin.js";
 import { moderateForumInput } from "../lib/ai-guardrails.js";
+import { inferLegacyGrade } from "../lib/grade-utils.js";
 import { pastPaperRepository } from "../repositories/past-paper.repository.js";
 import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
 import { listAdminChapterGraph } from "../lib/chapter-graph.js";
@@ -652,17 +653,6 @@ const persistAuditLog = async (input: PersistAuditLogInput): Promise<void> => {
     actorId: input.actorId,
     actorName: input.actorName
   });
-};
-
-const inferLegacyGrade = (input: string): "9" | "10" | null => {
-  const normalized = input.trim().toLowerCase();
-  if (normalized === "9" || normalized === "9th" || normalized.includes("class 9")) {
-    return "9";
-  }
-  if (normalized === "10" || normalized === "10th" || normalized.includes("class 10")) {
-    return "10";
-  }
-  return null;
 };
 
 type ResolvedWikiLink = {
