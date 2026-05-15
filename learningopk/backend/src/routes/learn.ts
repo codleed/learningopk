@@ -153,7 +153,8 @@ learnRouter.get("/:board/:grade/:subject/graph", requireSession, async (req, res
       });
       return;
     }
-    const normalizedUserClass = inferLegacyGrade(authedReq.session.user.class);
+    const rawClass = authedReq.session.user.class;
+    const normalizedUserClass = rawClass ? inferLegacyGrade(rawClass) : null;
     if (normalizedUserClass && normalizedUserClass !== grade) {
       res.status(403).json({
         error: "Forbidden"

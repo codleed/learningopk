@@ -3,6 +3,7 @@
  * accepted by the platform ("9" or "10").
  */
 export const inferLegacyGrade = (input: string): "9" | "10" | null => {
+  if (!input) return null;
   const normalized = input.trim().toLowerCase();
   if (normalized === "9" || normalized === "9th" || normalized.includes("class 9")) {
     return "9";
