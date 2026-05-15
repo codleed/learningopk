@@ -165,7 +165,22 @@ export const buildTutorSystemPrompt = (params: {
     `- grade=${context.grade}`,
     `- subject=${normalizeText(context.subject)}`,
     `- chapter=${normalizeText(context.chapterTitle)}`,
-    `- summary=${normalizeText(context.chapterSummary)}`,
+    ""
+  );
+
+  // Preserve multi-line structure for the summary so the model can parse headings and examples
+  lines.push("Chapter summary:");
+  const trimmedSummary = context.chapterSummary.trim();
+  if (trimmedSummary.length > 0) {
+    for (const line of trimmedSummary.split("\n")) {
+      lines.push(line);
+    }
+  } else {
+    lines.push("No chapter summary available for this chapter.");
+  }
+
+  lines.push(
+    "",
     context.focusExerciseQuestion ? `- focus_exercise=${normalizeText(context.focusExerciseQuestion)}` : "- focus_exercise=none"
   );
 

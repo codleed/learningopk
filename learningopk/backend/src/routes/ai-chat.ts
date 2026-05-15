@@ -133,24 +133,22 @@ const loadChapterContext = async (chapterId: number, latestPrompt: string): Prom
 
   let summary = chapterRow.chapterSummary ?? "";
 
-  // If the legacy summary column is empty, fall back to concatenated subparts
-  if (summary.trim().length === 0) {
-    const subpartRows = await db
-      .select({
-        heading: chapterSubparts.heading,
-        content: chapterSubparts.content
-      })
-      .from(chapterSubparts)
-      .where(eq(chapterSubparts.chapterId, chapterId))
-      .orderBy(asc(chapterSubparts.orderIndex), asc(chapterSubparts.id));
+  // Subparts are the canonical chapter content; always prefer them when present.
+  const subpartRows = await db
+    .select({
+      heading: chapterSubparts.heading,
+      content: chapterSubparts.content
+    })
+    .from(chapterSubparts)
+    .where(eq(chapterSubparts.chapterId, chapterId))
+    .orderBy(asc(chapterSubparts.orderIndex), asc(chapterSubparts.id));
 
-    if (subpartRows.length > 0) {
-      // Limit context injection size to prevent token blowup and model context window limits
-      summary = subpartRows
-        .map((sp) => `# ${sp.heading}\n${sp.content}`)
-        .join("\n\n")
-        .slice(0, 12000);
-    }
+  if (subpartRows.length > 0) {
+    // Limit context injection size to prevent token blowup and model context window limits
+    summary = subpartRows
+      .map((sp) => `# ${sp.heading}\n${sp.content}`)
+      .join("\n\n")
+      .slice(0, 12000);
   }
 
   const exerciseRows = await db
