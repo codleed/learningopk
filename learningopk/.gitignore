@@ -8,3 +8,7 @@ backend/.env
 frontend/playwright-report/
 frontend/test-results/
 .worktrees/
+
+# SSH keys and PEM files
+*.pem
+**/*.pem
