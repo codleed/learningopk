@@ -145,9 +145,11 @@ const loadChapterContext = async (chapterId: number, latestPrompt: string): Prom
       .orderBy(asc(chapterSubparts.orderIndex), asc(chapterSubparts.id));
 
     if (subpartRows.length > 0) {
+      // Limit context injection size to prevent token blowup and model context window limits
       summary = subpartRows
         .map((sp) => `# ${sp.heading}\n${sp.content}`)
-        .join("\n\n");
+        .join("\n\n")
+        .slice(0, 12000);
     }
   }
 
