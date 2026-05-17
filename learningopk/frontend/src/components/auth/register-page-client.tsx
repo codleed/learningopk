@@ -286,7 +286,7 @@ export function RegisterPageClient() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/verify-email");
     router.refresh();
   };
 

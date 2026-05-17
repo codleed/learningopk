@@ -1,5 +1,6 @@
 import { createAuthClient } from "better-auth/react";
 import { inferAdditionalFields } from "better-auth/client/plugins";
+import { emailOTPClient } from "better-auth/client/plugins";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
@@ -18,6 +19,7 @@ export const authClient = createAuthClient({
           type: "string"
         }
       }
-    })
+    }),
+    emailOTPClient(),
   ]
 });
