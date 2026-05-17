@@ -2,24 +2,65 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Copy, Check, GraduationCap } from "lucide-react";
+import { Copy, Check, GraduationCap, Trash2 } from "lucide-react";
 
 import { ContentListTable } from "@/components/admin/content-list-table";
 import { AdminPageHeader } from "@/components/admin/page-header";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { SchoolListItem } from "@/lib/school-api";
+import { deleteSchool } from "@/lib/school-api";
+import { useToast } from "@/components/ui/toast";
 
 type SchoolsListPanelProps = {
   initialSchools: SchoolListItem[];
 };
 
 export function SchoolsListPanel({ initialSchools }: SchoolsListPanelProps) {
-  const [schools] = useState(initialSchools);
+  const [schools, setSchools] = useState(initialSchools);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [schoolToDelete, setSchoolToDelete] = useState<SchoolListItem | null>(null);
+  const { pushToast } = useToast();
 
   const handleCopyInviteCode = async (code: string, id: number) => {
     await navigator.clipboard.writeText(code);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleDeleteClick = (school: SchoolListItem) => {
+    setSchoolToDelete(school);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!schoolToDelete) return;
+    setDeletingId(schoolToDelete.id);
+    try {
+      await deleteSchool(schoolToDelete.id);
+      setSchools((prev) => prev.filter((s) => s.id !== schoolToDelete.id));
+      pushToast({
+        title: "School deleted",
+        description: `"${schoolToDelete.name}" has been deleted.`,
+        tone: "success",
+      });
+    } catch (error) {
+      pushToast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete school",
+        tone: "error",
+      });
+    } finally {
+      setDeletingId(null);
+      setConfirmOpen(false);
+      setSchoolToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmOpen(false);
+    setSchoolToDelete(null);
   };
 
   return (
@@ -37,6 +78,7 @@ export function SchoolsListPanel({ initialSchools }: SchoolsListPanelProps) {
         addLabel="Add School"
         emptyMessage="No schools found. Create one to get started."
         getItemId={(s) => s.id}
+        onDelete={(s) => handleDeleteClick(s)}
         columns={[
           {
             key: "name",
@@ -93,6 +135,22 @@ export function SchoolsListPanel({ initialSchools }: SchoolsListPanelProps) {
             className: "w-32",
           },
         ]}
+      />
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete School"
+        description={
+          schoolToDelete
+            ? `Are you sure you want to delete "${schoolToDelete.name}"? This will unassign all students from this school. This action cannot be undone.`
+            : undefined
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        danger
+        isPending={deletingId !== null}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
       />
     </div>
   );

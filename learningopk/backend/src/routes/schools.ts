@@ -31,6 +31,38 @@ schoolsRouter.get("/", requireSession, async (req, res) => {
   res.status(200).json(successResponse({ schools: allSchools }));
 });
 
+// DELETE /api/schools/:id — delete a school (admin only)
+schoolsRouter.delete("/:id", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) return;
+
+  const idParam = req.params.id;
+  if (typeof idParam !== "string" || !idParam) {
+    res.status(400).json(errorResponse("Invalid school ID", "VALIDATION_ERROR"));
+    return;
+  }
+  const schoolId = parseInt(idParam, 10);
+  if (isNaN(schoolId)) {
+    res.status(400).json(errorResponse("Invalid school ID", "VALIDATION_ERROR"));
+    return;
+  }
+
+  // Check if school exists
+  const existing = await schoolRepository.findById(schoolId);
+  if (!existing) {
+    res.status(404).json(errorResponse("School not found", "SCHOOL_NOT_FOUND"));
+    return;
+  }
+
+  // Unassign all students from this school first
+  await db.update(users).set({ schoolId: null }).where(eq(users.schoolId, schoolId));
+
+  // Delete the school
+  await db.delete(schools).where(eq(schools.id, schoolId));
+
+  res.status(200).json(successResponse({ deleted: true }));
+});
+
 // GET /api/schools/me — get current user's school
 schoolsRouter.get("/me", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;

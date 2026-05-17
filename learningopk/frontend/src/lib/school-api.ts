@@ -146,3 +146,13 @@ export async function createSchool(data: {
     body: JSON.stringify(data),
   });
 }
+
+export async function deleteSchool(schoolId: number) {
+  const response = await fetch(`${backendUrl}/api/schools/${schoolId}`, {
+    method: "DELETE",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!response.ok) throw new Error(`Failed to delete school: ${response.status}`);
+  return response.json();
+}

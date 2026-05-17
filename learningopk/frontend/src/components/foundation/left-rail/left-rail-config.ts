@@ -93,6 +93,11 @@ export const adminCommandItems: NavItem[] = [
     icon: Users,
   },
   {
+    href: "/admin/schools",
+    label: "Schools",
+    icon: School,
+  },
+  {
     href: "/admin/content",
     label: "Content",
     icon: BookOpenCheck,

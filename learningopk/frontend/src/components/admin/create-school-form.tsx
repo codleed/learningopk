@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Copy, Check } from "lucide-react";
@@ -14,6 +14,7 @@ import {
 } from "@/components/admin";
 import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 import { createSchool } from "@/lib/school-api";
+import { getBoards } from "@/lib/learn-api";
 import { useToast } from "@/components/ui/toast";
 
 export function CreateSchoolForm() {
@@ -21,17 +22,36 @@ export function CreateSchoolForm() {
   const { pushToast } = useToast();
 
   const [name, setName] = useState("");
-  const [board, setBoard] = useState("punjab");
+  const [board, setBoard] = useState("");
   const [principalName, setPrincipalName] = useState("");
   const [principalEmail, setPrincipalEmail] = useState("");
   const [principalPassword, setPrincipalPassword] = useState("");
   const [principalClass, setPrincipalClass] = useState("10");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [boards, setBoards] = useState<{ id: number; name: string; slug: string }[]>([]);
+  const [boardsLoading, setBoardsLoading] = useState(true);
   const [createdResult, setCreatedResult] = useState<{
     school: { id: number; name: string; inviteCode: string };
     principal: { id: string; name: string; email: string; password: string };
   } | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadBoards() {
+      try {
+        const data = await getBoards();
+        if (data?.boards?.length) {
+          setBoards(data.boards);
+          setBoard(data.boards[0].slug);
+        }
+      } catch {
+        pushToast({ title: "Error", description: "Failed to load boards", tone: "error" });
+      } finally {
+        setBoardsLoading(false);
+      }
+    }
+    loadBoards();
+  }, [pushToast]);
 
   const handleCopy = async (text: string, field: string) => {
     await navigator.clipboard.writeText(text);
@@ -44,6 +64,10 @@ export function CreateSchoolForm() {
 
     if (!name.trim()) {
       pushToast({ title: "Error", description: "School name is required", tone: "error" });
+      return;
+    }
+    if (!board) {
+      pushToast({ title: "Error", description: "Board is required", tone: "error" });
       return;
     }
     if (!principalName.trim()) {
@@ -244,11 +268,20 @@ export function CreateSchoolForm() {
                 id="school-board"
                 value={board}
                 onChange={(e) => setBoard(e.target.value)}
-                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                disabled={boardsLoading}
+                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] disabled:opacity-50"
               >
-                <option value="punjab">Punjab</option>
-                <option value="federal">Federal</option>
-                <option value="sindh">Sindh</option>
+                {boardsLoading ? (
+                  <option>Loading boards...</option>
+                ) : boards.length === 0 ? (
+                  <option value="">No boards available</option>
+                ) : (
+                  boards.map((b) => (
+                    <option key={b.slug} value={b.slug}>
+                      {b.name}
+                    </option>
+                  ))
+                )}
               </select>
             </AdminFormField>
           </div>
@@ -310,7 +343,7 @@ export function CreateSchoolForm() {
               variant="primary"
               type="submit"
               loading={isSubmitting}
-              disabled={isSubmitting}
+              disabled={isSubmitting || boardsLoading || boards.length === 0}
             >
               Create School
             </AdminActionButton>
