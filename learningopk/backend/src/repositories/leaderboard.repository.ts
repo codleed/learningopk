@@ -10,6 +10,7 @@ export type LeaderboardViewer = {
   name: string;
   board: string | null;
   className: string | null;
+  schoolId: number | null;
   leaderboardPublic: boolean;
 };
 
@@ -30,6 +31,7 @@ export class LeaderboardRepository {
         name: users.name,
         board: users.board,
         className: users.class,
+        schoolId: users.schoolId,
         leaderboardPublic: users.leaderboardPublic
       })
       .from(users)
@@ -52,7 +54,7 @@ export class LeaderboardRepository {
     return rows[0]?.leaderboardPublic ?? isPublic;
   }
 
-  async listCandidates(scope: LeaderboardScope, viewer: Pick<LeaderboardViewer, "board" | "className">): Promise<LeaderboardCandidateRow[]> {
+  async listCandidates(scope: LeaderboardScope, viewer: Pick<LeaderboardViewer, "board" | "className" | "schoolId">): Promise<LeaderboardCandidateRow[]> {
     const predicates = [
       eq(users.role, "student"),
       eq(users.status, "active"),
@@ -72,7 +74,7 @@ export class LeaderboardRepository {
       .where(and(...predicates));
   }
 
-  async listQuizCounts(scope: LeaderboardScope, viewer: Pick<LeaderboardViewer, "board" | "className">) {
+  async listQuizCounts(scope: LeaderboardScope, viewer: Pick<LeaderboardViewer, "board" | "className" | "schoolId">) {
     const predicates = [
       eq(users.role, "student"),
       eq(users.status, "active"),
@@ -90,7 +92,7 @@ export class LeaderboardRepository {
       .groupBy(quizAttempts.userId);
   }
 
-  async listWeeklyActivityCounts(scope: LeaderboardScope, viewer: Pick<LeaderboardViewer, "board" | "className">) {
+  async listWeeklyActivityCounts(scope: LeaderboardScope, viewer: Pick<LeaderboardViewer, "board" | "className" | "schoolId">) {
     const predicates = [
       eq(users.role, "student"),
       eq(users.status, "active"),
@@ -112,7 +114,7 @@ export class LeaderboardRepository {
       .groupBy(userProgress.userId);
   }
 
-  async listActivityDates(scope: LeaderboardScope, viewer: Pick<LeaderboardViewer, "board" | "className">) {
+  async listActivityDates(scope: LeaderboardScope, viewer: Pick<LeaderboardViewer, "board" | "className" | "schoolId">) {
     const predicates = [
       eq(users.role, "student"),
       eq(users.status, "active"),
@@ -140,16 +142,22 @@ export class LeaderboardRepository {
       .where(and(eq(users.role, "student"), eq(users.status, "active")));
   }
 
-  private buildScopePredicates(scope: LeaderboardScope, viewer: Pick<LeaderboardViewer, "board" | "className">) {
+  private buildScopePredicates(
+    scope: LeaderboardScope,
+    viewer: Pick<LeaderboardViewer, "board" | "className" | "schoolId">
+  ) {
     if (scope === "board") {
       return viewer.board ? [eq(users.board, viewer.board)] : [];
     }
 
     if (scope === "school") {
+      if (viewer.schoolId) {
+        return [eq(users.schoolId, viewer.schoolId)];
+      }
+      // Fallback for users not in a school yet
       if (viewer.board && viewer.className) {
         return [eq(users.board, viewer.board), eq(users.class, viewer.className)];
       }
-
       if (viewer.board) {
         return [eq(users.board, viewer.board)];
       }
