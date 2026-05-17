@@ -253,6 +253,13 @@
       "when": 1777200000000,
       "tag": "0034_past_paper_attempts",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1779035232251,
+      "tag": "0036_add_schools_table",
+      "breakpoints": true
     }
   ]
 }
