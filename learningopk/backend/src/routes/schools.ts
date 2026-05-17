@@ -12,6 +12,25 @@ import { schoolJoinRateLimiter } from "../middleware/rate-limits.js";
 
 export const schoolsRouter = Router();
 
+// GET /api/schools — list all schools (admin only)
+schoolsRouter.get("/", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireAdminRole(authedReq, res))) return;
+
+  const allSchools = await db.select({
+    id: schools.id,
+    name: schools.name,
+    slug: schools.slug,
+    board: schools.board,
+    inviteCode: schools.inviteCode,
+    studentCount: schools.studentCount,
+    adminUserId: schools.adminUserId,
+    createdAt: schools.createdAt,
+  }).from(schools).orderBy(schools.createdAt);
+
+  res.status(200).json(successResponse({ schools: allSchools }));
+});
+
 // GET /api/schools/me — get current user's school
 schoolsRouter.get("/me", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
@@ -129,11 +148,14 @@ schoolsRouter.get("/students", requireSession, async (req, res) => {
   res.status(200).json(successResponse({ students }));
 });
 
-// POST /api/schools — platform admin creates a school (admin only)
+// POST /api/schools — platform admin creates a school with principal account (admin only)
 const createBodySchema = z.object({
   name: z.string().min(2).max(120),
   board: z.enum(["federal", "punjab", "sindh"]),
-  adminUserId: z.string().optional(),
+  principalName: z.string().min(2).max(120),
+  principalEmail: z.string().email(),
+  principalPassword: z.string().min(6).max(100),
+  principalClass: z.enum(["9", "10"]),
 });
 
 schoolsRouter.post("/", requireSession, async (req, res) => {
@@ -146,17 +168,79 @@ schoolsRouter.post("/", requireSession, async (req, res) => {
     return;
   }
 
-  const { name, board, adminUserId } = parsed.data;
+  const { name, board, principalName, principalEmail, principalPassword, principalClass } = parsed.data;
   const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 60);
   const inviteCode = "LPK-" + randomBytes(4).toString("hex").toUpperCase();
 
+  // Create school first
   const inserted = await db.insert(schools).values({
     name,
     slug,
     board,
     inviteCode,
-    adminUserId: adminUserId ?? null,
+    adminUserId: null,
   }).returning();
 
-  res.status(201).json(successResponse(inserted[0]));
+  const school = inserted[0];
+  if (!school) {
+    res.status(500).json(errorResponse("Failed to create school", "INTERNAL_ERROR"));
+    return;
+  }
+
+  // Create principal account via Better Auth
+  const backendUrl = process.env.BETTER_AUTH_URL ?? "http://localhost:3001";
+  const signUpResponse = await fetch(`${backendUrl}/api/auth/sign-up/email`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Origin": process.env.FRONTEND_ORIGIN ?? "http://localhost:3000"
+    },
+    body: JSON.stringify({
+      email: principalEmail,
+      password: principalPassword,
+      name: principalName,
+      class: principalClass,
+      board: board,
+    }),
+  });
+
+  if (!signUpResponse.ok) {
+    // Rollback: delete the school since principal creation failed
+    await db.delete(schools).where(eq(schools.id, school.id));
+    const error = await signUpResponse.json().catch(() => ({ message: "Unknown error" }));
+    res.status(400).json(errorResponse(
+      `Failed to create principal account: ${error.message ?? "Unknown error"}`,
+      "PRINCIPAL_CREATION_FAILED"
+    ));
+    return;
+  }
+
+  const signUpData = await signUpResponse.json();
+  const userId = signUpData.user?.id;
+
+  if (!userId) {
+    await db.delete(schools).where(eq(schools.id, school.id));
+    res.status(500).json(errorResponse("Principal created but no user ID returned", "INTERNAL_ERROR"));
+    return;
+  }
+
+  // Update school with principal as admin and set principal's school_id
+  await db.update(schools).set({ adminUserId: userId }).where(eq(schools.id, school.id));
+  await db.update(users).set({ schoolId: school.id }).where(eq(users.id, userId));
+
+  res.status(201).json(successResponse({
+    school: {
+      id: school.id,
+      name: school.name,
+      slug: school.slug,
+      board: school.board,
+      inviteCode: school.inviteCode,
+    },
+    principal: {
+      id: userId,
+      name: principalName,
+      email: principalEmail,
+      password: principalPassword, // Return so admin can share it
+    },
+  }));
 });

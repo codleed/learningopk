@@ -95,3 +95,54 @@ export async function checkSchoolAdmin(): Promise<boolean> {
     return false;
   }
 }
+
+const schoolListItemSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  slug: z.string(),
+  board: z.string(),
+  inviteCode: z.string(),
+  studentCount: z.number(),
+  adminUserId: z.string().nullable(),
+  createdAt: z.string(),
+});
+
+const schoolListSchema = z.object({
+  schools: z.array(schoolListItemSchema),
+});
+
+export type SchoolListItem = z.infer<typeof schoolListItemSchema>;
+
+export async function getSchools(cookieHeader?: string) {
+  return fetchSchoolJson("/api/schools", schoolListSchema, cookieHeader ? { cookieHeader } : undefined);
+}
+
+const createSchoolResponseSchema = z.object({
+  school: z.object({
+    id: z.number(),
+    name: z.string(),
+    slug: z.string(),
+    board: z.string(),
+    inviteCode: z.string(),
+  }),
+  principal: z.object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string(),
+    password: z.string(),
+  }),
+});
+
+export async function createSchool(data: {
+  name: string;
+  board: string;
+  principalName: string;
+  principalEmail: string;
+  principalPassword: string;
+  principalClass: string;
+}) {
+  return fetchSchoolJson("/api/schools", createSchoolResponseSchema, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}

@@ -4,6 +4,7 @@ import {
   Bell,
   BookOpenCheck,
   Flag,
+  GraduationCap,
   LayoutDashboard,
   MessagesSquare,
   ScrollText,
@@ -21,6 +22,7 @@ export type AdminNavItem = {
 export const adminNavItems = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/users", label: "User Management", icon: Users },
+  { href: "/admin/schools", label: "Schools", icon: GraduationCap },
   { href: "/admin/moderation", label: "Flagging & Moderation", icon: Flag },
   { href: "/admin/content", label: "Content Management", icon: BookOpenCheck },
   {

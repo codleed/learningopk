@@ -2,17 +2,37 @@
 
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from "@/components/ui/card";
 import { useState } from "react";
+import { Copy, Check } from "lucide-react";
 
 type DashboardData = NonNullable<Awaited<ReturnType<typeof import("@/lib/school-api").getSchoolDashboard>>>;
 
 export function SchoolDashboardClient({ initialData }: { initialData: DashboardData }) {
   const [data] = useState(initialData);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(data.school.inviteCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold">{data.school.name}</h1>
-        <p className="text-sm text-text-secondary">Invite code: <code className="rounded bg-bg-subtle px-2 py-1">{data.school.inviteCode}</code></p>
+        <div className="mt-2 flex items-center gap-3">
+          <span className="text-sm text-text-secondary">Invite code:</span>
+          <div className="flex items-center gap-2">
+            <code className="rounded bg-bg-subtle px-3 py-1.5 text-sm font-mono font-semibold">{data.school.inviteCode}</code>
+            <button
+              onClick={handleCopy}
+              className="rounded-md p-1.5 text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors"
+              title="Copy invite code"
+            >
+              {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
