@@ -10,6 +10,7 @@ import { Avatar } from "@/components/ui";
 import { ThemeToggleCompact } from "@/components/ui/theme-toggle";
 import type { SessionPayload } from "@/lib/session";
 import { cn } from "@/lib/utils";
+import { checkSchoolAdmin } from "@/lib/school-api";
 import { RoleToggle } from "./left-rail/role-toggle";
 import type { ViewMode, NavItem as NavItemType } from "./left-rail/left-rail-types";
 import {
@@ -94,10 +95,20 @@ export function LeftRail({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isSchoolAdmin, setIsSchoolAdmin] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isAdmin = session.user.role === "admin";
   const isModerator = session.user.role === "moderator";
   const suppressExpandRef = useRef(false);
+
+  /* ── Check school admin status once on mount ── */
+  useEffect(() => {
+    let cancelled = false;
+    checkSchoolAdmin().then((isAdmin) => {
+      if (!cancelled) setIsSchoolAdmin(isAdmin);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   /* ── Set CSS variable for main content offset ── */
   useEffect(() => {
@@ -184,16 +195,18 @@ export function LeftRail({
 
   const renderStudentNav = () => (
     <div className="flex w-full flex-col gap-1">
-      {studentNavItems.map((item) => (
-        <NavItem
-          key={item.href}
-          item={item}
-          isActive={isNavItemActive(currentPath, item)}
-          isExpanded={actualExpanded}
-          variant="student"
-          onNavigate={handleNavItemClick}
-        />
-      ))}
+      {studentNavItems
+        .filter((item) => item.href !== "/school" || isSchoolAdmin)
+        .map((item) => (
+          <NavItem
+            key={item.href}
+            item={item}
+            isActive={isNavItemActive(currentPath, item)}
+            isExpanded={actualExpanded}
+            variant="student"
+            onNavigate={handleNavItemClick}
+          />
+        ))}
     </div>
   );
 

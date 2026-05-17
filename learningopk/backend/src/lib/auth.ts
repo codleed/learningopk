@@ -36,6 +36,11 @@ export const auth = betterAuth({
         type: "string",
         required: false,
         input: false
+      },
+      schoolId: {
+        type: "number",
+        required: false,
+        input: false
       }
     }
   },

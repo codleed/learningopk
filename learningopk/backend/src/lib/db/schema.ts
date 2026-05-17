@@ -44,6 +44,18 @@ export const pastPaperAttemptStatusEnum = pgEnum("past_paper_attempt_status", [
   "timed_out"
 ]);
 
+export const schools = pgTable("schools", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  board: text("board").notNull(),
+  inviteCode: text("invite_code").notNull().unique(),
+  adminUserId: text("admin_user_id").references((): AnyPgColumn => users.id, { onDelete: "set null" }),
+  studentCount: integer("student_count").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+});
+
 export const users = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -53,6 +65,7 @@ export const users = pgTable("user", {
   class: text("student_class"),
   degree: text("degree"),
   board: text("board"),
+  schoolId: integer("school_id").references(() => schools.id, { onDelete: "set null" }),
   leaderboardPublic: boolean("leaderboard_public").notNull().default(true),
   role: userRoleEnum("role").notNull().default("student"),
   status: userStatusEnum("status").notNull().default("active"),
