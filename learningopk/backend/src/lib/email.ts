@@ -32,8 +32,10 @@ export async function sendEmail(params: SendEmailParams): Promise<void> {
 
     if (result.error) {
       logger.error({ error: result.error, to: params.to }, "Resend send failed");
+      throw new Error(`Email send failed: ${result.error.message}`);
     }
   } catch (err) {
     logger.error({ error: err, to: params.to }, "Email send exception");
+    throw err;
   }
 }

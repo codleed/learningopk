@@ -41,6 +41,20 @@ export function VerifyEmailClient() {
   const handleInputChange = useCallback(
     (index: number, value: string) => {
       if (!/^\d*$/.test(value)) return;
+
+      if (value.length > 1) {
+        const pasted = value.replace(/\D/g, "").slice(0, OTP_LENGTH);
+        if (!pasted) return;
+        const newOtp = [...Array(OTP_LENGTH).fill("")];
+        for (let i = 0; i < pasted.length; i++) {
+          newOtp[i] = pasted[i]!;
+        }
+        setOtp(newOtp);
+        setError(null);
+        inputRefs.current[Math.min(pasted.length, OTP_LENGTH - 1)]?.focus();
+        return;
+      }
+
       const newOtp = [...otp];
       newOtp[index] = value.slice(-1);
       setOtp(newOtp);

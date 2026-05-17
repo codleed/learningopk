@@ -6,6 +6,7 @@ import { db } from "./db/index.js";
 import { accounts, sessions, users, verifications } from "./db/schema.js";
 import { sendEmail } from "./email.js";
 import { env } from "./env.js";
+import { logger } from "./logger.js";
 
 export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
@@ -60,6 +61,8 @@ export const auth = betterAuth({
             : "Your sign-in code - LearningoPK",
           text: `Your verification code is: ${otp}. It expires in 5 minutes.`,
           html: `<p>Your verification code is: <strong>${otp}</strong></p><p>It expires in 5 minutes.</p>`,
+        }).catch((err) => {
+          logger.error({ error: err }, "sendVerificationOTP email failed");
         });
       },
       sendVerificationOnSignUp: true,
