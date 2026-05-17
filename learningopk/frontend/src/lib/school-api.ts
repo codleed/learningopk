@@ -72,3 +72,13 @@ export async function getSchoolStudents() {
   })) });
   return fetchSchoolJson("/api/schools/students", schema);
 }
+
+export async function checkSchoolAdmin(): Promise<boolean> {
+  try {
+    const schema = z.object({ isAdmin: z.boolean() });
+    const result = await fetchSchoolJson("/api/schools/check-admin", schema);
+    return result?.isAdmin ?? false;
+  } catch {
+    return false;
+  }
+}

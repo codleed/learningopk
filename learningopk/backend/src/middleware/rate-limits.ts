@@ -17,3 +17,12 @@ export const authRateLimiter = createRateLimitMiddleware({
   maxRequests: AUTH_RATE_LIMIT_MAX_REQUESTS,
   keyPrefix: "rl:auth"
 });
+
+export const SCHOOL_JOIN_RATE_LIMIT_WINDOW_MS = 60 * 1000;
+export const SCHOOL_JOIN_RATE_LIMIT_MAX_REQUESTS = 5;
+
+export const schoolJoinRateLimiter = createRateLimitMiddleware({
+  windowMs: SCHOOL_JOIN_RATE_LIMIT_WINDOW_MS,
+  maxRequests: SCHOOL_JOIN_RATE_LIMIT_MAX_REQUESTS,
+  keyPrefix: "rl:school-join"
+});
