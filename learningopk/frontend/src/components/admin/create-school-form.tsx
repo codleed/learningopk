@@ -284,7 +284,7 @@ export function CreateSchoolForm() {
             <AdminFormField id="principal-password" label="Password" required>
               <input
                 id="principal-password"
-                type="text"
+                type="password"
                 value={principalPassword}
                 onChange={(e) => setPrincipalPassword(e.target.value)}
                 placeholder="Min 6 characters"
