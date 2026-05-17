@@ -25,6 +25,7 @@ const dashboardSchema = z.object({
     })),
     weakAreas: z.array(z.object({
       chapterId: z.number(),
+      chapterTitle: z.string(),
       avgScore: z.number(),
       studentCount: z.number(),
     })),

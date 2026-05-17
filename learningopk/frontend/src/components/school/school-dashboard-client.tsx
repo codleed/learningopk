@@ -61,7 +61,7 @@ export function SchoolDashboardClient({ initialData }: { initialData: DashboardD
             <div className="divide-y divide-border">
               {data.analytics.weakAreas.map((area) => (
                 <div key={area.chapterId} className="flex items-center justify-between py-3">
-                  <span>Chapter ID {area.chapterId}</span>
+                  <span>{area.chapterTitle}</span>
                   <span className="rounded-full bg-accent-danger-light px-2 py-1 text-xs font-semibold text-accent-danger">{area.avgScore}%</span>
                 </div>
               ))}

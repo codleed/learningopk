@@ -1,6 +1,6 @@
-import { and, eq, sql, desc, avg, count } from "drizzle-orm";
+import { and, eq, sql, desc, count } from "drizzle-orm";
 import { db } from "../lib/db/index.js";
-import { schools, users, userProgress, quizAttempts } from "../lib/db/schema.js";
+import { schools, users, userProgress, quizAttempts, chapters } from "../lib/db/schema.js";
 
 export class SchoolRepository {
   async findById(id: number) {
@@ -64,13 +64,15 @@ export class SchoolRepository {
     return db
       .select({
         chapterId: userProgress.chapterId,
+        chapterTitle: chapters.title,
         avgScore: sql<number>`coalesce(avg(${userProgress.quizBestScore}), 0)::int`,
         studentCount: count(),
       })
       .from(userProgress)
       .innerJoin(users, eq(userProgress.userId, users.id))
+      .innerJoin(chapters, eq(userProgress.chapterId, chapters.id))
       .where(and(eq(users.schoolId, schoolId), eq(users.role, "student")))
-      .groupBy(userProgress.chapterId)
+      .groupBy(userProgress.chapterId, chapters.title)
       .having(sql`count(*) > 0`)
       .orderBy(sql`coalesce(avg(${userProgress.quizBestScore}), 0)::int`);
   }

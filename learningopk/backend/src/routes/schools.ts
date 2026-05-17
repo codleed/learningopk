@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "../lib/db/index.js";
@@ -117,7 +118,7 @@ schoolsRouter.post("/", requireSession, async (req, res) => {
 
   const { name, board, adminUserId } = parsed.data;
   const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 60);
-  const inviteCode = "LPK-" + Math.random().toString(36).slice(2, 8).toUpperCase();
+  const inviteCode = "LPK-" + randomBytes(4).toString("hex").toUpperCase();
 
   const inserted = await db.insert(schools).values({
     name,
