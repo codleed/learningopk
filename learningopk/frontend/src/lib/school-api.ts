@@ -139,7 +139,6 @@ export async function createSchool(data: {
   principalName: string;
   principalEmail: string;
   principalPassword: string;
-  principalClass: string;
 }) {
   return fetchSchoolJson("/api/schools", createSchoolResponseSchema, {
     method: "POST",

@@ -183,11 +183,10 @@ schoolsRouter.get("/students", requireSession, async (req, res) => {
 // POST /api/schools — platform admin creates a school with principal account (admin only)
 const createBodySchema = z.object({
   name: z.string().min(2).max(120),
-  board: z.enum(["federal", "punjab", "sindh"]),
+  board: z.string().min(1).max(60),
   principalName: z.string().min(2).max(120),
   principalEmail: z.string().email(),
   principalPassword: z.string().min(6).max(100),
-  principalClass: z.enum(["9", "10"]),
 });
 
 schoolsRouter.post("/", requireSession, async (req, res) => {
@@ -200,7 +199,7 @@ schoolsRouter.post("/", requireSession, async (req, res) => {
     return;
   }
 
-  const { name, board, principalName, principalEmail, principalPassword, principalClass } = parsed.data;
+  const { name, board, principalName, principalEmail, principalPassword } = parsed.data;
   const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 60);
   const inviteCode = "LPK-" + randomBytes(4).toString("hex").toUpperCase();
 
@@ -231,7 +230,7 @@ schoolsRouter.post("/", requireSession, async (req, res) => {
       email: principalEmail,
       password: principalPassword,
       name: principalName,
-      class: principalClass,
+      class: "10",
       board: board,
     }),
   });

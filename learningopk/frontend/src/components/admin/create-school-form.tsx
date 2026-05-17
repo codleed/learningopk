@@ -26,7 +26,6 @@ export function CreateSchoolForm() {
   const [principalName, setPrincipalName] = useState("");
   const [principalEmail, setPrincipalEmail] = useState("");
   const [principalPassword, setPrincipalPassword] = useState("");
-  const [principalClass, setPrincipalClass] = useState("10");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [boards, setBoards] = useState<{ id: number; name: string; slug: string }[]>([]);
   const [boardsLoading, setBoardsLoading] = useState(true);
@@ -92,7 +91,6 @@ export function CreateSchoolForm() {
         principalName: principalName.trim(),
         principalEmail: principalEmail.trim(),
         principalPassword,
-        principalClass,
       });
 
       if (!result) {
@@ -323,18 +321,6 @@ export function CreateSchoolForm() {
                 placeholder="Min 6 characters"
                 className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
               />
-            </AdminFormField>
-
-            <AdminFormField id="principal-class" label="Class" required>
-              <select
-                id="principal-class"
-                value={principalClass}
-                onChange={(e) => setPrincipalClass(e.target.value)}
-                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
-              >
-                <option value="9">9</option>
-                <option value="10">10</option>
-              </select>
             </AdminFormField>
           </div>
 
