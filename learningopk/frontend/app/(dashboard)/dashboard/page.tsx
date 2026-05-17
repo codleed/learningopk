@@ -20,6 +20,9 @@ import {
 } from "@/lib/progress-api";
 import { getServerSession } from "@/lib/session";
 import { getStudyGroups, type StudyGroupsListResponse } from "@/lib/study-groups-api";
+import { getMySchool } from "@/lib/school-api";
+import { JoinSchoolCard } from "@/components/school/join-school-card";
+import { Badge } from "@/components/ui/badge";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -89,12 +92,13 @@ export default async function DashboardPage({
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
-  const [summarySettled, learningPathSettled, studyGroupsSettled, subjectsListSettled] =
+  const [summarySettled, learningPathSettled, studyGroupsSettled, subjectsListSettled, mySchoolSettled] =
     await Promise.allSettled([
       getDashboardSummary(cookieHeader),
       getLearningPath(cookieHeader),
       getStudyGroups(cookieHeader),
       getSubjectsList(),
+      getMySchool(),
     ]);
 
   /* ---- Unwrap settled results with proper fallbacks ---- */
@@ -121,6 +125,8 @@ export default async function DashboardPage({
   const subjectsList: SubjectsListResponse | null =
     subjectsListSettled.status === "fulfilled" ? subjectsListSettled.value : null;
   const allSubjects = subjectsList?.subjects ?? [];
+
+  const mySchool = mySchoolSettled.status === "fulfilled" ? mySchoolSettled.value : null;
 
   /* ---- Derive summary-dependent values ---- */
   const subjects = summary?.subjects ?? [];
@@ -350,6 +356,14 @@ export default async function DashboardPage({
           ]}
         />
       </div>
+
+      {mySchool ? (
+        <Badge variant="primary" className="mb-4">
+          🏫 {mySchool.name}
+        </Badge>
+      ) : (
+        <JoinSchoolCard />
+      )}
 
       <DashboardClient
         displayName={displayName}
