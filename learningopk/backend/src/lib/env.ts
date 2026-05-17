@@ -21,6 +21,8 @@ const schema = z.object({
   MINIO_PUBLIC_URL: z.string().url().default("http://localhost:9000"),
   MINIO_BUCKET_IN_PUBLIC_URL: z.enum(["true", "false"]).default("true"),
   MISTRAL_API_KEY: z.string().min(1).optional().default("not-configured"),
+  RESEND_API_KEY: z.string().min(1).optional().default("not-configured"),
+  EMAIL_FROM: z.string().email().default("noreply@learningo.site"),
   PORT: z
     .string()
     .regex(/^\d+$/)

@@ -14,7 +14,7 @@ export interface StaleSessionCleanupJobData {
 }
 
 export interface EmailJobData {
-  type: "weekly-digest" | "notification" | "password-reset";
+  type: "weekly-digest" | "notification" | "password-reset" | "email-otp" | "email-verification";
   recipientId: string;
   email: string;
   data: Record<string, unknown>;
