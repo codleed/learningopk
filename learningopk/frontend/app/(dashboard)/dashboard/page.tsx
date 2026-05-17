@@ -98,7 +98,7 @@ export default async function DashboardPage({
       getLearningPath(cookieHeader),
       getStudyGroups(cookieHeader),
       getSubjectsList(),
-      getMySchool(),
+      getMySchool(cookieHeader),
     ]);
 
   /* ---- Unwrap settled results with proper fallbacks ---- */
