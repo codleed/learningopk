@@ -134,11 +134,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           }
         }
       }
-      // Enforce row limit to prevent full-table dumps
-      let boundedSql = sql;
-      if (!/\blimit\b/i.test(sql)) {
-        boundedSql = `${sql.trim()} LIMIT ${MAX_ROWS}`;
-      }
+      // Enforce row limit to prevent full-table dumps.
+      // Always append LIMIT at the end — PostgreSQL uses the last LIMIT clause,
+      // so this overrides any user-supplied LIMIT regardless of value.
+      const boundedSql = `${sql.trim()} LIMIT ${MAX_ROWS}`;
       const result = await db.query(boundedSql);
       return {
         content: [{ type: "text", text: JSON.stringify(result.rows, null, 2) }],
