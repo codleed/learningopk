@@ -102,4 +102,7 @@ async function main() {
   await server.connect(transport);
 }
 
+process.on("SIGTERM", () => process.exit(0));
+process.on("SIGINT", () => process.exit(0));
+
 main().catch(console.error);

@@ -6,9 +6,40 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { Client } from "pg";
 
-const client = new Client({
-  connectionString: process.env.DATABASE_URL,
-});
+const ALLOWED_TABLES = [
+  "classrooms",
+  "classroom_students",
+  "assignments",
+  "assignment_submissions",
+  "classroom_announcements",
+  "user",
+  "schools",
+  "boards",
+  "board_classes",
+  "subjects",
+  "chapters",
+  "quizzes",
+  "quiz_questions",
+  "quiz_attempts",
+  "mock_exams",
+  "user_progress",
+  "formulas",
+  "student_notes",
+  "forum_threads",
+  "forum_replies",
+];
+
+let isConnected = false;
+let client: Client | null = null;
+
+function getClient(): Client {
+  if (!client) {
+    client = new Client({
+      connectionString: process.env.DATABASE_URL,
+    });
+  }
+  return client;
+}
 
 const server = new Server(
   {
@@ -43,7 +74,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "safe_query",
-        description: "Execute a read-only SELECT query",
+        description: "Execute a read-only SELECT query against whitelisted tables",
         inputSchema: {
           type: "object",
           properties: {
@@ -57,13 +88,15 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 });
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  if (!client.connect) {
-    await client.connect();
+  const db = getClient();
+  if (!isConnected) {
+    await db.connect();
+    isConnected = true;
   }
 
   switch (request.params.name) {
     case "list_tables": {
-      const result = await client.query(
+      const result = await db.query(
         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
       );
       return {
@@ -72,8 +105,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     case "describe_table": {
       const table = String((request.params.arguments as Record<string, unknown>)?.table ?? "");
-      const result = await client.query(
-        `SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = $1`,
+      const result = await db.query(
+        "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = $1",
         [table]
       );
       return {
@@ -82,10 +115,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     case "safe_query": {
       const sql = String((request.params.arguments as Record<string, unknown>)?.sql ?? "");
-      if (!sql.trim().toLowerCase().startsWith("select")) {
+      const trimmed = sql.trim().toLowerCase();
+      if (!trimmed.startsWith("select")) {
         throw new Error("Only SELECT queries are allowed");
       }
-      const result = await client.query(sql);
+      // Validate only whitelisted tables are referenced
+      const tableMatches = sql.match(/from\s+["']?(\w+)["']?/gi);
+      if (tableMatches) {
+        for (const match of tableMatches) {
+          const tableName = match.replace(/from\s+["']?/i, "").replace(/["']/g, "").toLowerCase();
+          if (!ALLOWED_TABLES.includes(tableName) && tableName !== "information_schema") {
+            throw new Error(`Table "${tableName}" is not in the allowed tables list`);
+          }
+        }
+      }
+      const result = await db.query(sql);
       return {
         content: [{ type: "text", text: JSON.stringify(result.rows, null, 2) }],
       };
@@ -93,6 +137,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     default:
       throw new Error(`Unknown tool: ${request.params.name}`);
   }
+});
+
+process.on("SIGTERM", async () => {
+  if (client) {
+    await client.end();
+  }
+  process.exit(0);
+});
+
+process.on("SIGINT", async () => {
+  if (client) {
+    await client.end();
+  }
+  process.exit(0);
 });
 
 async function main() {

@@ -13,6 +13,7 @@ export type SessionResult = Awaited<ReturnType<typeof auth.api.getSession>>;
 
 export type AuthenticatedRequest = Request & {
   session: NonNullable<SessionResult>;
+  userRole: "student" | "teacher" | "admin" | "moderator";
 };
 
 export const requireSession: RequestHandler = async (req, res, next) => {
@@ -29,7 +30,8 @@ export const requireSession: RequestHandler = async (req, res, next) => {
     const userRows = await db
       .select({
         status: users.status,
-        suspendedUntil: users.suspendedUntil
+        suspendedUntil: users.suspendedUntil,
+        role: users.role,
       })
       .from(users)
       .where(eq(users.id, session.user.id))
@@ -65,6 +67,7 @@ export const requireSession: RequestHandler = async (req, res, next) => {
     }
 
     (req as AuthenticatedRequest).session = session;
+    (req as AuthenticatedRequest).userRole = user.role ?? "student";
     next();
   } catch (error) {
     logger.error({ error }, "Session retrieval error");
@@ -77,12 +80,7 @@ export const requireSession: RequestHandler = async (req, res, next) => {
 };
 
 export const requireTeacherRole = async (req: AuthenticatedRequest, res: Response): Promise<boolean> => {
-  const user = await db
-    .select({ role: users.role })
-    .from(users)
-    .where(eq(users.id, req.session.user.id))
-    .limit(1);
-  if (user[0]?.role !== "teacher") {
+  if (req.userRole !== "teacher") {
     res.status(403).json(errorResponse("Teacher access required", "FORBIDDEN"));
     return false;
   }

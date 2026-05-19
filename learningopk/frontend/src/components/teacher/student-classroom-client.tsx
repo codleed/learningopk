@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Megaphone, ClipboardList, BookOpen, Copy, Check, ArrowRight } from "lucide-react";
+import { Megaphone, ClipboardList, BookOpen, Copy, Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from "@/components/ui/card";
@@ -133,7 +133,18 @@ function ClassroomInfoCard({ classroom }: { classroom: NonNullable<Classroom> })
           </code>
           <button
             onClick={() => {
-              navigator.clipboard.writeText(classroom.inviteCode);
+              if (navigator.clipboard) {
+                navigator.clipboard.writeText(classroom.inviteCode);
+              } else {
+                const ta = document.createElement("textarea");
+                ta.value = classroom.inviteCode;
+                ta.style.position = "fixed";
+                ta.style.opacity = "0";
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                document.body.removeChild(ta);
+              }
               setCopied(true);
               setTimeout(() => setCopied(false), 2000);
             }}
@@ -216,9 +227,6 @@ function AssignmentsList({ assignments }: { assignments: Assignment[] }) {
               </div>
               <div className="flex items-center gap-2">
                 {getStatusBadge(a.status)}
-                <Button size="xs" variant="ghost">
-                  <ArrowRight className="h-3 w-3" />
-                </Button>
               </div>
             </Card>
           ))}

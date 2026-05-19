@@ -1,5 +1,9 @@
 -- Add teacher role to user_role enum
-ALTER TYPE "user_role" ADD VALUE IF NOT EXISTS 'teacher';
+DO $$ BEGIN
+    ALTER TYPE "user_role" ADD VALUE 'teacher';
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Create assignment_type enum
 DO $$ BEGIN

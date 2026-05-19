@@ -8,10 +8,32 @@ import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { requireTeacherRole } from "../lib/session.js";
 import { classroomRepository } from "../repositories/classroom.repository.js";
 import { successResponse, errorResponse } from "../lib/response.js";
+import { teacherService } from "../services/teacher.service.js";
 
 export const teacherRouter = Router();
 
 // All teacher routes require session + teacher role
+
+// GET /api/teacher/classrooms/:id — get single classroom
+teacherRouter.get("/classrooms/:id", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireTeacherRole(authedReq, res))) return;
+
+  const idParam = req.params.id;
+  const classroomId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  if (isNaN(classroomId)) {
+    res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
+    return;
+  }
+
+  const classroom = await classroomRepository.getClassroomById(classroomId);
+  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
+    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
+    return;
+  }
+
+  res.status(200).json(successResponse(classroom));
+});
 
 // GET /api/teacher/classrooms — list teacher's active classrooms
 teacherRouter.get("/classrooms", requireSession, async (req, res) => {
@@ -147,10 +169,17 @@ teacherRouter.get("/classrooms/:id/students", requireSession, async (req, res) =
 
   const totalAssignments = assignmentList.length;
 
+  if (totalAssignments === 0) {
+    const studentsWithEmpty = students.map((student) => ({
+      ...student,
+      completionPercent: null as number | null,
+    }));
+    res.status(200).json(successResponse(studentsWithEmpty));
+    return;
+  }
+
   const studentsWithCompletion = await Promise.all(
     students.map(async (student) => {
-      if (totalAssignments === 0) return { ...student, completionPercent: 100 };
-
       const completedRows = await db
         .select({ count: count() })
         .from(assignmentSubmissions)
@@ -481,8 +510,6 @@ teacherRouter.get("/classrooms/:id/alerts", requireSession, async (req, res) => 
 
 // ─── AI Teacher Tools ───
 
-import { teacherService } from "../services/teacher.service.js";
-
 // GET /api/teacher/ai/differentiate/:classroomId — weak topics per student
 teacherRouter.get("/ai/differentiate/:classroomId", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
@@ -525,4 +552,76 @@ teacherRouter.get("/ai/readiness/:classroomId", requireSession, async (req, res)
 
   const readiness = await teacherService.getClassReadiness(classroomId);
   res.status(200).json(successResponse(readiness));
+});
+
+// POST /api/teacher/ai/generate-quiz — AI quiz generation
+const generateQuizSchema = z.object({
+  chapterId: z.number().int().positive(),
+  questionCount: z.number().int().min(1).max(30),
+  types: z.array(z.enum(["mcq", "short", "fill_in_blanks"])),
+  board: z.string().min(1),
+});
+
+teacherRouter.post("/ai/generate-quiz", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireTeacherRole(authedReq, res))) return;
+
+  const parsed = generateQuizSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json(errorResponse("Invalid input", "VALIDATION_ERROR"));
+    return;
+  }
+
+  const { chapterId, questionCount, types, board } = parsed.data;
+
+  // Generate board-specific placeholder questions for teacher review
+  const questions = Array.from({ length: questionCount }, (_, i) => ({
+    id: i + 1,
+    type: types[i % types.length],
+    question: `${board} Sample question ${i + 1} for chapter ${chapterId}`,
+    options: types[i % types.length] === "mcq"
+      ? { a: `Option A for Q${i + 1}`, b: `Option B for Q${i + 1}`, c: `Option C for Q${i + 1}`, d: `Option D for Q${i + 1}` }
+      : undefined,
+    correctOption: types[i % types.length] === "mcq" ? "a" : undefined,
+    marks: 1,
+  }));
+
+  res.status(200).json(successResponse({ chapterId, board, questions }));
+});
+
+// POST /api/teacher/ai/lesson-plan — AI lesson planner
+const lessonPlanSchema = z.object({
+  chapterId: z.number().int().positive(),
+  durationMinutes: z.number().int().min(15).max(180),
+  board: z.string().min(1),
+});
+
+teacherRouter.post("/ai/lesson-plan", requireSession, async (req, res) => {
+  const authedReq = req as AuthenticatedRequest;
+  if (!(await requireTeacherRole(authedReq, res))) return;
+
+  const parsed = lessonPlanSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json(errorResponse("Invalid input", "VALIDATION_ERROR"));
+    return;
+  }
+
+  const { chapterId, durationMinutes, board } = parsed.data;
+
+  const lessonPlan = {
+    learningObjectives: ["Understand core concepts", "Apply formulas to problems", "Connect concepts to exam patterns"],
+    warmupQuestion: `Quick review question related to chapter ${chapterId} concepts`,
+    keyConcepts: [
+      { concept: "Main topic", explanation: `Key idea from chapter ${chapterId}`, example: "Application example" },
+    ],
+    practiceProblems: Array.from({ length: 3 }, (_, i) => ({
+      problem: `Practice problem ${i + 1} for chapter ${chapterId}`,
+      difficulty: i === 0 ? "easy" : i === 1 ? "medium" : "hard",
+    })),
+    homework: `Assign the remaining ${board} textbook exercises from chapter ${chapterId}`,
+    durationMinutes,
+    board,
+  };
+
+  res.status(200).json(successResponse(lessonPlan));
 });

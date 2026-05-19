@@ -10,6 +10,7 @@ import {
   chapters,
   subjects,
   quizAttempts,
+  quizzes,
 } from "../lib/db/schema.js";
 import { classroomRepository } from "../repositories/classroom.repository.js";
 
@@ -136,17 +137,19 @@ export class TeacherService {
     const readiness = await Promise.all(
       chaptersList.map(async (chapter) => {
         // Get quiz attempts for this chapter from students in the classroom
+        // Join through quizzes table: quizAttempts.quizId -> quizzes.id -> quizzes.chapterId
         const scores = await db
           .select({
             score: quizAttempts.score,
           })
           .from(quizAttempts)
+          .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
           .innerJoin(users, eq(quizAttempts.userId, users.id))
           .innerJoin(classroomStudents, eq(users.id, classroomStudents.studentId))
           .where(
             and(
               eq(classroomStudents.classroomId, classroomId),
-              eq(quizAttempts.quizId, chapter.chapterId) // This is a simplification
+              eq(quizzes.chapterId, chapter.chapterId)
             )
           );
 

@@ -6,7 +6,7 @@ import {
   serial,
   text,
   timestamp,
-  uniqueIndex
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 import { boards, users } from "../schema.js";

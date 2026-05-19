@@ -156,7 +156,19 @@ function ClassroomCard({
   const [copied, setCopied] = useState(false);
 
   const copyCode = () => {
-    navigator.clipboard.writeText(classroom.inviteCode);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(classroom.inviteCode);
+    } else {
+      // Fallback for non-HTTPS environments
+      const textarea = document.createElement("textarea");
+      textarea.value = classroom.inviteCode;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
