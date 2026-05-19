@@ -119,11 +119,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       if (!trimmed.startsWith("select")) {
         throw new Error("Only SELECT queries are allowed");
       }
-      // Validate only whitelisted tables are referenced
-      const tableMatches = sql.match(/from\s+["']?(\w+)["']?/gi);
+      // Validate only whitelisted tables are referenced (FROM + all JOIN variants)
+      const tableMatches = sql.match(/(?:from|join)\s+["']?(\w+)["']?/gi);
       if (tableMatches) {
         for (const match of tableMatches) {
-          const tableName = match.replace(/from\s+["']?/i, "").replace(/["']/g, "").toLowerCase();
+          const tableName = match.replace(/(?:from|join)\s+["']?/i, "").replace(/["']/g, "").toLowerCase();
           if (!ALLOWED_TABLES.includes(tableName) && tableName !== "information_schema") {
             throw new Error(`Table "${tableName}" is not in the allowed tables list`);
           }

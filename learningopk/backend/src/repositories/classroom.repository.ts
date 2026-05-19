@@ -302,6 +302,23 @@ export class ClassroomRepository {
       .orderBy(desc(assignmentSubmissions.submittedAt));
   }
 
+  async getSubmissionsForStudentInClassroom(classroomId: number, studentId: string) {
+    return db
+      .select({
+        assignmentId: assignmentSubmissions.assignmentId,
+        status: assignmentSubmissions.status,
+        score: assignmentSubmissions.score,
+      })
+      .from(assignmentSubmissions)
+      .innerJoin(assignments, eq(assignmentSubmissions.assignmentId, assignments.id))
+      .where(
+        and(
+          eq(assignments.classroomId, classroomId),
+          eq(assignmentSubmissions.studentId, studentId)
+        )
+      );
+  }
+
   // --- Announcements ---
 
   async createAnnouncement(classroomId: number, teacherId: string, content: string, pinned = false) {
