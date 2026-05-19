@@ -6,6 +6,8 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { Client } from "pg";
 
+const MAX_ROWS = 1000;
+
 const ALLOWED_TABLES = [
   "classrooms",
   "classroom_students",
@@ -104,7 +106,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       };
     }
     case "describe_table": {
-      const table = String((request.params.arguments as Record<string, unknown>)?.table ?? "");
+      const table = String((request.params.arguments as Record<string, unknown>)?.table ?? "").toLowerCase();
+      if (!ALLOWED_TABLES.includes(table) && table !== "information_schema") {
+        throw new Error(`Table "${table}" is not in the allowed tables list`);
+      }
       const result = await db.query(
         "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = $1",
         [table]
@@ -129,7 +134,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           }
         }
       }
-      const result = await db.query(sql);
+      // Enforce row limit to prevent full-table dumps
+      let boundedSql = sql;
+      if (!/\blimit\b/i.test(sql)) {
+        boundedSql = `${sql.trim()} LIMIT ${MAX_ROWS}`;
+      }
+      const result = await db.query(boundedSql);
       return {
         content: [{ type: "text", text: JSON.stringify(result.rows, null, 2) }],
       };

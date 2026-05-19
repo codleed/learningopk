@@ -158,7 +158,12 @@ export class ClassroomRepository {
       })
       .from(classroomStudents)
       .innerJoin(classrooms, eq(classroomStudents.classroomId, classrooms.id))
-      .where(eq(classroomStudents.studentId, studentId))
+      .where(
+        and(
+          eq(classroomStudents.studentId, studentId),
+          eq(classrooms.isActive, true)
+        )
+      )
       .limit(1);
     return rows[0] ?? null;
   }

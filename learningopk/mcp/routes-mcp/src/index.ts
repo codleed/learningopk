@@ -6,9 +6,25 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { glob } from "glob";
 import { readFile } from "fs/promises";
-import { join } from "path";
+import { join, resolve, normalize } from "path";
 
-const ROUTES_DIR = process.env.ROUTES_DIR || "./backend/src/routes";
+const ROUTES_DIR = resolve(process.env.ROUTES_DIR || "./backend/src/routes");
+
+function safeRoutePath(input: string): string | null {
+  // Reject path traversal attempts and non-.ts files
+  const normalized = normalize(input);
+  if (normalized.startsWith("..") || normalized.startsWith("/") || normalized.startsWith("\\")) {
+    return null;
+  }
+  if (!normalized.endsWith(".ts")) {
+    return null;
+  }
+  const fullPath = resolve(join(ROUTES_DIR, normalized));
+  if (!fullPath.startsWith(ROUTES_DIR)) {
+    return null;
+  }
+  return fullPath;
+}
 
 const server = new Server(
   {
@@ -78,7 +94,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case "get_route_schema": {
       const args = request.params.arguments as Record<string, unknown>;
       const file = String(args?.file ?? "");
-      const content = await readFile(join(ROUTES_DIR, file), "utf-8").catch(() => null);
+      const safePath = safeRoutePath(file);
+      if (!safePath) {
+        throw new Error(`Invalid route file name: ${file}`);
+      }
+      const content = await readFile(safePath, "utf-8").catch(() => null);
       if (!content) {
         throw new Error(`Route file not found: ${file}`);
       }
