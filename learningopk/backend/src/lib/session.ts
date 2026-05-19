@@ -7,6 +7,7 @@ import { db } from "./db/index.js";
 import { users } from "./db/schema.js";
 import { ServiceUnavailableError } from "./errors/index.js";
 import { logger } from "./logger.js";
+import { errorResponse } from "./response.js";
 
 export type SessionResult = Awaited<ReturnType<typeof auth.api.getSession>>;
 
@@ -73,6 +74,19 @@ export const requireSession: RequestHandler = async (req, res, next) => {
       code: "AUTH_SERVICE_UNAVAILABLE"
     });
   }
+};
+
+export const requireTeacherRole = async (req: AuthenticatedRequest, res: Response): Promise<boolean> => {
+  const user = await db
+    .select({ role: users.role })
+    .from(users)
+    .where(eq(users.id, req.session.user.id))
+    .limit(1);
+  if (user[0]?.role !== "teacher") {
+    res.status(403).json(errorResponse("Teacher access required", "FORBIDDEN"));
+    return false;
+  }
+  return true;
 };
 
 export const getSessionFromRequest = async (req: Request): Promise<SessionResult> => {

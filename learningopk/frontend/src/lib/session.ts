@@ -19,7 +19,7 @@ export type SessionPayload = {
     class?: string | null;
     degree?: string | null;
     board?: string | null;
-    role?: "student" | "admin" | "moderator";
+    role?: "student" | "teacher" | "admin" | "moderator";
     schoolId?: number | null;
   };
 };

@@ -1,0 +1,22 @@
+{
+  "name": "@learningopk/mcp-db",
+  "version": "0.1.0",
+  "description": "MCP server for Drizzle schema introspection and safe queries",
+  "type": "module",
+  "bin": {
+    "learningopk-db-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "pg": "^8.11.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.10.0",
+    "typescript": "^5.0.0"
+  }
+}

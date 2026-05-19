@@ -30,6 +30,8 @@ import { pastPapersRouter } from "./routes/past-papers.js";
 import { notesRouter } from "./routes/notes.js";
 import { studyGroupsRouter } from "./routes/study-groups.js";
 import { schoolsRouter } from "./routes/schools.js";
+import { teacherRouter } from "./routes/teacher.js";
+import { classroomRouter } from "./routes/classroom.js";
 
 export const createApp = () => {
   const app = express();
@@ -97,6 +99,8 @@ app.use("/api/past-papers", pastPapersRouter);
   app.use("/api/notes", notesRouter);
   app.use("/api/users", profileRouter);
   app.use("/api/schools", schoolsRouter);
+  app.use("/api/teacher", teacherRouter);
+  app.use("/api/classrooms", classroomRouter);
   app.use("/api/admin/content", chapterMediaRouter);
   app.use("/api/admin/content", subjectMediaRouter);
   app.use("/api/admin", performanceRouter);

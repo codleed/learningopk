@@ -1,0 +1,20 @@
+{
+  "name": "@learningopk/mcp-i18n",
+  "version": "0.1.0",
+  "description": "MCP server for Urdu translation pipeline",
+  "type": "module",
+  "bin": {
+    "learningopk-i18n-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
