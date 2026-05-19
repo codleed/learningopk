@@ -119,8 +119,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       };
     }
     case "safe_query": {
-      const sql = String((request.params.arguments as Record<string, unknown>)?.sql ?? "");
-      const trimmed = sql.trim().toLowerCase();
+      const rawSql = String((request.params.arguments as Record<string, unknown>)?.sql ?? "");
+
+      // Strip trailing semicolons and reject multi-statement queries
+      // (pg's simple query protocol executes all semicolon-separated statements)
+      const sql = rawSql.trim().replace(/;+$/, "").trim();
+      if (sql.includes(";")) {
+        throw new Error("Multi-statement queries are not allowed");
+      }
+
+      const trimmed = sql.toLowerCase();
       if (!trimmed.startsWith("select")) {
         throw new Error("Only SELECT queries are allowed");
       }
@@ -137,7 +145,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // Enforce row limit to prevent full-table dumps.
       // Strip any existing LIMIT (and optional OFFSET) before appending the hard cap
       // to avoid a PostgreSQL syntax error from double LIMIT clauses.
-      const withoutLimit = sql.trim().replace(/\s+LIMIT\s+\d+(\s+OFFSET\s+\d+)?\s*$/i, "");
+      const withoutLimit = sql.replace(/\s+LIMIT\s+\d+(\s+OFFSET\s+\d+)?\s*$/i, "");
       const boundedSql = `${withoutLimit} LIMIT ${MAX_ROWS}`;
       const result = await db.query(boundedSql);
       return {
