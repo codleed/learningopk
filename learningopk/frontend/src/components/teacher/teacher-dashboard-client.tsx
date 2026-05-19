@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Users, BookOpen, Copy, Check } from "lucide-react";
+import { useClipboard } from "@/hooks/useClipboard";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -153,24 +154,11 @@ function ClassroomCard({
   classroom: Classroom;
   onClick: () => void;
 }) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy: copyCode } = useClipboard();
 
-  const copyCode = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(classroom.inviteCode);
-    } else {
-      // Fallback for non-HTTPS environments
-      const textarea = document.createElement("textarea");
-      textarea.value = classroom.inviteCode;
-      textarea.style.position = "fixed";
-      textarea.style.opacity = "0";
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textarea);
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    copyCode(classroom.inviteCode);
   };
 
   return (
@@ -204,10 +192,7 @@ function ClassroomCard({
             Code: {classroom.inviteCode}
           </span>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              copyCode();
-            }}
+            onClick={handleCopy}
             className="rounded p-1 hover:bg-[var(--muted)]"
           >
             {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}

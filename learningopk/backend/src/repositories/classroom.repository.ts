@@ -21,6 +21,10 @@ function generateInviteCode(): string {
   return code;
 }
 
+function isUniqueViolation(err: unknown): boolean {
+  return typeof err === "object" && err !== null && (err as Record<string, unknown>).code === "23505";
+}
+
 export class ClassroomRepository {
   // --- Classrooms ---
 
@@ -33,19 +37,27 @@ export class ClassroomRepository {
       description?: string | null | undefined;
     }
   ) {
-    const inviteCode = generateInviteCode();
-    const inserted = await db
-      .insert(classrooms)
-      .values({
-        teacherId,
-        name: data.name,
-        boardId: data.boardId,
-        grade: data.grade,
-        inviteCode,
-        description: data.description,
-      })
-      .returning();
-    return inserted[0] ?? null;
+    // Retry on unique invite-code collision (extremely rare but possible)
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const inviteCode = generateInviteCode();
+      try {
+        const inserted = await db
+          .insert(classrooms)
+          .values({
+            teacherId,
+            name: data.name,
+            boardId: data.boardId,
+            grade: data.grade,
+            inviteCode,
+            description: data.description,
+          })
+          .returning();
+        return inserted[0] ?? null;
+      } catch (err) {
+        if (attempt === 4 || !isUniqueViolation(err)) throw err;
+      }
+    }
+    return null;
   }
 
   async getClassroomsByTeacher(teacherId: string) {
@@ -138,7 +150,7 @@ export class ClassroomRepository {
       .select({ count: count() })
       .from(classroomStudents)
       .where(eq(classroomStudents.classroomId, classroomId));
-    return rows[0]?.count ?? 0;
+    return Number(rows[0]?.count ?? 0);
   }
 
   async isStudentInClassroom(classroomId: number, studentId: string) {
@@ -200,7 +212,7 @@ export class ClassroomRepository {
     return db
       .select({
         assignment: assignments,
-        submissionCount: count(assignmentSubmissions.id),
+        submissionCount: sql<number>`count(case when ${assignmentSubmissions.status} = 'submitted' then 1 end)`,
       })
       .from(assignments)
       .leftJoin(assignmentSubmissions, eq(assignments.id, assignmentSubmissions.assignmentId))

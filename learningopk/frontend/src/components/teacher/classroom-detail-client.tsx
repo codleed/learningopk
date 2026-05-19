@@ -12,6 +12,7 @@ import {
   Plus,
   Send,
 } from "lucide-react";
+import { useClipboard } from "@/hooks/useClipboard";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -137,25 +138,10 @@ function StudentsTab({
   students: Student[];
   setStudents: (s: Student[]) => void;
 }) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy: copyCode } = useClipboard();
   const [removingId, setRemovingId] = useState<string | null>(null);
 
-  const copyCode = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(classroom.inviteCode);
-    } else {
-      const textarea = document.createElement("textarea");
-      textarea.value = classroom.inviteCode;
-      textarea.style.position = "fixed";
-      textarea.style.opacity = "0";
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textarea);
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const handleCopy = () => copyCode(classroom.inviteCode);
 
   const handleRemove = async (studentId: string) => {
     setRemovingId(studentId);
@@ -175,7 +161,7 @@ function StudentsTab({
           <code className="rounded bg-[var(--muted)] px-2 py-1 text-sm font-mono">
             {classroom.inviteCode}
           </code>
-          <Button size="xs" variant="ghost" onClick={copyCode}>
+          <Button size="xs" variant="ghost" onClick={handleCopy}>
             {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
           </Button>
         </div>

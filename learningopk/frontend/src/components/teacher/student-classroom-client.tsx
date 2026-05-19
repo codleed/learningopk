@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Megaphone, ClipboardList, BookOpen, Copy, Check } from "lucide-react";
+import { useClipboard } from "@/hooks/useClipboard";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from "@/components/ui/card";
@@ -112,7 +113,7 @@ export function StudentClassroomClient({
 }
 
 function ClassroomInfoCard({ classroom }: { classroom: NonNullable<Classroom> }) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useClipboard();
 
   return (
     <Card>
@@ -132,22 +133,7 @@ function ClassroomInfoCard({ classroom }: { classroom: NonNullable<Classroom> })
             {classroom.inviteCode}
           </code>
           <button
-            onClick={() => {
-              if (navigator.clipboard) {
-                navigator.clipboard.writeText(classroom.inviteCode);
-              } else {
-                const ta = document.createElement("textarea");
-                ta.value = classroom.inviteCode;
-                ta.style.position = "fixed";
-                ta.style.opacity = "0";
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand("copy");
-                document.body.removeChild(ta);
-              }
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            }}
+            onClick={() => copy(classroom.inviteCode)}
             className="rounded p-1 hover:bg-[var(--muted)]"
           >
             {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}

@@ -600,7 +600,7 @@ teacherRouter.post("/ai/generate-quiz", requireSession, async (req, res) => {
 
   const { chapterId, questionCount, types, board } = parsed.data;
 
-  // Generate board-specific placeholder questions for teacher review
+  // Generate board-specific placeholder questions for teacher review (AI integration pending)
   const questions = Array.from({ length: questionCount }, (_, i) => ({
     id: i + 1,
     type: types[i % types.length],
@@ -612,7 +612,7 @@ teacherRouter.post("/ai/generate-quiz", requireSession, async (req, res) => {
     marks: 1,
   }));
 
-  res.status(200).json(successResponse({ chapterId, board, questions }));
+  res.status(200).json(successResponse({ chapterId, board, questions, status: "placeholder" }));
 });
 
 // POST /api/teacher/ai/lesson-plan — AI lesson planner
@@ -647,6 +647,7 @@ teacherRouter.post("/ai/lesson-plan", requireSession, async (req, res) => {
     homework: `Assign the remaining ${board} textbook exercises from chapter ${chapterId}`,
     durationMinutes,
     board,
+    status: "placeholder",
   };
 
   res.status(200).json(successResponse(lessonPlan));

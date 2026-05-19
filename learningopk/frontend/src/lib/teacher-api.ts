@@ -115,13 +115,9 @@ export async function updateClassroom(classroomId: number, data: Partial<{
 }
 
 export async function deleteClassroom(classroomId: number) {
-  const response = await fetch(`${backendUrl}/api/teacher/classrooms/${classroomId}`, {
+  return fetchTeacherJson(`/api/teacher/classrooms/${classroomId}`, z.object({ archived: z.boolean() }), {
     method: "DELETE",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
   });
-  if (!response.ok) throw new Error(`Failed to delete classroom: ${response.status}`);
-  return response.json();
 }
 
 export async function getStudents(classroomId: number, cookieHeader?: string) {
@@ -129,13 +125,9 @@ export async function getStudents(classroomId: number, cookieHeader?: string) {
 }
 
 export async function removeStudent(classroomId: number, studentId: string) {
-  const response = await fetch(`${backendUrl}/api/teacher/classrooms/${classroomId}/students/${studentId}/remove`, {
+  return fetchTeacherJson(`/api/teacher/classrooms/${classroomId}/students/${studentId}/remove`, z.object({ removed: z.boolean() }), {
     method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
   });
-  if (!response.ok) throw new Error(`Failed to remove student: ${response.status}`);
-  return response.json();
 }
 
 export async function getAssignments(classroomId: number, cookieHeader?: string) {

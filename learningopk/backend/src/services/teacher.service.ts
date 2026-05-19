@@ -127,7 +127,6 @@ export class TeacherService {
   async getClassReadiness(classroomId: number) {
     const classroom = await classroomRepository.getClassroomById(classroomId);
     if (!classroom) return [];
-    if (classroom.grade !== "9" && classroom.grade !== "10") return [];
 
     // Get all subjects + chapters for the board/grade
     const chaptersList = await db
@@ -142,51 +141,58 @@ export class TeacherService {
       .where(
         and(
           eq(subjects.boardId, classroom.boardId),
-          eq(subjects.grade, classroom.grade)
+          sql`${subjects.grade} = ${classroom.grade}`
         )
       );
 
     const students = await classroomRepository.getStudents(classroomId);
     const totalStudents = students.length;
+    const chapterIds = chaptersList.map((c) => c.chapterId);
 
-    const readiness = await Promise.all(
-      chaptersList.map(async (chapter) => {
-        // Get quiz attempts for this chapter from students in the classroom
-        // Join through quizzes table: quizAttempts.quizId -> quizzes.id -> quizzes.chapterId
-        const scores = await db
-          .select({
-            score: quizAttempts.score,
-          })
-          .from(quizAttempts)
-          .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
-          .innerJoin(users, eq(quizAttempts.userId, users.id))
-          .innerJoin(classroomStudents, eq(users.id, classroomStudents.studentId))
-          .where(
-            and(
-              eq(classroomStudents.classroomId, classroomId),
-              eq(quizzes.chapterId, chapter.chapterId)
-            )
-          );
+    if (chapterIds.length === 0) return [];
 
-        const avgScore = scores.length > 0
-          ? Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length)
-          : 0;
-
-        const above70 = scores.filter((s) => s.score >= 70).length;
-        const below50 = scores.filter((s) => s.score < 50).length;
-
-        return {
-          chapterId: chapter.chapterId,
-          chapterName: chapter.chapterName,
-          subjectName: chapter.subjectName,
-          avgScore,
-          studentsAbove70Percent: totalStudents > 0 ? Math.round((above70 / totalStudents) * 100) : 0,
-          studentsBelow50Percent: totalStudents > 0 ? Math.round((below50 / totalStudents) * 100) : 0,
-        };
+    // Batch: fetch all quiz attempts for all chapters in one query
+    const allScores = await db
+      .select({
+        chapterId: quizzes.chapterId,
+        score: quizAttempts.score,
       })
-    );
+      .from(quizAttempts)
+      .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
+      .innerJoin(users, eq(quizAttempts.userId, users.id))
+      .innerJoin(classroomStudents, eq(users.id, classroomStudents.studentId))
+      .where(
+        and(
+          eq(classroomStudents.classroomId, classroomId),
+          inArray(quizzes.chapterId, chapterIds)
+        )
+      );
 
-    return readiness;
+    // Group scores by chapterId
+    const scoresByChapter = new Map<number, number[]>();
+    for (const row of allScores) {
+      const arr = scoresByChapter.get(row.chapterId) ?? [];
+      arr.push(row.score);
+      scoresByChapter.set(row.chapterId, arr);
+    }
+
+    return chaptersList.map((chapter) => {
+      const scores = scoresByChapter.get(chapter.chapterId) ?? [];
+      const avgScore = scores.length > 0
+        ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
+        : 0;
+      const above70 = scores.filter((s) => s >= 70).length;
+      const below50 = scores.filter((s) => s < 50).length;
+
+      return {
+        chapterId: chapter.chapterId,
+        chapterName: chapter.chapterName,
+        subjectName: chapter.subjectName,
+        avgScore,
+        studentsAbove70Percent: totalStudents > 0 ? Math.round((above70 / totalStudents) * 100) : 0,
+        studentsBelow50Percent: totalStudents > 0 ? Math.round((below50 / totalStudents) * 100) : 0,
+      };
+    });
   }
 }
 

@@ -213,3 +213,75 @@ test("Teacher posts and views announcements", async () => {
   await db.delete(classrooms).where(eq(classrooms.id, classroomId));
   await db.delete(users).where(eq(users.id, t.id));
 });
+
+test("Student cannot join the same classroom twice", async () => {
+  const teacherAgent = request.agent(app);
+  const studentAgent = request.agent(app);
+
+  await signUp(teacherAgent, "Teacher Dupe", makeEmail("teacher"));
+  const teacherUser = await getSessionUser(teacherAgent);
+  await db.update(users).set({ role: "teacher" }).where(eq(users.id, teacherUser.id));
+
+  await signUp(studentAgent, "Student Dupe", makeEmail("student"));
+
+  const createRes = await teacherAgent
+    .post("/api/teacher/classrooms")
+    .send({ name: "Dupe Join Test", boardId: 1, grade: "9" });
+  const inviteCode = createRes.body.data.inviteCode;
+  const classroomId = createRes.body.data.id;
+
+  // First join should succeed
+  const join1 = await studentAgent.post("/api/classrooms/join").send({ inviteCode });
+  assert.equal(join1.status, 200, `First join: ${JSON.stringify(join1.body)}`);
+
+  // Second join should be rejected (409)
+  const join2 = await studentAgent.post("/api/classrooms/join").send({ inviteCode });
+  assert.equal(join2.status, 409, `Expected 409 for duplicate join, got ${join2.status}: ${JSON.stringify(join2.body)}`);
+
+  // Cleanup
+  await db.delete(classroomStudents).where(eq(classroomStudents.classroomId, classroomId));
+  await db.delete(classrooms).where(eq(classrooms.id, classroomId));
+  const studentUser = await getSessionUser(studentAgent);
+  await db.delete(users).where(eq(users.id, teacherUser.id));
+  await db.delete(users).where(eq(users.id, studentUser.id));
+});
+
+test("Teacher cannot delete another teacher's announcement", async () => {
+  const teacher1Agent = request.agent(app);
+  const teacher2Agent = request.agent(app);
+
+  await signUp(teacher1Agent, "T1 Ann", makeEmail("teacher"));
+  const t1 = await getSessionUser(teacher1Agent);
+  await db.update(users).set({ role: "teacher" }).where(eq(users.id, t1.id));
+
+  await signUp(teacher2Agent, "T2 Ann", makeEmail("student"));
+  const t2 = await getSessionUser(teacher2Agent);
+  await db.update(users).set({ role: "teacher" }).where(eq(users.id, t2.id));
+
+  // T1 creates classroom and announcement
+  const createRes = await teacher1Agent
+    .post("/api/teacher/classrooms")
+    .send({ name: "T1 Announcement Class", boardId: 1, grade: "9" });
+  const classroomId = createRes.body.data.id;
+
+  const announceRes = await teacher1Agent
+    .post(`/api/teacher/classrooms/${classroomId}/announcements`)
+    .send({ content: "T1 announcement" });
+  assert.equal(announceRes.status, 201);
+  const announcementId = announceRes.body.data.id;
+
+  // T2 tries to delete T1's announcement (should fail with 403 because T2 doesn't own the classroom)
+  const deleteRes = await teacher2Agent
+    .delete(`/api/teacher/classrooms/${classroomId}/announcements/${announcementId}`);
+  assert.equal(deleteRes.status, 403, `Expected 403 for cross-teacher delete, got ${deleteRes.status}: ${JSON.stringify(deleteRes.body)}`);
+
+  // T1 CAN delete their own announcement
+  const selfDeleteRes = await teacher1Agent
+    .delete(`/api/teacher/classrooms/${classroomId}/announcements/${announcementId}`);
+  assert.equal(selfDeleteRes.status, 200, `Expected 200 for own delete, got ${selfDeleteRes.status}: ${JSON.stringify(selfDeleteRes.body)}`);
+
+  // Cleanup
+  await db.delete(classrooms).where(eq(classrooms.id, classroomId));
+  await db.delete(users).where(eq(users.id, t1.id));
+  await db.delete(users).where(eq(users.id, t2.id));
+});
