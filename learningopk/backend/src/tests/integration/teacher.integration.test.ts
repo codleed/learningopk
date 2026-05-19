@@ -33,6 +33,9 @@ const getSessionUser = async (agent: AuthAgent): Promise<{ id: string; role?: st
   return response.body.user;
 };
 
+const makeEmail = (prefix: string) =>
+  `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@test.com`;
+
 const app = createApp();
 
 after(async () => {
@@ -40,22 +43,18 @@ after(async () => {
   await pool.end();
 });
 
-const TEST_TEACHER_EMAIL = `teacher-test-${Date.now()}@test.com`;
-const TEST_STUDENT_EMAIL = `student-test-${Date.now()}@test.com`;
-const TEST_STUDENT_2_EMAIL = `student2-test-${Date.now()}@test.com`;
-
 test("Teacher creates classroom, student joins, and teacher views roster", async () => {
   const teacherAgent = request.agent(app);
   const studentAgent = request.agent(app);
 
   // Sign up teacher
-  await signUp(teacherAgent, "Teacher Test", TEST_TEACHER_EMAIL);
+  await signUp(teacherAgent, "Teacher Test", makeEmail("teacher"));
   // Set teacher role
   const teacherUser = await getSessionUser(teacherAgent);
   await db.update(users).set({ role: "teacher" }).where(eq(users.id, teacherUser.id));
 
   // Sign up student
-  await signUp(studentAgent, "Student Test", TEST_STUDENT_EMAIL);
+  await signUp(studentAgent, "Student Test", makeEmail("student"));
 
   // Teacher creates classroom
   const createRes = await teacherAgent
@@ -92,11 +91,11 @@ test("Teacher creates assignment and views submissions", async () => {
   const teacherAgent = request.agent(app);
   const studentAgent = request.agent(app);
 
-  await signUp(teacherAgent, "Teacher Test 2", TEST_TEACHER_EMAIL);
+  await signUp(teacherAgent, "Teacher Test 2", makeEmail("teacher"));
   const teacherUser = await getSessionUser(teacherAgent);
   await db.update(users).set({ role: "teacher" }).where(eq(users.id, teacherUser.id));
 
-  await signUp(studentAgent, "Student Test 2", TEST_STUDENT_EMAIL);
+  await signUp(studentAgent, "Student Test 2", makeEmail("student"));
 
   const createRes = await teacherAgent
     .post("/api/teacher/classrooms")
@@ -134,7 +133,7 @@ test("Teacher creates assignment and views submissions", async () => {
 test("Non-teacher gets 403 on teacher endpoints", async () => {
   const studentAgent = request.agent(app);
 
-  await signUp(studentAgent, "NonTeacher Test", TEST_STUDENT_2_EMAIL);
+  await signUp(studentAgent, "NonTeacher Test", makeEmail("student2"));
 
   const res = await studentAgent.get("/api/teacher/classrooms");
   assert.equal(res.status, 403, `Expected 403, got ${res.status}`);
@@ -148,11 +147,11 @@ test("Teacher cannot access another teacher's classroom", async () => {
   const teacher1Agent = request.agent(app);
   const teacher2Agent = request.agent(app);
 
-  await signUp(teacher1Agent, "T1", TEST_TEACHER_EMAIL);
+  await signUp(teacher1Agent, "T1", makeEmail("teacher"));
   const t1 = await getSessionUser(teacher1Agent);
   await db.update(users).set({ role: "teacher" }).where(eq(users.id, t1.id));
 
-  await signUp(teacher2Agent, "T2", TEST_STUDENT_EMAIL);
+  await signUp(teacher2Agent, "T2", makeEmail("student"));
   const t2 = await getSessionUser(teacher2Agent);
   await db.update(users).set({ role: "teacher" }).where(eq(users.id, t2.id));
 
@@ -175,7 +174,7 @@ test("Teacher cannot access another teacher's classroom", async () => {
 test("Invalid invite code returns 404", async () => {
   const studentAgent = request.agent(app);
 
-  await signUp(studentAgent, "Invalid Invite Student", TEST_STUDENT_2_EMAIL);
+  await signUp(studentAgent, "Invalid Invite Student", makeEmail("student2"));
 
   const res = await studentAgent.post("/api/classrooms/join").send({ inviteCode: "ZZZZZZ" });
   assert.equal(res.status, 404, `Expected 404, got ${res.status}`);
@@ -188,7 +187,7 @@ test("Invalid invite code returns 404", async () => {
 test("Teacher posts and views announcements", async () => {
   const teacherAgent = request.agent(app);
 
-  await signUp(teacherAgent, "Announcement Test T", TEST_TEACHER_EMAIL);
+  await signUp(teacherAgent, "Announcement Test T", makeEmail("teacher"));
   const t = await getSessionUser(teacherAgent);
   await db.update(users).set({ role: "teacher" }).where(eq(users.id, t.id));
 

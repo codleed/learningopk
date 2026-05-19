@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { z } from "zod";
-import { and, eq, count } from "drizzle-orm";
+import { and, eq, count, inArray } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
-import { classrooms, users, assignments, assignmentSubmissions, classroomAnnouncements } from "../lib/db/schema.js";
+import { classrooms, users, assignments, assignmentSubmissions, classroomAnnouncements, classroomStudents } from "../lib/db/schema.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { requireTeacherRole } from "../lib/session.js";
 import { classroomRepository } from "../repositories/classroom.repository.js";
@@ -12,6 +12,10 @@ import { teacherService } from "../services/teacher.service.js";
 
 export const teacherRouter = Router();
 
+function parseIdParam(value: unknown): number {
+  return typeof value === "string" ? parseInt(value, 10) : NaN;
+}
+
 // All teacher routes require session + teacher role
 
 // GET /api/teacher/classrooms/:id — get single classroom
@@ -19,8 +23,7 @@ teacherRouter.get("/classrooms/:id", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.id;
-  const classroomId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const classroomId = parseIdParam(req.params.id);
   if (isNaN(classroomId)) {
     res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
     return;
@@ -42,13 +45,22 @@ teacherRouter.get("/classrooms", requireSession, async (req, res) => {
 
   const teacherClassrooms = await classroomRepository.getClassroomsByTeacher(authedReq.session.user.id);
 
-  // Attach student counts
-  const withCounts = await Promise.all(
-    teacherClassrooms.map(async (classroom) => {
-      const studentCount = await classroomRepository.getStudentCount(classroom.id);
-      return { ...classroom, studentCount };
-    })
-  );
+  // Batch: student counts for all classrooms
+  const classroomIds = teacherClassrooms.map((c) => c.id);
+  const studentCounts = classroomIds.length > 0
+    ? await db
+        .select({ classroomId: classroomStudents.classroomId, count: count() })
+        .from(classroomStudents)
+        .where(inArray(classroomStudents.classroomId, classroomIds))
+        .groupBy(classroomStudents.classroomId)
+    : [];
+
+  const countMap = new Map(studentCounts.map((row) => [row.classroomId, Number(row.count)]));
+
+  const withCounts = teacherClassrooms.map((classroom) => ({
+    ...classroom,
+    studentCount: countMap.get(classroom.id) ?? 0,
+  }));
 
   res.status(200).json(successResponse(withCounts));
 });
@@ -85,8 +97,7 @@ teacherRouter.patch("/classrooms/:id", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.id;
-  const classroomId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const classroomId = parseIdParam(req.params.id);
   if (isNaN(classroomId)) {
     res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
     return;
@@ -124,8 +135,7 @@ teacherRouter.delete("/classrooms/:id", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.id;
-  const classroomId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const classroomId = parseIdParam(req.params.id);
   if (isNaN(classroomId)) {
     res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
     return;
@@ -145,8 +155,7 @@ teacherRouter.get("/classrooms/:id/students", requireSession, async (req, res) =
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.id;
-  const classroomId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const classroomId = parseIdParam(req.params.id);
   if (isNaN(classroomId)) {
     res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
     return;
@@ -178,25 +187,35 @@ teacherRouter.get("/classrooms/:id/students", requireSession, async (req, res) =
     return;
   }
 
-  const studentsWithCompletion = await Promise.all(
-    students.map(async (student) => {
-      const completedRows = await db
-        .select({ count: count() })
+  // Batch: completed counts per student
+  const studentIds = students.map((s) => s.id);
+  const completedCounts = studentIds.length > 0
+    ? await db
+        .select({
+          studentId: assignmentSubmissions.studentId,
+          completed: count(),
+        })
         .from(assignmentSubmissions)
+        .innerJoin(assignments, eq(assignmentSubmissions.assignmentId, assignments.id))
         .where(
           and(
-            eq(assignmentSubmissions.studentId, student.id),
-            eq(assignmentSubmissions.status, "submitted")
+            eq(assignments.classroomId, classroomId),
+            eq(assignmentSubmissions.status, "submitted"),
+            inArray(assignmentSubmissions.studentId, studentIds)
           )
-        );
+        )
+        .groupBy(assignmentSubmissions.studentId)
+    : [];
 
-      const completed = completedRows[0]?.count ?? 0;
-      return {
-        ...student,
-        completionPercent: Math.round((completed / totalAssignments) * 100),
-      };
-    })
-  );
+  const completedMap = new Map(completedCounts.map((row) => [row.studentId, Number(row.completed)]));
+
+  const studentsWithCompletion = students.map((student) => {
+    const completed = completedMap.get(student.id) ?? 0;
+    return {
+      ...student,
+      completionPercent: Math.round((completed / totalAssignments) * 100),
+    };
+  });
 
   res.status(200).json(successResponse(studentsWithCompletion));
 });
@@ -206,10 +225,8 @@ teacherRouter.post("/classrooms/:id/students/:sid/remove", requireSession, async
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.id;
-  const sidParam = req.params.sid;
-  const classroomId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
-  const studentId = typeof sidParam === "string" ? sidParam : "";
+  const classroomId = parseIdParam(req.params.id);
+  const studentId = typeof req.params.sid === "string" ? req.params.sid : "";
 
   if (isNaN(classroomId) || !studentId) {
     res.status(400).json(errorResponse("Invalid parameters", "VALIDATION_ERROR"));
@@ -231,8 +248,7 @@ teacherRouter.get("/classrooms/:id/assignments", requireSession, async (req, res
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.id;
-  const classroomId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const classroomId = parseIdParam(req.params.id);
   if (isNaN(classroomId)) {
     res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
     return;
@@ -270,8 +286,7 @@ teacherRouter.post("/classrooms/:id/assignments", requireSession, async (req, re
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.id;
-  const classroomId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const classroomId = parseIdParam(req.params.id);
   if (isNaN(classroomId)) {
     res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
     return;
@@ -309,8 +324,7 @@ teacherRouter.patch("/assignments/:id", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.id;
-  const assignmentId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const assignmentId = parseIdParam(req.params.id);
   if (isNaN(assignmentId)) {
     res.status(400).json(errorResponse("Invalid assignment ID", "VALIDATION_ERROR"));
     return;
@@ -358,8 +372,7 @@ teacherRouter.delete("/assignments/:id", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.id;
-  const assignmentId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const assignmentId = parseIdParam(req.params.id);
   if (isNaN(assignmentId)) {
     res.status(400).json(errorResponse("Invalid assignment ID", "VALIDATION_ERROR"));
     return;
@@ -386,8 +399,7 @@ teacherRouter.get("/assignments/:id/submissions", requireSession, async (req, re
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.id;
-  const assignmentId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const assignmentId = parseIdParam(req.params.id);
   if (isNaN(assignmentId)) {
     res.status(400).json(errorResponse("Invalid assignment ID", "VALIDATION_ERROR"));
     return;
@@ -414,8 +426,7 @@ teacherRouter.get("/classrooms/:id/announcements", requireSession, async (req, r
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.id;
-  const classroomId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const classroomId = parseIdParam(req.params.id);
   if (isNaN(classroomId)) {
     res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
     return;
@@ -436,8 +447,7 @@ teacherRouter.post("/classrooms/:id/announcements", requireSession, async (req, 
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.id;
-  const classroomId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const classroomId = parseIdParam(req.params.id);
   if (isNaN(classroomId)) {
     res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
     return;
@@ -475,8 +485,7 @@ teacherRouter.delete("/classrooms/:id/announcements/:aid", requireSession, async
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const aidParam = req.params.aid;
-  const announcementId = typeof aidParam === "string" ? parseInt(aidParam, 10) : NaN;
+  const announcementId = parseIdParam(req.params.aid);
   if (isNaN(announcementId)) {
     res.status(400).json(errorResponse("Invalid announcement ID", "VALIDATION_ERROR"));
     return;
@@ -491,8 +500,7 @@ teacherRouter.get("/classrooms/:id/alerts", requireSession, async (req, res) => 
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.id;
-  const classroomId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const classroomId = parseIdParam(req.params.id);
   if (isNaN(classroomId)) {
     res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
     return;
@@ -515,8 +523,7 @@ teacherRouter.get("/ai/differentiate/:classroomId", requireSession, async (req, 
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.classroomId;
-  const classroomId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const classroomId = parseIdParam(req.params.classroomId);
   if (isNaN(classroomId)) {
     res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
     return;
@@ -537,8 +544,7 @@ teacherRouter.get("/ai/readiness/:classroomId", requireSession, async (req, res)
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const idParam = req.params.classroomId;
-  const classroomId = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const classroomId = parseIdParam(req.params.classroomId);
   if (isNaN(classroomId)) {
     res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
     return;

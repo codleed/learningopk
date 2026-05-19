@@ -1,4 +1,4 @@
-import { eq, and, sql, count, desc } from "drizzle-orm";
+import { eq, and, sql, count, desc, inArray } from "drizzle-orm";
 import { db } from "../lib/db/index.js";
 import {
   classrooms,
@@ -17,6 +17,7 @@ import { classroomRepository } from "../repositories/classroom.repository.js";
 export class TeacherService {
   async getStudentProgressInClassroom(classroomId: number) {
     const students = await classroomRepository.getStudents(classroomId);
+    const studentIds = students.map((s) => s.id);
 
     const assignmentList = await db
       .select({ id: assignments.id })
@@ -25,94 +26,108 @@ export class TeacherService {
 
     const totalAssignments = assignmentList.length;
 
-    const progress = await Promise.all(
-      students.map(async (student) => {
-        // Completed assignments
-        const completedRows = await db
-          .select({ count: count() })
+    // Batch: completed counts + avg scores per student
+    const submissionAgg = studentIds.length > 0
+      ? await db
+          .select({
+            studentId: assignmentSubmissions.studentId,
+            completed: count(),
+            avgScore: sql<number>`coalesce(avg(${assignmentSubmissions.score}), 0)::int`,
+          })
           .from(assignmentSubmissions)
+          .innerJoin(assignments, eq(assignmentSubmissions.assignmentId, assignments.id))
           .where(
             and(
-              eq(assignmentSubmissions.studentId, student.id),
-              eq(assignmentSubmissions.status, "submitted")
+              eq(assignments.classroomId, classroomId),
+              eq(assignmentSubmissions.status, "submitted"),
+              inArray(assignmentSubmissions.studentId, studentIds)
             )
-          );
-        const completed = completedRows[0]?.count ?? 0;
+          )
+          .groupBy(assignmentSubmissions.studentId)
+      : [];
 
-        // Average quiz score
-        const avgScoreRows = await db
-          .select({ avgScore: sql<number>`coalesce(avg(${assignmentSubmissions.score}), 0)::int` })
-          .from(assignmentSubmissions)
-          .where(
-            and(
-              eq(assignmentSubmissions.studentId, student.id),
-              eq(assignmentSubmissions.status, "submitted")
-            )
-          );
-        const avgScore = avgScoreRows[0]?.avgScore ?? 0;
+    const submissionMap = new Map(submissionAgg.map((row) => [row.studentId, row]));
 
-        // Last active date
-        const lastActiveRows = await db
-          .select({ visitedAt: userProgress.visitedAt })
+    // Batch: last active per student
+    const lastActiveRows = studentIds.length > 0
+      ? await db
+          .select({ userId: userProgress.userId, visitedAt: userProgress.visitedAt })
           .from(userProgress)
-          .where(eq(userProgress.userId, student.id))
+          .where(inArray(userProgress.userId, studentIds))
           .orderBy(desc(userProgress.visitedAt))
-          .limit(1);
-        const lastActive = lastActiveRows[0]?.visitedAt ?? null;
+      : [];
 
-        return {
-          ...student,
-          assignmentsCompleted: completed,
-          totalAssignments,
-          avgScore,
-          lastActive,
-        };
-      })
-    );
+    const lastActiveMap = new Map<string, Date>();
+    for (const row of lastActiveRows) {
+      if (!lastActiveMap.has(row.userId)) {
+        lastActiveMap.set(row.userId, row.visitedAt);
+      }
+    }
 
-    return progress;
+    return students.map((student) => {
+      const sub = submissionMap.get(student.id);
+      return {
+        ...student,
+        assignmentsCompleted: sub?.completed ?? 0,
+        totalAssignments,
+        avgScore: sub?.avgScore ?? 0,
+        lastActive: lastActiveMap.get(student.id) ?? null,
+      };
+    });
   }
 
   async getDifferentiationSuggestions(classroomId: number) {
     const students = await classroomRepository.getStudents(classroomId);
+    const studentIds = students.map((s) => s.id);
+    if (studentIds.length === 0) return [];
 
-    const suggestions = await Promise.all(
-      students.map(async (student) => {
-        // Get weak topics (chapters where avg quiz score < 50%)
-        const weakTopics = await db
-          .select({
-            chapterId: userProgress.chapterId,
-            chapterTitle: chapters.title,
-            score: userProgress.quizBestScore,
-          })
-          .from(userProgress)
-          .innerJoin(chapters, eq(userProgress.chapterId, chapters.id))
-          .where(
-            and(
-              eq(userProgress.userId, student.id),
-              sql`${userProgress.quizBestScore} < 50`
-            )
-          );
+    // Batch: weak topics for all students in one query
+    const weakTopics = await db
+      .select({
+        userId: userProgress.userId,
+        chapterId: userProgress.chapterId,
+        chapterTitle: chapters.title,
+        score: userProgress.quizBestScore,
+      })
+      .from(userProgress)
+      .innerJoin(chapters, eq(userProgress.chapterId, chapters.id))
+      .where(
+        and(
+          inArray(userProgress.userId, studentIds),
+          sql`${userProgress.quizBestScore} < 50`
+        )
+      );
 
+    const topicsByStudent = new Map<string, typeof weakTopics>();
+    for (const row of weakTopics) {
+      const arr = topicsByStudent.get(row.userId) ?? [];
+      arr.push(row);
+      topicsByStudent.set(row.userId, arr);
+    }
+
+    const suggestions = students
+      .map((student) => {
+        const topics = topicsByStudent.get(student.id) ?? [];
         return {
           studentId: student.id,
           studentName: student.name,
-          weakTopics: weakTopics.map((t) => ({
+          weakTopics: topics.map((t) => ({
             chapterId: t.chapterId,
             chapterName: t.chapterTitle,
             score: t.score,
           })),
-          suggestions: weakTopics.map((t) => `Review ${t.chapterTitle}`),
+          suggestions: topics.map((t) => `Review ${t.chapterTitle}`),
         };
       })
-    );
+      .filter((s) => s.weakTopics.length > 0);
 
-    return suggestions.filter((s) => s.weakTopics.length > 0);
+    return suggestions;
   }
 
   async getClassReadiness(classroomId: number) {
     const classroom = await classroomRepository.getClassroomById(classroomId);
     if (!classroom) return [];
+    if (classroom.grade !== "9" && classroom.grade !== "10") return [];
 
     // Get all subjects + chapters for the board/grade
     const chaptersList = await db
@@ -127,7 +142,7 @@ export class TeacherService {
       .where(
         and(
           eq(subjects.boardId, classroom.boardId),
-          eq(subjects.grade, classroom.grade as "9" | "10")
+          eq(subjects.grade, classroom.grade)
         )
       );
 
