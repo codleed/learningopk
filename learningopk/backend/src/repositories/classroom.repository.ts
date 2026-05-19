@@ -265,22 +265,7 @@ export class ClassroomRepository {
       submittedAt?: Date | null;
     }
   ) {
-    const existing = await this.getSubmission(assignmentId, studentId);
-    if (existing) {
-      const updated = await db
-        .update(assignmentSubmissions)
-        .set({
-          ...(data.status && { status: data.status }),
-          ...(data.score !== undefined && { score: data.score }),
-          ...(data.startedAt && { startedAt: data.startedAt }),
-          ...(data.submittedAt && { submittedAt: data.submittedAt }),
-        })
-        .where(eq(assignmentSubmissions.id, existing.id))
-        .returning();
-      return updated[0] ?? null;
-    }
-
-    const inserted = await db
+    const result = await db
       .insert(assignmentSubmissions)
       .values({
         assignmentId,
@@ -290,8 +275,17 @@ export class ClassroomRepository {
         startedAt: data.startedAt,
         submittedAt: data.submittedAt,
       })
+      .onConflictDoUpdate({
+        target: [assignmentSubmissions.assignmentId, assignmentSubmissions.studentId],
+        set: {
+          ...(data.status && { status: data.status }),
+          ...(data.score !== undefined && { score: data.score }),
+          ...(data.startedAt && { startedAt: data.startedAt }),
+          ...(data.submittedAt && { submittedAt: data.submittedAt }),
+        },
+      })
       .returning();
-    return inserted[0] ?? null;
+    return result[0] ?? null;
   }
 
   async getSubmissions(assignmentId: number) {
