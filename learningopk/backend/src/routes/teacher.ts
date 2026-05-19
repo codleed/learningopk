@@ -485,13 +485,33 @@ teacherRouter.delete("/classrooms/:id/announcements/:aid", requireSession, async
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
+  const classroomId = parseIdParam(req.params.id);
+  if (isNaN(classroomId)) {
+    res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
+    return;
+  }
+
+  const classroom = await classroomRepository.getClassroomById(classroomId);
+  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
+    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
+    return;
+  }
+
   const announcementId = parseIdParam(req.params.aid);
   if (isNaN(announcementId)) {
     res.status(400).json(errorResponse("Invalid announcement ID", "VALIDATION_ERROR"));
     return;
   }
 
-  await classroomRepository.deleteAnnouncement(announcementId, authedReq.session.user.id);
+  const deleted = await classroomRepository.deleteAnnouncement(
+    announcementId,
+    classroomId,
+    authedReq.session.user.id
+  );
+  if (!deleted) {
+    res.status(404).json(errorResponse("Announcement not found", "NOT_FOUND"));
+    return;
+  }
   res.status(200).json(successResponse({ deleted: true }));
 });
 

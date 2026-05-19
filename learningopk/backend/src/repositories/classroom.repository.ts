@@ -337,15 +337,18 @@ export class ClassroomRepository {
       .limit(limit);
   }
 
-  async deleteAnnouncement(announcementId: number, teacherId: string) {
-    await db
+  async deleteAnnouncement(announcementId: number, classroomId: number, teacherId: string): Promise<boolean> {
+    const result = await db
       .delete(classroomAnnouncements)
       .where(
         and(
           eq(classroomAnnouncements.id, announcementId),
+          eq(classroomAnnouncements.classroomId, classroomId),
           eq(classroomAnnouncements.teacherId, teacherId)
         )
-      );
+      )
+      .returning();
+    return result.length > 0;
   }
 
   // --- Alerts / Struggling students ---
