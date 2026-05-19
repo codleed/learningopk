@@ -366,7 +366,7 @@ export class ClassroomRepository {
   // --- Alerts / Struggling students ---
 
   async getStrugglingStudents(classroomId: number) {
-    // Students with avg quiz score < 50% in any chapter
+    // Students with avg quiz score below 50% (percentage based)
     const lowScores = await db
       .select({
         studentId: users.id,
@@ -379,11 +379,12 @@ export class ClassroomRepository {
       .where(
         and(
           eq(assignments.classroomId, classroomId),
+          eq(assignments.type, "quiz"),
           eq(assignmentSubmissions.status, "submitted")
         )
       )
       .groupBy(users.id)
-      .having(sql`coalesce(avg(${assignmentSubmissions.score}), 0) < 50`);
+      .having(sql`coalesce(avg(${assignmentSubmissions.score} * 100.0 / nullif(${assignments.points}, 0)), 0) < 50`);
 
     return lowScores;
   }

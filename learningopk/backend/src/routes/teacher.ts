@@ -150,7 +150,7 @@ teacherRouter.delete("/classrooms/:id", requireSession, async (req, res) => {
   res.status(200).json(successResponse({ archived: true }));
 });
 
-// GET /api/teacher/classrooms/:id/students — roster
+// GET /api/teacher/classrooms/:id/students — roster with progress
 teacherRouter.get("/classrooms/:id/students", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
@@ -168,56 +168,8 @@ teacherRouter.get("/classrooms/:id/students", requireSession, async (req, res) =
     return;
   }
 
-  const students = await classroomRepository.getStudents(classroomId);
-
-  // Compute assignment completion % for each student
-  const assignmentList = await db
-    .select({ id: assignments.id })
-    .from(assignments)
-    .where(eq(assignments.classroomId, classroomId));
-
-  const totalAssignments = assignmentList.length;
-
-  if (totalAssignments === 0) {
-    const studentsWithEmpty = students.map((student) => ({
-      ...student,
-      completionPercent: null as number | null,
-    }));
-    res.status(200).json(successResponse(studentsWithEmpty));
-    return;
-  }
-
-  // Batch: completed counts per student
-  const studentIds = students.map((s) => s.id);
-  const completedCounts = studentIds.length > 0
-    ? await db
-        .select({
-          studentId: assignmentSubmissions.studentId,
-          completed: count(),
-        })
-        .from(assignmentSubmissions)
-        .innerJoin(assignments, eq(assignmentSubmissions.assignmentId, assignments.id))
-        .where(
-          and(
-            eq(assignments.classroomId, classroomId),
-            eq(assignmentSubmissions.status, "submitted"),
-            inArray(assignmentSubmissions.studentId, studentIds)
-          )
-        )
-        .groupBy(assignmentSubmissions.studentId)
-    : [];
-
-  const completedMap = new Map(completedCounts.map((row) => [row.studentId, Number(row.completed)]));
-
-  const studentsWithCompletion = students.map((student) => {
-    const completed = completedMap.get(student.id) ?? 0;
-    return {
-      ...student,
-      completionPercent: Math.round((completed / totalAssignments) * 100),
-    };
-  });
-
-  res.status(200).json(successResponse(studentsWithCompletion));
+  const studentsWithProgress = await teacherService.getStudentProgressInClassroom(classroomId);
+  res.status(200).json(successResponse(studentsWithProgress));
 });
 
 // POST /api/teacher/classrooms/:id/students/:sid — remove student

@@ -66,10 +66,12 @@ export class TeacherService {
 
     return students.map((student) => {
       const sub = submissionMap.get(student.id);
+      const assignmentsCompleted = sub?.completed ?? 0;
       return {
         ...student,
-        assignmentsCompleted: sub?.completed ?? 0,
+        assignmentsCompleted,
         totalAssignments,
+        completionPercent: totalAssignments > 0 ? Math.round((assignmentsCompleted / totalAssignments) * 100) : null,
         avgScore: sub?.avgScore ?? 0,
         lastActive: lastActiveMap.get(student.id) ?? null,
       };
