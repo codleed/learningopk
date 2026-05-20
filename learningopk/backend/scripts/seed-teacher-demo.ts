@@ -10,6 +10,7 @@ import {
   userProgress,
   quizAttempts,
   chapters,
+  quizzes,
 } from "../src/lib/db/schema.js";
 import { eq } from "drizzle-orm";
 
@@ -165,10 +166,12 @@ async function main() {
     const classroomAssignments = assignmentDefs.filter((a) => a.classroomId === s.classroomId);
 
     for (let i = 0; i < classroomAssignments.length; i++) {
-      const assignmentId = assignmentIds[assignmentDefs.indexOf(classroomAssignments[i]!)];
+      const def = classroomAssignments[i]!;
+      const aIdx = assignmentDefs.indexOf(def);
+      const assignmentId = assignmentIds[aIdx]!;
       const score = scores[i]!;
       const status = score > 0 ? "submitted" as const : "not_started" as const;
-      const daysAgo = classroomAssignments[i]!.daysAgo;
+      const daysAgo = def.daysAgo;
 
       await db
         .insert(assignmentSubmissions)
@@ -189,12 +192,20 @@ async function main() {
 
   // ── 6. Seed Quiz Attempts + UserProgress (for getClassReadiness) ──
   const chapterRows = await db.select({ id: chapters.id, title: chapters.title }).from(chapters).limit(8);
-  console.log(`📚 Found ${chapterRows.length} chapters for progress seeding`);
+  // Get actual quiz IDs (required for FK constraint on quizAttempts.quizId)
+  const quizRows = await db.select({ id: quizzes.id, chapterId: quizzes.chapterId }).from(quizzes);
+  const quizByChapter = new Map<number, number>();
+  for (const q of quizRows) {
+    if (!quizByChapter.has(q.chapterId)) quizByChapter.set(q.chapterId, q.id);
+  }
+  console.log(`📚 Found ${chapterRows.length} chapters, ${quizRows.length} quizzes for progress seeding`);
 
   let scoreIdx = 0;
   for (const studentId of studentIds) {
     for (let ci = 0; ci < Math.min(4, chapterRows.length); ci++) {
       const chapter = chapterRows[ci]!;
+      const quizId = quizByChapter.get(chapter.id);
+      if (!quizId) continue; // skip chapters with no quizzes
       // Varying scores: some strong, some weak
       const bases = [85, 72, 45, 38, 90, 65, 28, 95];
       const quizScore = Math.min(100, Math.max(15, bases[scoreIdx % bases.length]! + Math.floor(Math.random() * 10 - 5)));
@@ -213,7 +224,7 @@ async function main() {
 
       await db.insert(quizAttempts).values({
         userId: studentId,
-        quizId: chapter.id,
+        quizId,
         type: "chapter_quiz",
         answers: { q1: "a", q2: "b" },
         score: quizScore,

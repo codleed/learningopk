@@ -8,6 +8,27 @@ import { Client } from "pg";
 
 const MAX_ROWS = 1000;
 
+const DANGEROUS_FUNCTIONS = [
+  "pg_sleep",
+  "pg_read_file",
+  "pg_read_binary_file",
+  "pg_ls_dir",
+  "convert_from",
+  "convert_to",
+  "decode",
+  "encode",
+  "current_setting",
+  "set_config",
+  "lo_import",
+  "lo_export",
+  "dblink",
+];
+
+function hasDangerousFunctionCalls(sql: string): boolean {
+  const lowered = sql.toLowerCase();
+  return DANGEROUS_FUNCTIONS.some((fn) => lowered.includes(`${fn}(`));
+}
+
 const ALLOWED_TABLES = [
   "classrooms",
   "classroom_students",
@@ -101,8 +122,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const result = await db.query(
         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
       );
+      const filtered = (result.rows as Array<{ table_name: string }>)
+        .map((r) => r.table_name)
+        .filter((name) => ALLOWED_TABLES.includes(name));
       return {
-        content: [{ type: "text", text: JSON.stringify(result.rows, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(filtered, null, 2) }],
       };
     }
     case "describe_table": {
@@ -131,6 +155,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const trimmed = sql.toLowerCase();
       if (!trimmed.startsWith("select")) {
         throw new Error("Only SELECT queries are allowed");
+      }
+      // Block dangerous PostgreSQL function calls that operate without table references
+      if (hasDangerousFunctionCalls(sql)) {
+        throw new Error("Dangerous function calls are not allowed");
       }
       // Validate only whitelisted tables are referenced (FROM + all JOIN variants)
       const tableMatches = sql.match(/(?:from|join)\s+["']?(\w+)["']?/gi);

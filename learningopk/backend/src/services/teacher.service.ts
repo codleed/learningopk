@@ -153,7 +153,7 @@ export class TeacherService {
 
     if (chapterIds.length === 0) return [];
 
-    // Batch: fetch all quiz attempts for all chapters in one query
+    // Batch: fetch quiz attempts linked to classroom assignments only
     const allScores = await db
       .select({
         chapterId: quizzes.chapterId,
@@ -161,11 +161,13 @@ export class TeacherService {
       })
       .from(quizAttempts)
       .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
+      .innerJoin(assignments, and(eq(assignments.type, "quiz"), eq(assignments.targetId, quizzes.id)))
       .innerJoin(users, eq(quizAttempts.userId, users.id))
       .innerJoin(classroomStudents, eq(users.id, classroomStudents.studentId))
       .where(
         and(
           eq(classroomStudents.classroomId, classroomId),
+          eq(assignments.classroomId, classroomId),
           inArray(quizzes.chapterId, chapterIds)
         )
       );

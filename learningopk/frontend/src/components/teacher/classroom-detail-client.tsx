@@ -140,14 +140,18 @@ function StudentsTab({
 }) {
   const { copied, copy: copyCode } = useClipboard();
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCopy = () => copyCode(classroom.inviteCode);
 
   const handleRemove = async (studentId: string) => {
     setRemovingId(studentId);
+    setError(null);
     try {
       await removeStudent(classroom.id, studentId);
       setStudents(students.filter((s) => s.id !== studentId));
+    } catch {
+      setError("Failed to remove student. Please try again.");
     } finally {
       setRemovingId(null);
     }
@@ -166,6 +170,8 @@ function StudentsTab({
           </Button>
         </div>
       </div>
+
+      {error && <p className="text-sm text-red-500">{error}</p>}
 
       {students.length === 0 ? (
         <div className="py-8 text-center text-[var(--muted-foreground)]">
@@ -237,10 +243,12 @@ function AssignmentsTab({
   const [targetId, setTargetId] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const handleCreate = async () => {
     if (!title.trim() || !targetId.trim()) return;
     setIsCreating(true);
+    setCreateError(null);
     try {
       const assignment = await createAssignment(classroomId, {
         type,
@@ -254,6 +262,8 @@ function AssignmentsTab({
         setTargetId("");
         setDueDate("");
       }
+    } catch {
+      setCreateError("Failed to create assignment. Please try again.");
     } finally {
       setIsCreating(false);
     }
@@ -295,6 +305,7 @@ function AssignmentsTab({
               onChange={(e) => setDueDate(e.target.value)}
             />
           </div>
+          {createError && <p className="text-sm text-red-500">{createError}</p>}
           <Button onClick={handleCreate} loading={isCreating} iconLeft={<Plus className="h-4 w-4" />}>
             Create Assignment
           </Button>
@@ -337,16 +348,20 @@ function AnnouncementsTab({
 }) {
   const [content, setContent] = useState("");
   const [isPosting, setIsPosting] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
 
   const handlePost = async () => {
     if (!content.trim()) return;
     setIsPosting(true);
+    setPostError(null);
     try {
       const announcement = await createAnnouncement(classroomId, { content: content.trim() });
       if (announcement) {
         setAnnouncements([announcement, ...announcements]);
         setContent("");
       }
+    } catch {
+      setPostError("Failed to post announcement. Please try again.");
     } finally {
       setIsPosting(false);
     }
@@ -362,6 +377,7 @@ function AnnouncementsTab({
           rows={3}
         />
         <div className="flex justify-end">
+          {postError && <p className="text-sm text-red-500 mr-2 self-center">{postError}</p>}
           <Button
             size="sm"
             onClick={handlePost}

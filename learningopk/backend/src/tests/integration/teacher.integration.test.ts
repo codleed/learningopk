@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import request from "supertest";
 
 import { db, pool } from "../../lib/db/index.js";
-import { classrooms, classroomStudents, users } from "../../lib/db/schema.js";
+import { classrooms, classroomStudents, users, assignments, assignmentSubmissions } from "../../lib/db/schema.js";
 import { redis } from "../../lib/redis.js";
 import { createApp } from "../../server.js";
 
@@ -284,4 +284,70 @@ test("Teacher cannot delete another teacher's announcement", async () => {
   await db.delete(classrooms).where(eq(classrooms.id, classroomId));
   await db.delete(users).where(eq(users.id, t1.id));
   await db.delete(users).where(eq(users.id, t2.id));
+});
+
+test("Struggling-student alerts return students with avg quiz below 50%", async () => {
+  const teacherAgent = request.agent(app);
+  const studentAgents = [request.agent(app), request.agent(app)];
+
+  await signUp(teacherAgent, "Alerts Teacher", makeEmail("teacher"));
+  const teacherUser = await getSessionUser(teacherAgent);
+  await db.update(users).set({ role: "teacher" }).where(eq(users.id, teacherUser.id));
+
+  await signUp(studentAgents[0]!, "Strong Student", makeEmail("student"));
+  await signUp(studentAgents[1]!, "Weak Student", makeEmail("student"));
+  const strongUser = await getSessionUser(studentAgents[0]!);
+  const weakUser = await getSessionUser(studentAgents[1]!);
+
+  // Create classroom
+  const createRes = await teacherAgent
+    .post("/api/teacher/classrooms")
+    .send({ name: "Alerts Class", boardId: 1, grade: "9" });
+  const classroomId = createRes.body.data.id;
+  const inviteCode = createRes.body.data.inviteCode;
+
+  // Both students join
+  await studentAgents[0]!.post("/api/classrooms/join").send({ inviteCode });
+  await studentAgents[1]!.post("/api/classrooms/join").send({ inviteCode });
+
+  // Create quiz assignments
+  const assignment1 = await db.insert(assignments).values({
+    classroomId, type: "quiz", targetId: 1, title: "Quiz 1", points: 20,
+  }).returning().then((r) => r[0]!);
+  const assignment2 = await db.insert(assignments).values({
+    classroomId, type: "quiz", targetId: 2, title: "Quiz 2", points: 25,
+  }).returning().then((r) => r[0]!);
+
+  // Strong student: 90% avg
+  await db.insert(assignmentSubmissions).values([
+    { assignmentId: assignment1.id, studentId: strongUser.id, status: "submitted", score: 18 },
+    { assignmentId: assignment2.id, studentId: strongUser.id, status: "submitted", score: 23 },
+  ]).onConflictDoNothing();
+
+  // Weak student: 40% avg
+  await db.insert(assignmentSubmissions).values([
+    { assignmentId: assignment1.id, studentId: weakUser.id, status: "submitted", score: 8 },
+    { assignmentId: assignment2.id, studentId: weakUser.id, status: "submitted", score: 10 },
+  ]).onConflictDoNothing();
+
+  // Fetch alerts
+  const alertsRes = await teacherAgent.get(`/api/teacher/classrooms/${classroomId}/alerts`);
+  assert.equal(alertsRes.status, 200, `Alerts: ${JSON.stringify(alertsRes.body)}`);
+
+  // Only weak student should be flagged
+  const weakStudentAlert = alertsRes.body.data.find((a: { studentId: string }) => a.studentId === weakUser.id);
+  const strongStudentAlert = alertsRes.body.data.find((a: { studentId: string }) => a.studentId === strongUser.id);
+  assert.ok(weakStudentAlert, "Weak student should appear in alerts");
+  assert.ok(!strongStudentAlert, "Strong student should NOT appear in alerts");
+
+  // Cleanup
+  await db.delete(classroomStudents).where(eq(classroomStudents.classroomId, classroomId));
+  await db.delete(assignmentSubmissions).where(eq(assignmentSubmissions.assignmentId, assignment1.id));
+  await db.delete(assignmentSubmissions).where(eq(assignmentSubmissions.assignmentId, assignment2.id));
+  await db.delete(assignments).where(eq(assignments.id, assignment1.id));
+  await db.delete(assignments).where(eq(assignments.id, assignment2.id));
+  await db.delete(classrooms).where(eq(classrooms.id, classroomId));
+  await db.delete(users).where(eq(users.id, teacherUser.id));
+  await db.delete(users).where(eq(users.id, strongUser.id));
+  await db.delete(users).where(eq(users.id, weakUser.id));
 });
