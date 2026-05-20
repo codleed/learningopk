@@ -7,11 +7,13 @@ import { db } from "./db/index.js";
 import { users } from "./db/schema.js";
 import { ServiceUnavailableError } from "./errors/index.js";
 import { logger } from "./logger.js";
+import { errorResponse } from "./response.js";
 
 export type SessionResult = Awaited<ReturnType<typeof auth.api.getSession>>;
 
 export type AuthenticatedRequest = Request & {
   session: NonNullable<SessionResult>;
+  userRole: "student" | "teacher" | "admin" | "moderator";
 };
 
 export const requireSession: RequestHandler = async (req, res, next) => {
@@ -28,7 +30,8 @@ export const requireSession: RequestHandler = async (req, res, next) => {
     const userRows = await db
       .select({
         status: users.status,
-        suspendedUntil: users.suspendedUntil
+        suspendedUntil: users.suspendedUntil,
+        role: users.role,
       })
       .from(users)
       .where(eq(users.id, session.user.id))
@@ -64,6 +67,7 @@ export const requireSession: RequestHandler = async (req, res, next) => {
     }
 
     (req as AuthenticatedRequest).session = session;
+    (req as AuthenticatedRequest).userRole = user.role ?? "student";
     next();
   } catch (error) {
     logger.error({ error }, "Session retrieval error");
@@ -73,6 +77,14 @@ export const requireSession: RequestHandler = async (req, res, next) => {
       code: "AUTH_SERVICE_UNAVAILABLE"
     });
   }
+};
+
+export const requireTeacherRole = async (req: AuthenticatedRequest, res: Response): Promise<boolean> => {
+  if (req.userRole !== "teacher") {
+    res.status(403).json(errorResponse("Teacher access required", "FORBIDDEN"));
+    return false;
+  }
+  return true;
 };
 
 export const getSessionFromRequest = async (req: Request): Promise<SessionResult> => {

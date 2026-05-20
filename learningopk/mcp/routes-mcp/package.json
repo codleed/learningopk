@@ -1,0 +1,21 @@
+{
+  "name": "@learningopk/mcp-routes",
+  "version": "0.1.0",
+  "description": "MCP server for API route navigation and schema introspection",
+  "type": "module",
+  "bin": {
+    "learningopk-routes-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "glob": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

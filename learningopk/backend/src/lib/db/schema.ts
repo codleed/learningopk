@@ -15,7 +15,7 @@ import {
   uuid
 } from "drizzle-orm/pg-core";
 
-export const userRoleEnum = pgEnum("user_role", ["student", "admin", "moderator"]);
+export const userRoleEnum = pgEnum("user_role", ["student", "teacher", "admin", "moderator"]);
 export const gradeEnum = pgEnum("grade", ["9", "10"]);
 export const difficultyEnum = pgEnum("difficulty", ["easy", "medium", "hard"]);
 export const exerciseTypeEnum = pgEnum("exercise_type", ["mcq", "short", "long", "numerical", "fill_in_blanks"]);
@@ -945,3 +945,14 @@ export const institutes = pgTable("institutes", {
   id: serial("id").primaryKey(),
   name: text("name").notNull()
 });
+
+// Classroom / Teacher tables
+export {
+  assignmentTypeEnum,
+  submissionStatusEnum,
+  classrooms,
+  classroomStudents,
+  assignments,
+  assignmentSubmissions,
+  classroomAnnouncements,
+} from "./schema/classroom.js";

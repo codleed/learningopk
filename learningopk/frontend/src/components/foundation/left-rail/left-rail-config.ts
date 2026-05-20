@@ -19,6 +19,8 @@ import {
   NotebookPen,
   Database,
   School,
+  GraduationCap,
+  Presentation,
 } from "lucide-react";
 
 import type { NavItem, NavSection } from "./left-rail-types";
@@ -43,6 +45,11 @@ export const studentNavItems: NavItem[] = [
     href: "/school",
     label: "School",
     icon: School,
+  },
+  {
+    href: "/student/my-classroom",
+    label: "My Classroom",
+    icon: GraduationCap,
   },
   {
     href: "/subjects",
@@ -78,6 +85,14 @@ export const studentNavItems: NavItem[] = [
     href: "/forum",
     label: "Forum",
     icon: MessageCircle,
+  },
+];
+
+export const teacherNavItems: NavItem[] = [
+  {
+    href: "/teacher",
+    label: "Teacher Dashboard",
+    icon: Presentation,
   },
 ];
 

@@ -15,6 +15,7 @@ import { RoleToggle } from "./left-rail/role-toggle";
 import type { ViewMode, NavItem as NavItemType } from "./left-rail/left-rail-types";
 import {
   studentNavItems,
+  teacherNavItems,
   adminNavSections,
   moderatorNavSections,
   isNavItemActive,
@@ -99,6 +100,7 @@ export function LeftRail({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isAdmin = session.user.role === "admin";
   const isModerator = session.user.role === "moderator";
+  const isTeacher = session.user.role === "teacher";
   const suppressExpandRef = useRef(false);
 
   /* ── Check school admin status once on mount ── */
@@ -195,8 +197,22 @@ export function LeftRail({
 
   const renderStudentNav = () => (
     <div className="flex w-full flex-col gap-1">
+      {isTeacher && teacherNavItems.map((item) => (
+        <NavItem
+          key={item.href}
+          item={item}
+          isActive={isNavItemActive(currentPath, item)}
+          isExpanded={actualExpanded}
+          variant="student"
+          onNavigate={handleNavItemClick}
+        />
+      ))}
       {studentNavItems
-        .filter((item) => item.href !== "/school" || isSchoolAdmin)
+        .filter((item) => {
+          if (item.href === "/school") return isSchoolAdmin;
+          if (item.href === "/student/my-classroom") return !isTeacher;
+          return true;
+        })
         .map((item) => (
           <NavItem
             key={item.href}

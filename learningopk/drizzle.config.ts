@@ -8,7 +8,11 @@ if (!process.env.DATABASE_URL) {
 }
 
 export default defineConfig({
-  schema: ["./backend/src/lib/db/schema.ts", "./backend/src/lib/db/study-groups-schema.ts"],
+  schema: [
+    "./backend/src/lib/db/schema.ts",
+    "./backend/src/lib/db/schema/classroom.ts",
+    "./backend/src/lib/db/study-groups-schema.ts"
+  ],
   out: "./backend/drizzle",
   dialect: "postgresql",
   dbCredentials: {
