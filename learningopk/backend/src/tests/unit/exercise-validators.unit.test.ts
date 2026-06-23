@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   curriculumExerciseCreateBodySchema,
   curriculumExerciseUpdateBodySchema
-} from "../../routes/admin.js";
+} from "../../routes/admin/index.js";
 
 // curriculumExerciseCreateBodySchema tests
 

@@ -10,7 +10,7 @@ import { sentryErrorHandler, captureException } from "./lib/sentry.js";
 import { errorResponse } from "./lib/response.js";
 import { isHttpError } from "./lib/errors/index.js";
 import { authRateLimiter, globalRateLimiter } from "./middleware/rate-limits.js";
-import { adminRouter } from "./routes/admin.js";
+import { adminRouter } from "./routes/admin/index.js";
 import { aiChatRouter } from "./routes/ai-chat.js";
 import { aiContextRouter } from "./routes/ai-context.js";
 import { authRouter } from "./routes/auth.js";
