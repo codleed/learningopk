@@ -34,7 +34,7 @@
     "@learningopk/shared": "*",
     "@sentry/node": "^10.47.0",
     "ai": "^6.0.97",
-    "better-auth": "^1.4.0",
+    "better-auth": "^1.6.22",
     "bullmq": "^5.71.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
