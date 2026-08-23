@@ -2,7 +2,7 @@
   "name": "learningopk",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["frontend", "backend", "packages/shared", "mcp/content-gen", "mcp/db-mcp", "mcp/i18n-mcp", "mcp/routes-mcp"],
+  "workspaces": ["frontend", "backend", "packages/shared"],
   "scripts": {
     "dev:frontend": "npm --workspace frontend run dev",
     "dev:backend": "npm --workspace backend run dev",
