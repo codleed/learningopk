@@ -80,14 +80,7 @@ The `packages/shared/` package defines Zod schemas and types meant to be shared,
 
 ## 4. Orphan / Unused Endpoints
 
-Backend endpoints with **no frontend caller**:
-
-| Endpoint | Notes |
-|---|---|
-| `GET /api/boards/` | Standalone boards list - may be used during auth/onboarding |
-| `GET /api/classes/` | Standalone classes list |
-| `GET /api/institutes/` | Standalone institutes list |
-| `GET /api/subjects/` | Standalone subjects list |
+None. The previously-listed standalone `GET /api/boards|classes|institutes|subjects` routers were dead code and have been deleted (they were never mounted in `server.ts`).
 
 ---
 

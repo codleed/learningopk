@@ -92,7 +92,7 @@ res.json(successResponse(data))
 
 ---
 
-### Frontend (Next.js 16 + Heroui + Tailwind CSS)
+### Frontend (Next.js 16 + radix-ui/shadcn-style primitives + Tailwind CSS)
 
 #### File Structure
 ```
