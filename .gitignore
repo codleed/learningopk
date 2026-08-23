@@ -3,3 +3,4 @@
 /docs/
 settings.json
 .opencode/plans/
+.env
