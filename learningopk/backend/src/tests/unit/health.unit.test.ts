@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { after, test } from "node:test";
+
+import { pool } from "../../lib/db/index.js";
+import { redis } from "../../lib/redis.js";
+import { redisClient } from "../../middleware/rate-limit.js";
 import { createApp } from "../../server.js";
 
 // We test health routes using supertest-like manual approach since
@@ -78,4 +82,18 @@ test("health: backwards-compatible GET /api/health returns ok shape", async () =
   // May be 200 or 503 depending on DB availability
   assert.ok([200, 503].includes(response.status));
   assert.ok("ok" in response.body || "error" in response.body);
+});
+
+// The readiness checks open real Postgres/Redis connections when the dev
+// stack is up, and leave Redis clients retrying their initial connect when
+// it is not. Tear all of them down so the node:test process can exit.
+after(async () => {
+  for (const client of [redis, redisClient]) {
+    try {
+      client.destroy();
+    } catch {
+      // Client never opened a connection — nothing to tear down.
+    }
+  }
+  await pool.end();
 });
