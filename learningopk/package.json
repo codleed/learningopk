@@ -20,6 +20,7 @@
     "typecheck": "pnpm -r --if-present run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "prepare": "lefthook install",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "db:generate": "drizzle-kit generate",
@@ -33,6 +34,7 @@
   "devDependencies": {
     "concurrently": "^9.2.1",
     "drizzle-kit": "^0.31.4",
+    "lefthook": "^2.1.10",
     "prettier": "^3.9.6"
   },
   "overrides": {
