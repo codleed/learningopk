@@ -9,15 +9,6 @@ on:
       - 'learningopk/infra/**'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Deployment environment'
-        required: true
-        default: 'production'
-        type: choice
-        options:
-          - production
-          - staging
 
 concurrency:
   group: deploy-${{ github.ref }}
@@ -28,7 +19,7 @@ jobs:
     name: Deploy to EC2
     runs-on: ubuntu-latest
     environment: production
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -39,66 +30,58 @@ jobs:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
           log-public-key: false
 
-      - name: Add EC2 to known hosts
+      - name: Add EC2 host to known hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H 54.164.108.139 >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
 
-      - name: Deploy to EC2
+      # Git-pull based deploy: the EC2 host keeps a clone of this repo at
+      # ~/learningopk. One source of truth — no rsync fighting with git state.
+      - name: Pull latest code on EC2
         run: |
-          set -e
-          echo "🚀 Starting deployment to EC2..."
-          
-          # Sync repository to EC2
-          rsync -avz --delete \
-            --exclude='.git' \
-            --exclude='node_modules' \
-            --exclude='**/node_modules' \
-            --exclude='**/.next' \
-            --exclude='**/dist' \
-            --exclude='*.log' \
-            --exclude='learningopk/backups' \
-            ./ ubuntu@54.164.108.139:~/learningopk/
+          ssh ubuntu@"$EC2_HOST" "cd ~/learningopk && git fetch origin main && git reset --hard origin/main"
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
 
       - name: Restart services on EC2
         run: |
-          ssh ubuntu@54.164.108.139 << 'EOF'
+          ssh ubuntu@"$EC2_HOST" << 'EOF'
             set -e
             cd ~/learningopk/learningopk
-            
-            echo "📦 Pulling latest changes..."
-            git reset --hard HEAD
-            git clean -fd
-            
+
             echo "🐳 Building and starting Docker containers..."
             docker compose -f docker-compose.prod.yml down
-            docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --build
-            
-            echo "🧹 Cleaning up old Docker images..."
-            docker system prune -f --volumes
-            
+
+            echo "🧹 Pruning dangling images (volumes are preserved)..."
+            docker image prune -f
+
             echo "✅ Deployment completed!"
           EOF
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
 
       - name: Health check
         run: |
           echo "🏥 Running health check..."
           sleep 15
-          
+
           for i in {1..5}; do
-            if curl -sSf http://54.164.108.139:3001/api/health > /dev/null 2>&1; then
+            if curl -sSf "http://$EC2_HOST:3001/api/health/live" > /dev/null 2>&1; then
               echo "✅ Health check passed!"
               exit 0
             fi
             echo "⏳ Health check attempt $i/5 failed, retrying in 10s..."
             sleep 10
           done
-          
+
           echo "❌ Health check failed after 5 attempts"
           exit 1
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
 
       - name: Notify on failure
         if: failure()
-        run: |
-          echo "❌ Deployment failed! Check the logs above for details."
+        run: echo "❌ Deployment failed! Check the logs above for details."

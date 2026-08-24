@@ -1,5 +1,15 @@
+# Worktrees / agent scratch
 .worktrees/
-.worktrees
-/docs/
-settings.json
 .opencode/plans/
+settings.json
+
+# Secrets & local env — NEVER commit (.env.example files stay tracked)
+**/.env
+**/.env.local
+**/.env.*.local
+*.pem
+*.key
+
+# Temp & build artifacts
+.tmp-*
+*.tsbuildinfo

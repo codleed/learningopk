@@ -491,7 +491,7 @@ DATABASE_URL=postgresql://postgres:MySecurePass123!@learningopk-db.abcdefg12345.
 REDIS_URL=redis://learningopk-redis.xxxxxx.ng.0001.use1.cache.amazonaws.com:6379
 
 # ===== AUTH (Better Auth) =====
-BETTER_AUTH_SECRET=K8mP2xR9vL5nQ7wT3yA6bC1dE4fG0hI2jK4lM6nO8pQ0rS2tU4vW6xY8z=
+BETTER_AUTH_SECRET=<your-generated-64-char-base64-secret>
 BETTER_AUTH_URL=https://api.learningopk.com
 
 # ===== FRONTEND =====
@@ -1224,7 +1224,7 @@ sudo docker compose -f ~/Learningo/learningopk/docker-compose.prod.yml up -d --b
 |---|---|---|---|---|
 | `DATABASE_URL` | Yes | PostgreSQL connection string | `postgresql://postgres:password@localhost:6432/learningo` | `postgresql://postgres:pass@rds.xxx.us-east-1.rds.amazonaws.com:5432/learningo` |
 | `REDIS_URL` | Yes | Redis connection string | `redis://localhost:6379` | `redis://redis.xxx.cache.amazonaws.com:6379` |
-| `BETTER_AUTH_SECRET` | Yes | Server-side auth secret (base64) | `yOocWXqo7cx5Zde53GtGcCn4Q6qoNszeoQ8aLGLze1k=` | Generate: `openssl rand -base64 32` |
+| `BETTER_AUTH_SECRET` | Yes | Server-side auth secret (base64) | (generate locally) | Generate: `openssl rand -base64 32` |
 | `BETTER_AUTH_URL` | Yes | Public URL of the backend API | `http://localhost:3001` | `https://api.learningopk.com` |
 | `FRONTEND_ORIGIN` | Yes | Frontend URL for CORS | `http://localhost:3000` | `https://learningopk.com` |
 | `MINIO_ENDPOINT` | Yes | S3-compatible storage endpoint | `localhost` | `s3.amazonaws.com` |

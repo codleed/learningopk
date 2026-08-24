@@ -303,6 +303,135 @@ _No tasks in progress yet. Pick from Todo below._
 
 ---
 
+### Phase 12 — Repository & Pipeline Cleanup (High 🟠)
+
+---
+
+#### TASK-70 🟠
+
+**Title:** Rotate exposed secrets and purge them from git history
+**Phase:** 12 — Repo Cleanup
+**Priority:** High
+**Blocked by:** User must rotate keys in Mistral console + regenerate BETTER_AUTH_SECRET locally; history rewrite needs an explicit force-push approval.
+**Acceptance Criteria:**
+
+- [x] Secrets removed from all tracked working-tree files (KANBAN.md, DEPLOYMENT.md, docker-compose.yml now use placeholders/env-var refs) ✅ 2026-08-24
+- [ ] New MISTRAL_API_KEY generated in Mistral console (old key revoked)
+- [ ] New BETTER_AUTH_SECRET generated (`openssl rand -base64 32`) and set in learningopk/.env
+- [ ] Git history rewritten (git filter-repo or BFG) to drop old secret values
+- [ ] Force push coordinated with any clones/EC2 checkout
+
+---
+
+#### TASK-71 🟠
+
+**Title:** Flatten repo topology — app becomes repo root
+**Phase:** 12 — Repo Cleanup
+**Priority:** High
+**Acceptance Criteria:**
+
+- [ ] learningopk/* contents moved to repo root (apps/web, apps/api OR keep frontend/backend names initially)
+- [ ] marketing/, .opencode/, root MD reports moved out of the code repo (separate repo or untracked sibling)
+- [ ] Single docs/ tree at root
+- [ ] All workflow paths updated post-move
+
+---
+
+#### TASK-72 🔵
+
+**Title:** Standardize on pnpm across the workspace
+**Phase:** 12 — Repo Cleanup
+**Priority:** Medium
+**Acceptance Criteria:**
+
+- [ ] pnpm-workspace.yaml created; package-lock.json removed
+- [ ] All docs/AGENTS.md commands verified against pnpm
+- [ ] CI cache switched to pnpm
+
+---
+
+#### TASK-73 🟠
+
+**Title:** Purge committed junk and dead code
+**Phase:** 12 — Repo Cleanup
+**Priority:** High
+**Acceptance Criteria:**
+
+- [ ] Delete frontend/C:UsersCodleedDesktopts-errors.txt (mangled-filename artifact)
+- [ ] Delete learningopk/.tmp-dev-log.txt, frontend/src/Demo.tsx
+- [ ] Delete src/design-system/ tree + /design-system-demo public route
+- [ ] Delete dead routers: routes/boards.ts, classes.ts, institutes.ts, subjects.ts + unused barrel index files
+- [ ] Remove infra/pgbouncer-userlist.txt from tracking (contains password hashes)
+- [ ] Remove test-results/ artifacts from tracking if present
+
+---
+
+#### TASK-74 🔵
+
+**Title:** Enforce quality gates: formatter + pre-commit hooks + lint rules
+**Phase:** 12 — Repo Cleanup
+**Priority:** Medium
+**Acceptance Criteria:**
+
+- [ ] Biome or Prettier configured and run once over the codebase
+- [ ] lefthook/husky pre-commit running format + lint on staged files
+- [ ] @typescript-eslint/no-explicit-any enabled (errors, not warnings)
+- [ ] CI runs format check
+
+---
+
+#### TASK-75 🟠
+
+**Title:** Make @learningopk/shared the single API contract source
+**Phase:** 12 — Repo Cleanup
+**Priority:** High
+**Acceptance Criteria:**
+
+- [ ] Request/response Zod schemas moved from backend routes + frontend *-api.ts mirrors into shared
+- [ ] teacher-api.ts schemas replaced with shared imports
+- [ ] Inline slugSchema duplicates removed from forum.ts, learn.ts, progress.ts
+
+---
+
+#### TASK-76 🟠
+
+**Title:** Split god-files and extract duplicated guards
+**Phase:** 12 — Repo Cleanup
+**Priority:** High
+**Acceptance Criteria:**
+
+- [ ] ai-chat.ts (719L) split into service + repository layers
+- [ ] admin/content/chapters.ts (2154L) split along resource seams
+- [ ] Classroom-ownership check extracted to middleware (removes 14 copies in teacher.ts)
+- [ ] schools.ts principal creation uses Better Auth server API directly; stops returning plaintext password
+- [ ] settings-page-client.tsx and admin-curriculum-builder.tsx decomposed
+
+---
+
+#### TASK-77 🔵
+
+**Title:** Enforce layering and logging conventions
+**Phase:** 12 — Repo Cleanup
+**Priority:** Medium
+**Acceptance Criteria:**
+
+- [ ] ESLint boundary rule: routes may not import db directly (33 offenders migrated incrementally)
+- [ ] console.* replaced with structured logger (181 sites)
+- [ ] env access centralized through lib/env.ts (schools.ts raw process.env removed)
+
+---
+
+#### TASK-78 🔵
+
+**Title:** Introduce TanStack Query for client data fetching
+**Phase:** 12 — Repo Cleanup
+**Priority:** Medium
+**Acceptance Criteria:**
+
+- [ ] TanStack Query installed with a shared QueryClient provider
+- [ ] New features use it; one existing feature (forum feed) migrated as the pattern reference
+- [ ] No new hand-rolled fetch+useEffect data paths allowed (documented convention)
+
 ---
 
 ## 🔴 Blocked
@@ -314,6 +443,7 @@ _Tasks listed here are blocked by an external dependency or decision._
 | TASK-34 | Business decision | Needs JazzCash/EasyPaisa merchant account — requires company registration |
 | TASK-35 | TASK-31, TASK-34  | Requires payment system and teacher roles to be complete                  |
 | TASK-30 | Infrastructure    | Needs email provider (Resend free tier) — get API key first               |
+| TASK-70 | User action + approval | Key rotation needs Mistral console access; history rewrite needs force-push approval |
 
 ---
 
@@ -835,6 +965,38 @@ _Completed tasks are moved here by the coding agent._
 
 ---
 
+### Phase 12 — Repository & Pipeline Cleanup (Completed)
+
+#### TASK-79 ✅
+
+**Title:** Secret scrubbing from tracked files
+**Phase:** 12 — Repo Cleanup
+**Priority:** High
+**Evidence:** Removed live-looking `BETTER_AUTH_SECRET` / `MISTRAL_API_KEY` values from `KANBAN.md`, `DEPLOYMENT.md` (2 locations), and `docker-compose.yml` (now reads `${BETTER_AUTH_SECRET:?}` / `${MISTRAL_API_KEY:?}` from `learningopk/.env`). Key rotation + history purge remain in TASK-70.
+
+#### TASK-80 ✅
+
+**Title:** Gitignore hardening for env files and artifacts
+**Phase:** 12 — Repo Cleanup
+**Priority:** High
+**Evidence:** Root `.gitignore` rewritten: `**/.env`, `**/.env.local`, `*.pem`, `*.key`, `.tmp-*`, `*.tsbuildinfo`; conflicting `/docs/` rule removed. Inner `.gitignore` gained bare `.env`/`.env.local`. Verified via `git check-ignore`: `learningopk/.env`, `backend/.env`, `frontend/.env.local` all ignored.
+
+#### TASK-81 ✅
+
+**Title:** Resurrect CI at repo root (was invisible to GitHub)
+**Phase:** 12 — Repo Cleanup
+**Priority:** High
+**Evidence:** New root `.github/workflows/ci.yml` with lint, typecheck, and backend test jobs (`working-directory: ./learningopk`, lockfile-aware npm cache, Postgres+Redis services, `db:push` before tests). Old nested `learningopk/.github/workflows/ci.yml` deleted — GitHub API returned 404 for it, it had never run.
+
+#### TASK-82 ✅
+
+**Title:** Rewrite broken deploy workflow; remove duplicate deploy path
+**Phase:** 12 — Repo Cleanup
+**Priority:** High
+**Evidence:** `.github/workflows/deploy.yml` rewritten: hardcoded EC2 IP replaced with `EC2_HOST` secret; contradictory rsync-then-`git reset --hard` replaced with git-pull deploy; `docker system prune -f --volumes` replaced with volume-preserving `docker image prune -f`. Duplicate `learningopk/scripts/deploy.sh` deleted.
+
+---
+
 ## 📋 Notes for Coding Agent
 
 ### Commit message format
@@ -878,10 +1040,10 @@ Example: `task/TASK-05-better-auth-setup`
 ```bash
 DATABASE_URL=postgresql://postgres:password@localhost:5433/learningo
 REDIS_URL=redis://localhost:6379
-BETTER_AUTH_SECRET=yOocWXqo7cx5Zde53GtGcCn4Q6qoNszeoQ8aLGLze1k=
+BETTER_AUTH_SECRET=<generate-with-openssl-rand-base64-32>
 BETTER_AUTH_URL=http://localhost:3001
 FRONTEND_ORIGIN=http://localhost:3000
-MISTRAL_API_KEY=0MC0Dro56V7KOnEpeQMhanSXr1XK37l8
+MISTRAL_API_KEY=<your-mistral-api-key>
 MINIO_ENDPOINT=localhost
 MINIO_PORT=9000
 MINIO_USE_SSL=false
