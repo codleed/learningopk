@@ -16,38 +16,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: learningopk/package-lock.json
-      - run: npm ci
-      - run: npm run lint
+          cache: 'pnpm'
+          cache-dependency-path: learningopk/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
 
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: learningopk/package-lock.json
-      - run: npm ci
-      - run: npm run typecheck
+          cache: 'pnpm'
+          cache-dependency-path: learningopk/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run typecheck
 
   test:
     name: Backend Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: learningopk/package-lock.json
-      - run: npm ci
+          cache: 'pnpm'
+          cache-dependency-path: learningopk/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
       - name: Start Postgres + Redis
         run: docker compose up -d postgres redis
       - name: Wait for services
@@ -63,7 +66,7 @@ jobs:
       - name: Push database schema
         env:
           DATABASE_URL: postgresql://postgres:password@localhost:5433/learningo
-        run: npm run db:push
+        run: pnpm run db:push
       - name: Run backend tests
         working-directory: ./learningopk/backend
         env:
@@ -72,7 +75,7 @@ jobs:
           BETTER_AUTH_SECRET: ci-only-secret-do-not-use-in-production
           BETTER_AUTH_URL: http://localhost:3001
           FRONTEND_ORIGIN: http://localhost:3000
-        run: npm test
+        run: pnpm test
       - name: Tear down services
         if: always()
         run: docker compose down --remove-orphans

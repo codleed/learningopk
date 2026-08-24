@@ -4,46 +4,48 @@
 
 ### Root Commands (from `learningopk/`)
 
+This is a pnpm workspace (`pnpm-workspace.yaml`); use `pnpm` for install/CI. The pnpm version is pinned via `packageManager` in `package.json`.
+
 ```bash
-npm run dev:all       # Start frontend + backend concurrently
-npm run lint          # Lint all packages
-npm run typecheck     # TypeScript check all packages
-npm run db:generate   # Generate Drizzle migrations
-npm run db:migrate    # Run pending migrations
-npm run db:seed       # Seed database
+pnpm run dev:all       # Start frontend + backend concurrently
+pnpm run lint          # Lint all packages
+pnpm run typecheck     # TypeScript check all packages
+pnpm run db:generate   # Generate Drizzle migrations
+pnpm run db:migrate    # Run pending migrations
+pnpm run db:seed       # Seed database
 ```
 
 ### Backend Commands (from `learningopk/backend/`)
 
 ```bash
-npm run dev           # Start with tsx watch (port 3001)
-npm run build         # Compile to dist/
-npm run lint          # TypeScript check only
-npm run typecheck     # Same as lint
+pnpm run dev           # Start with tsx watch (port 3001)
+pnpm run build         # Compile to dist/
+pnpm run lint          # TypeScript check only
+pnpm run typecheck     # Same as lint
 
 # Testing
-npm run test                 # Run all tests
-npm run test:unit            # Unit tests only
-npm run test:integration     # Integration tests only
-npm run test src/tests/unit/validators.unit.test.ts  # Single test
+pnpm run test                 # Run all tests
+pnpm run test:unit            # Unit tests only
+pnpm run test:integration     # Integration tests only
+pnpm run test src/tests/unit/validators.unit.test.ts  # Single test
 
 # Verification
-npm run healthcheck          # Verify services running
-npm run ai:verify            # Test AI chat
-npm run quiz:verify          # Test quiz submission
-npm run auth:verify          # Test authentication
+pnpm run healthcheck          # Verify services running
+pnpm run ai:verify            # Test AI chat
+pnpm run quiz:verify          # Test quiz submission
+pnpm run auth:verify          # Test authentication
 ```
 
 ### Frontend Commands (from `learningopk/frontend/`)
 
 ```bash
-npm run dev           # Start Next.js dev server (port 3000)
-npm run build         # Production build
-npm run lint          # ESLint check
-npm run typecheck     # TypeScript check
-npm run test:e2e                    # Run all e2e tests
-npm run test:e2e:smoke              # Smoke tests only
-npm run test:e2e tests/e2e/smoke.spec.ts  # Single e2e test
+pnpm run dev           # Start Next.js dev server (port 3000)
+pnpm run build         # Production build
+pnpm run lint          # ESLint check
+pnpm run typecheck     # TypeScript check
+pnpm run test:e2e                    # Run all e2e tests
+pnpm run test:e2e:smoke              # Smoke tests only
+pnpm run test:e2e tests/e2e/smoke.spec.ts  # Single e2e test
 ```
 
 ---
@@ -152,7 +154,7 @@ import { Button } from "@/components/ui";
 
 1. Copy `backend/.env.example` → `backend/.env`, add `DATABASE_URL`, `REDIS_URL`, `MISTRAL_API_KEY`
 2. Copy `frontend/.env.local.example` → `frontend/.env.local`
-3. Run `npm run docker:up` to start PostgreSQL (port 5433) + Redis
+3. Run `pnpm run docker:up` to start PostgreSQL (port 5433) + Redis
 
 ---
 

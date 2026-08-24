@@ -1,0 +1,8 @@
+packages:
+  - frontend
+  - backend
+  - packages/shared
+  - mcp/content-gen
+  - mcp/db-mcp
+  - mcp/i18n-mcp
+  - mcp/routes-mcp
