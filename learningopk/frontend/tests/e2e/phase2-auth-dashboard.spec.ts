@@ -1,4 +1,4 @@
-﻿import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const registerAndOpenDashboard = async (baseEmail: string, page: Page) => {
   const timestamp = Date.now();
@@ -66,18 +66,18 @@ test("dashboard and forum show left rail for authenticated students", async ({ p
   await registerAndOpenDashboard("phase2_left_rail", page);
 
   await expect(page.getByLabel("Primary navigation")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Dashboard", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Today", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Subjects", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Forum", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Community", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "AI Tutor", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Home", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Practice", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
 
   await page.goto("/forum");
   await expect(page).toHaveURL(/\/forum$/);
   await expect(page.getByRole("heading", { name: "Forum" })).toBeVisible();
   await expect(page.getByLabel("Primary navigation")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Forum", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Community", exact: true })).toBeVisible();
 
   await page.goto("/ai-tutor");
   await expect(page).toHaveURL(/\/ai-tutor$/);
@@ -94,18 +94,18 @@ test("left rail can collapse and expand on desktop", async ({ page }) => {
 
   await expect(leftRail).toHaveAttribute("data-collapsed", "false");
   await expect(page.getByRole("button", { name: "Collapse sidebar" })).toBeVisible();
-  await expect(leftRail.getByText("Dashboard", { exact: true })).toBeVisible();
+  await expect(leftRail.getByText("Today", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Collapse sidebar" }).click();
 
   await expect(leftRail).toHaveAttribute("data-collapsed", "true");
   await expect(page.getByRole("button", { name: "Expand sidebar" })).toBeVisible();
-  await expect(leftRail.getByText("Dashboard", { exact: true })).not.toBeVisible();
+  await expect(leftRail.getByText("Today", { exact: true })).not.toBeVisible();
 
   await page.getByRole("button", { name: "Expand sidebar" }).click();
 
   await expect(leftRail).toHaveAttribute("data-collapsed", "false");
-  await expect(leftRail.getByText("Dashboard", { exact: true })).toBeVisible();
+  await expect(leftRail.getByText("Today", { exact: true })).toBeVisible();
 });
 
 test("settings screen provides profile management and light/dark theme controls", async ({ page }) => {

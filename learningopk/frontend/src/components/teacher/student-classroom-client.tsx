@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Megaphone, ClipboardList, BookOpen, Copy, Check } from "lucide-react";
+import { Megaphone, ClipboardList, BookOpen, Copy, Check, ArrowRight } from "lucide-react";
 import { useClipboard } from "@/hooks/useClipboard";
 
 import { Button } from "@/components/ui/button";
+import { Link } from "@/components/ui/link";
 import { Card, CardHeader, CardBody, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ type Classroom = {
 type Assignment = {
   id: number;
   title: string;
+  targetId: number;
   type: "chapter" | "quiz" | "mock_exam";
   dueDate: string | null;
   points: number;
@@ -77,14 +79,18 @@ export function StudentClassroomClient({
           description="Enter your teacher's invite code to join a classroom."
         />
         <div className="space-y-2">
+          <label htmlFor="classroom-invite-code" className="sr-only">
+            Classroom invite code
+          </label>
           <Input
+            id="classroom-invite-code"
             placeholder="Enter 6-character invite code"
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value)}
             maxLength={6}
             className="text-center font-mono uppercase"
           />
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-accent-danger" role="alert">{error}</p>}
           <Button
             className="w-full"
             onClick={handleJoin}
@@ -95,7 +101,7 @@ export function StudentClassroomClient({
           </Button>
         </div>
         {joined && (
-          <p className="text-center text-sm text-green-500">
+          <p className="text-center text-sm text-accent-success" role="status">
             Successfully joined! Refreshing...
           </p>
         )}
@@ -128,15 +134,17 @@ function ClassroomInfoCard({ classroom }: { classroom: NonNullable<Classroom> })
       </CardHeader>
       <CardBody>
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-[var(--muted-foreground)]">Invite code:</span>
-          <code className="rounded bg-[var(--muted)] px-2 py-1 font-mono text-sm">
+          <span className="text-text-secondary">Invite code:</span>
+          <code className="rounded bg-bg-subtle px-2 py-1 font-mono text-sm">
             {classroom.inviteCode}
           </code>
           <button
+            type="button"
             onClick={() => copy(classroom.inviteCode)}
-            className="rounded p-1 hover:bg-[var(--muted)]"
+            className="rounded p-1 text-text-secondary transition-colors hover:bg-bg-subtle hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40"
+            aria-label={copied ? "Invite code copied" : "Copy invite code"}
           >
-            {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+            {copied ? <Check className="h-3 w-3 text-accent-success" /> : <Copy className="h-3 w-3" />}
           </button>
         </div>
       </CardBody>
@@ -152,7 +160,7 @@ function AnnouncementsList({ announcements }: { announcements: Announcement[] })
         Announcements
       </h3>
       {announcements.length === 0 ? (
-        <p className="text-sm text-[var(--muted-foreground)]">No announcements yet.</p>
+        <p className="text-sm text-text-secondary">No announcements yet.</p>
       ) : (
         <div className="space-y-2">
           {announcements.map((a) => (
@@ -187,6 +195,23 @@ function AssignmentsList({ assignments }: { assignments: Assignment[] }) {
     return new Date(dueDate) < new Date();
   };
 
+  const getAssignmentHref = (assignment: Assignment) => {
+    switch (assignment.type) {
+      case "chapter":
+        return "/subjects";
+      case "quiz":
+        return "/practice";
+      case "mock_exam":
+        return "/past-papers";
+    }
+  };
+
+  const getActionLabel = (status?: Assignment["status"]) => {
+    if (status === "submitted") return "Review";
+    if (status === "in_progress") return "Continue";
+    return "Start";
+  };
+
   return (
     <div>
       <h3 className="mb-3 flex items-center gap-2 text-base font-semibold">
@@ -198,21 +223,28 @@ function AssignmentsList({ assignments }: { assignments: Assignment[] }) {
       ) : (
         <div className="space-y-2">
           {assignments.map((a) => (
-            <Card key={a.id} className="flex items-center justify-between p-4">
-              <div>
-                <div className="font-medium">{a.title}</div>
-                <div className="text-xs text-[var(--muted-foreground)]">
+            <Card key={a.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <div className="font-medium text-text-primary">{a.title}</div>
+                <div className="text-xs text-text-secondary">
                   {a.type} • {a.points} pts
                   {a.dueDate && (
-                    <span className={isOverdue(a.dueDate) ? "ml-2 text-red-500" : "ml-2"}>
+                    <span className={isOverdue(a.dueDate) ? "ml-2 text-accent-danger" : "ml-2"}>
                       Due: {new Date(a.dueDate).toLocaleDateString()}
                       {isOverdue(a.dueDate) && " (Overdue)"}
                     </span>
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-2 sm:justify-end">
                 {getStatusBadge(a.status)}
+                <Link
+                  href={getAssignmentHref(a)}
+                  className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm font-medium text-accent-primary transition-colors hover:bg-accent-primary-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40"
+                >
+                  {getActionLabel(a.status)}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
               </div>
             </Card>
           ))}

@@ -123,7 +123,10 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
   }, [chapterId, pushToast, sortSubparts]);
 
   useEffect(() => {
-    void fetchSubparts();
+    const timeoutId = window.setTimeout(() => {
+      void fetchSubparts();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [fetchSubparts]);
 
   const selectedSubpart = useMemo(

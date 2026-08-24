@@ -12,7 +12,7 @@ type AdminPageHeaderProps = {
 
 export function AdminPageHeader({ eyebrow, title, subtitle, actions, className }: AdminPageHeaderProps) {
   return (
-    <header className={cn("flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between", className)}>
+    <header className={cn("flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-5", className)}>
       <div className="space-y-2">
         {eyebrow && (
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-secondary)]">

@@ -105,7 +105,10 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
   }, [chapterId, pushToast]);
 
   useEffect(() => {
-    fetchExercises();
+    const timeoutId = window.setTimeout(() => {
+      void fetchExercises();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [fetchExercises]);
 
   /* ── Image upload handler ── */

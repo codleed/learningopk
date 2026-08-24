@@ -17,13 +17,13 @@ export function SchoolDashboardClient({ initialData }: { initialData: DashboardD
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-5 p-4 sm:space-y-6 sm:p-6">
       <div>
         <h1 className="text-2xl font-bold">{data.school.name}</h1>
-        <div className="mt-2 flex items-center gap-3">
+        <div className="mt-2 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
           <span className="text-sm text-text-secondary">Invite code:</span>
           <div className="flex items-center gap-2">
-            <code className="rounded bg-bg-subtle px-3 py-1.5 text-sm font-mono font-semibold">{data.school.inviteCode}</code>
+            <code className="max-w-full break-all rounded bg-bg-subtle px-3 py-1.5 text-sm font-mono font-semibold">{data.school.inviteCode}</code>
             <button
               onClick={handleCopy}
               className="rounded-md p-1.5 text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors"
@@ -38,13 +38,13 @@ export function SchoolDashboardClient({ initialData }: { initialData: DashboardD
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardBody>
-            <div className="text-3xl font-bold text-accent-primary">{data.analytics.studentCount}</div>
+            <div className="text-2xl font-bold text-accent-primary sm:text-3xl">{data.analytics.studentCount}</div>
             <div className="text-sm text-text-secondary">Enrolled Students</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody>
-            <div className="text-3xl font-bold text-accent-primary">{data.analytics.avgQuizScore}%</div>
+            <div className="text-2xl font-bold text-accent-primary sm:text-3xl">{data.analytics.avgQuizScore}%</div>
             <div className="text-sm text-text-secondary">Avg Quiz Score</div>
           </CardBody>
         </Card>
@@ -55,7 +55,7 @@ export function SchoolDashboardClient({ initialData }: { initialData: DashboardD
           <CardTitle>Top Students</CardTitle>
         </CardHeader>
         <CardBody>
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-border-default">
             {data.analytics.topStudents.map((s, i) => (
               <div key={s.id} className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-3">
@@ -78,7 +78,7 @@ export function SchoolDashboardClient({ initialData }: { initialData: DashboardD
             <CardDescription>Chapters where your students need more practice</CardDescription>
           </CardHeader>
           <CardBody>
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-border-default">
               {data.analytics.weakAreas.map((area) => (
                 <div key={area.chapterId} className="flex items-center justify-between py-3">
                   <span>{area.chapterTitle}</span>

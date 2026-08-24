@@ -59,7 +59,7 @@ export function ContentListTable<T>({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
           {title}
         </h2>
@@ -96,7 +96,7 @@ export function ContentListTable<T>({
                 {columns.map((col) => (
                   <th
                     key={col.key}
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]"
+                    className="whitespace-nowrap px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]"
                   >
                     {col.header}
                   </th>
@@ -117,7 +117,7 @@ export function ContentListTable<T>({
                     className="transition-colors hover:bg-[var(--bg-subtle)]"
                   >
                     {columns.map((col) => (
-                      <td key={col.key} className={`px-4 py-3 text-sm ${col.className || ""}`}>
+                      <td key={col.key} className={`px-3 py-2 text-sm ${col.className || ""}`}>
                         {col.render(item)}
                       </td>
                     ))}
@@ -187,7 +187,7 @@ export function ContentListTable<T>({
 
       {/* Pagination */}
       {pagination && pagination.total > pagination.pageSize && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-[var(--text-secondary)]">
             Showing {startItem}-{endItem} of {pagination.total} {title.toLowerCase()}
           </p>

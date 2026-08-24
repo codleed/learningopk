@@ -33,8 +33,8 @@ export default async function NotesPage() {
         <PageHeader
           sticky
           stickyClassName="-mx-4 -mt-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
-          title="My Notes"
-          subtitle="Create and organize your study notes with markdown, math, and images."
+          title="Notes that help you recall"
+          subtitle="Capture the idea, worked example, or formula you’ll want beside you before the next test."
           breadcrumbs={[
             { label: "Dashboard", href: "/dashboard" },
             { label: "Notes" }

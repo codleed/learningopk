@@ -20,6 +20,7 @@ export default async function MyClassroomPage() {
   let assignments: Array<{
     id: number;
     title: string;
+    targetId: number;
     type: "chapter" | "quiz" | "mock_exam";
     dueDate: string | null;
     points: number;

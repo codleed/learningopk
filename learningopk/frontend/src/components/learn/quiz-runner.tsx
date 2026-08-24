@@ -314,9 +314,11 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
 
   useEffect(() => {
     if (!challengeId) {
-      setChallengeError(null);
-      setChallengeDetails(null);
-      return;
+      const timeoutId = window.setTimeout(() => {
+        setChallengeError(null);
+        setChallengeDetails(null);
+      }, 0);
+      return () => window.clearTimeout(timeoutId);
     }
 
     let cancelled = false;

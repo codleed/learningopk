@@ -30,10 +30,10 @@ type ToastContextValue = {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 const toneClassName: Record<ToastTone, string> = {
-  info: "border-blue-300 bg-blue-50 text-blue-900",
-  success: "border-emerald-300 bg-emerald-50 text-emerald-900",
-  warning: "border-amber-300 bg-amber-50 text-amber-900",
-  error: "border-rose-300 bg-rose-50 text-rose-900"
+  info: "border-accent-info/30 bg-accent-info-light text-accent-info",
+  success: "border-accent-success/30 bg-accent-success-light text-accent-success",
+  warning: "border-accent-warning/30 bg-accent-warning-light text-accent-warning",
+  error: "border-accent-danger/30 bg-accent-danger-light text-accent-danger"
 };
 
 const toneIcon: Record<ToastTone, ReactNode> = {
@@ -75,7 +75,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={contextValue}>
       {children}
       <div
-        className="pointer-events-none fixed bottom-4 right-4 z-[150] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2"
+        className="pointer-events-none fixed bottom-4 right-4 z-[var(--z-toast)] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2"
         aria-live="polite"
       >
         {toasts.map((toast) => (
@@ -113,7 +113,7 @@ function ToastView({ toast, onDismiss }: ToastViewProps) {
   return (
     <div
       className={cn(
-        "pointer-events-auto rounded-xl border p-3 shadow-[var(--elevation-strong)] backdrop-blur-sm",
+        "pointer-events-auto rounded-xl border p-3 shadow-[var(--shadow-elevated)] backdrop-blur-sm",
         toneClassName[toast.tone]
       )}
     >
@@ -126,7 +126,7 @@ function ToastView({ toast, onDismiss }: ToastViewProps) {
         <button
           type="button"
           onClick={() => onDismiss(toast.id)}
-          className="rounded p-1 text-current/70 hover:bg-black/5 hover:text-current"
+          className="rounded p-1 text-current/70 hover:bg-current/10 hover:text-current"
           aria-label="Dismiss notification"
         >
           <X className="h-3.5 w-3.5" aria-hidden />

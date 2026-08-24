@@ -60,8 +60,8 @@ export default async function FormulasPage({
         <PageHeader
           sticky
           stickyClassName="-mx-4 -mt-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
-          title="Formula Library"
-          subtitle="Search and filter a centralized repository of formulas, then star the ones you revisit most."
+          title="Find the formula you need"
+          subtitle="Search by topic, open the explanation when you need context, and star the formulas worth revisiting."
           breadcrumbs={[
             { label: "Dashboard", href: "/dashboard" },
             { label: "Formula Library" }

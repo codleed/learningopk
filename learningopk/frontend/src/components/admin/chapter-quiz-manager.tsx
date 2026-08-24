@@ -95,7 +95,10 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
   }, [chapterId, pushToast]);
 
   useEffect(() => {
-    fetchQuiz();
+    const timeoutId = window.setTimeout(() => {
+      void fetchQuiz();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [fetchQuiz]);
 
   const handleCreateQuiz = async () => {

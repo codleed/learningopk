@@ -100,7 +100,7 @@ export function Avatar({
         />
       ) : (
         <span
-          className="flex h-full w-full items-center justify-center font-semibold text-white select-none"
+          className="flex h-full w-full items-center justify-center font-semibold text-accent-primary-fg select-none"
           style={{ background: initialsGradient(name) }}
           aria-hidden="true"
         >

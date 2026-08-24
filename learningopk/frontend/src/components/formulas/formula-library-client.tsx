@@ -67,9 +67,14 @@ export function FormulaLibraryClient({ initialData, initialQuery }: FormulaLibra
     <div className="space-y-6">
       <Card variant="default">
         <CardHeader>
-          <div className="flex items-center gap-2 text-text-secondary">
-            <Search className="h-4 w-4" aria-hidden />
-            <p className="text-sm">Filters are URL-driven so search, subject, chapter, and tag stay shareable.</p>
+          <div className="flex items-start gap-3 text-text-secondary">
+            <div className="rounded-lg bg-accent-primary/10 p-2 text-accent-primary">
+              <Search className="h-4 w-4" aria-hidden />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-text-primary">Start with the topic you’re stuck on</p>
+              <p className="mt-0.5 text-xs">Search and filter to keep this reference focused. Your URL keeps the view shareable.</p>
+            </div>
           </div>
         </CardHeader>
         <CardBody className="grid gap-3 md:grid-cols-4">

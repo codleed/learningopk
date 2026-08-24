@@ -80,9 +80,10 @@ export function useMobileKeyboard(): MobileKeyboardState {
     }
 
     window.addEventListener('resize', handleViewportChange);
-    handleViewportChange();
+    const initialMeasurement = window.setTimeout(handleViewportChange, 0);
 
     return () => {
+      window.clearTimeout(initialMeasurement);
       if (vv) {
         vv.removeEventListener('resize', handleViewportChange);
         vv.removeEventListener('scroll', handleViewportChange);

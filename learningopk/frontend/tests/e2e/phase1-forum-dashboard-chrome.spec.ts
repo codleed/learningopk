@@ -1,4 +1,4 @@
-﻿import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const registerAndOpenForum = async (baseEmail: string, page: Page) => {
   const timestamp = Date.now();
@@ -41,10 +41,10 @@ test("forum keeps dashboard shell styling while showing authenticated left rail"
   await expect(page.getByTestId("dashboard-chrome-header")).toBeVisible();
 
   await expect(page.getByLabel("Primary navigation")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Dashboard", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Today", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Subjects", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Forum", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Home", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Community", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Practice", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
 
   await page.getByPlaceholder("Search threads...").fill("phase1-filter-check");

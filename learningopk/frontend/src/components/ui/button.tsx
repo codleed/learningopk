@@ -44,7 +44,7 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         primary: [
-          "bg-accent-primary text-white",
+          "bg-accent-primary text-accent-primary-fg",
           "hover:bg-accent-primary-hover",
           "shadow-[var(--shadow-sm)]",
         ].join(" "),
@@ -58,12 +58,17 @@ export const buttonVariants = cva(
           "hover:bg-bg-subtle hover:text-text-primary",
         ].join(" "),
         danger: [
-          "bg-accent-danger text-white",
+          "bg-accent-danger text-accent-primary-fg",
+          "hover:bg-accent-danger/90",
+          "shadow-[var(--shadow-sm)]",
+        ].join(" "),
+        destructive: [
+          "bg-accent-danger text-accent-primary-fg",
           "hover:bg-accent-danger/90",
           "shadow-[var(--shadow-sm)]",
         ].join(" "),
         success: [
-          "bg-accent-success text-white",
+          "bg-accent-success text-accent-primary-fg",
           "hover:bg-accent-success/90",
           "shadow-[var(--shadow-sm)]",
         ].join(" "),

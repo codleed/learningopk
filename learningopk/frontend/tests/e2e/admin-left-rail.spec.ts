@@ -14,10 +14,10 @@ test.describe("admin left rail", () => {
     await expect(page.getByTestId("left-rail")).toBeVisible();
 
     await expect(page.getByLabel("Primary navigation")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Dashboard", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Today", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Subjects", exact: true })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Forum", exact: true })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Home", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Community", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Practice", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
   });
 

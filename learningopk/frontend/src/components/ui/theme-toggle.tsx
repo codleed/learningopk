@@ -147,7 +147,7 @@ export function ThemeToggle({
               "transition-all duration-200 ease-out",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base",
               isActive
-                ? "text-white"
+                ? "text-accent-primary-fg"
                 : "text-text-muted hover:text-text-primary hover:bg-bg-subtle"
             )}
           >

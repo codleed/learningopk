@@ -111,7 +111,7 @@ export function LinearProgress({
             fill,
             striped && [
               "bg-[length:20px_20px]",
-              "bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)]",
+              "bg-[linear-gradient(45deg,color-mix(in_oklab,var(--accent-primary-fg)_15%,transparent)_25%,transparent_25%,transparent_50%,color-mix(in_oklab,var(--accent-primary-fg)_15%,transparent)_50%,color-mix(in_oklab,var(--accent-primary-fg)_15%,transparent)_75%,transparent_75%,transparent)]",
             ]
           )}
           initial={{ width: 0 }}

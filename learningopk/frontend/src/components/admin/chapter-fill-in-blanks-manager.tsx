@@ -125,7 +125,10 @@ export function ChapterFillInBlanksManager({
   }, [chapterId, pushToast]);
 
   useEffect(() => {
-    fetchStatements();
+    const timeoutId = window.setTimeout(() => {
+      void fetchStatements();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [fetchStatements]);
 
   /* ── Derived state ── */

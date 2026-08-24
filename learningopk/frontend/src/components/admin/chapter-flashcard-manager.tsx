@@ -60,7 +60,10 @@ export function ChapterFlashcardManager({ chapterId }: ChapterFlashcardManagerPr
   }, [chapterId, pushToast]);
 
   useEffect(() => {
-    fetchFlashcards();
+    const timeoutId = window.setTimeout(() => {
+      void fetchFlashcards();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [fetchFlashcards]);
 
   const handleSave = async () => {

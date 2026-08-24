@@ -71,7 +71,7 @@ export function TeacherDashboardClient({ initialClassrooms }: TeacherDashboardCl
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold">Your Classrooms</h2>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -94,7 +94,7 @@ export function TeacherDashboardClient({ initialClassrooms }: TeacherDashboardCl
             <div>
               <label className="mb-1 block text-sm font-medium">Grade</label>
               <select
-                className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
+                className="w-full rounded-md border border-border-default bg-bg-surface px-3 py-2 text-sm text-text-primary"
                 value={grade}
                 onChange={(e) => setGrade(e.target.value)}
               >
@@ -164,8 +164,8 @@ function ClassroomCard({
   return (
     <Card className="cursor-pointer transition-shadow hover:shadow-md" onClick={onClick}>
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div>
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="min-w-0">
             <CardTitle>{classroom.name}</CardTitle>
             <CardDescription>
               Grade {classroom.grade} • {classroom.description ?? "No description"}
@@ -175,7 +175,7 @@ function ClassroomCard({
         </div>
       </CardHeader>
       <CardBody>
-        <div className="flex items-center gap-4 text-sm text-[var(--muted-foreground)]">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-text-muted">
           <div className="flex items-center gap-1">
             <Users className="h-4 w-4" />
             <span>{classroom.studentCount ?? 0} students</span>
@@ -187,8 +187,8 @@ function ClassroomCard({
         </div>
       </CardBody>
       <CardFooter>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-mono uppercase text-[var(--muted-foreground)]">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="min-w-0 truncate text-xs font-mono uppercase text-text-muted">
             Code: {classroom.inviteCode}
           </span>
           <button

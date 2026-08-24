@@ -45,6 +45,18 @@ export function AuthLayoutWrapper({
     setViewMode(getInitialViewMode(isAdmin));
   }, [isAdmin]);
 
+  // The useState initializer can't read localStorage safely (SSR renders the
+  // default, so reading storage during hydration would mismatch the HTML), so
+  // the persisted mode is applied here after mount. This also re-applies it
+  // whenever the wrapper remounts — pages that render <AppShell> in-page
+  // reset the state on navigation, and this restores the last chosen mode.
+  useEffect(() => {
+    // Hydration-safe restore: the initializer can't read localStorage (SSR
+    // would mismatch), so this is the standard place to apply stored state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- required for localStorage persistence
+    setViewMode(getInitialViewMode(isAdmin));
+  }, [isAdmin]);
+
   const handleViewModeChange = useCallback((mode: ViewMode) => {
     setViewMode(mode);
     if (typeof window !== "undefined" && typeof localStorage !== "undefined") {

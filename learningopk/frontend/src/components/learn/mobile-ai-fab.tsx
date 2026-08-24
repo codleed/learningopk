@@ -44,7 +44,10 @@ export function MobileAiFab() {
 
   // Hydrate the "has used AI" flag from localStorage after mount.
   useEffect(() => {
-    setHasUsedAi(hasUsedAiInChapter(chapterId));
+    const timeoutId = window.setTimeout(() => {
+      setHasUsedAi(hasUsedAiInChapter(chapterId));
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [chapterId]);
 
   // When the drawer opens, mark AI as used.

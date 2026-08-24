@@ -81,7 +81,8 @@ export function ClassroomDetailClient({
 
   return (
     <Tabs defaultValue="students">
-      <TabList>
+      <div className="overflow-x-auto">
+      <TabList className="min-w-max">
         <TabTrigger value="students">
           <Users className="mr-2 h-4 w-4" />
           Students ({students.length})
@@ -99,6 +100,7 @@ export function ClassroomDetailClient({
           Reports
         </TabTrigger>
       </TabList>
+      </div>
 
       <TabContent value="students">
         <StudentsTab classroom={classroom} students={students} setStudents={setStudents} />

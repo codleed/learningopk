@@ -16,7 +16,7 @@ type AdminStatsStripProps = {
 export function AdminStatsStrip({ stats, className }: AdminStatsStripProps) {
   return (
     <div
-      className={cn("flex flex-wrap items-center gap-[var(--space-6)]", className)}
+      className={cn("flex flex-wrap items-center gap-4 sm:gap-6", className)}
     >
       {stats.map((stat, index) => (
         <div key={index} className="flex items-center gap-3">
@@ -27,8 +27,7 @@ export function AdminStatsStrip({ stats, className }: AdminStatsStripProps) {
           )}
           <div className="flex flex-col">
             <span
-              className="font-mono text-text-primary"
-              style={{ fontSize: "2rem", fontWeight: 700 }}
+              className="font-mono text-2xl font-bold text-text-primary sm:text-[2rem]"
             >
               {stat.value}
             </span>

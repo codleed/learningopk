@@ -52,22 +52,25 @@ export function QuestExercisesView({
   const [orderOverride, setOrderOverride] = useState<number[] | null>(null);
 
   useEffect(() => {
-    if (!chapterId) {
-      setOrderOverride(null);
-      return;
-    }
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY(chapterId));
-      if (raw) {
-        const parsed = JSON.parse(raw) as number[];
-        const allIds = new Set(exercises.map((e) => e.id));
-        if (parsed.length === exercises.length && parsed.every((id) => allIds.has(id))) {
-          setOrderOverride(parsed);
-          return;
-        }
+    const timeoutId = window.setTimeout(() => {
+      if (!chapterId) {
+        setOrderOverride(null);
+        return;
       }
-    } catch { /* ignore */ }
-    setOrderOverride(null);
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY(chapterId));
+        if (raw) {
+          const parsed = JSON.parse(raw) as number[];
+          const allIds = new Set(exercises.map((e) => e.id));
+          if (parsed.length === exercises.length && parsed.every((id) => allIds.has(id))) {
+            setOrderOverride(parsed);
+            return;
+          }
+        }
+      } catch { /* ignore */ }
+      setOrderOverride(null);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [chapterId, exercises]);
 
   const orderedExercises = useMemo(() => {

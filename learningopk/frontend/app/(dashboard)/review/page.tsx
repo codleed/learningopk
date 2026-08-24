@@ -19,8 +19,8 @@ export default async function ReviewPage() {
         <PageHeader
           sticky
           stickyClassName="-mx-4 -mt-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
-          title="Spaced Repetition Review"
-          subtitle="Review your flashcards using the SM-2 algorithm for optimal retention."
+          title="Keep what you’ve learned"
+          subtitle="Work through the cards due today, then use your recall rating to shape the next review."
           breadcrumbs={[
             { label: "Home", href: "/" },
             { label: "Dashboard", href: "/dashboard" },

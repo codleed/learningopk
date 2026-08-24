@@ -25,10 +25,13 @@ export function ForumThreadFeed({ initialThreads, query, initialBatchSize, pageS
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    setThreads(initialThreads);
-    setHasMore(initialThreads.length >= initialBatchSize);
-    setIsLoading(false);
-    setLoadError(null);
+    const timeoutId = window.setTimeout(() => {
+      setThreads(initialThreads);
+      setHasMore(initialThreads.length >= initialBatchSize);
+      setIsLoading(false);
+      setLoadError(null);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [initialBatchSize, initialThreads]);
 
   const loadMore = useCallback(async () => {
