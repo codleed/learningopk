@@ -10,22 +10,26 @@ const createImageUploader = (maxFileSizeBytes: number) =>
     storage: multer.memoryStorage(),
     limits: {
       fileSize: maxFileSizeBytes,
-      files: 1
+      files: 1,
     },
     fileFilter: (_req, file, callback) => {
-      if (!SUPPORTED_IMAGE_MIME_TYPES.includes(file.mimetype as (typeof SUPPORTED_IMAGE_MIME_TYPES)[number])) {
+      if (
+        !SUPPORTED_IMAGE_MIME_TYPES.includes(
+          file.mimetype as (typeof SUPPORTED_IMAGE_MIME_TYPES)[number]
+        )
+      ) {
         callback(new multer.MulterError("LIMIT_UNEXPECTED_FILE", file.fieldname));
         return;
       }
 
       callback(null, true);
-    }
+    },
   });
 
 const sendUploadError = ({
   res,
   code,
-  message
+  message,
 }: {
   res: Parameters<RequestHandler>[1];
   code: number;
@@ -37,7 +41,7 @@ const sendUploadError = ({
 export const createSingleImageUploadMiddleware = ({
   fieldName,
   maxFileSizeBytes,
-  required = true
+  required = true,
 }: {
   fieldName: string;
   maxFileSizeBytes: number;
@@ -52,7 +56,7 @@ export const createSingleImageUploadMiddleware = ({
           sendUploadError({
             res,
             code: 413,
-            message: `File exceeds ${Math.floor(maxFileSizeBytes / (1024 * 1024))}MB limit.`
+            message: `File exceeds ${Math.floor(maxFileSizeBytes / (1024 * 1024))}MB limit.`,
           });
           return;
         }
@@ -61,7 +65,7 @@ export const createSingleImageUploadMiddleware = ({
           sendUploadError({
             res,
             code: 400,
-            message: unsupportedTypeMessage
+            message: unsupportedTypeMessage,
           });
           return;
         }
@@ -69,7 +73,7 @@ export const createSingleImageUploadMiddleware = ({
         sendUploadError({
           res,
           code: 400,
-          message: "Invalid upload payload."
+          message: "Invalid upload payload.",
         });
         return;
       }
@@ -78,7 +82,7 @@ export const createSingleImageUploadMiddleware = ({
         sendUploadError({
           res,
           code: 400,
-          message: error.message
+          message: error.message,
         });
         return;
       }
@@ -87,7 +91,7 @@ export const createSingleImageUploadMiddleware = ({
         sendUploadError({
           res,
           code: 400,
-          message: `Missing '${fieldName}' file in multipart form data.`
+          message: `Missing '${fieldName}' file in multipart form data.`,
         });
         return;
       }

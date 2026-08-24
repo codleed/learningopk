@@ -25,21 +25,10 @@ export function ForumThreadVoteControls({ threadId }: ForumThreadVoteControlsPro
 
   return (
     <div className="mt-4 flex items-center gap-2 border-t border-border-default pt-4">
-      <Button
-        type="button"
-        variant="ghost"
-        size="xs"
-        onClick={handleShare}
-        iconLeft={<Share2 />}
-      >
+      <Button type="button" variant="ghost" size="xs" onClick={handleShare} iconLeft={<Share2 />}>
         {copied ? "Link Copied!" : "Share"}
       </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="xs"
-        iconLeft={<Bookmark />}
-      >
+      <Button type="button" variant="ghost" size="xs" iconLeft={<Bookmark />}>
         Save
       </Button>
     </div>

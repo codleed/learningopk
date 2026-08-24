@@ -18,7 +18,7 @@ const leaderboardEntrySchema = z.object({
   quizzes: z.number().int().nonnegative(),
   weeklyChange: z.number().int(),
   badge: leaderboardBadgeSchema.nullable(),
-  isCurrentUser: z.boolean()
+  isCurrentUser: z.boolean(),
 });
 
 const leaderboardResponseSchema = z.object({
@@ -31,13 +31,13 @@ const leaderboardResponseSchema = z.object({
     rank: z.number().int().positive(),
     totalStudents: z.number().int().positive(),
     leaderboardPublic: z.boolean(),
-    badge: leaderboardBadgeSchema.nullable()
-  })
+    badge: leaderboardBadgeSchema.nullable(),
+  }),
 });
 
 const leaderboardSettingsSchema = z.object({
   leaderboardPublic: z.boolean(),
-  badge: leaderboardBadgeSchema.nullable()
+  badge: leaderboardBadgeSchema.nullable(),
 });
 
 export type LeaderboardScope = z.infer<typeof leaderboardScopeSchema>;
@@ -54,8 +54,8 @@ export const getLeaderboard = async (
     method: "GET",
     cache: "no-store",
     headers: {
-      cookie: cookieHeader
-    }
+      cookie: cookieHeader,
+    },
   });
 
   if (!response.ok) {
@@ -65,13 +65,15 @@ export const getLeaderboard = async (
   return leaderboardResponseSchema.parse((await response.json()) as unknown);
 };
 
-export const getLeaderboardSettings = async (cookieHeader: string): Promise<LeaderboardSettings> => {
+export const getLeaderboardSettings = async (
+  cookieHeader: string
+): Promise<LeaderboardSettings> => {
   const response = await fetch(`${backendUrl}/api/users/me/leaderboard-settings`, {
     method: "GET",
     cache: "no-store",
     headers: {
-      cookie: cookieHeader
-    }
+      cookie: cookieHeader,
+    },
   });
 
   if (!response.ok) {
@@ -81,14 +83,16 @@ export const getLeaderboardSettings = async (cookieHeader: string): Promise<Lead
   return leaderboardSettingsSchema.parse((await response.json()) as unknown);
 };
 
-export const updateLeaderboardSettings = async (isPublic: boolean): Promise<LeaderboardSettings> => {
+export const updateLeaderboardSettings = async (
+  isPublic: boolean
+): Promise<LeaderboardSettings> => {
   const response = await fetch(`${backendUrl}/api/users/me/leaderboard-settings`, {
     method: "PUT",
     credentials: "include",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify({ public: isPublic })
+    body: JSON.stringify({ public: isPublic }),
   });
 
   if (!response.ok) {

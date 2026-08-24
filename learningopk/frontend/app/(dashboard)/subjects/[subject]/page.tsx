@@ -9,12 +9,13 @@ type SubjectRedirectPageProps = {
 };
 
 const routeParamsSchema = z.object({
-  subject: z.string().trim().regex(/^[a-z0-9-]+$/),
+  subject: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/),
 });
 
-export default async function SubjectRedirectPage({
-  params,
-}: SubjectRedirectPageProps) {
+export default async function SubjectRedirectPage({ params }: SubjectRedirectPageProps) {
   const session = await getServerSession();
   if (!session) {
     redirect("/login");
@@ -30,23 +31,21 @@ export default async function SubjectRedirectPage({
     notFound();
   }
 
-  const candidateSubjects = subjectsList.subjects.filter(
-    (subject) => {
-      if (subject.slug !== parsedParams.data.subject || !subject.classSlug) {
-        return false;
-      }
+  const candidateSubjects = subjectsList.subjects.filter((subject) => {
+    if (subject.slug !== parsedParams.data.subject || !subject.classSlug) {
+      return false;
+    }
 
-      if (session.user.board && subject.boardSlug !== session.user.board) {
-        return false;
-      }
+    if (session.user.board && subject.boardSlug !== session.user.board) {
+      return false;
+    }
 
-      if (session.user.class && subject.classSlug !== session.user.class) {
-        return false;
-      }
+    if (session.user.class && subject.classSlug !== session.user.class) {
+      return false;
+    }
 
-      return true;
-    },
-  );
+    return true;
+  });
 
   for (const candidate of candidateSubjects) {
     if (!candidate.classSlug) {
@@ -61,7 +60,7 @@ export default async function SubjectRedirectPage({
 
     if (subjectOverview) {
       redirect(
-        `/${subjectOverview.board.slug}/${subjectOverview.class.slug}/${subjectOverview.subject.slug}`,
+        `/${subjectOverview.board.slug}/${subjectOverview.class.slug}/${subjectOverview.subject.slug}`
       );
     }
   }

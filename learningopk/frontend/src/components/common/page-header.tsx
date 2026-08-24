@@ -62,17 +62,12 @@ export function PageHeader({
               return (
                 <li key={crumb.label} className="flex items-center gap-1">
                   {crumb.href && !isLast ? (
-                    <Link
-                      href={crumb.href}
-                      className="transition-colors hover:text-text-primary"
-                    >
+                    <Link href={crumb.href} className="transition-colors hover:text-text-primary">
                       {crumb.label}
                     </Link>
                   ) : (
                     <span
-                      className={cn(
-                        isLast ? "text-text-primary font-medium" : "",
-                      )}
+                      className={cn(isLast ? "text-text-primary font-medium" : "")}
                       aria-current={isLast ? "page" : undefined}
                     >
                       {crumb.label}
@@ -93,7 +88,7 @@ export function PageHeader({
       ) : null}
 
       {/* ── Title row ── */}
-      {(title || actions || badge) ? (
+      {title || actions || badge ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
@@ -104,27 +99,19 @@ export function PageHeader({
             </div>
 
             {subtitle ? (
-              <p className="text-sm text-text-secondary leading-relaxed sm:text-base">
-                {subtitle}
-              </p>
+              <p className="text-sm text-text-secondary leading-relaxed sm:text-base">{subtitle}</p>
             ) : null}
           </div>
 
           {/* ── Actions slot ── */}
-          {actions ? (
-            <div className="flex shrink-0 items-center gap-2">{actions}</div>
-          ) : null}
+          {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
         </div>
       ) : null}
     </header>
   );
 
   if (sticky) {
-    return (
-      <StickyBreadcrumbWrapper className={stickyClassName}>
-        {content}
-      </StickyBreadcrumbWrapper>
-    );
+    return <StickyBreadcrumbWrapper className={stickyClassName}>{content}</StickyBreadcrumbWrapper>;
   }
 
   return content;

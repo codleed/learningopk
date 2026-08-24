@@ -1,9 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import {
-  DashboardClient,
-} from "@/components/dashboard/DashboardClient";
+import { DashboardClient } from "@/components/dashboard/DashboardClient";
 import { AppShell } from "@/components/foundation/app-shell";
 import { PageHeader } from "@/components/common/page-header";
 import type { FocusAreaItem } from "@/components/dashboard/focus-areas-widget";
@@ -14,10 +12,7 @@ import {
   type SubjectResponse,
 } from "@/lib/learn-api";
 import { getLearningPath, type LearningPathResponse } from "@/lib/learning-path-api";
-import {
-  getDashboardSummary,
-  type DashboardSummaryResponse,
-} from "@/lib/progress-api";
+import { getDashboardSummary, type DashboardSummaryResponse } from "@/lib/progress-api";
 import { getServerSession } from "@/lib/session";
 import { getStudyGroups, type StudyGroupsListResponse } from "@/lib/study-groups-api";
 import { getMySchool } from "@/lib/school-api";
@@ -63,9 +58,7 @@ const getInitials = (name: string): string =>
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 
-const getFirstQueryValue = (
-  value: string | string[] | undefined
-): string | undefined => {
+const getFirstQueryValue = (value: string | string[] | undefined): string | undefined => {
   if (Array.isArray(value)) return value[0];
   return value;
 };
@@ -74,9 +67,7 @@ const getFirstQueryValue = (
 /*  Page (Server Component)                                            */
 /* ------------------------------------------------------------------ */
 
-export default async function DashboardPage({
-  searchParams,
-}: DashboardPageProps) {
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const session = await getServerSession();
   if (!session) redirect("/login");
 
@@ -92,14 +83,19 @@ export default async function DashboardPage({
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
-  const [summarySettled, learningPathSettled, studyGroupsSettled, subjectsListSettled, mySchoolSettled] =
-    await Promise.allSettled([
-      getDashboardSummary(cookieHeader),
-      getLearningPath(cookieHeader),
-      getStudyGroups(cookieHeader),
-      getSubjectsList(),
-      getMySchool(cookieHeader),
-    ]);
+  const [
+    summarySettled,
+    learningPathSettled,
+    studyGroupsSettled,
+    subjectsListSettled,
+    mySchoolSettled,
+  ] = await Promise.allSettled([
+    getDashboardSummary(cookieHeader),
+    getLearningPath(cookieHeader),
+    getStudyGroups(cookieHeader),
+    getSubjectsList(),
+    getMySchool(cookieHeader),
+  ]);
 
   /* ---- Unwrap settled results with proper fallbacks ---- */
   const summary: DashboardSummaryResponse | null =
@@ -117,9 +113,7 @@ export default async function DashboardPage({
       : { recommendedChapters: [] };
 
   const studyGroups: StudyGroupsListResponse["groups"] =
-    studyGroupsSettled.status === "fulfilled"
-      ? studyGroupsSettled.value.groups
-      : [];
+    studyGroupsSettled.status === "fulfilled" ? studyGroupsSettled.value.groups : [];
 
   // Single subjects list used everywhere (deduplicated — was called twice before)
   const subjectsList: SubjectsListResponse | null =
@@ -143,17 +137,13 @@ export default async function DashboardPage({
   const featuredSubject = orderedSubjects[0] ?? null;
 
   const displayName =
-    summary && summary.studentName.trim().length > 0
-      ? summary.studentName
-      : session.user.name;
+    summary && summary.studentName.trim().length > 0 ? summary.studentName : session.user.name;
 
   /* ---- Scope subjects to the user's board/class ---- */
   const scopedSubjects = allSubjects.filter((subject) => {
     if (!subject.classSlug) return false;
-    if (session.user.board && subject.boardSlug !== session.user.board)
-      return false;
-    if (session.user.class && subject.classSlug !== session.user.class)
-      return false;
+    if (session.user.board && subject.boardSlug !== session.user.board) return false;
+    if (session.user.class && subject.classSlug !== session.user.class) return false;
     return true;
   });
 
@@ -175,9 +165,7 @@ export default async function DashboardPage({
     if (!routeSeed) {
       const fallbackSubject = scopedSubjects[0];
       if (!fallbackSubject)
-        throw new Error(
-          "No subject route available for the current profile scope."
-        );
+        throw new Error("No subject route available for the current profile scope.");
       if (fallbackSubject.classSlug) {
         routeSeed = {
           boardSlug: fallbackSubject.boardSlug,
@@ -254,10 +242,7 @@ export default async function DashboardPage({
   const overviewMap = new Map<string, SubjectResponse | null>();
   overviewsToFetch.forEach((entry, index) => {
     const settled = overviewSettledResults[index];
-    overviewMap.set(
-      entry.key,
-      settled?.status === "fulfilled" ? settled.value : null
-    );
+    overviewMap.set(entry.key, settled?.status === "fulfilled" ? settled.value : null);
   });
 
   /* ---- Resolve "Continue Learning" link from overview ---- */
@@ -267,12 +252,9 @@ export default async function DashboardPage({
       const overview = overviewMap.get(
         `${routeSeed.boardSlug}/${routeSeed.classSlug}/${routeSeed.subjectSlug}`
       );
-      const publishedChapters =
-        overview?.chapters.filter((chapter) => chapter.isPublished) ?? [];
+      const publishedChapters = overview?.chapters.filter((chapter) => chapter.isPublished) ?? [];
       const orderedChapters = [
-        ...(publishedChapters.length > 0
-          ? publishedChapters
-          : (overview?.chapters ?? [])),
+        ...(publishedChapters.length > 0 ? publishedChapters : (overview?.chapters ?? [])),
       ].sort((a, b) => a.chapterNumber - b.chapterNumber);
       const firstChapter = orderedChapters[0];
       if (firstChapter) {
@@ -283,9 +265,7 @@ export default async function DashboardPage({
     }
   }
 
-  const continueHref = firstChapterBasePath
-    ? `${firstChapterBasePath}?tab=summary`
-    : null;
+  const continueHref = firstChapterBasePath ? `${firstChapterBasePath}?tab=summary` : null;
 
   /* ---- Resolve focus areas from the already-fetched overviews ---- */
   let focusAreas: FocusAreaItem[] = [];
@@ -325,7 +305,7 @@ export default async function DashboardPage({
           return {
             ...item,
             title: route.chapterTitle,
-            href: `/${route.boardSlug}/${route.classSlug}/${route.subjectSlug}/${route.chapterSlug}?tab=exercises`
+            href: `/${route.boardSlug}/${route.classSlug}/${route.subjectSlug}/${route.chapterSlug}?tab=exercises`,
           };
         })
         .filter((item): item is FocusAreaItem => item !== null);
@@ -350,10 +330,7 @@ export default async function DashboardPage({
           stickyClassName="-mx-5 -mt-4 sm:-mx-8 lg:-mx-10 px-5 sm:px-8 lg:px-10"
           title={`Welcome back, ${displayName}`}
           subtitle="Track your progress, continue learning, and reach your goals."
-          breadcrumbs={[
-            { label: "Home", href: "/" },
-            { label: "Dashboard" },
-          ]}
+          breadcrumbs={[{ label: "Home", href: "/" }, { label: "Dashboard" }]}
         />
       </div>
 

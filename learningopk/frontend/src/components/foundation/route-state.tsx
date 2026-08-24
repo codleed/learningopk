@@ -13,4 +13,3 @@ export function RouteLoading({ title, description }: RouteLoadingProps) {
     </div>
   );
 }
-

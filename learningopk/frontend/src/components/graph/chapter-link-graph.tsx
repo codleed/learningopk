@@ -48,7 +48,7 @@ const PADDING = 48;
 function computeCircularLayout(
   nodes: ChapterGraphNode[],
   width: number,
-  height: number,
+  height: number
 ): PositionedNode[] {
   const cx = width / 2;
   const cy = height / 2;
@@ -112,7 +112,7 @@ export function ChapterLinkGraph({
 
   const positionedNodes = useMemo(
     () => computeCircularLayout(nodes, size.width, size.height),
-    [nodes, size.width, size.height],
+    [nodes, size.width, size.height]
   );
 
   const nodePositionMap = useMemo(() => {
@@ -124,18 +124,15 @@ export function ChapterLinkGraph({
   }, [positionedNodes]);
 
   const resolvedEdges = useMemo(
-    () =>
-      edges.filter(
-        (edge): edge is ResolvedEdge => edge.targetChapterId !== null,
-      ),
-    [edges],
+    () => edges.filter((edge): edge is ResolvedEdge => edge.targetChapterId !== null),
+    [edges]
   );
 
   const handleNodeClick = useCallback(
     (nodeId: number) => {
       onOpenChapter(nodeId);
     },
-    [onOpenChapter],
+    [onOpenChapter]
   );
 
   return (
@@ -164,11 +161,7 @@ export function ChapterLinkGraph({
               y1={source.y}
               x2={target.x}
               y2={target.y}
-              stroke={
-                edge.isResolved
-                  ? "var(--accent-success)"
-                  : "var(--border-strong)"
-              }
+              stroke={edge.isResolved ? "var(--accent-success)" : "var(--border-strong)"}
               strokeWidth={edge.isResolved ? 2.2 : 1.5}
               strokeOpacity={edge.isResolved ? 0.8 : 0.5}
             />
@@ -206,12 +199,7 @@ export function ChapterLinkGraph({
               }}
             >
               {/* Hit area (larger invisible circle for easier clicking) */}
-              <circle
-                cx={node.x}
-                cy={node.y}
-                r={NODE_RADIUS * 3}
-                fill="transparent"
-              />
+              <circle cx={node.x} cy={node.y} r={NODE_RADIUS * 3} fill="transparent" />
 
               {/* Active ring */}
               {isActive && (

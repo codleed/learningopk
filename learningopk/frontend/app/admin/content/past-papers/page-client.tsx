@@ -7,7 +7,11 @@ import { AdminPageHeader } from "@/components/admin";
 import { ContentTabs } from "@/components/admin/content-tabs";
 import { ContentStatsStrip } from "@/components/admin/content-stats-strip";
 import { ContentListTable, type ColumnDef } from "@/components/admin/content-list-table";
-import { deleteAdminPastPaper, type AdminCurriculumBoard, type PastPaperResponse } from "@/lib/admin-api";
+import {
+  deleteAdminPastPaper,
+  type AdminCurriculumBoard,
+  type PastPaperResponse,
+} from "@/lib/admin-api";
 import { useToast } from "@/components/ui/toast";
 
 type PastPapersPageProps = {
@@ -35,7 +39,7 @@ export function PastPapersPage({ boards, initialPastPapers, stats }: PastPapersP
   const boardOptions = useMemo(() => {
     return boards.map((board) => ({
       id: board.id,
-      label: board.name
+      label: board.name,
     }));
   }, [boards]);
 
@@ -47,7 +51,7 @@ export function PastPapersPage({ boards, initialPastPapers, stats }: PastPapersP
         for (const subject of boardClass.subjects) {
           options.push({
             id: subject.id,
-            label: `${board.name} / ${boardClass.name} / ${subject.name}`
+            label: `${board.name} / ${boardClass.name} / ${subject.name}`,
           });
         }
       }
@@ -76,20 +80,12 @@ export function PastPapersPage({ boards, initialPastPapers, stats }: PastPapersP
     {
       key: "title",
       header: "Title",
-      render: (p) => (
-        <span className="font-medium text-[var(--text-primary)]">
-          {p.title}
-        </span>
-      ),
+      render: (p) => <span className="font-medium text-[var(--text-primary)]">{p.title}</span>,
     },
     {
       key: "year",
       header: "Year",
-      render: (p) => (
-        <span className="text-sm text-[var(--text-primary)]">
-          {p.year}
-        </span>
-      ),
+      render: (p) => <span className="text-sm text-[var(--text-primary)]">{p.year}</span>,
     },
     {
       key: "board-grade",
@@ -99,9 +95,7 @@ export function PastPapersPage({ boards, initialPastPapers, stats }: PastPapersP
           <span className="text-xs text-[var(--text-primary)]">
             {p.boardName ?? `Board #${p.boardId}`}
           </span>
-          <span className="text-xs text-[var(--text-secondary)]">
-            Class {p.grade}
-          </span>
+          <span className="text-xs text-[var(--text-secondary)]">Class {p.grade}</span>
         </div>
       ),
     },

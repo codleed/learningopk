@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { isMissingOptionalDbFeatureError, withOptionalDbFallback } from "../../lib/db-schema-compat.js";
+import {
+  isMissingOptionalDbFeatureError,
+  withOptionalDbFallback,
+} from "../../lib/db-schema-compat.js";
 
 test("isMissingOptionalDbFeatureError detects missing table code", () => {
   assert.equal(isMissingOptionalDbFeatureError({ code: "42P01" }), true);

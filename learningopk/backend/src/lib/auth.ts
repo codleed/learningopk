@@ -18,47 +18,48 @@ export const auth = betterAuth({
       user: users,
       session: sessions,
       account: accounts,
-      verification: verifications
-    }
+      verification: verifications,
+    },
   }),
   user: {
     additionalFields: {
       class: {
         type: "string",
-        required: true
+        required: true,
       },
       degree: {
         type: "string",
-        required: false
+        required: false,
       },
       board: {
         type: "string",
-        required: true
+        required: true,
       },
       role: {
         type: "string",
         required: false,
-        input: false
+        input: false,
       },
       schoolId: {
         type: "number",
         required: false,
-        input: false
-      }
-    }
+        input: false,
+      },
+    },
   },
   emailAndPassword: {
     enabled: true,
-    autoSignIn: true
+    autoSignIn: true,
   },
   plugins: [
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
         void sendEmail({
           to: email,
-          subject: type === "email-verification"
-            ? "Verify your email - LearningoPK"
-            : "Your sign-in code - LearningoPK",
+          subject:
+            type === "email-verification"
+              ? "Verify your email - LearningoPK"
+              : "Your sign-in code - LearningoPK",
           text: `Your verification code is: ${otp}. It expires in 5 minutes.`,
           html: `<p>Your verification code is: <strong>${otp}</strong></p><p>It expires in 5 minutes.</p>`,
         }).catch((err) => {

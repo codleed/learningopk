@@ -50,16 +50,15 @@ export function MockExamResultDetails({ sectionScores, weakAreas }: MockExamResu
 
         <div className="space-y-3">
           {sectionScores.map((section, index) => {
-            const percentage = section.totalMarks > 0
-              ? Math.round((section.score / section.totalMarks) * 100)
-              : 0;
+            const percentage =
+              section.totalMarks > 0 ? Math.round((section.score / section.totalMarks) * 100) : 0;
 
             const colorVariant =
               percentage >= PERFORMANCE_EXCELLENT_THRESHOLD
-                ? "success" as const
+                ? ("success" as const)
                 : percentage >= PERFORMANCE_PASS_THRESHOLD
-                  ? "warning" as const
-                  : "danger" as const;
+                  ? ("warning" as const)
+                  : ("danger" as const);
 
             return (
               <motion.div
@@ -85,11 +84,7 @@ export function MockExamResultDetails({ sectionScores, weakAreas }: MockExamResu
                 </div>
 
                 <div className="mt-2.5">
-                  <LinearProgress
-                    value={percentage}
-                    barSize="sm"
-                    colorVariant={colorVariant}
-                  />
+                  <LinearProgress value={percentage} barSize="sm" colorVariant={colorVariant} />
                 </div>
 
                 <p className="mt-1.5 text-[11px] text-text-secondary">
@@ -135,8 +130,8 @@ export function MockExamResultDetails({ sectionScores, weakAreas }: MockExamResu
                   </Badge>
                 </div>
                 <p className="mt-1.5 pl-5.5 text-xs text-text-secondary">
-                  {area.wrongQuestionCount} of {area.totalQuestions} questions incorrect.
-                  Review this chapter to improve your score.
+                  {area.wrongQuestionCount} of {area.totalQuestions} questions incorrect. Review
+                  this chapter to improve your score.
                 </p>
               </motion.div>
             ))}
@@ -152,9 +147,7 @@ export function MockExamResultDetails({ sectionScores, weakAreas }: MockExamResu
             <p className="text-sm font-medium text-accent-success">
               Great job! No weak areas identified.
             </p>
-            <p className="text-xs text-text-secondary">
-              You scored 70% or above in all sections.
-            </p>
+            <p className="text-xs text-text-secondary">You scored 70% or above in all sections.</p>
           </motion.div>
         )}
 

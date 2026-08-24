@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 type MobileKeyboardState = {
   /** Whether the virtual keyboard is currently visible */
@@ -31,7 +31,11 @@ export function useMobileKeyboard(): MobileKeyboardState {
     const vv = window.visualViewport;
     if (!vv) {
       setState((prev) => {
-        if (prev.viewportHeight === window.innerHeight && !prev.keyboardVisible && prev.keyboardHeight === 0) {
+        if (
+          prev.viewportHeight === window.innerHeight &&
+          !prev.keyboardVisible &&
+          prev.keyboardHeight === 0
+        ) {
           return prev;
         }
 
@@ -57,9 +61,9 @@ export function useMobileKeyboard(): MobileKeyboardState {
 
     setState((prev) => {
       if (
-        prev.keyboardVisible === visible
-        && prev.keyboardHeight === nextKeyboardHeight
-        && prev.viewportHeight === nextViewportHeight
+        prev.keyboardVisible === visible &&
+        prev.keyboardHeight === nextKeyboardHeight &&
+        prev.viewportHeight === nextViewportHeight
       ) {
         return prev; // no change — avoid re-render
       }
@@ -75,20 +79,20 @@ export function useMobileKeyboard(): MobileKeyboardState {
   useEffect(() => {
     const vv = window.visualViewport;
     if (vv) {
-      vv.addEventListener('resize', handleViewportChange);
-      vv.addEventListener('scroll', handleViewportChange);
+      vv.addEventListener("resize", handleViewportChange);
+      vv.addEventListener("scroll", handleViewportChange);
     }
 
-    window.addEventListener('resize', handleViewportChange);
+    window.addEventListener("resize", handleViewportChange);
     handleViewportChange();
 
     return () => {
       if (vv) {
-        vv.removeEventListener('resize', handleViewportChange);
-        vv.removeEventListener('scroll', handleViewportChange);
+        vv.removeEventListener("resize", handleViewportChange);
+        vv.removeEventListener("scroll", handleViewportChange);
       }
 
-      window.removeEventListener('resize', handleViewportChange);
+      window.removeEventListener("resize", handleViewportChange);
     };
   }, [handleViewportChange]);
 

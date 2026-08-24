@@ -1,9 +1,4 @@
-import {
-  FileText,
-  MessageSquare,
-  TextCursorInput,
-  Atom,
-} from "lucide-react";
+import { FileText, MessageSquare, TextCursorInput, Atom } from "lucide-react";
 
 import type { ExerciseSectionType } from "./exercise-section-card";
 
@@ -56,8 +51,7 @@ export const SECTION_META: Record<
   short: {
     icon: <MessageSquare />,
     title: "Short Questions",
-    description:
-      "Brief, focused answers — definitions, formulas, short derivations",
+    description: "Brief, focused answers — definitions, formulas, short derivations",
   },
   blanks: {
     icon: <TextCursorInput />,

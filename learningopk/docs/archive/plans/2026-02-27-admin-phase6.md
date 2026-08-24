@@ -11,6 +11,7 @@
 ---
 
 ## Execution Guardrails
+
 - Follow RED -> GREEN -> refactor for every task.
 - If any command fails unexpectedly, invoke `superpowers:systematic-debugging` before changing code.
 - Commit after each task or clear logical task group.
@@ -27,6 +28,7 @@
 ### Task 1: Backend Aggregated Audit API Coverage (TDD)
 
 **Files:**
+
 - Create: `backend/src/tests/integration/admin-phase6.integration.test.ts`
 - Reference: `backend/src/tests/integration/admin-phase4.integration.test.ts`
 - Reference: `backend/src/tests/integration/admin-phase5.integration.test.ts`
@@ -69,12 +71,14 @@ git commit -m "test: add failing admin phase 6 aggregated audit API coverage"
 ### Task 2: Backend Aggregated + Scoped Audit Read Routes (TDD GREEN)
 
 **Files:**
+
 - Modify: `backend/src/routes/admin.ts`
 - Modify: `backend/src/tests/integration/admin-phase6.integration.test.ts`
 
 **Step 1: Implement minimal aggregated audit route + query layer**
 
 Implement:
+
 - query schema for:
   - `scope`: `all|content|forum|moderation|notifications|settings|users`
   - `status`: `all|success|failed`
@@ -91,6 +95,7 @@ Update returned entries to include `scope` for aggregated usage while preserving
 **Step 2: Add missing scope-specific audit routes**
 
 Implement:
+
 - `GET /api/admin/moderation/audit-logs`
 - `GET /api/admin/users/audit-logs`
 - `GET /api/admin/notifications/audit-logs`
@@ -111,12 +116,14 @@ test("admin scoped audit log routes are available for moderation/users/notificat
 **Step 4: Run tests to verify GREEN**
 
 Run:
+
 1. `pnpm.cmd --filter backend exec tsx --test src/tests/integration/admin-phase6.integration.test.ts --test-name-pattern aggregated`
 2. `pnpm.cmd --filter backend exec tsx --test src/tests/integration/admin-phase6.integration.test.ts --test-name-pattern scoped`
 
 Expected: PASS for new Phase 6 backend assertions.
 
 **Step 5: Refactor lightly**
+
 - Keep a single audit-row serializer for both aggregated and scoped responses.
 - Keep filter predicate building isolated in one helper.
 
@@ -130,6 +137,7 @@ git commit -m "feat: add aggregated and scoped admin audit log read APIs"
 ### Task 3: Frontend Audit Center E2E Coverage (TDD RED)
 
 **Files:**
+
 - Create: `frontend/tests/e2e/admin-phase6-audit-center.spec.ts`
 
 **Step 1: Write failing Playwright tests for `/admin/audit`**
@@ -155,6 +163,7 @@ test("admin audit center applies scope/status/search filters and paginates", asy
 **Step 2: Run test to verify RED**
 
 Run:
+
 1. `pnpm.cmd --filter backend db:clear`
 2. `pnpm.cmd --filter frontend exec playwright test tests/e2e/admin-phase6-audit-center.spec.ts`
 
@@ -170,6 +179,7 @@ git commit -m "test: add failing admin phase 6 audit center e2e coverage"
 ### Task 4: Frontend Audit Center Implementation (TDD GREEN)
 
 **Files:**
+
 - Modify: `frontend/lib/admin-api.ts`
 - Modify: `frontend/components/admin/admin-nav-config.ts`
 - Create: `frontend/app/admin/audit/page.tsx`
@@ -179,6 +189,7 @@ git commit -m "test: add failing admin phase 6 audit center e2e coverage"
 **Step 1: Implement API helpers + schemas**
 
 In `frontend/lib/admin-api.ts`:
+
 - extend audit entry schema with `scope`
 - add response schema for aggregated endpoint
 - add `getAdminAuditLogs({ scope, status, q, page, pageSize, cookieHeader? })`
@@ -186,10 +197,12 @@ In `frontend/lib/admin-api.ts`:
 **Step 2: Implement new admin audit route + UI components**
 
 In route/page:
+
 - server prefetch with `scope=all`, `status=all`, `q=""`, `page=1`, `pageSize=20`
 - render `AdminAuditPanel`
 
 In panel/table:
+
 - filters for scope/status/search
 - apply/reset-to-page-1 behavior
 - load more append behavior
@@ -200,17 +213,20 @@ In panel/table:
 **Step 3: Add sidebar navigation item**
 
 In `admin-nav-config.ts`:
+
 - add item for `/admin/audit` label `Audit Trail`
 
 **Step 4: Run test to verify GREEN**
 
 Run:
+
 1. `pnpm.cmd --filter backend db:clear`
 2. `pnpm.cmd --filter frontend exec playwright test tests/e2e/admin-phase6-audit-center.spec.ts`
 
 Expected: PASS for audit center flows.
 
 **Step 5: Refactor lightly**
+
 - Keep filter-state and fetch-state transitions minimal and deterministic.
 
 **Step 6: Commit**
@@ -223,6 +239,7 @@ git commit -m "feat: implement admin unified audit center UI"
 ### Task 5: Final Verification and Regression Gate
 
 **Files:**
+
 - Modify only files required to resolve verification failures.
 
 **Step 1: Run Phase 6 backend integration tests**
@@ -246,6 +263,7 @@ Expected: PASS.
 **Step 4: Run frontend smoke e2e**
 
 Run:
+
 1. `pnpm.cmd --filter backend db:clear`
 2. `pnpm.cmd --filter frontend test:e2e:smoke`
 
@@ -254,6 +272,7 @@ Expected: PASS.
 **Step 5: Run admin Phase 1 regression**
 
 Run:
+
 1. `pnpm.cmd --filter backend db:clear`
 2. `pnpm.cmd --filter frontend exec playwright test tests/e2e/admin-phase1-shell.spec.ts`
 
@@ -262,6 +281,7 @@ Expected: PASS.
 **Step 6: Run admin Phase 2 regression**
 
 Run:
+
 1. `pnpm.cmd --filter backend db:clear`
 2. `pnpm.cmd --filter frontend exec playwright test tests/e2e/admin-phase2-moderation-users.spec.ts`
 
@@ -270,6 +290,7 @@ Expected: PASS.
 **Step 7: Run admin Phase 3 regression**
 
 Run:
+
 1. `pnpm.cmd --filter backend db:clear`
 2. `pnpm.cmd --filter frontend exec playwright test tests/e2e/admin-phase3-community-analytics.spec.ts`
 
@@ -278,6 +299,7 @@ Expected: PASS.
 **Step 8: Run admin Phase 4 regression**
 
 Run:
+
 1. `pnpm.cmd --filter backend db:clear`
 2. `pnpm.cmd --filter frontend exec playwright test tests/e2e/admin-phase4-notifications-settings.spec.ts`
 
@@ -286,6 +308,7 @@ Expected: PASS.
 **Step 9: Run admin Phase 5 regression**
 
 Run:
+
 1. `pnpm.cmd --filter backend db:clear`
 2. `pnpm.cmd --filter frontend exec playwright test tests/e2e/admin-phase5-users-lifecycle.spec.ts`
 
@@ -294,6 +317,7 @@ Expected: PASS.
 **Step 10: Run admin Phase 6 targeted e2e**
 
 Run:
+
 1. `pnpm.cmd --filter backend db:clear`
 2. `pnpm.cmd --filter frontend exec playwright test tests/e2e/admin-phase6-audit-center.spec.ts`
 
@@ -306,6 +330,7 @@ Run: `pnpm.cmd --filter backend typecheck`
 Expected: PASS.
 
 **Step 12: Use completion verification skill**
+
 - Invoke `superpowers:verification-before-completion` before any success claim.
 
 **Step 13: Commit verification fixes**

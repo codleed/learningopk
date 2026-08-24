@@ -26,7 +26,9 @@ export function FormulaLibraryClient({ initialData, initialQuery }: FormulaLibra
   const chapterOptions = useMemo(
     () =>
       initialQuery.subjectId
-        ? initialData.filters.chapters.filter((chapter) => chapter.subjectId === initialQuery.subjectId)
+        ? initialData.filters.chapters.filter(
+            (chapter) => chapter.subjectId === initialQuery.subjectId
+          )
         : initialData.filters.chapters,
     [initialData.filters.chapters, initialQuery.subjectId]
   );
@@ -69,7 +71,9 @@ export function FormulaLibraryClient({ initialData, initialQuery }: FormulaLibra
         <CardHeader>
           <div className="flex items-center gap-2 text-text-secondary">
             <Search className="h-4 w-4" aria-hidden />
-            <p className="text-sm">Filters are URL-driven so search, subject, chapter, and tag stay shareable.</p>
+            <p className="text-sm">
+              Filters are URL-driven so search, subject, chapter, and tag stay shareable.
+            </p>
           </div>
         </CardHeader>
         <CardBody className="grid gap-3 md:grid-cols-4">
@@ -129,7 +133,9 @@ export function FormulaLibraryClient({ initialData, initialQuery }: FormulaLibra
         <Card variant="default">
           <CardBody className="py-10 text-center">
             <Sparkles className="mx-auto h-8 w-8 text-text-muted" aria-hidden />
-            <p className="mt-3 text-sm text-text-secondary">No formulas match the current search and filters.</p>
+            <p className="mt-3 text-sm text-text-secondary">
+              No formulas match the current search and filters.
+            </p>
           </CardBody>
         </Card>
       ) : (
@@ -142,10 +148,16 @@ export function FormulaLibraryClient({ initialData, initialQuery }: FormulaLibra
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-2">
                       <div className="flex flex-wrap gap-2">
-                        <Badge variant="primary" size="sm">{formula.subjectName}</Badge>
-                        <Badge variant="default" size="sm">{formula.chapterTitle}</Badge>
+                        <Badge variant="primary" size="sm">
+                          {formula.subjectName}
+                        </Badge>
+                        <Badge variant="default" size="sm">
+                          {formula.chapterTitle}
+                        </Badge>
                         {formula.tags.map((tag) => (
-                          <Badge key={tag} variant="outline" size="sm">#{tag}</Badge>
+                          <Badge key={tag} variant="outline" size="sm">
+                            #{tag}
+                          </Badge>
                         ))}
                       </div>
                       <h2 className="text-lg font-semibold text-text-primary">{formula.name}</h2>
@@ -156,7 +168,9 @@ export function FormulaLibraryClient({ initialData, initialQuery }: FormulaLibra
                       onClick={() => void onToggleStar(formula.id)}
                       className="rounded-full border border-border-default p-2 text-text-secondary transition-colors hover:text-accent-warning"
                     >
-                      <Star className={`h-4 w-4 ${formula.isStarred ? "fill-current text-accent-warning" : ""}`} />
+                      <Star
+                        className={`h-4 w-4 ${formula.isStarred ? "fill-current text-accent-warning" : ""}`}
+                      />
                     </button>
                   </div>
                 </CardHeader>
@@ -166,7 +180,11 @@ export function FormulaLibraryClient({ initialData, initialQuery }: FormulaLibra
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => void onToggleExpand(formula.id)}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => void onToggleExpand(formula.id)}
+                    >
                       {isExpanded ? "Hide explanation" : "Show explanation"}
                     </Button>
                     <Button
@@ -184,11 +202,19 @@ export function FormulaLibraryClient({ initialData, initialQuery }: FormulaLibra
                       <p className="text-sm leading-6 text-text-secondary">{formula.description}</p>
                       {formula.variables.length > 0 ? (
                         <div className="space-y-2">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">Variables</p>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                            Variables
+                          </p>
                           <ul className="space-y-2">
                             {formula.variables.map((variable) => (
-                              <li key={`${formula.id}-${variable.symbol}`} className="text-sm text-text-secondary">
-                                <span className="font-semibold text-text-primary">{variable.symbol}</span> — {variable.meaning}
+                              <li
+                                key={`${formula.id}-${variable.symbol}`}
+                                className="text-sm text-text-secondary"
+                              >
+                                <span className="font-semibold text-text-primary">
+                                  {variable.symbol}
+                                </span>{" "}
+                                — {variable.meaning}
                               </li>
                             ))}
                           </ul>

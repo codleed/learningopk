@@ -3,7 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ChevronLeft, ChevronRight, SkipForward, Send, AlertTriangle, Swords, TimerReset } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  SkipForward,
+  Send,
+  AlertTriangle,
+  Swords,
+  TimerReset,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,53 +55,61 @@ const submitQuizResponseSchema = z.object({
       isCorrect: z.boolean(),
       explanation: z.string(),
       marks: z.number().int().positive(),
-      awardedMarks: z.number().int().nonnegative()
+      awardedMarks: z.number().int().nonnegative(),
     })
   ),
-  sectionScores: z.array(
-    z.object({
-      chapterId: z.number().int().nullable(),
-      chapterTitle: z.string().nullable(),
-      chapterNumber: z.number().int().nullable(),
-      score: z.number().int(),
-      totalMarks: z.number().int(),
-      questionCount: z.number().int(),
-      correctCount: z.number().int()
+  sectionScores: z
+    .array(
+      z.object({
+        chapterId: z.number().int().nullable(),
+        chapterTitle: z.string().nullable(),
+        chapterNumber: z.number().int().nullable(),
+        score: z.number().int(),
+        totalMarks: z.number().int(),
+        questionCount: z.number().int(),
+        correctCount: z.number().int(),
+      })
+    )
+    .optional(),
+  weakAreas: z
+    .array(
+      z.object({
+        chapterId: z.number().int(),
+        chapterTitle: z.string(),
+        chapterNumber: z.number().int(),
+        correctPercentage: z.number(),
+        wrongQuestionCount: z.number().int(),
+        totalQuestions: z.number().int(),
+      })
+    )
+    .optional(),
+  duel: z
+    .object({
+      challengeId: z.string().uuid(),
+      status: z.enum(["open", "completed", "expired"]),
+      expiresAt: z.string().datetime(),
+      challenger: z.object({
+        userId: z.string(),
+        name: z.string(),
+        score: z.number().int().nonnegative(),
+        totalMarks: z.number().int().nonnegative(),
+        percentage: z.number().int().min(0).max(100),
+        completedAt: z.string().datetime(),
+        isCurrentUser: z.boolean(),
+      }),
+      recipient: z
+        .object({
+          userId: z.string(),
+          name: z.string(),
+          score: z.number().int().nonnegative(),
+          totalMarks: z.number().int().nonnegative(),
+          percentage: z.number().int().min(0).max(100),
+          completedAt: z.string().datetime(),
+          isCurrentUser: z.boolean(),
+        })
+        .nullable(),
     })
-  ).optional(),
-  weakAreas: z.array(
-    z.object({
-      chapterId: z.number().int(),
-      chapterTitle: z.string(),
-      chapterNumber: z.number().int(),
-      correctPercentage: z.number(),
-      wrongQuestionCount: z.number().int(),
-      totalQuestions: z.number().int()
-    })
-  ).optional(),
-  duel: z.object({
-    challengeId: z.string().uuid(),
-    status: z.enum(["open", "completed", "expired"]),
-    expiresAt: z.string().datetime(),
-    challenger: z.object({
-      userId: z.string(),
-      name: z.string(),
-      score: z.number().int().nonnegative(),
-      totalMarks: z.number().int().nonnegative(),
-      percentage: z.number().int().min(0).max(100),
-      completedAt: z.string().datetime(),
-      isCurrentUser: z.boolean()
-    }),
-    recipient: z.object({
-      userId: z.string(),
-      name: z.string(),
-      score: z.number().int().nonnegative(),
-      totalMarks: z.number().int().nonnegative(),
-      percentage: z.number().int().min(0).max(100),
-      completedAt: z.string().datetime(),
-      isCurrentUser: z.boolean()
-    }).nullable()
-  }).optional()
+    .optional(),
 });
 
 export type QuizResult = z.infer<typeof submitQuizResponseSchema>;
@@ -116,12 +132,12 @@ const quizChallengeResponseSchema = z.object({
     challengeId: z.string().uuid(),
     quizId: z.number().int().positive(),
     expiresAt: z.string().datetime(),
-    createdAt: z.string().datetime()
-  })
+    createdAt: z.string().datetime(),
+  }),
 });
 
 const quizChallengeDetailResponseSchema = z.object({
-  data: submitQuizResponseSchema.shape.duel.unwrap()
+  data: submitQuizResponseSchema.shape.duel.unwrap(),
 });
 
 /** Slide direction for the page transition */
@@ -142,7 +158,14 @@ const slideVariants = {
   }),
 };
 
-export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, challengeId, onQuizComplete }: QuizRunnerProps) {
+export function QuizRunner({
+  quiz,
+  subjectName,
+  chapterNumber,
+  chapterTitle,
+  challengeId,
+  onQuizComplete,
+}: QuizRunnerProps) {
   const reduced = useReducedMotion();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerOption>>({});
@@ -156,7 +179,10 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
   const [challengeError, setChallengeError] = useState<string | null>(null);
   const [challengeDetails, setChallengeDetails] = useState<QuizResult["duel"] | null>(null);
 
-  const backendUrl = useMemo(() => process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001", []);
+  const backendUrl = useMemo(
+    () => process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001",
+    []
+  );
 
   const currentQuestion = quiz.questions[currentIndex];
   const answeredCount = Object.keys(answers).length;
@@ -173,14 +199,17 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
 
     setAnswers((previous) => ({
       ...previous,
-      [String(questionId)]: option
+      [String(questionId)]: option,
     }));
   };
 
-  const goToQuestion = useCallback((newIndex: number) => {
-    setSlideDirection(newIndex > currentIndex ? "left" : "right");
-    setCurrentIndex(newIndex);
-  }, [currentIndex]);
+  const goToQuestion = useCallback(
+    (newIndex: number) => {
+      setSlideDirection(newIndex > currentIndex ? "left" : "right");
+      setCurrentIndex(newIndex);
+    },
+    [currentIndex]
+  );
 
   const goNext = useCallback(() => {
     if (currentIndex < totalQuestions - 1) {
@@ -216,14 +245,14 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
         method: "POST",
         credentials: "include",
         headers: {
-          "content-type": "application/json"
+          "content-type": "application/json",
         },
         body: JSON.stringify({
           quizId: quiz.id,
           startedAt: new Date(startedAtMs).toISOString(),
           answers,
-          challengeId
-        })
+          challengeId,
+        }),
       });
 
       if (!response.ok) {
@@ -241,7 +270,9 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
 
       const correctCount = parsedResponse.data.questionResults.filter((q) => q.isCorrect).length;
       const totalCount = parsedResponse.data.questionResults.length;
-      setAnnouncementText(`Quiz complete! You got ${correctCount} out of ${totalCount} questions correct.`);
+      setAnnouncementText(
+        `Quiz complete! You got ${correctCount} out of ${totalCount} questions correct.`
+      );
       setResult(parsedResponse.data);
 
       // Notify parent for gamification (XP, progress, streak)
@@ -251,7 +282,16 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
     } finally {
       setIsSubmitting(false);
     }
-  }, [answers, backendUrl, challengeId, isSubmitting, onQuizComplete, quiz.id, result, startedAtMs]);
+  }, [
+    answers,
+    backendUrl,
+    challengeId,
+    isSubmitting,
+    onQuizComplete,
+    quiz.id,
+    result,
+    startedAtMs,
+  ]);
 
   const createChallenge = useCallback(async () => {
     if (!result || result.quizType !== "chapter_quiz") {
@@ -262,12 +302,12 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
       method: "POST",
       credentials: "include",
       headers: {
-        "content-type": "application/json"
+        "content-type": "application/json",
       },
       body: JSON.stringify({
         quizId: result.quizId,
-        attemptId: result.attemptId
-      })
+        attemptId: result.attemptId,
+      }),
     });
 
     if (!response.ok) {
@@ -325,7 +365,7 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
       try {
         setChallengeError(null);
         const response = await fetch(`${backendUrl}/api/quiz/challenges/${challengeId}`, {
-          credentials: "include"
+          credentials: "include",
         });
 
         if (!response.ok) {
@@ -418,9 +458,15 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
               </p>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              <Badge variant="default" size="sm">{totalQuestions} questions</Badge>
-              <Badge variant="default" size="sm">{quiz.totalMarks} marks</Badge>
-              <Badge variant="primary" size="sm">{answeredCount} answered</Badge>
+              <Badge variant="default" size="sm">
+                {totalQuestions} questions
+              </Badge>
+              <Badge variant="default" size="sm">
+                {quiz.totalMarks} marks
+              </Badge>
+              <Badge variant="primary" size="sm">
+                {answeredCount} answered
+              </Badge>
             </div>
           </div>
           <QuizTimer remainingSeconds={remainingSeconds} expired={isTimeUp && !result} />
@@ -483,8 +529,13 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Badge variant="primary" size="sm">{challengeDetails.challenger.score}/{challengeDetails.challenger.totalMarks}</Badge>
-              <Badge variant={challengeDetails.status === "expired" ? "warning" : "default"} size="sm">
+              <Badge variant="primary" size="sm">
+                {challengeDetails.challenger.score}/{challengeDetails.challenger.totalMarks}
+              </Badge>
+              <Badge
+                variant={challengeDetails.status === "expired" ? "warning" : "default"}
+                size="sm"
+              >
                 <TimerReset className="mr-1 inline h-3.5 w-3.5" />
                 Expires {new Date(challengeDetails.expiresAt).toLocaleString()}
               </Badge>
@@ -587,9 +638,7 @@ export function QuizRunner({ quiz, subjectName, chapterNumber, chapterTitle, cha
   if (showNavigator) {
     return (
       <div className="flex gap-5">
-        <div className="min-w-0 flex-1">
-          {quizContent}
-        </div>
+        <div className="min-w-0 flex-1">{quizContent}</div>
         <div className="hidden w-52 shrink-0 lg:block">
           <div className="sticky top-4">
             <QuestionNavigator

@@ -140,7 +140,9 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
   const isSubpartDirty = useCallback(
     (subpart: Pick<AdminChapterSubpart, "id" | "heading" | "content">) => {
       const persisted = persistedSubpartsById.get(subpart.id);
-      return !persisted || subpart.heading !== persisted.heading || subpart.content !== persisted.content;
+      return (
+        !persisted || subpart.heading !== persisted.heading || subpart.content !== persisted.content
+      );
     },
     [persistedSubpartsById]
   );
@@ -250,7 +252,9 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
     }
 
     const dirtySubparts = subparts.filter((subpart) => dirtySubpartIds.has(subpart.id));
-    const firstInvalid = dirtySubparts.find((subpart) => !subpart.heading.trim() || !subpart.content.trim());
+    const firstInvalid = dirtySubparts.find(
+      (subpart) => !subpart.heading.trim() || !subpart.content.trim()
+    );
     if (firstInvalid) {
       pushToast({
         title: "Heading and content are required",
@@ -283,8 +287,12 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
       if (savedSubparts.length > 0) {
         const savedById = new Map(savedSubparts.map((subpart) => [subpart.id, subpart]));
 
-        setSubparts((current) => sortSubparts(current.map((subpart) => savedById.get(subpart.id) ?? subpart)));
-        setPersistedSubparts((current) => sortSubparts(current.map((subpart) => savedById.get(subpart.id) ?? subpart)));
+        setSubparts((current) =>
+          sortSubparts(current.map((subpart) => savedById.get(subpart.id) ?? subpart))
+        );
+        setPersistedSubparts((current) =>
+          sortSubparts(current.map((subpart) => savedById.get(subpart.id) ?? subpart))
+        );
         setDirtySubpartIds((current) => {
           const next = new Set(current);
           for (const subpart of savedSubparts) {
@@ -330,7 +338,9 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
       });
 
       const remaining = subparts.filter((subpart) => subpart.id !== selectedSubpart.id);
-      const remainingPersisted = persistedSubparts.filter((subpart) => subpart.id !== selectedSubpart.id);
+      const remainingPersisted = persistedSubparts.filter(
+        (subpart) => subpart.id !== selectedSubpart.id
+      );
       setSubparts(remaining);
       setPersistedSubparts(remainingPersisted);
       setDirtySubpartIds((current) => {
@@ -382,7 +392,10 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
 
       const previous = subparts;
       const reordered = [...subparts];
-      [reordered[currentIndex], reordered[targetIndex]] = [reordered[targetIndex], reordered[currentIndex]];
+      [reordered[currentIndex], reordered[targetIndex]] = [
+        reordered[targetIndex],
+        reordered[currentIndex],
+      ];
       setSubparts(reordered);
 
       setIsReorderingSubparts(true);
@@ -409,28 +422,37 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
     [chapterId, hasAnyUnsavedChanges, pushToast, selectedSubpartId, sortSubparts, subparts]
   );
 
-  const handleImageUpload = useCallback(async (file: File) => {
-    try {
-      const response = await uploadAdminChapterSummaryMedia({ chapterId, file });
-      return {
-        url: response.asset.objectUrl,
-        markdown: response.markdown,
-      };
-    } catch (error) {
-      pushToast({
-        title: "Image upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload image. Please try again.",
-        tone: "error",
-      });
-      throw error;
-    }
-  }, [chapterId, pushToast]);
+  const handleImageUpload = useCallback(
+    async (file: File) => {
+      try {
+        const response = await uploadAdminChapterSummaryMedia({ chapterId, file });
+        return {
+          url: response.asset.objectUrl,
+          markdown: response.markdown,
+        };
+      } catch (error) {
+        pushToast({
+          title: "Image upload failed",
+          description:
+            error instanceof Error ? error.message : "Failed to upload image. Please try again.",
+          tone: "error",
+        });
+        throw error;
+      }
+    },
+    [chapterId, pushToast]
+  );
 
   const breadcrumbSegments = [
     { label: "Admin", href: "/admin" },
     { label: "Content", href: "/admin/content" },
     { label: "Chapters", href: "/admin/content/chapters" },
-    { label: chapterNumber !== null && chapterTitle ? `Chapter ${chapterNumber}: ${chapterTitle}` : `Chapter ${chapterId}` },
+    {
+      label:
+        chapterNumber !== null && chapterTitle
+          ? `Chapter ${chapterNumber}: ${chapterTitle}`
+          : `Chapter ${chapterId}`,
+    },
   ];
 
   return (
@@ -442,7 +464,11 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
             <AdminBreadcrumb segments={breadcrumbSegments} className="mb-4" />
           </StickyBreadcrumbWrapper>
           <AdminPageHeader
-            title={chapterNumber !== null && chapterTitle ? `Chapter ${chapterNumber}: ${chapterTitle}` : `Chapter ${chapterId}`}
+            title={
+              chapterNumber !== null && chapterTitle
+                ? `Chapter ${chapterNumber}: ${chapterTitle}`
+                : `Chapter ${chapterId}`
+            }
             subtitle="Manage chapter content, quizzes, flashcards, and exercises"
           />
         </div>
@@ -451,7 +477,11 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
       {/* Tabs */}
       <div className="border-b border-border-default bg-bg-surface sticky top-0 z-10">
         <div className="container mx-auto px-4">
-          <nav className="flex items-center gap-0.5 overflow-x-auto" role="tablist" aria-label="Chapter content tabs">
+          <nav
+            className="flex items-center gap-0.5 overflow-x-auto"
+            role="tablist"
+            aria-label="Chapter content tabs"
+          >
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -490,7 +520,9 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
                 <div className="w-1 h-8 bg-gradient-to-b from-[var(--primary)] to-[var(--primary-hover)] rounded-full" />
                 <div>
                   <h2 className="text-xl font-semibold tracking-tight">Chapter Subparts</h2>
-                  <p className="text-sm text-text-secondary">Create, reorder, and edit chapter sections in Markdown</p>
+                  <p className="text-sm text-text-secondary">
+                    Create, reorder, and edit chapter sections in Markdown
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap justify-end">
@@ -519,7 +551,11 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
                   disabled={!selectedSubpart || isDeletingSubpart || isLoadingSubparts}
                   className="gap-2"
                 >
-                  {isDeletingSubpart ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  {isDeletingSubpart ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
                   Delete
                 </Button>
                 <Button
@@ -529,7 +565,11 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
                   disabled={isCreatingSubpart || isLoadingSubparts}
                   className="gap-2"
                 >
-                  {isCreatingSubpart ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  {isCreatingSubpart ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
                   Add Subpart
                 </Button>
                 <Button
@@ -563,9 +603,20 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
             ) : subparts.length === 0 ? (
               <Card>
                 <CardContent className="py-10 text-center space-y-4">
-                  <p className="text-sm text-text-secondary">No subparts yet. Add your first section to begin writing chapter content.</p>
-                  <Button variant="primary" size="sm" onClick={() => void handleAddSubpart()} disabled={isCreatingSubpart}>
-                    {isCreatingSubpart ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} 
+                  <p className="text-sm text-text-secondary">
+                    No subparts yet. Add your first section to begin writing chapter content.
+                  </p>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => void handleAddSubpart()}
+                    disabled={isCreatingSubpart}
+                  >
+                    {isCreatingSubpart ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="h-4 w-4" />
+                    )}
                     Add First Subpart
                   </Button>
                 </CardContent>
@@ -589,7 +640,9 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
                                 : "border-border-default hover:border-[var(--primary)]/40"
                             )}
                           >
-                            <p className="text-xs text-text-secondary">Section {subpart.orderIndex}</p>
+                            <p className="text-xs text-text-secondary">
+                              Section {subpart.orderIndex}
+                            </p>
                             <p className="text-sm font-medium truncate">
                               {subpart.heading}
                               {dirtySubpartIds.has(subpart.id) ? " *" : ""}
@@ -605,7 +658,9 @@ export function ChapterManageClient({ chapterId }: ChapterManageClientProps) {
                   <div className="space-y-3">
                     <Input
                       value={selectedSubpart.heading}
-                      onChange={(event) => handleSelectedSubpartChange("heading", event.target.value)}
+                      onChange={(event) =>
+                        handleSelectedSubpartChange("heading", event.target.value)
+                      }
                       placeholder="Subpart heading"
                     />
                     <GithubMarkdownEditor

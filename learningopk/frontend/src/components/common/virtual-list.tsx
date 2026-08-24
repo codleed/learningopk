@@ -99,22 +99,14 @@ export function VirtualList<T>({
   if (!isLoading && items.length === 0) {
     return (
       <div className={cn("flex items-center justify-center p-8", className)}>
-        {emptyState ?? (
-          <p className="text-sm text-text-muted">No items to display</p>
-        )}
+        {emptyState ?? <p className="text-sm text-text-muted">No items to display</p>}
       </div>
     );
   }
 
   return (
-    <div
-      ref={parentRef}
-      className={cn("overflow-auto scrollbar-thin", className)}
-    >
-      <div
-        className="relative w-full"
-        style={{ height: `${virtualizer.getTotalSize()}px` }}
-      >
+    <div ref={parentRef} className={cn("overflow-auto scrollbar-thin", className)}>
+      <div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
         {virtualItems.map((virtualItem) => {
           const item = items[virtualItem.index];
           if (item === undefined) return null;

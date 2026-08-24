@@ -2,10 +2,7 @@ import type { ReactNode } from "react";
 
 import { AppShell } from "@/components/foundation/app-shell";
 import { DashboardSurface } from "@/components/foundation/dashboard-primitives";
-import {
-  StaggerContainer,
-  MotionSection,
-} from "@/components/motion";
+import { StaggerContainer, MotionSection } from "@/components/motion";
 import type { SessionPayload } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +21,7 @@ export function DashboardChromeLayout({
   currentPath,
   header,
   children,
-  contentClassName
+  contentClassName,
 }: DashboardChromeLayoutProps) {
   return (
     <AppShell
@@ -57,7 +54,13 @@ type DashboardChromeHeaderProps = {
   className?: string;
 };
 
-export function DashboardChromeHeader({ title, subtitle, eyebrow, actions, className }: DashboardChromeHeaderProps) {
+export function DashboardChromeHeader({
+  title,
+  subtitle,
+  eyebrow,
+  actions,
+  className,
+}: DashboardChromeHeaderProps) {
   return (
     <DashboardSurface
       as="header"
@@ -68,10 +71,16 @@ export function DashboardChromeHeader({ title, subtitle, eyebrow, actions, class
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-[12rem]">
           {eyebrow ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.07em] text-[var(--primary)]">{eyebrow}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.07em] text-[var(--primary)]">
+              {eyebrow}
+            </p>
           ) : null}
-          <h1 className="mt-1 text-3xl font-medium tracking-tight text-text-primary sm:text-4xl">{title}</h1>
-          {subtitle ? <p className="mt-2 max-w-3xl text-sm text-text-secondary">{subtitle}</p> : null}
+          <h1 className="mt-1 text-3xl font-medium tracking-tight text-text-primary sm:text-4xl">
+            {title}
+          </h1>
+          {subtitle ? (
+            <p className="mt-2 max-w-3xl text-sm text-text-secondary">{subtitle}</p>
+          ) : null}
         </div>
         {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>

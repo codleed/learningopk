@@ -1,20 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import {
-  motion,
-  useInView,
-  useMotionValue,
-  useSpring,
-  useTransform,
-} from "framer-motion";
-import {
-  Users,
-  GraduationCap,
-  Layers,
-  Sparkles,
-  type LucideIcon,
-} from "lucide-react";
+import { motion, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { Users, GraduationCap, Layers, Sparkles, type LucideIcon } from "lucide-react";
 
 /* ─── Icon map (resolved client-side to avoid server→client function passing) ─── */
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -54,9 +42,7 @@ function AnimatedCounter({
     damping: 30,
     restDelta: 0.5,
   });
-  const rounded = useTransform(spring, (v) =>
-    Math.round(v).toLocaleString()
-  );
+  const rounded = useTransform(spring, (v) => Math.round(v).toLocaleString());
 
   const spanRef = useRef<HTMLSpanElement>(null);
 
@@ -93,10 +79,7 @@ export function StatsBar({ stats }: StatsBarProps) {
   const isInView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section
-      ref={ref}
-      className="relative z-10 border-y border-border-default bg-bg-surface"
-    >
+    <section ref={ref} className="relative z-10 border-y border-border-default bg-bg-surface">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-12 md:grid-cols-4 md:py-16">
         {stats.map((stat, i) => {
           const Icon = ICON_MAP[stat.iconName] ?? Users;
@@ -115,14 +98,8 @@ export function StatsBar({ stats }: StatsBarProps) {
               <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-accent-primary-light">
                 <Icon className="h-5 w-5 text-accent-primary" />
               </div>
-              <AnimatedCounter
-                target={stat.value}
-                suffix={stat.suffix}
-                inView={isInView}
-              />
-              <p className="text-sm font-medium text-text-secondary">
-                {stat.label}
-              </p>
+              <AnimatedCounter target={stat.value} suffix={stat.suffix} inView={isInView} />
+              <p className="text-sm font-medium text-text-secondary">{stat.label}</p>
             </motion.div>
           );
         })}

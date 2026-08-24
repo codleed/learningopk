@@ -2,7 +2,14 @@ import { alias } from "drizzle-orm/pg-core";
 import { and, eq, isNull } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
-import { chapters, quizAttempts, quizDuelChallenges, quizQuestions, quizzes, users } from "../lib/db/schema.js";
+import {
+  chapters,
+  quizAttempts,
+  quizDuelChallenges,
+  quizQuestions,
+  quizzes,
+  users,
+} from "../lib/db/schema.js";
 
 export class QuizRepository {
   async findQuizById(quizId: number) {
@@ -11,7 +18,7 @@ export class QuizRepository {
         id: quizzes.id,
         chapterId: quizzes.chapterId,
         totalMarks: quizzes.totalMarks,
-        type: quizzes.type
+        type: quizzes.type,
       })
       .from(quizzes)
       .where(eq(quizzes.id, quizId))
@@ -33,7 +40,7 @@ export class QuizRepository {
         explanation: quizQuestions.explanation,
         marks: quizQuestions.marks,
         chapterTitle: chapters.title,
-        chapterNumber: chapters.chapterNumber
+        chapterNumber: chapters.chapterNumber,
       })
       .from(quizQuestions)
       .leftJoin(chapters, eq(quizQuestions.chapterId, chapters.id))
@@ -50,15 +57,12 @@ export class QuizRepository {
     startedAt: Date;
     completedAt: Date;
   }) {
-    return db
-      .insert(quizAttempts)
-      .values(data)
-      .returning({
-        id: quizAttempts.id,
-        completedAt: quizAttempts.completedAt,
-        score: quizAttempts.score,
-        totalMarks: quizAttempts.totalMarks
-      });
+    return db.insert(quizAttempts).values(data).returning({
+      id: quizAttempts.id,
+      completedAt: quizAttempts.completedAt,
+      score: quizAttempts.score,
+      totalMarks: quizAttempts.totalMarks,
+    });
   }
 
   async createDuelChallenge(data: {
@@ -67,15 +71,12 @@ export class QuizRepository {
     challengerAttemptId: string;
     expiresAt: Date;
   }) {
-    return db
-      .insert(quizDuelChallenges)
-      .values(data)
-      .returning({
-        id: quizDuelChallenges.id,
-        quizId: quizDuelChallenges.quizId,
-        expiresAt: quizDuelChallenges.expiresAt,
-        createdAt: quizDuelChallenges.createdAt
-      });
+    return db.insert(quizDuelChallenges).values(data).returning({
+      id: quizDuelChallenges.id,
+      quizId: quizDuelChallenges.quizId,
+      expiresAt: quizDuelChallenges.expiresAt,
+      createdAt: quizDuelChallenges.createdAt,
+    });
   }
 
   async findAttemptById(attemptId: string) {
@@ -86,7 +87,7 @@ export class QuizRepository {
         quizId: quizAttempts.quizId,
         score: quizAttempts.score,
         totalMarks: quizAttempts.totalMarks,
-        completedAt: quizAttempts.completedAt
+        completedAt: quizAttempts.completedAt,
       })
       .from(quizAttempts)
       .where(eq(quizAttempts.id, attemptId))
@@ -116,10 +117,13 @@ export class QuizRepository {
         challengerCompletedAt: challengerAttempt.completedAt,
         recipientScore: recipientAttempt.score,
         recipientTotalMarks: recipientAttempt.totalMarks,
-        recipientCompletedAt: recipientAttempt.completedAt
+        recipientCompletedAt: recipientAttempt.completedAt,
       })
       .from(quizDuelChallenges)
-      .innerJoin(challengerAttempt, eq(quizDuelChallenges.challengerAttemptId, challengerAttempt.id))
+      .innerJoin(
+        challengerAttempt,
+        eq(quizDuelChallenges.challengerAttemptId, challengerAttempt.id)
+      )
       .innerJoin(challengerUser, eq(quizDuelChallenges.challengerUserId, challengerUser.id))
       .leftJoin(recipientAttempt, eq(quizDuelChallenges.recipientAttemptId, recipientAttempt.id))
       .leftJoin(recipientUser, eq(quizDuelChallenges.recipientUserId, recipientUser.id))
@@ -137,12 +141,17 @@ export class QuizRepository {
       .set({
         recipientUserId: data.recipientUserId,
         recipientAttemptId: data.recipientAttemptId,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
-      .where(and(eq(quizDuelChallenges.id, data.challengeId), isNull(quizDuelChallenges.recipientAttemptId)))
+      .where(
+        and(
+          eq(quizDuelChallenges.id, data.challengeId),
+          isNull(quizDuelChallenges.recipientAttemptId)
+        )
+      )
       .returning({
         id: quizDuelChallenges.id,
-        recipientAttemptId: quizDuelChallenges.recipientAttemptId
+        recipientAttemptId: quizDuelChallenges.recipientAttemptId,
       });
   }
 

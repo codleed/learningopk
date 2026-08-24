@@ -913,10 +913,7 @@ export function NumericalVisualizationEditor({
   /* ── Close template dropdown on outside click ── */
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        templateMenuRef.current &&
-        !templateMenuRef.current.contains(event.target as Node)
-      ) {
+      if (templateMenuRef.current && !templateMenuRef.current.contains(event.target as Node)) {
         setTemplateMenuOpen(false);
       }
     }
@@ -934,7 +931,7 @@ export function NumericalVisualizationEditor({
       onChange(template.code);
       setTemplateMenuOpen(false);
     },
-    [onChange],
+    [onChange]
   );
 
   const handleReset = useCallback(() => {
@@ -945,7 +942,7 @@ export function NumericalVisualizationEditor({
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
       onChange(event.target.value);
     },
-    [onChange],
+    [onChange]
   );
 
   const hasContent = value.trim().length > 0;
@@ -955,16 +952,14 @@ export function NumericalVisualizationEditor({
       className={cn(
         "rounded-lg border border-border-default overflow-hidden",
         disabled && "opacity-60 pointer-events-none",
-        className,
+        className
       )}
     >
       {/* ── Header Bar ── */}
       <div className="bg-bg-surface border-b border-border-default px-4 py-2.5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <Code2 className="h-4 w-4 text-accent-primary shrink-0" />
-          <span className="text-sm font-semibold text-text-primary">
-            Visualization Code
-          </span>
+          <span className="text-sm font-semibold text-text-primary">Visualization Code</span>
           {hasContent && (
             <Badge variant="primary" size="sm">
               HTML
@@ -995,7 +990,7 @@ export function NumericalVisualizationEditor({
                   "rounded-lg border border-border-default",
                   "bg-bg-elevated shadow-[var(--shadow-elevated)]",
                   "animate-in fade-in-0 zoom-in-95 origin-top-right",
-                  "py-1",
+                  "py-1"
                 )}
                 role="listbox"
                 aria-label="Visualization templates"
@@ -1010,16 +1005,12 @@ export function NumericalVisualizationEditor({
                       "w-full text-left px-3 py-2.5 flex flex-col gap-0.5",
                       "transition-colors duration-100",
                       "hover:bg-bg-subtle focus-visible:bg-bg-subtle",
-                      "focus-visible:outline-none",
+                      "focus-visible:outline-none"
                     )}
                     onClick={() => handleTemplateSelect(template)}
                   >
-                    <span className="text-sm font-medium text-text-primary">
-                      {template.label}
-                    </span>
-                    <span className="text-xs text-text-muted">
-                      {template.description}
-                    </span>
+                    <span className="text-sm font-medium text-text-primary">{template.label}</span>
+                    <span className="text-xs text-text-muted">{template.description}</span>
                   </button>
                 ))}
               </div>
@@ -1064,7 +1055,7 @@ export function NumericalVisualizationEditor({
               "p-4 outline-none",
               "placeholder:text-[#484f58]",
               "disabled:cursor-not-allowed disabled:opacity-50",
-              "selection:bg-[#264f78]",
+              "selection:bg-[#264f78]"
             )}
             style={{ fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" }}
           />

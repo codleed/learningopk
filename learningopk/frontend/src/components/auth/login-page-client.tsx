@@ -5,15 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  BookOpen,
-  Brain,
-  GraduationCap,
-  Lock,
-  Mail,
-  Sparkles,
-  TrendingUp,
-} from "lucide-react";
+import { BookOpen, Brain, GraduationCap, Lock, Mail, Sparkles, TrendingUp } from "lucide-react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -82,8 +74,7 @@ export function LoginPageClient() {
 
     if (!parsed.success) {
       setErrorMessage(
-        parsed.error.issues[0]?.message ??
-          "Please enter a valid email and password."
+        parsed.error.issues[0]?.message ?? "Please enter a valid email and password."
       );
       return;
     }
@@ -116,15 +107,10 @@ export function LoginPageClient() {
   };
 
   const emailError =
-    submitted && errorMessage?.toLowerCase().includes("email")
-      ? errorMessage
-      : null;
+    submitted && errorMessage?.toLowerCase().includes("email") ? errorMessage : null;
   const passwordError =
-    submitted && errorMessage?.toLowerCase().includes("password")
-      ? errorMessage
-      : null;
-  const generalError =
-    errorMessage && !emailError && !passwordError ? errorMessage : null;
+    submitted && errorMessage?.toLowerCase().includes("password") ? errorMessage : null;
+  const generalError = errorMessage && !emailError && !passwordError ? errorMessage : null;
 
   return (
     <div className="flex min-h-screen bg-bg-base">
@@ -155,12 +141,7 @@ export function LoginPageClient() {
           </Link>
 
           {/* Feature highlights */}
-          <motion.div
-            variants={stagger}
-            initial="hidden"
-            animate="show"
-            className="space-y-6"
-          >
+          <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-6">
             <motion.div variants={fadeUp}>
               <h2 className="font-display text-3xl font-bold tracking-tight text-text-primary xl:text-4xl">
                 Learn smarter,
@@ -168,8 +149,8 @@ export function LoginPageClient() {
                 <span className="text-accent-primary">not harder.</span>
               </h2>
               <p className="mt-3 text-sm text-text-secondary leading-relaxed max-w-md">
-                Your personalized learning companion for Pakistani board exams.
-                AI-powered, gamified, and built for success.
+                Your personalized learning companion for Pakistani board exams. AI-powered,
+                gamified, and built for success.
               </p>
             </motion.div>
 
@@ -186,12 +167,8 @@ export function LoginPageClient() {
                       <Icon className="h-5 w-5 text-accent-primary" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-text-primary">
-                        {feature.title}
-                      </h3>
-                      <p className="mt-0.5 text-xs text-text-secondary">
-                        {feature.description}
-                      </p>
+                      <h3 className="text-sm font-semibold text-text-primary">{feature.title}</h3>
+                      <p className="mt-0.5 text-xs text-text-secondary">{feature.description}</p>
                     </div>
                   </motion.div>
                 );
@@ -318,11 +295,7 @@ export function LoginPageClient() {
                   width="full"
                   size="lg"
                   iconLeft={
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-5 w-5"
-                      aria-hidden="true"
-                    >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
                       <path
                         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
                         fill="#4285F4"

@@ -3,12 +3,19 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, GraduationCap, Book, FileText, Brain, ClipboardList, Layers, Plus, Clock } from "lucide-react";
-
 import {
-  AdminPageHeader,
-  AdminBreadcrumb,
-} from "@/components/admin";
+  BookOpen,
+  GraduationCap,
+  Book,
+  FileText,
+  Brain,
+  ClipboardList,
+  Layers,
+  Plus,
+  Clock,
+} from "lucide-react";
+
+import { AdminPageHeader, AdminBreadcrumb } from "@/components/admin";
 import { ContentTabs } from "@/components/admin/content-tabs";
 import { ContentStatsStrip } from "@/components/admin/content-stats-strip";
 import { ContentListTable, type ColumnDef } from "@/components/admin/content-list-table";
@@ -38,9 +45,21 @@ export function ContentDashboard({ boards, auditLogs, stats }: ContentDashboardP
     { label: "Add Class", href: "/admin/classes/add", icon: <GraduationCap className="h-5 w-5" /> },
     { label: "Add Subject", href: "/admin/subjects/add", icon: <Book className="h-5 w-5" /> },
     { label: "Add Chapter", href: "/admin/chapters/add", icon: <FileText className="h-5 w-5" /> },
-    { label: "Add Exercise", href: "/admin/content/exercises/add", icon: <Brain className="h-5 w-5" /> },
-    { label: "Add Quiz", href: "/admin/content/quizzes/add", icon: <ClipboardList className="h-5 w-5" /> },
-    { label: "Add Flash Cards", href: "/admin/content/flashcards/add", icon: <Layers className="h-5 w-5" /> },
+    {
+      label: "Add Exercise",
+      href: "/admin/content/exercises/add",
+      icon: <Brain className="h-5 w-5" />,
+    },
+    {
+      label: "Add Quiz",
+      href: "/admin/content/quizzes/add",
+      icon: <ClipboardList className="h-5 w-5" />,
+    },
+    {
+      label: "Add Flash Cards",
+      href: "/admin/content/flashcards/add",
+      icon: <Layers className="h-5 w-5" />,
+    },
   ];
 
   return (
@@ -54,7 +73,7 @@ export function ContentDashboard({ boards, auditLogs, stats }: ContentDashboardP
 
       <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
         <ContentTabs />
-        
+
         <div className="p-6">
           {/* Tab Content Area - This would be replaced by actual tab content */}
           <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -63,7 +82,8 @@ export function ContentDashboard({ boards, auditLogs, stats }: ContentDashboardP
               Select a content type tab
             </h3>
             <p className="mb-6 max-w-md text-sm text-[var(--text-secondary)]">
-              Choose a tab above to view and manage that content type. Each tab shows a list of items with Edit actions immediately visible.
+              Choose a tab above to view and manage that content type. Each tab shows a list of
+              items with Edit actions immediately visible.
             </p>
             <div className="flex flex-wrap justify-center gap-2">
               {quickActions.map((action) => (
@@ -104,9 +124,7 @@ export function ContentDashboard({ boards, auditLogs, stats }: ContentDashboardP
                   <p className="truncate text-sm font-medium text-[var(--text-primary)]">
                     {entry.action}
                   </p>
-                  <p className="truncate text-xs text-[var(--text-secondary)]">
-                    {entry.target}
-                  </p>
+                  <p className="truncate text-xs text-[var(--text-secondary)]">{entry.target}</p>
                 </div>
                 <div className="ml-4 flex shrink-0 flex-col items-end gap-1">
                   <span
@@ -118,9 +136,7 @@ export function ContentDashboard({ boards, auditLogs, stats }: ContentDashboardP
                   >
                     {entry.status}
                   </span>
-                  <span className="text-xs text-[var(--text-secondary)]">
-                    {entry.actor.name}
-                  </span>
+                  <span className="text-xs text-[var(--text-secondary)]">{entry.actor.name}</span>
                   <span className="text-xs text-[var(--text-secondary)]">
                     {new Date(entry.occurredAt).toLocaleDateString()}
                   </span>

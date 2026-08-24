@@ -26,7 +26,7 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
     email,
     password: TEST_PASSWORD,
     class: "9th",
-    board: "fbise"
+    board: "fbise",
   });
 
   assert.ok(
@@ -61,11 +61,11 @@ const createThreadFixture = async (userId: string): Promise<{ id: string; title:
       userId,
       title: `Moderation Thread ${suffix}`,
       body: "Thread body fixture for admin moderation tests.",
-      isPinned: false
+      isPinned: false,
     })
     .returning({
       id: forumThreads.id,
-      title: forumThreads.title
+      title: forumThreads.title,
     });
 
   const thread = threadRows[0];
@@ -79,7 +79,7 @@ const createModerationFlagFixture = async ({
   targetId,
   targetLabel,
   reason,
-  status
+  status,
 }: {
   targetType: ModerationTargetType;
   targetId: string;
@@ -130,7 +130,7 @@ test("admin moderation flags listing enforces auth/role and supports status + ta
     targetId: openThread.id,
     targetLabel: openThread.title,
     reason: "Abusive language",
-    status: "open"
+    status: "open",
   });
 
   await createModerationFlagFixture({
@@ -138,7 +138,7 @@ test("admin moderation flags listing enforces auth/role and supports status + ta
     targetId: `reply-${Date.now()}`,
     targetLabel: "Reply snippet fixture",
     reason: "Spam",
-    status: "open"
+    status: "open",
   });
 
   await createModerationFlagFixture({
@@ -146,7 +146,7 @@ test("admin moderation flags listing enforces auth/role and supports status + ta
     targetId: resolvedThread.id,
     targetLabel: resolvedThread.title,
     reason: "Off-topic",
-    status: "resolved"
+    status: "resolved",
   });
 
   const unauthenticated = await anonAgent.get("/api/admin/moderation/flags");
@@ -159,13 +159,18 @@ test("admin moderation flags listing enforces auth/role and supports status + ta
     status: "open",
     targetType: "thread",
     page: 1,
-    pageSize: 10
+    pageSize: 10,
   });
   assert.equal(openThreads.status, 200);
   assert.ok(Array.isArray(openThreads.body?.entries), "Expected moderation entries payload.");
-  assert.ok(openThreads.body.entries.length >= 1, "Expected at least one open thread moderation entry.");
+  assert.ok(
+    openThreads.body.entries.length >= 1,
+    "Expected at least one open thread moderation entry."
+  );
   assert.ok(openThreads.body.entries.every((row: { status: string }) => row.status === "open"));
-  assert.ok(openThreads.body.entries.every((row: { targetType: string }) => row.targetType === "thread"));
+  assert.ok(
+    openThreads.body.entries.every((row: { targetType: string }) => row.targetType === "thread")
+  );
 });
 
 test("admin moderation resolve requires note, persists lifecycle fields, and writes moderation audit log", async () => {
@@ -186,10 +191,12 @@ test("admin moderation resolve requires note, persists lifecycle fields, and wri
     targetId: thread.id,
     targetLabel: thread.title,
     reason: "Harassment",
-    status: "open"
+    status: "open",
   });
 
-  const shortNote = await adminAgent.post(`/api/admin/moderation/flags/${flagId}/resolve`).send({ note: "short" });
+  const shortNote = await adminAgent
+    .post(`/api/admin/moderation/flags/${flagId}/resolve`)
+    .send({ note: "short" });
   assert.equal(shortNote.status, 400);
 
   const success = await adminAgent
@@ -270,7 +277,7 @@ test("admin users listing enforces auth/role and supports search + role filters 
   const byEmail = await adminAgent.get("/api/admin/users").query({
     q: adminEmail,
     page: 1,
-    pageSize: 10
+    pageSize: 10,
   });
   assert.equal(byEmail.status, 200);
   assert.ok(Array.isArray(byEmail.body?.entries), "Expected users entries payload.");
@@ -282,12 +289,10 @@ test("admin users listing enforces auth/role and supports search + role filters 
   const studentsOnly = await adminAgent.get("/api/admin/users").query({
     role: "student",
     page: 1,
-    pageSize: 10
+    pageSize: 10,
   });
   assert.equal(studentsOnly.status, 200);
   assert.ok(Array.isArray(studentsOnly.body?.entries), "Expected users entries payload.");
   assert.ok(studentsOnly.body.entries.length >= 1, "Expected at least one student row.");
   assert.ok(studentsOnly.body.entries.every((row: { role: string }) => row.role === "student"));
 });
-
-

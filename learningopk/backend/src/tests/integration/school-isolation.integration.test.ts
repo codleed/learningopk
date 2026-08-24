@@ -28,7 +28,7 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
     email,
     password: TEST_PASSWORD,
     class: "9th",
-    board: "fbise"
+    board: "fbise",
   });
   assert.ok(
     response.status < 400,
@@ -51,7 +51,7 @@ const createSchool = async (label: string): Promise<number> => {
       name: `Isolation Test School ${label}`,
       slug: `isolation-${label}-${stamp}-${rand}`,
       board: "fbise",
-      inviteCode: rand.padEnd(6, "x").slice(0, 6)
+      inviteCode: rand.padEnd(6, "x").slice(0, 6),
     })
     .returning();
   return inserted[0]!.id;
@@ -64,13 +64,20 @@ const enrollStudent = async (
   xp: number
 ): Promise<string> => {
   const userId = await getSessionUserId(agent);
-  await db.update(users).set({ schoolId, xp, level: Math.floor(xp / 100) }).where(eq(users.id, userId));
+  await db
+    .update(users)
+    .set({ schoolId, xp, level: Math.floor(xp / 100) })
+    .where(eq(users.id, userId));
   return userId;
 };
 
 const fetchSchoolLeaderboardUserIds = async (agent: AuthAgent): Promise<Set<string>> => {
   const response = await agent.get("/api/leaderboard").query({ scope: "school", metric: "xp" });
-  assert.equal(response.status, 200, `Leaderboard request failed: ${JSON.stringify(response.body)}`);
+  assert.equal(
+    response.status,
+    200,
+    `Leaderboard request failed: ${JSON.stringify(response.body)}`
+  );
   assert.equal(response.body.scope, "school");
   const ids = (response.body.entries as Array<{ userId: string }>).map((entry) => entry.userId);
   return new Set(ids);
@@ -124,7 +131,11 @@ test("school leaderboard shows only the viewer's own school members", async () =
 
   const responseA1 = await agentA1.get("/api/leaderboard").query({ scope: "school", metric: "xp" });
   assert.equal(responseA1.status, 200);
-  assert.equal(responseA1.body.currentUser.rank, 1, "Top XP earner of school A should rank #1 within school A");
+  assert.equal(
+    responseA1.body.currentUser.rank,
+    1,
+    "Top XP earner of school A should rank #1 within school A"
+  );
 
   const seenByA2 = await fetchSchoolLeaderboardUserIds(agentA2);
   assert.ok(!seenByA2.has(userB1), "Cross-school leakage for second viewer too");
@@ -147,7 +158,11 @@ test("each school only sees itself even when another school dominates global XP"
   assert.deepEqual(Array.from(seenByC1), [userC1], "School C viewer should see exactly themselves");
 
   const seenByD1 = await fetchSchoolLeaderboardUserIds(agentD1);
-  assert.deepEqual(Array.from(seenByD1), [userD1], "School D whale should see exactly themselves despite huge XP");
+  assert.deepEqual(
+    Array.from(seenByD1),
+    [userD1],
+    "School D whale should see exactly themselves despite huge XP"
+  );
 
   const responseD1 = await agentD1.get("/api/leaderboard").query({ scope: "school", metric: "xp" });
   assert.equal(responseD1.status, 200);

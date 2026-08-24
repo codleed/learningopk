@@ -17,7 +17,10 @@ export const scoreToPercent = (score: number, totalMarks: number): number => {
   return Math.min(100, Math.max(0, Math.round((score / totalMarks) * 100)));
 };
 
-export const calculateStreakDays = (activityDates: readonly Date[], referenceDate: Date = new Date()): number => {
+export const calculateStreakDays = (
+  activityDates: readonly Date[],
+  referenceDate: Date = new Date()
+): number => {
   const activityDateKeys = new Set(activityDates.map((date) => toDateKey(date)));
   const referenceUtcDay = createUtcDay(
     referenceDate.getUTCFullYear(),
@@ -87,13 +90,21 @@ export type ActivityCalendarEntry = {
 export const buildDailyActivitySeries = ({
   activityDailyCounts,
   endDate = new Date(),
-  days
-}: BuildDailyActivitySeriesOptions): Array<{ date: string; active: boolean; activityCount: number }> => {
+  days,
+}: BuildDailyActivitySeriesOptions): Array<{
+  date: string;
+  active: boolean;
+  activityCount: number;
+}> => {
   if (days <= 0) {
     return [];
   }
 
-  const endUtcDay = createUtcDay(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate());
+  const endUtcDay = createUtcDay(
+    endDate.getUTCFullYear(),
+    endDate.getUTCMonth(),
+    endDate.getUTCDate()
+  );
 
   return Array.from({ length: days }, (_value, index) => {
     const day = shiftUtcDays(endUtcDay, index - (days - 1));
@@ -103,7 +114,7 @@ export const buildDailyActivitySeries = ({
     return {
       date: key,
       active: count > 0,
-      activityCount: count
+      activityCount: count,
     };
   });
 };
@@ -120,18 +131,18 @@ const toActivityLevel = (count: number, maxCount: number): ActivityLevel => {
 export const buildActivityCalendarSeries = ({
   activityDailyCounts,
   endDate = new Date(),
-  days
+  days,
 }: BuildDailyActivitySeriesOptions): ActivityCalendarEntry[] => {
   const dailySeries = buildDailyActivitySeries({
     activityDailyCounts,
     endDate,
-    days
+    days,
   });
   const maxCount = dailySeries.reduce((max, entry) => Math.max(max, entry.activityCount), 0);
 
   return dailySeries.map((entry) => ({
     date: entry.date,
     count: entry.activityCount,
-    level: toActivityLevel(entry.activityCount, maxCount)
+    level: toActivityLevel(entry.activityCount, maxCount),
   }));
 };

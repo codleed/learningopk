@@ -1,6 +1,7 @@
 # Admin Phase 4 Design
 
 ## Context
+
 - Admin Phases 1-3 established:
   - shared admin shell + route completeness
   - moderation and users workflows
@@ -19,16 +20,19 @@
 ## Approach Options
 
 ### Option A: UI-only placeholders with better copy
+
 - Keep notifications/settings non-functional.
 - Pros: lowest risk.
 - Cons: no operational value for admin teams.
 
 ### Option B: Full automation suite
+
 - Build notification scheduling, delivery tracking, segmentation engine, and full platform settings matrix in one phase.
 - Pros: maximum feature scope.
 - Cons: high implementation risk and long verification cycle.
 
 ### Option C (Recommended): Focused operational activation
+
 - Implement a practical first release:
   - `/admin/notifications`: compose and send broadcast announcements immediately
   - `/admin/settings`: manage a small set of platform flags and values
@@ -36,6 +40,7 @@
 - Cons: deeper automation and advanced settings remain for future phases.
 
 ## Approved Direction
+
 - Approach: **Option C, backend-first vertical slices with strict TDD**
 - Activate:
   - Notifications broadcast workflow
@@ -43,6 +48,7 @@
 - Preserve existing admin behavior and layout patterns.
 
 ## Goals
+
 - Deliver `/admin/notifications` with:
   - paginated notification history list
   - compose form (`title`, `message`, `audience`)
@@ -57,6 +63,7 @@
 - Ensure successful notification send and setting update actions write admin audit logs.
 
 ## Non-goals
+
 - No scheduled delivery or cron orchestration.
 - No per-user notification inbox implementation.
 - No destructive setting key delete/create in UI.
@@ -64,6 +71,7 @@
 - No behavior changes to prior admin sections except regression-safe integrations.
 
 ## Data Model
+
 - Add enum `notification_audience`: `all | students | admins`.
 - Add enum `notification_status`: `sent`.
 - Add table `admin_notifications`:
@@ -83,6 +91,7 @@
 - Seed deterministic defaults for settings and sample notification rows.
 
 ## Admin Audit Logging
+
 - Extend `admin_audit_scope` to include:
   - `notifications`
   - `settings`
@@ -94,6 +103,7 @@
 ## Backend API Contracts
 
 ### GET `/api/admin/notifications`
+
 - Query params:
   - `page` (default 1)
   - `pageSize` (default 20, max 100)
@@ -105,6 +115,7 @@
   - `total`, `page`, `pageSize`, `hasMore`
 
 ### POST `/api/admin/notifications`
+
 - Body:
   - `title` (min 5 chars)
   - `message` (min 10 chars)
@@ -120,6 +131,7 @@
   - persist audit log entry (`scope: notifications`)
 
 ### GET `/api/admin/settings`
+
 - Query params:
   - `page` (default 1)
   - `pageSize` (default 20, max 100)
@@ -131,6 +143,7 @@
   - `total`, `page`, `pageSize`, `hasMore`
 
 ### POST `/api/admin/settings/:key`
+
 - Body:
   - `value` (trimmed, min 1 char, max 2000)
 - Auth:
@@ -145,6 +158,7 @@
   - persist audit log entry (`scope: settings`)
 
 ## Frontend Architecture
+
 - `frontend/lib/admin-api.ts`
   - add notification and settings schemas/helpers
 - `/admin/notifications`
@@ -162,6 +176,7 @@
 ## UI Behavior
 
 ### Notifications
+
 - Form fields:
   - title
   - message
@@ -175,6 +190,7 @@
   - preserve form values
 
 ### Settings
+
 - List settings in editable rows.
 - Save action per row.
 - On save success:
@@ -185,11 +201,13 @@
   - keep user input for retry
 
 ## Error and Empty States
+
 - Empty lists show explicit copy.
 - Invalid backend params return `400` and map to user-facing toast.
 - Transient fetch failure keeps last-known data visible.
 
 ## Testing Strategy (Test-First)
+
 - Backend integration tests:
   - notifications list/create auth + validation + pagination
   - settings list/update auth + validation + not-found
@@ -202,6 +220,7 @@
   - keep smoke flow green
 
 ## Verification Targets
+
 - `pnpm.cmd --filter backend exec tsx --test src/tests/integration/admin-phase4.integration.test.ts`
 - `pnpm.cmd --filter frontend typecheck`
 - `pnpm.cmd --filter frontend lint`
@@ -213,6 +232,7 @@
 - `pnpm.cmd --filter backend typecheck`
 
 ## Risks and Mitigations
+
 - Risk: settings updates can introduce unsafe values.
   - Mitigation: strict server-side validation + seeded allowlist keys.
 - Risk: notification form enables accidental spam in future phases.

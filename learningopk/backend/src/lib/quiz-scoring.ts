@@ -42,7 +42,10 @@ type ScoreQuizSubmissionResult = {
   percentage: number;
 };
 
-export const getInvalidAnswerQuestionIds = (questionRows: QuizQuestionForScoring[], answers: QuizAnswers): string[] => {
+export const getInvalidAnswerQuestionIds = (
+  questionRows: QuizQuestionForScoring[],
+  answers: QuizAnswers
+): string[] => {
   const validQuestionIdSet = new Set(questionRows.map((question) => String(question.id)));
   return Object.keys(answers).filter((questionId) => !validQuestionIdSet.has(questionId));
 };
@@ -65,19 +68,23 @@ export const scoreQuizSubmission = (input: ScoreQuizSubmissionInput): ScoreQuizS
       isCorrect,
       explanation: question.explanation,
       marks: question.marks,
-      awardedMarks
+      awardedMarks,
     };
   });
 
   const score = questionResults.reduce((total, question) => total + question.awardedMarks, 0);
-  const calculatedTotalMarks = input.questionRows.reduce((total, question) => total + question.marks, 0);
-  const totalMarks = input.configuredTotalMarks > 0 ? input.configuredTotalMarks : calculatedTotalMarks;
+  const calculatedTotalMarks = input.questionRows.reduce(
+    (total, question) => total + question.marks,
+    0
+  );
+  const totalMarks =
+    input.configuredTotalMarks > 0 ? input.configuredTotalMarks : calculatedTotalMarks;
   const percentage = totalMarks > 0 ? Math.round((score / totalMarks) * 100) : 0;
 
   return {
     questionResults,
     score,
     totalMarks,
-    percentage
+    percentage,
   };
 };

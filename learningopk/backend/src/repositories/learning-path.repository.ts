@@ -1,7 +1,17 @@
 import { and, eq, isNotNull, sql } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
-import { aiChatSessions, boardClasses, boards, chapters, exercises, quizAttempts, quizzes, subjects, userProgress } from "../lib/db/schema.js";
+import {
+  aiChatSessions,
+  boardClasses,
+  boards,
+  chapters,
+  exercises,
+  quizAttempts,
+  quizzes,
+  subjects,
+  userProgress,
+} from "../lib/db/schema.js";
 
 type LearningPathScope = {
   boardSlug?: string | null;
@@ -31,16 +41,25 @@ export class LearningPathRepository {
         exercisesViewed: userProgress.exercisesViewed,
         visitedAt: userProgress.visitedAt,
         quizAttemptsCount: userProgress.quizAttemptsCount,
-        totalExercises: sql<number>`count(distinct ${exercises.id})::int`
+        totalExercises: sql<number>`count(distinct ${exercises.id})::int`,
       })
       .from(chapters)
       .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
       .innerJoin(boards, eq(subjects.boardId, boards.id))
       .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
-      .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+      .leftJoin(
+        userProgress,
+        and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId))
+      )
       .leftJoin(exercises, eq(exercises.chapterId, chapters.id))
       .where(and(...buildScopeFilters(scope)))
-      .groupBy(chapters.id, chapters.title, userProgress.exercisesViewed, userProgress.visitedAt, userProgress.quizAttemptsCount);
+      .groupBy(
+        chapters.id,
+        chapters.title,
+        userProgress.exercisesViewed,
+        userProgress.visitedAt,
+        userProgress.quizAttemptsCount
+      );
   }
 
   async findChapterQuizScores(userId: string, scope?: LearningPathScope) {
@@ -48,7 +67,7 @@ export class LearningPathRepository {
       .select({
         chapterId: chapters.id,
         score: quizAttempts.score,
-        totalMarks: quizAttempts.totalMarks
+        totalMarks: quizAttempts.totalMarks,
       })
       .from(quizAttempts)
       .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
@@ -56,21 +75,33 @@ export class LearningPathRepository {
       .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
       .innerJoin(boards, eq(subjects.boardId, boards.id))
       .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
-      .where(and(eq(quizAttempts.userId, userId), eq(quizAttempts.type, "chapter_quiz"), ...buildScopeFilters(scope)));
+      .where(
+        and(
+          eq(quizAttempts.userId, userId),
+          eq(quizAttempts.type, "chapter_quiz"),
+          ...buildScopeFilters(scope)
+        )
+      );
   }
 
   async findAiSessionCounts(userId: string, scope?: LearningPathScope) {
     return db
       .select({
         chapterId: aiChatSessions.chapterId,
-        sessionCount: sql<number>`count(*)::int`
+        sessionCount: sql<number>`count(*)::int`,
       })
       .from(aiChatSessions)
       .innerJoin(chapters, eq(aiChatSessions.chapterId, chapters.id))
       .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
       .innerJoin(boards, eq(subjects.boardId, boards.id))
       .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
-      .where(and(eq(aiChatSessions.userId, userId), isNotNull(aiChatSessions.chapterId), ...buildScopeFilters(scope)))
+      .where(
+        and(
+          eq(aiChatSessions.userId, userId),
+          isNotNull(aiChatSessions.chapterId),
+          ...buildScopeFilters(scope)
+        )
+      )
       .groupBy(aiChatSessions.chapterId);
   }
 }

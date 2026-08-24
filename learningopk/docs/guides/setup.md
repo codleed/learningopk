@@ -74,4 +74,3 @@ The AI coder must create this file for the Express backend app
 - 7\. Start backend: pnpm dev:backend (http://localhost:3001)
 
 - 8\. Start frontend: pnpm dev:frontend (http://localhost:3000)
-

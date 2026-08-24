@@ -22,18 +22,20 @@ const STOP_WORDS = new Set([
   "false",
   "formula",
   "calculate",
-  "find"
+  "find",
 ]);
 
 const toTitleCase = (value: string): string =>
   value
     .split(/\s+/)
     .filter(Boolean)
-    .map((part) => part[0] ? `${part[0].toUpperCase()}${part.slice(1)}` : part)
+    .map((part) => (part[0] ? `${part[0].toUpperCase()}${part.slice(1)}` : part))
     .join(" ");
 
 const extractLabel = (question: string, fallback: string): string => {
-  const keywords = Array.from(new Set(tokenize(question).filter((token) => !STOP_WORDS.has(token))));
+  const keywords = Array.from(
+    new Set(tokenize(question).filter((token) => !STOP_WORDS.has(token)))
+  );
   if (keywords.length === 0) {
     return fallback;
   }
@@ -125,7 +127,9 @@ export const buildSubjectWeakAreas = (params: {
 
         const candidateExercises = exercisesByChapter.get(attempt.chapterId) ?? [];
         let matchedExercise = candidateExercises[0] ?? null;
-        let bestScore = matchedExercise ? similarity(question.question, matchedExercise.question) : 0;
+        let bestScore = matchedExercise
+          ? similarity(question.question, matchedExercise.question)
+          : 0;
 
         for (const exercise of candidateExercises.slice(1)) {
           const nextScore = similarity(question.question, exercise.question);
@@ -151,7 +155,7 @@ export const buildSubjectWeakAreas = (params: {
           exerciseNumber: matchedExercise?.exerciseNumber ?? null,
           exerciseQuestion: matchedExercise?.question ?? null,
           wrongAnswerCount: 1,
-          quizAttemptsCount: attempts.length
+          quizAttemptsCount: attempts.length,
         });
       }
     }
@@ -159,7 +163,10 @@ export const buildSubjectWeakAreas = (params: {
     subjectWeakAreas.set(
       subjectId,
       Array.from(buckets.values())
-        .sort((left, right) => right.wrongAnswerCount - left.wrongAnswerCount || left.label.localeCompare(right.label))
+        .sort(
+          (left, right) =>
+            right.wrongAnswerCount - left.wrongAnswerCount || left.label.localeCompare(right.label)
+        )
         .slice(0, params.limitPerSubject ?? 3)
     );
   }

@@ -18,7 +18,7 @@ const pastPaperSchema = z.object({
   solutionContent: z.string().nullable().optional(),
   published: z.boolean().optional(),
   description: z.string().nullable().optional(),
-  exerciseCount: z.number().int().optional()
+  exerciseCount: z.number().int().optional(),
 });
 
 const exerciseBaseSchema = z.object({
@@ -27,18 +27,26 @@ const exerciseBaseSchema = z.object({
   question: z.string(),
   type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]),
   difficulty: z.enum(["easy", "medium", "hard"]),
-  options: z.array(z.object({ key: z.string(), text: z.string() })).nullable().optional(),
+  options: z
+    .array(z.object({ key: z.string(), text: z.string() }))
+    .nullable()
+    .optional(),
   correctOption: z.string().nullable().optional(),
   blanksAnswer: z.array(z.string()).nullable().optional(),
   blankCount: z.number().int().optional(),
-  statements: z.array(z.object({
-    text: z.string(),
-    blanksAnswer: z.array(z.string()).optional(),
-    blankCount: z.number().int().optional()
-  })).nullable().optional(),
+  statements: z
+    .array(
+      z.object({
+        text: z.string(),
+        blanksAnswer: z.array(z.string()).optional(),
+        blankCount: z.number().int().optional(),
+      })
+    )
+    .nullable()
+    .optional(),
   problemMarkdown: z.string().nullable().optional(),
   orderIndex: z.number().int(),
-  marks: z.number().int().nullable().optional()
+  marks: z.number().int().nullable().optional(),
 });
 
 const attemptSchema = z.object({
@@ -51,7 +59,7 @@ const attemptSchema = z.object({
   totalMarks: z.number().int().nullable(),
   score: z.number().int().nullable(),
   percentage: z.number().nullable(),
-  submittedAt: z.string().nullable().optional()
+  submittedAt: z.string().nullable().optional(),
 });
 
 const paginatedResponseSchema = z.object({
@@ -60,8 +68,8 @@ const paginatedResponseSchema = z.object({
     page: z.number(),
     limit: z.number(),
     total: z.number(),
-    totalPages: z.number()
-  })
+    totalPages: z.number(),
+  }),
 });
 
 export type PastPaper = z.infer<typeof pastPaperSchema>;
@@ -88,8 +96,8 @@ const apiFetch = async <T>(url: string, schema: z.ZodType<T>, init?: RequestInit
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      ...(init?.headers as Record<string, string> ?? {})
-    }
+      ...((init?.headers as Record<string, string>) ?? {}),
+    },
   });
 
   const json = (await response.json()) as Record<string, unknown>;
@@ -120,10 +128,7 @@ export async function getPastPapers(params?: {
   if (params?.search) searchParams.set("search", params.search);
 
   const qs = searchParams.toString();
-  return apiFetch(
-    `${backendUrl}/api/past-papers${qs ? `?${qs}` : ""}`,
-    paginatedResponseSchema
-  );
+  return apiFetch(`${backendUrl}/api/past-papers${qs ? `?${qs}` : ""}`, paginatedResponseSchema);
 }
 
 export async function startAttempt(paperId: number): Promise<{
@@ -135,12 +140,13 @@ export async function startAttempt(paperId: number): Promise<{
     data: z.object({
       attempt: attemptSchema,
       exercises: z.array(exerciseBaseSchema),
-      savedAnswers: z.record(z.string(), z.unknown())
-    })
+      savedAnswers: z.record(z.string(), z.unknown()),
+    }),
   });
 
-  return apiFetch(`${backendUrl}/api/past-papers/${paperId}/attempt/start`, resultSchema)
-    .then(r => r.data);
+  return apiFetch(`${backendUrl}/api/past-papers/${paperId}/attempt/start`, resultSchema).then(
+    (r) => r.data
+  );
 }
 
 export async function saveAnswer(params: {
@@ -157,8 +163,8 @@ export async function saveAnswer(params: {
       body: JSON.stringify({
         attemptId: params.attemptId,
         exerciseId: params.exerciseId,
-        answer: params.answer
-      })
+        answer: params.answer,
+      }),
     }
   );
 }
@@ -189,51 +195,61 @@ export async function submitAttempt(params: {
       totalScore: z.number(),
       totalMarks: z.number(),
       percentage: z.number(),
-      gradedQuestions: z.array(z.object({
-        exerciseId: z.number(),
-        score: z.number(),
-        maxMarks: z.number(),
-        isCorrect: z.boolean(),
-        needsAiGrading: z.boolean(),
-        aiFeedback: z.string().optional(),
-        userAnswer: z.unknown().optional()
-      })),
-      xpAwarded: z.number()
-    })
+      gradedQuestions: z.array(
+        z.object({
+          exerciseId: z.number(),
+          score: z.number(),
+          maxMarks: z.number(),
+          isCorrect: z.boolean(),
+          needsAiGrading: z.boolean(),
+          aiFeedback: z.string().optional(),
+          userAnswer: z.unknown().optional(),
+        })
+      ),
+      xpAwarded: z.number(),
+    }),
   });
 
-  return apiFetch(
-    `${backendUrl}/api/past-papers/${params.paperId}/attempt/submit`,
-    resultSchema,
-    {
-      method: "POST",
-      body: JSON.stringify({ attemptId: params.attemptId, timedOut: params.timedOut ?? false })
-    }
-  ).then(r => r.data);
+  return apiFetch(`${backendUrl}/api/past-papers/${params.paperId}/attempt/submit`, resultSchema, {
+    method: "POST",
+    body: JSON.stringify({ attemptId: params.attemptId, timedOut: params.timedOut ?? false }),
+  }).then((r) => r.data);
 }
 
-export async function getAttemptDetail(paperId: number, attemptId: string): Promise<{
+export async function getAttemptDetail(
+  paperId: number,
+  attemptId: string
+): Promise<{
   attempt: PastPaperAttempt;
-  answers: Array<{ id: string; attemptId: string; exerciseId: number; answer: unknown; score: number | null; aiFeedback: string | null }>;
+  answers: Array<{
+    id: string;
+    attemptId: string;
+    exerciseId: number;
+    answer: unknown;
+    score: number | null;
+    aiFeedback: string | null;
+  }>;
   exercises: AttemptExercise[];
 }> {
   const resultSchema = z.object({
     data: z.object({
       attempt: attemptSchema,
-      answers: z.array(z.object({
-        id: z.string(),
-        attemptId: z.string(),
-        exerciseId: z.number(),
-        answer: z.unknown(),
-        score: z.number().nullable(),
-        aiFeedback: z.string().nullable()
-      })),
-      exercises: z.array(exerciseBaseSchema)
-    })
+      answers: z.array(
+        z.object({
+          id: z.string(),
+          attemptId: z.string(),
+          exerciseId: z.number(),
+          answer: z.unknown(),
+          score: z.number().nullable(),
+          aiFeedback: z.string().nullable(),
+        })
+      ),
+      exercises: z.array(exerciseBaseSchema),
+    }),
   });
 
   return apiFetch(
     `${backendUrl}/api/past-papers/${paperId}/attempts/${attemptId}`,
     resultSchema
-  ).then(r => r.data);
+  ).then((r) => r.data);
 }

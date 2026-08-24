@@ -13,6 +13,7 @@
 ### Task 1: Stabilize nav item icon layout
 
 **Files:**
+
 - Modify: `frontend/src/components/foundation/left-rail.tsx`
 
 **Step 1:** Remove the collapsed/expanded icon-slot layout switch in `NavItem`.
@@ -24,6 +25,7 @@
 ### Task 2: Verify
 
 **Files:**
+
 - Verify: `frontend/`
 
 **Step 1:** Run `pnpm exec tsc --noEmit`

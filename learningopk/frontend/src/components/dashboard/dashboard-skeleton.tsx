@@ -122,7 +122,10 @@ export function DashboardSkeleton() {
         <div className="rounded-xl border border-border-default bg-bg-surface p-5 space-y-3">
           <Skeleton className="h-5 w-36" />
           {[0, 1, 2, 3].map((m) => (
-            <div key={m} className="flex items-start gap-3 py-2.5 border-b border-border-default/40 last:border-0">
+            <div
+              key={m}
+              className="flex items-start gap-3 py-2.5 border-b border-border-default/40 last:border-0"
+            >
               <Skeleton variant="circular" className="h-7 w-7" />
               <div className="flex-1 space-y-1.5">
                 <Skeleton className="h-4 w-4/5" />
@@ -141,7 +144,10 @@ export function DashboardSkeleton() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1].map((n) => (
-            <div key={n} className="flex items-center justify-between rounded-xl border border-border-default bg-bg-base p-4">
+            <div
+              key={n}
+              className="flex items-center justify-between rounded-xl border border-border-default bg-bg-base p-4"
+            >
               <div className="space-y-1.5 flex-1">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />

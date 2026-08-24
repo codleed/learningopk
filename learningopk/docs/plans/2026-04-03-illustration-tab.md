@@ -13,9 +13,11 @@
 ### Task 1: Update page.tsx — Add `illustration` to tabSchema + tabs array
 
 **Files:**
+
 - Modify: `frontend/app/(learn)/[board]/[grade]/[subject]/[chapter]/page.tsx:18,56-66`
 
 **Changes:**
+
 1. Line 18: Add `"illustration"` to the `z.enum()` in `tabSchema`
 2. Lines 56-66: Add illustration tab entry to the `tabs` array (after quiz)
 
@@ -24,9 +26,11 @@
 ### Task 2: Update QuestTabBar — Add Illustration tab config, progress & completion
 
 **Files:**
+
 - Modify: `frontend/src/components/learn/quest-tab-bar.tsx:3,9,11-18,26-35,38-51,53-66`
 
 **Changes:**
+
 1. Line 3: Import `Atom` icon from lucide-react
 2. Line 9: Add `"illustration"` to `ChapterTab` union type
 3. Lines 11-18: Add `illustrations: number` and `totalIllustrations: number` to `TabStatus`
@@ -39,9 +43,11 @@
 ### Task 3: Update ChapterStudyWorkspace — Filter exercises, TAB_ICONS, TabStatus, completionPercent
 
 **Files:**
+
 - Modify: `frontend/src/components/learn/chapter-study-workspace.tsx:4,26,49-54,84-96,136-149,169-184`
 
 **Changes:**
+
 1. Line 4: Import `Atom` from lucide-react
 2. Line 26: Add `"illustration"` to `ChapterTab` union type
 3. Lines 49-54: Add `illustration: <Atom className="h-4 w-4" />` to `TAB_ICONS`
@@ -57,9 +63,11 @@
 ### Task 4: Create QuestIllustrationView component
 
 **Files:**
+
 - Create: `frontend/src/components/learn/quest-illustration-view.tsx`
 
 **Design:**
+
 - Visualization-first card layout
 - Progress header with completion tracking (same pattern as QuestExercisesView)
 - Per-exercise hero card: NumericalVisualizationRenderer at top, then exercise number + difficulty badge + question via ContentRenderer, then expandable solution
@@ -72,9 +80,11 @@
 ### Task 5: Update ChapterStudyContentWithAi — Route illustration tab
 
 **Files:**
+
 - Modify: `frontend/src/components/learn/chapter-study-content-with-ai.tsx:1-77`
 
 **Changes:**
+
 1. Import `QuestIllustrationView`
 2. Add `ChapterTab` to include `"illustration"`
 3. Add `illustrationExercises` prop to the props type
@@ -86,6 +96,7 @@
 ### Task 6: Verify, typecheck, lint, commit
 
 **Commands:**
+
 ```bash
 pnpm typecheck   # from learningopk/
 pnpm lint         # from learningopk/

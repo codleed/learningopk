@@ -39,12 +39,13 @@ export function AdminQuickActions({ actions, className }: AdminQuickActionsProps
                 {action.icon}
               </span>
             )}
-            <h3 className="font-heading font-semibold text-[var(--text-primary)]" style={{ fontSize: "1rem" }}>
+            <h3
+              className="font-heading font-semibold text-[var(--text-primary)]"
+              style={{ fontSize: "1rem" }}
+            >
               {action.label}
             </h3>
-            <p className="text-sm text-[var(--text-secondary)]">
-              {action.description}
-            </p>
+            <p className="text-sm text-[var(--text-secondary)]">{action.description}</p>
           </div>
         </Link>
       ))}

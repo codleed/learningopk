@@ -3,7 +3,14 @@ import { z } from "zod";
 import { and, eq, count, inArray } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
-import { classrooms, users, assignments, assignmentSubmissions, classroomAnnouncements, classroomStudents } from "../lib/db/schema.js";
+import {
+  classrooms,
+  users,
+  assignments,
+  assignmentSubmissions,
+  classroomAnnouncements,
+  classroomStudents,
+} from "../lib/db/schema.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { requireTeacherRole } from "../lib/session.js";
 import { classroomRepository } from "../repositories/classroom.repository.js";
@@ -43,17 +50,20 @@ teacherRouter.get("/classrooms", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const teacherClassrooms = await classroomRepository.getClassroomsByTeacher(authedReq.session.user.id);
+  const teacherClassrooms = await classroomRepository.getClassroomsByTeacher(
+    authedReq.session.user.id
+  );
 
   // Batch: student counts for all classrooms
   const classroomIds = teacherClassrooms.map((c) => c.id);
-  const studentCounts = classroomIds.length > 0
-    ? await db
-        .select({ classroomId: classroomStudents.classroomId, count: count() })
-        .from(classroomStudents)
-        .where(inArray(classroomStudents.classroomId, classroomIds))
-        .groupBy(classroomStudents.classroomId)
-    : [];
+  const studentCounts =
+    classroomIds.length > 0
+      ? await db
+          .select({ classroomId: classroomStudents.classroomId, count: count() })
+          .from(classroomStudents)
+          .where(inArray(classroomStudents.classroomId, classroomIds))
+          .groupBy(classroomStudents.classroomId)
+      : [];
 
   const countMap = new Map(studentCounts.map((row) => [row.classroomId, Number(row.count)]));
 
@@ -83,7 +93,10 @@ teacherRouter.post("/classrooms", requireSession, async (req, res) => {
     return;
   }
 
-  const classroom = await classroomRepository.createClassroom(authedReq.session.user.id, parsed.data);
+  const classroom = await classroomRepository.createClassroom(
+    authedReq.session.user.id,
+    parsed.data
+  );
   if (!classroom) {
     res.status(500).json(errorResponse("Failed to create classroom", "INTERNAL_ERROR"));
     return;
@@ -141,7 +154,10 @@ teacherRouter.delete("/classrooms/:id", requireSession, async (req, res) => {
     return;
   }
 
-  const classroom = await classroomRepository.deleteClassroom(classroomId, authedReq.session.user.id);
+  const classroom = await classroomRepository.deleteClassroom(
+    classroomId,
+    authedReq.session.user.id
+  );
   if (!classroom) {
     res.status(404).json(errorResponse("Classroom not found", "NOT_FOUND"));
     return;
@@ -307,7 +323,12 @@ teacherRouter.patch("/assignments/:id", requireSession, async (req, res) => {
     return;
   }
 
-  const dueDate = parsed.data.dueDate === null ? null : parsed.data.dueDate ? new Date(parsed.data.dueDate) : undefined;
+  const dueDate =
+    parsed.data.dueDate === null
+      ? null
+      : parsed.data.dueDate
+        ? new Date(parsed.data.dueDate)
+        : undefined;
 
   const updated = await classroomRepository.updateAssignment(assignmentId, {
     ...(parsed.data.title && { title: parsed.data.title }),
@@ -557,9 +578,15 @@ teacherRouter.post("/ai/generate-quiz", requireSession, async (req, res) => {
     id: i + 1,
     type: types[i % types.length],
     question: `${board} Sample question ${i + 1} for chapter ${chapterId}`,
-    options: types[i % types.length] === "mcq"
-      ? { a: `Option A for Q${i + 1}`, b: `Option B for Q${i + 1}`, c: `Option C for Q${i + 1}`, d: `Option D for Q${i + 1}` }
-      : undefined,
+    options:
+      types[i % types.length] === "mcq"
+        ? {
+            a: `Option A for Q${i + 1}`,
+            b: `Option B for Q${i + 1}`,
+            c: `Option C for Q${i + 1}`,
+            d: `Option D for Q${i + 1}`,
+          }
+        : undefined,
     correctOption: types[i % types.length] === "mcq" ? "a" : undefined,
     marks: 1,
   }));
@@ -587,10 +614,18 @@ teacherRouter.post("/ai/lesson-plan", requireSession, async (req, res) => {
   const { chapterId, durationMinutes, board } = parsed.data;
 
   const lessonPlan = {
-    learningObjectives: ["Understand core concepts", "Apply formulas to problems", "Connect concepts to exam patterns"],
+    learningObjectives: [
+      "Understand core concepts",
+      "Apply formulas to problems",
+      "Connect concepts to exam patterns",
+    ],
     warmupQuestion: `Quick review question related to chapter ${chapterId} concepts`,
     keyConcepts: [
-      { concept: "Main topic", explanation: `Key idea from chapter ${chapterId}`, example: "Application example" },
+      {
+        concept: "Main topic",
+        explanation: `Key idea from chapter ${chapterId}`,
+        example: "Application example",
+      },
     ],
     practiceProblems: Array.from({ length: 3 }, (_, i) => ({
       problem: `Practice problem ${i + 1} for chapter ${chapterId}`,

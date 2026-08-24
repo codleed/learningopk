@@ -24,7 +24,7 @@ const signUp = async (
     email,
     password: TEST_PASSWORD,
     board: profile.board,
-    class: profile.className
+    class: profile.className,
   });
 
   assert.ok(
@@ -60,18 +60,33 @@ test("leaderboard returns scoped results and respects leaderboard privacy opt-ou
   const otherBoardAgent = request.agent(app);
 
   const suffix = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-  const studentId = await signUp(studentAgent, "Leaderboard Student", `leaderboard-student-${suffix}@example.com`, {
-    board: `fbise-${suffix}`,
-    className: "9th"
-  });
-  const boardPeerId = await signUp(boardPeerAgent, "Board Peer", `board-peer-${suffix}@example.com`, {
-    board: `fbise-${suffix}`,
-    className: "9th"
-  });
-  const otherBoardId = await signUp(otherBoardAgent, "Other Board", `other-board-${suffix}@example.com`, {
-    board: `aksu-${suffix}`,
-    className: "9th"
-  });
+  const studentId = await signUp(
+    studentAgent,
+    "Leaderboard Student",
+    `leaderboard-student-${suffix}@example.com`,
+    {
+      board: `fbise-${suffix}`,
+      className: "9th",
+    }
+  );
+  const boardPeerId = await signUp(
+    boardPeerAgent,
+    "Board Peer",
+    `board-peer-${suffix}@example.com`,
+    {
+      board: `fbise-${suffix}`,
+      className: "9th",
+    }
+  );
+  const otherBoardId = await signUp(
+    otherBoardAgent,
+    "Other Board",
+    `other-board-${suffix}@example.com`,
+    {
+      board: `aksu-${suffix}`,
+      className: "9th",
+    }
+  );
 
   await db.update(users).set({ xp: 250, level: 1 }).where(eq(users.id, studentId));
   await db.update(users).set({ xp: 500, level: 2 }).where(eq(users.id, boardPeerId));
@@ -93,7 +108,7 @@ test("leaderboard returns scoped results and respects leaderboard privacy opt-ou
   );
 
   const updateResponse = await boardPeerAgent.put("/api/users/me/leaderboard-settings").send({
-    public: false
+    public: false,
   });
   assert.equal(updateResponse.status, 200, JSON.stringify(updateResponse.body));
   assert.equal(updateResponse.body?.leaderboardPublic, false);
@@ -102,15 +117,24 @@ test("leaderboard returns scoped results and respects leaderboard privacy opt-ou
   assert.equal(afterOptOutResponse.status, 200, JSON.stringify(afterOptOutResponse.body));
   assert.equal(afterOptOutResponse.body?.currentUser?.totalStudents, 2);
 
-  const afterOptOutEntries = afterOptOutResponse.body?.entries as Array<{ name: string }> | undefined;
+  const afterOptOutEntries = afterOptOutResponse.body?.entries as
+    Array<{ name: string }> | undefined;
   assert.ok(Array.isArray(afterOptOutEntries), "Expected entries array after opt-out.");
-  assert.equal(afterOptOutEntries?.length, 1, "Expected opted-out peer to disappear from public leaderboard.");
+  assert.equal(
+    afterOptOutEntries?.length,
+    1,
+    "Expected opted-out peer to disappear from public leaderboard."
+  );
   assert.equal(afterOptOutEntries?.[0]?.name, "Leaderboard Student");
 
   const schoolResponse = await studentAgent.get("/api/leaderboard?scope=school&metric=xp");
   assert.equal(schoolResponse.status, 200, JSON.stringify(schoolResponse.body));
   assert.equal(schoolResponse.body?.scope, "school");
-  assert.equal(schoolResponse.body?.currentUser?.totalStudents, 2, "School fallback should scope to board+grade.");
+  assert.equal(
+    schoolResponse.body?.currentUser?.totalStudents,
+    2,
+    "School fallback should scope to board+grade."
+  );
 
   const streakResponse = await studentAgent.get("/api/leaderboard?scope=global&metric=streak");
   assert.equal(streakResponse.status, 200, JSON.stringify(streakResponse.body));

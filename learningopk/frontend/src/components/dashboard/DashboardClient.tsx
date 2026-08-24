@@ -84,10 +84,7 @@ export function DashboardClient({
       {/*  HERO ZONE — Equal columns, no spanning                      */}
       {/* ============================================================ */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <ContinueLearningCard
-          subject={featuredSubject}
-          continueHref={continueHref}
-        />
+        <ContinueLearningCard subject={featuredSubject} continueHref={continueHref} />
         <StreakXPCard
           streakDays={summary.streakDays}
           longestStreakDays={summary.longestStreakDays}
@@ -111,9 +108,7 @@ export function DashboardClient({
         </div>
 
         <div className="flex flex-col gap-4">
-          {hasFocusAreas ? (
-            <FocusAreasWidget recommendations={focusAreas} />
-          ) : null}
+          {hasFocusAreas ? <FocusAreasWidget recommendations={focusAreas} /> : null}
           <ReviewNowWidget />
         </div>
       </div>
@@ -122,9 +117,7 @@ export function DashboardClient({
       {/*  WIDGETS ROW — Formulas, Quick Actions, AI Memory            */}
       {/* ============================================================ */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 items-start">
-        {hasStarredFormulas ? (
-          <StarredFormulasWidget formulas={summary.starredFormulas} />
-        ) : null}
+        {hasStarredFormulas ? <StarredFormulasWidget formulas={summary.starredFormulas} /> : null}
         <QuickActionsCard firstChapterBasePath={firstChapterBasePath} />
         <AiMemoryCard />
       </div>

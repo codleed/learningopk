@@ -15,14 +15,7 @@ function ButtonSpinner({ className }: { className?: string }) {
       viewBox="0 0 24 24"
       aria-hidden="true"
     >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path
         className="opacity-75"
         fill="currentColor"
@@ -53,10 +46,7 @@ export const buttonVariants = cva(
           "border border-border-default",
           "hover:bg-bg-elevated hover:border-border-strong",
         ].join(" "),
-        ghost: [
-          "text-text-secondary",
-          "hover:bg-bg-subtle hover:text-text-primary",
-        ].join(" "),
+        ghost: ["text-text-secondary", "hover:bg-bg-subtle hover:text-text-primary"].join(" "),
         danger: [
           "bg-accent-danger text-white",
           "hover:bg-accent-danger/90",
@@ -108,7 +98,8 @@ export const buttonVariants = cva(
 
 /** Props for the Button component. */
 export interface ButtonProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children">,
+  extends
+    Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children">,
     VariantProps<typeof buttonVariants> {
   /** Content rendered inside the button. */
   children?: ReactNode;
@@ -127,75 +118,71 @@ export interface ButtonProps
  *
  * Supports loading state, icon slots, and an optional press state.
  */
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  function Button(
-    {
-      className,
-      variant,
-      size,
-      shape,
-      width,
-      loading = false,
-      iconLeft,
-      iconRight,
-      disabled,
-      children,
-      type = "button",
-      disableAnimation = false,
-      ...props
-    },
-    ref
-  ) {
-    const isDisabled = disabled || loading;
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  {
+    className,
+    variant,
+    size,
+    shape,
+    width,
+    loading = false,
+    iconLeft,
+    iconRight,
+    disabled,
+    children,
+    type = "button",
+    disableAnimation = false,
+    ...props
+  },
+  ref
+) {
+  const isDisabled = disabled || loading;
 
-    const iconSizeClass =
-      size === "xs" || size === "sm"
-        ? "h-3.5 w-3.5"
-        : size === "lg" || size === "xl"
-          ? "h-5 w-5"
-          : "h-4 w-4";
+  const iconSizeClass =
+    size === "xs" || size === "sm"
+      ? "h-3.5 w-3.5"
+      : size === "lg" || size === "xl"
+        ? "h-5 w-5"
+        : "h-4 w-4";
 
-    const content = (
-      <>
-        {loading ? (
-          <ButtonSpinner className={iconSizeClass} />
-        ) : iconLeft ? (
-          <span className={cn("shrink-0", iconSizeClass, "[&>svg]:h-full [&>svg]:w-full")}>
-            {iconLeft}
-          </span>
-        ) : null}
+  const content = (
+    <>
+      {loading ? (
+        <ButtonSpinner className={iconSizeClass} />
+      ) : iconLeft ? (
+        <span className={cn("shrink-0", iconSizeClass, "[&>svg]:h-full [&>svg]:w-full")}>
+          {iconLeft}
+        </span>
+      ) : null}
 
-        {children ? (
-          <span className={cn(loading && "opacity-0 select-none", "truncate")}>
-            {children}
-          </span>
-        ) : null}
+      {children ? (
+        <span className={cn(loading && "opacity-0 select-none", "truncate")}>{children}</span>
+      ) : null}
 
-        {!loading && iconRight ? (
-          <span className={cn("shrink-0", iconSizeClass, "[&>svg]:h-full [&>svg]:w-full")}>
-            {iconRight}
-          </span>
-        ) : null}
-      </>
-    );
+      {!loading && iconRight ? (
+        <span className={cn("shrink-0", iconSizeClass, "[&>svg]:h-full [&>svg]:w-full")}>
+          {iconRight}
+        </span>
+      ) : null}
+    </>
+  );
 
-    return (
-      <button
-        ref={ref}
-        type={type}
-        disabled={isDisabled}
-        className={cn(
-          buttonVariants({ variant, size, shape, width }),
-          !disableAnimation && !isDisabled && "active:scale-[0.97]",
-          className
-        )}
-        aria-busy={loading || undefined}
-        {...props}
-      >
-        {content}
-      </button>
-    );
-  }
-);
+  return (
+    <button
+      ref={ref}
+      type={type}
+      disabled={isDisabled}
+      className={cn(
+        buttonVariants({ variant, size, shape, width }),
+        !disableAnimation && !isDisabled && "active:scale-[0.97]",
+        className
+      )}
+      aria-busy={loading || undefined}
+      {...props}
+    >
+      {content}
+    </button>
+  );
+});
 
 export type { VariantProps };

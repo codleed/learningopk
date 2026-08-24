@@ -16,7 +16,7 @@ test("scoreQuizSubmission calculates marks and percentage from answers", () => {
         optionD: "D",
         correctOption: "a",
         explanation: "exp1",
-        marks: 2
+        marks: 2,
       },
       {
         id: 2,
@@ -27,14 +27,14 @@ test("scoreQuizSubmission calculates marks and percentage from answers", () => {
         optionD: "D",
         correctOption: "b",
         explanation: "exp2",
-        marks: 3
-      }
+        marks: 3,
+      },
     ],
     answers: {
       "1": "a",
-      "2": "d"
+      "2": "d",
     },
-    configuredTotalMarks: 5
+    configuredTotalMarks: 5,
   });
 
   assert.equal(result.score, 2);
@@ -56,13 +56,13 @@ test("scoreQuizSubmission falls back to calculated total marks when configured t
         optionD: "D",
         correctOption: "c",
         explanation: "exp1",
-        marks: 4
-      }
+        marks: 4,
+      },
     ],
     answers: {
-      "1": "c"
+      "1": "c",
     },
-    configuredTotalMarks: 0
+    configuredTotalMarks: 0,
   });
 
   assert.equal(result.totalMarks, 4);
@@ -85,7 +85,7 @@ test("calculateStreakDays counts only contiguous active UTC days ending today", 
       new Date("2026-02-24T03:00:00.000Z"),
       new Date("2026-02-23T11:00:00.000Z"),
       new Date("2026-02-22T22:00:00.000Z"),
-      new Date("2026-02-20T22:00:00.000Z")
+      new Date("2026-02-20T22:00:00.000Z"),
     ],
     referenceDate
   );

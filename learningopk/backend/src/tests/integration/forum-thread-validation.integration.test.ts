@@ -18,7 +18,7 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
     email,
     password: TEST_PASSWORD,
     class: "9th",
-    board: "fbise"
+    board: "fbise",
   });
 
   assert.ok(
@@ -57,7 +57,7 @@ const createFixture = async (opts?: { isPublished?: boolean }) => {
       title: `Chapter ${suffix}`,
       slug: `chapter-${suffix}`,
       summary: "Fixture chapter for forum thread validation tests.",
-      isPublished
+      isPublished,
     })
     .returning({ id: chapters.id });
   const chapter = insertedChapters[0];
@@ -80,10 +80,14 @@ describe("POST /api/forum/threads — validation contracts", () => {
     const response = await agent.post("/api/forum/threads").send({
       title: "Thread with nonexistent subject",
       body: "This body is long enough to pass the minimum length check.",
-      subjectId: 999999
+      subjectId: 999999,
     });
 
-    assert.equal(response.status, 404, `Expected 404 for nonexistent subject, got ${response.status}`);
+    assert.equal(
+      response.status,
+      404,
+      `Expected 404 for nonexistent subject, got ${response.status}`
+    );
     assert.ok(
       response.body?.error?.toLowerCase().includes("subject"),
       `Expected error message to reference subject, got: ${JSON.stringify(response.body)}`
@@ -98,10 +102,14 @@ describe("POST /api/forum/threads — validation contracts", () => {
     const response = await agent.post("/api/forum/threads").send({
       title: "Thread with nonexistent chapter",
       body: "This body is long enough to pass the minimum length check.",
-      chapterId: 999999
+      chapterId: 999999,
     });
 
-    assert.equal(response.status, 404, `Expected 404 for nonexistent chapter, got ${response.status}`);
+    assert.equal(
+      response.status,
+      404,
+      `Expected 404 for nonexistent chapter, got ${response.status}`
+    );
     assert.ok(
       response.body?.error?.toLowerCase().includes("chapter"),
       `Expected error message to reference chapter, got: ${JSON.stringify(response.body)}`
@@ -121,10 +129,14 @@ describe("POST /api/forum/threads — validation contracts", () => {
       title: "Thread with mismatched subject and chapter",
       body: "This body is long enough to pass the minimum length check.",
       subjectId: fixtureA.subjectId,
-      chapterId: fixtureB.chapterId
+      chapterId: fixtureB.chapterId,
     });
 
-    assert.equal(response.status, 400, `Expected 400 for subject/chapter mismatch, got ${response.status}`);
+    assert.equal(
+      response.status,
+      400,
+      `Expected 400 for subject/chapter mismatch, got ${response.status}`
+    );
     assert.equal(response.body?.code, "VALIDATION_ERROR", "Expected VALIDATION_ERROR code.");
   });
 
@@ -139,10 +151,14 @@ describe("POST /api/forum/threads — validation contracts", () => {
       title: "Thread with unpublished chapter",
       body: "This body is long enough to pass the minimum length check.",
       subjectId: fixture.subjectId,
-      chapterId: fixture.chapterId
+      chapterId: fixture.chapterId,
     });
 
-    assert.equal(response.status, 400, `Expected 400 for unpublished chapter, got ${response.status}`);
+    assert.equal(
+      response.status,
+      400,
+      `Expected 400 for unpublished chapter, got ${response.status}`
+    );
     assert.equal(response.body?.code, "VALIDATION_ERROR", "Expected VALIDATION_ERROR code.");
     assert.ok(
       response.body?.error?.toLowerCase().includes("unpublished"),
@@ -161,10 +177,14 @@ describe("POST /api/forum/threads — validation contracts", () => {
       title: "Thread with valid data and published chapter",
       body: "This body is long enough to pass the minimum length check.",
       subjectId: fixture.subjectId,
-      chapterId: fixture.chapterId
+      chapterId: fixture.chapterId,
     });
 
-    assert.equal(response.status, 201, `Expected 201 for valid thread creation, got ${response.status}: ${JSON.stringify(response.body)}`);
+    assert.equal(
+      response.status,
+      201,
+      `Expected 201 for valid thread creation, got ${response.status}: ${JSON.stringify(response.body)}`
+    );
     const thread = response.body?.data?.thread;
     assert.ok(thread, "Expected thread in response data.");
     assert.ok(thread.id, "Expected thread to have an id.");

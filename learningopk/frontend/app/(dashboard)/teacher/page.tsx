@@ -29,10 +29,7 @@ export default async function TeacherPage() {
           stickyClassName="-mx-5 -mt-4 sm:-mx-8 lg:-mx-10 px-5 sm:px-8 lg:px-10"
           title="Teacher Dashboard"
           subtitle="Manage your classrooms, students, and assignments."
-          breadcrumbs={[
-            { label: "Home", href: "/" },
-            { label: "Teacher Dashboard" },
-          ]}
+          breadcrumbs={[{ label: "Home", href: "/" }, { label: "Teacher Dashboard" }]}
         />
       </div>
 

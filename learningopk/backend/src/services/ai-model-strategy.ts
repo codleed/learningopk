@@ -102,9 +102,12 @@ const defaultCircuitState = (): AiCircuitState => ({
 
 const countTokens = (value: string): number => value.trim().split(/\s+/).filter(Boolean).length;
 
-export const normalizePrompt = (value: string): string => value.trim().toLowerCase().replace(/\s+/g, " ");
+export const normalizePrompt = (value: string): string =>
+  value.trim().toLowerCase().replace(/\s+/g, " ");
 
-export const classifyAiQuery = (prompt: string): {
+export const classifyAiQuery = (
+  prompt: string
+): {
   classification: AiQueryClassification;
   modelTier: AiModelTier;
   tokenCount: number;
@@ -112,12 +115,14 @@ export const classifyAiQuery = (prompt: string): {
   const normalizedPrompt = normalizePrompt(prompt);
   const tokenCount = countTokens(normalizedPrompt);
 
-  const isSimple = tokenCount < 50 && SIMPLE_PROMPT_PATTERNS.some((pattern) => pattern.test(normalizedPrompt));
+  const isSimple =
+    tokenCount < 50 && SIMPLE_PROMPT_PATTERNS.some((pattern) => pattern.test(normalizedPrompt));
   if (isSimple) {
     return { classification: "simple", modelTier: "mistral-tiny", tokenCount };
   }
 
-  const isComplex = tokenCount >= 50 || COMPLEX_PROMPT_PATTERNS.some((pattern) => pattern.test(normalizedPrompt));
+  const isComplex =
+    tokenCount >= 50 || COMPLEX_PROMPT_PATTERNS.some((pattern) => pattern.test(normalizedPrompt));
   if (isComplex) {
     return { classification: "complex", modelTier: "mistral-medium", tokenCount };
   }
@@ -141,7 +146,8 @@ const isCircuitOpen = (state: AiCircuitState, now: number): boolean =>
   state.openedAt !== null && now - state.openedAt < FAILURE_WINDOW_MS;
 
 const recordFailure = (state: AiCircuitState, now: number): AiCircuitState => {
-  const isRecentFailure = state.lastFailureAt !== null && now - state.lastFailureAt < FAILURE_WINDOW_MS;
+  const isRecentFailure =
+    state.lastFailureAt !== null && now - state.lastFailureAt < FAILURE_WINDOW_MS;
   const consecutiveFailures = isRecentFailure ? state.consecutiveFailures + 1 : 1;
 
   return {
@@ -153,13 +159,17 @@ const recordFailure = (state: AiCircuitState, now: number): AiCircuitState => {
 
 const resetCircuitState = (): AiCircuitState => defaultCircuitState();
 
-const buildCircuitOpenError = (): Error => new Error("AI circuit breaker is open and no cached response is available.");
+const buildCircuitOpenError = (): Error =>
+  new Error("AI circuit breaker is open and no cached response is available.");
 
 export const createAiModelStrategy = (dependencies: AiModelStrategyDependencies) => {
   const now = dependencies.now ?? (() => Date.now());
   const circuitKey = dependencies.circuitKey ?? DEFAULT_CIRCUIT_KEY;
 
-  const primeCachedResponse = async (params: { prompt: string; responseText: string }): Promise<void> => {
+  const primeCachedResponse = async (params: {
+    prompt: string;
+    responseText: string;
+  }): Promise<void> => {
     await dependencies.setCachedResponse({
       normalizedPrompt: normalizePrompt(params.prompt),
       responseText: params.responseText,
@@ -250,7 +260,9 @@ export const createAiModelStrategy = (dependencies: AiModelStrategyDependencies)
       }
     }
 
-    throw lastError instanceof Error ? lastError : new Error("AI generation failed after all retries.");
+    throw lastError instanceof Error
+      ? lastError
+      : new Error("AI generation failed after all retries.");
   };
 
   /**
@@ -263,7 +275,9 @@ export const createAiModelStrategy = (dependencies: AiModelStrategyDependencies)
    * Throws synchronously if `invokeModelStreaming` is not configured or
    * the circuit breaker is open (unless a cached response is available).
    */
-  const generateStream = async (params: GenerateParams): Promise<{
+  const generateStream = async (
+    params: GenerateParams
+  ): Promise<{
     textStream: AsyncIterable<string>;
     completed: Promise<AiStrategyResult>;
   }> => {

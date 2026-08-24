@@ -20,11 +20,7 @@ export type AiContextUpdate = {
 
 export class AiContextRepository {
   async findByUserId(userId: string): Promise<AiContextRow | null> {
-    const rows = await db
-      .select()
-      .from(aiContext)
-      .where(eq(aiContext.userId, userId))
-      .limit(1);
+    const rows = await db.select().from(aiContext).where(eq(aiContext.userId, userId)).limit(1);
 
     return rows[0] ?? null;
   }
@@ -37,21 +33,35 @@ export class AiContextRepository {
       .values({
         userId,
         ...(data.weakTopics !== undefined && { weakTopics: data.weakTopics.slice(0, MAX_TOPICS) }),
-        ...(data.strongTopics !== undefined && { strongTopics: data.strongTopics.slice(0, MAX_TOPICS) }),
-        ...(data.preferredExplanationStyle !== undefined && { preferredExplanationStyle: data.preferredExplanationStyle }),
-        ...(data.lastConceptsDiscussed !== undefined && { lastConceptsDiscussed: data.lastConceptsDiscussed.slice(0, MAX_LAST_CONCEPTS) }),
+        ...(data.strongTopics !== undefined && {
+          strongTopics: data.strongTopics.slice(0, MAX_TOPICS),
+        }),
+        ...(data.preferredExplanationStyle !== undefined && {
+          preferredExplanationStyle: data.preferredExplanationStyle,
+        }),
+        ...(data.lastConceptsDiscussed !== undefined && {
+          lastConceptsDiscussed: data.lastConceptsDiscussed.slice(0, MAX_LAST_CONCEPTS),
+        }),
         updatedAt: now,
-        createdAt: now
+        createdAt: now,
       })
       .onConflictDoUpdate({
         target: aiContext.userId,
         set: {
-          ...(data.weakTopics !== undefined && { weakTopics: data.weakTopics.slice(0, MAX_TOPICS) }),
-          ...(data.strongTopics !== undefined && { strongTopics: data.strongTopics.slice(0, MAX_TOPICS) }),
-          ...(data.preferredExplanationStyle !== undefined && { preferredExplanationStyle: data.preferredExplanationStyle }),
-          ...(data.lastConceptsDiscussed !== undefined && { lastConceptsDiscussed: data.lastConceptsDiscussed.slice(0, MAX_LAST_CONCEPTS) }),
-          updatedAt: now
-        }
+          ...(data.weakTopics !== undefined && {
+            weakTopics: data.weakTopics.slice(0, MAX_TOPICS),
+          }),
+          ...(data.strongTopics !== undefined && {
+            strongTopics: data.strongTopics.slice(0, MAX_TOPICS),
+          }),
+          ...(data.preferredExplanationStyle !== undefined && {
+            preferredExplanationStyle: data.preferredExplanationStyle,
+          }),
+          ...(data.lastConceptsDiscussed !== undefined && {
+            lastConceptsDiscussed: data.lastConceptsDiscussed.slice(0, MAX_LAST_CONCEPTS),
+          }),
+          updatedAt: now,
+        },
       })
       .returning();
 
@@ -140,7 +150,10 @@ export class AiContextRepository {
     }
 
     // Merge with existing — newest first, deduplicated, capped
-    const merged = [...new Set([...normalizedConcepts, ...existing.lastConceptsDiscussed])].slice(0, MAX_LAST_CONCEPTS);
+    const merged = [...new Set([...normalizedConcepts, ...existing.lastConceptsDiscussed])].slice(
+      0,
+      MAX_LAST_CONCEPTS
+    );
     await db
       .update(aiContext)
       .set({ lastConceptsDiscussed: merged, updatedAt: new Date() })

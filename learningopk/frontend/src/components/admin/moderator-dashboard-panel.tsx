@@ -133,7 +133,10 @@ export function ModeratorDashboardPanel() {
           <CardContent>
             <div className="space-y-3">
               {data.recentResolved.slice(0, 5).map((item) => (
-                <div key={item.id} className="flex items-start justify-between border-b border-border pb-3 last:border-0 last:pb-0">
+                <div
+                  key={item.id}
+                  className="flex items-start justify-between border-b border-border pb-3 last:border-0 last:pb-0"
+                >
                   <div>
                     <p className="font-medium text-sm">{item.targetLabel}</p>
                     <p className="text-xs text-muted-foreground">{item.reason}</p>

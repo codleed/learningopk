@@ -6,8 +6,10 @@ import { Switch as SwitchPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
 
 /** Props for the Switch component. */
-export interface SwitchProps
-  extends Omit<ComponentPropsWithoutRef<typeof SwitchPrimitive.Root>, "children"> {
+export interface SwitchProps extends Omit<
+  ComponentPropsWithoutRef<typeof SwitchPrimitive.Root>,
+  "children"
+> {
   /** Accessible label. */
   label?: string;
   /** Hint/description text below the label. */
@@ -19,10 +21,10 @@ export interface SwitchProps
  *
  * Smooth sliding thumb with accent color when checked.
  */
-export const Switch = forwardRef<
-  HTMLButtonElement,
-  SwitchProps
->(function Switch({ className, label, description, id, ...props }, ref) {
+export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
+  { className, label, description, id, ...props },
+  ref
+) {
   const switchId = id ?? props.name;
 
   const switchElement = (
@@ -59,14 +61,10 @@ export const Switch = forwardRef<
         {switchElement}
         <label htmlFor={switchId} className="cursor-pointer select-none">
           {label ? (
-            <span className="block text-sm font-medium text-text-primary">
-              {label}
-            </span>
+            <span className="block text-sm font-medium text-text-primary">{label}</span>
           ) : null}
           {description ? (
-            <span className="block text-xs text-text-muted mt-0.5">
-              {description}
-            </span>
+            <span className="block text-xs text-text-muted mt-0.5">{description}</span>
           ) : null}
         </label>
       </div>

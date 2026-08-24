@@ -1,14 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { 
-  Sparkles, 
-  Maximize2, 
-  Minimize2,
-  ArrowUp,
-  ChevronDown,
-  Loader2
-} from "lucide-react";
+import { Sparkles, Maximize2, Minimize2, ArrowUp, ChevronDown, Loader2 } from "lucide-react";
 
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { StreamingText } from "@/components/common/streaming-text";
@@ -60,7 +53,9 @@ const formatAssistantError = (payload: AIChatErrorResponse | null, fallback: str
 
   const reasonSuffix = payload.reason ? ` (${payload.reason})` : "";
   const retrySuffix =
-    typeof payload.retryAfterSeconds === "number" ? ` Try again in ${payload.retryAfterSeconds} seconds.` : "";
+    typeof payload.retryAfterSeconds === "number"
+      ? ` Try again in ${payload.retryAfterSeconds} seconds.`
+      : "";
 
   return `${payload.error ?? fallback}${reasonSuffix}${retrySuffix}`;
 };
@@ -69,7 +64,7 @@ const DEFAULT_SUGGESTIONS = [
   "Explain a concept in simple terms",
   "Help me with this exercise",
   "Quiz me on this topic",
-  "Summarize the key points"
+  "Summarize the key points",
 ];
 
 // ============================================================================
@@ -117,7 +112,7 @@ function MessageBubble({ message, isStreaming, showAvatar }: MessageBubbleProps)
           </div>
         </div>
       )}
-      
+
       {isUser ? (
         <div className="break-words [overflow-wrap:anywhere]">{message.content}</div>
       ) : isStreaming && isEmpty ? (
@@ -132,10 +127,7 @@ function MessageBubble({ message, isStreaming, showAvatar }: MessageBubbleProps)
         </div>
       ) : (
         <div className="[overflow-wrap:anywhere] [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
-          <MarkdownRenderer
-            content={message.content}
-            className="text-[15px] leading-relaxed"
-          />
+          <MarkdownRenderer content={message.content} className="text-[15px] leading-relaxed" />
         </div>
       )}
     </article>
@@ -152,17 +144,17 @@ function EmptyState({ suggestions, onSuggestionClick }: EmptyStateProps) {
     <div className="flex h-full flex-col items-center justify-center px-4 py-12">
       {/* Icon */}
       <Sparkles className="mb-4 h-12 w-12 text-accent-primary opacity-90" />
-      
+
       {/* Title */}
       <h2 className="mb-3 text-center font-[family-name:var(--font-heading)] text-2xl font-semibold text-text-primary">
         How can I help you?
       </h2>
-      
+
       {/* Subtitle */}
       <p className="mb-8 max-w-[360px] text-center text-[15px] text-text-secondary">
         Ask about concepts, get help with exercises, or test your knowledge.
       </p>
-      
+
       {/* Suggestion chips */}
       <div className="grid w-full max-w-[560px] grid-cols-1 gap-3 sm:grid-cols-2">
         {suggestions.map((suggestion) => (
@@ -220,7 +212,7 @@ export function AIChatPanel({
   onClose,
   isSidebarMaximized = false,
   onToggleSidebarMaximized,
-  onHideSidebar
+  onHideSidebar,
 }: AIChatPanelProps) {
   const panelIsVisible = layout === "sidebar" ? true : isOpen;
   const usePanelLevelScroll = layout === "sidebar" && isSidebarMaximized;
@@ -242,9 +234,7 @@ export function AIChatPanel({
   const hasMessages = messages.length > 0;
 
   const placeholder = useMemo(() => {
-    return messages.length > 0
-      ? "Ask a follow-up question..."
-      : "Ask your first question...";
+    return messages.length > 0 ? "Ask a follow-up question..." : "Ask your first question...";
   }, [messages.length]);
 
   // Auto-scroll to bottom on new messages
@@ -261,7 +251,7 @@ export function AIChatPanel({
 
     const { scrollTop, scrollHeight, clientHeight } = container;
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-    
+
     setShowScrollButton(distanceFromBottom > 200);
   }, []);
 
@@ -319,7 +309,10 @@ export function AIChatPanel({
       if (messageElements.length === 0) return;
 
       if (e.key === "ArrowDown") {
-        if (focusedMessageIndex.current === null || focusedMessageIndex.current >= messageElements.length - 1) {
+        if (
+          focusedMessageIndex.current === null ||
+          focusedMessageIndex.current >= messageElements.length - 1
+        ) {
           focusedMessageIndex.current = 0;
         } else {
           focusedMessageIndex.current!++;
@@ -380,18 +373,15 @@ export function AIChatPanel({
     [adjustTextareaHeight]
   );
 
-  const handleTextareaKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        const form = e.currentTarget.form;
-        if (form) {
-          form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-        }
+  const handleTextareaKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      const form = e.currentTarget.form;
+      if (form) {
+        form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
       }
-    },
-    []
-  );
+    }
+  }, []);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -407,26 +397,26 @@ export function AIChatPanel({
     const userMessage: ChatMessage = {
       id: createMessageId(),
       role: "user",
-      content: trimmed
+      content: trimmed,
     };
 
     const assistantMessageId = createMessageId();
     const pendingAssistantMessage: ChatMessage = {
       id: assistantMessageId,
       role: "assistant",
-      content: ""
+      content: "",
     };
 
     const requestMessages = [...messages, userMessage]
       .map((message) => ({
         role: message.role,
-        content: message.content
+        content: message.content,
       }))
       .filter((message) => message.content.trim().length > 0);
 
     setMessages((previous) => [...previous, userMessage, pendingAssistantMessage]);
     setInputValue("");
-    
+
     // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -436,7 +426,7 @@ export function AIChatPanel({
       const requestBody = {
         messages: requestMessages,
         chapterId,
-        sessionId: normalizeSessionId(sessionId) ?? undefined
+        sessionId: normalizeSessionId(sessionId) ?? undefined,
       };
 
       // Diagnostic: log the exact payload to help trace 400 errors
@@ -448,16 +438,20 @@ export function AIChatPanel({
         method: "POST",
         credentials: "include",
         headers: {
-          "content-type": "application/json"
+          "content-type": "application/json",
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as AIChatErrorResponse | null;
         // Diagnostic: log full error payload including Zod validation details
         if (process.env.NODE_ENV === "development") {
-          console.error("[ai-chat-panel] error response:", response.status, JSON.stringify(payload, null, 2));
+          console.error(
+            "[ai-chat-panel] error response:",
+            response.status,
+            JSON.stringify(payload, null, 2)
+          );
         }
         const responseSessionId = payload?.sessionId;
         if (responseSessionId) {
@@ -465,7 +459,9 @@ export function AIChatPanel({
         }
 
         setMessages((previous) => previous.filter((message) => message.id !== assistantMessageId));
-        setError(formatAssistantError(payload, `AI request failed with status ${response.status}.`));
+        setError(
+          formatAssistantError(payload, `AI request failed with status ${response.status}.`)
+        );
         return;
       }
 
@@ -501,7 +497,9 @@ export function AIChatPanel({
         assistantText += decoder.decode(chunk.value, { stream: true });
         const latestText = assistantText;
         setMessages((previous) =>
-          previous.map((message) => (message.id === assistantMessageId ? { ...message, content: latestText } : message))
+          previous.map((message) =>
+            message.id === assistantMessageId ? { ...message, content: latestText } : message
+          )
         );
       }
 
@@ -550,16 +548,28 @@ export function AIChatPanel({
               aria-pressed={isSidebarMaximized}
               aria-label={isSidebarMaximized ? "Restore AI sidebar size" : "Maximize AI sidebar"}
             >
-              {isSidebarMaximized ? <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />}
+              {isSidebarMaximized ? (
+                <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : (
+                <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
               {isSidebarMaximized ? "Restore" : "Maximize"}
             </Button>
           ) : null}
           {layout === "sidebar" && onHideSidebar ? (
-            <Button type="button" variant="ghost" size="sm" onClick={onHideSidebar} aria-label="Hide AI sidebar">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onHideSidebar}
+              aria-label="Hide AI sidebar"
+            >
               Hide
             </Button>
           ) : null}
-          {sessionId ? <p className="self-center text-xs text-text-secondary">Session active</p> : null}
+          {sessionId ? (
+            <p className="self-center text-xs text-text-secondary">Session active</p>
+          ) : null}
         </div>
       </header>
 
@@ -567,7 +577,10 @@ export function AIChatPanel({
         ref={containerRef}
         onKeyDown={handleKeyDown}
         onScroll={handleScroll}
-        className={cn("space-y-3 px-3 py-3", usePanelLevelScroll ? "" : "min-h-0 flex-1 overflow-y-auto")}
+        className={cn(
+          "space-y-3 px-3 py-3",
+          usePanelLevelScroll ? "" : "min-h-0 flex-1 overflow-y-auto"
+        )}
         role="log"
         aria-label="Conversation"
         aria-live="polite"
@@ -578,18 +591,19 @@ export function AIChatPanel({
           <>
             {messages.map((message, index) => {
               const prevMessage = messages[index - 1];
-              const shouldShowAvatar = message.role === "assistant" && 
-                (index === 0 || prevMessage?.role === "user");
+              const shouldShowAvatar =
+                message.role === "assistant" && (index === 0 || prevMessage?.role === "user");
               const isConsecutiveSameRole = prevMessage?.role === message.role;
-              const isMessageStreaming = isStreaming && message.id === messages[messages.length - 1]?.id;
+              const isMessageStreaming =
+                isStreaming && message.id === messages[messages.length - 1]?.id;
 
               return (
                 <div
                   key={message.id}
-                  ref={(el) => { messageRefs.current[index] = el; }}
-                  className={cn(
-                    isConsecutiveSameRole ? "mt-1" : "mt-4"
-                  )}
+                  ref={(el) => {
+                    messageRefs.current[index] = el;
+                  }}
+                  className={cn(isConsecutiveSameRole ? "mt-1" : "mt-4")}
                 >
                   <MessageBubble
                     message={message}
@@ -620,10 +634,19 @@ export function AIChatPanel({
           {proactiveHint ? (
             <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/40 bg-amber-50 px-3 py-2 dark:border-amber-500/20 dark:bg-amber-500/10">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">Need a hint?</p>
-                <p className="text-sm text-amber-900 dark:text-amber-100">{proactiveHint.message}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+                  Need a hint?
+                </p>
+                <p className="text-sm text-amber-900 dark:text-amber-100">
+                  {proactiveHint.message}
+                </p>
               </div>
-              <Button type="button" variant="secondary" size="sm" onClick={() => setInputValue(proactiveHint.message)}>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setInputValue(proactiveHint.message)}
+              >
                 Need a hint?
               </Button>
             </div>
@@ -700,7 +723,10 @@ export function AIChatPanel({
         className="fixed inset-0 z-40 bg-black/40"
         onClick={onClose}
       />
-      <aside id="ai-chat-panel" className="fixed inset-y-0 right-0 z-50 w-full max-w-xl border-l border-border-default bg-bg-surface shadow-[var(--elevation-strong)]">
+      <aside
+        id="ai-chat-panel"
+        className="fixed inset-y-0 right-0 z-50 w-full max-w-xl border-l border-border-default bg-bg-surface shadow-[var(--elevation-strong)]"
+      >
         {panelBody}
       </aside>
     </>

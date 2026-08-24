@@ -11,7 +11,7 @@ const formatDateTime = (value: string): string =>
   new Date(value).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
-    year: "numeric"
+    year: "numeric",
   });
 
 const formatRelativeTime = (value: string): string => {
@@ -59,7 +59,9 @@ export function ForumThreadHeader({ thread }: ForumThreadHeaderProps) {
         {thread.subjectName ? <SubjectBadge name={thread.subjectName} size="sm" /> : null}
         {thread.boardName ? <BoardBadge board={thread.boardName} size="sm" /> : null}
         {thread.className ? (
-          <Badge variant="default" size="sm">Class {thread.className}</Badge>
+          <Badge variant="default" size="sm">
+            Class {thread.className}
+          </Badge>
         ) : null}
       </div>
 
@@ -71,9 +73,7 @@ export function ForumThreadHeader({ thread }: ForumThreadHeaderProps) {
         <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-text-muted">
           <span className="inline-flex items-center gap-2">
             <Avatar name={thread.userName} size="sm" />
-            <span className="font-medium text-text-secondary">
-              Asked by {thread.userName}
-            </span>
+            <span className="font-medium text-text-secondary">Asked by {thread.userName}</span>
           </span>
           <span className="inline-flex items-center gap-1">
             <Clock className="h-3.5 w-3.5" aria-hidden="true" />

@@ -62,7 +62,17 @@ type ToolbarAction = {
   label: string;
   icon: ReactNode;
   shortcutLabel?: string;
-  action: "bold" | "italic" | "code" | "link" | "ordered-list" | "unordered-list" | "quote" | "heading" | "attach" | "horizontal-rule";
+  action:
+    | "bold"
+    | "italic"
+    | "code"
+    | "link"
+    | "ordered-list"
+    | "unordered-list"
+    | "quote"
+    | "heading"
+    | "attach"
+    | "horizontal-rule";
 };
 
 const ICON_SIZE = 16;
@@ -171,7 +181,7 @@ function HeadingDropdown({ onSelect, open, onToggle, onClose, disabled }: Headin
       onSelect(level);
       onClose();
     },
-    [onSelect, onClose],
+    [onSelect, onClose]
   );
 
   return (
@@ -184,7 +194,7 @@ function HeadingDropdown({ onSelect, open, onToggle, onClose, disabled }: Headin
           className={cn(
             "inline-flex items-center gap-0.5 rounded p-1.5",
             "text-text-secondary hover:bg-bg-subtle hover:text-text-primary",
-            "transition-colors disabled:pointer-events-none disabled:opacity-50",
+            "transition-colors disabled:pointer-events-none disabled:opacity-50"
           )}
           aria-label="Select heading level"
           aria-haspopup="listbox"
@@ -203,7 +213,7 @@ function HeadingDropdown({ onSelect, open, onToggle, onClose, disabled }: Headin
             className={cn(
               "absolute left-0 top-full z-50 mt-1 min-w-[160px]",
               "rounded-lg border border-border-default bg-bg-surface shadow-lg",
-              "animate-in fade-in-0 zoom-in-95 py-1",
+              "animate-in fade-in-0 zoom-in-95 py-1"
             )}
           >
             {HEADING_LEVELS.map(({ level, label }) => (
@@ -216,7 +226,7 @@ function HeadingDropdown({ onSelect, open, onToggle, onClose, disabled }: Headin
                 className={cn(
                   "flex w-full items-center gap-3 px-3 py-1.5 text-left text-sm",
                   "text-text-secondary hover:bg-bg-subtle hover:text-text-primary",
-                  "transition-colors",
+                  "transition-colors"
                 )}
               >
                 <span className="font-mono text-xs text-text-secondary/60">
@@ -254,7 +264,7 @@ function ToolbarButton({ label, shortcutLabel, icon, onClick, disabled }: Toolba
         className={cn(
           "rounded p-1.5",
           "text-text-secondary hover:bg-bg-subtle hover:text-text-primary",
-          "transition-colors disabled:pointer-events-none disabled:opacity-50",
+          "transition-colors disabled:pointer-events-none disabled:opacity-50"
         )}
         aria-label={label}
       >
@@ -293,7 +303,7 @@ function replaceRange(
   currentValue: string,
   start: number,
   end: number,
-  replacement: string,
+  replacement: string
 ): { value: string; cursorPos: number } {
   const before = currentValue.slice(0, start);
   const after = currentValue.slice(end);
@@ -310,7 +320,7 @@ function wrapSelection(
   prefix: string,
   suffix: string,
   selectedText: string,
-  placeholderText: string,
+  placeholderText: string
 ): { value: string; selectionStart: number; selectionEnd: number } {
   const text = selectedText || placeholderText;
   const replacement = `${prefix}${text}${suffix}`;
@@ -337,7 +347,7 @@ function wrapSelection(
 function insertAtLineStart(
   currentValue: string,
   start: number,
-  prefix: string,
+  prefix: string
 ): { value: string; cursorPos: number } {
   // Find the beginning of the current line
   const lineStart = currentValue.lastIndexOf("\n", start - 1) + 1;
@@ -363,7 +373,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
       className,
       minHeight = 400,
     },
-    ref,
+    ref
   ) {
     const [activeTab, setActiveTab] = useState<TabMode>("write");
     const [isDragging, setIsDragging] = useState(false);
@@ -384,7 +394,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
           ref.current = el;
         }
       },
-      [ref],
+      [ref]
     );
 
     /* ─── Update value ─── */
@@ -392,7 +402,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
       (newValue: string) => {
         onChange(newValue);
       },
-      [onChange],
+      [onChange]
     );
 
     /* ─── Set cursor / selection in textarea ─── */
@@ -424,7 +434,10 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
           const currentVal = textareaRef.current?.value ?? newValue;
           const placeholderIndex = currentVal.indexOf(placeholderText);
           if (placeholderIndex !== -1) {
-            const updated = currentVal.slice(0, placeholderIndex) + result.markdown + currentVal.slice(placeholderIndex + placeholderText.length);
+            const updated =
+              currentVal.slice(0, placeholderIndex) +
+              result.markdown +
+              currentVal.slice(placeholderIndex + placeholderText.length);
             updateValue(updated);
           }
         } catch (error) {
@@ -432,14 +445,16 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
           const currentVal = textareaRef.current?.value ?? newValue;
           const placeholderIndex = currentVal.indexOf(placeholderText);
           if (placeholderIndex !== -1) {
-            const updated = currentVal.slice(0, placeholderIndex) + currentVal.slice(placeholderIndex + placeholderText.length);
+            const updated =
+              currentVal.slice(0, placeholderIndex) +
+              currentVal.slice(placeholderIndex + placeholderText.length);
             updateValue(updated);
           }
           console.error("[GithubMarkdownEditor] Image upload failed:", error);
           onImageUploadError?.(error);
         }
       },
-      [onImageUpload, onImageUploadError, value, updateValue],
+      [onImageUpload, onImageUploadError, value, updateValue]
     );
 
     const handleFilesFromInput = useCallback(
@@ -452,7 +467,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
           }
         }
       },
-      [handleFileUpload],
+      [handleFileUpload]
     );
 
     /* ─── Toolbar formatting actions ─── */
@@ -479,7 +494,15 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
           case "code": {
             if (selectedText.includes("\n")) {
               // Multi-line selection → fenced code block
-              const result = wrapSelection(value, start, end, "```\n", "\n```", selectedText, "code");
+              const result = wrapSelection(
+                value,
+                start,
+                end,
+                "```\n",
+                "\n```",
+                selectedText,
+                "code"
+              );
               updateValue(result.value);
               setTextareaSelection(result.selectionStart, result.selectionEnd);
             } else {
@@ -540,10 +563,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
             const needsNewlineBefore = before.length > 0 && !before.endsWith("\n");
             const after = value.slice(end);
             const needsNewlineAfter = after.length > 0 && !after.startsWith("\n");
-            const rule =
-              (needsNewlineBefore ? "\n" : "") +
-              "---" +
-              (needsNewlineAfter ? "\n" : "");
+            const rule = (needsNewlineBefore ? "\n" : "") + "---" + (needsNewlineAfter ? "\n" : "");
             const { value: newValue, cursorPos } = replaceRange(value, start, end, rule);
             updateValue(newValue);
             setTextareaSelection(cursorPos, cursorPos);
@@ -555,7 +575,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
           }
         }
       },
-      [value, updateValue, setTextareaSelection],
+      [value, updateValue, setTextareaSelection]
     );
 
     /* ─── Keyboard shortcuts ─── */
@@ -577,7 +597,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
           applyFormatAction("link");
         }
       },
-      [applyFormatAction],
+      [applyFormatAction]
     );
 
     /* ─── Paste handler (images) ─── */
@@ -598,7 +618,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
           }
         }
       },
-      [onImageUpload, handleFileUpload],
+      [onImageUpload, handleFileUpload]
     );
 
     /* ─── Drag and drop handlers ─── */
@@ -612,20 +632,17 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
           setIsDragging(true);
         }
       },
-      [onImageUpload],
+      [onImageUpload]
     );
 
-    const handleDragLeave = useCallback(
-      (e: DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-        dragCounterRef.current -= 1;
-        if (dragCounterRef.current === 0) {
-          setIsDragging(false);
-        }
-      },
-      [],
-    );
+    const handleDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounterRef.current -= 1;
+      if (dragCounterRef.current === 0) {
+        setIsDragging(false);
+      }
+    }, []);
 
     const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
       e.preventDefault();
@@ -650,7 +667,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
           }
         }
       },
-      [onImageUpload, handleFileUpload],
+      [onImageUpload, handleFileUpload]
     );
 
     /* ─── Textarea change ─── */
@@ -658,7 +675,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
       (e: ChangeEvent<HTMLTextAreaElement>) => {
         updateValue(e.target.value);
       },
-      [updateValue],
+      [updateValue]
     );
 
     /* ─── File input change ─── */
@@ -668,7 +685,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
         // Reset input so same file can be selected again
         e.target.value = "";
       },
-      [handleFilesFromInput],
+      [handleFilesFromInput]
     );
 
     /* ─── Footer click → trigger file input ─── */
@@ -690,7 +707,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
       (level: HeadingLevel) => {
         applyFormatAction("heading", level);
       },
-      [applyFormatAction],
+      [applyFormatAction]
     );
 
     /* ─── Render toolbar action ─── */
@@ -740,7 +757,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
         headingDropdownOpen,
         handleHeadingToggle,
         handleHeadingClose,
-      ],
+      ]
     );
 
     /* ─── Render ─── */
@@ -754,7 +771,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
           "transition-colors",
           isDragging && "ring-2 ring-accent-primary/40 border-accent-primary/60",
           disabled && "opacity-60 pointer-events-none",
-          className,
+          className
         )}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
@@ -762,7 +779,11 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
         onDrop={handleDrop}
       >
         {/* ── Tab Bar ── */}
-        <div className="bg-bg-surface border-b border-border-default" role="tablist" aria-label="Editor mode">
+        <div
+          className="bg-bg-surface border-b border-border-default"
+          role="tablist"
+          aria-label="Editor mode"
+        >
           <div className="flex items-center px-3">
             <button
               type="button"
@@ -777,9 +798,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
               className={cn(
                 "relative flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium",
                 "transition-colors",
-                isWriteMode
-                  ? "text-text-primary"
-                  : "text-text-secondary hover:text-text-primary",
+                isWriteMode ? "text-text-primary" : "text-text-secondary hover:text-text-primary"
               )}
             >
               <Pencil size={14} />
@@ -805,9 +824,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
               className={cn(
                 "relative flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium",
                 "transition-colors",
-                !isWriteMode
-                  ? "text-text-primary"
-                  : "text-text-secondary hover:text-text-primary",
+                !isWriteMode ? "text-text-primary" : "text-text-secondary hover:text-text-primary"
               )}
             >
               <Eye size={14} />
@@ -854,7 +871,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
                 "w-full resize-y bg-transparent font-mono text-sm p-4",
                 "text-text-primary placeholder:text-text-secondary",
                 "focus:outline-none",
-                "disabled:cursor-not-allowed disabled:opacity-50",
+                "disabled:cursor-not-allowed disabled:opacity-50"
               )}
               style={{ minHeight: `${minHeight}px` }}
               aria-label="Markdown editor"
@@ -867,7 +884,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
                 className={cn(
                   "absolute inset-0 z-10 flex items-center justify-center",
                   "bg-bg-surface/80 backdrop-blur-sm",
-                  "border-2 border-dashed border-accent-primary/40 rounded-lg m-1",
+                  "border-2 border-dashed border-accent-primary/40 rounded-lg m-1"
                 )}
               >
                 <div className="flex flex-col items-center gap-2 text-text-secondary">
@@ -888,9 +905,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
             {value.trim() ? (
               <ContentRenderer content={value} variant="default" />
             ) : (
-              <p className="text-text-secondary text-sm italic">
-                Nothing to preview
-              </p>
+              <p className="text-text-secondary text-sm italic">Nothing to preview</p>
             )}
           </div>
         )}
@@ -919,7 +934,7 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
               className={cn(
                 "flex items-center gap-1.5 text-xs text-text-secondary",
                 "hover:text-text-primary transition-colors",
-                "disabled:pointer-events-none disabled:opacity-50",
+                "disabled:pointer-events-none disabled:opacity-50"
               )}
             >
               <ImageIcon size={14} className="shrink-0" />
@@ -941,5 +956,5 @@ export const GithubMarkdownEditor = forwardRef<TextareaRef, GithubMarkdownEditor
         />
       </div>
     );
-  },
+  }
 );

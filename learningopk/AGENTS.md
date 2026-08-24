@@ -53,6 +53,7 @@ pnpm run test:e2e tests/e2e/smoke.spec.ts  # Single e2e test
 ## Code Style Guidelines
 
 ### General Principles
+
 - **Strict TypeScript** - All code must pass strict mode
 - **No `any`** - Use `unknown` or proper generics
 - **ES Modules** - Use `.js` extensions in imports
@@ -60,6 +61,7 @@ pnpm run test:e2e tests/e2e/smoke.spec.ts  # Single e2e test
 ### Backend (Express + Drizzle + Better Auth)
 
 #### File Structure
+
 ```
 backend/src/
 ├── routes/        # Express routers (ai-chat.ts, quiz.ts, etc.)
@@ -74,21 +76,24 @@ backend/src/
 ```
 
 #### Naming
+
 - Routes: `kebab-case` (e.g., `ai-chat.ts`)
 - Services/Repositories: `camelCase` (e.g., `quiz.service.ts`)
 - Database tables: `snake_case` (e.g., `user_progress`)
 - Zod schemas: `CamelCase` + `Schema` suffix
 
 #### Error Handling
+
 ```typescript
 // Use errorResponse from src/lib/response.ts
-res.status(400).json(errorResponse('Invalid input', 'VALIDATION_ERROR'))
+res.status(400).json(errorResponse("Invalid input", "VALIDATION_ERROR"));
 
 // Success
-res.json(successResponse(data))
+res.json(successResponse(data));
 ```
 
 #### Database
+
 - Use **Drizzle ORM** for all queries
 - Never interpolate user input in queries
 
@@ -97,6 +102,7 @@ res.json(successResponse(data))
 ### Frontend (Next.js 16 + Heroui + Tailwind CSS)
 
 #### File Structure
+
 ```
 frontend/
 ├── app/              # Next.js App Router pages
@@ -106,11 +112,13 @@ frontend/
 ```
 
 #### UI Components
+
 - Use `@/components/ui` (Button, Badge, Card, Input, etc.)
 - Defined via **CVA** (Class Variance Authority)
 - Follow 4px spacing grid, dark theme supported
 
 #### Imports
+
 ```typescript
 // Good
 import { Button, Card, Badge } from "@/components/ui";
@@ -124,6 +132,7 @@ import { Button } from "@/design-system/components/Button";
 ### Shared Conventions
 
 #### Import Syntax
+
 ```typescript
 // Backend - use .js extension for ESM
 import { auth } from "../lib/auth.js";
@@ -133,10 +142,12 @@ import { Button } from "@/components/ui";
 ```
 
 #### TypeScript
+
 - Backend: `strict: true`, `NodeNext` module, `noUncheckedIndexedAccess`
 - Frontend: `strict: true`, `bundler` module resolution
 
 #### Git
+
 - Branch: `feature/description`, `fix/description`
 - Never commit secrets - use `.env` files
 

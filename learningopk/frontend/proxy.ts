@@ -14,9 +14,9 @@ export const proxy = async (request: NextRequest) => {
     const response = await fetch(`${backendUrl}/api/auth/get-session`, {
       method: "GET",
       headers: {
-        cookie: request.headers.get("cookie") ?? ""
+        cookie: request.headers.get("cookie") ?? "",
       },
-      cache: "no-store"
+      cache: "no-store",
     });
 
     if (!response.ok) {
@@ -25,7 +25,9 @@ export const proxy = async (request: NextRequest) => {
         return NextResponse.redirect(new URL("/login", request.url));
       }
       // Auth service or backend error - show service unavailable
-      return new NextResponse("Authentication service unavailable. Please try again later.", { status: 503 });
+      return new NextResponse("Authentication service unavailable. Please try again later.", {
+        status: 503,
+      });
     }
 
     const payload = (await response.json()) as { session?: unknown } | null;
@@ -37,10 +39,12 @@ export const proxy = async (request: NextRequest) => {
   } catch (error) {
     console.error("Proxy auth check failed:", error);
     // Network error or backend unreachable
-    return new NextResponse("Authentication service unreachable. Please check your connection.", { status: 503 });
+    return new NextResponse("Authentication service unreachable. Please check your connection.", {
+      status: 503,
+    });
   }
 };
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/stats/:path*"]
+  matcher: ["/dashboard/:path*", "/stats/:path*"],
 };

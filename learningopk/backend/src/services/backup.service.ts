@@ -46,14 +46,15 @@ async function runDocker(args: string[]): Promise<{ stdout: string; stderr: stri
 
 export async function listBackups(): Promise<BackupEntry[]> {
   ensureBackupsDir();
-  const entries = fs.readdirSync(BACKUPS_DIR)
+  const entries = fs
+    .readdirSync(BACKUPS_DIR)
     .filter((name) => name.endsWith(".sql"))
     .map((name) => {
       const stat = fs.statSync(path.join(BACKUPS_DIR, name));
       return {
         name,
         sizeBytes: stat.size,
-        createdAt: stat.birthtime.toISOString()
+        createdAt: stat.birthtime.toISOString(),
       };
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -72,14 +73,17 @@ export async function createBackup(label?: string): Promise<BackupEntry> {
 
   await new Promise<void>((resolve, reject) => {
     const child = spawn("docker", [
-      "exec", CONTAINER_NAME,
+      "exec",
+      CONTAINER_NAME,
       "pg_dump",
-      "-U", DB_USER,
-      "-d", DB_NAME,
+      "-U",
+      DB_USER,
+      "-d",
+      DB_NAME,
       "--clean",
       "--if-exists",
       "--no-owner",
-      "--no-acl"
+      "--no-acl",
     ]);
     const stream = fs.createWriteStream(filepath);
     child.stdout.pipe(stream);
@@ -98,7 +102,7 @@ export async function createBackup(label?: string): Promise<BackupEntry> {
   return {
     name: filename,
     sizeBytes: stat.size,
-    createdAt: stat.birthtime.toISOString()
+    createdAt: stat.birthtime.toISOString(),
   };
 }
 
@@ -119,17 +123,18 @@ export async function restoreBackup(filename: string): Promise<void> {
 
   try {
     await runDocker([
-      "exec", CONTAINER_NAME,
+      "exec",
+      CONTAINER_NAME,
       "psql",
-      "-U", DB_USER,
-      "-d", DB_NAME,
-      "-f", CONTAINER_RESTORE_PATH
+      "-U",
+      DB_USER,
+      "-d",
+      DB_NAME,
+      "-f",
+      CONTAINER_RESTORE_PATH,
     ]);
   } finally {
-    await runDocker([
-      "exec", CONTAINER_NAME,
-      "rm", "-f", CONTAINER_RESTORE_PATH
-    ]).catch(() => {});
+    await runDocker(["exec", CONTAINER_NAME, "rm", "-f", CONTAINER_RESTORE_PATH]).catch(() => {});
   }
 }
 

@@ -42,7 +42,8 @@ const inputVariants = cva(
 
 /** Props for the Input component. */
 export interface InputProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, "size" | "prefix">,
+  extends
+    Omit<InputHTMLAttributes<HTMLInputElement>, "size" | "prefix">,
     VariantProps<typeof inputVariants> {
   /** Error message to display below the input. Also triggers danger ring styling. */
   error?: string | null;
@@ -59,85 +60,65 @@ export interface InputProps
  *
  * Uses `forwardRef` for integration with form libraries.
  */
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  function Input(
-    {
-      className,
-      variant,
-      inputSize,
-      error,
-      prefix,
-      suffix,
-      label,
-      id,
-      disabled,
-      ...props
-    },
-    ref
-  ) {
-    const inputId = id ?? props.name;
-    const errorStr = error ?? undefined;
-    const hasError = Boolean(errorStr);
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  { className, variant, inputSize, error, prefix, suffix, label, id, disabled, ...props },
+  ref
+) {
+  const inputId = id ?? props.name;
+  const errorStr = error ?? undefined;
+  const hasError = Boolean(errorStr);
 
-    const errorClasses = hasError
-      ? "!border-accent-danger !ring-2 !ring-accent-danger/20 focus:!border-accent-danger focus:!ring-accent-danger/20"
-      : "";
+  const errorClasses = hasError
+    ? "!border-accent-danger !ring-2 !ring-accent-danger/20 focus:!border-accent-danger focus:!ring-accent-danger/20"
+    : "";
 
-    const inputElement = (
-      <input
-        ref={ref}
-        id={inputId}
-        disabled={disabled}
-        aria-invalid={hasError || undefined}
-        aria-describedby={hasError && inputId ? `${inputId}-error` : undefined}
-        className={cn(
-          inputVariants({ variant, inputSize }),
-          prefix && "pl-10",
-          suffix && "pr-10",
-          errorClasses,
-          className
-        )}
-        {...props}
-      />
-    );
+  const inputElement = (
+    <input
+      ref={ref}
+      id={inputId}
+      disabled={disabled}
+      aria-invalid={hasError || undefined}
+      aria-describedby={hasError && inputId ? `${inputId}-error` : undefined}
+      className={cn(
+        inputVariants({ variant, inputSize }),
+        prefix && "pl-10",
+        suffix && "pr-10",
+        errorClasses,
+        className
+      )}
+      {...props}
+    />
+  );
 
-    return (
-      <div className="w-full space-y-1.5">
-        {label ? (
-          <label
-            htmlFor={inputId}
-            className="block text-sm font-medium text-text-primary"
-          >
-            {label}
-          </label>
+  return (
+    <div className="w-full space-y-1.5">
+      {label ? (
+        <label htmlFor={inputId} className="block text-sm font-medium text-text-primary">
+          {label}
+        </label>
+      ) : null}
+
+      <div className="relative">
+        {prefix ? (
+          <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-text-muted [&>svg]:h-4 [&>svg]:w-4">
+            {prefix}
+          </span>
         ) : null}
 
-        <div className="relative">
-          {prefix ? (
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-text-muted [&>svg]:h-4 [&>svg]:w-4">
-              {prefix}
-            </span>
-          ) : null}
+        {inputElement}
 
-          {inputElement}
-
-          {suffix ? (
-            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-text-muted [&>svg]:h-4 [&>svg]:w-4">
-              {suffix}
-            </span>
-          ) : null}
-        </div>
-
-        {hasError && inputId ? (
-          <p
-            id={`${inputId}-error`}
-            className="text-xs text-accent-danger"
-            role="alert"
-          >
-            {errorStr}
-          </p>
+        {suffix ? (
+          <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-text-muted [&>svg]:h-4 [&>svg]:w-4">
+            {suffix}
+          </span>
         ) : null}
       </div>
-    );
-  }
-);
+
+      {hasError && inputId ? (
+        <p id={`${inputId}-error`} className="text-xs text-accent-danger" role="alert">
+          {errorStr}
+        </p>
+      ) : null}
+    </div>
+  );
+});

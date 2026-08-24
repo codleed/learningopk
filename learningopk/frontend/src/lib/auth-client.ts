@@ -10,16 +10,16 @@ export const authClient = createAuthClient({
     inferAdditionalFields({
       user: {
         class: {
-          type: "string"
+          type: "string",
         },
         degree: {
-          type: "string"
+          type: "string",
         },
         board: {
-          type: "string"
-        }
-      }
+          type: "string",
+        },
+      },
     }),
     emailOTPClient(),
-  ]
+  ],
 });

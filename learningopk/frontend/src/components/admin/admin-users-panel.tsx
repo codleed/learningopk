@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
-import { getAdminUsers, type AdminUser, updateAdminUserRole, updateAdminUserSuspension } from "@/lib/admin-api";
+import {
+  getAdminUsers,
+  type AdminUser,
+  updateAdminUserRole,
+  updateAdminUserSuspension,
+} from "@/lib/admin-api";
 
 import { AdminUsersTable } from "./admin-users-table";
 
@@ -30,24 +35,20 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
   const [isApplying, setIsApplying] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [mutatingUserIds, setMutatingUserIds] = useState<Set<string>>(new Set());
-  const [suspensionMutatingUserIds, setSuspensionMutatingUserIds] = useState<Set<string>>(new Set());
+  const [suspensionMutatingUserIds, setSuspensionMutatingUserIds] = useState<Set<string>>(
+    new Set()
+  );
   const { pushToast } = useToast();
   const hasMore = entries.length < total;
 
-  const runFetch = async ({
-    nextPage,
-    append
-  }: {
-    nextPage: number;
-    append: boolean;
-  }) => {
+  const runFetch = async ({ nextPage, append }: { nextPage: number; append: boolean }) => {
     try {
       const payload = await getAdminUsers({
         page: nextPage,
         pageSize: usersPageSize,
         q: searchTerm,
         role,
-        status
+        status,
       });
 
       setEntries((previous) => (append ? [...previous, ...payload.entries] : payload.entries));
@@ -58,7 +59,7 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
       pushToast({
         tone: "error",
         title: "Users directory unavailable",
-        description: message
+        description: message,
       });
     }
   };
@@ -68,7 +69,7 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
     try {
       await runFetch({
         nextPage: 1,
-        append: false
+        append: false,
       });
     } finally {
       setIsApplying(false);
@@ -84,7 +85,7 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
     try {
       await runFetch({
         nextPage: page + 1,
-        append: true
+        append: true,
       });
     } finally {
       setIsLoadingMore(false);
@@ -103,23 +104,23 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
     try {
       await updateAdminUserRole({
         id: user.id,
-        role: nextRole
+        role: nextRole,
       });
       pushToast({
         tone: "success",
         title: "Role updated",
-        description: `${user.name} is now ${nextRole}.`
+        description: `${user.name} is now ${nextRole}.`,
       });
       await runFetch({
         nextPage: 1,
-        append: false
+        append: false,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to update user role.";
       pushToast({
         tone: "error",
         title: "Role update failed",
-        description: message
+        description: message,
       });
     } finally {
       setMutatingUserIds((previous) => {
@@ -141,16 +142,16 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
       await updateAdminUserSuspension({
         id: user.id,
         action: "suspend",
-        reason
+        reason,
       });
       pushToast({
         tone: "success",
         title: "User suspended",
-        description: `${user.name} has been suspended.`
+        description: `${user.name} has been suspended.`,
       });
       await runFetch({
         nextPage: 1,
-        append: false
+        append: false,
       });
       return true;
     } catch (error) {
@@ -158,7 +159,7 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
       pushToast({
         tone: "error",
         title: "Suspension failed",
-        description: message
+        description: message,
       });
       return false;
     } finally {
@@ -180,23 +181,23 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
     try {
       await updateAdminUserSuspension({
         id: user.id,
-        action: "reactivate"
+        action: "reactivate",
       });
       pushToast({
         tone: "success",
         title: "User reactivated",
-        description: `${user.name} has been reactivated.`
+        description: `${user.name} has been reactivated.`,
       });
       await runFetch({
         nextPage: 1,
-        append: false
+        append: false,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to reactivate user.";
       pushToast({
         tone: "error",
         title: "Reactivation failed",
-        description: message
+        description: message,
       });
     } finally {
       setSuspensionMutatingUserIds((previous) => {
@@ -213,22 +214,34 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reason }),
-      credentials: "include"
+      credentials: "include",
     });
     if (!res.ok) throw new Error("Warn failed");
-    pushToast({ tone: "success", title: "Warning issued", description: `${user.name} has been warned.` });
+    pushToast({
+      tone: "success",
+      title: "Warning issued",
+      description: `${user.name} has been warned.`,
+    });
   };
 
-  const tempBanUser = async (user: AdminUser, reason: string, durationHours: number): Promise<boolean> => {
+  const tempBanUser = async (
+    user: AdminUser,
+    reason: string,
+    durationHours: number
+  ): Promise<boolean> => {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
     const res = await fetch(`${backendUrl}/api/admin/moderation/users/${user.id}/temp-ban`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reason, durationHours }),
-      credentials: "include"
+      credentials: "include",
     });
     if (!res.ok) throw new Error("Temp ban failed");
-    pushToast({ tone: "success", title: "Temporary ban applied", description: `${user.name} banned for ${durationHours}h.` });
+    pushToast({
+      tone: "success",
+      title: "Temporary ban applied",
+      description: `${user.name} banned for ${durationHours}h.`,
+    });
     await runFetch({ nextPage: 1, append: false });
     return true;
   };
@@ -237,11 +250,21 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
     <section className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/75 pb-4">
         <div>
-          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-foreground">Users Directory</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Search users by name or email and filter by role.</p>
+          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-foreground">
+            Users Directory
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Search users by name or email and filter by role.
+          </p>
         </div>
         {hasMore ? (
-          <Button type="button" size="sm" variant="secondary" onClick={() => void loadMore()} disabled={isLoadingMore}>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => void loadMore()}
+            disabled={isLoadingMore}
+          >
             {isLoadingMore ? "Loading..." : "Load more"}
           </Button>
         ) : null}
@@ -250,7 +273,10 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
       <div className="space-y-4">
         <div className="grid gap-3 md:grid-cols-[1fr_220px_220px_auto] md:items-end">
           <div className="space-y-1.5">
-            <label htmlFor="users-search" className="text-xs font-semibold uppercase tracking-wide text-foreground">
+            <label
+              htmlFor="users-search"
+              className="text-xs font-semibold uppercase tracking-wide text-foreground"
+            >
               Search users
             </label>
             <Input
@@ -262,10 +288,18 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
             />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="users-role" className="text-xs font-semibold uppercase tracking-wide text-foreground">
+            <label
+              htmlFor="users-role"
+              className="text-xs font-semibold uppercase tracking-wide text-foreground"
+            >
               Role
             </label>
-            <Select id="users-role" value={role} onChange={(event) => setRole(event.target.value as UsersRoleFilter)} disabled={isApplying}>
+            <Select
+              id="users-role"
+              value={role}
+              onChange={(event) => setRole(event.target.value as UsersRoleFilter)}
+              disabled={isApplying}
+            >
               <option value="">All roles</option>
               <option value="admin">Admin</option>
               <option value="moderator">Moderator</option>
@@ -273,7 +307,10 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
             </Select>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="users-status" className="text-xs font-semibold uppercase tracking-wide text-foreground">
+            <label
+              htmlFor="users-status"
+              className="text-xs font-semibold uppercase tracking-wide text-foreground"
+            >
               Status
             </label>
             <Select
@@ -287,7 +324,12 @@ export function AdminUsersPanel({ initialEntries, initialTotal }: AdminUsersPane
               <option value="suspended">Suspended</option>
             </Select>
           </div>
-          <Button type="button" variant="secondary" onClick={() => void applyFilters()} disabled={isApplying}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => void applyFilters()}
+            disabled={isApplying}
+          >
             {isApplying ? "Applying..." : "Apply filters"}
           </Button>
         </div>

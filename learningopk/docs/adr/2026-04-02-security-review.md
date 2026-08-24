@@ -15,12 +15,12 @@ However, this review identified **4 CRITICAL**, **6 HIGH**, **9 MEDIUM**, and **
 
 ### Risk Summary
 
-| Severity | Count | Status |
-|----------|-------|--------|
-| CRITICAL | 4 | Requires immediate fix |
-| HIGH | 6 | Fix before next production deploy |
-| MEDIUM | 9 | Fix within current sprint |
-| LOW | 5 | Fix during next refactor cycle |
+| Severity | Count | Status                            |
+| -------- | ----- | --------------------------------- |
+| CRITICAL | 4     | Requires immediate fix            |
+| HIGH     | 6     | Fix before next production deploy |
+| MEDIUM   | 9     | Fix within current sprint         |
+| LOW      | 5     | Fix during next refactor cycle    |
 
 ---
 
@@ -36,12 +36,14 @@ However, this review identified **4 CRITICAL**, **6 HIGH**, **9 MEDIUM**, and **
 A grep across the entire codebase for `helmet`, `Content-Security-Policy`, and `X-Frame-Options` returns zero results.
 
 **Exploitation Scenario**: Without these headers:
+
 - **Clickjacking**: An attacker can embed the application in an iframe on a malicious site and trick admins into performing actions (changing roles, suspending users).
 - **MIME sniffing**: Uploaded images could be reinterpreted as HTML/JavaScript by browsers.
 - **No HSTS**: Users can be downgraded from HTTPS to HTTP via man-in-the-middle attacks.
 - **No CSP**: If any XSS vector exists (even via a dependency), there is no secondary defense layer.
 
 **Recommended Fix**:
+
 ```bash
 pnpm add helmet
 ```
@@ -95,6 +97,7 @@ For the AI chat endpoint specifically, `chatInputSchema` allows `messages` with 
 **Exploitation Scenario**: An attacker sends a multi-megabyte JSON payload to any POST endpoint. Even at the 100kb default, 40 messages x 4000 chars is legitimately allowed by the Zod schema, so the real concern is that future changes or misconfigurations could remove the limit. Without an explicit configuration, this is fragile.
 
 **Recommended Fix**:
+
 ```typescript
 // server.ts:37 - Set explicit, conservative body size limit
 app.use(express.json({ limit: "256kb" }));
@@ -112,6 +115,7 @@ app.use("/api/auth", express.json({ limit: "64kb" }), authRouter);
 **Severity**: CRITICAL
 
 **Description**: The Zod environment schema provides default values for MinIO credentials:
+
 ```typescript
 MINIO_ACCESS_KEY: z.string().min(1).default("minioadmin"),
 MINIO_SECRET_KEY: z.string().min(1).default("minioadmin123"),
@@ -120,12 +124,14 @@ MINIO_SECRET_KEY: z.string().min(1).default("minioadmin123"),
 If the `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` environment variables are not explicitly set in production, the application will silently use well-known default credentials. This is the MinIO root user password that ships with every MinIO Docker image.
 
 **Exploitation Scenario**: If the production deployment fails to set these env vars (misconfigured container, missing .env file, incomplete CI/CD), the backend will connect to MinIO using `minioadmin/minioadmin123`. If the MinIO instance is accessible from the internet (common in cloud deployments), any attacker can:
+
 1. Read/download all uploaded images (profile photos, chapter media)
 2. Upload arbitrary files to the bucket
 3. Delete all stored media
 4. Potentially execute server-side attacks if MinIO has known vulnerabilities
 
 **Recommended Fix**:
+
 ```typescript
 // lib/env.ts - Remove defaults for credentials; require them explicitly
 const schema = z.object({
@@ -133,10 +139,10 @@ const schema = z.object({
   MINIO_ENDPOINT: z.string().min(1).default("localhost"),
   MINIO_PORT: z.string().regex(/^\d+$/).default("9000"),
   MINIO_USE_SSL: z.enum(["true", "false"]).default("false"),
-  MINIO_ACCESS_KEY: z.string().min(1),        // No default - MUST be set
-  MINIO_SECRET_KEY: z.string().min(8),         // No default, enforce min length
+  MINIO_ACCESS_KEY: z.string().min(1), // No default - MUST be set
+  MINIO_SECRET_KEY: z.string().min(8), // No default, enforce min length
   MINIO_BUCKET: z.string().min(1).default("learningo-media"),
-  MINIO_PUBLIC_URL: z.string().url(),          // No default - MUST be set
+  MINIO_PUBLIC_URL: z.string().url(), // No default - MUST be set
   // ...
 });
 ```
@@ -154,24 +160,25 @@ For local development, document the values in `.env.example` and ensure `docker-
 
 ```typescript
 // admin.ts:616-620
-ilike(adminAuditLogs.action, `%${searchTerm}%`),
-ilike(adminAuditLogs.target, `%${searchTerm}%`),
-ilike(adminAuditLogs.message, `%${searchTerm}%`),
-ilike(adminAuditLogs.actorName, `%${searchTerm}%`)
+(ilike(adminAuditLogs.action, `%${searchTerm}%`),
+  ilike(adminAuditLogs.target, `%${searchTerm}%`),
+  ilike(adminAuditLogs.message, `%${searchTerm}%`),
+  ilike(adminAuditLogs.actorName, `%${searchTerm}%`));
 
 // admin.ts:813-814
-ilike(users.name, `%${searchTerm}%`),
-ilike(users.email, `%${searchTerm}%`)
+(ilike(users.name, `%${searchTerm}%`), ilike(users.email, `%${searchTerm}%`));
 ```
 
 While Drizzle ORM **does** parameterize these values (preventing SQL injection), the LIKE pattern characters `%` and `_` within the user input are **not escaped**. This is not SQL injection, but it is a LIKE pattern injection.
 
 **Exploitation Scenario**:
+
 1. **Performance attack**: An admin (or compromised admin account) searches for `%%%%%%%%%%%%%%%%%%%%%` which creates a worst-case pattern for PostgreSQL's LIKE optimizer, potentially causing full table scans and high CPU usage.
 2. **Information disclosure via wildcard**: Searching for `_@gmail.com` matches all single-character-prefix Gmail addresses, enabling targeted user enumeration.
 3. **ReDoS-adjacent**: While PostgreSQL's `ILIKE` is not regex-based, deeply nested wildcard patterns can cause significantly slower query execution on large tables.
 
 **Recommended Fix**:
+
 ```typescript
 // lib/sql-utils.ts
 export const escapeLikePattern = (input: string): string =>
@@ -191,9 +198,10 @@ const searchPredicate = or(
 
 // In listAdminUsers:
 const escaped = escapeLikePattern(searchTerm);
-const searchPredicate = searchTerm.length > 0
-  ? or(ilike(users.name, `%${escaped}%`), ilike(users.email, `%${escaped}%`))
-  : undefined;
+const searchPredicate =
+  searchTerm.length > 0
+    ? or(ilike(users.name, `%${escaped}%`), ilike(users.email, `%${escaped}%`))
+    : undefined;
 ```
 
 ---
@@ -210,6 +218,7 @@ Better-Auth may set `SameSite=Lax` by default on session cookies, which provides
 **Exploitation Scenario**: An attacker crafts a page with a hidden form that POST-submits to `/api/admin/users/:id/role` (or any state-changing endpoint). If an admin visits the page while logged in, the browser sends session cookies automatically. Without CSRF protection, the form submission changes a user's role to admin.
 
 **Recommended Fix**:
+
 ```typescript
 // In lib/auth.ts - Explicitly configure session cookie attributes
 export const auth = betterAuth({
@@ -217,22 +226,23 @@ export const auth = betterAuth({
   session: {
     cookieCache: {
       enabled: true,
-      maxAge: 5 * 60  // 5 minutes
-    }
+      maxAge: 5 * 60, // 5 minutes
+    },
   },
   advanced: {
     cookiePrefix: "learningo",
     defaultCookieAttributes: {
       httpOnly: true,
-      secure: true,          // Only send over HTTPS
-      sameSite: "strict",    // Block all cross-origin requests
-      path: "/"
-    }
-  }
+      secure: true, // Only send over HTTPS
+      sameSite: "strict", // Block all cross-origin requests
+      path: "/",
+    },
+  },
 });
 ```
 
 If `SameSite=Strict` is too restrictive for UX (e.g., links from email), use `Lax` and additionally implement:
+
 ```typescript
 // Custom CSRF middleware using the Origin header check
 const csrfProtection: RequestHandler = (req, res, next) => {
@@ -259,6 +269,7 @@ app.use(csrfProtection);
 **Severity**: HIGH
 
 **Description**: The session middleware uses a TypeScript type assertion to cast the request object:
+
 ```typescript
 (req as AuthenticatedRequest).session = session;
 ```
@@ -270,6 +281,7 @@ This pattern is repeated in **every single route handler** across admin.ts, foru
 **Exploitation Scenario**: During a refactor, a developer removes `requireSession` from a route but forgets to update the handler. The application crashes with an uncaught exception on the first request, potentially revealing internal stack traces if there's no global error handler.
 
 **Recommended Fix**:
+
 ```typescript
 // lib/session.ts - Add a runtime assertion helper
 export function assertSession(req: Request): AuthenticatedRequest {
@@ -295,10 +307,12 @@ adminRouter.post("/notifications", requireSession, async (req, res) => {
 **Severity**: HIGH
 
 **Description**: Rate limiting is only implemented for:
+
 - AI chat: 20 requests/hour per user (`ai-guardrails.ts:3`)
 - Forum mutations: 60 requests/hour per user (`ai-guardrails.ts:6`)
 
 All other endpoints have **zero rate limiting**:
+
 - Authentication endpoints (`/api/auth/*`) - including login, signup
 - Admin endpoints (59 route handlers)
 - Quiz submission (`/api/quiz/submit`)
@@ -309,11 +323,13 @@ All other endpoints have **zero rate limiting**:
 - Health check (`/api/health`)
 
 **Exploitation Scenario**:
+
 1. **Credential stuffing**: An attacker brute-forces login credentials with no rate limit on `/api/auth/sign-in/email`.
 2. **Resource exhaustion**: Thousands of quiz submissions or progress events flood the database.
 3. **Admin panel abuse**: A compromised admin account can make unlimited requests.
 
 **Recommended Fix**:
+
 ```bash
 pnpm add express-rate-limit
 ```
@@ -323,23 +339,23 @@ pnpm add express-rate-limit
 import rateLimit from "express-rate-limit";
 
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
-  max: 300,                    // 300 requests per window per IP
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300, // 300 requests per window per IP
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Too many requests, please try again later." }
+  message: { error: "Too many requests, please try again later." },
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,                     // 20 auth attempts per 15 minutes
-  message: { error: "Too many authentication attempts." }
+  max: 20, // 20 auth attempts per 15 minutes
+  message: { error: "Too many authentication attempts." },
 });
 
 const uploadLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 30,                     // 30 uploads per hour
-  message: { error: "Upload rate limit exceeded." }
+  max: 30, // 30 uploads per hour
+  message: { error: "Upload rate limit exceeded." },
 });
 
 app.use(globalLimiter);
@@ -356,6 +372,7 @@ app.use("/api/admin/content/chapters/:chapterId/summary-media", uploadLimiter);
 **Severity**: HIGH
 
 **Description**: The `/chapters/:chapterId/media/confirm` endpoint accepts a user-supplied `objectKey` in the request body:
+
 ```typescript
 const { objectKey, mimeType, fileSize } = parsedBody.data;
 // ...
@@ -369,14 +386,16 @@ Additionally, `buildPublicObjectUrl` encodes path segments but does not validate
 **Exploitation Scenario**: An admin user obtains a presigned URL for chapter 5, then calls `/chapters/5/media/confirm` with `objectKey: "profile-images/victim-user-id/photo.jpg"`. The media record is created pointing to the victim's profile image, which could later be deleted via the media deletion endpoint.
 
 **Recommended Fix**:
+
 ```typescript
 // routes/chapter-media.ts - Validate objectKey format in confirm endpoint
-const CHAPTER_SUMMARY_KEY_PATTERN = /^chapter-summaries\/\d+\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+\.(jpg|png|webp|gif)$/;
+const CHAPTER_SUMMARY_KEY_PATTERN =
+  /^chapter-summaries\/\d+\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+\.(jpg|png|webp|gif)$/;
 
 const confirmUploadBodySchema = z.object({
   objectKey: z.string().min(1).regex(CHAPTER_SUMMARY_KEY_PATTERN, "Invalid object key format"),
   mimeType: z.enum(SUPPORTED_IMAGE_MIME_TYPES),
-  fileSize: z.number().int().positive()
+  fileSize: z.number().int().positive(),
 });
 
 // Additionally, verify the objectKey contains the correct chapterId:
@@ -414,14 +433,17 @@ message: error instanceof Error ? error.message : "Board delete failed",
 PostgreSQL and Node.js error messages can contain table names, column names, constraint names, connection strings, and stack traces.
 
 **Exploitation Scenario**: An attacker triggers a database error (e.g., by submitting edge-case data that causes a constraint violation) and receives a response like:
+
 ```json
 {
   "error": "duplicate key value violates unique constraint \"user_progress_user_id_chapter_id_key\" (user_id=abc, chapter_id=123)"
 }
 ```
+
 This reveals database table structure, constraint names, and potentially other users' IDs.
 
 **Recommended Fix**:
+
 ```typescript
 // For all 500-level error responses, use generic messages:
 catch (error) {
@@ -448,6 +470,7 @@ catch (error) {
 Additionally, there is no `process.on('unhandledRejection')` handler for the main application (only `SIGINT`/`SIGTERM` handlers exist), and no centralized error logging.
 
 **Recommended Fix**:
+
 ```typescript
 // server.ts - Add after all route registrations
 import type { ErrorRequestHandler } from "express";
@@ -480,9 +503,10 @@ process.on("unhandledRejection", (reason) => {
 **Severity**: MEDIUM
 
 **Description**: The auth router is mounted **before** `express.json()`:
+
 ```typescript
-app.use("/api/auth", authRouter);    // Line 36 - BEFORE json parser
-app.use(express.json());              // Line 37
+app.use("/api/auth", authRouter); // Line 36 - BEFORE json parser
+app.use(express.json()); // Line 37
 ```
 
 This is intentional (Better-Auth uses `toNodeHandler` which handles its own parsing), but it means Better-Auth's request parsing is not governed by the same body size limits as the rest of the application. If Better-Auth's internal parsing has different limits or configurations, this could be exploited.
@@ -494,7 +518,7 @@ This is intentional (Better-Auth uses `toNodeHandler` which handles its own pars
 app.use("/api/auth", express.raw({ limit: "64kb", type: "*/*" }), authRouter);
 ```
 
-*Note: Test this carefully - Better-Auth may need specific content-type handling.*
+_Note: Test this carefully - Better-Auth may need specific content-type handling._
 
 ---
 
@@ -504,6 +528,7 @@ app.use("/api/auth", express.raw({ limit: "64kb", type: "*/*" }), authRouter);
 **Severity**: MEDIUM
 
 **Description**: Admin authorization is implemented as a function that must be manually called inside every endpoint handler:
+
 ```typescript
 const authedReq = req as AuthenticatedRequest;
 if (!(await requireAdminRole(authedReq, res))) {
@@ -516,6 +541,7 @@ This pattern is repeated 55 times across 59 admin endpoints. The 4 remaining end
 However, this pattern is fragile. Every new endpoint requires the developer to remember to add the admin check. A single omission creates a privilege escalation vulnerability.
 
 **Recommended Fix**: Convert to a router-level middleware:
+
 ```typescript
 // lib/admin.ts - Create as middleware
 export const requireAdmin: RequestHandler = async (req, res, next) => {
@@ -553,21 +579,22 @@ adminRouter.get("/notifications", async (req, res) => { ... });
 **Exploitation Scenario**: An attacker automates login attempts against known email addresses (enumerated from forum posts or other sources) with common Pakistani passwords. Without lockout, they can try thousands of combinations per hour.
 
 **Recommended Fix**:
+
 ```typescript
 // lib/auth.ts - Add rate limiting and lockout configuration
 export const auth = betterAuth({
   // ...existing config
   rateLimit: {
     enabled: true,
-    window: 60,        // 60 second window
-    max: 10            // 10 attempts per window
+    window: 60, // 60 second window
+    max: 10, // 10 attempts per window
   },
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
     maxPasswordLength: 128,
-    minPasswordLength: 8
-  }
+    minPasswordLength: 8,
+  },
 });
 ```
 
@@ -581,6 +608,7 @@ Also apply the auth-specific rate limiter from HIGH-03.
 **Severity**: MEDIUM
 
 **Description**: The Mistral API key has a default value of `"not-configured"`:
+
 ```typescript
 MISTRAL_API_KEY: z.string().min(1).optional().default("not-configured"),
 ```
@@ -590,6 +618,7 @@ While the AI chat endpoint checks for this value and returns a 503, this means t
 If a developer accidentally removes the runtime check in `ai-chat.ts:216`, the application would send `"not-configured"` as an API key to Mistral, which would log the attempt and potentially flag the account.
 
 **Recommended Fix**:
+
 ```typescript
 // Make it truly optional with no default, or use a union
 MISTRAL_API_KEY: z.string().min(1).optional(),
@@ -609,15 +638,16 @@ if (!env.MISTRAL_API_KEY) {
 **Severity**: MEDIUM
 
 **Description**: The forum thread creation schema validates body with `.min(10)` but no `.max()`:
+
 ```typescript
 const createThreadSchema = z.object({
   title: z.string().trim().min(5).max(160),
-  body: z.string().trim().min(10),          // No max!
+  body: z.string().trim().min(10), // No max!
   // ...
 });
 
 const replySchema = z.object({
-  body: z.string().trim().min(2),            // No max!
+  body: z.string().trim().min(2), // No max!
   // ...
 });
 ```
@@ -625,15 +655,16 @@ const replySchema = z.object({
 **Exploitation Scenario**: An attacker creates forum threads or replies with multi-megabyte bodies, consuming database storage and causing performance issues when rendering threads.
 
 **Recommended Fix**:
+
 ```typescript
 const createThreadSchema = z.object({
   title: z.string().trim().min(5).max(160),
-  body: z.string().trim().min(10).max(20000),  // ~20KB max
+  body: z.string().trim().min(10).max(20000), // ~20KB max
   // ...
 });
 
 const replySchema = z.object({
-  body: z.string().trim().min(2).max(10000),    // ~10KB max
+  body: z.string().trim().min(2).max(10000), // ~10KB max
   // ...
 });
 ```
@@ -646,11 +677,12 @@ const replySchema = z.object({
 **Severity**: MEDIUM
 
 **Description**: The `consumeRateLimit` function increments the counter before checking if the limit is exceeded:
+
 ```typescript
-const count = await redis.incr(key);  // Increment first
+const count = await redis.incr(key); // Increment first
 // ...
 return {
-  allowed: count <= maxRequests,       // Then check
+  allowed: count <= maxRequests, // Then check
   // ...
 };
 ```
@@ -660,6 +692,7 @@ This means if a user is at their limit (20/20 for AI chat), the next request inc
 More importantly, the rate limit is consumed even for requests that fail validation before reaching the rate limit check. In `ai-chat.ts`, the rate limit is checked after message parsing and moderation, so this is mostly fine. But in `forum.ts:177`, the rate limit check happens after Zod validation but before the actual operation, meaning failed operations still count against the limit.
 
 **Recommended Fix**: Consider using Redis `MULTI/EXEC` or Lua script for atomic check-and-increment:
+
 ```typescript
 const consumeRateLimit = async (
   keyPrefix: string,
@@ -684,16 +717,16 @@ const consumeRateLimit = async (
     return {count, redis.call('TTL', KEYS[1])}
   `;
 
-  const [count, ttl] = await redis.eval(luaScript, {
+  const [count, ttl] = (await redis.eval(luaScript, {
     keys: [key],
-    arguments: [String(maxRequests), String(windowSeconds)]
-  }) as [number, number];
+    arguments: [String(maxRequests), String(windowSeconds)],
+  })) as [number, number];
 
   return {
     allowed: count <= maxRequests,
     limit: maxRequests,
     remaining: Math.max(0, maxRequests - count),
-    resetSeconds: ttl > 0 ? ttl : windowSeconds
+    resetSeconds: ttl > 0 ? ttl : windowSeconds,
   };
 };
 ```
@@ -706,6 +739,7 @@ const consumeRateLimit = async (
 **Severity**: MEDIUM
 
 **Description**: The `persistAuditLog` function awaits the insert but doesn't catch errors:
+
 ```typescript
 const persistAuditLog = async (input: PersistAuditLogInput): Promise<void> => {
   await db.insert(adminAuditLogs).values({ ... });
@@ -717,6 +751,7 @@ If the audit log insert fails (disk full, connection timeout, schema mismatch), 
 **Exploitation Scenario**: A malicious insider performs admin actions during a period of database pressure. The primary action (role change, user suspension) succeeds, but the audit log write fails. There is no record of the action.
 
 **Recommended Fix**:
+
 ```typescript
 const persistAuditLog = async (input: PersistAuditLogInput): Promise<void> => {
   try {
@@ -727,13 +762,13 @@ const persistAuditLog = async (input: PersistAuditLogInput): Promise<void> => {
       status: input.status,
       message: input.message,
       actorId: input.actorId,
-      actorName: input.actorName
+      actorName: input.actorName,
     });
   } catch (error) {
     // Log to stderr for external log aggregation - never silently drop audit events
     console.error("AUDIT LOG WRITE FAILURE:", {
       ...input,
-      error: error instanceof Error ? error.message : "Unknown error"
+      error: error instanceof Error ? error.message : "Unknown error",
     });
     // Optionally: Push to a dead letter queue for later replay
   }
@@ -752,6 +787,7 @@ const persistAuditLog = async (input: PersistAuditLogInput): Promise<void> => {
 **Exploitation Scenario**: An attacker probes `/api/health` to determine the backend's infrastructure health. During a partial outage, the error message might reveal PostgreSQL connection strings, Redis hostnames, or timeout details. This information aids in targeted attacks.
 
 **Recommended Fix**: Create two endpoints - a public liveness probe and a protected detailed health check:
+
 ```typescript
 // Public - returns only status code, no details
 healthRouter.get("/live", (_req, res) => {
@@ -779,6 +815,7 @@ Or, if using a load balancer, restrict access via network policy rather than aut
 **Severity**: MEDIUM
 
 **Description**: MinIO SSL is disabled by default:
+
 ```typescript
 MINIO_USE_SSL: z.enum(["true", "false"]).default("false"),
 ```
@@ -786,6 +823,7 @@ MINIO_USE_SSL: z.enum(["true", "false"]).default("false"),
 If the production deployment doesn't set `MINIO_USE_SSL=true`, all communication between the backend and MinIO (including uploading user profile images) happens over unencrypted HTTP.
 
 **Recommended Fix**: Remove the default or add a startup warning:
+
 ```typescript
 MINIO_USE_SSL: z.enum(["true", "false"]),  // No default - must be explicit
 ```
@@ -798,12 +836,14 @@ MINIO_USE_SSL: z.enum(["true", "false"]),  // No default - must be explicit
 **Severity**: LOW
 
 **Description**: The profanity, harassment, and self-harm detection uses simple regex word matching:
+
 ```typescript
 const profanityPattern = /\b(fuck|fucking|shit|bitch|bastard|asshole|motherfucker)\b/i;
 const harassmentPattern = /\b(stupid|idiot|moron|loser|shut up|hate you)\b/i;
 ```
 
 These are trivially bypassed with:
+
 - Character substitution: `f*ck`, `sh1t`, `b!tch`
 - Zero-width characters: `f​u​c​k` (with zero-width spaces)
 - Unicode homoglyphs: `stupi\u0501`
@@ -813,6 +853,7 @@ These are trivially bypassed with:
 **Exploitation Scenario**: A user posts harmful content to forum threads that passes the filter but is clearly offensive to human readers.
 
 **Recommended Fix**: This is acknowledged as a baseline filter. For production, consider:
+
 1. Adding a word normalization step before pattern matching (strip accents, normalize unicode, collapse repeated chars)
 2. Using an external moderation API (OpenAI Moderation, Perspective API) for higher-fidelity detection
 3. Keeping the local filter as a fast first-pass and queueing borderline content for review
@@ -827,6 +868,7 @@ These are trivially bypassed with:
 **Description**: The vote endpoint validates the reply exists but does not check if the voter is the reply author. A user can upvote their own replies to inflate their score.
 
 **Recommended Fix**:
+
 ```typescript
 // In ForumService.voteReply:
 async voteReply(input: VoteInput) {
@@ -851,6 +893,7 @@ async voteReply(input: VoteInput) {
 **Severity**: LOW
 
 **Description**: Throughout the codebase, caught errors are logged with `console.error` including the full error object:
+
 ```typescript
 console.error("Session retrieval error:", error);
 console.error("AI rate limit check failed:", error);
@@ -860,11 +903,12 @@ console.error("Unexpected error in createThread:", error);
 In production, the full error object can contain database connection strings, query text, user data, and other sensitive information. If logs are sent to a third-party logging service, this data could be exposed.
 
 **Recommended Fix**: Use a structured logger that redacts sensitive fields:
+
 ```typescript
 import { createLogger } from "./lib/logger.js"; // Custom or pino/winston
 
 const logger = createLogger({
-  redact: ["password", "token", "secret", "authorization"]
+  redact: ["password", "token", "secret", "authorization"],
 });
 
 // Replace console.error:
@@ -881,6 +925,7 @@ logger.error({ err: error, context: "session-retrieval" }, "Session retrieval fa
 **Description**: There is no request ID generation middleware. When investigating security incidents, it's impossible to correlate a specific client request with its server-side log entries, database queries, and background jobs.
 
 **Recommended Fix**:
+
 ```typescript
 import { randomUUID } from "node:crypto";
 
@@ -898,18 +943,20 @@ app.use((req, _res, next) => {
 **Severity**: LOW
 
 **Description**: The mock exam params schema uses a raw `parseInt` transform without NaN checking:
+
 ```typescript
 const mockExamParamsSchema = z.object({
-  id: z.string().transform((val) => parseInt(val, 10))
+  id: z.string().transform((val) => parseInt(val, 10)),
 });
 ```
 
 If `val` is `"abc"`, `parseInt("abc", 10)` returns `NaN`. This `NaN` is then passed to database queries, which may behave unexpectedly.
 
 **Recommended Fix**:
+
 ```typescript
 const mockExamParamsSchema = z.object({
-  id: z.coerce.number().int().positive()  // Consistent with other schemas
+  id: z.coerce.number().int().positive(), // Consistent with other schemas
 });
 ```
 
@@ -919,29 +966,30 @@ const mockExamParamsSchema = z.object({
 
 These areas demonstrate strong security practices and should be maintained:
 
-| Area | Evidence | Assessment |
-|------|----------|------------|
-| **Input Validation** | Zod schemas on all 59+ endpoints with strict types | Excellent |
-| **SQL Injection Prevention** | 100% Drizzle ORM usage; all `sql` template literals use parameterized values | Excellent |
-| **Session Management** | Better-Auth handles session tokens; `requireSession` checks suspension status | Good |
-| **Admin Authorization Coverage** | All 59 admin endpoints have `requireAdminRole` check (verified via grep) | Good |
-| **Self-Mutation Prevention** | Admin cannot change own role (`admin.ts:1648`) or suspend self (`admin.ts:1751`) | Good |
-| **File Upload Validation** | Multer with MIME type whitelist, file size limits, memory storage | Good |
-| **Object Key Sanitization** | `sanitizePathSegment` in minio.ts strips dangerous characters | Good |
-| **Secrets in .gitignore** | Both `backend/.env` and `frontend/.env.local` are gitignored | Good |
-| **Environment Validation** | All env vars validated via Zod at startup; app fails fast on misconfiguration | Good |
-| **AI Content Moderation** | Profanity/harassment/spam detection on AI and forum inputs | Baseline |
-| **Audit Logging** | Comprehensive audit trail for all admin actions with actor, target, status | Good |
-| **CORS Configuration** | Single origin with credentials; exposed headers explicitly listed | Good |
-| **User Suspension** | Suspended users are blocked at the session middleware level | Good |
-| **Optimistic Concurrency** | Moderation flag resolve uses `WHERE status = 'open'` to prevent double-resolve | Good |
-| **Error Classification** | Custom `HttpError` hierarchy with status codes and error codes | Good |
+| Area                             | Evidence                                                                         | Assessment |
+| -------------------------------- | -------------------------------------------------------------------------------- | ---------- |
+| **Input Validation**             | Zod schemas on all 59+ endpoints with strict types                               | Excellent  |
+| **SQL Injection Prevention**     | 100% Drizzle ORM usage; all `sql` template literals use parameterized values     | Excellent  |
+| **Session Management**           | Better-Auth handles session tokens; `requireSession` checks suspension status    | Good       |
+| **Admin Authorization Coverage** | All 59 admin endpoints have `requireAdminRole` check (verified via grep)         | Good       |
+| **Self-Mutation Prevention**     | Admin cannot change own role (`admin.ts:1648`) or suspend self (`admin.ts:1751`) | Good       |
+| **File Upload Validation**       | Multer with MIME type whitelist, file size limits, memory storage                | Good       |
+| **Object Key Sanitization**      | `sanitizePathSegment` in minio.ts strips dangerous characters                    | Good       |
+| **Secrets in .gitignore**        | Both `backend/.env` and `frontend/.env.local` are gitignored                     | Good       |
+| **Environment Validation**       | All env vars validated via Zod at startup; app fails fast on misconfiguration    | Good       |
+| **AI Content Moderation**        | Profanity/harassment/spam detection on AI and forum inputs                       | Baseline   |
+| **Audit Logging**                | Comprehensive audit trail for all admin actions with actor, target, status       | Good       |
+| **CORS Configuration**           | Single origin with credentials; exposed headers explicitly listed                | Good       |
+| **User Suspension**              | Suspended users are blocked at the session middleware level                      | Good       |
+| **Optimistic Concurrency**       | Moderation flag resolve uses `WHERE status = 'open'` to prevent double-resolve   | Good       |
+| **Error Classification**         | Custom `HttpError` hierarchy with status codes and error codes                   | Good       |
 
 ---
 
 ## Remediation Priority
 
 ### Phase 1 - Immediate (This Week)
+
 1. **CRITICAL-01**: Install and configure Helmet
 2. **CRITICAL-02**: Set explicit JSON body size limit
 3. **CRITICAL-03**: Remove MinIO credential defaults
@@ -949,12 +997,14 @@ These areas demonstrate strong security practices and should be maintained:
 5. **HIGH-06**: Add global error handler
 
 ### Phase 2 - Before Next Deploy
+
 6. **HIGH-01**: Configure CSRF protection (SameSite + Origin check)
 7. **HIGH-03**: Add global and auth-specific rate limiting
 8. **HIGH-05**: Sanitize all 500-level error responses
 9. **HIGH-04**: Validate presigned upload object key format
 
 ### Phase 3 - Current Sprint
+
 10. **HIGH-02**: Add runtime session assertion helper
 11. **MEDIUM-02**: Refactor admin check to router-level middleware
 12. **MEDIUM-03**: Add login attempt limiting
@@ -962,6 +1012,7 @@ These areas demonstrate strong security practices and should be maintained:
 14. **MEDIUM-09**: Require explicit MinIO SSL configuration
 
 ### Phase 4 - Next Refactor
+
 15. **MEDIUM-01**: Review Better-Auth body parsing limits
 16. **MEDIUM-04**: Make Mistral API key truly optional
 17. **MEDIUM-06**: Implement atomic rate limit check
@@ -973,35 +1024,35 @@ These areas demonstrate strong security practices and should be maintained:
 
 ## Appendix: Files Reviewed
 
-| File | Lines | Reviewed |
-|------|-------|----------|
-| `lib/auth.ts` | 48 | Full |
-| `lib/session.ts` | 72 | Full |
-| `lib/admin.ts` | 25 | Full |
-| `lib/env.ts` | 29 | Full |
-| `lib/errors/index.ts` | 90 | Full |
-| `lib/ai-guardrails.ts` | 141 | Full |
-| `lib/minio.ts` | 198 | Full |
-| `lib/redis.ts` | 27 | Full |
-| `lib/mistral.ts` | 98 | Full |
-| `lib/queue.ts` | 79 | Full |
-| `server.ts` | 81 | Full |
-| `middleware/image-upload.ts` | 98 | Full |
-| `routes/admin.ts` | 5,371 | Sampled (~2,000 lines) + grep for all route definitions and admin checks |
-| `routes/forum.ts` | 307 | Full |
-| `routes/ai-chat.ts` | 416 | Full |
-| `routes/quiz.ts` | 57 | Full |
-| `routes/chapter-media.ts` | 418 | Full |
-| `routes/profile.ts` | 114 | Full |
-| `routes/progress.ts` | 102 | Full |
-| `routes/mock-exams.ts` | 314 | Full |
-| `routes/auth.ts` | 8 | Full |
-| `routes/learn.ts` | 162 | Full |
-| `routes/health.ts` | 28 | Full |
-| `services/forum.service.ts` | 377 | Full |
-| `workers/analytics.worker.ts` | 33 | Full |
-| `workers/email.worker.ts` | 27 | Full |
-| `workers/cleanup.worker.ts` | 27 | Full |
-| `lib/db/schema.ts` | 522 | Partial (auth tables) |
+| File                          | Lines | Reviewed                                                                 |
+| ----------------------------- | ----- | ------------------------------------------------------------------------ |
+| `lib/auth.ts`                 | 48    | Full                                                                     |
+| `lib/session.ts`              | 72    | Full                                                                     |
+| `lib/admin.ts`                | 25    | Full                                                                     |
+| `lib/env.ts`                  | 29    | Full                                                                     |
+| `lib/errors/index.ts`         | 90    | Full                                                                     |
+| `lib/ai-guardrails.ts`        | 141   | Full                                                                     |
+| `lib/minio.ts`                | 198   | Full                                                                     |
+| `lib/redis.ts`                | 27    | Full                                                                     |
+| `lib/mistral.ts`              | 98    | Full                                                                     |
+| `lib/queue.ts`                | 79    | Full                                                                     |
+| `server.ts`                   | 81    | Full                                                                     |
+| `middleware/image-upload.ts`  | 98    | Full                                                                     |
+| `routes/admin.ts`             | 5,371 | Sampled (~2,000 lines) + grep for all route definitions and admin checks |
+| `routes/forum.ts`             | 307   | Full                                                                     |
+| `routes/ai-chat.ts`           | 416   | Full                                                                     |
+| `routes/quiz.ts`              | 57    | Full                                                                     |
+| `routes/chapter-media.ts`     | 418   | Full                                                                     |
+| `routes/profile.ts`           | 114   | Full                                                                     |
+| `routes/progress.ts`          | 102   | Full                                                                     |
+| `routes/mock-exams.ts`        | 314   | Full                                                                     |
+| `routes/auth.ts`              | 8     | Full                                                                     |
+| `routes/learn.ts`             | 162   | Full                                                                     |
+| `routes/health.ts`            | 28    | Full                                                                     |
+| `services/forum.service.ts`   | 377   | Full                                                                     |
+| `workers/analytics.worker.ts` | 33    | Full                                                                     |
+| `workers/email.worker.ts`     | 27    | Full                                                                     |
+| `workers/cleanup.worker.ts`   | 27    | Full                                                                     |
+| `lib/db/schema.ts`            | 522   | Partial (auth tables)                                                    |
 
 **Total lines reviewed**: ~8,800+

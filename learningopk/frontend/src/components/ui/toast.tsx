@@ -1,7 +1,15 @@
 "use client";
 
 import { CheckCircle2, CircleAlert, Info, TriangleAlert, X } from "lucide-react";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -33,14 +41,14 @@ const toneClassName: Record<ToastTone, string> = {
   info: "border-blue-300 bg-blue-50 text-blue-900",
   success: "border-emerald-300 bg-emerald-50 text-emerald-900",
   warning: "border-amber-300 bg-amber-50 text-amber-900",
-  error: "border-rose-300 bg-rose-50 text-rose-900"
+  error: "border-rose-300 bg-rose-50 text-rose-900",
 };
 
 const toneIcon: Record<ToastTone, ReactNode> = {
   info: <Info className="h-4 w-4" aria-hidden />,
   success: <CheckCircle2 className="h-4 w-4" aria-hidden />,
   warning: <TriangleAlert className="h-4 w-4" aria-hidden />,
-  error: <CircleAlert className="h-4 w-4" aria-hidden />
+  error: <CircleAlert className="h-4 w-4" aria-hidden />,
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -58,15 +66,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         title: toast.title,
         description: toast.description,
         tone: toast.tone ?? "info",
-        durationMs: toast.durationMs ?? 4200
-      }
+        durationMs: toast.durationMs ?? 4200,
+      },
     ]);
   }, []);
 
   const contextValue = useMemo(
     () => ({
       pushToast,
-      dismissToast
+      dismissToast,
     }),
     [dismissToast, pushToast]
   );
@@ -121,7 +129,9 @@ function ToastView({ toast, onDismiss }: ToastViewProps) {
         <span className="mt-0.5">{toneIcon[toast.tone]}</span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">{toast.title}</p>
-          {toast.description ? <p className="mt-1 text-xs opacity-90">{toast.description}</p> : null}
+          {toast.description ? (
+            <p className="mt-1 text-xs opacity-90">{toast.description}</p>
+          ) : null}
         </div>
         <button
           type="button"
@@ -135,4 +145,3 @@ function ToastView({ toast, onDismiss }: ToastViewProps) {
     </div>
   );
 }
-

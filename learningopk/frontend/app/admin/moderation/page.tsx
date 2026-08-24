@@ -12,13 +12,13 @@ export default async function AdminModerationPage() {
     page: 1,
     pageSize: 10,
     status: "open",
-    cookieHeader
+    cookieHeader,
   }).catch(() => ({
     entries: [],
     total: 0,
     page: 1,
     pageSize: 10,
-    hasMore: false
+    hasMore: false,
   }));
 
   return (
@@ -28,12 +28,18 @@ export default async function AdminModerationPage() {
         title="Flagging & Moderation"
         subtitle="Resolve reported content and review outcomes by status and target type."
         actions={
-          <Link href="/admin" className="text-sm font-medium text-text-primary underline underline-offset-4">
+          <Link
+            href="/admin"
+            className="text-sm font-medium text-text-primary underline underline-offset-4"
+          >
             Back to admin
           </Link>
         }
       />
-      <AdminModerationPanel initialEntries={moderationPayload.entries} initialTotal={moderationPayload.total} />
+      <AdminModerationPanel
+        initialEntries={moderationPayload.entries}
+        initialTotal={moderationPayload.total}
+      />
     </div>
   );
 }

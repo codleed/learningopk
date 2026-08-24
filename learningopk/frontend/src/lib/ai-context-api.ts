@@ -22,7 +22,7 @@ export async function getAiContext(cookieHeader?: string): Promise<AiContextData
     method: "GET",
     credentials: "include",
     cache: "no-store",
-    headers
+    headers,
   });
 
   if (!response.ok) {
@@ -42,7 +42,7 @@ export async function updateAiContext(update: {
     method: "PATCH",
     credentials: "include",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(update)
+    body: JSON.stringify(update),
   });
 
   if (!response.ok) {
@@ -54,10 +54,13 @@ export async function updateAiContext(update: {
 }
 
 export async function removeWeakTopic(topic: string): Promise<void> {
-  const response = await fetch(`${backendUrl}/api/ai/context/weak-topics/${encodeURIComponent(topic)}`, {
-    method: "DELETE",
-    credentials: "include"
-  });
+  const response = await fetch(
+    `${backendUrl}/api/ai/context/weak-topics/${encodeURIComponent(topic)}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  );
 
   if (!response.ok) {
     throw new Error(`Failed to remove weak topic: ${response.status}`);
@@ -65,10 +68,13 @@ export async function removeWeakTopic(topic: string): Promise<void> {
 }
 
 export async function removeStrongTopic(topic: string): Promise<void> {
-  const response = await fetch(`${backendUrl}/api/ai/context/strong-topics/${encodeURIComponent(topic)}`, {
-    method: "DELETE",
-    credentials: "include"
-  });
+  const response = await fetch(
+    `${backendUrl}/api/ai/context/strong-topics/${encodeURIComponent(topic)}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  );
 
   if (!response.ok) {
     throw new Error(`Failed to remove strong topic: ${response.status}`);

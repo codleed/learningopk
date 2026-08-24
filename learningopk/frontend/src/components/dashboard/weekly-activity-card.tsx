@@ -65,15 +65,13 @@ const isToday = (dateStr: string): boolean => {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function WeeklyActivityCard({
-  weeklyActivity,
-}: WeeklyActivityCardProps) {
+export function WeeklyActivityCard({ weeklyActivity }: WeeklyActivityCardProps) {
   const [focusedIndex, setFocusedIndex] = useState(0);
   const cellRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const totalActivities = useMemo(
     () => weeklyActivity.reduce((sum, entry) => sum + entry.activityCount, 0),
-    [weeklyActivity],
+    [weeklyActivity]
   );
 
   const handleKeyDown = useCallback(
@@ -103,7 +101,7 @@ export function WeeklyActivityCard({
         cellRefs.current[nextIndex]?.focus();
       }
     },
-    [weeklyActivity.length],
+    [weeklyActivity.length]
   );
 
   return (
@@ -129,23 +127,16 @@ export function WeeklyActivityCard({
           <>
             {/* Screen reader summary */}
             <p className="sr-only">
-              Study activity for the past 7 days. Total:{" "}
-              {totalActivities}{" "}
+              Study activity for the past 7 days. Total: {totalActivities}{" "}
               {totalActivities === 1 ? "activity" : "activities"}.
             </p>
 
             {/* Heatmap grid */}
-            <div
-              role="grid"
-              aria-label="Weekly study activity"
-              className="grid grid-cols-7 gap-2"
-            >
+            <div role="grid" aria-label="Weekly study activity" className="grid grid-cols-7 gap-2">
               <div role="row" className="contents">
                 {weeklyActivity.map((entry, index) => {
                   const dayFull = getFullDayLabel(entry.date);
-                  const intensityLabel = getIntensityLabel(
-                    entry.activityCount,
-                  );
+                  const intensityLabel = getIntensityLabel(entry.activityCount);
                   const cellLabel = `${dayFull}: ${entry.activityCount} ${entry.activityCount === 1 ? "activity" : "activities"}, ${intensityLabel}`;
                   const today = isToday(entry.date);
 
@@ -158,9 +149,7 @@ export function WeeklyActivityCard({
                       <span
                         className={cn(
                           "text-[11px] font-semibold uppercase tracking-wider",
-                          today
-                            ? "text-accent-primary"
-                            : "text-text-muted",
+                          today ? "text-accent-primary" : "text-text-muted"
                         )}
                       >
                         {getDayLabel(entry.date)}
@@ -185,13 +174,13 @@ export function WeeklyActivityCard({
                             entry.active
                               ? "border-accent-primary/20 text-accent-primary"
                               : "border-border-default text-text-muted",
-                            today && "ring-2 ring-accent-primary/30",
+                            today && "ring-2 ring-accent-primary/30"
                           )}
                         >
                           <div
                             className={cn(
                               "flex h-full w-full items-center justify-center rounded-lg",
-                              getActivityIntensityClass(entry.activityCount),
+                              getActivityIntensityClass(entry.activityCount)
                             )}
                             aria-hidden="true"
                           >
@@ -206,31 +195,31 @@ export function WeeklyActivityCard({
             </div>
 
             {/* Legend */}
-            <div
-              className="mt-3 flex items-center justify-end gap-1.5"
-              aria-hidden="true"
-            >
-              <span className="mr-1 text-[10px] font-medium text-text-muted">
-                Less
-              </span>
-              <div className="h-3 w-3 rounded-sm border border-border-default bg-bg-subtle" title="None" />
-              <div className="h-3 w-3 rounded-sm border border-border-default bg-accent-primary/20" title="Low" />
-              <div className="h-3 w-3 rounded-sm border border-border-default bg-accent-primary/45" title="Med" />
-              <div className="h-3 w-3 rounded-sm border border-border-default bg-accent-primary/90" title="High" />
-              <span className="ml-1 text-[10px] font-medium text-text-muted">
-                More
-              </span>
+            <div className="mt-3 flex items-center justify-end gap-1.5" aria-hidden="true">
+              <span className="mr-1 text-[10px] font-medium text-text-muted">Less</span>
+              <div
+                className="h-3 w-3 rounded-sm border border-border-default bg-bg-subtle"
+                title="None"
+              />
+              <div
+                className="h-3 w-3 rounded-sm border border-border-default bg-accent-primary/20"
+                title="Low"
+              />
+              <div
+                className="h-3 w-3 rounded-sm border border-border-default bg-accent-primary/45"
+                title="Med"
+              />
+              <div
+                className="h-3 w-3 rounded-sm border border-border-default bg-accent-primary/90"
+                title="High"
+              />
+              <span className="ml-1 text-[10px] font-medium text-text-muted">More</span>
             </div>
           </>
         ) : (
           <div className="py-6 text-center">
-            <Clock
-              className="mx-auto h-8 w-8 text-text-muted"
-              aria-hidden
-            />
-            <p className="mt-2 text-xs text-text-secondary">
-              No activity data available yet.
-            </p>
+            <Clock className="mx-auto h-8 w-8 text-text-muted" aria-hidden />
+            <p className="mt-2 text-xs text-text-secondary">No activity data available yet.</p>
           </div>
         )}
       </CardBody>

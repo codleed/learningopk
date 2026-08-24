@@ -7,7 +7,7 @@ import {
   getCurrentPktContext,
   getPktDateKey,
   getPktDayBounds,
-  shouldShowStreakAtRiskWarning
+  shouldShowStreakAtRiskWarning,
 } from "../../lib/streak-wager.js";
 
 test("getPktDateKey uses explicit PKT day boundaries", () => {
@@ -26,12 +26,12 @@ test("buildDailyGoalProgress marks completion only after 3 chapters and 1 quiz",
   const incomplete = buildDailyGoalProgress({
     dateKey: "2026-04-06",
     chaptersCompleted: 2,
-    quizzesCompleted: 1
+    quizzesCompleted: 1,
   });
   const complete = buildDailyGoalProgress({
     dateKey: "2026-04-06",
     chaptersCompleted: 3,
-    quizzesCompleted: 1
+    quizzesCompleted: 1,
   });
 
   assert.equal(incomplete.completed, false);

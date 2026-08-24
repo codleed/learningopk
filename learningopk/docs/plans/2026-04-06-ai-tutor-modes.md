@@ -13,12 +13,14 @@
 ### Task 1: Add failing tutor prompt tests
 
 **Files:**
+
 - Modify: `learningopk/backend/src/tests/unit/mistral.unit.test.ts`
 - Modify: `learningopk/backend/src/lib/mistral.ts`
 
 **Step 1: Write the failing test**
 
 Add tests that assert:
+
 - explain mode includes direct explanation instructions
 - socratic mode includes hint-plus-question instructions
 - prompt requires Markdown and LaTeX math notation
@@ -42,6 +44,7 @@ Expected: PASS.
 ### Task 2: Add explicit tutor mode to backend chat contract
 
 **Files:**
+
 - Modify: `learningopk/backend/src/routes/ai-chat.ts`
 - Modify: `learningopk/backend/src/lib/mistral.ts`
 
@@ -70,6 +73,7 @@ Expected: PASS.
 ### Task 3: Wire frontend mode into chat requests
 
 **Files:**
+
 - Modify: `learningopk/frontend/src/components/ai/ai-tutor-chat.tsx`
 
 **Step 1: Write the failing test**
@@ -95,6 +99,7 @@ Expected: PASS.
 ### Task 4: Final verification
 
 **Files:**
+
 - Verify only
 
 **Step 1: Run backend unit tests**

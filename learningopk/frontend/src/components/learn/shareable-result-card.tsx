@@ -35,7 +35,10 @@ export function ShareableResultCard({
     day: "numeric",
   });
 
-  const displayTitle = chapterTitle || result.sectionScores?.[0]?.chapterTitle || (isMockExam ? "Mock Exam" : "Chapter Quiz");
+  const displayTitle =
+    chapterTitle ||
+    result.sectionScores?.[0]?.chapterTitle ||
+    (isMockExam ? "Mock Exam" : "Chapter Quiz");
   const displayChapterNumber = chapterNumber || result.sectionScores?.[0]?.chapterNumber;
 
   const correctCount = result.questionResults.filter((q) => q.isCorrect).length;
@@ -188,7 +191,12 @@ export function ShareableResultCard({
       ctx.moveTo(badgeX + badgeRadius, badgeY);
       ctx.lineTo(badgeX + badgeW - badgeRadius, badgeY);
       ctx.quadraticCurveTo(badgeX + badgeW, badgeY, badgeX + badgeW, badgeY + badgeRadius);
-      ctx.quadraticCurveTo(badgeX + badgeW, badgeY + badgeH, badgeX + badgeW - badgeRadius, badgeY + badgeH);
+      ctx.quadraticCurveTo(
+        badgeX + badgeW,
+        badgeY + badgeH,
+        badgeX + badgeW - badgeRadius,
+        badgeY + badgeH
+      );
       ctx.lineTo(badgeX + badgeRadius, badgeY + badgeH);
       ctx.quadraticCurveTo(badgeX, badgeY + badgeH, badgeX, badgeY + badgeRadius);
       ctx.quadraticCurveTo(badgeX, badgeY, badgeX + badgeRadius, badgeY);
@@ -209,7 +217,12 @@ export function ShareableResultCard({
       ctx.moveTo(0, footerY);
       ctx.lineTo(cardWidth, footerY);
       ctx.lineTo(cardWidth, footerY + footerHeight - radius);
-      ctx.quadraticCurveTo(cardWidth, footerY + footerHeight, cardWidth - radius, footerY + footerHeight);
+      ctx.quadraticCurveTo(
+        cardWidth,
+        footerY + footerHeight,
+        cardWidth - radius,
+        footerY + footerHeight
+      );
       ctx.lineTo(radius, footerY + footerHeight);
       ctx.quadraticCurveTo(0, footerY + footerHeight, 0, footerY + footerHeight - radius);
       ctx.closePath();
@@ -325,9 +338,7 @@ export function ShareableResultCard({
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
                 Your Score
               </p>
-              <p className="mt-1 text-4xl font-bold text-gray-900">
-                {result.percentage}%
-              </p>
+              <p className="mt-1 text-4xl font-bold text-gray-900">{result.percentage}%</p>
               <p className="mt-1 text-sm text-gray-500">
                 {result.score} out of {result.totalMarks} marks
               </p>
@@ -336,9 +347,7 @@ export function ShareableResultCard({
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                Subject
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Subject</p>
               <p className="mt-1 text-lg font-bold text-gray-900">{subjectName}</p>
               <p className="mt-1 text-xs text-gray-400">{formattedDate}</p>
             </div>
@@ -348,9 +357,7 @@ export function ShareableResultCard({
           <div className="mt-4 flex items-center justify-center">
             <span
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold ${
-                passed
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-amber-50 text-amber-700"
+                passed ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
               }`}
             >
               {passed ? (

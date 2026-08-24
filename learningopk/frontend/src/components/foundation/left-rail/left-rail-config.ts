@@ -180,9 +180,7 @@ export const moderatorNavSections: NavSection[] = [
   },
   {
     label: "Users",
-    items: [
-      { href: "/admin/users", label: "Users", icon: Users },
-    ],
+    items: [{ href: "/admin/users", label: "Users", icon: Users }],
   },
 ];
 

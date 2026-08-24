@@ -20,7 +20,7 @@ export default async function NotesPage() {
     .then((data) => ({ data, error: null as string | null }))
     .catch((error: unknown) => ({
       data: null,
-      error: error instanceof Error ? error.message : "Unable to load notes."
+      error: error instanceof Error ? error.message : "Unable to load notes.",
     }));
 
   return (
@@ -35,10 +35,7 @@ export default async function NotesPage() {
           stickyClassName="-mx-4 -mt-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
           title="My Notes"
           subtitle="Create and organize your study notes with markdown, math, and images."
-          breadcrumbs={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Notes" }
-          ]}
+          breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Notes" }]}
         />
 
         {notesResult.error || !notesResult.data ? (

@@ -18,4 +18,3 @@ export default function ForumThreadError({ error: _error, reset }: ForumThreadEr
     </div>
   );
 }
-

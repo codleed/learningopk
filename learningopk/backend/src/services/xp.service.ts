@@ -17,7 +17,7 @@ export const XP_VALUES = {
   dailyLoginBonus: 10,
   streakBonus3Days: 25,
   streakBonus7Days: 75,
-  streakBonus30Days: 200
+  streakBonus30Days: 200,
 } as const;
 
 // Level thresholds — more granular, rewarding progression
@@ -32,7 +32,7 @@ export const LEVEL_THRESHOLDS = [
   { level: 7, name: "Champion", minXp: 2200 },
   { level: 8, name: "Legend", minXp: 3000 },
   { level: 9, name: "Genius", minXp: 4000 },
-  { level: 10, name: "Board Topper", minXp: 5500 }
+  { level: 10, name: "Board Topper", minXp: 5500 },
 ] as const;
 
 export type LevelName = (typeof LEVEL_THRESHOLDS)[number]["name"];
@@ -56,15 +56,11 @@ export interface StreakFreezeResult {
 }
 
 export class XpService {
-  private async adjustXp(
-    userId: string,
-    deltaXp: number,
-    _reason: string
-  ): Promise<XpAwardResult> {
+  private async adjustXp(userId: string, deltaXp: number, _reason: string): Promise<XpAwardResult> {
     const userRows = await db
       .select({
         xp: users.xp,
-        level: users.level
+        level: users.level,
       })
       .from(users)
       .where(eq(users.id, userId))
@@ -91,7 +87,7 @@ export class XpService {
       .update(users)
       .set({
         xp: sql`${users.xp} + ${deltaXp}`,
-        level: newLevel
+        level: newLevel,
       })
       .where(eq(users.id, userId));
 
@@ -101,7 +97,7 @@ export class XpService {
       level: newLevel,
       levelName: newLevelName,
       leveledUp,
-      previousLevel
+      previousLevel,
     };
   }
 
@@ -128,7 +124,7 @@ export class XpService {
   async checkStreakFreeze(userId: string): Promise<StreakFreezeResult> {
     const userRows = await db
       .select({
-        streakFreezeUsedAt: users.streakFreezeUsedAt
+        streakFreezeUsedAt: users.streakFreezeUsedAt,
       })
       .from(users)
       .where(eq(users.id, userId))
@@ -140,7 +136,7 @@ export class XpService {
       return {
         canUseStreakFreeze: false,
         streakFreezeUsed: false,
-        nextFreezeAvailableAt: null
+        nextFreezeAvailableAt: null,
       };
     }
 
@@ -149,7 +145,7 @@ export class XpService {
       return {
         canUseStreakFreeze: true,
         streakFreezeUsed: false,
-        nextFreezeAvailableAt: null
+        nextFreezeAvailableAt: null,
       };
     }
 
@@ -164,7 +160,7 @@ export class XpService {
     return {
       canUseStreakFreeze: canUse,
       streakFreezeUsed: false,
-      nextFreezeAvailableAt: nextAvailableAt
+      nextFreezeAvailableAt: nextAvailableAt,
     };
   }
 
@@ -181,7 +177,7 @@ export class XpService {
     await db
       .update(users)
       .set({
-        streakFreezeUsedAt: new Date()
+        streakFreezeUsedAt: new Date(),
       })
       .where(eq(users.id, userId));
 
@@ -192,11 +188,7 @@ export class XpService {
    * Award XP to a user and update their level
    * Uses atomic increment to prevent race conditions
    */
-  async awardXp(
-    userId: string,
-    xpAmount: number,
-    reason: string
-  ): Promise<XpAwardResult> {
+  async awardXp(userId: string, xpAmount: number, reason: string): Promise<XpAwardResult> {
     if (typeof xpAmount !== "number" || xpAmount < 0) {
       throw new Error("XP amount must be a non-negative number");
     }
@@ -246,7 +238,11 @@ export class XpService {
   /**
    * Award XP for quiz pass (only if passed with pass threshold+)
    */
-  async awardQuizPassXp(userId: string, score: number, totalMarks: number): Promise<XpAwardResult | null> {
+  async awardQuizPassXp(
+    userId: string,
+    score: number,
+    totalMarks: number
+  ): Promise<XpAwardResult | null> {
     const percentage = (score / totalMarks) * 100;
 
     // Only award XP if passed (pass threshold or higher)
@@ -310,7 +306,7 @@ export class XpService {
       .select({
         xp: users.xp,
         level: users.level,
-        streakFreezeUsedAt: users.streakFreezeUsedAt
+        streakFreezeUsedAt: users.streakFreezeUsedAt,
       })
       .from(users)
       .where(eq(users.id, userId))
@@ -341,7 +337,7 @@ export class XpService {
       xpInCurrentLevel: Math.max(0, xpInCurrentLevel),
       xpRequiredForLevel: Math.max(1, xpRequiredForLevel),
       isMaxLevel: !nextThreshold,
-      streakFreezeUsedAt: user.streakFreezeUsedAt?.toISOString() ?? null
+      streakFreezeUsedAt: user.streakFreezeUsedAt?.toISOString() ?? null,
     };
   }
 }

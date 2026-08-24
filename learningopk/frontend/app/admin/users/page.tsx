@@ -12,13 +12,13 @@ export default async function AdminUsersPage() {
     pageSize: 10,
     q: "",
     role: "",
-    cookieHeader
+    cookieHeader,
   }).catch(() => ({
     entries: [],
     total: 0,
     page: 1,
     pageSize: 10,
-    hasMore: false
+    hasMore: false,
   }));
 
   return (

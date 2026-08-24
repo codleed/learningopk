@@ -37,7 +37,7 @@ export function PastPaperForm({ boards, existingPaper }: PastPaperFormProps) {
   const boardOptions = useMemo(() => {
     return boards.map((board) => ({
       id: board.id,
-      label: board.name
+      label: board.name,
     }));
   }, [boards]);
 
@@ -59,34 +59,20 @@ export function PastPaperForm({ boards, existingPaper }: PastPaperFormProps) {
 
   // Form state
   const [title, setTitle] = useState(existingPaper?.title ?? "");
-  const [boardId, setBoardId] = useState<string>(
-    existingPaper?.boardId?.toString() ?? ""
-  );
+  const [boardId, setBoardId] = useState<string>(existingPaper?.boardId?.toString() ?? "");
   const [grade, setGrade] = useState<string>(existingPaper?.grade ?? "");
-  const [subjectId, setSubjectId] = useState<string>(
-    existingPaper?.subjectId?.toString() ?? ""
-  );
-  const [year, setYear] = useState<string>(
-    existingPaper?.year?.toString() ?? ""
-  );
-  const [paperContent, setPaperContent] = useState(
-    existingPaper?.paperContent ?? ""
-  );
-  const [solutionContent, setSolutionContent] = useState(
-    existingPaper?.solutionContent ?? ""
-  );
-  const [description, setDescription] = useState(
-    existingPaper?.description ?? ""
-  );
+  const [subjectId, setSubjectId] = useState<string>(existingPaper?.subjectId?.toString() ?? "");
+  const [year, setYear] = useState<string>(existingPaper?.year?.toString() ?? "");
+  const [paperContent, setPaperContent] = useState(existingPaper?.paperContent ?? "");
+  const [solutionContent, setSolutionContent] = useState(existingPaper?.solutionContent ?? "");
+  const [description, setDescription] = useState(existingPaper?.description ?? "");
   const [durationMinutes, setDurationMinutes] = useState<string>(
     existingPaper?.durationMinutes?.toString() ?? "60"
   );
   const [totalMarks, setTotalMarks] = useState<string>(
     existingPaper?.totalMarks?.toString() ?? "0"
   );
-  const [published, setPublished] = useState(
-    existingPaper?.published ?? false
-  );
+  const [published, setPublished] = useState(existingPaper?.published ?? false);
   const [showPreview, setShowPreview] = useState(false);
 
   // Errors
@@ -227,9 +213,7 @@ export function PastPaperForm({ boards, existingPaper }: PastPaperFormProps) {
             { label: "Content", href: "/admin/content" },
             { label: "Past Papers", href: "/admin/content/past-papers" },
             {
-              label: isEdit
-                ? `Edit "${existingPaper?.title}"`
-                : "Add Past Paper",
+              label: isEdit ? `Edit "${existingPaper?.title}"` : "Add Past Paper",
             },
           ]}
         />
@@ -268,12 +252,7 @@ export function PastPaperForm({ boards, existingPaper }: PastPaperFormProps) {
           </AdminFormField>
 
           {/* Board */}
-          <AdminFormField
-            id="pp-board"
-            label="Board"
-            required
-            error={boardError}
-          >
+          <AdminFormField id="pp-board" label="Board" required error={boardError}>
             <Select
               id="pp-board"
               value={boardId}
@@ -293,12 +272,7 @@ export function PastPaperForm({ boards, existingPaper }: PastPaperFormProps) {
           </AdminFormField>
 
           {/* Grade */}
-          <AdminFormField
-            id="pp-grade"
-            label="Grade"
-            required
-            error={gradeError}
-          >
+          <AdminFormField id="pp-grade" label="Grade" required error={gradeError}>
             <Select
               id="pp-grade"
               value={grade}
@@ -315,12 +289,7 @@ export function PastPaperForm({ boards, existingPaper }: PastPaperFormProps) {
           </AdminFormField>
 
           {/* Subject */}
-          <AdminFormField
-            id="pp-subject"
-            label="Subject"
-            required
-            error={subjectError}
-          >
+          <AdminFormField id="pp-subject" label="Subject" required error={subjectError}>
             <Select
               id="pp-subject"
               value={subjectId}
@@ -398,10 +367,7 @@ export function PastPaperForm({ boards, existingPaper }: PastPaperFormProps) {
               {showPreview ? (
                 <div className="min-h-[200px] rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-4">
                   {paperContent.trim() ? (
-                    <MarkdownRenderer
-                      content={paperContent}
-                      className="text-sm"
-                    />
+                    <MarkdownRenderer content={paperContent} className="text-sm" />
                   ) : (
                     <p className="text-sm text-[var(--text-secondary)] italic">
                       Nothing to preview yet. Write some content first.
@@ -481,12 +447,11 @@ export function PastPaperForm({ boards, existingPaper }: PastPaperFormProps) {
             hint="Only published papers are visible to students"
           >
             <div className="flex items-center gap-3">
-              <Switch
-                id="pp-published"
-                checked={published}
-                onCheckedChange={setPublished}
-              />
-              <label htmlFor="pp-published" className="text-sm text-[var(--text-primary)] cursor-pointer">
+              <Switch id="pp-published" checked={published} onCheckedChange={setPublished} />
+              <label
+                htmlFor="pp-published"
+                className="text-sm text-[var(--text-primary)] cursor-pointer"
+              >
                 {published ? "Published" : "Draft"}
               </label>
             </div>

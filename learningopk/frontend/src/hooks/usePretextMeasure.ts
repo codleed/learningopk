@@ -3,9 +3,22 @@
 import { useMemo, useState, useEffect } from "react";
 
 export type BlockType =
-  | "h1" | "h2" | "h3" | "h4" | "h5" | "h6"
-  | "p" | "code" | "math" | "blockquote"
-  | "ul" | "ol" | "li" | "hr" | "img" | "table"
+  | "h1"
+  | "h2"
+  | "h3"
+  | "h4"
+  | "h5"
+  | "h6"
+  | "p"
+  | "code"
+  | "math"
+  | "blockquote"
+  | "ul"
+  | "ol"
+  | "li"
+  | "hr"
+  | "img"
+  | "table"
   | "unknown";
 
 export interface MarkdownBlock {
@@ -227,11 +240,7 @@ function estimateTextHeight(
   return Math.max(estimatedLines, 1) * lineHeight;
 }
 
-function computeBlockHeight(
-  block: MarkdownBlock,
-  width: number,
-  baseLineHeight: number
-): number {
+function computeBlockHeight(block: MarkdownBlock, width: number, baseLineHeight: number): number {
   switch (block.type) {
     case "h1":
     case "h2":
@@ -314,9 +323,7 @@ export function usePretextMeasure(
   const blocks = useMemo(() => parseMarkdownBlocks(content), [content]);
 
   const heights = useMemo(() => {
-    return blocks.map((block) =>
-      computeBlockHeight(block, actualWidth, lineHeight)
-    );
+    return blocks.map((block) => computeBlockHeight(block, actualWidth, lineHeight));
   }, [blocks, actualWidth, lineHeight]);
 
   const totalHeight = useMemo(() => {

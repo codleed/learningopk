@@ -19,7 +19,7 @@ import {
   saveAnswer,
   submitAttempt,
   type AttemptExercise,
-  type PastPaperAttempt
+  type PastPaperAttempt,
 } from "@/lib/past-papers-api";
 
 export function AttemptClient({ paperId }: { paperId: string }) {
@@ -65,7 +65,9 @@ export function AttemptClient({ paperId }: { paperId: string }) {
       if (!attempt) return;
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(() => {
-        saveAnswer({ paperId: paperIdNum, attemptId: attempt.id, exerciseId, answer }).catch(console.error);
+        saveAnswer({ paperId: paperIdNum, attemptId: attempt.id, exerciseId, answer }).catch(
+          console.error
+        );
       }, 2000);
     },
     [attempt, paperIdNum]
@@ -76,8 +78,13 @@ export function AttemptClient({ paperId }: { paperId: string }) {
   const answeredSet = useMemo(() => {
     const set = new Set<number>();
     for (const [key, val] of Object.entries(answers)) {
-      const idx = exercises.findIndex(e => e.id === Number(key));
-      if (idx !== -1 && val !== undefined && val !== null && (typeof val !== "string" || val.trim() !== "")) {
+      const idx = exercises.findIndex((e) => e.id === Number(key));
+      if (
+        idx !== -1 &&
+        val !== undefined &&
+        val !== null &&
+        (typeof val !== "string" || val.trim() !== "")
+      ) {
         set.add(idx);
       }
     }
@@ -86,7 +93,7 @@ export function AttemptClient({ paperId }: { paperId: string }) {
 
   const handleAnswerChange = useCallback(
     (exerciseId: number, answer: unknown) => {
-      setAnswers(prev => ({ ...prev, [exerciseId]: answer }));
+      setAnswers((prev) => ({ ...prev, [exerciseId]: answer }));
       autoSave(exerciseId, answer);
     },
     [autoSave]
@@ -144,7 +151,9 @@ export function AttemptClient({ paperId }: { paperId: string }) {
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <div>
             <h1 className="font-display text-lg font-bold text-text-primary">Past Paper</h1>
-            <p className="text-xs text-text-secondary">Question {currentIndex + 1} of {exercises.length}</p>
+            <p className="text-xs text-text-secondary">
+              Question {currentIndex + 1} of {exercises.length}
+            </p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -181,10 +190,16 @@ export function AttemptClient({ paperId }: { paperId: string }) {
           {currentExercise && (
             <Card className="p-6">
               <div className="mb-4 flex items-center gap-2">
-                <Badge variant="primary" size="sm">Q{currentIndex + 1}</Badge>
-                <Badge variant="default" size="sm">{currentExercise.type.replace(/_/g, " ")}</Badge>
+                <Badge variant="primary" size="sm">
+                  Q{currentIndex + 1}
+                </Badge>
+                <Badge variant="default" size="sm">
+                  {currentExercise.type.replace(/_/g, " ")}
+                </Badge>
                 {currentExercise.marks != null && (
-                  <Badge variant="outline" size="sm">{currentExercise.marks} marks</Badge>
+                  <Badge variant="outline" size="sm">
+                    {currentExercise.marks} marks
+                  </Badge>
                 )}
               </div>
 
@@ -195,7 +210,7 @@ export function AttemptClient({ paperId }: { paperId: string }) {
               {currentExercise.type === "mcq" && currentExercise.options && (
                 <MCQOptionGroup
                   options={currentExercise.options}
-                  selectedOption={answers[currentExercise.id] as string ?? null}
+                  selectedOption={(answers[currentExercise.id] as string) ?? null}
                   onChange={(key) => handleAnswerChange(currentExercise.id, key)}
                 />
               )}
@@ -211,7 +226,7 @@ export function AttemptClient({ paperId }: { paperId: string }) {
 
               {(currentExercise.type === "short" || currentExercise.type === "long") && (
                 <AnswerEditor
-                  value={answers[currentExercise.id] as string ?? ""}
+                  value={(answers[currentExercise.id] as string) ?? ""}
                   onChange={(val) => handleAnswerChange(currentExercise.id, val)}
                   exerciseType={currentExercise.type}
                 />
@@ -222,7 +237,7 @@ export function AttemptClient({ paperId }: { paperId: string }) {
                   type="text"
                   className="w-full rounded-lg border border-border-primary bg-surface-secondary p-4 text-sm text-text-primary focus:border-accent-primary focus:outline-none"
                   placeholder="Enter your numerical answer..."
-                  value={answers[currentExercise.id] as string ?? ""}
+                  value={(answers[currentExercise.id] as string) ?? ""}
                   onChange={(e) => handleAnswerChange(currentExercise.id, e.target.value)}
                 />
               )}
@@ -235,7 +250,7 @@ export function AttemptClient({ paperId }: { paperId: string }) {
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => setCurrentIndex(i => Math.max(0, i - 1))}
+            onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
             disabled={currentIndex === 0}
             iconLeft={<ChevronLeft className="h-4 w-4" />}
           >
@@ -246,7 +261,7 @@ export function AttemptClient({ paperId }: { paperId: string }) {
             {currentIndex < exercises.length - 1 ? (
               <Button
                 size="sm"
-                onClick={() => setCurrentIndex(i => Math.min(exercises.length - 1, i + 1))}
+                onClick={() => setCurrentIndex((i) => Math.min(exercises.length - 1, i + 1))}
                 iconRight={<ChevronRight className="h-4 w-4" />}
               >
                 Next

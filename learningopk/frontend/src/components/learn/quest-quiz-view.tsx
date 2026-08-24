@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { 
-  Clock, 
-  Trophy, 
-  Sparkles, 
+import {
+  Clock,
+  Trophy,
+  Sparkles,
   RotateCcw,
   ChevronLeft,
   ChevronRight,
-  Target
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,7 +49,7 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
 
   useEffect(() => {
     if (isSubmitted || remainingSeconds <= 0) return;
-    
+
     const interval = setInterval(() => {
       setRemainingSeconds((prev) => Math.max(0, prev - 1));
     }, 1000);
@@ -64,38 +64,39 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
 
   const submitQuiz = async () => {
     if (isSubmitting) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
       const response = await fetch(`${backendUrl}/api/quiz/submit`, {
         method: "POST",
         credentials: "include",
         headers: {
-          "content-type": "application/json"
+          "content-type": "application/json",
         },
         body: JSON.stringify({
           quizId: quiz.id,
           startedAt: new Date().toISOString(),
-          answers
-        })
+          answers,
+        }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        const correctCount = data.questionResults?.filter((q: { isCorrect: boolean }) => q.isCorrect).length ?? 0;
+        const correctCount =
+          data.questionResults?.filter((q: { isCorrect: boolean }) => q.isCorrect).length ?? 0;
         const percentage = Math.round((correctCount / quiz.questions.length) * 100);
-        
+
         setResult({
           score: correctCount,
           total: quiz.questions.length,
           percentage,
-          answers
+          answers,
         });
         setIsSubmitted(true);
         onComplete(correctCount, percentage);
-        
+
         if (percentage === 100) {
           setShowCelebration(true);
           setTimeout(() => setShowCelebration(false), 3000);
@@ -106,7 +107,7 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
           score: answeredCount,
           total: quiz.questions.length,
           percentage,
-          answers
+          answers,
         });
         setIsSubmitted(true);
         onComplete(answeredCount, percentage);
@@ -117,7 +118,7 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
         score: answeredCount,
         total: quiz.questions.length,
         percentage,
-        answers
+        answers,
       });
       setIsSubmitted(true);
       onComplete(answeredCount, percentage);
@@ -166,7 +167,7 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
             <p className="font-semibold">{quiz.title}</p>
           </div>
         </div>
-        
+
         <div className={cn("flex items-center gap-2 rounded-full px-4 py-2", getTimerColor())}>
           <Clock className="h-4 w-4" />
           <span className="font-mono font-bold">{formatTime(remainingSeconds)}</span>
@@ -201,7 +202,8 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
           <div className="space-y-1 text-sm text-muted-foreground">
             <p>Complete Quiz: +{XP_REWARDS.QUIZ_COMPLETE} XP</p>
             <p className="font-semibold text-amber-600">
-              Total: +{XP_REWARDS.QUIZ_COMPLETE + XP_REWARDS.QUIZ_HIGH_SCORE + XP_REWARDS.QUIZ_PERFECT} XP
+              Total: +
+              {XP_REWARDS.QUIZ_COMPLETE + XP_REWARDS.QUIZ_HIGH_SCORE + XP_REWARDS.QUIZ_PERFECT} XP
             </p>
           </div>
         </div>
@@ -209,10 +211,10 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
 
       <div className="rounded-2xl border border-border bg-card p-6">
         <div className="mb-4 flex items-center justify-between">
-          <Badge variant="neutral">{currentIndex + 1} of {quiz.questions.length}</Badge>
-          {isTimeUp && !isSubmitted && (
-            <Badge variant="error">Time&apos;s Up!</Badge>
-          )}
+          <Badge variant="neutral">
+            {currentIndex + 1} of {quiz.questions.length}
+          </Badge>
+          {isTimeUp && !isSubmitted && <Badge variant="error">Time&apos;s Up!</Badge>}
         </div>
 
         <p className="mb-6 text-lg">{currentQuestion.question}</p>
@@ -235,10 +237,12 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
                   (isSubmitted || isTimeUp) && "cursor-not-allowed opacity-80"
                 )}
               >
-                <span className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-lg font-bold",
-                  isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
-                )}>
+                <span
+                  className={cn(
+                    "flex h-8 w-8 items-center justify-center rounded-lg font-bold",
+                    isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
+                  )}
+                >
                   {option.toUpperCase()}
                 </span>
                 <span className="flex-1">{optionText}</span>
@@ -256,7 +260,7 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
             <ChevronLeft className="h-4 w-4 mr-1" />
             Previous
           </Button>
-          
+
           <Button
             variant="ghost"
             onClick={() => setCurrentIndex(Math.min(quiz.questions.length - 1, currentIndex + 1))}
@@ -270,12 +274,7 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
 
       {!isSubmitted && (
         <div className="flex justify-center">
-          <Button
-            size="lg"
-            onClick={submitQuiz}
-            disabled={isSubmitting}
-            className="gap-2"
-          >
+          <Button size="lg" onClick={submitQuiz} disabled={isSubmitting} className="gap-2">
             <Trophy className="h-5 w-5" />
             {isSubmitting ? "Submitting..." : "Submit Quiz"}
           </Button>
@@ -299,15 +298,11 @@ export function QuestQuizView({ quiz, chapterId, onComplete }: QuestQuizViewProp
               <Sparkles className="mx-auto h-16 w-16 text-amber-500" />
             </motion.div>
           )}
-          
-          <h2 className="text-2xl font-bold">
-            Quiz Complete!
-          </h2>
-          
+
+          <h2 className="text-2xl font-bold">Quiz Complete!</h2>
+
           <div className="my-6">
-            <span className="text-5xl font-bold text-primary">
-              {result.percentage}%
-            </span>
+            <span className="text-5xl font-bold text-primary">{result.percentage}%</span>
             <p className="mt-2 text-muted-foreground">
               {result.score} of {result.total} answered
             </p>

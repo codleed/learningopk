@@ -19,9 +19,7 @@ const optionLabels: Record<string, string> = { a: "A", b: "B", c: "C", d: "D" };
 export function QuizQuestionReviewList({ result }: QuizQuestionReviewListProps) {
   return (
     <div className="space-y-3">
-      <h3 className="font-display text-lg font-semibold text-text-primary">
-        Review Answers
-      </h3>
+      <h3 className="font-display text-lg font-semibold text-text-primary">Review Answers</h3>
       <div className="space-y-2">
         {result.questionResults.map((entry, index) => (
           <ReviewItem key={entry.questionId} entry={entry} index={index} />
@@ -52,10 +50,10 @@ function ReviewItem({ entry, index }: { entry: ReviewEntry; index: number }) {
       : "bg-accent-danger text-white";
 
   const statusBadgeVariant = entry.isCorrect
-    ? "success" as const
+    ? ("success" as const)
     : entry.selectedOption === null
-      ? "warning" as const
-      : "danger" as const;
+      ? ("warning" as const)
+      : ("danger" as const);
 
   const statusLabel = entry.isCorrect
     ? "Correct"
@@ -73,7 +71,12 @@ function ReviewItem({ entry, index }: { entry: ReviewEntry; index: number }) {
         aria-expanded={isExpanded}
       >
         {/* Status icon */}
-        <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-md", statusColor)}>
+        <span
+          className={cn(
+            "flex h-6 w-6 shrink-0 items-center justify-center rounded-md",
+            statusColor
+          )}
+        >
           {statusIcon}
         </span>
 
@@ -84,9 +87,7 @@ function ReviewItem({ entry, index }: { entry: ReviewEntry; index: number }) {
               Q{index + 1}
             </span>
             {entry.chapterTitle && (
-              <span className="text-[11px] text-text-secondary">
-                {entry.chapterTitle}
-              </span>
+              <span className="text-[11px] text-text-secondary">{entry.chapterTitle}</span>
             )}
           </div>
           <p className="mt-0.5 truncate text-sm font-medium text-text-primary">
@@ -141,7 +142,9 @@ function ReviewItem({ entry, index }: { entry: ReviewEntry; index: number }) {
                       className={cn(
                         "flex items-start gap-2.5 rounded-lg border px-3 py-2 text-sm",
                         isCorrect && "border-accent-success/30 bg-accent-success-light",
-                        isUserChoice && !isCorrect && "border-accent-danger/30 bg-accent-danger-light",
+                        isUserChoice &&
+                          !isCorrect &&
+                          "border-accent-danger/30 bg-accent-danger-light",
                         !isCorrect && !isUserChoice && "border-border-default bg-bg-surface"
                       )}
                     >
@@ -150,17 +153,27 @@ function ReviewItem({ entry, index }: { entry: ReviewEntry; index: number }) {
                           "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold",
                           isCorrect && "bg-accent-success text-white",
                           isUserChoice && !isCorrect && "bg-accent-danger text-white",
-                          !isCorrect && !isUserChoice && "bg-bg-subtle text-text-secondary border border-border-default"
+                          !isCorrect &&
+                            !isUserChoice &&
+                            "bg-bg-subtle text-text-secondary border border-border-default"
                         )}
                       >
-                        {isCorrect ? <Check className="h-3 w-3" /> : isUserChoice ? <X className="h-3 w-3" /> : optionLabels[opt]}
+                        {isCorrect ? (
+                          <Check className="h-3 w-3" />
+                        ) : isUserChoice ? (
+                          <X className="h-3 w-3" />
+                        ) : (
+                          optionLabels[opt]
+                        )}
                       </span>
-                      <span className={cn(
-                        "flex-1",
-                        isCorrect && "text-accent-success font-medium",
-                        isUserChoice && !isCorrect && "text-accent-danger",
-                        !isCorrect && !isUserChoice && "text-text-secondary"
-                      )}>
+                      <span
+                        className={cn(
+                          "flex-1",
+                          isCorrect && "text-accent-success font-medium",
+                          isUserChoice && !isCorrect && "text-accent-danger",
+                          !isCorrect && !isUserChoice && "text-text-secondary"
+                        )}
+                      >
                         {text}
                       </span>
                     </div>

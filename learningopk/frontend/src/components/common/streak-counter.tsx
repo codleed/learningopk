@@ -20,7 +20,7 @@ const streakVariants = cva(
     defaultVariants: {
       size: "md",
     },
-  },
+  }
 );
 
 const iconSizeMap: Record<NonNullable<StreakSize>, string> = {
@@ -52,11 +52,7 @@ export interface StreakCounterProps {
  * Shows an active fire when count > 0 (orange tint + pulse).
  * Grayed out when count === 0.
  */
-export function StreakCounter({
-  count,
-  size = "md",
-  className,
-}: StreakCounterProps) {
+export function StreakCounter({ count, size = "md", className }: StreakCounterProps) {
   const isActive = count > 0;
   const sizeKey = size ?? "md";
 
@@ -64,28 +60,15 @@ export function StreakCounter({
     <motion.div
       className={cn(
         streakVariants({ size }),
-        isActive
-          ? "bg-accent-warning/15 text-accent-warning"
-          : "bg-bg-subtle text-text-muted",
-        className,
+        isActive ? "bg-accent-warning/15 text-accent-warning" : "bg-bg-subtle text-text-muted",
+        className
       )}
-      animate={
-        isActive
-          ? { scale: [1, 1.05, 1] }
-          : { scale: 1 }
-      }
-      transition={
-        isActive
-          ? { duration: 2, repeat: Infinity, ease: "easeInOut" }
-          : {}
-      }
+      animate={isActive ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+      transition={isActive ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : {}}
     >
       {/* Flame icon */}
       <Flame
-        className={cn(
-          iconSizeMap[sizeKey],
-          isActive ? "text-accent-warning" : "text-text-muted",
-        )}
+        className={cn(iconSizeMap[sizeKey], isActive ? "text-accent-warning" : "text-text-muted")}
         fill={isActive ? "var(--accent-warning)" : "none"}
         aria-hidden="true"
       />
@@ -98,7 +81,7 @@ export function StreakCounter({
         className={cn(
           "font-medium",
           labelSizeMap[sizeKey],
-          isActive ? "text-accent-warning/80" : "text-text-muted",
+          isActive ? "text-accent-warning/80" : "text-text-muted"
         )}
       >
         day{count !== 1 ? "s" : ""}

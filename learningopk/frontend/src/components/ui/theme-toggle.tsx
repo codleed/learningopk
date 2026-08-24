@@ -45,10 +45,7 @@ function resolveTheme(raw: string | undefined): ThemeMode {
  *
  * Renders a segmented control for light/dark with animated active indicator.
  */
-export function ThemeToggle({
-  className,
-  showLabels = true,
-}: ThemeToggleProps) {
+export function ThemeToggle({ className, showLabels = true }: ThemeToggleProps) {
   const { theme: rawTheme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(
     () => () => undefined,
@@ -89,9 +86,8 @@ export function ThemeToggle({
       event.preventDefault();
       setTheme(modes[newIndex]!);
 
-      const buttons = event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
-        '[role="tab"]'
-      );
+      const buttons =
+        event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
       buttons?.[newIndex]?.focus();
     },
     [setTheme]
@@ -109,11 +105,7 @@ export function ThemeToggle({
         aria-label="Theme toggle"
       >
         {modes.map((m) => (
-          <div
-            key={m}
-            className="h-8 w-8 rounded-lg bg-bg-subtle animate-pulse"
-            aria-hidden
-          />
+          <div key={m} className="h-8 w-8 rounded-lg bg-bg-subtle animate-pulse" aria-hidden />
         ))}
       </div>
     );
@@ -146,9 +138,7 @@ export function ThemeToggle({
               "relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium",
               "transition-all duration-200 ease-out",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base",
-              isActive
-                ? "text-white"
-                : "text-text-muted hover:text-text-primary hover:bg-bg-subtle"
+              isActive ? "text-white" : "text-text-muted hover:text-text-primary hover:bg-bg-subtle"
             )}
           >
             {isActive ? (
@@ -161,11 +151,7 @@ export function ThemeToggle({
 
             <span className="relative z-10 flex items-center gap-1.5">
               <Icon className="h-4 w-4" aria-hidden />
-              {showLabels ? (
-                <span className="hidden sm:inline">
-                  {themeConfig[m].label}
-                </span>
-              ) : null}
+              {showLabels ? <span className="hidden sm:inline">{themeConfig[m].label}</span> : null}
             </span>
           </button>
         );
@@ -216,10 +202,7 @@ export function ThemeToggleCompact({ className }: ThemeToggleCompactProps) {
   if (!mounted) {
     return (
       <button
-        className={cn(
-          "h-10 w-10 rounded-lg bg-bg-subtle animate-pulse",
-          className
-        )}
+        className={cn("h-10 w-10 rounded-lg bg-bg-subtle animate-pulse", className)}
         aria-label="Theme toggle"
         disabled
       />

@@ -64,32 +64,41 @@ async function main() {
   }
 
   // ── 3. Get chapters for quiz/progress seeding ──────────────────────
-  const chapterRows = await db.select({ id: chapters.id, title: chapters.title }).from(chapters).limit(10);
+  const chapterRows = await db
+    .select({ id: chapters.id, title: chapters.title })
+    .from(chapters)
+    .limit(10);
   console.log(`\n📚 Found ${chapterRows.length} chapters for quiz seeding`);
 
   // ── 4. Create quiz attempts and progress for realism ───────────────
   let idx = 0;
   for (const studentId of studentIds) {
-    const baseScore = 40 + (idx * 8); // Varying scores: 48, 56, 64, 72, 80, 88, 96, 100
+    const baseScore = 40 + idx * 8; // Varying scores: 48, 56, 64, 72, 80, 88, 96, 100
     idx++;
 
     for (const chapter of chapterRows.slice(0, 5)) {
       // Create user progress
-      const quizScore = Math.min(100, Math.max(30, baseScore + Math.floor(Math.random() * 20 - 10)));
+      const quizScore = Math.min(
+        100,
+        Math.max(30, baseScore + Math.floor(Math.random() * 20 - 10))
+      );
       const visited = Math.random() > 0.2; // 80% visited
 
       if (visited) {
-        await db.insert(userProgress).values({
-          userId: studentId,
-          chapterId: chapter.id,
-          visitedAt: new Date(Date.now() - Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000)),
-          summaryRead: Math.random() > 0.3,
-          subpartsReadCount: Math.floor(Math.random() * 5),
-          exercisesViewed: Math.floor(Math.random() * 10),
-          flashcardsCompleted: Math.random() > 0.5,
-          quizBestScore: quizScore,
-          quizAttemptsCount: Math.floor(Math.random() * 3) + 1,
-        }).onConflictDoNothing();
+        await db
+          .insert(userProgress)
+          .values({
+            userId: studentId,
+            chapterId: chapter.id,
+            visitedAt: new Date(Date.now() - Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000)),
+            summaryRead: Math.random() > 0.3,
+            subpartsReadCount: Math.floor(Math.random() * 5),
+            exercisesViewed: Math.floor(Math.random() * 10),
+            flashcardsCompleted: Math.random() > 0.5,
+            quizBestScore: quizScore,
+            quizAttemptsCount: Math.floor(Math.random() * 3) + 1,
+          })
+          .onConflictDoNothing();
 
         // Create quiz attempt
         await db.insert(quizAttempts).values({
@@ -109,7 +118,8 @@ async function main() {
   console.log("\n✅ Quiz attempts and progress seeded");
 
   // ── 5. Update student count ────────────────────────────────────────
-  await db.update(schools)
+  await db
+    .update(schools)
     .set({ studentCount: studentIds.length })
     .where(eq(schools.id, SCHOOL_ID));
 

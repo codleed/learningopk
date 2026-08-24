@@ -51,9 +51,7 @@ export function ForumFilterBar({
 
   const filteredSubjects = filters.subjects.filter((subject) => {
     if (selected.board) {
-      const board = filters.boards.find(
-        (option) => option.id === subject.boardId,
-      );
+      const board = filters.boards.find((option) => option.id === subject.boardId);
       if (!board || board.slug !== selected.board) {
         return false;
       }
@@ -83,12 +81,17 @@ export function ForumFilterBar({
     return chapter.subjectId === selected.subjectId;
   });
 
-  const activeFilterCount = (selected.board ? 1 : 0) + (selected.grade ? 1 : 0) + (selected.subjectId ? 1 : 0);
+  const activeFilterCount =
+    (selected.board ? 1 : 0) + (selected.grade ? 1 : 0) + (selected.subjectId ? 1 : 0);
   const hasActiveFilters = activeFilterCount > 0 || Boolean(selected.q);
 
   return (
     <div className="space-y-3">
-      {topContent ? <div className="rounded-lg border border-border-default bg-bg-subtle/50 px-4 py-3">{topContent}</div> : null}
+      {topContent ? (
+        <div className="rounded-lg border border-border-default bg-bg-subtle/50 px-4 py-3">
+          {topContent}
+        </div>
+      ) : null}
 
       {/* ── Main toolbar row ── */}
       <div className="flex flex-wrap items-center gap-2">
@@ -96,9 +99,15 @@ export function ForumFilterBar({
         <form method="GET" className="min-w-[180px] flex-1">
           {selected.board ? <input type="hidden" name="board" value={selected.board} /> : null}
           {selected.grade ? <input type="hidden" name="grade" value={selected.grade} /> : null}
-          {selected.subjectId ? <input type="hidden" name="subjectId" value={String(selected.subjectId)} /> : null}
-          {selected.chapterId ? <input type="hidden" name="chapterId" value={String(selected.chapterId)} /> : null}
-          {selected.solved !== "all" ? <input type="hidden" name="solved" value={selected.solved} /> : null}
+          {selected.subjectId ? (
+            <input type="hidden" name="subjectId" value={String(selected.subjectId)} />
+          ) : null}
+          {selected.chapterId ? (
+            <input type="hidden" name="chapterId" value={String(selected.chapterId)} />
+          ) : null}
+          {selected.solved !== "all" ? (
+            <input type="hidden" name="solved" value={selected.solved} />
+          ) : null}
           <Input
             name="q"
             defaultValue={selected.q ?? ""}
@@ -119,7 +128,7 @@ export function ForumFilterBar({
                 grade: selected.grade,
                 subjectId: selected.subjectId,
                 chapterId: selected.chapterId,
-                solved: filter.key
+                solved: filter.key,
               })}
               className={cn(
                 "rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150",
@@ -186,14 +195,23 @@ export function ForumFilterBar({
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="overflow-hidden"
           >
-            <form method="GET" className="rounded-xl border border-border-default bg-bg-surface p-4">
+            <form
+              method="GET"
+              className="rounded-xl border border-border-default bg-bg-surface p-4"
+            >
               <input type="hidden" name="solved" value={selected.solved} />
               {selected.q ? <input type="hidden" name="q" value={selected.q} /> : null}
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <label className="space-y-1.5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Board</span>
-                  <Select name="board" defaultValue={selected.board ?? ""} className="!h-9 !text-sm">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    Board
+                  </span>
+                  <Select
+                    name="board"
+                    defaultValue={selected.board ?? ""}
+                    className="!h-9 !text-sm"
+                  >
                     <option value="">All boards</option>
                     {filters.boards.map((board) => (
                       <option key={board.id} value={board.slug}>
@@ -204,8 +222,14 @@ export function ForumFilterBar({
                 </label>
 
                 <label className="space-y-1.5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Class</span>
-                  <Select name="grade" defaultValue={selected.grade ?? ""} className="!h-9 !text-sm">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    Class
+                  </span>
+                  <Select
+                    name="grade"
+                    defaultValue={selected.grade ?? ""}
+                    className="!h-9 !text-sm"
+                  >
                     <option value="">All classes</option>
                     {filteredClasses.map((entry) => (
                       <option key={entry.id} value={entry.slug}>
@@ -216,7 +240,9 @@ export function ForumFilterBar({
                 </label>
 
                 <label className="space-y-1.5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Subject</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    Subject
+                  </span>
                   <Select
                     name="subjectId"
                     defaultValue={selected.subjectId ? String(selected.subjectId) : ""}
@@ -233,7 +259,9 @@ export function ForumFilterBar({
                 </label>
 
                 <label className="space-y-1.5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Chapter</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    Chapter
+                  </span>
                   <Select
                     name="chapterId"
                     defaultValue={selected.chapterId ? String(selected.chapterId) : ""}
@@ -268,7 +296,9 @@ export function ForumFilterBar({
       <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen} side="bottom">
         <SheetHeader>
           <SheetTitle>Filters</SheetTitle>
-          <SheetDescription>Narrow down threads by board, class, subject, and chapter.</SheetDescription>
+          <SheetDescription>
+            Narrow down threads by board, class, subject, and chapter.
+          </SheetDescription>
         </SheetHeader>
         <SheetBody>
           <form method="GET" className="space-y-4">
@@ -276,7 +306,9 @@ export function ForumFilterBar({
             {selected.q ? <input type="hidden" name="q" value={selected.q} /> : null}
 
             <label className="space-y-1.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Board</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                Board
+              </span>
               <Select name="board" defaultValue={selected.board ?? ""}>
                 <option value="">All boards</option>
                 {filters.boards.map((board) => (
@@ -288,7 +320,9 @@ export function ForumFilterBar({
             </label>
 
             <label className="space-y-1.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Class</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                Class
+              </span>
               <Select name="grade" defaultValue={selected.grade ?? ""}>
                 <option value="">All classes</option>
                 {filteredClasses.map((entry) => (
@@ -300,7 +334,9 @@ export function ForumFilterBar({
             </label>
 
             <label className="space-y-1.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Subject</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                Subject
+              </span>
               <Select
                 name="subjectId"
                 defaultValue={selected.subjectId ? String(selected.subjectId) : ""}
@@ -316,7 +352,9 @@ export function ForumFilterBar({
             </label>
 
             <label className="space-y-1.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Chapter</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                Chapter
+              </span>
               <Select
                 name="chapterId"
                 defaultValue={selected.chapterId ? String(selected.chapterId) : ""}

@@ -23,7 +23,9 @@ export default async function EditChapterPage({ params }: EditChapterPageProps) 
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
-  const curriculumBoards = await getAdminCurriculumTree(cookieHeader).catch(() => [] as AdminCurriculumBoard[]);
+  const curriculumBoards = await getAdminCurriculumTree(cookieHeader).catch(
+    () => [] as AdminCurriculumBoard[]
+  );
 
   let chapter: AdminCurriculumChapter | undefined;
   let subjectName = "";

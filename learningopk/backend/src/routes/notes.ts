@@ -18,7 +18,7 @@ const notesQuerySchema = z.object({
     (value) => (value === undefined || value === "" ? undefined : value),
     numericStringSchema.optional()
   ),
-  q: z.string().trim().max(200).optional().default("")
+  q: z.string().trim().max(200).optional().default(""),
 });
 
 const createNoteSchema = z.object({
@@ -26,7 +26,7 @@ const createNoteSchema = z.object({
   content: z.string().min(1).max(50000),
   subjectId: z.number().int().positive().nullable().optional(),
   chapterId: z.number().int().positive().nullable().optional(),
-  tags: z.array(z.string().trim().max(50)).max(20).optional().default([])
+  tags: z.array(z.string().trim().max(50)).max(20).optional().default([]),
 });
 
 const updateNoteSchema = z.object({
@@ -34,11 +34,11 @@ const updateNoteSchema = z.object({
   content: z.string().min(1).max(50000).optional(),
   subjectId: z.number().int().positive().nullable().optional(),
   chapterId: z.number().int().positive().nullable().optional(),
-  tags: z.array(z.string().trim().max(50)).max(20).optional()
+  tags: z.array(z.string().trim().max(50)).max(20).optional(),
 });
 
 const noteIdParamSchema = z.object({
-  id: numericStringSchema
+  id: numericStringSchema,
 });
 
 export const notesRouter = Router();
@@ -47,7 +47,9 @@ export const notesRouter = Router();
 notesRouter.get("/", requireSession, async (req, res) => {
   const parsed = notesQuerySchema.safeParse(req.query);
   if (!parsed.success) {
-    res.status(400).json(errorResponse("Invalid query parameters", "VALIDATION_ERROR", parsed.error.flatten()));
+    res
+      .status(400)
+      .json(errorResponse("Invalid query parameters", "VALIDATION_ERROR", parsed.error.flatten()));
     return;
   }
 
@@ -81,7 +83,7 @@ notesRouter.get("/", requireSession, async (req, res) => {
         createdAt: studentNotes.createdAt,
         updatedAt: studentNotes.updatedAt,
         subjectName: subjects.name,
-        chapterTitle: chapters.title
+        chapterTitle: chapters.title,
       })
       .from(studentNotes)
       .leftJoin(subjects, eq(studentNotes.subjectId, subjects.id))
@@ -100,7 +102,9 @@ notesRouter.get("/", requireSession, async (req, res) => {
 notesRouter.post("/", requireSession, async (req, res) => {
   const parsed = createNoteSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json(errorResponse("Invalid note data", "VALIDATION_ERROR", parsed.error.flatten()));
+    res
+      .status(400)
+      .json(errorResponse("Invalid note data", "VALIDATION_ERROR", parsed.error.flatten()));
     return;
   }
 
@@ -116,7 +120,7 @@ notesRouter.post("/", requireSession, async (req, res) => {
         content: parsed.data.content,
         subjectId: parsed.data.subjectId ?? null,
         chapterId: parsed.data.chapterId ?? null,
-        tags: parsed.data.tags
+        tags: parsed.data.tags,
       })
       .returning();
 
@@ -131,13 +135,17 @@ notesRouter.post("/", requireSession, async (req, res) => {
 notesRouter.put("/:id", requireSession, async (req, res) => {
   const params = noteIdParamSchema.safeParse(req.params);
   if (!params.success) {
-    res.status(400).json(errorResponse("Invalid note id", "VALIDATION_ERROR", params.error.flatten()));
+    res
+      .status(400)
+      .json(errorResponse("Invalid note id", "VALIDATION_ERROR", params.error.flatten()));
     return;
   }
 
   const parsed = updateNoteSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json(errorResponse("Invalid note data", "VALIDATION_ERROR", parsed.error.flatten()));
+    res
+      .status(400)
+      .json(errorResponse("Invalid note data", "VALIDATION_ERROR", parsed.error.flatten()));
     return;
   }
 
@@ -158,7 +166,7 @@ notesRouter.put("/:id", requireSession, async (req, res) => {
     }
 
     const updateData: Record<string, unknown> = {
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     if (parsed.data.title !== undefined) updateData.title = parsed.data.title;
@@ -184,7 +192,9 @@ notesRouter.put("/:id", requireSession, async (req, res) => {
 notesRouter.delete("/:id", requireSession, async (req, res) => {
   const params = noteIdParamSchema.safeParse(req.params);
   if (!params.success) {
-    res.status(400).json(errorResponse("Invalid note id", "VALIDATION_ERROR", params.error.flatten()));
+    res
+      .status(400)
+      .json(errorResponse("Invalid note id", "VALIDATION_ERROR", params.error.flatten()));
     return;
   }
 

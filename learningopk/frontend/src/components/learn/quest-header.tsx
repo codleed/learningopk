@@ -18,19 +18,9 @@ interface QuestHeaderProps {
 }
 
 export function QuestHeader(props: QuestHeaderProps) {
-  const {
-    gamificationState,
-    streak,
-    completionPercent,
-    chapterXp,
-  } = props;
+  const { gamificationState, streak, completionPercent, chapterXp } = props;
 
-  const {
-    boardName,
-    subjectName,
-    chapterNumber,
-    chapterTitle,
-  } = useChapter();
+  const { boardName, subjectName, chapterNumber, chapterTitle } = useChapter();
   const reduced = useReducedMotion();
   return (
     <motion.header
@@ -49,8 +39,7 @@ export function QuestHeader(props: QuestHeaderProps) {
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.02]"
         style={{
-          backgroundImage:
-            "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+          backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
           backgroundSize: "20px 20px",
         }}
       />
@@ -82,11 +71,7 @@ export function QuestHeader(props: QuestHeaderProps) {
               className="sm:hidden"
             />
             <div className="hidden sm:block">
-              <ProgressRing
-                percentage={completionPercent}
-                size={76}
-                strokeWidth={6}
-              />
+              <ProgressRing percentage={completionPercent} size={76} strokeWidth={6} />
             </div>
           </motion.div>
 
@@ -140,7 +125,9 @@ export function QuestHeader(props: QuestHeaderProps) {
             <motion.div
               initial={reduced ? false : { width: 0 }}
               animate={{ width: `${completionPercent}%` }}
-              transition={reduced ? { duration: 0 } : { duration: 0.8, ease: "easeOut", delay: 0.3 }}
+              transition={
+                reduced ? { duration: 0 } : { duration: 0.8, ease: "easeOut", delay: 0.3 }
+              }
               className="h-full rounded-full bg-gradient-to-r from-accent-primary to-accent-success"
             />
           </div>

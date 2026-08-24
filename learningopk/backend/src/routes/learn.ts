@@ -19,13 +19,25 @@ import { errorResponse, successResponse } from "../lib/response.js";
 import { inferLegacyGrade } from "../lib/grade-utils.js";
 
 const paramsSchema = z.object({
-  board: z.string().trim().regex(/^[a-z0-9-]+$/),
-  grade: z.string().trim().regex(/^[a-z0-9-]+$/),
-  subject: z.string().trim().regex(/^[a-z0-9-]+$/)
+  board: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/),
+  grade: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/),
+  subject: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/),
 });
 
 const chapterParamsSchema = paramsSchema.extend({
-  chapter: z.string().trim().regex(/^[a-z0-9-]+$/)
+  chapter: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/),
 });
 
 export const learnRouter = Router();
@@ -33,14 +45,32 @@ export const learnRouter = Router();
 learnRouter.get("/patterns/:board/:subject", async (req, res) => {
   const parsed = z
     .object({
-      board: z.string().trim().regex(/^[a-z0-9-]+$/),
-      subject: z.string().trim().regex(/^[a-z0-9-]+$/),
-      grade: z.string().trim().regex(/^[a-z0-9-]+$/).optional()
+      board: z
+        .string()
+        .trim()
+        .regex(/^[a-z0-9-]+$/),
+      subject: z
+        .string()
+        .trim()
+        .regex(/^[a-z0-9-]+$/),
+      grade: z
+        .string()
+        .trim()
+        .regex(/^[a-z0-9-]+$/)
+        .optional(),
     })
     .safeParse({ ...req.params, ...req.query });
 
   if (!parsed.success) {
-    res.status(400).json(errorResponse("Invalid pattern route parameters", "VALIDATION_ERROR", parsed.error.flatten()));
+    res
+      .status(400)
+      .json(
+        errorResponse(
+          "Invalid pattern route parameters",
+          "VALIDATION_ERROR",
+          parsed.error.flatten()
+        )
+      );
     return;
   }
 
@@ -48,7 +78,7 @@ learnRouter.get("/patterns/:board/:subject", async (req, res) => {
   const patterns = await examPatternRepository.findSubjectPatternsByRoute({
     board: parsed.data.board,
     grade,
-    subject: parsed.data.subject
+    subject: parsed.data.subject,
   });
 
   if (!patterns) {
@@ -56,21 +86,23 @@ learnRouter.get("/patterns/:board/:subject", async (req, res) => {
     return;
   }
 
-  res.status(200).json(successResponse({
-    ...patterns,
-    grade
-  }));
+  res.status(200).json(
+    successResponse({
+      ...patterns,
+      grade,
+    })
+  );
 });
 
 learnRouter.get("/boards", async (_req, res) => {
   const [boardRows, classRows] = await Promise.all([
     learnRepository.findAllBoards(),
-    learnRepository.findAllBoardClasses()
+    learnRepository.findAllBoardClasses(),
   ]);
 
   res.status(200).json({
     boards: boardRows,
-    classes: classRows
+    classes: classRows,
   });
 });
 
@@ -78,7 +110,7 @@ learnRouter.get("/subjects", async (_req, res) => {
   const subjectRows = await learnRepository.findAllSubjectsWithBoard();
 
   res.status(200).json({
-    subjects: subjectRows
+    subjects: subjectRows,
   });
 });
 
@@ -87,7 +119,7 @@ learnRouter.get("/:board/:grade/:subject", async (req, res) => {
   if (!parsed.success) {
     res.status(400).json({
       error: "Invalid route parameters",
-      details: parsed.error.flatten()
+      details: parsed.error.flatten(),
     });
     return;
   }
@@ -104,34 +136,36 @@ learnRouter.get("/:board/:grade/:subject", async (req, res) => {
   const chapterRows = await learnRepository.findChaptersBySubject(subjectRow.subjectId);
   const patterns = await examPatternRepository.findSubjectPatternsByRoute(parsed.data);
 
-  res.status(200).json(successResponse({
-    board: {
-      slug: subjectRow.boardSlug,
-      name: subjectRow.boardName
-    },
-    grade,
-    class: {
-      slug: subjectRow.classSlug ?? grade,
-      name: subjectRow.className ?? grade
-    },
-    subject: {
-      id: subjectRow.subjectId,
-      slug: subjectRow.subjectSlug,
-      name: subjectRow.subjectName,
-      description: subjectRow.subjectDescription ?? ""
-    },
-    chapters: chapterRows.map((chapter) => {
-      const pattern = patterns?.chapters.find((item) => item.id === chapter.id);
-      return {
-        ...chapter,
-        weightagePercentage: pattern?.weightagePercentage ?? 0,
-        occurrenceCount: pattern?.occurrenceCount ?? 0,
-        avgMarks: pattern?.avgMarks ?? 0,
-        lastSeenYear: pattern?.lastSeenYear ?? null
-      };
-    }),
-    recommendation: patterns?.recommendation ?? null
-  }));
+  res.status(200).json(
+    successResponse({
+      board: {
+        slug: subjectRow.boardSlug,
+        name: subjectRow.boardName,
+      },
+      grade,
+      class: {
+        slug: subjectRow.classSlug ?? grade,
+        name: subjectRow.className ?? grade,
+      },
+      subject: {
+        id: subjectRow.subjectId,
+        slug: subjectRow.subjectSlug,
+        name: subjectRow.subjectName,
+        description: subjectRow.subjectDescription ?? "",
+      },
+      chapters: chapterRows.map((chapter) => {
+        const pattern = patterns?.chapters.find((item) => item.id === chapter.id);
+        return {
+          ...chapter,
+          weightagePercentage: pattern?.weightagePercentage ?? 0,
+          occurrenceCount: pattern?.occurrenceCount ?? 0,
+          avgMarks: pattern?.avgMarks ?? 0,
+          lastSeenYear: pattern?.lastSeenYear ?? null,
+        };
+      }),
+      recommendation: patterns?.recommendation ?? null,
+    })
+  );
 });
 
 learnRouter.get("/:board/:grade/:subject/graph", requireSession, async (req, res) => {
@@ -139,7 +173,7 @@ learnRouter.get("/:board/:grade/:subject/graph", requireSession, async (req, res
   if (!parsed.success) {
     res.status(400).json({
       error: "Invalid route parameters",
-      details: parsed.error.flatten()
+      details: parsed.error.flatten(),
     });
     return;
   }
@@ -149,7 +183,7 @@ learnRouter.get("/:board/:grade/:subject/graph", requireSession, async (req, res
   if (authedReq.session.user.role === "student") {
     if (authedReq.session.user.board && authedReq.session.user.board !== board) {
       res.status(403).json({
-        error: "Forbidden"
+        error: "Forbidden",
       });
       return;
     }
@@ -157,7 +191,7 @@ learnRouter.get("/:board/:grade/:subject/graph", requireSession, async (req, res
     const normalizedUserClass = rawClass ? inferLegacyGrade(rawClass) : null;
     if (normalizedUserClass && normalizedUserClass !== grade) {
       res.status(403).json({
-        error: "Forbidden"
+        error: "Forbidden",
       });
       return;
     }
@@ -167,22 +201,25 @@ learnRouter.get("/:board/:grade/:subject/graph", requireSession, async (req, res
   const subjectRow = subjectRows[0] ?? null;
   if (!subjectRow) {
     res.status(404).json({
-      error: "Subject not found"
+      error: "Subject not found",
     });
     return;
   }
 
-  const graph = await listSubjectChapterGraph({ subjectId: subjectRow.subjectId, userId: authedReq.session.user.id });
+  const graph = await listSubjectChapterGraph({
+    subjectId: subjectRow.subjectId,
+    userId: authedReq.session.user.id,
+  });
 
   res.status(200).json({
-    graph
+    graph,
   });
 });
 
 // ── Personalized Revision Notes ─────────────────────────────────────────────
 
 const revisionPersonalizeParamsSchema = z.object({
-  chapterId: z.coerce.number().int().positive()
+  chapterId: z.coerce.number().int().positive(),
 });
 
 learnRouter.post("/revision/:chapterId/personalize", requireSession, async (req, res) => {
@@ -193,7 +230,9 @@ learnRouter.post("/revision/:chapterId/personalize", requireSession, async (req,
 
   const parsed = revisionPersonalizeParamsSchema.safeParse(req.params);
   if (!parsed.success) {
-    res.status(400).json(errorResponse("Invalid chapter ID", "VALIDATION_ERROR", parsed.error.flatten()));
+    res
+      .status(400)
+      .json(errorResponse("Invalid chapter ID", "VALIDATION_ERROR", parsed.error.flatten()));
     return;
   }
 
@@ -209,7 +248,7 @@ learnRouter.post("/revision/:chapterId/personalize", requireSession, async (req,
       chapterSummary: chapters.summary,
       grade: subjects.grade,
       subjectName: subjects.name,
-      boardName: boards.name
+      boardName: boards.name,
     })
     .from(chapters)
     .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
@@ -224,28 +263,31 @@ learnRouter.post("/revision/:chapterId/personalize", requireSession, async (req,
   }
 
   // Fetch revision notes, AI context, weak areas, and quiz attempts in parallel
-  const [revisionNotesRow, aiCtx, adaptiveWeakAreas, chapterQuizAttempts, learningPath] = await Promise.all([
-    learnRepository.findRevisionNotesByChapter(chapterId),
-    aiContextRepository.findByUserId(userId),
-    progressService.getAdaptiveWeakAreaLabels(userId, 5),
-    db
-      .select({
-        score: quizAttempts.score,
-        totalMarks: quizAttempts.totalMarks,
-        completedAt: quizAttempts.completedAt
-      })
-      .from(quizAttempts)
-      .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
-      .where(and(eq(quizAttempts.userId, userId), eq(quizzes.chapterId, chapterId)))
-      .orderBy(desc(quizAttempts.completedAt))
-      .limit(10),
-    learningPathService.getLearningPath(userId, {
-      boardSlug: authedReq.session.user.board ?? null,
-      classSlug: authedReq.session.user.class ?? null
-    })
-  ]);
+  const [revisionNotesRow, aiCtx, adaptiveWeakAreas, chapterQuizAttempts, learningPath] =
+    await Promise.all([
+      learnRepository.findRevisionNotesByChapter(chapterId),
+      aiContextRepository.findByUserId(userId),
+      progressService.getAdaptiveWeakAreaLabels(userId, 5),
+      db
+        .select({
+          score: quizAttempts.score,
+          totalMarks: quizAttempts.totalMarks,
+          completedAt: quizAttempts.completedAt,
+        })
+        .from(quizAttempts)
+        .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
+        .where(and(eq(quizAttempts.userId, userId), eq(quizzes.chapterId, chapterId)))
+        .orderBy(desc(quizAttempts.completedAt))
+        .limit(10),
+      learningPathService.getLearningPath(userId, {
+        boardSlug: authedReq.session.user.board ?? null,
+        classSlug: authedReq.session.user.class ?? null,
+      }),
+    ]);
 
-  const mergedWeakAreas = Array.from(new Set([...adaptiveWeakAreas, ...learningPath.studentWeakAreas])).slice(0, 5);
+  const mergedWeakAreas = Array.from(
+    new Set([...adaptiveWeakAreas, ...learningPath.studentWeakAreas])
+  ).slice(0, 5);
 
   // Build the prompt
   const existingNotesSummary: string[] = [];
@@ -254,7 +296,9 @@ learnRouter.post("/revision/:chapterId/personalize", requireSession, async (req,
       existingNotesSummary.push(`Key Formulas: ${revisionNotesRow.keyFormulas.join("; ")}`);
     }
     if (revisionNotesRow.keyDefinitions.length > 0) {
-      const defs = revisionNotesRow.keyDefinitions.map((d) => `${d.term}: ${d.definition}`).join("; ");
+      const defs = revisionNotesRow.keyDefinitions
+        .map((d) => `${d.term}: ${d.definition}`)
+        .join("; ");
       existingNotesSummary.push(`Key Definitions: ${defs}`);
     }
     if (revisionNotesRow.commonMistakes) {
@@ -265,9 +309,15 @@ learnRouter.post("/revision/:chapterId/personalize", requireSession, async (req,
     }
   }
 
-  const quizSummary = chapterQuizAttempts.length > 0
-    ? chapterQuizAttempts.map((a) => `${a.score}/${a.totalMarks} (${Math.round((a.score / Math.max(a.totalMarks, 1)) * 100)}%)`).join(", ")
-    : "No quiz attempts yet";
+  const quizSummary =
+    chapterQuizAttempts.length > 0
+      ? chapterQuizAttempts
+          .map(
+            (a) =>
+              `${a.score}/${a.totalMarks} (${Math.round((a.score / Math.max(a.totalMarks, 1)) * 100)}%)`
+          )
+          .join(", ")
+      : "No quiz attempts yet";
 
   const personalContextLines: string[] = [];
   if (aiCtx?.weakTopics && aiCtx.weakTopics.length > 0) {
@@ -316,7 +366,7 @@ learnRouter.post("/revision/:chapterId/personalize", requireSession, async (req,
       ? `Student's personal learning context:\n${personalContextLines.join("\n")}`
       : "No personal learning data available yet.",
     "",
-    "Generate personalized revision tips for this student and chapter."
+    "Generate personalized revision tips for this student and chapter.",
   ].join("\n");
 
   try {
@@ -328,7 +378,7 @@ learnRouter.post("/revision/:chapterId/personalize", requireSession, async (req,
       system: systemPrompt,
       messages: [{ role: "user" as const, content: userPrompt }] as ModelMessage[],
       maxOutputTokens: 1024,
-      temperature: 0.6
+      temperature: 0.6,
     });
 
     const responseText = result.text.trim();
@@ -343,20 +393,29 @@ learnRouter.post("/revision/:chapterId/personalize", requireSession, async (req,
     const responseSchema = z.object({
       personalizedTips: z.array(z.string()).min(1).max(8),
       focusAreas: z.array(z.string()).min(1).max(6),
-      strengthAreas: z.array(z.string()).max(5)
+      strengthAreas: z.array(z.string()).max(5),
     });
 
     const parsedResponse = responseSchema.safeParse(JSON.parse(jsonText));
     if (!parsedResponse.success) {
-      logger.warn({ error: parsedResponse.error.flatten(), rawText: responseText }, "AI revision personalization returned invalid JSON shape");
-      res.status(502).json(errorResponse("AI returned an unexpected response format", "AI_RESPONSE_INVALID"));
+      logger.warn(
+        { error: parsedResponse.error.flatten(), rawText: responseText },
+        "AI revision personalization returned invalid JSON shape"
+      );
+      res
+        .status(502)
+        .json(errorResponse("AI returned an unexpected response format", "AI_RESPONSE_INVALID"));
       return;
     }
 
     res.status(200).json(successResponse(parsedResponse.data));
   } catch (error) {
     logger.error({ error }, "AI revision personalization failed");
-    res.status(502).json(errorResponse("Failed to generate personalized revision notes", "AI_GENERATION_FAILED"));
+    res
+      .status(502)
+      .json(
+        errorResponse("Failed to generate personalized revision notes", "AI_GENERATION_FAILED")
+      );
   }
 });
 
@@ -365,7 +424,7 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
   if (!parsed.success) {
     res.status(400).json({
       error: "Invalid route parameters",
-      details: parsed.error.flatten()
+      details: parsed.error.flatten(),
     });
     return;
   }
@@ -383,7 +442,7 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
     learnRepository.findExercisesByChapter(chapterRow.chapterId),
     learnRepository.findQuizByChapter(chapterRow.chapterId),
     learnRepository.findRevisionNotesByChapter(chapterRow.chapterId),
-    learnRepository.findChapterSubparts(chapterRow.chapterId)
+    learnRepository.findChapterSubparts(chapterRow.chapterId),
   ]);
   const chapterPattern = await examPatternRepository.findChapterPatternByRoute(parsed.data);
 
@@ -394,47 +453,49 @@ learnRouter.get("/:board/:grade/:subject/:chapter", async (req, res) => {
     quiz = { ...quizRow, questions: quizQuestions };
   }
 
-  res.status(200).json(successResponse({
-    board: {
-      slug: chapterRow.boardSlug,
-      name: chapterRow.boardName
-    },
-    grade,
-    class: {
-      slug: chapterRow.classSlug ?? grade,
-      name: chapterRow.className ?? grade
-    },
-    subject: {
-      id: chapterRow.subjectId,
-      slug: chapterRow.subjectSlug,
-      name: chapterRow.subjectName
-    },
-    chapter: {
-      id: chapterRow.chapterId,
-      chapterNumber: chapterRow.chapterNumber,
-      title: chapterRow.chapterTitle,
-      slug: chapterRow.chapterSlug,
-      summary: chapterRow.chapterSummary ?? "",
-      subparts: chapterSubparts,
-      coverImageUrl: chapterRow.chapterCoverImageUrl,
-      examWeightage: chapterPattern
-        ? {
-            occurrenceCount: chapterPattern.occurrenceCount,
-            avgMarks: chapterPattern.avgMarks,
-            lastSeenYear: chapterPattern.lastSeenYear,
-            weightagePercentage: chapterPattern.weightagePercentage,
-            analysisWindowYears: chapterPattern.analysisWindowYears
-          }
-        : null,
-      revisionNotes: {
-        keyFormulas: chapterRevisionNotes?.keyFormulas ?? [],
-        keyDefinitions: chapterRevisionNotes?.keyDefinitions ?? [],
-        commonMistakes: chapterRevisionNotes?.commonMistakes ?? "",
-        examTips: chapterRevisionNotes?.examTips ?? ""
-      }
-    },
-    exercises: chapterExercises,
-    flashcards: [],
-    quiz: quiz
-  }));
+  res.status(200).json(
+    successResponse({
+      board: {
+        slug: chapterRow.boardSlug,
+        name: chapterRow.boardName,
+      },
+      grade,
+      class: {
+        slug: chapterRow.classSlug ?? grade,
+        name: chapterRow.className ?? grade,
+      },
+      subject: {
+        id: chapterRow.subjectId,
+        slug: chapterRow.subjectSlug,
+        name: chapterRow.subjectName,
+      },
+      chapter: {
+        id: chapterRow.chapterId,
+        chapterNumber: chapterRow.chapterNumber,
+        title: chapterRow.chapterTitle,
+        slug: chapterRow.chapterSlug,
+        summary: chapterRow.chapterSummary ?? "",
+        subparts: chapterSubparts,
+        coverImageUrl: chapterRow.chapterCoverImageUrl,
+        examWeightage: chapterPattern
+          ? {
+              occurrenceCount: chapterPattern.occurrenceCount,
+              avgMarks: chapterPattern.avgMarks,
+              lastSeenYear: chapterPattern.lastSeenYear,
+              weightagePercentage: chapterPattern.weightagePercentage,
+              analysisWindowYears: chapterPattern.analysisWindowYears,
+            }
+          : null,
+        revisionNotes: {
+          keyFormulas: chapterRevisionNotes?.keyFormulas ?? [],
+          keyDefinitions: chapterRevisionNotes?.keyDefinitions ?? [],
+          commonMistakes: chapterRevisionNotes?.commonMistakes ?? "",
+          examTips: chapterRevisionNotes?.examTips ?? "",
+        },
+      },
+      exercises: chapterExercises,
+      flashcards: [],
+      quiz: quiz,
+    })
+  );
 });

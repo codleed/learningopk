@@ -83,7 +83,8 @@
   color: var(--md-code-color, inherit);
   padding: 0.125em 0.375em;
   border-radius: 0.25em;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 0.9em;
 }
 
@@ -115,7 +116,8 @@
   border: 1px solid var(--md-code-block-border, #333);
   border-top: none;
   overflow-x: auto;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 0.875em;
   line-height: 1.5;
 }
@@ -131,7 +133,8 @@
 .md-blockquote {
   margin: 1em 0;
   padding: 0.5em 1em;
-  border-left: var(--md-blockquote-border-width, 4px) solid var(--md-blockquote-border-color, #6366f1);
+  border-left: var(--md-blockquote-border-width, 4px) solid
+    var(--md-blockquote-border-color, #6366f1);
   background: var(--md-blockquote-bg, #f9fafb);
   color: var(--md-blockquote-color, #374151);
   border-radius: 0 0.25em 0.25em 0;

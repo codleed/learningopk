@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useRef, useState } from 'react';
-import { cn } from '@/lib/utils';
-import { useAIChatContext } from './ai-chat-context';
-import { AIChatHeader } from './components/ai-chat-header';
-import { AIChatMessages } from './components/ai-chat-messages';
-import { AIChatInput } from './components/ai-chat-input';
-import { AIChatEmptyState } from './components/ai-chat-empty-state';
-import { CrisisBanner } from './components/crisis-banner';
-import { useMobileKeyboard } from './hooks/use-mobile-keyboard';
+import { useRef, useState } from "react";
+import { cn } from "@/lib/utils";
+import { useAIChatContext } from "./ai-chat-context";
+import { AIChatHeader } from "./components/ai-chat-header";
+import { AIChatMessages } from "./components/ai-chat-messages";
+import { AIChatInput } from "./components/ai-chat-input";
+import { AIChatEmptyState } from "./components/ai-chat-empty-state";
+import { CrisisBanner } from "./components/crisis-banner";
+import { useMobileKeyboard } from "./hooks/use-mobile-keyboard";
 
 type AIChatDrawerProps = {
   onClose: () => void;
@@ -33,33 +33,32 @@ export function AIChatDrawer({ onClose, className }: AIChatDrawerProps) {
     clearError,
     dismissCrisisBanner,
   } = useAIChatContext();
-  
-  const [inputValue, setInputValue] = useState('');
+
+  const [inputValue, setInputValue] = useState("");
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const { keyboardVisible, viewportHeight } = useMobileKeyboard();
-  
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       onClose();
     }
   };
-  
+
   if (!isVisible) return null;
-  
+
   const handleSubmit = async () => {
     if (!inputValue.trim() || isSending) return;
     await sendMessage(inputValue);
-    setInputValue('');
+    setInputValue("");
   };
-  
+
   const handleSuggestionClick = (prompt: string) => {
     setInputValue(prompt);
   };
-  
-  const placeholder = messages.length > 0 
-    ? 'Ask a follow-up question...' 
-    : 'Ask your first question...';
-  
+
+  const placeholder =
+    messages.length > 0 ? "Ask a follow-up question..." : "Ask your first question...";
+
   return (
     <>
       <div
@@ -67,18 +66,22 @@ export function AIChatDrawer({ onClose, className }: AIChatDrawerProps) {
         onClick={onClose}
         aria-hidden="true"
       />
-      
+
       <div
         className={cn(
-          'fixed inset-x-0 bottom-0 z-50',
-          'flex h-[85dvh] max-h-[85dvh] flex-col rounded-t-2xl',
-          'border-t border-border-default bg-bg-surface',
-          'shadow-[0_-8px_32px_rgba(0,0,0,0.15)]',
-          'animate-in slide-in-from-bottom duration-300',
-          'xl:hidden',
+          "fixed inset-x-0 bottom-0 z-50",
+          "flex h-[85dvh] max-h-[85dvh] flex-col rounded-t-2xl",
+          "border-t border-border-default bg-bg-surface",
+          "shadow-[0_-8px_32px_rgba(0,0,0,0.15)]",
+          "animate-in slide-in-from-bottom duration-300",
+          "xl:hidden",
           className
         )}
-        style={keyboardVisible ? { height: `${viewportHeight}px`, maxHeight: `${viewportHeight}px` } : undefined}
+        style={
+          keyboardVisible
+            ? { height: `${viewportHeight}px`, maxHeight: `${viewportHeight}px` }
+            : undefined
+        }
         onKeyDown={handleKeyDown}
         role="dialog"
         aria-label="AI Chat Drawer"
@@ -88,13 +91,10 @@ export function AIChatDrawer({ onClose, className }: AIChatDrawerProps) {
         <div className="flex justify-center pt-3 pb-2">
           <div className="h-1 w-10 rounded-full bg-border-default" />
         </div>
-        
+
         <div className="flex min-h-0 flex-1 flex-col">
-          <AIChatHeader
-            variant="drawer"
-            onClose={onClose}
-          />
-          
+          <AIChatHeader variant="drawer" onClose={onClose} />
+
           {messages.length === 0 ? (
             <AIChatEmptyState
               context={context}
@@ -110,7 +110,7 @@ export function AIChatDrawer({ onClose, className }: AIChatDrawerProps) {
               containerRef={messagesContainerRef}
             />
           )}
-          
+
           {error && (
             <div className="mx-4 mb-2 rounded-xl border border-accent-danger/30 bg-accent-danger/10 px-4 py-3">
               <p className="text-sm text-accent-danger">{error}</p>
@@ -126,8 +126,12 @@ export function AIChatDrawer({ onClose, className }: AIChatDrawerProps) {
 
           {proactiveHint && (
             <div className="mx-4 mb-2 rounded-xl border border-amber-300/40 bg-amber-50 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-500/10">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">Need a hint?</p>
-              <p className="mt-1 text-sm text-amber-900 dark:text-amber-100">{proactiveHint.message}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+                Need a hint?
+              </p>
+              <p className="mt-1 text-sm text-amber-900 dark:text-amber-100">
+                {proactiveHint.message}
+              </p>
               <button
                 type="button"
                 onClick={() => setInputValue(proactiveHint.message)}
@@ -137,7 +141,7 @@ export function AIChatDrawer({ onClose, className }: AIChatDrawerProps) {
               </button>
             </div>
           )}
-           
+
           <AIChatInput
             value={inputValue}
             onChange={setInputValue}

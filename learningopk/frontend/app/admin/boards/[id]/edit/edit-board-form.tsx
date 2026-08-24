@@ -138,19 +138,11 @@ export function EditBoardForm({ board }: EditBoardFormProps) {
         />
       </StickyBreadcrumbWrapper>
 
-      <AdminPageHeader
-        title="Edit Board"
-        subtitle={`Editing "${board.name}"`}
-      />
+      <AdminPageHeader title="Edit Board" subtitle={`Editing "${board.name}"`} />
 
       <AdminFormCard>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <AdminFormField
-            id="board-name"
-            label="Board Name"
-            required
-            error={nameError}
-          >
+          <AdminFormField id="board-name" label="Board Name" required error={nameError}>
             <input
               id="board-name"
               type="text"

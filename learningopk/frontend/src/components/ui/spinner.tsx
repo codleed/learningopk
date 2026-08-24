@@ -19,8 +19,7 @@ const spinnerSizeVariants = cva("", {
 
 /** Props for the Spinner component. */
 export interface SpinnerProps
-  extends HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof spinnerSizeVariants> {
+  extends HTMLAttributes<HTMLDivElement>, VariantProps<typeof spinnerSizeVariants> {
   /** Visual style: "border" (CSS ring) or "dots" (animated dots). */
   variant?: "border" | "dots";
   /** Accessible label. Defaults to "Loading". */
@@ -40,10 +39,8 @@ export function Spinner({
   ...props
 }: SpinnerProps) {
   if (variant === "dots") {
-    const dotSize =
-      size === "sm" ? "h-1.5 w-1.5" : size === "lg" ? "h-3 w-3" : "h-2 w-2";
-    const gap =
-      size === "sm" ? "gap-1" : size === "lg" ? "gap-2" : "gap-1.5";
+    const dotSize = size === "sm" ? "h-1.5 w-1.5" : size === "lg" ? "h-3 w-3" : "h-2 w-2";
+    const gap = size === "sm" ? "gap-1" : size === "lg" ? "gap-2" : "gap-1.5";
 
     return (
       <div
@@ -55,10 +52,7 @@ export function Spinner({
         {[0, 1, 2].map((i) => (
           <span
             key={i}
-            className={cn(
-              "rounded-full bg-accent-primary",
-              dotSize
-            )}
+            className={cn("rounded-full bg-accent-primary", dotSize)}
             style={{
               animation: "streaming-dot 1.4s ease-in-out infinite",
               animationDelay: `${i * 0.2}s`,

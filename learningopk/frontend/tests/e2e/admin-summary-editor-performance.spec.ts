@@ -6,11 +6,15 @@ const loginAsSeededAdmin = async (page: Page) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("admin@example.com");
   await page.getByLabel("Password").fill("password");
-  await Promise.all([page.waitForURL(/\/dashboard$/), page.getByRole("button", { name: "Sign in" }).click()]);
+  await Promise.all([
+    page.waitForURL(/\/dashboard$/),
+    page.getByRole("button", { name: "Sign in" }).click(),
+  ]);
 };
 
 const buildLongMarkdown = (targetLength: number): string => {
-  const line = "Momentum depends on mass and velocity with practical examples from chapter drills. ";
+  const line =
+    "Momentum depends on mass and velocity with practical examples from chapter drills. ";
   let content = "## Summary Performance Baseline\n\n";
   while (content.length < targetLength) {
     content += `${line}${Math.random().toString(36).slice(2, 8)}\n`;
@@ -39,26 +43,31 @@ test("admin summary editor baseline performance", async ({ page }, testInfo) => 
   const select = page.getByTestId("curriculum-summary-editor-chapter-select");
   const firstChapterValue = await select.evaluate((element) => {
     const selectElement = element as HTMLSelectElement;
-    const firstOption = Array.from(selectElement.options).find((option) => option.value.trim().length > 0);
+    const firstOption = Array.from(selectElement.options).find(
+      (option) => option.value.trim().length > 0
+    );
     return firstOption?.value ?? "";
   });
   expect(firstChapterValue.length).toBeGreaterThan(0);
 
   const summaryLoadStart = Date.now();
   await select.selectOption(firstChapterValue);
-  await expect.poll(async () => {
-    return page.evaluate(() => {
-      const cmHost = document.querySelector("[data-testid='curriculum-summary-editor-cm6']") as
-        | (HTMLDivElement & { __cmView?: { state: { doc: { toString: () => string } } } })
-        | null;
-      if (cmHost?.__cmView) {
-        return cmHost.__cmView.state.doc.toString().trim().length;
-      }
+  await expect
+    .poll(async () => {
+      return page.evaluate(() => {
+        const cmHost = document.querySelector("[data-testid='curriculum-summary-editor-cm6']") as
+          (HTMLDivElement & { __cmView?: { state: { doc: { toString: () => string } } } }) | null;
+        if (cmHost?.__cmView) {
+          return cmHost.__cmView.state.doc.toString().trim().length;
+        }
 
-      const textarea = document.querySelector("[data-testid='curriculum-summary-editor-input']") as HTMLTextAreaElement | null;
-      return textarea?.value.trim().length ?? 0;
-    });
-  }).toBeGreaterThan(0);
+        const textarea = document.querySelector(
+          "[data-testid='curriculum-summary-editor-input']"
+        ) as HTMLTextAreaElement | null;
+        return textarea?.value.trim().length ?? 0;
+      });
+    })
+    .toBeGreaterThan(0);
   const summaryLoadMs = Date.now() - summaryLoadStart;
 
   const longMarkdown = buildLongMarkdown(15_000);
@@ -73,7 +82,9 @@ test("admin summary editor baseline performance", async ({ page }, testInfo) => 
           };
         })
       | null;
-    const input = document.querySelector("[data-testid='curriculum-summary-editor-input']") as HTMLTextAreaElement | null;
+    const input = document.querySelector(
+      "[data-testid='curriculum-summary-editor-input']"
+    ) as HTMLTextAreaElement | null;
 
     const waitFrame = () =>
       new Promise<void>((resolve) => {
@@ -86,8 +97,8 @@ test("admin summary editor baseline performance", async ({ page }, testInfo) => 
         changes: {
           from: 0,
           to: view.state.doc.length,
-          insert: seedMarkdown
-        }
+          insert: seedMarkdown,
+        },
       });
       await waitFrame();
       await waitFrame();
@@ -100,8 +111,8 @@ test("admin summary editor baseline performance", async ({ page }, testInfo) => 
           changes: {
             from: view.state.doc.length,
             to: view.state.doc.length,
-            insert: token
-          }
+            insert: token,
+          },
         });
         await waitFrame();
         await waitFrame();
@@ -111,7 +122,7 @@ test("admin summary editor baseline performance", async ({ page }, testInfo) => 
       return {
         editorType: "codemirror",
         samples,
-        finalLength: view.state.doc.length
+        finalLength: view.state.doc.length,
       };
     }
 
@@ -138,7 +149,7 @@ test("admin summary editor baseline performance", async ({ page }, testInfo) => 
     return {
       editorType: "textarea",
       samples,
-      finalLength: input.value.length
+      finalLength: input.value.length,
     };
   }, longMarkdown);
 
@@ -147,7 +158,12 @@ test("admin summary editor baseline performance", async ({ page }, testInfo) => 
   }
 
   const typingP95Ms = Number(percentile(typingMetrics.samples, 0.95).toFixed(2));
-  const typingMeanMs = Number((typingMetrics.samples.reduce((total, value) => total + value, 0) / typingMetrics.samples.length).toFixed(2));
+  const typingMeanMs = Number(
+    (
+      typingMetrics.samples.reduce((total, value) => total + value, 0) /
+      typingMetrics.samples.length
+    ).toFixed(2)
+  );
   const typingMaxMs = Number(Math.max(...typingMetrics.samples).toFixed(2));
 
   expect(typingMetrics.finalLength).toBeGreaterThan(15_000);
@@ -162,8 +178,8 @@ test("admin summary editor baseline performance", async ({ page }, testInfo) => 
       sampleCount: typingMetrics.samples.length,
       p95Ms: typingP95Ms,
       meanMs: typingMeanMs,
-      maxMs: typingMaxMs
-    }
+      maxMs: typingMaxMs,
+    },
   };
 
   const reportDir = path.resolve(process.cwd(), "../docs/perf");
@@ -173,6 +189,6 @@ test("admin summary editor baseline performance", async ({ page }, testInfo) => 
 
   await testInfo.attach("summary-editor-baseline", {
     body: JSON.stringify(metrics, null, 2),
-    contentType: "application/json"
+    contentType: "application/json",
   });
 });

@@ -14,7 +14,7 @@ test("buildLearningPathRecommendations prioritizes weak quiz performance with we
         exercisesViewed: 1,
         totalExercises: 8,
         aiSessionCount: 2,
-        weakTopicMatch: true
+        weakTopicMatch: true,
       },
       {
         chapterId: 102,
@@ -24,7 +24,7 @@ test("buildLearningPathRecommendations prioritizes weak quiz performance with we
         exercisesViewed: 0,
         totalExercises: 8,
         aiSessionCount: 0,
-        weakTopicMatch: false
+        weakTopicMatch: false,
       },
       {
         chapterId: 103,
@@ -34,17 +34,21 @@ test("buildLearningPathRecommendations prioritizes weak quiz performance with we
         exercisesViewed: 6,
         totalExercises: 8,
         aiSessionCount: 3,
-        weakTopicMatch: false
-      }
+        weakTopicMatch: false,
+      },
     ],
-    limit: 3
+    limit: 3,
   });
 
   assert.equal(result.recommendedChapters.length, 3);
   assert.equal(result.recommendedChapters[0]?.chapterId, 101);
   assert.equal(result.recommendedChapters[0]?.priority, 1);
   assert.match(result.recommendedChapters[0]?.reason ?? "", /quiz|ai tutor/i);
-  assert.deepEqual(result.studentWeakAreas, ["Quadratic Equations", "Sets and Functions", "Trigonometry"]);
+  assert.deepEqual(result.studentWeakAreas, [
+    "Quadratic Equations",
+    "Sets and Functions",
+    "Trigonometry",
+  ]);
 });
 
 test("buildLearningPathRecommendations ignores chapters with no stored weak-area signals", () => {
@@ -58,7 +62,7 @@ test("buildLearningPathRecommendations ignores chapters with no stored weak-area
         exercisesViewed: 0,
         totalExercises: 10,
         aiSessionCount: 0,
-        weakTopicMatch: false
+        weakTopicMatch: false,
       },
       {
         chapterId: 202,
@@ -68,10 +72,10 @@ test("buildLearningPathRecommendations ignores chapters with no stored weak-area
         exercisesViewed: 2,
         totalExercises: 10,
         aiSessionCount: 1,
-        weakTopicMatch: false
-      }
+        weakTopicMatch: false,
+      },
     ],
-    limit: 5
+    limit: 5,
   });
 
   assert.deepEqual(

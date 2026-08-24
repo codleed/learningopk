@@ -25,15 +25,15 @@ interface SubjectConfig {
 }
 
 const SUBJECT_CONFIG: Record<string, SubjectConfig> = {
-  Mathematics:        { color: "#6366F1", icon: Calculator },
-  Physics:            { color: "#06B6D4", icon: Atom },
-  Chemistry:          { color: "#8B5CF6", icon: FlaskConical },
-  Biology:            { color: "#22C55E", icon: Leaf },
-  English:            { color: "#F59E0B", icon: BookOpen },
-  Urdu:               { color: "#EC4899", icon: Languages },
+  Mathematics: { color: "#6366F1", icon: Calculator },
+  Physics: { color: "#06B6D4", icon: Atom },
+  Chemistry: { color: "#8B5CF6", icon: FlaskConical },
+  Biology: { color: "#22C55E", icon: Leaf },
+  English: { color: "#F59E0B", icon: BookOpen },
+  Urdu: { color: "#EC4899", icon: Languages },
   "Pakistan Studies": { color: "#14B8A6", icon: Landmark },
   "Computer Science": { color: "#3B82F6", icon: Monitor },
-  Islamiat:           { color: "#A855F7", icon: Moon },
+  Islamiat: { color: "#A855F7", icon: Moon },
 };
 
 /** Fallback for unknown subjects. */
@@ -56,7 +56,7 @@ const badgeSizeVariants = cva(
     defaultVariants: {
       size: "md",
     },
-  },
+  }
 );
 
 const iconSizeMap: Record<NonNullable<SubjectBadgeSize>, string> = {
@@ -82,11 +82,7 @@ export interface SubjectBadgeProps {
  * Each subject has a consistent color and Lucide icon.
  * Unknown subjects fall back to a neutral gray style.
  */
-export function SubjectBadge({
-  name,
-  size = "md",
-  className,
-}: SubjectBadgeProps) {
+export function SubjectBadge({ name, size = "md", className }: SubjectBadgeProps) {
   const config = SUBJECT_CONFIG[name] ?? DEFAULT_CONFIG;
   const Icon = config.icon;
   const sizeKey = size ?? "md";

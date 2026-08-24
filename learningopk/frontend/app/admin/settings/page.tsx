@@ -11,13 +11,13 @@ export default async function AdminSettingsPage() {
   const payload = await getAdminSettings({
     page: 1,
     pageSize: 20,
-    cookieHeader
+    cookieHeader,
   }).catch(() => ({
     entries: [],
     total: 0,
     page: 1,
     pageSize: 20,
-    hasMore: false
+    hasMore: false,
   }));
 
   return (
@@ -27,7 +27,10 @@ export default async function AdminSettingsPage() {
         title="System Settings"
         subtitle="Manage allowlisted platform defaults and operational flags."
         actions={
-          <Link href="/admin" className="text-sm font-medium text-text-primary underline underline-offset-4">
+          <Link
+            href="/admin"
+            className="text-sm font-medium text-text-primary underline underline-offset-4"
+          >
             Back to admin
           </Link>
         }

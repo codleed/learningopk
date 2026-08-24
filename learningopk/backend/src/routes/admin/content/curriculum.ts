@@ -17,7 +17,7 @@ curriculumAdminRouter.get("/content/curriculum", requireSession, async (req, res
     .select({
       id: boards.id,
       name: boards.name,
-      slug: boards.slug
+      slug: boards.slug,
     })
     .from(boards)
     .orderBy(asc(boards.name));
@@ -27,7 +27,7 @@ curriculumAdminRouter.get("/content/curriculum", requireSession, async (req, res
       id: boardClasses.id,
       boardId: boardClasses.boardId,
       name: boardClasses.name,
-      slug: boardClasses.slug
+      slug: boardClasses.slug,
     })
     .from(boardClasses)
     .orderBy(asc(boardClasses.name));
@@ -40,7 +40,7 @@ curriculumAdminRouter.get("/content/curriculum", requireSession, async (req, res
       slug: subjects.slug,
       icon: subjects.icon,
       description: subjects.description,
-      coverImageUrl: subjects.coverImageUrl
+      coverImageUrl: subjects.coverImageUrl,
     })
     .from(subjects)
     .where(sql`${subjects.boardClassId} is not null`)
@@ -54,7 +54,7 @@ curriculumAdminRouter.get("/content/curriculum", requireSession, async (req, res
       title: chapters.title,
       slug: chapters.slug,
       isPublished: chapters.isPublished,
-      coverImageUrl: chapters.coverImageUrl
+      coverImageUrl: chapters.coverImageUrl,
     })
     .from(chapters)
     .orderBy(asc(chapters.chapterNumber));
@@ -104,13 +104,13 @@ curriculumAdminRouter.get("/content/curriculum", requireSession, async (req, res
           title: chapter.title,
           slug: chapter.slug,
           isPublished: chapter.isPublished,
-          coverImageUrl: chapter.coverImageUrl
-        }))
-      }))
-    }))
+          coverImageUrl: chapter.coverImageUrl,
+        })),
+      })),
+    })),
   }));
 
   res.status(200).json({
-    boards: tree
+    boards: tree,
   });
 });

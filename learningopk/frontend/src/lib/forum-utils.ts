@@ -45,12 +45,20 @@ export function buildForumHref(query: {
  */
 export const forumSearchParamsSchema = z.object({
   q: z.string().trim().min(1).max(160).optional(),
-  board: z.string().trim().regex(/^[a-z0-9-]+$/).optional(),
-  grade: z.string().trim().regex(/^[a-z0-9-]+$/).optional(),
+  board: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
+  grade: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
   subjectId: z.string().regex(/^\d+$/).optional(),
   chapterId: z.string().regex(/^\d+$/).optional(),
   solved: z.enum(["all", "solved", "unsolved"]).optional().default("all"),
-  compose: z.enum(["1"]).optional()
+  compose: z.enum(["1"]).optional(),
 });
 
 export type ForumSearchParams = z.infer<typeof forumSearchParamsSchema>;

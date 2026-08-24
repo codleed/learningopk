@@ -83,11 +83,19 @@ const studentSchema = z.object({
 // --- Teacher endpoints ---
 
 export async function getClassroomById(classroomId: number, cookieHeader?: string) {
-  return fetchTeacherJson(`/api/teacher/classrooms/${classroomId}`, classroomSchema, cookieHeader ? { cookieHeader } : undefined);
+  return fetchTeacherJson(
+    `/api/teacher/classrooms/${classroomId}`,
+    classroomSchema,
+    cookieHeader ? { cookieHeader } : undefined
+  );
 }
 
 export async function getClassrooms(cookieHeader?: string) {
-  return fetchTeacherJson("/api/teacher/classrooms", z.array(classroomSchema), cookieHeader ? { cookieHeader } : undefined);
+  return fetchTeacherJson(
+    "/api/teacher/classrooms",
+    z.array(classroomSchema),
+    cookieHeader ? { cookieHeader } : undefined
+  );
 }
 
 export async function createClassroom(data: {
@@ -102,12 +110,15 @@ export async function createClassroom(data: {
   });
 }
 
-export async function updateClassroom(classroomId: number, data: Partial<{
-  name: string;
-  boardId: number;
-  grade: string;
-  description: string | null;
-}>) {
+export async function updateClassroom(
+  classroomId: number,
+  data: Partial<{
+    name: string;
+    boardId: number;
+    grade: string;
+    description: string | null;
+  }>
+) {
   return fetchTeacherJson(`/api/teacher/classrooms/${classroomId}`, classroomSchema, {
     method: "PATCH",
     body: JSON.stringify(data),
@@ -115,33 +126,52 @@ export async function updateClassroom(classroomId: number, data: Partial<{
 }
 
 export async function deleteClassroom(classroomId: number) {
-  return fetchTeacherJson(`/api/teacher/classrooms/${classroomId}`, z.object({ archived: z.boolean() }), {
-    method: "DELETE",
-  });
+  return fetchTeacherJson(
+    `/api/teacher/classrooms/${classroomId}`,
+    z.object({ archived: z.boolean() }),
+    {
+      method: "DELETE",
+    }
+  );
 }
 
 export async function getStudents(classroomId: number, cookieHeader?: string) {
-  return fetchTeacherJson(`/api/teacher/classrooms/${classroomId}/students`, z.array(studentSchema), cookieHeader ? { cookieHeader } : undefined);
+  return fetchTeacherJson(
+    `/api/teacher/classrooms/${classroomId}/students`,
+    z.array(studentSchema),
+    cookieHeader ? { cookieHeader } : undefined
+  );
 }
 
 export async function removeStudent(classroomId: number, studentId: string) {
-  return fetchTeacherJson(`/api/teacher/classrooms/${classroomId}/students/${studentId}/remove`, z.object({ removed: z.boolean() }), {
-    method: "POST",
-  });
+  return fetchTeacherJson(
+    `/api/teacher/classrooms/${classroomId}/students/${studentId}/remove`,
+    z.object({ removed: z.boolean() }),
+    {
+      method: "POST",
+    }
+  );
 }
 
 export async function getAssignments(classroomId: number, cookieHeader?: string) {
-  return fetchTeacherJson(`/api/teacher/classrooms/${classroomId}/assignments`, z.array(assignmentSchema), cookieHeader ? { cookieHeader } : undefined);
+  return fetchTeacherJson(
+    `/api/teacher/classrooms/${classroomId}/assignments`,
+    z.array(assignmentSchema),
+    cookieHeader ? { cookieHeader } : undefined
+  );
 }
 
-export async function createAssignment(classroomId: number, data: {
-  type: "chapter" | "quiz" | "mock_exam";
-  targetId: number;
-  title: string;
-  description?: string;
-  dueDate?: string;
-  points?: number;
-}) {
+export async function createAssignment(
+  classroomId: number,
+  data: {
+    type: "chapter" | "quiz" | "mock_exam";
+    targetId: number;
+    title: string;
+    description?: string;
+    dueDate?: string;
+    points?: number;
+  }
+) {
   return fetchTeacherJson(`/api/teacher/classrooms/${classroomId}/assignments`, assignmentSchema, {
     method: "POST",
     body: JSON.stringify(data),
@@ -149,33 +179,60 @@ export async function createAssignment(classroomId: number, data: {
 }
 
 export async function getAnnouncements(classroomId: number, cookieHeader?: string) {
-  return fetchTeacherJson(`/api/teacher/classrooms/${classroomId}/announcements`, z.array(announcementSchema), cookieHeader ? { cookieHeader } : undefined);
+  return fetchTeacherJson(
+    `/api/teacher/classrooms/${classroomId}/announcements`,
+    z.array(announcementSchema),
+    cookieHeader ? { cookieHeader } : undefined
+  );
 }
 
-export async function createAnnouncement(classroomId: number, data: { content: string; pinned?: boolean }) {
-  return fetchTeacherJson(`/api/teacher/classrooms/${classroomId}/announcements`, announcementSchema, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+export async function createAnnouncement(
+  classroomId: number,
+  data: { content: string; pinned?: boolean }
+) {
+  return fetchTeacherJson(
+    `/api/teacher/classrooms/${classroomId}/announcements`,
+    announcementSchema,
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    }
+  );
 }
 
 // --- Student endpoints ---
 
 export async function joinClassroom(inviteCode: string) {
-  return fetchTeacherJson("/api/classrooms/join", z.object({ classroomId: z.number(), name: z.string(), teacherId: z.string() }), {
-    method: "POST",
-    body: JSON.stringify({ inviteCode }),
-  });
+  return fetchTeacherJson(
+    "/api/classrooms/join",
+    z.object({ classroomId: z.number(), name: z.string(), teacherId: z.string() }),
+    {
+      method: "POST",
+      body: JSON.stringify({ inviteCode }),
+    }
+  );
 }
 
 export async function getMyClassroom(cookieHeader?: string) {
-  return fetchTeacherJson("/api/classrooms/me", classroomSchema.nullable(), cookieHeader ? { cookieHeader } : undefined);
+  return fetchTeacherJson(
+    "/api/classrooms/me",
+    classroomSchema.nullable(),
+    cookieHeader ? { cookieHeader } : undefined
+  );
 }
 
 export async function getMyAssignments(classroomId: number, cookieHeader?: string) {
-  return fetchTeacherJson(`/api/classrooms/${classroomId}/assignments`, z.array(assignmentSchema), cookieHeader ? { cookieHeader } : undefined);
+  return fetchTeacherJson(
+    `/api/classrooms/${classroomId}/assignments`,
+    z.array(assignmentSchema),
+    cookieHeader ? { cookieHeader } : undefined
+  );
 }
 
 export async function getMyAnnouncements(classroomId: number, cookieHeader?: string) {
-  return fetchTeacherJson(`/api/classrooms/${classroomId}/announcements`, z.array(announcementSchema), cookieHeader ? { cookieHeader } : undefined);
+  return fetchTeacherJson(
+    `/api/classrooms/${classroomId}/announcements`,
+    z.array(announcementSchema),
+    cookieHeader ? { cookieHeader } : undefined
+  );
 }

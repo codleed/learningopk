@@ -7,7 +7,12 @@ import { db } from "../../lib/db/index.js";
 import { adminAuditLogs } from "../../lib/db/schema.js";
 import { requireSession, type AuthenticatedRequest } from "../../lib/session.js";
 import { escapeLikePattern } from "../../lib/escape-like.js";
-import { adminAuditScopeValues, adminAuditStatusValues, type AdminAuditScope, type AdminAuditStatus } from "./shared.js";
+import {
+  adminAuditScopeValues,
+  adminAuditStatusValues,
+  type AdminAuditScope,
+  type AdminAuditStatus,
+} from "./shared.js";
 
 type ListAuditLogsInput = {
   scope?: AdminAuditScope;
@@ -19,15 +24,21 @@ type ListAuditLogsInput = {
 
 const auditLogQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).optional().default(20)
+  pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
 });
 
 const aggregatedAuditLogQuerySchema = z.object({
-  scope: z.enum(["all", ...adminAuditScopeValues]).optional().default("all"),
-  status: z.enum(["all", ...adminAuditStatusValues]).optional().default("all"),
+  scope: z
+    .enum(["all", ...adminAuditScopeValues])
+    .optional()
+    .default("all"),
+  status: z
+    .enum(["all", ...adminAuditStatusValues])
+    .optional()
+    .default("all"),
   q: z.string().trim().optional().default(""),
   page: z.coerce.number().int().min(1).optional().default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).optional().default(20)
+  pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
 });
 
 const listAuditLogs = async ({ scope, status, q, page, pageSize }: ListAuditLogsInput) => {
@@ -65,7 +76,7 @@ const listAuditLogs = async ({ scope, status, q, page, pageSize }: ListAuditLogs
       message: adminAuditLogs.message,
       actorId: adminAuditLogs.actorId,
       actorName: adminAuditLogs.actorName,
-      createdAt: adminAuditLogs.createdAt
+      createdAt: adminAuditLogs.createdAt,
     })
     .from(adminAuditLogs)
     .where(whereClause)
@@ -75,7 +86,7 @@ const listAuditLogs = async ({ scope, status, q, page, pageSize }: ListAuditLogs
 
   const totalRows = await db
     .select({
-      count: sql<number>`count(*)::int`
+      count: sql<number>`count(*)::int`,
     })
     .from(adminAuditLogs)
     .where(whereClause);
@@ -92,16 +103,20 @@ const listAuditLogs = async ({ scope, status, q, page, pageSize }: ListAuditLogs
       message: row.message,
       actor: {
         id: row.actorId,
-        name: row.actorName
+        name: row.actorName,
       },
-      occurredAt: row.createdAt.toISOString()
+      occurredAt: row.createdAt.toISOString(),
     })),
     total,
-    hasMore: offset + rows.length < total
+    hasMore: offset + rows.length < total,
   };
 };
 
-const handleAuditLogRead = async (req: AuthenticatedRequest, res: Response, scope: AdminAuditScope) => {
+const handleAuditLogRead = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  scope: AdminAuditScope
+) => {
   if (!(await requireAdminRole(req, res))) {
     return;
   }
@@ -110,7 +125,7 @@ const handleAuditLogRead = async (req: AuthenticatedRequest, res: Response, scop
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid audit log query parameters",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
@@ -123,7 +138,7 @@ const handleAuditLogRead = async (req: AuthenticatedRequest, res: Response, scop
     total: payload.total,
     page,
     pageSize,
-    hasMore: payload.hasMore
+    hasMore: payload.hasMore,
   });
 };
 
@@ -136,7 +151,7 @@ const handleAggregatedAuditLogRead = async (req: AuthenticatedRequest, res: Resp
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid aggregated audit log query parameters",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
@@ -147,7 +162,7 @@ const handleAggregatedAuditLogRead = async (req: AuthenticatedRequest, res: Resp
     ...(status !== "all" ? { status } : {}),
     ...(q.length > 0 ? { q } : {}),
     page,
-    pageSize
+    pageSize,
   });
 
   res.status(200).json({
@@ -155,7 +170,7 @@ const handleAggregatedAuditLogRead = async (req: AuthenticatedRequest, res: Resp
     total: payload.total,
     page,
     pageSize,
-    hasMore: payload.hasMore
+    hasMore: payload.hasMore,
   });
 };
 

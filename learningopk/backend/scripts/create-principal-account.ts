@@ -16,9 +16,9 @@ async function main() {
   const backendUrl = process.env.BETTER_AUTH_URL ?? "http://localhost:3001";
   const signUpResponse = await fetch(`${backendUrl}/api/auth/sign-up/email`, {
     method: "POST",
-    headers: { 
+    headers: {
       "Content-Type": "application/json",
-      "Origin": process.env.FRONTEND_ORIGIN ?? "http://localhost:3000"
+      Origin: process.env.FRONTEND_ORIGIN ?? "http://localhost:3000",
     },
     body: JSON.stringify({
       email: PRINCIPAL_EMAIL,
@@ -46,13 +46,9 @@ async function main() {
   console.log("✅ Principal signed up:", userId);
 
   // 3. Update user's school_id and set as school admin
-  await db.update(users)
-    .set({ schoolId: SCHOOL_ID })
-    .where(eq(users.id, userId));
+  await db.update(users).set({ schoolId: SCHOOL_ID }).where(eq(users.id, userId));
 
-  await db.update(schools)
-    .set({ adminUserId: userId })
-    .where(eq(schools.id, SCHOOL_ID));
+  await db.update(schools).set({ adminUserId: userId }).where(eq(schools.id, SCHOOL_ID));
 
   console.log("\n🎉 Principal account ready!");
   console.log("─────────────────────────────────────────");

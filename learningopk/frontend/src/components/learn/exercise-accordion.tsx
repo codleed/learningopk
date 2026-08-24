@@ -40,7 +40,9 @@ export function ExerciseAccordion({
           return parsed;
         }
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     return null;
   });
 
@@ -50,26 +52,35 @@ export function ExerciseAccordion({
     return orderOverride.map((id) => map.get(id)!).filter(Boolean);
   }, [exercises, orderOverride]);
 
-  const saveOrder = useCallback((newOrder: number[]) => {
-    setOrderOverride(newOrder);
-    localStorage.setItem(STORAGE_KEY(chapterId), JSON.stringify(newOrder));
-  }, [chapterId]);
+  const saveOrder = useCallback(
+    (newOrder: number[]) => {
+      setOrderOverride(newOrder);
+      localStorage.setItem(STORAGE_KEY(chapterId), JSON.stringify(newOrder));
+    },
+    [chapterId]
+  );
 
-  const moveUp = useCallback((index: number) => {
-    if (index <= 0) return;
-    const ids = orderedExercises.map((e) => e.id);
-    const newIds = [...ids];
-    [newIds[index], newIds[index - 1]] = [newIds[index - 1], newIds[index]];
-    saveOrder(newIds);
-  }, [orderedExercises, saveOrder]);
+  const moveUp = useCallback(
+    (index: number) => {
+      if (index <= 0) return;
+      const ids = orderedExercises.map((e) => e.id);
+      const newIds = [...ids];
+      [newIds[index], newIds[index - 1]] = [newIds[index - 1], newIds[index]];
+      saveOrder(newIds);
+    },
+    [orderedExercises, saveOrder]
+  );
 
-  const moveDown = useCallback((index: number) => {
-    if (index >= orderedExercises.length - 1) return;
-    const ids = orderedExercises.map((e) => e.id);
-    const newIds = [...ids];
-    [newIds[index], newIds[index + 1]] = [newIds[index + 1], newIds[index]];
-    saveOrder(newIds);
-  }, [orderedExercises, saveOrder]);
+  const moveDown = useCallback(
+    (index: number) => {
+      if (index >= orderedExercises.length - 1) return;
+      const ids = orderedExercises.map((e) => e.id);
+      const newIds = [...ids];
+      [newIds[index], newIds[index + 1]] = [newIds[index + 1], newIds[index]];
+      saveOrder(newIds);
+    },
+    [orderedExercises, saveOrder]
+  );
 
   const resetOrder = useCallback(() => {
     setOrderOverride(null);
@@ -101,9 +112,7 @@ export function ExerciseAccordion({
           <span className="font-[var(--font-mono)] text-xs font-medium uppercase tracking-[0.08em] text-text-secondary">
             {exercises.length} {exercises.length === 1 ? "exercise" : "exercises"}
           </span>
-          {hasCustomOrder && (
-            <span className="text-[10px] text-text-muted">(custom order)</span>
-          )}
+          {hasCustomOrder && <span className="text-[10px] text-text-muted">(custom order)</span>}
         </motion.div>
         {hasCustomOrder && (
           <Button variant="ghost" size="sm" onClick={resetOrder}>

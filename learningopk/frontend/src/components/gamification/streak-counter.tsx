@@ -30,10 +30,7 @@ export function StreakCounter({ streak, className }: StreakCounterProps) {
         className
       )}
     >
-      <motion.div
-        animate={{ scale: [1, 1.1, 1] }}
-        transition={{ duration: 1.5, repeat: Infinity }}
-      >
+      <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
         <Flame className={cn("h-4 w-4", getStreakColor())} />
       </motion.div>
       <span className={cn("text-sm font-bold", getStreakColor())}>{streak}</span>

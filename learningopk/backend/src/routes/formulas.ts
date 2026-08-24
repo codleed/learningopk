@@ -8,13 +8,19 @@ const numericStringSchema = z.coerce.number().int().positive();
 
 export const formulasQuerySchema = z.object({
   q: z.string().trim().max(120).optional().default(""),
-  subjectId: z.preprocess((value) => (value === undefined || value === "" ? undefined : value), numericStringSchema.optional()),
-  chapterId: z.preprocess((value) => (value === undefined || value === "" ? undefined : value), numericStringSchema.optional()),
-  tag: z.string().trim().max(50).optional().default("")
+  subjectId: z.preprocess(
+    (value) => (value === undefined || value === "" ? undefined : value),
+    numericStringSchema.optional()
+  ),
+  chapterId: z.preprocess(
+    (value) => (value === undefined || value === "" ? undefined : value),
+    numericStringSchema.optional()
+  ),
+  tag: z.string().trim().max(50).optional().default(""),
 });
 
 export const formulaIdParamSchema = z.object({
-  formulaId: numericStringSchema
+  formulaId: numericStringSchema,
 });
 
 export const formulasRouter = Router();
@@ -24,7 +30,7 @@ formulasRouter.get("/", requireSession, async (req, res) => {
   if (!parsed.success) {
     res.status(400).json({
       error: "Invalid formulas query",
-      details: parsed.error.flatten()
+      details: parsed.error.flatten(),
     });
     return;
   }
@@ -35,18 +41,18 @@ formulasRouter.get("/", requireSession, async (req, res) => {
     ...(parsed.data.q ? { q: parsed.data.q } : {}),
     ...(parsed.data.subjectId ? { subjectId: parsed.data.subjectId } : {}),
     ...(parsed.data.chapterId ? { chapterId: parsed.data.chapterId } : {}),
-    ...(parsed.data.tag ? { tag: parsed.data.tag } : {})
+    ...(parsed.data.tag ? { tag: parsed.data.tag } : {}),
   };
 
   try {
     const [items, filterOptions] = await Promise.all([
       formulasRepository.listFormulas(filters, userId),
-      formulasRepository.listFilters()
+      formulasRepository.listFilters(),
     ]);
 
     res.status(200).json({
       items,
-      filters: filterOptions
+      filters: filterOptions,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -59,7 +65,7 @@ formulasRouter.post("/:formulaId/star", requireSession, async (req, res) => {
   if (!params.success) {
     res.status(400).json({
       error: "Invalid formula id",
-      details: params.error.flatten()
+      details: params.error.flatten(),
     });
     return;
   }
@@ -73,7 +79,10 @@ formulasRouter.post("/:formulaId/star", requireSession, async (req, res) => {
       return;
     }
 
-    const result = await formulasRepository.toggleStar(authedReq.session.user.id, params.data.formulaId);
+    const result = await formulasRepository.toggleStar(
+      authedReq.session.user.id,
+      params.data.formulaId
+    );
     res.status(200).json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -86,7 +95,7 @@ formulasRouter.post("/:formulaId/access", requireSession, async (req, res) => {
   if (!params.success) {
     res.status(400).json({
       error: "Invalid formula id",
-      details: params.error.flatten()
+      details: params.error.flatten(),
     });
     return;
   }

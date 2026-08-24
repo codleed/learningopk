@@ -10,11 +10,11 @@ import { requireSession, type AuthenticatedRequest } from "../../lib/session.js"
 import { persistAuditLog } from "./shared.js";
 
 const threadParamsSchema = z.object({
-  threadId: z.string().uuid()
+  threadId: z.string().uuid(),
 });
 
 const threadPinBodySchema = z.object({
-  isPinned: z.boolean()
+  isPinned: z.boolean(),
 });
 
 const adminCommunityThreadsQuerySchema = z.object({
@@ -22,7 +22,7 @@ const adminCommunityThreadsQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
   solved: z.enum(["all", "solved", "unsolved"]).optional().default("all"),
   pinned: z.enum(["all", "pinned", "unpinned"]).optional().default("all"),
-  flagState: z.enum(["all", "openFlags", "noOpenFlags"]).optional().default("all")
+  flagState: z.enum(["all", "openFlags", "noOpenFlags"]).optional().default("all"),
 });
 
 const listAdminCommunityThreads = async ({
@@ -30,7 +30,7 @@ const listAdminCommunityThreads = async ({
   pageSize,
   solved,
   pinned,
-  flagState
+  flagState,
 }: {
   page: number;
   pageSize: number;
@@ -100,7 +100,7 @@ const listAdminCommunityThreads = async ({
         where moderation_flags.target_type = 'thread'
           and moderation_flags.status = 'open'
           and moderation_flags.target_id = ${threadIdAsText}
-      )`
+      )`,
     })
     .from(forumThreads)
     .innerJoin(users, eq(forumThreads.userId, users.id))
@@ -111,7 +111,7 @@ const listAdminCommunityThreads = async ({
 
   const totalRows = await db
     .select({
-      count: sql<number>`count(*)::int`
+      count: sql<number>`count(*)::int`,
     })
     .from(forumThreads)
     .where(whereClause);
@@ -128,10 +128,10 @@ const listAdminCommunityThreads = async ({
       isDeleted: row.isDeleted,
       replyCount: row.replyCount,
       views: row.views,
-      openFlagCount: row.openFlagCount
+      openFlagCount: row.openFlagCount,
     })),
     total,
-    hasMore: offset + rows.length < total
+    hasMore: offset + rows.length < total,
   };
 };
 
@@ -147,7 +147,7 @@ forumAdminRouter.get("/community/threads", requireSession, async (req, res) => {
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid community threads query parameters",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
@@ -158,7 +158,7 @@ forumAdminRouter.get("/community/threads", requireSession, async (req, res) => {
     pageSize,
     solved,
     pinned,
-    flagState
+    flagState,
   });
 
   res.status(200).json({
@@ -166,7 +166,7 @@ forumAdminRouter.get("/community/threads", requireSession, async (req, res) => {
     total: payload.total,
     page,
     pageSize,
-    hasMore: payload.hasMore
+    hasMore: payload.hasMore,
   });
 });
 
@@ -175,7 +175,7 @@ forumAdminRouter.post("/forum/threads/:threadId/pin", requireSession, async (req
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid thread identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -184,7 +184,7 @@ forumAdminRouter.post("/forum/threads/:threadId/pin", requireSession, async (req
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid thread pin payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -202,7 +202,7 @@ forumAdminRouter.post("/forum/threads/:threadId/pin", requireSession, async (req
   const threadRows = await db
     .select({
       id: forumThreads.id,
-      title: forumThreads.title
+      title: forumThreads.title,
     })
     .from(forumThreads)
     .where(eq(forumThreads.id, parsedParams.data.threadId))
@@ -218,10 +218,10 @@ forumAdminRouter.post("/forum/threads/:threadId/pin", requireSession, async (req
       status: "failed",
       message,
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: message
+      error: message,
     });
     return;
   }
@@ -231,13 +231,13 @@ forumAdminRouter.post("/forum/threads/:threadId/pin", requireSession, async (req
     .update(forumThreads)
     .set({
       isPinned: parsedBody.data.isPinned,
-      updatedAt
+      updatedAt,
     })
     .where(eq(forumThreads.id, parsedParams.data.threadId))
     .returning({
       id: forumThreads.id,
       isPinned: forumThreads.isPinned,
-      updatedAt: forumThreads.updatedAt
+      updatedAt: forumThreads.updatedAt,
     });
 
   const updatedThread = updatedRows[0];
@@ -250,10 +250,10 @@ forumAdminRouter.post("/forum/threads/:threadId/pin", requireSession, async (req
       status: "failed",
       message,
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: message
+      error: message,
     });
     return;
   }
@@ -267,16 +267,18 @@ forumAdminRouter.post("/forum/threads/:threadId/pin", requireSession, async (req
     action,
     target: threadRow.title,
     status: "success",
-    message: parsedBody.data.isPinned ? "Thread pinned successfully." : "Thread unpinned successfully.",
+    message: parsedBody.data.isPinned
+      ? "Thread pinned successfully."
+      : "Thread unpinned successfully.",
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
     thread: {
       id: updatedThread.id,
-      isPinned: updatedThread.isPinned
+      isPinned: updatedThread.isPinned,
     },
-    timestamp: updatedThread.updatedAt.toISOString()
+    timestamp: updatedThread.updatedAt.toISOString(),
   });
 });

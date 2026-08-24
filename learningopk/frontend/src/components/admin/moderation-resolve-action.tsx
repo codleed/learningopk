@@ -13,7 +13,11 @@ type ModerationResolveActionProps = {
   onResolved: (flag: AdminModerationFlag) => void;
 };
 
-export function ModerationResolveAction({ flagId, targetLabel, onResolved }: ModerationResolveActionProps) {
+export function ModerationResolveAction({
+  flagId,
+  targetLabel,
+  onResolved,
+}: ModerationResolveActionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [note, setNote] = useState("");
@@ -25,7 +29,7 @@ export function ModerationResolveAction({ flagId, targetLabel, onResolved }: Mod
       pushToast({
         tone: "error",
         title: "Resolution note too short",
-        description: "Please provide at least 10 characters before resolving."
+        description: "Please provide at least 10 characters before resolving.",
       });
       return;
     }
@@ -34,23 +38,24 @@ export function ModerationResolveAction({ flagId, targetLabel, onResolved }: Mod
     try {
       const payload = await resolveAdminModerationFlag({
         id: flagId,
-        note
+        note,
       });
 
       onResolved(payload.flag);
       pushToast({
         tone: "success",
         title: "Flag resolved",
-        description: `Resolved moderation flag for "${targetLabel}".`
+        description: `Resolved moderation flag for "${targetLabel}".`,
       });
       setNote("");
       setIsExpanded(false);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to resolve moderation flag right now.";
+      const message =
+        error instanceof Error ? error.message : "Unable to resolve moderation flag right now.";
       pushToast({
         tone: "error",
         title: "Resolve failed",
-        description: message
+        description: message,
       });
     } finally {
       setIsPending(false);

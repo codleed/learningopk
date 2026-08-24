@@ -226,12 +226,7 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
     }
 
     return (
-      <AdminFormField
-        id="exercise-question"
-        label="Question"
-        required
-        error={questionError}
-      >
+      <AdminFormField id="exercise-question" label="Question" required error={questionError}>
         <GithubMarkdownEditor
           value={question}
           onChange={(value) => {
@@ -250,12 +245,7 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
     if (activeSection === "blanks") return null;
 
     return (
-      <AdminFormField
-        id="exercise-solution"
-        label="Solution"
-        required
-        error={solutionError}
-      >
+      <AdminFormField id="exercise-solution" label="Solution" required error={solutionError}>
         <GithubMarkdownEditor
           value={solution}
           onChange={(value) => {
@@ -274,14 +264,8 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
     if (activeSection !== "physics") return null;
 
     return (
-      <AdminFormField
-        id="exercise-visualization"
-        label="Illustration (HTML/CSS/JS)"
-      >
-        <NumericalVisualizationEditor
-          value={visualizationHtml}
-          onChange={setVisualizationHtml}
-        />
+      <AdminFormField id="exercise-visualization" label="Illustration (HTML/CSS/JS)">
+        <NumericalVisualizationEditor value={visualizationHtml} onChange={setVisualizationHtml} />
       </AdminFormField>
     );
   };
@@ -311,20 +295,12 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
         />
       </StickyBreadcrumbWrapper>
 
-      <AdminPageHeader
-        title="Add Exercise"
-        subtitle="Create a new exercise under a chapter"
-      />
+      <AdminPageHeader title="Add Exercise" subtitle="Create a new exercise under a chapter" />
 
       {/* ── Metadata Card (chapter, number, difficulty) ── */}
       <AdminFormCard>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <AdminFormField
-            id="exercise-chapter"
-            label="Chapter"
-            required
-            error={chapterError}
-          >
+          <AdminFormField id="exercise-chapter" label="Chapter" required error={chapterError}>
             <Select
               id="exercise-chapter"
               value={chapterId}
@@ -379,15 +355,8 @@ export function AddExerciseForm({ boards, preSelectedChapterId }: AddExerciseFor
 
           {/* ── Exercise Type Tabs ── */}
           <div className="space-y-4">
-            <AdminFormField
-              id="exercise-type"
-              label="Exercise Type"
-              required
-            >
-              <ExerciseTypeTabs
-                value={activeSection}
-                onValueChange={handleSectionChange}
-              />
+            <AdminFormField id="exercise-type" label="Exercise Type" required>
+              <ExerciseTypeTabs value={activeSection} onValueChange={handleSectionChange} />
             </AdminFormField>
 
             {/* ── Accented Section Card with animated content swap ── */}

@@ -13,6 +13,7 @@
 ### Task 1: Reduce Bento auth scale
 
 **Files:**
+
 - Modify: `learningopk/frontend/components/auth/bento-auth-shell.tsx`
 - Modify: `learningopk/frontend/components/auth/bento-auth-field.tsx`
 - Modify: `learningopk/frontend/components/auth/login-form.tsx`

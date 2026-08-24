@@ -8,24 +8,25 @@ export const SUPPORTED_IMAGE_MIME_TYPES = [
   "image/jpeg",
   "image/png",
   "image/webp",
-  "image/gif"
+  "image/gif",
 ] as const;
 
 export type SupportedImageMimeType = (typeof SUPPORTED_IMAGE_MIME_TYPES)[number];
 
-const IMAGE_EXTENSION_BY_MIME_TYPE: Record<SupportedImageMimeType, "jpg" | "png" | "webp" | "gif"> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/gif": "gif"
-};
+const IMAGE_EXTENSION_BY_MIME_TYPE: Record<SupportedImageMimeType, "jpg" | "png" | "webp" | "gif"> =
+  {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/gif": "gif",
+  };
 
 const minioClient = new Client({
   endPoint: env.MINIO_ENDPOINT,
   port: Number(env.MINIO_PORT),
   useSSL: env.MINIO_USE_SSL === "true",
   accessKey: env.MINIO_ACCESS_KEY,
-  secretKey: env.MINIO_SECRET_KEY
+  secretKey: env.MINIO_SECRET_KEY,
 });
 
 const normalizedPublicUrl = env.MINIO_PUBLIC_URL.replace(/\/+$/, "");
@@ -34,14 +35,16 @@ let ensureBucketPromise: Promise<void> | null = null;
 
 const sanitizePathSegment = (value: string) => value.trim().replace(/[^a-zA-Z0-9_-]/g, "_");
 
-export const fileExtensionFromMimeType = (mimeType: string): "jpg" | "png" | "webp" | "gif" | null => {
+export const fileExtensionFromMimeType = (
+  mimeType: string
+): "jpg" | "png" | "webp" | "gif" | null => {
   return IMAGE_EXTENSION_BY_MIME_TYPE[mimeType as SupportedImageMimeType] ?? null;
 };
 
 export const buildProfileImageObjectKey = ({
   userId,
   fileExtension,
-  objectId = randomUUID()
+  objectId = randomUUID(),
 }: {
   userId: string;
   fileExtension: "jpg" | "png" | "webp" | "gif";
@@ -54,7 +57,7 @@ export const buildChapterSummaryObjectKey = ({
   chapterId,
   userId,
   fileExtension,
-  objectId = randomUUID()
+  objectId = randomUUID(),
 }: {
   chapterId: number;
   userId: string;
@@ -73,7 +76,7 @@ export const buildChapterSummaryObjectPrefix = (chapterId: number, userId: strin
 export const buildChapterCoverObjectKey = ({
   chapterId,
   fileExtension,
-  objectId = randomUUID()
+  objectId = randomUUID(),
 }: {
   chapterId: number;
   fileExtension: "jpg" | "png" | "webp" | "gif";
@@ -85,7 +88,7 @@ export const buildChapterCoverObjectKey = ({
 export const buildSubjectCoverObjectKey = ({
   subjectId,
   fileExtension,
-  objectId = randomUUID()
+  objectId = randomUUID(),
 }: {
   subjectId: number;
   fileExtension: "jpg" | "png" | "webp" | "gif";
@@ -97,7 +100,7 @@ export const buildSubjectCoverObjectKey = ({
 export const buildPublicObjectUrl = ({
   bucket = env.MINIO_BUCKET,
   objectKey,
-  bucketInPublicUrl = defaultBucketInPublicUrl
+  bucketInPublicUrl = defaultBucketInPublicUrl,
 }: {
   bucket?: string;
   objectKey: string;
@@ -119,7 +122,7 @@ export const extractManagedObjectKeyFromPublicUrl = ({
   publicUrl,
   bucket,
   objectUrl,
-  bucketInPublicUrl = defaultBucketInPublicUrl
+  bucketInPublicUrl = defaultBucketInPublicUrl,
 }: {
   publicUrl: string;
   bucket: string;
@@ -176,7 +179,7 @@ export const uploadImageBuffer = async ({
   objectKey,
   buffer,
   mimeType,
-  bucket = env.MINIO_BUCKET
+  bucket = env.MINIO_BUCKET,
 }: {
   objectKey: string;
   buffer: Buffer;
@@ -187,18 +190,18 @@ export const uploadImageBuffer = async ({
 
   await minioClient.putObject(bucket, objectKey, buffer, buffer.length, {
     "Content-Type": mimeType,
-    "Cache-Control": "public, max-age=31536000, immutable"
+    "Cache-Control": "public, max-age=31536000, immutable",
   });
 
   return {
     objectKey,
-    objectUrl: buildPublicObjectUrl({ bucket, objectKey })
+    objectUrl: buildPublicObjectUrl({ bucket, objectKey }),
   };
 };
 
 export const deleteObjectIfExists = async ({
   bucket = env.MINIO_BUCKET,
-  objectKey
+  objectKey,
 }: {
   bucket?: string;
   objectKey: string;
@@ -212,7 +215,7 @@ export const deleteObjectIfExists = async ({
 
 export const objectExists = async ({
   bucket = env.MINIO_BUCKET,
-  objectKey
+  objectKey,
 }: {
   bucket?: string;
   objectKey: string;
@@ -229,7 +232,7 @@ export const generatePresignedPutUrl = async ({
   objectKey,
   mimeType,
   expirySeconds = 3600,
-  bucket = env.MINIO_BUCKET
+  bucket = env.MINIO_BUCKET,
 }: {
   objectKey: string;
   mimeType: string;

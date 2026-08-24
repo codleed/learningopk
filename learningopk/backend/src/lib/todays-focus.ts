@@ -57,19 +57,19 @@ type BuildTodaysFocusInput = {
 const XP_BY_DIFFICULTY: Record<FocusDifficulty, number> = {
   easy: 5,
   medium: 10,
-  hard: 15
+  hard: 15,
 };
 
 const DEFAULT_DURATION_BY_DIFFICULTY: Record<FocusDifficulty, number> = {
   easy: 5,
   medium: 8,
-  hard: 12
+  hard: 12,
 };
 
 const RAMADAN_DURATION_BY_DIFFICULTY: Record<FocusDifficulty, number> = {
   easy: 3,
   medium: 4,
-  hard: 5
+  hard: 5,
 };
 
 const truthyValues = new Set(["1", "true", "yes", "on", "enabled"]);
@@ -99,15 +99,23 @@ const getExamTime = (examDate: string | null): number => {
   return Number.isNaN(time) ? Number.POSITIVE_INFINITY : time;
 };
 
-const sortByExamAndChapter = (left: FocusChapterCandidate, right: FocusChapterCandidate): number => {
-  return getExamTime(left.examDate) - getExamTime(right.examDate) || left.chapterNumber - right.chapterNumber;
+const sortByExamAndChapter = (
+  left: FocusChapterCandidate,
+  right: FocusChapterCandidate
+): number => {
+  return (
+    getExamTime(left.examDate) - getExamTime(right.examDate) ||
+    left.chapterNumber - right.chapterNumber
+  );
 };
 
 const buildHref = (chapter: FocusChapterCandidate, tab: "summary" | "quiz"): string =>
   `/${chapter.boardSlug}/${chapter.grade}/${chapter.subjectSlug}/${chapter.chapterSlug}?tab=${tab}`;
 
 const buildDuration = (difficulty: FocusDifficulty, isRamadanAdjusted: boolean): number =>
-  isRamadanAdjusted ? RAMADAN_DURATION_BY_DIFFICULTY[difficulty] : DEFAULT_DURATION_BY_DIFFICULTY[difficulty];
+  isRamadanAdjusted
+    ? RAMADAN_DURATION_BY_DIFFICULTY[difficulty]
+    : DEFAULT_DURATION_BY_DIFFICULTY[difficulty];
 
 const isWithinFastingHours = (now: Date, config: RamadanConfig): boolean => {
   const pktHour = getPktHour(now);
@@ -118,7 +126,7 @@ export const isRamadanByHeuristic = (now: Date): boolean => {
   try {
     const islamicMonth = new Intl.DateTimeFormat("en-u-ca-islamic", {
       month: "long",
-      timeZone: PKT_TIMEZONE
+      timeZone: PKT_TIMEZONE,
     }).format(now);
 
     return /ramad/i.test(islamicMonth);
@@ -203,7 +211,10 @@ export const buildTodaysFocus = (input: BuildTodaysFocusInput): TodaysFocus | nu
 
   const weakQuizChapter = [...input.chapters]
     .filter((chapter) => chapter.quizAttemptsCount > 0 && chapter.bestQuizScorePercent < 50)
-    .sort((left, right) => left.bestQuizScorePercent - right.bestQuizScorePercent || sortByExamAndChapter(left, right))[0];
+    .sort(
+      (left, right) =>
+        left.bestQuizScorePercent - right.bestQuizScorePercent || sortByExamAndChapter(left, right)
+    )[0];
 
   if (weakQuizChapter) {
     const difficulty: FocusDifficulty = "hard";
@@ -237,9 +248,10 @@ export const buildTodaysFocus = (input: BuildTodaysFocusInput): TodaysFocus | nu
         type: "streak_at_risk",
         difficulty,
         title: `Keep your streak alive with ${streakChapter.chapterTitle}`,
-        reason: input.streakDays > 0
-          ? `You have ${input.streakDays} day${input.streakDays === 1 ? "" : "s"} of momentum on the line. Open one bite-sized chapter touchpoint now.`
-          : "Start today with a small win so momentum never has to restart tomorrow.",
+        reason:
+          input.streakDays > 0
+            ? `You have ${input.streakDays} day${input.streakDays === 1 ? "" : "s"} of momentum on the line. Open one bite-sized chapter touchpoint now.`
+            : "Start today with a small win so momentum never has to restart tomorrow.",
         ctaLabel: "Quick Start",
         href: buildHref(streakChapter, "summary"),
         xpReward: XP_BY_DIFFICULTY[difficulty],

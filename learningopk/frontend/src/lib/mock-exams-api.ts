@@ -15,7 +15,7 @@ const mockExamSchema = z.object({
   subjectSlug: z.string(),
   quizId: z.number().int(),
   paperContent: z.string().nullable().optional(),
-  solutionContent: z.string().nullable().optional()
+  solutionContent: z.string().nullable().optional(),
 });
 
 const mockExamDetailSchema = z.object({
@@ -36,14 +36,14 @@ const mockExamDetailSchema = z.object({
   quizType: z.enum(["chapter_quiz", "mock_exam"]),
   quizDurationMinutes: z.number().int(),
   paperContent: z.string().nullable().optional(),
-  solutionContent: z.string().nullable().optional()
+  solutionContent: z.string().nullable().optional(),
 });
 
 const quizAttemptSchema = z.object({
   id: z.string().uuid(),
   score: z.number().int(),
   totalMarks: z.number().int(),
-  completedAt: z.string().datetime()
+  completedAt: z.string().datetime(),
 });
 
 const quizQuestionSchema = z.object({
@@ -59,22 +59,26 @@ const quizQuestionSchema = z.object({
   explanation: z.string().nullable(),
   marks: z.number().int().positive(),
   chapterTitle: z.string().nullable(),
-  chapterNumber: z.number().int().positive().nullable()
+  chapterNumber: z.number().int().positive().nullable(),
 });
 
 const filterOptionsSchema = z.object({
-  boards: z.array(z.object({
-    id: z.number().int(),
-    name: z.string(),
-    slug: z.string()
-  })),
+  boards: z.array(
+    z.object({
+      id: z.number().int(),
+      name: z.string(),
+      slug: z.string(),
+    })
+  ),
   grades: z.array(z.enum(["9", "10"])),
-  subjects: z.array(z.object({
-    id: z.number().int(),
-    name: z.string(),
-    slug: z.string()
-  })),
-  years: z.array(z.number().int())
+  subjects: z.array(
+    z.object({
+      id: z.number().int(),
+      name: z.string(),
+      slug: z.string(),
+    })
+  ),
+  years: z.array(z.number().int()),
 });
 
 export type MockExam = z.infer<typeof mockExamSchema>;
@@ -114,7 +118,9 @@ const fetchJson = async <T>(
     method: "GET",
     cache: "no-store",
     ...(Object.keys(headers).length > 0 ? { headers } : {}),
-    ...(options?.includeCredentials && !options.cookieHeader ? { credentials: "include" as const } : {})
+    ...(options?.includeCredentials && !options.cookieHeader
+      ? { credentials: "include" as const }
+      : {}),
   });
 
   if (!response.ok) {
@@ -168,7 +174,7 @@ export const getMockExam = async (id: number): Promise<MockExamDetail> => {
 export const getMockExamAttempts = async (id: number): Promise<QuizAttempt[]> => {
   const url = `${backendUrl}/api/mock-exams/${id}/attempts`;
   const response = await fetchJson(url, z.object({ attempts: z.array(quizAttemptSchema) }), {
-    includeCredentials: true
+    includeCredentials: true,
   });
   return response.attempts;
 };
@@ -176,7 +182,7 @@ export const getMockExamAttempts = async (id: number): Promise<QuizAttempt[]> =>
 export const getQuizQuestions = async (mockExamId: number): Promise<QuizQuestion[]> => {
   const url = `${backendUrl}/api/mock-exams/${mockExamId}/questions`;
   const response = await fetchJson(url, z.object({ questions: z.array(quizQuestionSchema) }), {
-    includeCredentials: true
+    includeCredentials: true,
   });
   return response.questions;
 };

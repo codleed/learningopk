@@ -97,9 +97,7 @@ export function EditFlashCardForm({ deck, boards }: EditFlashCardFormProps) {
   };
 
   const updateCard = (id: string, field: keyof FlashCard, value: string) => {
-    setCards(
-      cards.map((c) => (c.id === id ? { ...c, [field]: value } : c))
-    );
+    setCards(cards.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
   };
 
   const validateForm = (): boolean => {
@@ -163,7 +161,11 @@ export function EditFlashCardForm({ deck, boards }: EditFlashCardFormProps) {
   };
 
   const handleDelete = async () => {
-    if (window.confirm(`Are you sure you want to delete "${deck.title}"? This action cannot be undone.`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete "${deck.title}"? This action cannot be undone.`
+      )
+    ) {
       try {
         // TODO: Call delete API
         console.log("Delete flash card deck:", deck.id);
@@ -203,12 +205,7 @@ export function EditFlashCardForm({ deck, boards }: EditFlashCardFormProps) {
 
       <AdminFormCard>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <AdminFormField
-            id="flashcard-chapter"
-            label="Chapter"
-            required
-            error={chapterError}
-          >
+          <AdminFormField id="flashcard-chapter" label="Chapter" required error={chapterError}>
             <Select
               id="flashcard-chapter"
               value={chapterId}
@@ -263,9 +260,7 @@ export function EditFlashCardForm({ deck, boards }: EditFlashCardFormProps) {
               </button>
             </div>
 
-            {cardsError && (
-              <p className="text-sm text-red-600">{cardsError}</p>
-            )}
+            {cardsError && <p className="text-sm text-red-600">{cardsError}</p>}
 
             <div className="space-y-4">
               {cards.map((card, index) => (
@@ -274,9 +269,7 @@ export function EditFlashCardForm({ deck, boards }: EditFlashCardFormProps) {
                   className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-4"
                 >
                   <div className="mb-4 flex items-center justify-between">
-                    <h4 className="font-medium text-[var(--text-primary)]">
-                      Card {index + 1}
-                    </h4>
+                    <h4 className="font-medium text-[var(--text-primary)]">Card {index + 1}</h4>
                     {cards.length > 1 && (
                       <button
                         type="button"
@@ -340,11 +333,7 @@ export function EditFlashCardForm({ deck, boards }: EditFlashCardFormProps) {
               </AdminActionButton>
             </Link>
             <div className="ml-auto">
-              <AdminActionButton
-                variant="danger"
-                type="button"
-                onClick={handleDelete}
-              >
+              <AdminActionButton variant="danger" type="button" onClick={handleDelete}>
                 Delete Flash Cards
               </AdminActionButton>
             </div>

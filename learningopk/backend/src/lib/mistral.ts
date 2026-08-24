@@ -34,7 +34,7 @@ export type TutorMode = "explain" | "socratic";
 export const MISTRAL_MODEL_IDS = {
   "mistral-tiny": "mistral-tiny-latest",
   "mistral-small": "mistral-small-latest",
-  "mistral-medium": "mistral-medium-latest"
+  "mistral-medium": "mistral-medium-latest",
 } as const;
 
 export const MISTRAL_MODEL_ID = MISTRAL_MODEL_IDS["mistral-small"];
@@ -43,22 +43,23 @@ export const MISTRAL_COMPLETION_MAX_TOKENS = 2048;
 export const MISTRAL_TEMPERATURE = 0.7;
 
 const mistralProvider = createMistral({
-  apiKey: env.MISTRAL_API_KEY
+  apiKey: env.MISTRAL_API_KEY,
 });
 
 export const mistralModel = mistralProvider(MISTRAL_MODEL_ID);
 
-export const getMistralModel = (modelTier: keyof typeof MISTRAL_MODEL_IDS) => mistralProvider(MISTRAL_MODEL_IDS[modelTier]);
+export const getMistralModel = (modelTier: keyof typeof MISTRAL_MODEL_IDS) =>
+  mistralProvider(MISTRAL_MODEL_IDS[modelTier]);
 
-export const getMistralModelId = (modelTier: keyof typeof MISTRAL_MODEL_IDS) => MISTRAL_MODEL_IDS[modelTier];
+export const getMistralModelId = (modelTier: keyof typeof MISTRAL_MODEL_IDS) =>
+  MISTRAL_MODEL_IDS[modelTier];
 
 const stageInstructions: Record<TutorResponseStage, string> = {
   guide:
     "STAGE: GUIDE QUESTION. Ask one focused guiding question first. Do not reveal the answer yet. Keep to 3-5 short sentences.",
-  hint:
-    "STAGE: STRUCTURED HINT. The student seems stuck once. Give a compact hint, then ask the next guiding question. Do not reveal the full solution yet.",
+  hint: "STAGE: STRUCTURED HINT. The student seems stuck once. Give a compact hint, then ask the next guiding question. Do not reveal the full solution yet.",
   reveal:
-    "STAGE: CONCISE REVEAL. The student appears stuck after 2 attempts. Provide a brief worked solution, then ask a checkpoint question."
+    "STAGE: CONCISE REVEAL. The student appears stuck after 2 attempts. Provide a brief worked solution, then ask a checkpoint question.",
 };
 
 const LATEX_DELIMITER_RULES = [
@@ -68,7 +69,7 @@ const LATEX_DELIMITER_RULES = [
   "$$",
   "\\frac{dy}{dx} = f'(g(x)) \\cdot g'(x)",
   "$$",
-  "NEVER use square-bracket delimiters \\[...\\] or parenthesis delimiters \\(...\\) for math. Only dollar-sign delimiters are supported."
+  "NEVER use square-bracket delimiters \\[...\\] or parenthesis delimiters \\(...\\) for math. Only dollar-sign delimiters are supported.",
 ];
 
 const modeInstructions: Record<TutorMode, string[]> = {
@@ -77,18 +78,21 @@ const modeInstructions: Record<TutorMode, string[]> = {
     "Give the direct explanation first.",
     "Be straightforward, teacher-like, and concise.",
     ...LATEX_DELIMITER_RULES,
-    "Use short Markdown sections when they help clarity, such as `## Idea`, `## Formula`, `## Steps`, and `## Final Answer`."
+    "Use short Markdown sections when they help clarity, such as `## Idea`, `## Formula`, `## Steps`, and `## Final Answer`.",
   ],
   socratic: [
     "MODE: SOCRATIC.",
     "Use the Socratic method to lead the student to the answer.",
     "Give a tiny hint first when useful, then ask one focused guiding question.",
-    ...LATEX_DELIMITER_RULES
-  ]
+    ...LATEX_DELIMITER_RULES,
+  ],
 };
 
 export const inferFailedAttempts = (messages: ChatMessage[]): number => {
-  const userTurns = messages.reduce((count, message) => (message.role === "user" ? count + 1 : count), 0);
+  const userTurns = messages.reduce(
+    (count, message) => (message.role === "user" ? count + 1 : count),
+    0
+  );
   if (userTurns <= 1) {
     return 0;
   }
@@ -136,7 +140,7 @@ export const buildTutorSystemPrompt = (params: {
     "- If the student is incorrect, point out one mistake gently and ask them to try again.",
     "",
     ...modeInstructions[mode],
-    ""
+    "",
   ];
 
   if (mode === "socratic") {
@@ -166,7 +170,9 @@ export const buildTutorSystemPrompt = (params: {
     `- subject=${normalizeText(context.subject)}`,
     `- chapter=${normalizeText(context.chapterTitle)}`,
     `- summary=${normalizeText(context.chapterSummary)}`,
-    context.focusExerciseQuestion ? `- focus_exercise=${normalizeText(context.focusExerciseQuestion)}` : "- focus_exercise=none"
+    context.focusExerciseQuestion
+      ? `- focus_exercise=${normalizeText(context.focusExerciseQuestion)}`
+      : "- focus_exercise=none"
   );
 
   // Inject personal context when available
@@ -191,7 +197,10 @@ export const buildTutorSystemPrompt = (params: {
       );
     }
 
-    if (personalContext.preferredExplanationStyle && personalContext.preferredExplanationStyle !== "balanced") {
+    if (
+      personalContext.preferredExplanationStyle &&
+      personalContext.preferredExplanationStyle !== "balanced"
+    ) {
       personalLines.push(
         `The student prefers ${personalContext.preferredExplanationStyle} explanations.`
       );

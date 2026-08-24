@@ -19,10 +19,7 @@ type StickyBreadcrumbWrapperProps = {
  * padding utility pairs via `className` to make it bleed edge-to-edge within
  * a padded parent (see the chapter page for an example).
  */
-export function StickyBreadcrumbWrapper({
-  children,
-  className,
-}: StickyBreadcrumbWrapperProps) {
+export function StickyBreadcrumbWrapper({ children, className }: StickyBreadcrumbWrapperProps) {
   return (
     <div
       className={cn(
@@ -30,7 +27,7 @@ export function StickyBreadcrumbWrapper({
         "pb-2 pt-3",
         "backdrop-blur-xl bg-bg-base/70",
         "border-b border-border-default/50",
-        className,
+        className
       )}
     >
       {children}

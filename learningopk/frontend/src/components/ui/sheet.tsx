@@ -10,7 +10,14 @@ import { cn } from "@/lib/utils";
 /* ─── Slide direction config ─── */
 type SheetSide = "left" | "right" | "bottom";
 
-const slideVariants: Record<SheetSide, { initial: Record<string, number | string>; animate: Record<string, number | string>; exit: Record<string, number | string> }> = {
+const slideVariants: Record<
+  SheetSide,
+  {
+    initial: Record<string, number | string>;
+    animate: Record<string, number | string>;
+    exit: Record<string, number | string>;
+  }
+> = {
   left: {
     initial: { x: "-100%" },
     animate: { x: 0 },
@@ -127,12 +134,7 @@ export type SheetHeaderProps = HTMLAttributes<HTMLDivElement>;
 
 /** Header area for the sheet panel. */
 export function SheetHeader({ className, ...props }: SheetHeaderProps) {
-  return (
-    <div
-      className={cn("px-5 pt-5 pb-3", className)}
-      {...props}
-    />
-  );
+  return <div className={cn("px-5 pt-5 pb-3", className)} {...props} />;
 }
 
 /** Props for SheetBody. */
@@ -140,12 +142,7 @@ export type SheetBodyProps = HTMLAttributes<HTMLDivElement>;
 
 /** Scrollable body area. */
 export function SheetBody({ className, ...props }: SheetBodyProps) {
-  return (
-    <div
-      className={cn("flex-1 overflow-y-auto px-5 py-4", className)}
-      {...props}
-    />
-  );
+  return <div className={cn("flex-1 overflow-y-auto px-5 py-4", className)} {...props} />;
 }
 
 /** Props for SheetFooter. */

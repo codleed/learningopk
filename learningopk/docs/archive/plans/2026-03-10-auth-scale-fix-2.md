@@ -13,6 +13,7 @@
 ### Task 1: Reduce auth scale further
 
 **Files:**
+
 - Modify: `learningopk/frontend/components/auth/bento-auth-shell.tsx`
 - Modify: `learningopk/frontend/components/auth/bento-auth-field.tsx`
 - Modify: `learningopk/frontend/components/auth/login-form.tsx`
@@ -30,6 +31,7 @@ Expected: PASS before the change; this is a styling-only update with compile ver
 **Step 3: Write minimal implementation**
 
 Reduce:
+
 - input/button heights to `h-11`
 - label/body text to `text-sm`
 - heading/subtitle sizing down one step

@@ -23,7 +23,7 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
     email,
     password: TEST_PASSWORD,
     class: "9th",
-    board: "fbise"
+    board: "fbise",
   });
 
   assert.ok(
@@ -76,29 +76,45 @@ test("admin user role mutation enforces auth/role and applies promote/demote gua
   const studentUser = await getSessionUser(studentAgent);
   await assignAdminRole(adminUser.id);
 
-  const unauthenticated = await anonAgent.post(`/api/admin/users/${studentUser.id}/role`).send({ role: "admin" });
+  const unauthenticated = await anonAgent
+    .post(`/api/admin/users/${studentUser.id}/role`)
+    .send({ role: "admin" });
   assert.equal(unauthenticated.status, 401);
 
-  const forbidden = await memberAgent.post(`/api/admin/users/${studentUser.id}/role`).send({ role: "admin" });
+  const forbidden = await memberAgent
+    .post(`/api/admin/users/${studentUser.id}/role`)
+    .send({ role: "admin" });
   assert.equal(forbidden.status, 403);
 
-  const invalidBody = await adminAgent.post(`/api/admin/users/${studentUser.id}/role`).send({ role: "superadmin" });
+  const invalidBody = await adminAgent
+    .post(`/api/admin/users/${studentUser.id}/role`)
+    .send({ role: "superadmin" });
   assert.equal(invalidBody.status, 400);
 
-  const notFound = await adminAgent.post("/api/admin/users/non-existent-user/role").send({ role: "admin" });
+  const notFound = await adminAgent
+    .post("/api/admin/users/non-existent-user/role")
+    .send({ role: "admin" });
   assert.equal(notFound.status, 404);
 
-  const promoted = await adminAgent.post(`/api/admin/users/${studentUser.id}/role`).send({ role: "admin" });
+  const promoted = await adminAgent
+    .post(`/api/admin/users/${studentUser.id}/role`)
+    .send({ role: "admin" });
   assert.equal(promoted.status, 200);
   assert.equal(promoted.body.user.role, "admin");
 
-  const noOp = await adminAgent.post(`/api/admin/users/${studentUser.id}/role`).send({ role: "admin" });
+  const noOp = await adminAgent
+    .post(`/api/admin/users/${studentUser.id}/role`)
+    .send({ role: "admin" });
   assert.equal(noOp.status, 409);
 
-  const selfMutation = await adminAgent.post(`/api/admin/users/${adminUser.id}/role`).send({ role: "student" });
+  const selfMutation = await adminAgent
+    .post(`/api/admin/users/${adminUser.id}/role`)
+    .send({ role: "student" });
   assert.equal(selfMutation.status, 409);
 
-  const demoted = await adminAgent.post(`/api/admin/users/${studentUser.id}/role`).send({ role: "student" });
+  const demoted = await adminAgent
+    .post(`/api/admin/users/${studentUser.id}/role`)
+    .send({ role: "student" });
   assert.equal(demoted.status, 200);
   assert.equal(demoted.body.user.role, "student");
 });
@@ -110,26 +126,39 @@ test("admin users listing supports status filter with suspension metadata", asyn
   const studentTwoAgent = request.agent(app);
 
   await signUp(adminAgent, "Status Admin", `tst_phase5_status_admin_${Date.now()}@example.com`);
-  await signUp(studentOneAgent, "Status Student One", `tst_phase5_status_student1_${Date.now()}@example.com`);
-  await signUp(studentTwoAgent, "Status Student Two", `tst_phase5_status_student2_${Date.now()}@example.com`);
+  await signUp(
+    studentOneAgent,
+    "Status Student One",
+    `tst_phase5_status_student1_${Date.now()}@example.com`
+  );
+  await signUp(
+    studentTwoAgent,
+    "Status Student Two",
+    `tst_phase5_status_student2_${Date.now()}@example.com`
+  );
 
   const adminUser = await getSessionUser(adminAgent);
   const studentOneUser = await getSessionUser(studentOneAgent);
   await assignAdminRole(adminUser.id);
 
-  const suspendResponse = await adminAgent.post(`/api/admin/users/${studentOneUser.id}/suspension`).send({
-    action: "suspend",
-    reason: "Repeated policy violations in forum posts requiring temporary suspension."
-  });
+  const suspendResponse = await adminAgent
+    .post(`/api/admin/users/${studentOneUser.id}/suspension`)
+    .send({
+      action: "suspend",
+      reason: "Repeated policy violations in forum posts requiring temporary suspension.",
+    });
   assert.equal(suspendResponse.status, 200);
 
   const suspendedListing = await adminAgent.get("/api/admin/users").query({
     status: "suspended",
     page: 1,
-    pageSize: 20
+    pageSize: 20,
   });
   assert.equal(suspendedListing.status, 200);
-  assert.ok(Array.isArray(suspendedListing.body?.entries), "Expected suspended users listing entries payload.");
+  assert.ok(
+    Array.isArray(suspendedListing.body?.entries),
+    "Expected suspended users listing entries payload."
+  );
   assert.ok(suspendedListing.body.entries.length >= 1, "Expected at least one suspended user row.");
   assert.ok(
     suspendedListing.body.entries.every((row: { status: string }) => row.status === "suspended"),
@@ -139,10 +168,13 @@ test("admin users listing supports status filter with suspension metadata", asyn
   const activeListing = await adminAgent.get("/api/admin/users").query({
     status: "active",
     page: 1,
-    pageSize: 20
+    pageSize: 20,
   });
   assert.equal(activeListing.status, 200);
-  assert.ok(Array.isArray(activeListing.body?.entries), "Expected active users listing entries payload.");
+  assert.ok(
+    Array.isArray(activeListing.body?.entries),
+    "Expected active users listing entries payload."
+  );
   assert.ok(activeListing.body.entries.some((row: { status: string }) => row.status === "active"));
 });
 
@@ -155,9 +187,21 @@ test("admin suspension mutation is students-only, requires reason, and supports 
   const adminTargetAgent = request.agent(app);
 
   await signUp(adminAgent, "Suspend Admin", `tst_phase5_suspend_admin_${Date.now()}@example.com`);
-  await signUp(memberAgent, "Suspend Member", `tst_phase5_suspend_member_${Date.now()}@example.com`);
-  await signUp(studentAgent, "Suspend Student", `tst_phase5_suspend_student_${Date.now()}@example.com`);
-  await signUp(adminTargetAgent, "Suspend Admin Target", `tst_phase5_suspend_target_${Date.now()}@example.com`);
+  await signUp(
+    memberAgent,
+    "Suspend Member",
+    `tst_phase5_suspend_member_${Date.now()}@example.com`
+  );
+  await signUp(
+    studentAgent,
+    "Suspend Student",
+    `tst_phase5_suspend_student_${Date.now()}@example.com`
+  );
+  await signUp(
+    adminTargetAgent,
+    "Suspend Admin Target",
+    `tst_phase5_suspend_target_${Date.now()}@example.com`
+  );
 
   const adminUser = await getSessionUser(adminAgent);
   const studentUser = await getSessionUser(studentAgent);
@@ -165,52 +209,62 @@ test("admin suspension mutation is students-only, requires reason, and supports 
   await assignRole(adminUser.id, "admin");
   await assignRole(adminTargetUser.id, "admin");
 
-  const unauthenticated = await anonAgent.post(`/api/admin/users/${studentUser.id}/suspension`).send({
-    action: "suspend",
-    reason: "No auth should fail."
-  });
+  const unauthenticated = await anonAgent
+    .post(`/api/admin/users/${studentUser.id}/suspension`)
+    .send({
+      action: "suspend",
+      reason: "No auth should fail.",
+    });
   assert.equal(unauthenticated.status, 401);
 
   const forbidden = await memberAgent.post(`/api/admin/users/${studentUser.id}/suspension`).send({
     action: "suspend",
-    reason: "Non-admin should fail."
+    reason: "Non-admin should fail.",
   });
   assert.equal(forbidden.status, 403);
 
-  const missingReason = await adminAgent.post(`/api/admin/users/${studentUser.id}/suspension`).send({
-    action: "suspend",
-    reason: ""
-  });
+  const missingReason = await adminAgent
+    .post(`/api/admin/users/${studentUser.id}/suspension`)
+    .send({
+      action: "suspend",
+      reason: "",
+    });
   assert.equal(missingReason.status, 400);
 
   const suspended = await adminAgent.post(`/api/admin/users/${studentUser.id}/suspension`).send({
     action: "suspend",
-    reason: "Repeated policy violations in forum posts."
+    reason: "Repeated policy violations in forum posts.",
   });
   assert.equal(suspended.status, 200);
   assert.equal(suspended.body.user.status, "suspended");
 
-  const duplicateSuspend = await adminAgent.post(`/api/admin/users/${studentUser.id}/suspension`).send({
-    action: "suspend",
-    reason: "Second suspend attempt should conflict."
-  });
+  const duplicateSuspend = await adminAgent
+    .post(`/api/admin/users/${studentUser.id}/suspension`)
+    .send({
+      action: "suspend",
+      reason: "Second suspend attempt should conflict.",
+    });
   assert.equal(duplicateSuspend.status, 409);
 
-  const nonStudentAttempt = await adminAgent.post(`/api/admin/users/${adminTargetUser.id}/suspension`).send({
-    action: "suspend",
-    reason: "Should fail for non-student role."
-  });
+  const nonStudentAttempt = await adminAgent
+    .post(`/api/admin/users/${adminTargetUser.id}/suspension`)
+    .send({
+      action: "suspend",
+      reason: "Should fail for non-student role.",
+    });
   assert.equal(nonStudentAttempt.status, 409);
 
   const reactivated = await adminAgent.post(`/api/admin/users/${studentUser.id}/suspension`).send({
-    action: "reactivate"
+    action: "reactivate",
   });
   assert.equal(reactivated.status, 200);
   assert.equal(reactivated.body.user.status, "active");
 
-  const duplicateReactivate = await adminAgent.post(`/api/admin/users/${studentUser.id}/suspension`).send({
-    action: "reactivate"
-  });
+  const duplicateReactivate = await adminAgent
+    .post(`/api/admin/users/${studentUser.id}/suspension`)
+    .send({
+      action: "reactivate",
+    });
   assert.equal(duplicateReactivate.status, 409);
 });
 
@@ -220,7 +274,11 @@ test("suspended users are blocked from protected routes", async () => {
   const studentAgent = request.agent(app);
 
   await signUp(adminAgent, "Blocked Admin", `tst_phase5_block_admin_${Date.now()}@example.com`);
-  await signUp(studentAgent, "Blocked Student", `tst_phase5_block_student_${Date.now()}@example.com`);
+  await signUp(
+    studentAgent,
+    "Blocked Student",
+    `tst_phase5_block_student_${Date.now()}@example.com`
+  );
 
   const adminUser = await getSessionUser(adminAgent);
   const studentUser = await getSessionUser(studentAgent);
@@ -228,7 +286,7 @@ test("suspended users are blocked from protected routes", async () => {
 
   const suspended = await adminAgent.post(`/api/admin/users/${studentUser.id}/suspension`).send({
     action: "suspend",
-    reason: "Temporary suspension for policy review and moderation follow-up."
+    reason: "Temporary suspension for policy review and moderation follow-up.",
   });
   assert.equal(suspended.status, 200);
 
@@ -236,5 +294,3 @@ test("suspended users are blocked from protected routes", async () => {
   assert.equal(blocked.status, 403);
   assert.equal(blocked.body.code, "ACCOUNT_SUSPENDED");
 });
-
-

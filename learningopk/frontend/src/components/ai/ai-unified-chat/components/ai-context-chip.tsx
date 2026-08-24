@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Atom, BookOpen, HelpCircle, Layers, FileQuestion, NotebookPen } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { AIContext } from '../types';
+import { Atom, BookOpen, HelpCircle, Layers, FileQuestion, NotebookPen } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { AIContext } from "../types";
 
 type AIContextChipProps = {
   context: AIContext;
@@ -11,7 +11,7 @@ type AIContextChipProps = {
 
 const tabIcons = {
   summary: BookOpen,
-  'quick-revision': NotebookPen,
+  "quick-revision": NotebookPen,
   exercises: HelpCircle,
   flashcards: Layers,
   quiz: FileQuestion,
@@ -19,25 +19,25 @@ const tabIcons = {
 } as const;
 
 const tabLabels = {
-  summary: 'Summary',
-  'quick-revision': 'Quick Revision',
-  exercises: 'Exercises',
-  flashcards: 'Flashcards',
-  quiz: 'Quiz',
-  illustration: 'Illustration',
+  summary: "Summary",
+  "quick-revision": "Quick Revision",
+  exercises: "Exercises",
+  flashcards: "Flashcards",
+  quiz: "Quiz",
+  illustration: "Illustration",
 } as const;
 
 export function AIContextChip({ context, className }: AIContextChipProps) {
   const TabIcon = tabIcons[context.currentTab];
-  
+
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1.5',
-        'px-3 py-1',
-        'rounded-full',
-        'bg-accent-primary/10 border border-accent-primary/25',
-        'text-xs font-medium text-accent-primary',
+        "inline-flex items-center gap-1.5",
+        "px-3 py-1",
+        "rounded-full",
+        "bg-accent-primary/10 border border-accent-primary/25",
+        "text-xs font-medium text-accent-primary",
         className
       )}
     >

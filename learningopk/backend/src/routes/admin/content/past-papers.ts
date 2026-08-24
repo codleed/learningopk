@@ -9,7 +9,7 @@ import { pastPaperRepository } from "../../../repositories/past-paper.repository
 import { persistAuditLog, type AdminAuditScope } from "../shared.js";
 
 const curriculumEntityParamsSchema = z.object({
-  id: z.coerce.number().int().positive()
+  id: z.coerce.number().int().positive(),
 });
 
 // Past paper schemas
@@ -25,11 +25,16 @@ const pastPaperCreateBodySchema = z.object({
   description: z.string().trim().optional(),
   durationMinutes: z.coerce.number().int().min(0).optional().default(60),
   totalMarks: z.coerce.number().int().min(0).optional().default(0),
-  exercises: z.array(z.object({
-    exerciseId: z.coerce.number().int().positive(),
-    orderIndex: z.coerce.number().int().min(0),
-    marks: z.coerce.number().int().positive().optional()
-  })).optional().default([])
+  exercises: z
+    .array(
+      z.object({
+        exerciseId: z.coerce.number().int().positive(),
+        orderIndex: z.coerce.number().int().min(0),
+        marks: z.coerce.number().int().positive().optional(),
+      })
+    )
+    .optional()
+    .default([]),
 });
 
 const pastPaperUpdateBodySchema = z.object({
@@ -43,14 +48,14 @@ const pastPaperUpdateBodySchema = z.object({
   published: z.boolean().optional(),
   description: z.string().trim().optional(),
   durationMinutes: z.coerce.number().int().min(0).optional(),
-  totalMarks: z.coerce.number().int().min(0).optional()
+  totalMarks: z.coerce.number().int().min(0).optional(),
 });
 
 const pastPaperListQuerySchema = z.object({
   boardId: z.coerce.number().int().positive().optional(),
   grade: z.enum(["9", "10"]).optional(),
   subjectId: z.coerce.number().int().positive().optional(),
-  year: z.coerce.number().int().min(2000).max(2099).optional()
+  year: z.coerce.number().int().min(2000).max(2099).optional(),
 });
 
 export const pastPapersAdminRouter = Router();
@@ -65,7 +70,7 @@ pastPapersAdminRouter.get("/content/past-papers", requireSession, async (req, re
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid past paper query",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
@@ -101,7 +106,7 @@ pastPapersAdminRouter.get("/content/past-papers", requireSession, async (req, re
       paperContent: mockExams.paperContent,
       solutionContent: mockExams.solutionContent,
       published: mockExams.published,
-      description: mockExams.description
+      description: mockExams.description,
     })
     .from(mockExams)
     .innerJoin(boards, eq(mockExams.boardId, boards.id))
@@ -111,7 +116,7 @@ pastPapersAdminRouter.get("/content/past-papers", requireSession, async (req, re
 
   res.status(200).json({
     data: rows,
-    total: rows.length
+    total: rows.length,
   });
 });
 
@@ -128,7 +133,7 @@ pastPapersAdminRouter.post("/content/past-papers", requireSession, async (req, r
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid past paper payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -153,9 +158,11 @@ pastPapersAdminRouter.post("/content/past-papers", requireSession, async (req, r
       status: "failed",
       message: "No chapters found for subject — needed for placeholder quiz",
       actorId,
-      actorName
+      actorName,
     });
-    res.status(400).json({ error: "Subject must have at least one chapter before adding a past paper" });
+    res
+      .status(400)
+      .json({ error: "Subject must have at least one chapter before adding a past paper" });
     return;
   }
 
@@ -167,7 +174,7 @@ pastPapersAdminRouter.post("/content/past-papers", requireSession, async (req, r
       chapterId: firstChapter.id,
       type: "mock_exam",
       durationMinutes: 0,
-      totalMarks: 0
+      totalMarks: 0,
     })
     .returning({ id: quizzes.id });
 
@@ -180,7 +187,7 @@ pastPapersAdminRouter.post("/content/past-papers", requireSession, async (req, r
       status: "failed",
       message: "Failed to create placeholder quiz for past paper",
       actorId,
-      actorName
+      actorName,
     });
     res.status(500).json({ error: "Failed to create past paper" });
     return;
@@ -200,7 +207,7 @@ pastPapersAdminRouter.post("/content/past-papers", requireSession, async (req, r
       paperContent: parsedBody.data.paperContent?.trim() ?? null,
       solutionContent: parsedBody.data.solutionContent?.trim() ?? null,
       published: parsedBody.data.published ?? false,
-      description: parsedBody.data.description?.trim() ?? null
+      description: parsedBody.data.description?.trim() ?? null,
     })
     .returning({
       id: mockExams.id,
@@ -214,7 +221,7 @@ pastPapersAdminRouter.post("/content/past-papers", requireSession, async (req, r
       paperContent: mockExams.paperContent,
       solutionContent: mockExams.solutionContent,
       published: mockExams.published,
-      description: mockExams.description
+      description: mockExams.description,
     });
 
   const newPaper = insertedRows[0];
@@ -226,7 +233,7 @@ pastPapersAdminRouter.post("/content/past-papers", requireSession, async (req, r
       status: "failed",
       message: "Past paper creation failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(500).json({ error: "Failed to create past paper" });
     return;
@@ -239,7 +246,7 @@ pastPapersAdminRouter.post("/content/past-papers", requireSession, async (req, r
     status: "success",
     message: `Created past paper "${newPaper.title}" for year ${newPaper.year}`,
     actorId,
-    actorName
+    actorName,
   });
 
   // Link exercises if provided
@@ -248,7 +255,7 @@ pastPapersAdminRouter.post("/content/past-papers", requireSession, async (req, r
   }
 
   res.status(201).json({
-    data: newPaper
+    data: newPaper,
   });
 });
 
@@ -260,7 +267,7 @@ pastPapersAdminRouter.post("/content/past-papers/:id/update", requireSession, as
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid past paper identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -274,7 +281,7 @@ pastPapersAdminRouter.post("/content/past-papers/:id/update", requireSession, as
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid past paper payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -298,7 +305,7 @@ pastPapersAdminRouter.post("/content/past-papers/:id/update", requireSession, as
       status: "failed",
       message: "Past paper not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({ error: "Past paper not found" });
     return;
@@ -310,11 +317,15 @@ pastPapersAdminRouter.post("/content/past-papers/:id/update", requireSession, as
   if (parsedBody.data.grade !== undefined) updateData.grade = parsedBody.data.grade;
   if (parsedBody.data.subjectId !== undefined) updateData.subjectId = parsedBody.data.subjectId;
   if (parsedBody.data.year !== undefined) updateData.year = parsedBody.data.year;
-  if (parsedBody.data.paperContent !== undefined) updateData.paperContent = parsedBody.data.paperContent.trim();
-  if (parsedBody.data.solutionContent !== undefined) updateData.solutionContent = parsedBody.data.solutionContent.trim();
+  if (parsedBody.data.paperContent !== undefined)
+    updateData.paperContent = parsedBody.data.paperContent.trim();
+  if (parsedBody.data.solutionContent !== undefined)
+    updateData.solutionContent = parsedBody.data.solutionContent.trim();
   if (parsedBody.data.published !== undefined) updateData.published = parsedBody.data.published;
-  if (parsedBody.data.description !== undefined) updateData.description = parsedBody.data.description?.trim() ?? null;
-  if (parsedBody.data.durationMinutes !== undefined) updateData.durationMinutes = parsedBody.data.durationMinutes;
+  if (parsedBody.data.description !== undefined)
+    updateData.description = parsedBody.data.description?.trim() ?? null;
+  if (parsedBody.data.durationMinutes !== undefined)
+    updateData.durationMinutes = parsedBody.data.durationMinutes;
   if (parsedBody.data.totalMarks !== undefined) updateData.totalMarks = parsedBody.data.totalMarks;
 
   const updatedRows = await db
@@ -333,7 +344,7 @@ pastPapersAdminRouter.post("/content/past-papers/:id/update", requireSession, as
       paperContent: mockExams.paperContent,
       solutionContent: mockExams.solutionContent,
       published: mockExams.published,
-      description: mockExams.description
+      description: mockExams.description,
     });
 
   const updatedPaper = updatedRows[0];
@@ -345,7 +356,7 @@ pastPapersAdminRouter.post("/content/past-papers/:id/update", requireSession, as
       status: "failed",
       message: "Past paper update failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(500).json({ error: "Failed to update past paper" });
     return;
@@ -358,11 +369,11 @@ pastPapersAdminRouter.post("/content/past-papers/:id/update", requireSession, as
     status: "success",
     message: `Updated past paper "${updatedPaper.title}"`,
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
-    data: updatedPaper
+    data: updatedPaper,
   });
 });
 
@@ -374,7 +385,7 @@ pastPapersAdminRouter.post("/content/past-papers/:id/delete", requireSession, as
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid past paper identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -392,7 +403,7 @@ pastPapersAdminRouter.post("/content/past-papers/:id/delete", requireSession, as
       id: mockExams.id,
       title: mockExams.title,
       quizId: mockExams.quizId,
-      subjectId: mockExams.subjectId
+      subjectId: mockExams.subjectId,
     })
     .from(mockExams)
     .where(eq(mockExams.id, parsedParams.data.id))
@@ -407,7 +418,7 @@ pastPapersAdminRouter.post("/content/past-papers/:id/delete", requireSession, as
       status: "failed",
       message: "Past paper not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({ error: "Past paper not found" });
     return;
@@ -423,89 +434,108 @@ pastPapersAdminRouter.post("/content/past-papers/:id/delete", requireSession, as
     status: "success",
     message: `Deleted past paper from subject ${paper.subjectId}`,
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
     success: true,
-    deletedId: paper.id
+    deletedId: paper.id,
   });
 });
 
 // GET /api/admin/content/past-papers/:id/exercises
-pastPapersAdminRouter.get("/content/past-papers/:id/exercises", requireSession, async (req, res) => {
-  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
-  if (!parsedParams.success) {
-    res.status(400).json({ error: "Invalid paper ID", details: parsedParams.error.flatten() });
-    return;
-  }
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) return;
+pastPapersAdminRouter.get(
+  "/content/past-papers/:id/exercises",
+  requireSession,
+  async (req, res) => {
+    const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+      res.status(400).json({ error: "Invalid paper ID", details: parsedParams.error.flatten() });
+      return;
+    }
+    const authedReq = req as AuthenticatedRequest;
+    if (!(await requireAdminRole(authedReq, res))) return;
 
-  const exerciseRows = await pastPaperRepository.getPaperExercises(parsedParams.data.id);
-  res.status(200).json({ data: exerciseRows });
-});
+    const exerciseRows = await pastPaperRepository.getPaperExercises(parsedParams.data.id);
+    res.status(200).json({ data: exerciseRows });
+  }
+);
 
 // POST /api/admin/content/past-papers/:id/exercises
-pastPapersAdminRouter.post("/content/past-papers/:id/exercises", requireSession, async (req, res) => {
-  const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
-  if (!parsedParams.success) {
-    res.status(400).json({ error: "Invalid paper ID", details: parsedParams.error.flatten() });
-    return;
+pastPapersAdminRouter.post(
+  "/content/past-papers/:id/exercises",
+  requireSession,
+  async (req, res) => {
+    const parsedParams = curriculumEntityParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+      res.status(400).json({ error: "Invalid paper ID", details: parsedParams.error.flatten() });
+      return;
+    }
+    const authedReq = req as AuthenticatedRequest;
+    if (!(await requireAdminRole(authedReq, res))) return;
+
+    const linkSchema = z.object({
+      exercises: z.array(
+        z.object({
+          exerciseId: z.coerce.number().int().positive(),
+          orderIndex: z.coerce.number().int().min(0),
+          marks: z.coerce.number().int().positive().optional(),
+        })
+      ),
+    });
+
+    const parsedBody = linkSchema.safeParse(req.body);
+    if (!parsedBody.success) {
+      res.status(400).json({ error: "Invalid payload", details: parsedBody.error.flatten() });
+      return;
+    }
+
+    for (const ex of parsedBody.data.exercises) {
+      await pastPaperRepository.linkExercise(
+        parsedParams.data.id,
+        ex.exerciseId,
+        ex.orderIndex,
+        ex.marks
+      );
+    }
+
+    const actorId = authedReq.session.user.id;
+    const actorName = authedReq.session.user.name;
+    await persistAuditLog({
+      scope: "content",
+      action: "Link exercises to past paper",
+      target: `Past Paper #${parsedParams.data.id}`,
+      status: "success",
+      message: `Linked ${parsedBody.data.exercises.length} exercises`,
+      actorId,
+      actorName,
+    });
+
+    res.status(200).json({ success: true, count: parsedBody.data.exercises.length });
   }
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) return;
-
-  const linkSchema = z.object({
-    exercises: z.array(z.object({
-      exerciseId: z.coerce.number().int().positive(),
-      orderIndex: z.coerce.number().int().min(0),
-      marks: z.coerce.number().int().positive().optional()
-    }))
-  });
-
-  const parsedBody = linkSchema.safeParse(req.body);
-  if (!parsedBody.success) {
-    res.status(400).json({ error: "Invalid payload", details: parsedBody.error.flatten() });
-    return;
-  }
-
-  for (const ex of parsedBody.data.exercises) {
-    await pastPaperRepository.linkExercise(parsedParams.data.id, ex.exerciseId, ex.orderIndex, ex.marks);
-  }
-
-  const actorId = authedReq.session.user.id;
-  const actorName = authedReq.session.user.name;
-  await persistAuditLog({
-    scope: "content",
-    action: "Link exercises to past paper",
-    target: `Past Paper #${parsedParams.data.id}`,
-    status: "success",
-    message: `Linked ${parsedBody.data.exercises.length} exercises`,
-    actorId,
-    actorName
-  });
-
-  res.status(200).json({ success: true, count: parsedBody.data.exercises.length });
-});
+);
 
 // POST /api/admin/content/past-papers/:id/exercises/:exerciseId/remove
-pastPapersAdminRouter.post("/content/past-papers/:id/exercises/:exerciseId/remove", requireSession, async (req, res) => {
-  const paramsSchema = z.object({
-    id: z.coerce.number().int().positive(),
-    exerciseId: z.coerce.number().int().positive()
-  });
-  const parsed = paramsSchema.safeParse(req.params);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Invalid parameters", details: parsed.error.flatten() });
-    return;
-  }
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) return;
+pastPapersAdminRouter.post(
+  "/content/past-papers/:id/exercises/:exerciseId/remove",
+  requireSession,
+  async (req, res) => {
+    const paramsSchema = z.object({
+      id: z.coerce.number().int().positive(),
+      exerciseId: z.coerce.number().int().positive(),
+    });
+    const parsed = paramsSchema.safeParse(req.params);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid parameters", details: parsed.error.flatten() });
+      return;
+    }
+    const authedReq = req as AuthenticatedRequest;
+    if (!(await requireAdminRole(authedReq, res))) return;
 
-  await pastPaperRepository.unlinkExercise(parsed.data.id, parsed.data.exerciseId);
-  res.status(200).json({ success: true });
-});
+    await pastPaperRepository.unlinkExercise(parsed.data.id, parsed.data.exerciseId);
+    res.status(200).json({ success: true });
+  }
+);
 
 // POST /api/admin/content/past-papers/:id/publish
 pastPapersAdminRouter.post("/content/past-papers/:id/publish", requireSession, async (req, res) => {
@@ -527,7 +557,7 @@ pastPapersAdminRouter.post("/content/past-papers/:id/publish", requireSession, a
       status: "success",
       message: published ? "Published" : "Unpublished",
       actorId: authedReq.session.user.id,
-      actorName: authedReq.session.user.name
+      actorName: authedReq.session.user.name,
     });
 
     res.status(200).json({ data: { published } });

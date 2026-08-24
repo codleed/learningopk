@@ -11,13 +11,13 @@ export default async function AdminNotificationsPage() {
   const payload = await getAdminNotifications({
     page: 1,
     pageSize: 10,
-    cookieHeader
+    cookieHeader,
   }).catch(() => ({
     entries: [],
     total: 0,
     page: 1,
     pageSize: 10,
-    hasMore: false
+    hasMore: false,
   }));
 
   return (
@@ -27,7 +27,10 @@ export default async function AdminNotificationsPage() {
         title="Notifications"
         subtitle="Broadcast operational messages and review recent sends."
         actions={
-          <Link href="/admin" className="text-sm font-medium text-text-primary underline underline-offset-4">
+          <Link
+            href="/admin"
+            className="text-sm font-medium text-text-primary underline underline-offset-4"
+          >
             Back to admin
           </Link>
         }

@@ -39,7 +39,9 @@ test("student subject graph interaction performance budget", async ({ page }, te
   const graphLoadStart = Date.now();
   await page.getByTestId("subject-view-tab-graph").click();
   await expect(page.getByTestId("subject-chapter-graph-panel")).toBeVisible();
-  await expect(page.getByTestId("subject-graph-node-list")).toContainText("Physical Quantities and Measurement");
+  await expect(page.getByTestId("subject-graph-node-list")).toContainText(
+    "Physical Quantities and Measurement"
+  );
   const graphLoadMs = Date.now() - graphLoadStart;
 
   const searchInput = page.getByTestId("subject-graph-search");
@@ -61,7 +63,9 @@ test("student subject graph interaction performance budget", async ({ page }, te
   }
 
   const searchP95Ms = Number(percentile(searchSamplesMs, 0.95).toFixed(2));
-  const searchMeanMs = Number((searchSamplesMs.reduce((total, value) => total + value, 0) / searchSamplesMs.length).toFixed(2));
+  const searchMeanMs = Number(
+    (searchSamplesMs.reduce((total, value) => total + value, 0) / searchSamplesMs.length).toFixed(2)
+  );
   const searchMaxMs = Number(Math.max(...searchSamplesMs).toFixed(2));
 
   expect(subjectRouteLoadMs).toBeLessThan(8000);
@@ -76,8 +80,8 @@ test("student subject graph interaction performance budget", async ({ page }, te
       sampleCount: searchSamplesMs.length,
       p95Ms: searchP95Ms,
       meanMs: searchMeanMs,
-      maxMs: searchMaxMs
-    }
+      maxMs: searchMaxMs,
+    },
   };
 
   const reportDir = path.resolve(process.cwd(), "../docs/perf");
@@ -87,6 +91,6 @@ test("student subject graph interaction performance budget", async ({ page }, te
 
   await testInfo.attach("student-subject-graph-performance", {
     body: JSON.stringify(metrics, null, 2),
-    contentType: "application/json"
+    contentType: "application/json",
   });
 });

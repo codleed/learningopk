@@ -28,7 +28,7 @@ const profileSchema = z.object({
   name: z.string().trim().min(2, "Please enter your name."),
   studentClass: z.string().trim().min(1, "Please enter your class."),
   degree: z.string().trim().min(1, "Please enter your degree."),
-  board: z.string().trim().min(1, "Please enter your board.")
+  board: z.string().trim().min(1, "Please enter your board."),
 });
 
 export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPanelProps) {
@@ -109,7 +109,7 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
       pushToast({
         title: "Profile picture updated",
         description: "Your new profile image was uploaded successfully.",
-        tone: "success"
+        tone: "success",
       });
       router.refresh();
     } catch (error) {
@@ -129,7 +129,7 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
       name: String(formData.get("name") ?? ""),
       studentClass: String(formData.get("class") ?? ""),
       degree: String(formData.get("degree") ?? ""),
-      board: String(formData.get("board") ?? "")
+      board: String(formData.get("board") ?? ""),
     });
 
     if (!parsed.success) {
@@ -142,7 +142,7 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
       name: parsed.data.name,
       class: parsed.data.studentClass,
       degree: parsed.data.degree,
-      board: parsed.data.board
+      board: parsed.data.board,
     })) as { error?: { message?: string } };
     setIsSavingProfile(false);
 
@@ -154,7 +154,7 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
     pushToast({
       title: "Profile updated",
       description: "Your profile details were saved.",
-      tone: "success"
+      tone: "success",
     });
     router.refresh();
   };
@@ -165,7 +165,7 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
     pushToast({
       title: "Theme updated",
       description: `Switched to ${nextTheme} mode.`,
-      tone: "info"
+      tone: "info",
     });
   };
 
@@ -177,21 +177,34 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
         contentClassName="grid gap-4 xl:grid-cols-2"
       >
         <div className="rounded-[1.8rem] border border-border-default bg-bg-surface px-4 py-5 sm:px-6 sm:py-7">
-          <h3 className="font-heading text-xl font-extrabold tracking-[-0.04em] text-text-primary">Profile management</h3>
-          <p className="mt-2 text-sm text-text-secondary">Update your photo, name, class, degree, and board.</p>
+          <h3 className="font-heading text-xl font-extrabold tracking-[-0.04em] text-text-primary">
+            Profile management
+          </h3>
+          <p className="mt-2 text-sm text-text-secondary">
+            Update your photo, name, class, degree, and board.
+          </p>
 
           <div className="mt-5 rounded-[1.2rem] border border-border-default bg-bg-surface p-4">
             <div className="flex items-center gap-4">
               <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-border-default bg-bg-subtle text-sm font-semibold text-text-secondary">
                 {previewImageUrl ? (
-                  <Image src={previewImageUrl} alt="Profile preview" fill unoptimized className="object-cover" />
+                  <Image
+                    src={previewImageUrl}
+                    alt="Profile preview"
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
                 ) : (
                   <span>{avatarInitials || "U"}</span>
                 )}
               </div>
 
               <div className="flex-1 space-y-2">
-                <label htmlFor="settings-profile-image" className="text-sm font-bold tracking-[-0.02em] text-text-primary">
+                <label
+                  htmlFor="settings-profile-image"
+                  className="text-sm font-bold tracking-[-0.02em] text-text-primary"
+                >
                   Profile picture
                 </label>
                 <input
@@ -211,12 +224,17 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
                 </button>
               </div>
             </div>
-            {profileImageError ? <p className="mt-2 text-sm font-medium text-accent-danger">{profileImageError}</p> : null}
+            {profileImageError ? (
+              <p className="mt-2 text-sm font-medium text-accent-danger">{profileImageError}</p>
+            ) : null}
           </div>
 
           <form className="mt-5 space-y-4" onSubmit={onProfileSubmit} noValidate>
             <div className="space-y-2">
-              <label htmlFor="settings-name" className="text-sm font-bold tracking-[-0.02em] text-text-primary">
+              <label
+                htmlFor="settings-name"
+                className="text-sm font-bold tracking-[-0.02em] text-text-primary"
+              >
                 Name
               </label>
               <input
@@ -229,7 +247,10 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="settings-class" className="text-sm font-bold tracking-[-0.02em] text-text-primary">
+              <label
+                htmlFor="settings-class"
+                className="text-sm font-bold tracking-[-0.02em] text-text-primary"
+              >
                 Class
               </label>
               <input
@@ -241,7 +262,10 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="settings-degree" className="text-sm font-bold tracking-[-0.02em] text-text-primary">
+              <label
+                htmlFor="settings-degree"
+                className="text-sm font-bold tracking-[-0.02em] text-text-primary"
+              >
                 Degree
               </label>
               <input
@@ -253,7 +277,10 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="settings-board" className="text-sm font-bold tracking-[-0.02em] text-text-primary">
+              <label
+                htmlFor="settings-board"
+                className="text-sm font-bold tracking-[-0.02em] text-text-primary"
+              >
                 Board
               </label>
               <input
@@ -264,7 +291,9 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
               />
             </div>
 
-            {profileError ? <p className="text-sm font-medium text-accent-danger">{profileError}</p> : null}
+            {profileError ? (
+              <p className="text-sm font-medium text-accent-danger">{profileError}</p>
+            ) : null}
 
             <button
               type="submit"
@@ -277,8 +306,12 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
         </div>
 
         <div className="rounded-[1.8rem] border border-border-default bg-bg-surface px-4 py-5 sm:px-6 sm:py-7">
-          <h3 className="font-heading text-xl font-extrabold tracking-[-0.04em] text-text-primary">Theme</h3>
-          <p className="mt-2 text-sm text-text-secondary">Choose between light and dark interface themes.</p>
+          <h3 className="font-heading text-xl font-extrabold tracking-[-0.04em] text-text-primary">
+            Theme
+          </h3>
+          <p className="mt-2 text-sm text-text-secondary">
+            Choose between light and dark interface themes.
+          </p>
           <div className="mt-5 grid grid-cols-2 gap-3" role="group" aria-label="Theme options">
             {(["light", "dark"] as const).map((theme) => {
               const isActive = activeTheme === theme;

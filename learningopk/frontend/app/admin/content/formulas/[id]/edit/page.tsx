@@ -21,7 +21,7 @@ export default async function EditFormulaPage({ params }: EditFormulaPageProps) 
 
   const [boards, allFormulas] = await Promise.all([
     getAdminCurriculumTree(cookieHeader).catch(() => []),
-    getAdminFormulas({ cookieHeader }).catch(() => [])
+    getAdminFormulas({ cookieHeader }).catch(() => []),
   ]);
 
   const formula = allFormulas.find((f) => f.id === formulaId);

@@ -9,7 +9,7 @@ export default async function PastPapersPageRoute() {
 
   const [curriculumBoards, initialPastPapers] = await Promise.all([
     getAdminCurriculumTree(cookieHeader).catch(() => []),
-    getAdminPastPapers({ cookieHeader }).catch(() => [])
+    getAdminPastPapers({ cookieHeader }).catch(() => []),
   ]);
 
   const boardCount = curriculumBoards.length;

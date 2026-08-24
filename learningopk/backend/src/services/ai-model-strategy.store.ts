@@ -55,7 +55,10 @@ export const getCachedAiResponse = async (normalizedPrompt: string): Promise<str
   return cacheService.get<string>(buildResponseCacheKey(normalizedPrompt));
 };
 
-export const setCachedAiResponse = async (normalizedPrompt: string, responseText: string): Promise<void> => {
+export const setCachedAiResponse = async (
+  normalizedPrompt: string,
+  responseText: string
+): Promise<void> => {
   await cacheService.set(buildResponseCacheKey(normalizedPrompt), responseText, {
     ttlSeconds: AI_RESPONSE_CACHE_TTL_SECONDS,
   });

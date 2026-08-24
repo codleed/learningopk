@@ -8,7 +8,7 @@ const adminCurriculumChapterSchema = z.object({
   title: z.string(),
   slug: z.string(),
   isPublished: z.boolean(),
-  coverImageUrl: z.string().nullable().optional().default(null)
+  coverImageUrl: z.string().nullable().optional().default(null),
 });
 
 const adminCurriculumSubjectSchema = z.object({
@@ -18,42 +18,42 @@ const adminCurriculumSubjectSchema = z.object({
   icon: z.string().nullable(),
   description: z.string().nullable(),
   coverImageUrl: z.string().nullable().optional().default(null),
-  chapters: z.array(adminCurriculumChapterSchema)
+  chapters: z.array(adminCurriculumChapterSchema),
 });
 
 const adminCurriculumClassSchema = z.object({
   id: z.number().int().positive(),
   name: z.string(),
   slug: z.string(),
-  subjects: z.array(adminCurriculumSubjectSchema)
+  subjects: z.array(adminCurriculumSubjectSchema),
 });
 
 const adminCurriculumBoardSchema = z.object({
   id: z.number().int().positive(),
   name: z.string(),
   slug: z.string(),
-  classes: z.array(adminCurriculumClassSchema)
+  classes: z.array(adminCurriculumClassSchema),
 });
 
 const adminCurriculumResponseSchema = z.object({
-  boards: z.array(adminCurriculumBoardSchema)
+  boards: z.array(adminCurriculumBoardSchema),
 });
 
 const adminCurriculumBoardCreateResponseSchema = z.object({
   board: z.object({
     id: z.number().int().positive(),
     name: z.string(),
-    slug: z.string()
-  })
+    slug: z.string(),
+  }),
 });
 
 const adminCurriculumBoardMutationResponseSchema = z.object({
   board: z.object({
     id: z.number().int().positive(),
     name: z.string(),
-    slug: z.string()
+    slug: z.string(),
   }),
-  timestamp: z.string().datetime()
+  timestamp: z.string().datetime(),
 });
 
 const adminCurriculumClassCreateResponseSchema = z.object({
@@ -61,8 +61,8 @@ const adminCurriculumClassCreateResponseSchema = z.object({
     id: z.number().int().positive(),
     boardId: z.number().int().positive(),
     name: z.string(),
-    slug: z.string()
-  })
+    slug: z.string(),
+  }),
 });
 
 const adminCurriculumClassMutationResponseSchema = z.object({
@@ -70,9 +70,9 @@ const adminCurriculumClassMutationResponseSchema = z.object({
     id: z.number().int().positive(),
     boardId: z.number().int().positive(),
     name: z.string(),
-    slug: z.string()
+    slug: z.string(),
   }),
-  timestamp: z.string().datetime()
+  timestamp: z.string().datetime(),
 });
 
 const adminCurriculumSubjectCreateResponseSchema = z.object({
@@ -83,8 +83,8 @@ const adminCurriculumSubjectCreateResponseSchema = z.object({
     slug: z.string(),
     icon: z.string().nullable(),
     description: z.string().nullable(),
-    coverImageUrl: z.string().nullable()
-  })
+    coverImageUrl: z.string().nullable(),
+  }),
 });
 
 const adminCurriculumSubjectMutationResponseSchema = z.object({
@@ -94,9 +94,9 @@ const adminCurriculumSubjectMutationResponseSchema = z.object({
     slug: z.string(),
     icon: z.string().nullable(),
     description: z.string().nullable(),
-    coverImageUrl: z.string().nullable()
+    coverImageUrl: z.string().nullable(),
   }),
-  timestamp: z.string().datetime()
+  timestamp: z.string().datetime(),
 });
 
 const adminCurriculumSubjectUpdateResponseSchema = z.object({
@@ -106,9 +106,9 @@ const adminCurriculumSubjectUpdateResponseSchema = z.object({
     slug: z.string(),
     icon: z.string().nullable(),
     description: z.string().nullable(),
-    coverImageUrl: z.string().nullable()
+    coverImageUrl: z.string().nullable(),
   }),
-  timestamp: z.string().datetime()
+  timestamp: z.string().datetime(),
 });
 
 const adminCurriculumChapterCreateResponseSchema = z.object({
@@ -118,8 +118,8 @@ const adminCurriculumChapterCreateResponseSchema = z.object({
     chapterNumber: z.number().int().positive(),
     title: z.string(),
     slug: z.string(),
-    isPublished: z.boolean()
-  })
+    isPublished: z.boolean(),
+  }),
 });
 
 const adminCurriculumChapterMutationResponseSchema = z.object({
@@ -129,38 +129,38 @@ const adminCurriculumChapterMutationResponseSchema = z.object({
     chapterNumber: z.number().int().positive(),
     title: z.string(),
     slug: z.string(),
-    isPublished: z.boolean()
+    isPublished: z.boolean(),
   }),
-  timestamp: z.string().datetime()
+  timestamp: z.string().datetime(),
 });
 
 const adminChapterSummaryResponseSchema = z.object({
   chapter: z.object({
     id: z.number().int().positive(),
     title: z.string(),
-    summary: z.string().nullable().optional().default("")
-  })
+    summary: z.string().nullable().optional().default(""),
+  }),
 });
 
 const revisionDefinitionSchema = z.object({
   term: z.string(),
-  definition: z.string()
+  definition: z.string(),
 });
 
 const adminRevisionNotesSchema = z.object({
   keyFormulas: z.array(z.string()),
   keyDefinitions: z.array(revisionDefinitionSchema),
   commonMistakes: z.string(),
-  examTips: z.string()
+  examTips: z.string(),
 });
 
 const adminChapterSummaryUpdateResponseSchema = z.object({
   chapter: z.object({
     id: z.number().int().positive(),
     title: z.string(),
-    summary: z.string()
+    summary: z.string(),
   }),
-  timestamp: z.string().datetime()
+  timestamp: z.string().datetime(),
 });
 
 const adminChapterSubpartSchema = z.object({
@@ -170,49 +170,49 @@ const adminChapterSubpartSchema = z.object({
   heading: z.string(),
   content: z.string(),
   createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime()
+  updatedAt: z.string().datetime(),
 });
 
 const adminChapterSubpartsResponseSchema = z.object({
   chapter: z.object({
     id: z.number().int().positive(),
     chapterNumber: z.number().int().positive(),
-    title: z.string()
+    title: z.string(),
   }),
-  subparts: z.array(adminChapterSubpartSchema)
+  subparts: z.array(adminChapterSubpartSchema),
 });
 
 const adminChapterSubpartMutationResponseSchema = z.object({
   subpart: adminChapterSubpartSchema,
-  timestamp: z.string().datetime()
+  timestamp: z.string().datetime(),
 });
 
 const adminChapterSubpartReorderResponseSchema = z.object({
   subparts: z.array(adminChapterSubpartSchema),
-  timestamp: z.string().datetime()
+  timestamp: z.string().datetime(),
 });
 
 const adminChapterSubpartDeleteResponseSchema = z.object({
   success: z.boolean(),
   deletedId: z.number().int().positive(),
-  timestamp: z.string().datetime()
+  timestamp: z.string().datetime(),
 });
 
 const adminChapterRevisionNotesResponseSchema = z.object({
   chapter: z.object({
     id: z.number().int().positive(),
-    title: z.string()
+    title: z.string(),
   }),
-  revisionNotes: adminRevisionNotesSchema
+  revisionNotes: adminRevisionNotesSchema,
 });
 
 const adminChapterRevisionNotesUpdateResponseSchema = z.object({
   chapter: z.object({
     id: z.number().int().positive(),
-    title: z.string()
+    title: z.string(),
   }),
   revisionNotes: adminRevisionNotesSchema,
-  timestamp: z.string().datetime()
+  timestamp: z.string().datetime(),
 });
 
 const adminChapterLinksResponseSchema = z.object({
@@ -224,17 +224,17 @@ const adminChapterLinksResponseSchema = z.object({
         targetTitle: z.string(),
         normalizedTarget: z.string(),
         isResolved: z.boolean(),
-        targetChapterTitle: z.string().nullable()
+        targetChapterTitle: z.string().nullable(),
       })
     ),
     backlinks: z.array(
       z.object({
         sourceChapterId: z.number().int().positive(),
         sourceChapterTitle: z.string(),
-        normalizedTarget: z.string()
+        normalizedTarget: z.string(),
       })
-    )
-  })
+    ),
+  }),
 });
 
 const adminChapterLinkSuggestionsResponseSchema = z.object({
@@ -243,9 +243,9 @@ const adminChapterLinkSuggestionsResponseSchema = z.object({
       id: z.number().int().positive(),
       title: z.string(),
       slug: z.string(),
-      chapterNumber: z.number().int().positive()
+      chapterNumber: z.number().int().positive(),
     })
-  )
+  ),
 });
 
 const adminChapterGraphResponseSchema = z.object({
@@ -254,18 +254,18 @@ const adminChapterGraphResponseSchema = z.object({
       z.object({
         id: z.number().int().positive(),
         title: z.string(),
-        isPublished: z.boolean()
+        isPublished: z.boolean(),
       })
     ),
     edges: z.array(
       z.object({
         sourceChapterId: z.number().int().positive(),
         targetChapterId: z.number().int().positive().nullable(),
-        isResolved: z.boolean()
+        isResolved: z.boolean(),
       })
     ),
-    unresolvedEdgeCount: z.number().int().nonnegative()
-  })
+    unresolvedEdgeCount: z.number().int().nonnegative(),
+  }),
 });
 
 const adminChapterSummaryMediaUploadResponseSchema = z.object({
@@ -275,14 +275,14 @@ const adminChapterSummaryMediaUploadResponseSchema = z.object({
     objectUrl: z.string().url(),
     mimeType: z.string(),
     fileSize: z.number().int().positive(),
-    createdAt: z.string().datetime()
+    createdAt: z.string().datetime(),
   }),
-  markdown: z.string().min(1)
+  markdown: z.string().min(1),
 });
 
 const blankStatementSchema = z.object({
   text: z.string().min(1),
-  blanksAnswer: z.array(z.string().min(1)).min(1)
+  blanksAnswer: z.array(z.string().min(1)).min(1),
 });
 
 const adminCurriculumExerciseCreateResponseSchema = z.object({
@@ -298,8 +298,8 @@ const adminCurriculumExerciseCreateResponseSchema = z.object({
     type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]),
     visualizationHtml: z.string().nullable().optional(),
     blanksAnswer: z.array(z.string()).nullable().optional(),
-    statements: z.array(blankStatementSchema).nullable().optional()
-  })
+    statements: z.array(blankStatementSchema).nullable().optional(),
+  }),
 });
 
 const adminCurriculumExerciseReadSchema = z.object({
@@ -316,11 +316,11 @@ const adminCurriculumExerciseReadSchema = z.object({
   type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]),
   visualizationHtml: z.string().nullable().optional(),
   blanksAnswer: z.array(z.string()).nullable().optional(),
-  statements: z.array(blankStatementSchema).nullable().optional()
+  statements: z.array(blankStatementSchema).nullable().optional(),
 });
 
 const adminCurriculumExerciseListResponseSchema = z.object({
-  exercises: z.array(adminCurriculumExerciseReadSchema)
+  exercises: z.array(adminCurriculumExerciseReadSchema),
 });
 
 const adminCurriculumExerciseMutationResponseSchema = z.object({
@@ -336,9 +336,9 @@ const adminCurriculumExerciseMutationResponseSchema = z.object({
     type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]),
     visualizationHtml: z.string().nullable().optional(),
     blanksAnswer: z.array(z.string()).nullable().optional(),
-    statements: z.array(blankStatementSchema).nullable().optional()
+    statements: z.array(blankStatementSchema).nullable().optional(),
   }),
-  timestamp: z.string().datetime()
+  timestamp: z.string().datetime(),
 });
 
 // Quiz Schemas
@@ -346,7 +346,7 @@ const quizUpsertBodySchema = z.object({
   chapterId: z.number().int().positive(),
   title: z.string().trim().min(1),
   durationMinutes: z.number().int().positive().optional().default(30),
-  type: z.enum(["chapter_quiz", "mock_exam"]).optional().default("chapter_quiz")
+  type: z.enum(["chapter_quiz", "mock_exam"]).optional().default("chapter_quiz"),
 });
 
 const quizResponseSchema = z.object({
@@ -357,7 +357,7 @@ const quizResponseSchema = z.object({
   totalMarks: z.number().int().min(0),
   type: z.enum(["chapter_quiz", "mock_exam"]),
   createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional()
+  updatedAt: z.string().datetime().optional(),
 });
 
 const quizQuestionCreateSchema = z.object({
@@ -369,7 +369,7 @@ const quizQuestionCreateSchema = z.object({
   optionD: z.string().trim().min(1),
   correctOption: z.enum(["a", "b", "c", "d"]),
   explanation: z.string().trim().optional(),
-  marks: z.number().int().positive().optional().default(1)
+  marks: z.number().int().positive().optional().default(1),
 });
 
 const quizQuestionResponseSchema = z.object({
@@ -385,22 +385,22 @@ const quizQuestionResponseSchema = z.object({
   explanation: z.string().nullable(),
   marks: z.number(),
   createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional()
+  updatedAt: z.string().datetime().optional(),
 });
 
 const quizQuestionUpdateSchema = quizQuestionCreateSchema.partial();
 
 const quizUpsertResponseSchema = z.object({
   data: quizResponseSchema,
-  created: z.boolean()
+  created: z.boolean(),
 });
 
 const quizUpdateResponseSchema = z.object({
-  data: quizResponseSchema
+  data: quizResponseSchema,
 });
 
 const quizQuestionMutationResponseSchema = z.object({
-  data: quizQuestionResponseSchema
+  data: quizQuestionResponseSchema,
 });
 
 // Flashcard Schemas
@@ -408,13 +408,13 @@ const flashcardCreateSchema = z.object({
   chapterId: z.number().int().positive(),
   front: z.string().trim().min(1),
   back: z.string().trim().min(1),
-  orderIndex: z.number().int().min(0).optional()
+  orderIndex: z.number().int().min(0).optional(),
 });
 
 const flashcardUpdateSchema = z.object({
   front: z.string().trim().min(1).optional(),
   back: z.string().trim().min(1).optional(),
-  orderIndex: z.number().int().min(0).optional()
+  orderIndex: z.number().int().min(0).optional(),
 });
 
 const flashcardResponseSchema = z.object({
@@ -424,34 +424,36 @@ const flashcardResponseSchema = z.object({
   back: z.string(),
   orderIndex: z.number().int().min(0).nullable(),
   createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional()
+  updatedAt: z.string().datetime().optional(),
 });
 
 const flashcardCreateResponseSchema = z.object({
-  data: flashcardResponseSchema
+  data: flashcardResponseSchema,
 });
 
 const flashcardMutationResponseSchema = z.object({
-  data: flashcardResponseSchema
+  data: flashcardResponseSchema,
 });
 
 const flashcardReorderSchema = z.object({
   chapterId: z.number().int().positive(),
-  flashcardIds: z.array(z.number().int().positive())
+  flashcardIds: z.array(z.number().int().positive()),
 });
 
 const flashcardReorderResponseSchema = z.object({
   success: z.boolean(),
-  updated: z.array(z.object({
-    id: z.number(),
-    orderIndex: z.number()
-  }))
+  updated: z.array(
+    z.object({
+      id: z.number(),
+      orderIndex: z.number(),
+    })
+  ),
 });
 
 // Formula Schemas
 const formulaVariableSchema = z.object({
   symbol: z.string(),
-  meaning: z.string()
+  meaning: z.string(),
 });
 
 const formulaResponseSchema = z.object({
@@ -466,29 +468,31 @@ const formulaResponseSchema = z.object({
   createdAt: z.string().datetime().or(z.coerce.string()).optional(),
   updatedAt: z.string().datetime().or(z.coerce.string()).optional(),
   subjectName: z.string().nullable().optional(),
-  chapterTitle: z.string().nullable().optional()
+  chapterTitle: z.string().nullable().optional(),
 });
 
 const formulaCreateResponseSchema = z.object({
-  data: formulaResponseSchema
+  data: formulaResponseSchema,
 });
 
 const formulaMutationResponseSchema = z.object({
-  data: formulaResponseSchema
+  data: formulaResponseSchema,
 });
 
 const adminAuditLogEntrySchema = z.object({
   id: z.string().uuid(),
-  scope: z.enum(["content", "forum", "moderation", "notifications", "settings", "users"]).optional(),
+  scope: z
+    .enum(["content", "forum", "moderation", "notifications", "settings", "users"])
+    .optional(),
   action: z.string(),
   target: z.string(),
   status: z.enum(["success", "failed"]),
   message: z.string(),
   actor: z.object({
     id: z.string().nullable(),
-    name: z.string()
+    name: z.string(),
   }),
-  occurredAt: z.string().datetime()
+  occurredAt: z.string().datetime(),
 });
 
 const adminAuditLogResponseSchema = z.object({
@@ -496,7 +500,7 @@ const adminAuditLogResponseSchema = z.object({
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
   pageSize: z.number().int().positive(),
-  hasMore: z.boolean()
+  hasMore: z.boolean(),
 });
 
 const adminModerationFlagSchema = z.object({
@@ -509,7 +513,7 @@ const adminModerationFlagSchema = z.object({
   status: z.enum(["open", "resolved"]),
   resolvedBy: z.string().nullable(),
   resolvedAt: z.string().datetime().nullable(),
-  resolutionNote: z.string().nullable()
+  resolutionNote: z.string().nullable(),
 });
 
 const adminModerationFlagsResponseSchema = z.object({
@@ -517,11 +521,11 @@ const adminModerationFlagsResponseSchema = z.object({
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
   pageSize: z.number().int().positive(),
-  hasMore: z.boolean()
+  hasMore: z.boolean(),
 });
 
 const adminModerationResolveResponseSchema = z.object({
-  flag: adminModerationFlagSchema
+  flag: adminModerationFlagSchema,
 });
 
 const adminUserSchema = z.object({
@@ -534,7 +538,7 @@ const adminUserSchema = z.object({
   suspendedAt: z.string().datetime().nullable().optional(),
   suspendedReason: z.string().nullable().optional(),
   suspendedBy: z.string().nullable().optional(),
-  createdAt: z.string().datetime()
+  createdAt: z.string().datetime(),
 });
 
 const adminUsersResponseSchema = z.object({
@@ -542,15 +546,15 @@ const adminUsersResponseSchema = z.object({
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
   pageSize: z.number().int().positive(),
-  hasMore: z.boolean()
+  hasMore: z.boolean(),
 });
 
 const adminUserRoleUpdateResponseSchema = z.object({
-  user: adminUserSchema
+  user: adminUserSchema,
 });
 
 const adminUserSuspensionUpdateResponseSchema = z.object({
-  user: adminUserSchema
+  user: adminUserSchema,
 });
 
 const adminCommunityThreadSchema = z.object({
@@ -562,7 +566,7 @@ const adminCommunityThreadSchema = z.object({
   isSolved: z.boolean(),
   replyCount: z.number().int().nonnegative(),
   views: z.number().int().nonnegative(),
-  openFlagCount: z.number().int().nonnegative()
+  openFlagCount: z.number().int().nonnegative(),
 });
 
 const adminCommunityThreadsResponseSchema = z.object({
@@ -570,7 +574,7 @@ const adminCommunityThreadsResponseSchema = z.object({
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
   pageSize: z.number().int().positive(),
-  hasMore: z.boolean()
+  hasMore: z.boolean(),
 });
 
 const adminAnalyticsSubjectPerformanceSchema = z.object({
@@ -580,7 +584,7 @@ const adminAnalyticsSubjectPerformanceSchema = z.object({
   boardName: z.string(),
   attempts: z.number().int().nonnegative(),
   averageScorePercent: z.number(),
-  activeStudents: z.number().int().nonnegative()
+  activeStudents: z.number().int().nonnegative(),
 });
 
 const adminAnalyticsOverviewSchema = z.object({
@@ -591,7 +595,7 @@ const adminAnalyticsOverviewSchema = z.object({
     averageQuizScorePercent: z.number(),
     threadsCreated: z.number().int().nonnegative(),
     openModerationFlags: z.number().int().nonnegative(),
-    confusionEvents: z.number().int().nonnegative()
+    confusionEvents: z.number().int().nonnegative(),
   }),
   subjectPerformance: z.array(adminAnalyticsSubjectPerformanceSchema),
   confusionByChapter: z.array(
@@ -599,9 +603,9 @@ const adminAnalyticsOverviewSchema = z.object({
       chapterId: z.number().int().positive(),
       chapterTitle: z.string(),
       subjectName: z.string(),
-      count: z.number().int().nonnegative()
+      count: z.number().int().nonnegative(),
     })
-  )
+  ),
 });
 
 const adminOverviewActivityScopeSchema = z.enum([
@@ -610,7 +614,7 @@ const adminOverviewActivityScopeSchema = z.enum([
   "moderation",
   "notifications",
   "settings",
-  "users"
+  "users",
 ]);
 
 const adminOverviewActivityEntrySchema = z.object({
@@ -622,9 +626,9 @@ const adminOverviewActivityEntrySchema = z.object({
   message: z.string(),
   actor: z.object({
     id: z.string().nullable(),
-    name: z.string()
+    name: z.string(),
   }),
-  occurredAt: z.string().datetime()
+  occurredAt: z.string().datetime(),
 });
 
 const adminOverviewResponseSchema = z.object({
@@ -633,13 +637,13 @@ const adminOverviewResponseSchema = z.object({
     openModerationFlags: z.number().int().nonnegative(),
     suspendedUsers: z.number().int().nonnegative(),
     failedAdminActionsLast24h: z.number().int().nonnegative(),
-    notificationsSentInWindow: z.number().int().nonnegative()
+    notificationsSentInWindow: z.number().int().nonnegative(),
   }),
   alerts: z.object({
     showHighPriorityBanner: z.boolean(),
-    reasons: z.array(z.string())
+    reasons: z.array(z.string()),
   }),
-  recentActivity: z.array(adminOverviewActivityEntrySchema)
+  recentActivity: z.array(adminOverviewActivityEntrySchema),
 });
 
 const adminNotificationSchema = z.object({
@@ -650,9 +654,9 @@ const adminNotificationSchema = z.object({
   status: z.enum(["sent"]),
   createdBy: z.object({
     id: z.string(),
-    name: z.string()
+    name: z.string(),
   }),
-  createdAt: z.string().datetime()
+  createdAt: z.string().datetime(),
 });
 
 const adminNotificationsResponseSchema = z.object({
@@ -660,11 +664,11 @@ const adminNotificationsResponseSchema = z.object({
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
   pageSize: z.number().int().positive(),
-  hasMore: z.boolean()
+  hasMore: z.boolean(),
 });
 
 const adminNotificationCreateResponseSchema = z.object({
-  notification: adminNotificationSchema
+  notification: adminNotificationSchema,
 });
 
 const adminSettingSchema = z.object({
@@ -674,10 +678,10 @@ const adminSettingSchema = z.object({
   updatedBy: z
     .object({
       id: z.string(),
-      name: z.string()
+      name: z.string(),
     })
     .nullable(),
-  updatedAt: z.string().datetime()
+  updatedAt: z.string().datetime(),
 });
 
 const adminSettingsResponseSchema = z.object({
@@ -685,11 +689,11 @@ const adminSettingsResponseSchema = z.object({
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
   pageSize: z.number().int().positive(),
-  hasMore: z.boolean()
+  hasMore: z.boolean(),
 });
 
 const adminSettingUpdateResponseSchema = z.object({
-  setting: adminSettingSchema
+  setting: adminSettingSchema,
 });
 
 export type AdminCurriculumBoard = z.infer<typeof adminCurriculumBoardSchema>;
@@ -697,32 +701,70 @@ export type AdminCurriculumClass = z.infer<typeof adminCurriculumClassSchema>;
 export type AdminCurriculumSubject = z.infer<typeof adminCurriculumSubjectSchema>;
 export type AdminCurriculumChapter = z.infer<typeof adminCurriculumChapterSchema>;
 export type AdminCurriculumResponse = z.infer<typeof adminCurriculumResponseSchema>;
-export type AdminCurriculumBoardCreateResponse = z.infer<typeof adminCurriculumBoardCreateResponseSchema>;
-export type AdminCurriculumBoardMutationResponse = z.infer<typeof adminCurriculumBoardMutationResponseSchema>;
-export type AdminCurriculumClassCreateResponse = z.infer<typeof adminCurriculumClassCreateResponseSchema>;
-export type AdminCurriculumClassMutationResponse = z.infer<typeof adminCurriculumClassMutationResponseSchema>;
-export type AdminCurriculumSubjectCreateResponse = z.infer<typeof adminCurriculumSubjectCreateResponseSchema>;
-export type AdminCurriculumSubjectMutationResponse = z.infer<typeof adminCurriculumSubjectMutationResponseSchema>;
-export type AdminCurriculumSubjectUpdateResponse = z.infer<typeof adminCurriculumSubjectUpdateResponseSchema>;
-export type AdminCurriculumChapterCreateResponse = z.infer<typeof adminCurriculumChapterCreateResponseSchema>;
-export type AdminCurriculumChapterMutationResponse = z.infer<typeof adminCurriculumChapterMutationResponseSchema>;
+export type AdminCurriculumBoardCreateResponse = z.infer<
+  typeof adminCurriculumBoardCreateResponseSchema
+>;
+export type AdminCurriculumBoardMutationResponse = z.infer<
+  typeof adminCurriculumBoardMutationResponseSchema
+>;
+export type AdminCurriculumClassCreateResponse = z.infer<
+  typeof adminCurriculumClassCreateResponseSchema
+>;
+export type AdminCurriculumClassMutationResponse = z.infer<
+  typeof adminCurriculumClassMutationResponseSchema
+>;
+export type AdminCurriculumSubjectCreateResponse = z.infer<
+  typeof adminCurriculumSubjectCreateResponseSchema
+>;
+export type AdminCurriculumSubjectMutationResponse = z.infer<
+  typeof adminCurriculumSubjectMutationResponseSchema
+>;
+export type AdminCurriculumSubjectUpdateResponse = z.infer<
+  typeof adminCurriculumSubjectUpdateResponseSchema
+>;
+export type AdminCurriculumChapterCreateResponse = z.infer<
+  typeof adminCurriculumChapterCreateResponseSchema
+>;
+export type AdminCurriculumChapterMutationResponse = z.infer<
+  typeof adminCurriculumChapterMutationResponseSchema
+>;
 export type AdminChapterSummaryResponse = z.infer<typeof adminChapterSummaryResponseSchema>;
-export type AdminChapterRevisionNotesResponse = z.infer<typeof adminChapterRevisionNotesResponseSchema>;
+export type AdminChapterRevisionNotesResponse = z.infer<
+  typeof adminChapterRevisionNotesResponseSchema
+>;
 export type AdminChapterRevisionNotes = z.infer<typeof adminRevisionNotesSchema>;
-export type AdminChapterSummaryUpdateResponse = z.infer<typeof adminChapterSummaryUpdateResponseSchema>;
+export type AdminChapterSummaryUpdateResponse = z.infer<
+  typeof adminChapterSummaryUpdateResponseSchema
+>;
 export type AdminChapterSubpart = z.infer<typeof adminChapterSubpartSchema>;
 export type AdminChapterSubpartsResponse = z.infer<typeof adminChapterSubpartsResponseSchema>;
-export type AdminChapterSubpartMutationResponse = z.infer<typeof adminChapterSubpartMutationResponseSchema>;
-export type AdminChapterSubpartReorderResponse = z.infer<typeof adminChapterSubpartReorderResponseSchema>;
-export type AdminChapterSubpartDeleteResponse = z.infer<typeof adminChapterSubpartDeleteResponseSchema>;
+export type AdminChapterSubpartMutationResponse = z.infer<
+  typeof adminChapterSubpartMutationResponseSchema
+>;
+export type AdminChapterSubpartReorderResponse = z.infer<
+  typeof adminChapterSubpartReorderResponseSchema
+>;
+export type AdminChapterSubpartDeleteResponse = z.infer<
+  typeof adminChapterSubpartDeleteResponseSchema
+>;
 export type AdminChapterLinksResponse = z.infer<typeof adminChapterLinksResponseSchema>;
-export type AdminChapterLinkSuggestionsResponse = z.infer<typeof adminChapterLinkSuggestionsResponseSchema>;
+export type AdminChapterLinkSuggestionsResponse = z.infer<
+  typeof adminChapterLinkSuggestionsResponseSchema
+>;
 export type AdminChapterGraphResponse = z.infer<typeof adminChapterGraphResponseSchema>;
-export type AdminChapterSummaryMediaUploadResponse = z.infer<typeof adminChapterSummaryMediaUploadResponseSchema>;
-export type AdminCurriculumExerciseCreateResponse = z.infer<typeof adminCurriculumExerciseCreateResponseSchema>;
+export type AdminChapterSummaryMediaUploadResponse = z.infer<
+  typeof adminChapterSummaryMediaUploadResponseSchema
+>;
+export type AdminCurriculumExerciseCreateResponse = z.infer<
+  typeof adminCurriculumExerciseCreateResponseSchema
+>;
 export type AdminCurriculumExerciseRead = z.infer<typeof adminCurriculumExerciseReadSchema>;
-export type AdminCurriculumExerciseListResponse = z.infer<typeof adminCurriculumExerciseListResponseSchema>;
-export type AdminCurriculumExerciseMutationResponse = z.infer<typeof adminCurriculumExerciseMutationResponseSchema>;
+export type AdminCurriculumExerciseListResponse = z.infer<
+  typeof adminCurriculumExerciseListResponseSchema
+>;
+export type AdminCurriculumExerciseMutationResponse = z.infer<
+  typeof adminCurriculumExerciseMutationResponseSchema
+>;
 export type AdminAuditLogResponse = z.infer<typeof adminAuditLogResponseSchema>;
 export type AdminAuditLogResponseEntry = z.infer<typeof adminAuditLogEntrySchema>;
 export type AdminModerationFlag = z.infer<typeof adminModerationFlagSchema>;
@@ -731,12 +773,18 @@ export type AdminModerationResolveResponse = z.infer<typeof adminModerationResol
 export type AdminUser = z.infer<typeof adminUserSchema>;
 export type AdminUsersResponse = z.infer<typeof adminUsersResponseSchema>;
 export type AdminUserRoleUpdateResponse = z.infer<typeof adminUserRoleUpdateResponseSchema>;
-export type AdminUserSuspensionUpdateResponse = z.infer<typeof adminUserSuspensionUpdateResponseSchema>;
+export type AdminUserSuspensionUpdateResponse = z.infer<
+  typeof adminUserSuspensionUpdateResponseSchema
+>;
 export type AdminCommunityThread = z.infer<typeof adminCommunityThreadSchema>;
 export type AdminCommunityThreadsResponse = z.infer<typeof adminCommunityThreadsResponseSchema>;
 export type AdminAnalyticsOverview = z.infer<typeof adminAnalyticsOverviewSchema>;
-export type AdminAnalyticsSubjectPerformance = z.infer<typeof adminAnalyticsSubjectPerformanceSchema>;
-export type AdminAnalyticsConfusionChapter = z.infer<typeof adminAnalyticsOverviewSchema>['confusionByChapter'][number];
+export type AdminAnalyticsSubjectPerformance = z.infer<
+  typeof adminAnalyticsSubjectPerformanceSchema
+>;
+export type AdminAnalyticsConfusionChapter = z.infer<
+  typeof adminAnalyticsOverviewSchema
+>["confusionByChapter"][number];
 export type AdminOverviewResponse = z.infer<typeof adminOverviewResponseSchema>;
 export type AdminOverviewActivityScope = z.infer<typeof adminOverviewActivityScopeSchema>;
 export type AdminNotification = z.infer<typeof adminNotificationSchema>;
@@ -770,7 +818,7 @@ const fetchAdminJson = async <T>({
   schema,
   cookieHeader,
   method = "GET",
-  body
+  body,
 }: {
   path: string;
   schema: z.ZodType<T>;
@@ -791,7 +839,7 @@ const fetchAdminJson = async <T>({
     cache: "no-store",
     ...(!cookieHeader ? { credentials: "include" } : {}),
     ...(Object.keys(headers).length > 0 ? { headers } : {}),
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {})
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
 
   if (!response.ok) {
@@ -808,11 +856,13 @@ const fetchAdminJson = async <T>({
   return schema.parse((await response.json()) as unknown);
 };
 
-export const getAdminCurriculumTree = async (cookieHeader?: string): Promise<AdminCurriculumBoard[]> => {
+export const getAdminCurriculumTree = async (
+  cookieHeader?: string
+): Promise<AdminCurriculumBoard[]> => {
   const payload = await fetchAdminJson({
     path: "/api/admin/content/curriculum",
     schema: adminCurriculumResponseSchema,
-    ...(cookieHeader ? { cookieHeader } : {})
+    ...(cookieHeader ? { cookieHeader } : {}),
   });
 
   return payload.boards;
@@ -826,14 +876,14 @@ export const createAdminCurriculumBoard = async (input: {
     path: "/api/admin/content/boards",
     schema: adminCurriculumBoardCreateResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
 export const updateAdminCurriculumBoard = async ({
   boardId,
   name,
-  slug
+  slug,
 }: {
   boardId: number;
   name: string;
@@ -843,15 +893,17 @@ export const updateAdminCurriculumBoard = async ({
     path: `/api/admin/content/boards/${boardId}/update`,
     schema: adminCurriculumBoardMutationResponseSchema,
     method: "POST",
-    body: { name, slug }
+    body: { name, slug },
   });
 };
 
-export const deleteAdminCurriculumBoard = async (boardId: number): Promise<AdminCurriculumBoardMutationResponse> => {
+export const deleteAdminCurriculumBoard = async (
+  boardId: number
+): Promise<AdminCurriculumBoardMutationResponse> => {
   return fetchAdminJson({
     path: `/api/admin/content/boards/${boardId}/delete`,
     schema: adminCurriculumBoardMutationResponseSchema,
-    method: "POST"
+    method: "POST",
   });
 };
 
@@ -864,14 +916,14 @@ export const createAdminCurriculumClass = async (input: {
     path: "/api/admin/content/classes",
     schema: adminCurriculumClassCreateResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
 export const updateAdminCurriculumClass = async ({
   classId,
   name,
-  slug
+  slug,
 }: {
   classId: number;
   name: string;
@@ -881,15 +933,17 @@ export const updateAdminCurriculumClass = async ({
     path: `/api/admin/content/classes/${classId}/update`,
     schema: adminCurriculumClassMutationResponseSchema,
     method: "POST",
-    body: { name, slug }
+    body: { name, slug },
   });
 };
 
-export const deleteAdminCurriculumClass = async (classId: number): Promise<AdminCurriculumClassMutationResponse> => {
+export const deleteAdminCurriculumClass = async (
+  classId: number
+): Promise<AdminCurriculumClassMutationResponse> => {
   return fetchAdminJson({
     path: `/api/admin/content/classes/${classId}/delete`,
     schema: adminCurriculumClassMutationResponseSchema,
-    method: "POST"
+    method: "POST",
   });
 };
 
@@ -905,15 +959,17 @@ export const createAdminCurriculumSubject = async (input: {
     path: "/api/admin/content/subjects",
     schema: adminCurriculumSubjectCreateResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
-export const deleteAdminCurriculumSubject = async (subjectId: number): Promise<AdminCurriculumSubjectMutationResponse> => {
+export const deleteAdminCurriculumSubject = async (
+  subjectId: number
+): Promise<AdminCurriculumSubjectMutationResponse> => {
   return fetchAdminJson({
     path: `/api/admin/content/subjects/${subjectId}/delete`,
     schema: adminCurriculumSubjectMutationResponseSchema,
-    method: "POST"
+    method: "POST",
   });
 };
 
@@ -923,7 +979,7 @@ export const updateAdminCurriculumSubject = async ({
   slug,
   icon,
   description,
-  coverImageUrl
+  coverImageUrl,
 }: {
   subjectId: number;
   name: string;
@@ -941,8 +997,8 @@ export const updateAdminCurriculumSubject = async ({
       slug,
       ...(icon !== undefined ? { icon } : {}),
       ...(description !== undefined ? { description } : {}),
-      ...(coverImageUrl !== undefined ? { coverImageUrl } : {})
-    }
+      ...(coverImageUrl !== undefined ? { coverImageUrl } : {}),
+    },
   });
 };
 
@@ -958,7 +1014,7 @@ export const createAdminCurriculumChapter = async (input: {
     path: "/api/admin/content/chapters",
     schema: adminCurriculumChapterCreateResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
@@ -967,7 +1023,7 @@ export const updateAdminCurriculumChapter = async ({
   chapterNumber,
   title,
   slug,
-  coverImageUrl
+  coverImageUrl,
 }: {
   chapterId: number;
   chapterNumber: number;
@@ -983,31 +1039,35 @@ export const updateAdminCurriculumChapter = async ({
       chapterNumber,
       title,
       slug,
-      ...(coverImageUrl !== undefined ? { coverImageUrl } : {})
-    }
+      ...(coverImageUrl !== undefined ? { coverImageUrl } : {}),
+    },
   });
 };
 
-export const deleteAdminCurriculumChapter = async (chapterId: number): Promise<AdminCurriculumChapterMutationResponse> => {
+export const deleteAdminCurriculumChapter = async (
+  chapterId: number
+): Promise<AdminCurriculumChapterMutationResponse> => {
   return fetchAdminJson({
     path: `/api/admin/content/chapters/${chapterId}/delete`,
     schema: adminCurriculumChapterMutationResponseSchema,
-    method: "POST"
+    method: "POST",
   });
 };
 
 /** @deprecated Use {@link getAdminChapterSubparts} instead. Chapter summaries are now managed via subparts. */
-export const getAdminChapterSummary = async (chapterId: number): Promise<AdminChapterSummaryResponse> => {
+export const getAdminChapterSummary = async (
+  chapterId: number
+): Promise<AdminChapterSummaryResponse> => {
   return fetchAdminJson({
     path: `/api/admin/content/chapters/${chapterId}/summary`,
-    schema: adminChapterSummaryResponseSchema
+    schema: adminChapterSummaryResponseSchema,
   });
 };
 
 /** @deprecated Use {@link createAdminChapterSubpart} or {@link updateAdminChapterSubpart} instead. Chapter summaries are now managed via subparts. */
 export const updateAdminChapterSummary = async ({
   chapterId,
-  summary
+  summary,
 }: {
   chapterId: number;
   summary: string;
@@ -1016,14 +1076,16 @@ export const updateAdminChapterSummary = async ({
     path: `/api/admin/content/chapters/${chapterId}/summary`,
     schema: adminChapterSummaryUpdateResponseSchema,
     method: "POST",
-    body: { summary }
+    body: { summary },
   });
 };
 
-export const getAdminChapterSubparts = async (chapterId: number): Promise<AdminChapterSubpartsResponse> => {
+export const getAdminChapterSubparts = async (
+  chapterId: number
+): Promise<AdminChapterSubpartsResponse> => {
   return fetchAdminJson({
     path: `/api/admin/content/chapters/${chapterId}/subparts`,
-    schema: adminChapterSubpartsResponseSchema
+    schema: adminChapterSubpartsResponseSchema,
   });
 };
 
@@ -1031,7 +1093,7 @@ export const createAdminChapterSubpart = async ({
   chapterId,
   heading,
   content,
-  orderIndex
+  orderIndex,
 }: {
   chapterId: number;
   heading: string;
@@ -1045,8 +1107,8 @@ export const createAdminChapterSubpart = async ({
     body: {
       heading,
       content,
-      ...(orderIndex !== undefined ? { orderIndex } : {})
-    }
+      ...(orderIndex !== undefined ? { orderIndex } : {}),
+    },
   });
 };
 
@@ -1054,7 +1116,7 @@ export const updateAdminChapterSubpart = async ({
   chapterId,
   subpartId,
   heading,
-  content
+  content,
 }: {
   chapterId: number;
   subpartId: number;
@@ -1067,14 +1129,14 @@ export const updateAdminChapterSubpart = async ({
     method: "POST",
     body: {
       heading,
-      content
-    }
+      content,
+    },
   });
 };
 
 export const reorderAdminChapterSubparts = async ({
   chapterId,
-  subpartIds
+  subpartIds,
 }: {
   chapterId: number;
   subpartIds: number[];
@@ -1084,14 +1146,14 @@ export const reorderAdminChapterSubparts = async ({
     schema: adminChapterSubpartReorderResponseSchema,
     method: "POST",
     body: {
-      subpartIds
-    }
+      subpartIds,
+    },
   });
 };
 
 export const deleteAdminChapterSubpart = async ({
   chapterId,
-  subpartId
+  subpartId,
 }: {
   chapterId: number;
   subpartId: number;
@@ -1099,20 +1161,22 @@ export const deleteAdminChapterSubpart = async ({
   return fetchAdminJson({
     path: `/api/admin/content/chapters/${chapterId}/subparts/${subpartId}/delete`,
     schema: adminChapterSubpartDeleteResponseSchema,
-    method: "POST"
+    method: "POST",
   });
 };
 
-export const getAdminChapterRevisionNotes = async (chapterId: number): Promise<AdminChapterRevisionNotesResponse> => {
+export const getAdminChapterRevisionNotes = async (
+  chapterId: number
+): Promise<AdminChapterRevisionNotesResponse> => {
   return fetchAdminJson({
     path: `/api/admin/content/chapters/${chapterId}/revision-notes`,
-    schema: adminChapterRevisionNotesResponseSchema
+    schema: adminChapterRevisionNotesResponseSchema,
   });
 };
 
 export const updateAdminChapterRevisionNotes = async ({
   chapterId,
-  revisionNotes
+  revisionNotes,
 }: {
   chapterId: number;
   revisionNotes: AdminChapterRevisionNotes;
@@ -1121,51 +1185,53 @@ export const updateAdminChapterRevisionNotes = async ({
     path: `/api/admin/content/chapters/${chapterId}/revision-notes`,
     schema: adminChapterRevisionNotesUpdateResponseSchema,
     method: "POST",
-    body: revisionNotes
+    body: revisionNotes,
   });
 };
 
-export const getAdminChapterLinks = async (chapterId: number): Promise<AdminChapterLinksResponse> => {
+export const getAdminChapterLinks = async (
+  chapterId: number
+): Promise<AdminChapterLinksResponse> => {
   return fetchAdminJson({
     path: `/api/admin/content/chapters/${chapterId}/links`,
-    schema: adminChapterLinksResponseSchema
+    schema: adminChapterLinksResponseSchema,
   });
 };
 
 export const getAdminChapterLinkSuggestions = async ({
   query,
-  limit = 20
+  limit = 20,
 }: {
   query: string;
   limit?: number;
 }): Promise<AdminChapterLinkSuggestionsResponse> => {
   const searchParams = new URLSearchParams({
     q: query,
-    limit: String(limit)
+    limit: String(limit),
   });
   return fetchAdminJson({
     path: `/api/admin/content/chapters/link-suggestions?${searchParams.toString()}`,
-    schema: adminChapterLinkSuggestionsResponseSchema
+    schema: adminChapterLinkSuggestionsResponseSchema,
   });
 };
 
 export const getAdminChapterGraph = async ({
-  query
+  query,
 }: {
   query: string;
 }): Promise<AdminChapterGraphResponse> => {
   const searchParams = new URLSearchParams({
-    q: query
+    q: query,
   });
   return fetchAdminJson({
     path: `/api/admin/content/chapters/graph?${searchParams.toString()}`,
-    schema: adminChapterGraphResponseSchema
+    schema: adminChapterGraphResponseSchema,
   });
 };
 
 export const uploadAdminChapterSummaryMedia = async ({
   chapterId,
-  file
+  file,
 }: {
   chapterId: number;
   file: File;
@@ -1173,11 +1239,14 @@ export const uploadAdminChapterSummaryMedia = async ({
   const formData = new FormData();
   formData.append("media", file);
 
-  const response = await fetch(`${backendUrl}/api/admin/content/chapters/${chapterId}/summary-media`, {
-    method: "POST",
-    body: formData,
-    credentials: "include"
-  });
+  const response = await fetch(
+    `${backendUrl}/api/admin/content/chapters/${chapterId}/summary-media`,
+    {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    }
+  );
 
   if (!response.ok) {
     let message = "Failed to upload chapter summary media.";
@@ -1197,7 +1266,7 @@ export const uploadAdminChapterSummaryMedia = async ({
 
 export const uploadAdminChapterCoverImage = async ({
   chapterId,
-  file
+  file,
 }: {
   chapterId: number;
   file: File;
@@ -1205,11 +1274,14 @@ export const uploadAdminChapterCoverImage = async ({
   const formData = new FormData();
   formData.append("cover", file);
 
-  const response = await fetch(`${backendUrl}/api/admin/content/chapters/${chapterId}/cover-image`, {
-    method: "POST",
-    body: formData,
-    credentials: "include"
-  });
+  const response = await fetch(
+    `${backendUrl}/api/admin/content/chapters/${chapterId}/cover-image`,
+    {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    }
+  );
 
   if (!response.ok) {
     let message = "Failed to upload chapter cover image.";
@@ -1228,14 +1300,17 @@ export const uploadAdminChapterCoverImage = async ({
 };
 
 export const deleteAdminChapterCoverImage = async ({
-  chapterId
+  chapterId,
 }: {
   chapterId: number;
 }): Promise<void> => {
-  const response = await fetch(`${backendUrl}/api/admin/content/chapters/${chapterId}/cover-image`, {
-    method: "DELETE",
-    credentials: "include"
-  });
+  const response = await fetch(
+    `${backendUrl}/api/admin/content/chapters/${chapterId}/cover-image`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  );
 
   if (!response.ok) {
     let message = "Failed to delete chapter cover image.";
@@ -1253,7 +1328,7 @@ export const deleteAdminChapterCoverImage = async ({
 
 export const uploadAdminSubjectCoverImage = async ({
   subjectId,
-  file
+  file,
 }: {
   subjectId: number;
   file: File;
@@ -1261,11 +1336,14 @@ export const uploadAdminSubjectCoverImage = async ({
   const formData = new FormData();
   formData.append("cover", file);
 
-  const response = await fetch(`${backendUrl}/api/admin/content/subjects/${subjectId}/cover-image`, {
-    method: "POST",
-    body: formData,
-    credentials: "include"
-  });
+  const response = await fetch(
+    `${backendUrl}/api/admin/content/subjects/${subjectId}/cover-image`,
+    {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    }
+  );
 
   if (!response.ok) {
     let message = "Failed to upload subject cover image.";
@@ -1284,14 +1362,17 @@ export const uploadAdminSubjectCoverImage = async ({
 };
 
 export const deleteAdminSubjectCoverImage = async ({
-  subjectId
+  subjectId,
 }: {
   subjectId: number;
 }): Promise<void> => {
-  const response = await fetch(`${backendUrl}/api/admin/content/subjects/${subjectId}/cover-image`, {
-    method: "DELETE",
-    credentials: "include"
-  });
+  const response = await fetch(
+    `${backendUrl}/api/admin/content/subjects/${subjectId}/cover-image`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  );
 
   if (!response.ok) {
     let message = "Failed to delete subject cover image.";
@@ -1336,12 +1417,12 @@ export const createAdminCurriculumExercise = async (input: {
       ...(input.visualizationHtml !== undefined && { visualizationHtml: input.visualizationHtml }),
       ...(input.blanksAnswer !== undefined && { blanksAnswer: input.blanksAnswer }),
       ...(input.statements !== undefined && { statements: input.statements }),
-    }
+    },
   });
 };
 
 export const getAdminCurriculumExercises = async ({
-  chapterId
+  chapterId,
 }: {
   chapterId?: number;
 }): Promise<AdminCurriculumExerciseListResponse> => {
@@ -1351,7 +1432,7 @@ export const getAdminCurriculumExercises = async ({
   }
   return fetchAdminJson({
     path: `/api/admin/content/exercises${searchParams.size > 0 ? `?${searchParams.toString()}` : ""}`,
-    schema: adminCurriculumExerciseListResponseSchema
+    schema: adminCurriculumExerciseListResponseSchema,
   });
 };
 
@@ -1366,7 +1447,7 @@ export const updateAdminCurriculumExercise = async ({
   solutionCode,
   visualizationHtml,
   blanksAnswer,
-  statements
+  statements,
 }: {
   exerciseId: number;
   exerciseNumber: string;
@@ -1394,8 +1475,8 @@ export const updateAdminCurriculumExercise = async ({
       ...(solutionCode !== undefined ? { solutionCode } : {}),
       ...(visualizationHtml !== undefined ? { visualizationHtml } : {}),
       ...(blanksAnswer !== undefined ? { blanksAnswer } : {}),
-      ...(statements !== undefined ? { statements } : {})
-    }
+      ...(statements !== undefined ? { statements } : {}),
+    },
   });
 };
 
@@ -1405,7 +1486,7 @@ export const deleteAdminCurriculumExercise = async (
   return fetchAdminJson({
     path: `/api/admin/content/exercises/${exerciseId}/delete`,
     schema: adminCurriculumExerciseMutationResponseSchema,
-    method: "POST"
+    method: "POST",
   });
 };
 
@@ -1413,7 +1494,7 @@ const getAuditLogs = async ({
   scope,
   page,
   pageSize,
-  cookieHeader
+  cookieHeader,
 }: {
   scope: "content" | "forum" | "moderation" | "notifications" | "settings" | "users";
   page: number;
@@ -1422,20 +1503,20 @@ const getAuditLogs = async ({
 }): Promise<AdminAuditLogResponse> => {
   const query = new URLSearchParams({
     page: String(page),
-    pageSize: String(pageSize)
+    pageSize: String(pageSize),
   });
 
   return fetchAdminJson({
     path: `/api/admin/${scope}/audit-logs?${query.toString()}`,
     schema: adminAuditLogResponseSchema,
-    ...(cookieHeader ? { cookieHeader } : {})
+    ...(cookieHeader ? { cookieHeader } : {}),
   });
 };
 
 export const getAdminContentAuditLogs = async ({
   page,
   pageSize,
-  cookieHeader
+  cookieHeader,
 }: {
   page: number;
   pageSize: number;
@@ -1445,14 +1526,14 @@ export const getAdminContentAuditLogs = async ({
     scope: "content",
     page,
     pageSize,
-    ...(cookieHeader ? { cookieHeader } : {})
+    ...(cookieHeader ? { cookieHeader } : {}),
   });
 };
 
 export const getAdminForumAuditLogs = async ({
   page,
   pageSize,
-  cookieHeader
+  cookieHeader,
 }: {
   page: number;
   pageSize: number;
@@ -1462,7 +1543,7 @@ export const getAdminForumAuditLogs = async ({
     scope: "forum",
     page,
     pageSize,
-    ...(cookieHeader ? { cookieHeader } : {})
+    ...(cookieHeader ? { cookieHeader } : {}),
   });
 };
 
@@ -1472,7 +1553,7 @@ export const getAdminAuditLogs = async ({
   q,
   page,
   pageSize,
-  cookieHeader
+  cookieHeader,
 }: {
   scope: "all" | "content" | "forum" | "moderation" | "notifications" | "settings" | "users";
   status: "all" | "success" | "failed";
@@ -1486,13 +1567,13 @@ export const getAdminAuditLogs = async ({
     status,
     q,
     page: String(page),
-    pageSize: String(pageSize)
+    pageSize: String(pageSize),
   });
 
   return fetchAdminJson({
     path: `/api/admin/audit-logs?${query.toString()}`,
     schema: adminAuditLogResponseSchema,
-    ...(cookieHeader ? { cookieHeader } : {})
+    ...(cookieHeader ? { cookieHeader } : {}),
   });
 };
 
@@ -1501,7 +1582,7 @@ export const getAdminModerationFlags = async ({
   pageSize,
   status,
   targetType,
-  cookieHeader
+  cookieHeader,
 }: {
   page: number;
   pageSize: number;
@@ -1512,7 +1593,7 @@ export const getAdminModerationFlags = async ({
   const query = new URLSearchParams({
     page: String(page),
     pageSize: String(pageSize),
-    status
+    status,
   });
   if (targetType) {
     query.set("targetType", targetType);
@@ -1521,13 +1602,13 @@ export const getAdminModerationFlags = async ({
   return fetchAdminJson({
     path: `/api/admin/moderation/flags?${query.toString()}`,
     schema: adminModerationFlagsResponseSchema,
-    ...(cookieHeader ? { cookieHeader } : {})
+    ...(cookieHeader ? { cookieHeader } : {}),
   });
 };
 
 export const resolveAdminModerationFlag = async ({
   id,
-  note
+  note,
 }: {
   id: string;
   note: string;
@@ -1536,7 +1617,7 @@ export const resolveAdminModerationFlag = async ({
     path: `/api/admin/moderation/flags/${id}/resolve`,
     schema: adminModerationResolveResponseSchema,
     method: "POST",
-    body: { note }
+    body: { note },
   });
 };
 
@@ -1546,7 +1627,7 @@ export const getAdminUsers = async ({
   q,
   role,
   status,
-  cookieHeader
+  cookieHeader,
 }: {
   page: number;
   pageSize: number;
@@ -1558,7 +1639,7 @@ export const getAdminUsers = async ({
   const query = new URLSearchParams({
     page: String(page),
     pageSize: String(pageSize),
-    q
+    q,
   });
   if (role) {
     query.set("role", role);
@@ -1570,13 +1651,13 @@ export const getAdminUsers = async ({
   return fetchAdminJson({
     path: `/api/admin/users?${query.toString()}`,
     schema: adminUsersResponseSchema,
-    ...(cookieHeader ? { cookieHeader } : {})
+    ...(cookieHeader ? { cookieHeader } : {}),
   });
 };
 
 export const updateAdminUserRole = async ({
   id,
-  role
+  role,
 }: {
   id: string;
   role: "student" | "admin" | "moderator";
@@ -1585,14 +1666,14 @@ export const updateAdminUserRole = async ({
     path: `/api/admin/users/${encodeURIComponent(id)}/role`,
     schema: adminUserRoleUpdateResponseSchema,
     method: "POST",
-    body: { role }
+    body: { role },
   });
 };
 
 export const updateAdminUserSuspension = async ({
   id,
   action,
-  reason
+  reason,
 }: {
   id: string;
   action: "suspend" | "reactivate";
@@ -1602,7 +1683,7 @@ export const updateAdminUserSuspension = async ({
     path: `/api/admin/users/${encodeURIComponent(id)}/suspension`,
     schema: adminUserSuspensionUpdateResponseSchema,
     method: "POST",
-    body: action === "suspend" ? { action, reason } : { action }
+    body: action === "suspend" ? { action, reason } : { action },
   });
 };
 
@@ -1612,7 +1693,7 @@ export const getAdminCommunityThreads = async ({
   solved,
   pinned,
   flagState,
-  cookieHeader
+  cookieHeader,
 }: {
   page: number;
   pageSize: number;
@@ -1626,31 +1707,31 @@ export const getAdminCommunityThreads = async ({
     pageSize: String(pageSize),
     solved,
     pinned,
-    flagState
+    flagState,
   });
 
   return fetchAdminJson({
     path: `/api/admin/community/threads?${query.toString()}`,
     schema: adminCommunityThreadsResponseSchema,
-    ...(cookieHeader ? { cookieHeader } : {})
+    ...(cookieHeader ? { cookieHeader } : {}),
   });
 };
 
 export const getAdminAnalyticsOverview = async ({
   windowDays,
-  cookieHeader
+  cookieHeader,
 }: {
   windowDays: 7 | 30 | 90;
   cookieHeader?: string;
 }): Promise<AdminAnalyticsOverview> => {
   const query = new URLSearchParams({
-    windowDays: String(windowDays)
+    windowDays: String(windowDays),
   });
 
   return fetchAdminJson({
     path: `/api/admin/analytics/overview?${query.toString()}`,
     schema: adminAnalyticsOverviewSchema,
-    ...(cookieHeader ? { cookieHeader } : {})
+    ...(cookieHeader ? { cookieHeader } : {}),
   });
 };
 
@@ -1663,22 +1744,22 @@ const moderatorOverviewResponseSchema = z.object({
       targetLabel: z.string(),
       reason: z.string(),
       resolvedAt: z.string().nullable(),
-      resolutionNote: z.string().nullable()
+      resolutionNote: z.string().nullable(),
     })
-  )
+  ),
 });
 
 export type ModeratorOverviewResponse = z.infer<typeof moderatorOverviewResponseSchema>;
 
 export const getModeratorOverview = async ({
-  cookieHeader
+  cookieHeader,
 }: {
   cookieHeader?: string;
 } = {}): Promise<ModeratorOverviewResponse> => {
   return fetchAdminJson({
     path: "/api/admin/moderator/overview",
     schema: moderatorOverviewResponseSchema,
-    ...(cookieHeader ? { cookieHeader } : {})
+    ...(cookieHeader ? { cookieHeader } : {}),
   });
 };
 
@@ -1686,7 +1767,7 @@ export const deleteModerationThread = async (threadId: string): Promise<void> =>
   await fetchAdminJson({
     path: `/api/admin/moderation/threads/${threadId}/delete`,
     schema: z.object({ deleted: z.boolean() }),
-    method: "POST"
+    method: "POST",
   });
 };
 
@@ -1694,32 +1775,32 @@ export const deleteModerationReply = async (replyId: string): Promise<void> => {
   await fetchAdminJson({
     path: `/api/admin/moderation/replies/${replyId}/delete`,
     schema: z.object({ deleted: z.boolean() }),
-    method: "POST"
+    method: "POST",
   });
 };
 
 export const getAdminOverview = async ({
   windowDays,
-  cookieHeader
+  cookieHeader,
 }: {
   windowDays: 7 | 30 | 90;
   cookieHeader?: string;
 }): Promise<AdminOverviewResponse> => {
   const query = new URLSearchParams({
-    windowDays: String(windowDays)
+    windowDays: String(windowDays),
   });
 
   return fetchAdminJson({
     path: `/api/admin/overview?${query.toString()}`,
     schema: adminOverviewResponseSchema,
-    ...(cookieHeader ? { cookieHeader } : {})
+    ...(cookieHeader ? { cookieHeader } : {}),
   });
 };
 
 export const getAdminNotifications = async ({
   page,
   pageSize,
-  cookieHeader
+  cookieHeader,
 }: {
   page: number;
   pageSize: number;
@@ -1727,20 +1808,20 @@ export const getAdminNotifications = async ({
 }): Promise<AdminNotificationsResponse> => {
   const query = new URLSearchParams({
     page: String(page),
-    pageSize: String(pageSize)
+    pageSize: String(pageSize),
   });
 
   return fetchAdminJson({
     path: `/api/admin/notifications?${query.toString()}`,
     schema: adminNotificationsResponseSchema,
-    ...(cookieHeader ? { cookieHeader } : {})
+    ...(cookieHeader ? { cookieHeader } : {}),
   });
 };
 
 export const createAdminNotification = async ({
   title,
   message,
-  audience
+  audience,
 }: {
   title: string;
   message: string;
@@ -1750,14 +1831,14 @@ export const createAdminNotification = async ({
     path: "/api/admin/notifications",
     schema: adminNotificationCreateResponseSchema,
     method: "POST",
-    body: { title, message, audience }
+    body: { title, message, audience },
   });
 };
 
 export const getAdminSettings = async ({
   page,
   pageSize,
-  cookieHeader
+  cookieHeader,
 }: {
   page: number;
   pageSize: number;
@@ -1765,19 +1846,19 @@ export const getAdminSettings = async ({
 }): Promise<AdminSettingsResponse> => {
   const query = new URLSearchParams({
     page: String(page),
-    pageSize: String(pageSize)
+    pageSize: String(pageSize),
   });
 
   return fetchAdminJson({
     path: `/api/admin/settings?${query.toString()}`,
     schema: adminSettingsResponseSchema,
-    ...(cookieHeader ? { cookieHeader } : {})
+    ...(cookieHeader ? { cookieHeader } : {}),
   });
 };
 
 export const updateAdminSetting = async ({
   key,
-  value
+  value,
 }: {
   key: string;
   value: string;
@@ -1786,7 +1867,7 @@ export const updateAdminSetting = async ({
     path: `/api/admin/settings/${encodeURIComponent(key)}`,
     schema: adminSettingUpdateResponseSchema,
     method: "POST",
-    body: { value }
+    body: { value },
   });
 };
 
@@ -1801,25 +1882,25 @@ export const upsertAdminQuiz = async (input: {
     path: "/api/admin/content/quizzes",
     schema: quizUpsertResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
 export const getAdminQuiz = async (chapterId: number): Promise<QuizResponse | null> => {
   const searchParams = new URLSearchParams({
-    chapterId: String(chapterId)
+    chapterId: String(chapterId),
   });
   const searchParamsStr = searchParams.toString();
   const response = await fetchAdminJson({
     path: `/api/admin/content/quizzes?${searchParamsStr}`,
-    schema: z.object({ data: quizResponseSchema.nullable() })
+    schema: z.object({ data: quizResponseSchema.nullable() }),
   });
   return response.data;
 };
 
 export const updateAdminQuiz = async ({
   id,
-  input
+  input,
 }: {
   id: number;
   input: {
@@ -1832,7 +1913,7 @@ export const updateAdminQuiz = async ({
     path: `/api/admin/content/quizzes/${id}/update`,
     schema: quizUpdateResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
@@ -1840,7 +1921,7 @@ export const deleteAdminQuiz = async (id: number): Promise<void> => {
   await fetchAdminJson({
     path: `/api/admin/content/quizzes/${id}/delete`,
     schema: z.object({ success: z.boolean() }),
-    method: "POST"
+    method: "POST",
   });
 };
 
@@ -1859,24 +1940,24 @@ export const createAdminQuizQuestion = async (input: {
     path: "/api/admin/content/quiz-questions",
     schema: quizQuestionMutationResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
 export const getAdminQuizQuestions = async (quizId: number): Promise<QuizQuestionResponse[]> => {
   const searchParams = new URLSearchParams({
-    quizId: String(quizId)
+    quizId: String(quizId),
   });
   const response = await fetchAdminJson({
     path: `/api/admin/content/quiz-questions?${searchParams.toString()}`,
-    schema: z.object({ data: z.array(quizQuestionResponseSchema) })
+    schema: z.object({ data: z.array(quizQuestionResponseSchema) }),
   });
   return response.data;
 };
 
 export const updateAdminQuizQuestion = async ({
   id,
-  input
+  input,
 }: {
   id: number;
   input: {
@@ -1894,7 +1975,7 @@ export const updateAdminQuizQuestion = async ({
     path: `/api/admin/content/quiz-questions/${id}/update`,
     schema: quizQuestionMutationResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
@@ -1902,7 +1983,7 @@ export const deleteAdminQuizQuestion = async (id: number): Promise<void> => {
   await fetchAdminJson({
     path: `/api/admin/content/quiz-questions/${id}/delete`,
     schema: z.object({ success: z.boolean() }),
-    method: "POST"
+    method: "POST",
   });
 };
 
@@ -1917,24 +1998,24 @@ export const createAdminFlashcard = async (input: {
     path: "/api/admin/content/flashcards",
     schema: flashcardCreateResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
 export const getAdminFlashcards = async (chapterId: number): Promise<FlashcardResponse[]> => {
   const searchParams = new URLSearchParams({
-    chapterId: String(chapterId)
+    chapterId: String(chapterId),
   });
   const response = await fetchAdminJson({
     path: `/api/admin/content/flashcards?${searchParams.toString()}`,
-    schema: z.object({ data: z.array(flashcardResponseSchema), total: z.number() })
+    schema: z.object({ data: z.array(flashcardResponseSchema), total: z.number() }),
   });
   return response.data;
 };
 
 export const updateAdminFlashcard = async ({
   id,
-  input
+  input,
 }: {
   id: number;
   input: {
@@ -1947,7 +2028,7 @@ export const updateAdminFlashcard = async ({
     path: `/api/admin/content/flashcards/${id}/update`,
     schema: flashcardMutationResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
@@ -1955,7 +2036,7 @@ export const deleteAdminFlashcard = async (id: number): Promise<void> => {
   await fetchAdminJson({
     path: `/api/admin/content/flashcards/${id}/delete`,
     schema: z.object({ success: z.boolean() }),
-    method: "POST"
+    method: "POST",
   });
 };
 
@@ -1967,7 +2048,7 @@ export const reorderAdminFlashcards = async (input: {
     path: "/api/admin/content/flashcards/reorder",
     schema: flashcardReorderResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
@@ -1985,7 +2066,7 @@ export const getAdminFormulas = async (params?: {
   const response = await fetchAdminJson({
     path,
     schema: z.object({ data: z.array(formulaResponseSchema), total: z.number() }),
-    ...(params?.cookieHeader ? { cookieHeader: params.cookieHeader } : {})
+    ...(params?.cookieHeader ? { cookieHeader: params.cookieHeader } : {}),
   });
   return response.data;
 };
@@ -2003,13 +2084,13 @@ export const createAdminFormula = async (input: {
     path: "/api/admin/content/formulas",
     schema: formulaCreateResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
 export const updateAdminFormula = async ({
   id,
-  input
+  input,
 }: {
   id: number;
   input: {
@@ -2026,7 +2107,7 @@ export const updateAdminFormula = async ({
     path: `/api/admin/content/formulas/${id}/update`,
     schema: formulaMutationResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
@@ -2034,7 +2115,7 @@ export const deleteAdminFormula = async (id: number): Promise<void> => {
   await fetchAdminJson({
     path: `/api/admin/content/formulas/${id}/delete`,
     schema: z.object({ success: z.boolean() }),
-    method: "POST"
+    method: "POST",
   });
 };
 
@@ -2053,15 +2134,15 @@ const pastPaperResponseSchema = z.object({
   published: z.boolean().default(false),
   description: z.string().nullable(),
   paperContent: z.string().nullable(),
-  solutionContent: z.string().nullable()
+  solutionContent: z.string().nullable(),
 });
 
 const pastPaperCreateResponseSchema = z.object({
-  data: pastPaperResponseSchema
+  data: pastPaperResponseSchema,
 });
 
 const pastPaperMutationResponseSchema = z.object({
-  data: pastPaperResponseSchema
+  data: pastPaperResponseSchema,
 });
 
 export type PastPaperResponse = z.infer<typeof pastPaperResponseSchema>;
@@ -2086,7 +2167,7 @@ export const getAdminPastPapers = async (params?: {
   const response = await fetchAdminJson({
     path,
     schema: z.object({ data: z.array(pastPaperResponseSchema), total: z.number() }),
-    ...(params?.cookieHeader ? { cookieHeader: params.cookieHeader } : {})
+    ...(params?.cookieHeader ? { cookieHeader: params.cookieHeader } : {}),
   });
   return response.data;
 };
@@ -2108,13 +2189,13 @@ export const createAdminPastPaper = async (input: {
     path: "/api/admin/content/past-papers",
     schema: pastPaperCreateResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
 export const updateAdminPastPaper = async ({
   id,
-  input
+  input,
 }: {
   id: number;
   input: {
@@ -2135,7 +2216,7 @@ export const updateAdminPastPaper = async ({
     path: `/api/admin/content/past-papers/${id}/update`,
     schema: pastPaperMutationResponseSchema,
     method: "POST",
-    body: input
+    body: input,
   });
 };
 
@@ -2143,15 +2224,17 @@ export const deleteAdminPastPaper = async (id: number): Promise<void> => {
   await fetchAdminJson({
     path: `/api/admin/content/past-papers/${id}/delete`,
     schema: z.object({ success: z.boolean() }),
-    method: "POST"
+    method: "POST",
   });
 };
 
-export const togglePublishAdminPastPaper = async (id: number): Promise<PastPaperMutationResponse> => {
+export const togglePublishAdminPastPaper = async (
+  id: number
+): Promise<PastPaperMutationResponse> => {
   return fetchAdminJson({
     path: `/api/admin/content/past-papers/${id}/publish`,
     schema: pastPaperMutationResponseSchema,
-    method: "POST"
+    method: "POST",
   });
 };
 
@@ -2160,15 +2243,15 @@ export const togglePublishAdminPastPaper = async (id: number): Promise<PastPaper
 const adminBackupEntrySchema = z.object({
   name: z.string(),
   sizeBytes: z.number(),
-  createdAt: z.string()
+  createdAt: z.string(),
 });
 
 const adminBackupsResponseSchema = z.object({
-  backups: z.array(adminBackupEntrySchema)
+  backups: z.array(adminBackupEntrySchema),
 });
 
 const adminBackupCreateResponseSchema = z.object({
-  backup: adminBackupEntrySchema
+  backup: adminBackupEntrySchema,
 });
 
 export type AdminBackupEntry = z.infer<typeof adminBackupEntrySchema>;
@@ -2176,19 +2259,19 @@ export type AdminBackupsResponse = z.infer<typeof adminBackupsResponseSchema>;
 export type AdminBackupCreateResponse = z.infer<typeof adminBackupCreateResponseSchema>;
 
 export const getAdminBackups = async ({
-  cookieHeader
+  cookieHeader,
 }: {
   cookieHeader?: string;
 } = {}): Promise<AdminBackupsResponse> => {
   return fetchAdminJson({
     path: "/api/admin/backup",
     schema: adminBackupsResponseSchema,
-    ...(cookieHeader ? { cookieHeader } : {})
+    ...(cookieHeader ? { cookieHeader } : {}),
   });
 };
 
 export const createAdminBackup = async ({
-  label
+  label,
 }: {
   label?: string;
 } = {}): Promise<AdminBackupCreateResponse> => {
@@ -2196,7 +2279,7 @@ export const createAdminBackup = async ({
     path: "/api/admin/backup",
     schema: adminBackupCreateResponseSchema,
     method: "POST",
-    body: label ? { label } : {}
+    body: label ? { label } : {},
   });
 };
 
@@ -2204,7 +2287,7 @@ export const restoreAdminBackup = async (name: string): Promise<{ success: boole
   return fetchAdminJson({
     path: `/api/admin/backup/${encodeURIComponent(name)}/restore`,
     schema: z.object({ success: z.boolean() }),
-    method: "POST"
+    method: "POST",
   });
 };
 
@@ -2212,6 +2295,6 @@ export const deleteAdminBackup = async (name: string): Promise<{ success: boolea
   return fetchAdminJson({
     path: `/api/admin/backup/${encodeURIComponent(name)}`,
     schema: z.object({ success: z.boolean() }),
-    method: "DELETE"
+    method: "DELETE",
   });
 };

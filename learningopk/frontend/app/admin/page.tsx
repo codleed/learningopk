@@ -27,20 +27,20 @@ export default async function AdminPage() {
   const cookieHeader = cookieStore.toString();
   const overviewPayload = await getAdminOverview({
     windowDays: 30,
-    cookieHeader
+    cookieHeader,
   }).catch(() => ({
     windowDays: 30 as const,
     kpis: {
       openModerationFlags: 0,
       suspendedUsers: 0,
       failedAdminActionsLast24h: 0,
-      notificationsSentInWindow: 0
+      notificationsSentInWindow: 0,
     },
     alerts: {
       showHighPriorityBanner: false,
-      reasons: []
+      reasons: [],
     },
-    recentActivity: []
+    recentActivity: [],
   }));
 
   return (
@@ -55,4 +55,3 @@ export default async function AdminPage() {
     </div>
   );
 }
-

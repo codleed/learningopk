@@ -5,7 +5,15 @@ import { and, eq, sql } from "drizzle-orm";
 import request from "supertest";
 
 import { db, pool } from "../../lib/db/index.js";
-import { boardClasses, boards, chapters, quizAttempts, quizQuestions, quizzes, subjects } from "../../lib/db/schema.js";
+import {
+  boardClasses,
+  boards,
+  chapters,
+  quizAttempts,
+  quizQuestions,
+  quizzes,
+  subjects,
+} from "../../lib/db/schema.js";
 import { redis } from "../../lib/redis.js";
 import { createApp } from "../../server.js";
 
@@ -19,15 +27,21 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
     email,
     password: TEST_PASSWORD,
     class: "9th",
-    board: "fbise"
+    board: "fbise",
   });
 
-  assert.ok(response.status < 400, `Expected sign-up success, got ${response.status} ${JSON.stringify(response.body)}`);
+  assert.ok(
+    response.status < 400,
+    `Expected sign-up success, got ${response.status} ${JSON.stringify(response.body)}`
+  );
 };
 
 const getSessionUserId = async (agent: AuthAgent): Promise<string> => {
   const response = await agent.get("/api/auth/get-session").set("origin", APP_ORIGIN);
-  assert.ok(response.status < 400, `Expected session lookup success, got ${response.status} ${JSON.stringify(response.body)}`);
+  assert.ok(
+    response.status < 400,
+    `Expected session lookup success, got ${response.status} ${JSON.stringify(response.body)}`
+  );
 
   const userId = response.body?.user?.id;
   assert.equal(typeof userId, "string");
@@ -42,72 +56,90 @@ const getWrongOption = (correctOption: "a" | "b" | "c" | "d"): "a" | "b" | "c" |
 const createChapterQuizFixture = async () => {
   const suffix = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 
-  const [board] = await db.insert(boards).values({
-    name: `Duel Board ${suffix}`,
-    slug: `duel-board-${suffix}`
-  }).returning({ id: boards.id });
+  const [board] = await db
+    .insert(boards)
+    .values({
+      name: `Duel Board ${suffix}`,
+      slug: `duel-board-${suffix}`,
+    })
+    .returning({ id: boards.id });
   assert.ok(board, "Expected board fixture insert.");
 
-  const [boardClass] = await db.insert(boardClasses).values({
-    boardId: board.id,
-    name: `Class ${suffix}`,
-    slug: `class-${suffix}`
-  }).returning({ id: boardClasses.id });
+  const [boardClass] = await db
+    .insert(boardClasses)
+    .values({
+      boardId: board.id,
+      name: `Class ${suffix}`,
+      slug: `class-${suffix}`,
+    })
+    .returning({ id: boardClasses.id });
   assert.ok(boardClass, "Expected class fixture insert.");
 
-  const [subject] = await db.insert(subjects).values({
-    boardId: board.id,
-    grade: "9",
-    name: `Physics ${suffix}`,
-    slug: `physics-${suffix}`,
-    description: "Quiz duel fixture."
-  }).returning({ id: subjects.id });
+  const [subject] = await db
+    .insert(subjects)
+    .values({
+      boardId: board.id,
+      grade: "9",
+      name: `Physics ${suffix}`,
+      slug: `physics-${suffix}`,
+      description: "Quiz duel fixture.",
+    })
+    .returning({ id: subjects.id });
   assert.ok(subject, "Expected subject fixture insert.");
 
   void boardClass;
 
-  const [chapter] = await db.insert(chapters).values({
-    subjectId: subject.id,
-    chapterNumber: 1,
-    title: `Motion ${suffix}`,
-    slug: `motion-${suffix}`,
-    summary: "Published chapter for quiz duel test.",
-    isPublished: true
-  }).returning({ id: chapters.id });
+  const [chapter] = await db
+    .insert(chapters)
+    .values({
+      subjectId: subject.id,
+      chapterNumber: 1,
+      title: `Motion ${suffix}`,
+      slug: `motion-${suffix}`,
+      summary: "Published chapter for quiz duel test.",
+      isPublished: true,
+    })
+    .returning({ id: chapters.id });
   assert.ok(chapter, "Expected chapter fixture insert.");
 
-  const [quiz] = await db.insert(quizzes).values({
-    chapterId: chapter.id,
-    title: `Chapter Quiz ${suffix}`,
-    durationMinutes: 20,
-    totalMarks: 10,
-    type: "chapter_quiz"
-  }).returning({ id: quizzes.id });
+  const [quiz] = await db
+    .insert(quizzes)
+    .values({
+      chapterId: chapter.id,
+      title: `Chapter Quiz ${suffix}`,
+      durationMinutes: 20,
+      totalMarks: 10,
+      type: "chapter_quiz",
+    })
+    .returning({ id: quizzes.id });
   assert.ok(quiz, "Expected quiz fixture insert.");
 
-  const insertedQuestions = await db.insert(quizQuestions).values(
-    Array.from({ length: 10 }, (_, index) => ({
-      quizId: quiz.id,
-      chapterId: chapter.id,
-      question: `Question ${index + 1}`,
-      optionA: `A${index + 1}`,
-      optionB: `B${index + 1}`,
-      optionC: `C${index + 1}`,
-      optionD: `D${index + 1}`,
-      correctOption: (index % 2 === 0 ? "a" : "b") as "a" | "b",
-      explanation: `Explanation ${index + 1}`,
-      marks: 1
-    }))
-  ).returning({
-    id: quizQuestions.id,
-    correctOption: quizQuestions.correctOption
-  });
+  const insertedQuestions = await db
+    .insert(quizQuestions)
+    .values(
+      Array.from({ length: 10 }, (_, index) => ({
+        quizId: quiz.id,
+        chapterId: chapter.id,
+        question: `Question ${index + 1}`,
+        optionA: `A${index + 1}`,
+        optionB: `B${index + 1}`,
+        optionC: `C${index + 1}`,
+        optionD: `D${index + 1}`,
+        correctOption: (index % 2 === 0 ? "a" : "b") as "a" | "b",
+        explanation: `Explanation ${index + 1}`,
+        marks: 1,
+      }))
+    )
+    .returning({
+      id: quizQuestions.id,
+      correctOption: quizQuestions.correctOption,
+    });
 
   assert.equal(insertedQuestions.length, 10, "Expected ten quiz questions.");
 
   return {
     quizId: quiz.id,
-    questions: insertedQuestions
+    questions: insertedQuestions,
   };
 };
 
@@ -136,7 +168,7 @@ test("quiz duel flow creates a challenge and returns side-by-side duel scores", 
 
   const creatorSubmitResponse = await creatorAgent.post("/api/quiz/submit").send({
     quizId: fixture.quizId,
-    answers: creatorAnswers
+    answers: creatorAnswers,
   });
 
   assert.equal(creatorSubmitResponse.status, 200);
@@ -144,7 +176,7 @@ test("quiz duel flow creates a challenge and returns side-by-side duel scores", 
 
   const createChallengeResponse = await creatorAgent.post("/api/quiz/challenges").send({
     quizId: fixture.quizId,
-    attemptId: creatorSubmitResponse.body?.attemptId
+    attemptId: creatorSubmitResponse.body?.attemptId,
   });
 
   assert.equal(createChallengeResponse.status, 201);
@@ -163,14 +195,14 @@ test("quiz duel flow creates a challenge and returns side-by-side duel scores", 
   const recipientAnswers = Object.fromEntries(
     fixture.questions.map((question, index) => [
       String(question.id),
-      index < 5 ? question.correctOption : getWrongOption(question.correctOption)
+      index < 5 ? question.correctOption : getWrongOption(question.correctOption),
     ])
   ) as Record<string, "a" | "b" | "c" | "d">;
 
   const recipientSubmitResponse = await recipientAgent.post("/api/quiz/submit").send({
     quizId: fixture.quizId,
     answers: recipientAnswers,
-    challengeId
+    challengeId,
   });
 
   assert.equal(recipientSubmitResponse.status, 200);
@@ -180,15 +212,17 @@ test("quiz duel flow creates a challenge and returns side-by-side duel scores", 
   assert.equal(recipientSubmitResponse.body?.duel?.recipient?.score, 5);
   assert.equal(recipientSubmitResponse.body?.duel?.recipient?.isCurrentUser, true);
 
-  const recipientAttempts = await db.select({ id: quizAttempts.id }).from(quizAttempts).where(
-    and(eq(quizAttempts.userId, recipientUserId), eq(quizAttempts.quizId, fixture.quizId))
-  );
+  const recipientAttempts = await db
+    .select({ id: quizAttempts.id })
+    .from(quizAttempts)
+    .where(and(eq(quizAttempts.userId, recipientUserId), eq(quizAttempts.quizId, fixture.quizId)));
 
   assert.equal(recipientAttempts.length, 1);
 
-  const creatorAttempts = await db.select({ id: quizAttempts.id }).from(quizAttempts).where(
-    and(eq(quizAttempts.userId, creatorUserId), eq(quizAttempts.quizId, fixture.quizId))
-  );
+  const creatorAttempts = await db
+    .select({ id: quizAttempts.id })
+    .from(quizAttempts)
+    .where(and(eq(quizAttempts.userId, creatorUserId), eq(quizAttempts.quizId, fixture.quizId)));
 
   assert.equal(creatorAttempts.length, 1);
 });
@@ -208,21 +242,23 @@ test("quiz duel challenge expires after 48 hours", async () => {
 
   const creatorSubmitResponse = await creatorAgent.post("/api/quiz/submit").send({
     quizId: fixture.quizId,
-    answers: creatorAnswers
+    answers: creatorAnswers,
   });
 
   assert.equal(creatorSubmitResponse.status, 200);
 
   const createChallengeResponse = await creatorAgent.post("/api/quiz/challenges").send({
     quizId: fixture.quizId,
-    attemptId: creatorSubmitResponse.body?.attemptId
+    attemptId: creatorSubmitResponse.body?.attemptId,
   });
 
   assert.equal(createChallengeResponse.status, 201);
 
   const challengeId = createChallengeResponse.body.data.challengeId as string;
 
-  await db.execute(sql`update quiz_duel_challenges set expires_at = now() - interval '1 hour' where id = ${challengeId}`);
+  await db.execute(
+    sql`update quiz_duel_challenges set expires_at = now() - interval '1 hour' where id = ${challengeId}`
+  );
 
   const fetchChallengeResponse = await recipientAgent.get(`/api/quiz/challenges/${challengeId}`);
   assert.equal(fetchChallengeResponse.status, 200);
@@ -231,7 +267,7 @@ test("quiz duel challenge expires after 48 hours", async () => {
   const expiredSubmitResponse = await recipientAgent.post("/api/quiz/submit").send({
     quizId: fixture.quizId,
     answers: creatorAnswers,
-    challengeId
+    challengeId,
   });
 
   assert.equal(expiredSubmitResponse.status, 410);

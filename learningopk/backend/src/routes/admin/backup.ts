@@ -2,16 +2,21 @@ import { Router } from "express";
 import { z } from "zod";
 
 import { requireAdminRole } from "../../lib/admin.js";
-import { listBackups, createBackup, restoreBackup, deleteBackup } from "../../services/backup.service.js";
+import {
+  listBackups,
+  createBackup,
+  restoreBackup,
+  deleteBackup,
+} from "../../services/backup.service.js";
 import { requireSession, type AuthenticatedRequest } from "../../lib/session.js";
 import { persistAuditLog } from "./shared.js";
 
 const backupCreateBodySchema = z.object({
-  label: z.string().trim().min(1).max(100).optional()
+  label: z.string().trim().min(1).max(100).optional(),
 });
 
 const backupRestoreParamsSchema = z.object({
-  name: z.string().trim().min(1).max(255)
+  name: z.string().trim().min(1).max(255),
 });
 
 export const backupAdminRouter = Router();
@@ -47,7 +52,7 @@ backupAdminRouter.post("/backup", requireSession, async (req, res) => {
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid backup label",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -65,7 +70,7 @@ backupAdminRouter.post("/backup", requireSession, async (req, res) => {
       status: "success",
       message: `Created backup "${backup.name}" (${(backup.sizeBytes / 1024).toFixed(1)} KB)`,
       actorId,
-      actorName
+      actorName,
     });
 
     res.status(201).json({ backup });
@@ -79,7 +84,7 @@ backupAdminRouter.post("/backup", requireSession, async (req, res) => {
       status: "failed",
       message,
       actorId,
-      actorName
+      actorName,
     });
 
     res.status(500).json({ error: message });
@@ -99,7 +104,7 @@ backupAdminRouter.post("/backup/:name/restore", requireSession, async (req, res)
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid backup name",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -118,7 +123,7 @@ backupAdminRouter.post("/backup/:name/restore", requireSession, async (req, res)
       status: "success",
       message: `Restored database from backup "${backupName}"`,
       actorId,
-      actorName
+      actorName,
     });
 
     res.status(200).json({ success: true });
@@ -132,7 +137,7 @@ backupAdminRouter.post("/backup/:name/restore", requireSession, async (req, res)
       status: "failed",
       message,
       actorId,
-      actorName
+      actorName,
     });
 
     res.status(500).json({ error: message });
@@ -152,7 +157,7 @@ backupAdminRouter.delete("/backup/:name", requireSession, async (req, res) => {
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid backup name",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -171,7 +176,7 @@ backupAdminRouter.delete("/backup/:name", requireSession, async (req, res) => {
       status: "success",
       message: `Deleted backup "${backupName}"`,
       actorId,
-      actorName
+      actorName,
     });
 
     res.status(200).json({ success: true });
@@ -185,7 +190,7 @@ backupAdminRouter.delete("/backup/:name", requireSession, async (req, res) => {
       status: "failed",
       message,
       actorId,
-      actorName
+      actorName,
     });
 
     res.status(500).json({ error: message });

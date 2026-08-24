@@ -37,9 +37,9 @@ export const getServerSession = async (): Promise<SessionPayload | null> => {
     const response = await fetch(`${backendUrl}/api/auth/get-session`, {
       method: "GET",
       headers: {
-        cookie: cookieStore.toString()
+        cookie: cookieStore.toString(),
       },
-      cache: "no-store"
+      cache: "no-store",
     });
 
     if (!response.ok) {
@@ -47,8 +47,12 @@ export const getServerSession = async (): Promise<SessionPayload | null> => {
         return null;
       }
       // Other errors indicate service issue
-      const errorData = await response.json().catch(() => ({ error: "Authentication service error" }));
-      const err: AuthServiceError = new Error(errorData?.error ?? "Authentication service unavailable");
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: "Authentication service error" }));
+      const err: AuthServiceError = new Error(
+        errorData?.error ?? "Authentication service unavailable"
+      );
       err.status = response.status;
       err.code = "AUTH_SERVICE_UNAVAILABLE";
       throw err;

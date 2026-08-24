@@ -104,7 +104,7 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
       pushToast({
         title: "Invalid file type",
         description: "Please upload a JPG, PNG, or WebP image.",
-        tone: "error"
+        tone: "error",
       });
       event.target.value = "";
       return;
@@ -114,7 +114,7 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
       pushToast({
         title: "File too large",
         description: "Please upload an image smaller than 10MB.",
-        tone: "error"
+        tone: "error",
       });
       event.target.value = "";
       return;
@@ -217,7 +217,7 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
         try {
           await uploadAdminChapterCoverImage({
             chapterId: result.chapter.id,
-            file: coverImage
+            file: coverImage,
           });
         } catch {
           // Image upload failed, but chapter was created
@@ -261,12 +261,7 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
 
       <AdminFormCard>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <AdminFormField
-            id="chapter-subject"
-            label="Subject"
-            required
-            error={subjectError}
-          >
+          <AdminFormField id="chapter-subject" label="Subject" required error={subjectError}>
             <Select
               id="chapter-subject"
               value={subjectId}
@@ -305,12 +300,7 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
             />
           </AdminFormField>
 
-          <AdminFormField
-            id="chapter-title"
-            label="Chapter Title"
-            required
-            error={titleError}
-          >
+          <AdminFormField id="chapter-title" label="Chapter Title" required error={titleError}>
             <input
               id="chapter-title"
               type="text"
@@ -376,8 +366,18 @@ export function AddChapterForm({ boards }: AddChapterFormProps) {
                 onClick={() => coverImageInputRef.current?.click()}
                 className="inline-flex items-center gap-2 rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-subtle)] px-4 py-3 text-sm text-[var(--text-secondary)] transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--bg-surface)]"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+                  />
                 </svg>
                 Upload cover image
               </button>

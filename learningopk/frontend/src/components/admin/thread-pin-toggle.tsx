@@ -19,7 +19,12 @@ type ThreadPinToggleProps = {
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
-export function ThreadPinToggle({ threadId, threadTitle, isPinned, onComplete }: ThreadPinToggleProps) {
+export function ThreadPinToggle({
+  threadId,
+  threadTitle,
+  isPinned,
+  onComplete,
+}: ThreadPinToggleProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const { pushToast } = useToast();
@@ -33,11 +38,11 @@ export function ThreadPinToggle({ threadId, threadTitle, isPinned, onComplete }:
         method: "POST",
         credentials: "include",
         headers: {
-          "content-type": "application/json"
+          "content-type": "application/json",
         },
         body: JSON.stringify({
-          isPinned: nextPinned
-        })
+          isPinned: nextPinned,
+        }),
       });
 
       if (!response.ok) {
@@ -48,12 +53,12 @@ export function ThreadPinToggle({ threadId, threadTitle, isPinned, onComplete }:
       onComplete({
         status: "success",
         message,
-        nextPinned
+        nextPinned,
       });
       pushToast({
         tone: "success",
         title: "Thread moderation updated",
-        description: message
+        description: message,
       });
     } catch (error) {
       const message =
@@ -64,12 +69,12 @@ export function ThreadPinToggle({ threadId, threadTitle, isPinned, onComplete }:
       onComplete({
         status: "failed",
         message,
-        nextPinned: isPinned
+        nextPinned: isPinned,
       });
       pushToast({
         tone: "error",
         title: "Thread moderation failed",
-        description: message
+        description: message,
       });
     } finally {
       setIsPending(false);
@@ -79,7 +84,12 @@ export function ThreadPinToggle({ threadId, threadTitle, isPinned, onComplete }:
 
   return (
     <>
-      <Button type="button" size="sm" variant={isPinned ? "danger" : "secondary"} onClick={() => setIsDialogOpen(true)}>
+      <Button
+        type="button"
+        size="sm"
+        variant={isPinned ? "danger" : "secondary"}
+        onClick={() => setIsDialogOpen(true)}
+      >
         {isPinned ? "Unpin" : "Pin"}
       </Button>
       <ConfirmDialog
@@ -95,4 +105,3 @@ export function ThreadPinToggle({ threadId, threadTitle, isPinned, onComplete }:
     </>
   );
 }
-

@@ -52,7 +52,13 @@ export const createApp = () => {
     cors({
       origin: env.FRONTEND_ORIGIN,
       credentials: true,
-      exposedHeaders: ["x-ai-session-id", "x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset", "x-correlation-id"]
+      exposedHeaders: [
+        "x-ai-session-id",
+        "x-ratelimit-limit",
+        "x-ratelimit-remaining",
+        "x-ratelimit-reset",
+        "x-correlation-id",
+      ],
     })
   );
 
@@ -92,7 +98,7 @@ export const createApp = () => {
   app.use("/api/formulas", formulasRouter);
   app.use("/api/quiz", quizRouter);
   app.use("/api/mock-exams", mockExamsRouter);
-app.use("/api/past-papers", pastPapersRouter);
+  app.use("/api/past-papers", pastPapersRouter);
   app.use("/api/progress", progressRouter);
   app.use("/api/study-groups", studyGroupsRouter);
   app.use("/api/flashcard-reviews", flashcardReviewsRouter);
@@ -113,21 +119,25 @@ app.use("/api/past-papers", pastPapersRouter);
   app.use(sentryErrorHandler);
 
   // Global error handler — catches unhandled errors from route handlers
-  app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-    if (isHttpError(err)) {
-      res.status(err.status).json(err.toResponse());
-      return;
-    }
+  app.use(
+    (err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+      if (isHttpError(err)) {
+        res.status(err.status).json(err.toResponse());
+        return;
+      }
 
-    logger.error({ error: err }, "Unhandled error");
-    captureException(err);
-    res.status(500).json(errorResponse("Internal server error", "INTERNAL_ERROR"));
-  });
+      logger.error({ error: err }, "Unhandled error");
+      captureException(err);
+      res.status(500).json(errorResponse("Internal server error", "INTERNAL_ERROR"));
+    }
+  );
 
   return app;
 };
 
-const isDirectRun = process.argv[1] ? import.meta.url === pathToFileURL(process.argv[1]).href : false;
+const isDirectRun = process.argv[1]
+  ? import.meta.url === pathToFileURL(process.argv[1]).href
+  : false;
 
 if (isDirectRun) {
   const app = createApp();

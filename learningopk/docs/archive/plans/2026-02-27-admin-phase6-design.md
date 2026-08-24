@@ -1,6 +1,7 @@
 # Admin Phase 6 Design
 
 ## Context
+
 - Admin Phases 1-5 established:
   - admin shell and route completeness
   - moderation and users workflows
@@ -17,22 +18,26 @@
 ## Approach Options
 
 ### Option A: Route-only aggregator
+
 - Add one aggregated route and one new UI page.
 - Pros: fastest, low risk.
 - Cons: leaves scoped audit route parity incomplete.
 
 ### Option B: Scoped parity only
+
 - Add missing scope-specific audit reads to each admin area.
 - Pros: consistent APIs by scope.
 - Cons: no unified cross-scope audit workflow.
 
 ### Option C (Approved): Hybrid
+
 - Add unified audit center (`/admin/audit`) and aggregated API.
 - Also add missing scope-specific audit read routes for consistency.
 - Pros: immediate centralized operations + coherent API surface.
 - Cons: larger than Option A, but still bounded.
 
 ## Approved Direction
+
 - Approach: **Option C (Hybrid), backend-first vertical slices with strict TDD**
 - Deliver:
   - aggregated audit API with filtering + pagination
@@ -41,6 +46,7 @@
 - Preserve existing content/forum audit behavior.
 
 ## Goals
+
 - Provide a unified audit trail for admins across all scopes.
 - Allow filtering by:
   - scope
@@ -51,12 +57,14 @@
 - Keep prior admin workflows and routes stable.
 
 ## Non-goals
+
 - No schema migration for `admin_audit_logs`.
 - No write-path changes for existing audit emitters.
 - No new admin mutation workflows beyond audit read access.
 - No redesign of student-facing routes.
 
 ## Data Model
+
 - No table or enum changes required.
 - Reuse existing `admin_audit_logs` columns:
   - `scope`, `action`, `target`, `status`, `message`, `actor_id`, `actor_name`, `created_at`
@@ -64,6 +72,7 @@
 ## Backend API Contracts
 
 ### GET `/api/admin/audit-logs`
+
 - Query params:
   - `scope` (`all|content|forum|moderation|notifications|settings|users`, default `all`)
   - `status` (`all|success|failed`, default `all`)
@@ -82,6 +91,7 @@
   - `total`, `page`, `pageSize`, `hasMore`
 
 ### Added scope-specific read routes
+
 - `GET /api/admin/moderation/audit-logs`
 - `GET /api/admin/notifications/audit-logs`
 - `GET /api/admin/settings/audit-logs`
@@ -91,6 +101,7 @@
   - response: `entries`, `total`, `page`, `pageSize`, `hasMore`
 
 ## Frontend Architecture
+
 - `frontend/lib/admin-api.ts`
   - extend audit schema to include `scope`
   - add `getAdminAuditLogs(...)`
@@ -105,6 +116,7 @@
   - add `Audit Trail` item to `frontend/components/admin/admin-nav-config.ts`
 
 ## UI Behavior
+
 - Filters:
   - scope select
   - status select
@@ -121,12 +133,14 @@
   - preserve last known rows on transient failures
 
 ## Error and Guardrail Rules
+
 - Validate all query enums and pagination bounds server-side.
 - Keep response shape stable across aggregated and scoped endpoints.
 - Never expose audit read routes to non-admin users.
 - Keep UI resilient to partial failures by preserving current list state.
 
 ## Testing Strategy (Strict TDD)
+
 - Backend integration tests (new phase file):
   - aggregated endpoint auth/role enforcement
   - scope filter behavior
@@ -143,6 +157,7 @@
   - keep smoke spec green
 
 ## Verification Targets
+
 - `pnpm.cmd --filter backend exec tsx --test src/tests/integration/admin-phase6.integration.test.ts`
 - `pnpm.cmd --filter frontend typecheck`
 - `pnpm.cmd --filter frontend lint`
@@ -156,6 +171,7 @@
 - `pnpm.cmd --filter backend typecheck`
 
 ## Verification Run Rules
+
 - Before each Playwright command, run:
   - `pnpm.cmd --filter backend db:clear`
 - Use PowerShell env vars for backend/frontend verification commands when needed:
@@ -166,6 +182,7 @@
   - `FRONTEND_ORIGIN=http://localhost:3000`
 
 ## Risks and Mitigations
+
 - Risk: broad audit queries degrade performance with large tables.
   - Mitigation: bounded page size, indexed sort (`scope, created_at`) and targeted filters.
 - Risk: route proliferation causes payload drift.

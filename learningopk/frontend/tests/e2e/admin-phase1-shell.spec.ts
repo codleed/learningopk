@@ -4,7 +4,10 @@ test("admin shell exposes phase-1 section navigation", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("admin@example.com");
   await page.getByLabel("Password").fill("password");
-  await Promise.all([page.waitForURL(/\/dashboard$/), page.getByRole("button", { name: "Sign in" }).click()]);
+  await Promise.all([
+    page.waitForURL(/\/dashboard$/),
+    page.getByRole("button", { name: "Sign in" }).click(),
+  ]);
 
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Command Center" })).toBeVisible();
@@ -46,7 +49,10 @@ test.describe("admin shell mobile behavior", () => {
     await page.goto("/login");
     await page.getByLabel("Email").fill("admin@example.com");
     await page.getByLabel("Password").fill("password");
-    await Promise.all([page.waitForURL(/\/dashboard$/), page.getByRole("button", { name: "Sign in" }).click()]);
+    await Promise.all([
+      page.waitForURL(/\/dashboard$/),
+      page.getByRole("button", { name: "Sign in" }).click(),
+    ]);
 
     await page.goto("/admin");
     await expect(page.getByRole("button", { name: "Open navigation" })).toBeVisible();

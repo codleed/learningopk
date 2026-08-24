@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import {
   FORUM_MUTATION_RATE_LIMIT_MAX_REQUESTS,
-  FORUM_MUTATION_RATE_LIMIT_WINDOW_SECONDS
+  FORUM_MUTATION_RATE_LIMIT_WINDOW_SECONDS,
 } from "../lib/ai-guardrails.js";
 import { pool } from "../lib/db/index.js";
 import { ensureRedisConnection, redis } from "../lib/redis.js";
@@ -11,12 +11,12 @@ import { createApp } from "../server.js";
 
 const moderationErrorSchema = z.object({
   error: z.string(),
-  reason: z.enum(["profanity", "harassment", "self_harm", "spam"])
+  reason: z.enum(["profanity", "harassment", "self_harm", "spam"]),
 });
 
 const rateLimitErrorSchema = z.object({
   error: z.string(),
-  retryAfterSeconds: z.number().int().positive()
+  retryAfterSeconds: z.number().int().positive(),
 });
 
 const run = async (): Promise<void> => {
@@ -28,29 +28,38 @@ const run = async (): Promise<void> => {
 
   const unauthMutationResponse = await anonAgent.post("/api/forum/threads").send({
     title: "Unauthenticated post",
-    body: "Should not pass."
+    body: "Should not pass.",
   });
   if (unauthMutationResponse.status !== 401) {
-    throw new Error(`Expected unauthenticated forum mutation 401, got ${unauthMutationResponse.status}`);
+    throw new Error(
+      `Expected unauthenticated forum mutation 401, got ${unauthMutationResponse.status}`
+    );
   }
 
-  const signUpResponse = await agent.post("/api/auth/sign-up/email").set("origin", "http://localhost:3000").send({
-    name: "Forum FRM-04 User",
-    email,
-    password,
-    class: "9th",
-    board: "fbise"
-  });
+  const signUpResponse = await agent
+    .post("/api/auth/sign-up/email")
+    .set("origin", "http://localhost:3000")
+    .send({
+      name: "Forum FRM-04 User",
+      email,
+      password,
+      class: "9th",
+      board: "fbise",
+    });
   if (signUpResponse.status >= 400) {
-    throw new Error(`Sign-up failed: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`);
+    throw new Error(
+      `Sign-up failed: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`
+    );
   }
 
-  const sessionResponse = await agent.get("/api/auth/get-session").set("origin", "http://localhost:3000");
+  const sessionResponse = await agent
+    .get("/api/auth/get-session")
+    .set("origin", "http://localhost:3000");
   const userId = z
     .object({
       user: z.object({
-        id: z.string().min(1)
-      })
+        id: z.string().min(1),
+      }),
     })
     .safeParse(sessionResponse.body).data?.user.id;
   if (!userId) {
@@ -59,7 +68,7 @@ const run = async (): Promise<void> => {
 
   const flaggedThreadResponse = await agent.post("/api/forum/threads").send({
     title: "Need study help",
-    body: "You are stupid and useless."
+    body: "You are stupid and useless.",
   });
   if (flaggedThreadResponse.status !== 422) {
     throw new Error(`Expected moderation status 422, got ${flaggedThreadResponse.status}`);
@@ -68,7 +77,7 @@ const run = async (): Promise<void> => {
 
   const cleanThreadResponse = await agent.post("/api/forum/threads").send({
     title: "Need derivation help",
-    body: "Please explain the derivation steps for this chapter equation."
+    body: "Please explain the derivation steps for this chapter equation.",
   });
   if (cleanThreadResponse.status !== 201) {
     throw new Error(`Expected clean thread creation 201, got ${cleanThreadResponse.status}`);
@@ -76,23 +85,27 @@ const run = async (): Promise<void> => {
   const threadId = z
     .object({
       thread: z.object({
-        id: z.string().uuid()
-      })
+        id: z.string().uuid(),
+      }),
     })
     .parse(cleanThreadResponse.body).thread.id;
 
   await ensureRedisConnection();
-  const rateLimitBucket = Math.floor(Date.now() / (FORUM_MUTATION_RATE_LIMIT_WINDOW_SECONDS * 1000));
+  const rateLimitBucket = Math.floor(
+    Date.now() / (FORUM_MUTATION_RATE_LIMIT_WINDOW_SECONDS * 1000)
+  );
   const rateLimitKey = `ratelimit:forum:${userId}:${rateLimitBucket}`;
   await redis.set(rateLimitKey, String(FORUM_MUTATION_RATE_LIMIT_MAX_REQUESTS), {
-    EX: FORUM_MUTATION_RATE_LIMIT_WINDOW_SECONDS
+    EX: FORUM_MUTATION_RATE_LIMIT_WINDOW_SECONDS,
   });
 
   const overLimitResponse = await agent.post(`/api/forum/threads/${threadId}/replies`).send({
-    body: "Trying to post while at rate limit."
+    body: "Trying to post while at rate limit.",
   });
   if (overLimitResponse.status !== 429) {
-    throw new Error(`Expected forum mutation rate-limit status 429, got ${overLimitResponse.status}`);
+    throw new Error(
+      `Expected forum mutation rate-limit status 429, got ${overLimitResponse.status}`
+    );
   }
 
   const overLimitBody = rateLimitErrorSchema.parse(overLimitResponse.body);
@@ -120,4 +133,3 @@ run()
       await redis.quit().catch(() => undefined);
     }
   });
-

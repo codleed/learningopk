@@ -30,13 +30,10 @@ const ChapterExercisesWithAi = dynamic(
   }
 );
 
-const QuizRunner = dynamic(
-  () => import("./quiz-runner").then((mod) => mod.QuizRunner),
-  {
-    ssr: false,
-    loading: () => <LoadingSkeleton title="Loading quiz..." rows={5} variant="card" />,
-  }
-);
+const QuizRunner = dynamic(() => import("./quiz-runner").then((mod) => mod.QuizRunner), {
+  ssr: false,
+  loading: () => <LoadingSkeleton title="Loading quiz..." rows={5} variant="card" />,
+});
 
 const QuestIllustrationView = dynamic(
   () => import("./quest-illustration-view").then((mod) => mod.QuestIllustrationView),
@@ -54,10 +51,9 @@ const QuickRevisionView = dynamic(
   }
 );
 
-const MobileAiFab = dynamic(
-  () => import("./mobile-ai-fab").then((mod) => mod.MobileAiFab),
-  { ssr: false }
-);
+const MobileAiFab = dynamic(() => import("./mobile-ai-fab").then((mod) => mod.MobileAiFab), {
+  ssr: false,
+});
 
 type ChapterStudyContentWithAiProps = {
   trainingExercises: ChapterDetailResponse["exercises"];

@@ -26,7 +26,9 @@ export class SchoolRepository {
     const rows = await db
       .select({ count: count() })
       .from(users)
-      .where(and(eq(users.schoolId, schoolId), eq(users.role, "student"), eq(users.status, "active")));
+      .where(
+        and(eq(users.schoolId, schoolId), eq(users.role, "student"), eq(users.status, "active"))
+      );
     return rows[0]?.count ?? 0;
   }
 
@@ -42,7 +44,9 @@ export class SchoolRepository {
         createdAt: users.createdAt,
       })
       .from(users)
-      .where(and(eq(users.schoolId, schoolId), eq(users.role, "student"), eq(users.status, "active")))
+      .where(
+        and(eq(users.schoolId, schoolId), eq(users.role, "student"), eq(users.status, "active"))
+      )
       .orderBy(desc(users.xp))
       .limit(limit);
   }

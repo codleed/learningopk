@@ -23,7 +23,7 @@ type ForumReplyActionsProps = {
 };
 
 const errorSchema = z.object({
-  error: z.string()
+  error: z.string(),
 });
 
 export const ForumReplyActions = ({
@@ -32,7 +32,7 @@ export const ForumReplyActions = ({
   viewerVoteType,
   isAcceptedAnswer,
   canMarkAccepted,
-  isAuthenticated
+  isAuthenticated,
 }: ForumReplyActionsProps) => {
   const router = useRouter();
   const { pushToast } = useToast();
@@ -52,9 +52,9 @@ export const ForumReplyActions = ({
         method: "POST",
         credentials: "include",
         headers: {
-          "content-type": "application/json"
+          "content-type": "application/json",
         },
-        body: JSON.stringify({ voteType })
+        body: JSON.stringify({ voteType }),
       });
       const responseBody = (await response.json().catch(() => null)) as unknown;
 
@@ -70,7 +70,7 @@ export const ForumReplyActions = ({
       pushToast({
         title: "Vote failed",
         description: "The server could not be reached. Please try again.",
-        tone: "error"
+        tone: "error",
       });
     } finally {
       setIsPending(false);
@@ -88,7 +88,7 @@ export const ForumReplyActions = ({
     try {
       const response = await fetch(`${backendUrl}/api/forum/replies/${replyId}/accept`, {
         method: "POST",
-        credentials: "include"
+        credentials: "include",
       });
       const responseBody = (await response.json().catch(() => null)) as unknown;
 
@@ -104,7 +104,7 @@ export const ForumReplyActions = ({
       pushToast({
         title: "Accept answer failed",
         description: "The server could not be reached. Please try again.",
-        tone: "error"
+        tone: "error",
       });
     } finally {
       setIsPending(false);
@@ -135,10 +135,16 @@ export const ForumReplyActions = ({
         </button>
 
         {/* Score */}
-        <span className={cn(
-          "px-1.5 text-xs font-bold tabular-nums",
-          upvotes > 0 ? "text-accent-success" : upvotes < 0 ? "text-accent-danger" : "text-text-muted"
-        )}>
+        <span
+          className={cn(
+            "px-1.5 text-xs font-bold tabular-nums",
+            upvotes > 0
+              ? "text-accent-success"
+              : upvotes < 0
+                ? "text-accent-danger"
+                : "text-text-muted"
+          )}
+        >
           {upvotes > 0 ? `+${upvotes}` : upvotes}
         </span>
 

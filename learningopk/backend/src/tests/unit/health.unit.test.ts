@@ -35,9 +35,7 @@ test("health: GET /api/health/live accepts a provided correlation ID", async () 
   const { default: supertest } = await import("supertest");
   const testCorrId = "test-corr-id-12345";
 
-  const response = await supertest(app)
-    .get("/api/health/live")
-    .set("x-correlation-id", testCorrId);
+  const response = await supertest(app).get("/api/health/live").set("x-correlation-id", testCorrId);
 
   assert.equal(response.status, 200);
   assert.equal(response.headers["x-correlation-id"], testCorrId);
@@ -64,7 +62,10 @@ test("health: GET /api/ready returns structured readiness response", async () =>
   // Each check should have status and latencyMs
   for (const checkName of ["postgres", "redis", "minio", "ai"] as const) {
     const check = response.body.checks[checkName] as { status: string; latencyMs: number };
-    assert.ok(["up", "degraded", "down"].includes(check.status), `${checkName} should have valid status`);
+    assert.ok(
+      ["up", "degraded", "down"].includes(check.status),
+      `${checkName} should have valid status`
+    );
     assert.ok(typeof check.latencyMs === "number", `${checkName} should have latencyMs`);
   }
 });

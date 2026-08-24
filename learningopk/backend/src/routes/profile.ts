@@ -8,7 +8,7 @@ import {
   extractManagedObjectKeyFromPublicUrl,
   fileExtensionFromMimeType,
   type SupportedImageMimeType,
-  uploadImageBuffer
+  uploadImageBuffer,
 } from "../lib/minio.js";
 import { db } from "../lib/db/index.js";
 import { users } from "../lib/db/schema.js";
@@ -20,12 +20,12 @@ import { leaderboardService } from "../services/leaderboard.service.js";
 export const profileRouter = Router();
 
 const leaderboardSettingsSchema = z.object({
-  public: z.boolean()
+  public: z.boolean(),
 });
 
 const uploadProfileImage = createSingleImageUploadMiddleware({
   fieldName: "image",
-  maxFileSizeBytes: 2 * 1024 * 1024
+  maxFileSizeBytes: 2 * 1024 * 1024,
 });
 
 profileRouter.put("/me/profile-image", requireSession, uploadProfileImage, async (req, res) => {
@@ -34,7 +34,7 @@ profileRouter.put("/me/profile-image", requireSession, uploadProfileImage, async
 
   if (!file) {
     res.status(400).json({
-      error: "Missing image file."
+      error: "Missing image file.",
     });
     return;
   }
@@ -42,7 +42,7 @@ profileRouter.put("/me/profile-image", requireSession, uploadProfileImage, async
   const fileExtension = fileExtensionFromMimeType(file.mimetype);
   if (!fileExtension) {
     res.status(400).json({
-      error: "Unsupported image type."
+      error: "Unsupported image type.",
     });
     return;
   }
@@ -50,7 +50,7 @@ profileRouter.put("/me/profile-image", requireSession, uploadProfileImage, async
   const userId = authedReq.session.user.id;
   const objectKey = buildProfileImageObjectKey({
     userId,
-    fileExtension
+    fileExtension,
   });
   let shouldCleanupNewObject = false;
 
@@ -59,13 +59,13 @@ profileRouter.put("/me/profile-image", requireSession, uploadProfileImage, async
     const { objectUrl } = await uploadImageBuffer({
       objectKey,
       buffer: file.buffer,
-      mimeType
+      mimeType,
     });
     shouldCleanupNewObject = true;
 
     const existingUserRows = await db
       .select({
-        image: users.image
+        image: users.image,
       })
       .from(users)
       .where(eq(users.id, userId))
@@ -77,11 +77,11 @@ profileRouter.put("/me/profile-image", requireSession, uploadProfileImage, async
       .update(users)
       .set({
         image: objectUrl,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(users.id, userId))
       .returning({
-        image: users.image
+        image: users.image,
       });
 
     const updatedImageUrl = updatedRows[0]?.image ?? objectUrl;
@@ -90,12 +90,12 @@ profileRouter.put("/me/profile-image", requireSession, uploadProfileImage, async
       const previousObjectKey = extractManagedObjectKeyFromPublicUrl({
         publicUrl: env.MINIO_PUBLIC_URL,
         bucket: env.MINIO_BUCKET,
-        objectUrl: previousImageUrl
+        objectUrl: previousImageUrl,
       });
 
       if (previousObjectKey) {
         await deleteObjectIfExists({
-          objectKey: previousObjectKey
+          objectKey: previousObjectKey,
         });
       }
     }
@@ -103,18 +103,18 @@ profileRouter.put("/me/profile-image", requireSession, uploadProfileImage, async
     shouldCleanupNewObject = false;
 
     res.status(200).json({
-      imageUrl: updatedImageUrl
+      imageUrl: updatedImageUrl,
     });
   } catch (error) {
     if (shouldCleanupNewObject) {
       await deleteObjectIfExists({
-        objectKey
+        objectKey,
       });
     }
 
     console.error("Failed to upload profile image:", error);
     res.status(500).json({
-      error: "Failed to upload profile image."
+      error: "Failed to upload profile image.",
     });
   }
 });
@@ -128,7 +128,7 @@ profileRouter.get("/me/leaderboard-settings", requireSession, async (req, res) =
   } catch (error) {
     console.error("Failed to load leaderboard settings:", error);
     res.status(500).json({
-      error: "Failed to load leaderboard settings."
+      error: "Failed to load leaderboard settings.",
     });
   }
 });
@@ -138,7 +138,7 @@ profileRouter.put("/me/leaderboard-settings", requireSession, async (req, res) =
   if (!parsed.success) {
     res.status(400).json({
       error: "Invalid leaderboard settings payload.",
-      details: parsed.error.flatten()
+      details: parsed.error.flatten(),
     });
     return;
   }
@@ -146,12 +146,15 @@ profileRouter.put("/me/leaderboard-settings", requireSession, async (req, res) =
   const authedReq = req as AuthenticatedRequest;
 
   try {
-    const settings = await leaderboardService.updateSettings(authedReq.session.user.id, parsed.data.public);
+    const settings = await leaderboardService.updateSettings(
+      authedReq.session.user.id,
+      parsed.data.public
+    );
     res.status(200).json(settings);
   } catch (error) {
     console.error("Failed to update leaderboard settings:", error);
     res.status(500).json({
-      error: "Failed to update leaderboard settings."
+      error: "Failed to update leaderboard settings.",
     });
   }
 });

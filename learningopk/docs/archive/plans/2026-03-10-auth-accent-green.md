@@ -13,6 +13,7 @@
 ### Task 1: Update auth-only accent classes
 
 **Files:**
+
 - Modify: `learningopk/frontend/components/auth/bento-auth-shell.tsx`
 - Modify: `learningopk/frontend/components/auth/login-form.tsx`
 - Modify: `learningopk/frontend/components/auth/register-form.tsx`

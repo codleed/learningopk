@@ -9,18 +9,18 @@ import { requireSession, type AuthenticatedRequest } from "../../../lib/session.
 import { persistAuditLog, type AdminAuditScope } from "../shared.js";
 
 const curriculumEntityParamsSchema = z.object({
-  id: z.coerce.number().int().positive()
+  id: z.coerce.number().int().positive(),
 });
 
 const curriculumClassCreateBodySchema = z.object({
   boardId: z.coerce.number().int().positive(),
   name: z.string().trim().min(1),
-  slug: z.string().trim().min(1)
+  slug: z.string().trim().min(1),
 });
 
 const curriculumClassUpdateBodySchema = z.object({
   name: z.string().trim().min(1),
-  slug: z.string().trim().min(1)
+  slug: z.string().trim().min(1),
 });
 
 export const classesAdminRouter = Router();
@@ -35,7 +35,7 @@ classesAdminRouter.post("/content/classes", requireSession, async (req, res) => 
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid class payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -48,7 +48,7 @@ classesAdminRouter.post("/content/classes", requireSession, async (req, res) => 
   const boardRows = await db
     .select({
       id: boards.id,
-      name: boards.name
+      name: boards.name,
     })
     .from(boards)
     .where(eq(boards.id, parsedBody.data.boardId))
@@ -63,10 +63,10 @@ classesAdminRouter.post("/content/classes", requireSession, async (req, res) => 
       status: "failed",
       message: "Board not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Board not found"
+      error: "Board not found",
     });
     return;
   }
@@ -77,19 +77,19 @@ classesAdminRouter.post("/content/classes", requireSession, async (req, res) => 
       .values({
         boardId: board.id,
         name,
-        slug
+        slug,
       })
       .returning({
         id: boardClasses.id,
         boardId: boardClasses.boardId,
         name: boardClasses.name,
-        slug: boardClasses.slug
+        slug: boardClasses.slug,
       });
 
     const boardClass = insertedRows[0];
     if (!boardClass) {
       res.status(500).json({
-        error: "Failed to create class"
+        error: "Failed to create class",
       });
       return;
     }
@@ -101,14 +101,14 @@ classesAdminRouter.post("/content/classes", requireSession, async (req, res) => 
       status: "success",
       message: `Created class ${boardClass.slug}`,
       actorId,
-      actorName
+      actorName,
     });
 
     // Purge cached curriculum data
     void cacheService.invalidatePattern("learn:*");
 
     res.status(201).json({
-      class: boardClass
+      class: boardClass,
     });
   } catch {
     await persistAuditLog({
@@ -118,10 +118,10 @@ classesAdminRouter.post("/content/classes", requireSession, async (req, res) => 
       status: "failed",
       message: "Class create failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(409).json({
-      error: "Class already exists for board"
+      error: "Class already exists for board",
     });
   }
 });
@@ -131,7 +131,7 @@ classesAdminRouter.post("/content/classes/:id/update", requireSession, async (re
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid class identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -140,7 +140,7 @@ classesAdminRouter.post("/content/classes/:id/update", requireSession, async (re
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid class payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -161,7 +161,7 @@ classesAdminRouter.post("/content/classes/:id/update", requireSession, async (re
       boardId: boardClasses.boardId,
       name: boardClasses.name,
       slug: boardClasses.slug,
-      boardName: boards.name
+      boardName: boards.name,
     })
     .from(boardClasses)
     .innerJoin(boards, eq(boardClasses.boardId, boards.id))
@@ -176,10 +176,10 @@ classesAdminRouter.post("/content/classes/:id/update", requireSession, async (re
       status: "failed",
       message: "Class not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Class not found"
+      error: "Class not found",
     });
     return;
   }
@@ -189,14 +189,14 @@ classesAdminRouter.post("/content/classes/:id/update", requireSession, async (re
       .update(boardClasses)
       .set({
         name: parsedBody.data.name.trim(),
-        slug: parsedBody.data.slug.trim().toLowerCase()
+        slug: parsedBody.data.slug.trim().toLowerCase(),
       })
       .where(eq(boardClasses.id, boardClass.id))
       .returning({
         id: boardClasses.id,
         boardId: boardClasses.boardId,
         name: boardClasses.name,
-        slug: boardClasses.slug
+        slug: boardClasses.slug,
       });
     const updatedClass = updatedRows[0];
     if (!updatedClass) {
@@ -207,10 +207,10 @@ classesAdminRouter.post("/content/classes/:id/update", requireSession, async (re
         status: "failed",
         message: "Class not found",
         actorId,
-        actorName
+        actorName,
       });
       res.status(404).json({
-        error: "Class not found"
+        error: "Class not found",
       });
       return;
     }
@@ -222,7 +222,7 @@ classesAdminRouter.post("/content/classes/:id/update", requireSession, async (re
       status: "success",
       message: `Updated class to ${updatedClass.slug}`,
       actorId,
-      actorName
+      actorName,
     });
 
     // Purge cached curriculum data
@@ -230,7 +230,7 @@ classesAdminRouter.post("/content/classes/:id/update", requireSession, async (re
 
     res.status(200).json({
       class: updatedClass,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch {
     await persistAuditLog({
@@ -240,10 +240,10 @@ classesAdminRouter.post("/content/classes/:id/update", requireSession, async (re
       status: "failed",
       message: "Class update failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(409).json({
-      error: "Class already exists for board"
+      error: "Class already exists for board",
     });
   }
 });
@@ -253,7 +253,7 @@ classesAdminRouter.post("/content/classes/:id/delete", requireSession, async (re
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid class identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -274,7 +274,7 @@ classesAdminRouter.post("/content/classes/:id/delete", requireSession, async (re
       boardId: boardClasses.boardId,
       name: boardClasses.name,
       slug: boardClasses.slug,
-      boardName: boards.name
+      boardName: boards.name,
     })
     .from(boardClasses)
     .innerJoin(boards, eq(boardClasses.boardId, boards.id))
@@ -289,10 +289,10 @@ classesAdminRouter.post("/content/classes/:id/delete", requireSession, async (re
       status: "failed",
       message: "Class not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Class not found"
+      error: "Class not found",
     });
     return;
   }
@@ -310,7 +310,7 @@ classesAdminRouter.post("/content/classes/:id/delete", requireSession, async (re
       status: "failed",
       message: error instanceof Error ? error.message : "Class delete failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(500).json({ error: "Failed to delete class" });
     return;
@@ -323,7 +323,7 @@ classesAdminRouter.post("/content/classes/:id/delete", requireSession, async (re
     status: "success",
     message: `Deleted class ${boardClass.slug}`,
     actorId,
-    actorName
+    actorName,
   });
 
   // Purge cached curriculum data
@@ -336,8 +336,8 @@ classesAdminRouter.post("/content/classes/:id/delete", requireSession, async (re
       id: boardClass.id,
       boardId: boardClass.boardId,
       name: boardClass.name,
-      slug: boardClass.slug
+      slug: boardClass.slug,
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });

@@ -28,8 +28,7 @@ const skeletonVariants = cva(
 
 /** Props for the Skeleton component. */
 export interface SkeletonProps
-  extends HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof skeletonVariants> {}
+  extends HTMLAttributes<HTMLDivElement>, VariantProps<typeof skeletonVariants> {}
 
 /**
  * Skeleton loading placeholder with shimmer animation.
@@ -39,11 +38,7 @@ export interface SkeletonProps
  */
 export function Skeleton({ className, variant, ...props }: SkeletonProps) {
   return (
-    <div
-      className={cn(skeletonVariants({ variant }), className)}
-      aria-hidden="true"
-      {...props}
-    />
+    <div className={cn(skeletonVariants({ variant }), className)} aria-hidden="true" {...props} />
   );
 }
 

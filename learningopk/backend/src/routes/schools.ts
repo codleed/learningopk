@@ -17,16 +17,19 @@ schoolsRouter.get("/", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireAdminRole(authedReq, res))) return;
 
-  const allSchools = await db.select({
-    id: schools.id,
-    name: schools.name,
-    slug: schools.slug,
-    board: schools.board,
-    inviteCode: schools.inviteCode,
-    studentCount: schools.studentCount,
-    adminUserId: schools.adminUserId,
-    createdAt: schools.createdAt,
-  }).from(schools).orderBy(schools.createdAt);
+  const allSchools = await db
+    .select({
+      id: schools.id,
+      name: schools.name,
+      slug: schools.slug,
+      board: schools.board,
+      inviteCode: schools.inviteCode,
+      studentCount: schools.studentCount,
+      adminUserId: schools.adminUserId,
+      createdAt: schools.createdAt,
+    })
+    .from(schools)
+    .orderBy(schools.createdAt);
 
   res.status(200).json(successResponse({ schools: allSchools }));
 });
@@ -68,7 +71,11 @@ schoolsRouter.get("/me", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   const userId = authedReq.session.user.id;
 
-  const userRows = await db.select({ schoolId: users.schoolId }).from(users).where(eq(users.id, userId)).limit(1);
+  const userRows = await db
+    .select({ schoolId: users.schoolId })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
   const schoolId = userRows[0]?.schoolId;
 
   if (!schoolId) {
@@ -103,7 +110,11 @@ schoolsRouter.post("/join", requireSession, schoolJoinRateLimiter, async (req, r
   const userId = authedReq.session.user.id;
 
   // Prevent users from joining multiple schools
-  const userRows = await db.select({ schoolId: users.schoolId }).from(users).where(eq(users.id, userId)).limit(1);
+  const userRows = await db
+    .select({ schoolId: users.schoolId })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
   if (userRows[0]?.schoolId) {
     res.status(400).json(errorResponse("You are already in a school", "ALREADY_IN_SCHOOL"));
     return;
@@ -115,8 +126,13 @@ schoolsRouter.post("/join", requireSession, schoolJoinRateLimiter, async (req, r
     const countResult = await tx
       .select({ count: count() })
       .from(users)
-      .where(and(eq(users.schoolId, school.id), eq(users.role, "student"), eq(users.status, "active")));
-    await tx.update(schools).set({ studentCount: countResult[0]?.count ?? 0 }).where(eq(schools.id, school.id));
+      .where(
+        and(eq(users.schoolId, school.id), eq(users.role, "student"), eq(users.status, "active"))
+      );
+    await tx
+      .update(schools)
+      .set({ studentCount: countResult[0]?.count ?? 0 })
+      .where(eq(schools.id, school.id));
   });
 
   res.status(200).json(successResponse({ schoolId: school.id, name: school.name }));
@@ -141,14 +157,21 @@ schoolsRouter.get("/dashboard", requireSession, async (req, res) => {
   ]);
 
   // Filter weak areas to only those with avg < 70 and take top 10
-  const filteredWeakAreas = weakAreas
-    .filter((a) => a.avgScore < 70)
-    .slice(0, 10);
+  const filteredWeakAreas = weakAreas.filter((a) => a.avgScore < 70).slice(0, 10);
 
-  res.status(200).json(successResponse({
-    school: { id: school.id, name: school.name, slug: school.slug, board: school.board, inviteCode: school.inviteCode, studentCount },
-    analytics: { studentCount, avgQuizScore, topStudents, weakAreas: filteredWeakAreas },
-  }));
+  res.status(200).json(
+    successResponse({
+      school: {
+        id: school.id,
+        name: school.name,
+        slug: school.slug,
+        board: school.board,
+        inviteCode: school.inviteCode,
+        studentCount,
+      },
+      analytics: { studentCount, avgQuizScore, topStudents, weakAreas: filteredWeakAreas },
+    })
+  );
 });
 
 // GET /api/schools/check-admin — lightweight check if user is a school admin
@@ -200,17 +223,24 @@ schoolsRouter.post("/", requireSession, async (req, res) => {
   }
 
   const { name, board, principalName, principalEmail, principalPassword } = parsed.data;
-  const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 60);
+  const slug = name
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .slice(0, 60);
   const inviteCode = "LPK-" + randomBytes(4).toString("hex").toUpperCase();
 
   // Create school first
-  const inserted = await db.insert(schools).values({
-    name,
-    slug,
-    board,
-    inviteCode,
-    adminUserId: null,
-  }).returning();
+  const inserted = await db
+    .insert(schools)
+    .values({
+      name,
+      slug,
+      board,
+      inviteCode,
+      adminUserId: null,
+    })
+    .returning();
 
   const school = inserted[0];
   if (!school) {
@@ -224,7 +254,7 @@ schoolsRouter.post("/", requireSession, async (req, res) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Origin": process.env.FRONTEND_ORIGIN ?? "http://localhost:3000"
+      Origin: process.env.FRONTEND_ORIGIN ?? "http://localhost:3000",
     },
     body: JSON.stringify({
       email: principalEmail,
@@ -239,10 +269,14 @@ schoolsRouter.post("/", requireSession, async (req, res) => {
     // Rollback: delete the school since principal creation failed
     await db.delete(schools).where(eq(schools.id, school.id));
     const error = await signUpResponse.json().catch(() => ({ message: "Unknown error" }));
-    res.status(400).json(errorResponse(
-      `Failed to create principal account: ${error.message ?? "Unknown error"}`,
-      "PRINCIPAL_CREATION_FAILED"
-    ));
+    res
+      .status(400)
+      .json(
+        errorResponse(
+          `Failed to create principal account: ${error.message ?? "Unknown error"}`,
+          "PRINCIPAL_CREATION_FAILED"
+        )
+      );
     return;
   }
 
@@ -251,7 +285,9 @@ schoolsRouter.post("/", requireSession, async (req, res) => {
 
   if (!userId) {
     await db.delete(schools).where(eq(schools.id, school.id));
-    res.status(500).json(errorResponse("Principal created but no user ID returned", "INTERNAL_ERROR"));
+    res
+      .status(500)
+      .json(errorResponse("Principal created but no user ID returned", "INTERNAL_ERROR"));
     return;
   }
 
@@ -259,19 +295,21 @@ schoolsRouter.post("/", requireSession, async (req, res) => {
   await db.update(schools).set({ adminUserId: userId }).where(eq(schools.id, school.id));
   await db.update(users).set({ schoolId: school.id }).where(eq(users.id, userId));
 
-  res.status(201).json(successResponse({
-    school: {
-      id: school.id,
-      name: school.name,
-      slug: school.slug,
-      board: school.board,
-      inviteCode: school.inviteCode,
-    },
-    principal: {
-      id: userId,
-      name: principalName,
-      email: principalEmail,
-      password: principalPassword, // Return so admin can share it
-    },
-  }));
+  res.status(201).json(
+    successResponse({
+      school: {
+        id: school.id,
+        name: school.name,
+        slug: school.slug,
+        board: school.board,
+        inviteCode: school.inviteCode,
+      },
+      principal: {
+        id: userId,
+        name: principalName,
+        email: principalEmail,
+        password: principalPassword, // Return so admin can share it
+      },
+    })
+  );
 });

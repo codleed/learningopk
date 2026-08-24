@@ -13,7 +13,7 @@ import {
   quizQuestions,
   mockExams,
   quizAttempts,
-  users
+  users,
 } from "../../lib/db/schema.js";
 import { createApp } from "../../server.js";
 
@@ -31,7 +31,7 @@ const createMockExamFixture = async () => {
     .insert(boards)
     .values({
       name: `Mock Exam Test Board ${suffix}`,
-      slug: `mock-exam-test-board-${suffix}`
+      slug: `mock-exam-test-board-${suffix}`,
     })
     .returning({ id: boards.id, slug: boards.slug, name: boards.name });
   const board = boardRows[0];
@@ -44,7 +44,7 @@ const createMockExamFixture = async () => {
       boardId: board.id,
       grade: "10",
       name: `Mock Exam Test Subject ${suffix}`,
-      slug: `mock-exam-test-subject-${suffix}`
+      slug: `mock-exam-test-subject-${suffix}`,
     })
     .returning({ id: subjects.id, slug: subjects.slug, name: subjects.name });
   const subject = subjectRows[0];
@@ -59,7 +59,7 @@ const createMockExamFixture = async () => {
       title: `Mock Exam Test Chapter ${suffix}`,
       slug: `mock-exam-test-chapter-${suffix}`,
       summary: "Test chapter for mock exam.",
-      isPublished: true
+      isPublished: true,
     })
     .returning({ id: chapters.id });
   const chapter = chapterRows[0];
@@ -73,7 +73,7 @@ const createMockExamFixture = async () => {
       title: `Mock Exam Quiz ${suffix}`,
       durationMinutes: 60,
       totalMarks: 50,
-      type: "mock_exam"
+      type: "mock_exam",
     })
     .returning({ id: quizzes.id, type: quizzes.type });
   const quiz = quizRows[0];
@@ -91,7 +91,7 @@ const createMockExamFixture = async () => {
       optionD: "6",
       correctOption: "b",
       explanation: "Basic arithmetic: 2 + 2 = 4",
-      marks: 5
+      marks: 5,
     },
     {
       quizId: quiz.id,
@@ -103,8 +103,8 @@ const createMockExamFixture = async () => {
       optionD: "Madrid",
       correctOption: "c",
       explanation: "Paris is the capital of France",
-      marks: 5
-    }
+      marks: 5,
+    },
   ]);
 
   // Create mock exam entry (include all required fields: title, durationMinutes, totalMarks)
@@ -118,11 +118,11 @@ const createMockExamFixture = async () => {
       grade: "10",
       title: `Mock Exam ${suffix}`,
       durationMinutes: 60,
-      totalMarks: 50
+      totalMarks: 50,
     })
     .returning({
       id: mockExams.id,
-      quizId: mockExams.quizId
+      quizId: mockExams.quizId,
     });
   const mockExam = mockExamRows[0];
   assert.ok(mockExam, "Expected mock exam to be created");
@@ -132,7 +132,7 @@ const createMockExamFixture = async () => {
     quizId: mockExam.quizId,
     boardSlug: board.slug,
     subjectSlug: subject.slug,
-    grade: "10"
+    grade: "10",
   };
 };
 
@@ -147,7 +147,7 @@ const createAndLoginUser = async (agent: request.Agent, nameSuffix: string) => {
     .send({
       name: `Mock Test ${nameSuffix}`,
       email,
-      password: TEST_PASSWORD
+      password: TEST_PASSWORD,
     });
 
   assert.ok(
@@ -198,21 +198,17 @@ test("Mock exam solutions endpoint requires completion (TASK-59)", async () => {
     answers: {},
     score: 40,
     totalMarks: 50,
-    completedAt: new Date()
+    completedAt: new Date(),
   });
 
-  response = await agent
-    .get(`/api/mock-exams/${mockExamId}/questions`)
-    .set("origin", APP_ORIGIN);
+  response = await agent.get(`/api/mock-exams/${mockExamId}/questions`).set("origin", APP_ORIGIN);
 
   assert.equal(response.status, 200, "Expected 200 after completing exam");
   assert.ok(Array.isArray(response.body.questions), "Expected questions array");
   assert.ok(response.body.questions.length > 0, "Expected non-empty questions");
 
   // Test 3: Non-existent mock exam returns 404
-  response = await agent
-    .get("/api/mock-exams/999999/questions")
-    .set("origin", APP_ORIGIN);
+  response = await agent.get("/api/mock-exams/999999/questions").set("origin", APP_ORIGIN);
 
   assert.equal(response.status, 404, "Expected 404 for non-existent exam");
 });
@@ -229,7 +225,7 @@ test("Subject progress route uses scoped identifiers (TASK-60)", async () => {
     .insert(boards)
     .values({
       name: `FBISE Board ${suffix}`,
-      slug: `fbise-${suffix}`
+      slug: `fbise-${suffix}`,
     })
     .returning({ id: boards.id, slug: boards.slug, name: boards.name });
   const boardA = boardARows[0];
@@ -240,7 +236,7 @@ test("Subject progress route uses scoped identifiers (TASK-60)", async () => {
     .insert(boards)
     .values({
       name: `BISE Board ${suffix}`,
-      slug: `bise-${suffix}`
+      slug: `bise-${suffix}`,
     })
     .returning({ id: boards.id, slug: boards.slug, name: boards.name });
   const boardB = boardBRows[0];
@@ -249,22 +245,20 @@ test("Subject progress route uses scoped identifiers (TASK-60)", async () => {
   // Both boards have "Mathematics" subject for grade 10
   const subjectSlug = `mathematics-${suffix}`;
 
-  await db
-    .insert(subjects)
-    .values([
-      {
-        boardId: boardA.id,
-        grade: "10",
-        name: "Mathematics",
-        slug: subjectSlug
-      },
-      {
-        boardId: boardB.id,
-        grade: "10",
-        name: "Mathematics",
-        slug: subjectSlug
-      }
-    ]);
+  await db.insert(subjects).values([
+    {
+      boardId: boardA.id,
+      grade: "10",
+      name: "Mathematics",
+      slug: subjectSlug,
+    },
+    {
+      boardId: boardB.id,
+      grade: "10",
+      name: "Mathematics",
+      slug: subjectSlug,
+    },
+  ]);
 
   // Create a user and enroll in board A (simulate via user.board field)
   await createAndLoginUser(agent, "user2");
@@ -275,13 +269,13 @@ test("Subject progress route uses scoped identifiers (TASK-60)", async () => {
   assert.ok(userId, "Expected user ID");
 
   // Update user's board to boardA
-  await db
-    .update(users)
-    .set({ board: boardA.slug })
-    .where(eq(users.id, userId));
+  await db.update(users).set({ board: boardA.slug }).where(eq(users.id, userId));
 
   // Create chapter for subject in board A
-  const subjectARows = await db.select({ id: subjects.id }).from(subjects).where(eq(subjects.boardId, boardA.id));
+  const subjectARows = await db
+    .select({ id: subjects.id })
+    .from(subjects)
+    .where(eq(subjects.boardId, boardA.id));
   const subjectA = subjectARows[0];
   assert.ok(subjectA, "Expected subjectA to exist");
 
@@ -293,7 +287,7 @@ test("Subject progress route uses scoped identifiers (TASK-60)", async () => {
       title: "Algebra Basics",
       slug: `algebra-basics-${suffix}`,
       summary: "Basic algebra chapter",
-      isPublished: true
+      isPublished: true,
     })
     .returning({ id: chapters.id });
 

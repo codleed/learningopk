@@ -1,9 +1,6 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
+import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { Client } from "pg";
 
 const MAX_ROWS = 1000;
@@ -130,7 +127,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       };
     }
     case "describe_table": {
-      const table = String((request.params.arguments as Record<string, unknown>)?.table ?? "").toLowerCase();
+      const table = String(
+        (request.params.arguments as Record<string, unknown>)?.table ?? ""
+      ).toLowerCase();
       if (!ALLOWED_TABLES.includes(table) && table !== "information_schema") {
         throw new Error(`Table "${table}" is not in the allowed tables list`);
       }
@@ -164,7 +163,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const tableMatches = sql.match(/(?:from|join)\s+["']?(\w+)["']?/gi);
       if (tableMatches) {
         for (const match of tableMatches) {
-          const tableName = match.replace(/(?:from|join)\s+["']?/i, "").replace(/["']/g, "").toLowerCase();
+          const tableName = match
+            .replace(/(?:from|join)\s+["']?/i, "")
+            .replace(/["']/g, "")
+            .toLowerCase();
           if (!ALLOWED_TABLES.includes(tableName) && tableName !== "information_schema") {
             throw new Error(`Table "${tableName}" is not in the allowed tables list`);
           }

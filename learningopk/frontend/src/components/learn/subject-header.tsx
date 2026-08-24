@@ -42,8 +42,7 @@ export function SubjectHeader({
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage:
-            "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+          backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
           backgroundSize: "24px 24px",
         }}
       />
@@ -102,11 +101,7 @@ export function SubjectHeader({
             transition={reduced ? { duration: 0 } : { delay: 0.2, duration: 0.4 }}
             className="shrink-0 self-center sm:self-start"
           >
-            <ProgressRing
-              percentage={completionPercent}
-              size={88}
-              strokeWidth={7}
-            />
+            <ProgressRing percentage={completionPercent} size={88} strokeWidth={7} />
           </motion.div>
         )}
       </div>

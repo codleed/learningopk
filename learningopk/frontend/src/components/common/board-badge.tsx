@@ -13,8 +13,8 @@ interface BoardConfig {
 
 const BOARD_CONFIG: Record<string, BoardConfig> = {
   federal: { color: "#6366F1", label: "Federal" },
-  punjab:  { color: "#22C55E", label: "Punjab" },
-  sindh:   { color: "#F59E0B", label: "Sindh" },
+  punjab: { color: "#22C55E", label: "Punjab" },
+  sindh: { color: "#F59E0B", label: "Sindh" },
 };
 
 /** Fallback for unrecognized board keys. */
@@ -37,7 +37,7 @@ const badgeSizeVariants = cva(
     defaultVariants: {
       size: "md",
     },
-  },
+  }
 );
 
 type BoardBadgeSize = VariantProps<typeof badgeSizeVariants>["size"];
@@ -56,11 +56,7 @@ export interface BoardBadgeProps {
  * Branded badge for Pakistani education boards.
  * Each board has a consistent color and human-readable label.
  */
-export function BoardBadge({
-  board,
-  size = "md",
-  className,
-}: BoardBadgeProps) {
+export function BoardBadge({ board, size = "md", className }: BoardBadgeProps) {
   const config = BOARD_CONFIG[board.toLowerCase()] ?? {
     ...DEFAULT_BOARD,
     label: board,

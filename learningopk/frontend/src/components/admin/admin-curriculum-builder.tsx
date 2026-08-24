@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 
 import {
   createAdminCurriculumBoard,
@@ -27,7 +35,7 @@ import {
   type AdminChapterGraphResponse,
   type AdminChapterLinksResponse,
   type AdminCurriculumBoard,
-  type AdminCurriculumExerciseRead
+  type AdminCurriculumExerciseRead,
 } from "@/lib/admin-api";
 
 import { Button } from "../ui/button";
@@ -37,7 +45,10 @@ import { Select } from "../ui/select";
 import { Textarea } from "../ui/textarea";
 import { useToast } from "../ui/toast";
 import { ChapterLinkGraph } from "./chapter-link-graph";
-import { CodeMirrorMarkdownEditor, type CodeMirrorMarkdownEditorHandle } from "./codemirror-markdown-editor";
+import {
+  CodeMirrorMarkdownEditor,
+  type CodeMirrorMarkdownEditorHandle,
+} from "./codemirror-markdown-editor";
 
 type AdminCurriculumBuilderProps = {
   initialBoards: AdminCurriculumBoard[];
@@ -71,7 +82,7 @@ const buildSizedImageMarkdown = ({
   imageUrl,
   altText,
   width,
-  height
+  height,
 }: {
   imageUrl: string;
   altText: string;
@@ -95,7 +106,7 @@ const insertAtSelection = ({
   source,
   insertion,
   start,
-  end
+  end,
 }: {
   source: string;
   insertion: string;
@@ -107,7 +118,7 @@ const insertAtSelection = ({
   const nextValue = `${source.slice(0, safeStart)}${insertion}${source.slice(safeEnd)}`;
   return {
     value: nextValue,
-    cursor: safeStart + insertion.length
+    cursor: safeStart + insertion.length,
   };
 };
 
@@ -144,17 +155,27 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   const [isSummarySaving, setIsSummarySaving] = useState(false);
   const [isSummaryMediaUploading, setIsSummaryMediaUploading] = useState(false);
   const [isSummaryLinksLoading, setIsSummaryLinksLoading] = useState(false);
-  const [summaryEditorOutgoingLinks, setSummaryEditorOutgoingLinks] = useState<AdminChapterLinksResponse["links"]["outgoing"]>([]);
-  const [summaryEditorBacklinks, setSummaryEditorBacklinks] = useState<AdminChapterLinksResponse["links"]["backlinks"]>([]);
+  const [summaryEditorOutgoingLinks, setSummaryEditorOutgoingLinks] = useState<
+    AdminChapterLinksResponse["links"]["outgoing"]
+  >([]);
+  const [summaryEditorBacklinks, setSummaryEditorBacklinks] = useState<
+    AdminChapterLinksResponse["links"]["backlinks"]
+  >([]);
   const [isSummaryGraphLoading, setIsSummaryGraphLoading] = useState(false);
-  const [summaryGraphNodes, setSummaryGraphNodes] = useState<AdminChapterGraphResponse["graph"]["nodes"]>([]);
-  const [summaryGraphEdges, setSummaryGraphEdges] = useState<AdminChapterGraphResponse["graph"]["edges"]>([]);
+  const [summaryGraphNodes, setSummaryGraphNodes] = useState<
+    AdminChapterGraphResponse["graph"]["nodes"]
+  >([]);
+  const [summaryGraphEdges, setSummaryGraphEdges] = useState<
+    AdminChapterGraphResponse["graph"]["edges"]
+  >([]);
   const [summaryGraphSearch, setSummaryGraphSearch] = useState("");
   const [wikiLinkSuggestionQuery, setWikiLinkSuggestionQuery] = useState("");
   const [wikiLinkSuggestions, setWikiLinkSuggestions] = useState<string[]>([]);
   const [exerciseChapterId, setExerciseChapterId] = useState("");
   const [exerciseType, setExerciseType] = useState<ExerciseType>("short");
-  const [exerciseDifficulty, setExerciseDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+  const [exerciseDifficulty, setExerciseDifficulty] = useState<"easy" | "medium" | "hard">(
+    "medium"
+  );
   const [exerciseNumber, setExerciseNumber] = useState("");
   const [exerciseQuestion, setExerciseQuestion] = useState("");
   const [exerciseSolution, setExerciseSolution] = useState("");
@@ -162,7 +183,9 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   const [isExerciseListLoading, setIsExerciseListLoading] = useState(false);
   const [manageExerciseId, setManageExerciseId] = useState("");
   const [manageExerciseType, setManageExerciseType] = useState<ExerciseType>("short");
-  const [manageExerciseDifficulty, setManageExerciseDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+  const [manageExerciseDifficulty, setManageExerciseDifficulty] = useState<
+    "easy" | "medium" | "hard"
+  >("medium");
   const [manageExerciseNumber, setManageExerciseNumber] = useState("");
   const [manageExerciseQuestion, setManageExerciseQuestion] = useState("");
   const [manageExerciseSolution, setManageExerciseSolution] = useState("");
@@ -232,7 +255,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
           boardId: board.id,
           boardName: board.name,
           name: boardClass.name,
-          label: `${board.name} / ${boardClass.name}`
+          label: `${board.name} / ${boardClass.name}`,
         }))
       ),
     [boards]
@@ -244,7 +267,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
         board.classes.flatMap((boardClass) =>
           boardClass.subjects.map((subject) => ({
             id: subject.id,
-            label: `${board.name} / ${boardClass.name} / ${subject.name}`
+            label: `${board.name} / ${boardClass.name} / ${subject.name}`,
           }))
         )
       ),
@@ -261,7 +284,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
               subjectName: subject.name,
               chapterNumber: chapter.chapterNumber,
               title: chapter.title,
-              label: `${board.name} / ${boardClass.name} / ${subject.name} / Chapter ${chapter.chapterNumber}: ${chapter.title}`
+              label: `${board.name} / ${boardClass.name} / ${subject.name} / Chapter ${chapter.chapterNumber}: ${chapter.title}`,
             }))
           )
         )
@@ -317,13 +340,14 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     [chapterOptions, exerciseChapterId]
   );
 
-  const isPhysicsExerciseChapter = selectedExerciseChapter?.subjectName.toLowerCase().includes("physics") ?? false;
+  const isPhysicsExerciseChapter =
+    selectedExerciseChapter?.subjectName.toLowerCase().includes("physics") ?? false;
 
   const exerciseTypeOptions = useMemo(() => {
     const baseOptions: Array<{ value: ExerciseType; label: string }> = [
       { value: "short", label: "Comprehension Questions Short Questions" },
       { value: "mcq", label: "MCQs" },
-      { value: "long", label: "Comprehension Questions Long Questions" }
+      { value: "long", label: "Comprehension Questions Long Questions" },
     ];
     if (isPhysicsExerciseChapter) {
       baseOptions.push({ value: "numerical", label: "Numerical Problems" });
@@ -354,34 +378,39 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   }, [classOptions, manageClassId]);
 
   useEffect(() => {
-    const selectedChapter = chapterOptions.find((option) => option.id === Number(summaryEditorChapterId));
+    const selectedChapter = chapterOptions.find(
+      (option) => option.id === Number(summaryEditorChapterId)
+    );
     setManageChapterTitle(selectedChapter?.title ?? "");
     setManageChapterNumber(selectedChapter ? String(selectedChapter.chapterNumber) : "1");
   }, [chapterOptions, summaryEditorChapterId]);
 
-  const loadSummaryLinks = useCallback(async (chapterId: number) => {
-    setIsSummaryLinksLoading(true);
-    try {
-      const payload = await getAdminChapterLinks(chapterId);
-      setSummaryEditorOutgoingLinks(payload.links.outgoing);
-      setSummaryEditorBacklinks(payload.links.backlinks);
-    } catch {
-      setSummaryEditorOutgoingLinks([]);
-      setSummaryEditorBacklinks([]);
-      pushToast({
-        title: "Could not load chapter links",
-        tone: "error"
-      });
-    } finally {
-      setIsSummaryLinksLoading(false);
-    }
-  }, [pushToast]);
+  const loadSummaryLinks = useCallback(
+    async (chapterId: number) => {
+      setIsSummaryLinksLoading(true);
+      try {
+        const payload = await getAdminChapterLinks(chapterId);
+        setSummaryEditorOutgoingLinks(payload.links.outgoing);
+        setSummaryEditorBacklinks(payload.links.backlinks);
+      } catch {
+        setSummaryEditorOutgoingLinks([]);
+        setSummaryEditorBacklinks([]);
+        pushToast({
+          title: "Could not load chapter links",
+          tone: "error",
+        });
+      } finally {
+        setIsSummaryLinksLoading(false);
+      }
+    },
+    [pushToast]
+  );
 
   const loadSummaryGraph = useCallback(async () => {
     setIsSummaryGraphLoading(true);
     try {
       const payload = await getAdminChapterGraph({
-        query: ""
+        query: "",
       });
       setSummaryGraphNodes(payload.graph.nodes);
       setSummaryGraphEdges(payload.graph.edges);
@@ -390,7 +419,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       setSummaryGraphEdges([]);
       pushToast({
         title: "Could not load summary graph",
-        tone: "error"
+        tone: "error",
       });
     } finally {
       setIsSummaryGraphLoading(false);
@@ -435,7 +464,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
           setSummaryEditorBacklinks([]);
           pushToast({
             title: "Could not load chapter summary",
-            tone: "error"
+            tone: "error",
           });
         }
       })
@@ -497,14 +526,14 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       setIsExerciseListLoading(true);
       try {
         const payload = await getAdminCurriculumExercises({
-          chapterId
+          chapterId,
         });
         setChapterExercises(payload.exercises);
       } catch {
         setChapterExercises([]);
         pushToast({
           title: "Could not load exercises",
-          tone: "error"
+          tone: "error",
         });
       } finally {
         setIsExerciseListLoading(false);
@@ -521,7 +550,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     } catch {
       pushToast({
         title: "Failed to refresh curriculum",
-        tone: "error"
+        tone: "error",
       });
     } finally {
       setIsRefreshing(false);
@@ -539,7 +568,9 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
   }, [exerciseChapterId, refreshExercises]);
 
   useEffect(() => {
-    const selectedExercise = chapterExercises.find((exercise) => exercise.id === Number(manageExerciseId));
+    const selectedExercise = chapterExercises.find(
+      (exercise) => exercise.id === Number(manageExerciseId)
+    );
     if (!selectedExercise) {
       setManageExerciseNumber("");
       setManageExerciseQuestion("");
@@ -566,7 +597,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     try {
       await createAdminCurriculumBoard({
         name: normalizedName,
-        slug: toSlug(normalizedName)
+        slug: toSlug(normalizedName),
       });
       setBoardName("");
       await refreshTree();
@@ -591,7 +622,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       await updateAdminCurriculumBoard({
         boardId,
         name: normalizedName,
-        slug: toSlug(normalizedName)
+        slug: toSlug(normalizedName),
       });
       await refreshTree();
       pushToast({ title: "Board updated", tone: "success" });
@@ -608,7 +639,11 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       pushToast({ title: "Select a board first", tone: "error" });
       return;
     }
-    if (!window.confirm("Delete this board and all related classes, subjects, chapters, and exercises?")) {
+    if (
+      !window.confirm(
+        "Delete this board and all related classes, subjects, chapters, and exercises?"
+      )
+    ) {
       return;
     }
 
@@ -638,7 +673,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       await createAdminCurriculumClass({
         boardId,
         name: normalizedName,
-        slug: toSlug(normalizedName)
+        slug: toSlug(normalizedName),
       });
       setClassName("");
       await refreshTree();
@@ -663,7 +698,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       await updateAdminCurriculumClass({
         classId,
         name: normalizedName,
-        slug: toSlug(normalizedName)
+        slug: toSlug(normalizedName),
       });
       await refreshTree();
       pushToast({ title: "Class updated", tone: "success" });
@@ -711,7 +746,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
         boardClassId,
         name: normalizedName,
         slug: toSlug(normalizedName),
-        ...(subjectDescription.trim().length > 0 ? { description: subjectDescription.trim() } : {})
+        ...(subjectDescription.trim().length > 0 ? { description: subjectDescription.trim() } : {}),
       });
       setSubjectName("");
       setSubjectDescription("");
@@ -763,7 +798,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
         subjectId,
         chapterNumber: chapterNumberValue,
         title,
-        slug: toSlug(title)
+        slug: toSlug(title),
       });
       setChapterNumber("1");
       setChapterTitle("");
@@ -804,7 +839,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
         question,
         solution,
         difficulty: exerciseDifficulty,
-        type: exerciseType
+        type: exerciseType,
       });
       setExerciseNumber("");
       setExerciseQuestion("");
@@ -834,7 +869,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
         chapterId,
         chapterNumber: chapterNumberValue,
         title,
-        slug: toSlug(title)
+        slug: toSlug(title),
       });
       await refreshTree();
       await loadSummaryGraph();
@@ -897,7 +932,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
         question,
         solution,
         difficulty: manageExerciseDifficulty,
-        type: manageExerciseType
+        type: manageExerciseType,
       });
       await refreshExercises(Number(exerciseChapterId));
       pushToast({ title: "Exercise updated", tone: "success" });
@@ -943,14 +978,16 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       if (importedMarkdown.trim().length === 0) {
         pushToast({
           title: "Markdown file is empty",
-          tone: "error"
+          tone: "error",
         });
         return;
       }
 
       if (
         chapterSummary.trim().length > 0 &&
-        !window.confirm("Importing a Markdown file will replace the current chapter summary draft. Continue?")
+        !window.confirm(
+          "Importing a Markdown file will replace the current chapter summary draft. Continue?"
+        )
       ) {
         return;
       }
@@ -958,12 +995,12 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       setChapterSummary(importedMarkdown);
       pushToast({
         title: "Markdown imported into chapter form",
-        tone: "success"
+        tone: "success",
       });
     } catch {
       pushToast({
         title: "Could not read Markdown file",
-        tone: "error"
+        tone: "error",
       });
     } finally {
       input.value = "";
@@ -976,7 +1013,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     if (!chapterId || !summary) {
       pushToast({
         title: "Select a chapter and write summary first",
-        tone: "error"
+        tone: "error",
       });
       return;
     }
@@ -985,19 +1022,19 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     try {
       await updateAdminChapterSummary({
         chapterId,
-        summary
+        summary,
       });
       summaryEditorPersistedContentRef.current = summary;
       await refreshSummaryLinks();
       await loadSummaryGraph();
       pushToast({
         title: "Chapter summary updated",
-        tone: "success"
+        tone: "success",
       });
     } catch {
       pushToast({
         title: "Could not save chapter summary",
-        tone: "error"
+        tone: "error",
       });
     } finally {
       setIsSummarySaving(false);
@@ -1016,13 +1053,17 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       if (importedMarkdown.trim().length === 0) {
         pushToast({
           title: "Markdown file is empty",
-          tone: "error"
+          tone: "error",
         });
         return;
       }
 
-      const hasUnsavedChanges = summaryEditorLiveContentRef.current !== summaryEditorPersistedContentRef.current;
-      if (hasUnsavedChanges && !window.confirm("Importing a Markdown file will replace unsaved summary edits. Continue?")) {
+      const hasUnsavedChanges =
+        summaryEditorLiveContentRef.current !== summaryEditorPersistedContentRef.current;
+      if (
+        hasUnsavedChanges &&
+        !window.confirm("Importing a Markdown file will replace unsaved summary edits. Continue?")
+      ) {
         return;
       }
 
@@ -1030,12 +1071,12 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       summaryEditorCodeMirrorRef.current?.focus();
       pushToast({
         title: "Markdown imported into editor",
-        tone: "success"
+        tone: "success",
       });
     } catch {
       pushToast({
         title: "Could not read Markdown file",
-        tone: "error"
+        tone: "error",
       });
     } finally {
       input.value = "";
@@ -1047,7 +1088,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     if (!chapterId) {
       pushToast({
         title: "Select a chapter first",
-        tone: "error"
+        tone: "error",
       });
       return;
     }
@@ -1056,7 +1097,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     if (!file) {
       pushToast({
         title: "Choose an image file first",
-        tone: "error"
+        tone: "error",
       });
       return;
     }
@@ -1069,13 +1110,13 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
     try {
       const payload = await uploadAdminChapterSummaryMedia({
         chapterId,
-        file
+        file,
       });
       const imageMarkdown = buildSizedImageMarkdown({
         imageUrl: payload.asset.objectUrl,
         altText: summaryEditorImageAlt,
         width: summaryEditorImageWidth,
-        height: summaryEditorImageHeight
+        height: summaryEditorImageHeight,
       });
       const insertion = `${imageMarkdown}\n`;
 
@@ -1088,7 +1129,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
           source: summaryEditorLiveContentRef.current,
           insertion,
           start: selectionStart,
-          end: selectionEnd
+          end: selectionEnd,
         }).value;
         setSummaryEditorContentImmediate(nextValue);
       }
@@ -1107,12 +1148,12 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
 
       pushToast({
         title: "Figure uploaded and inserted",
-        tone: "success"
+        tone: "success",
       });
     } catch {
       pushToast({
         title: "Could not upload figure",
-        tone: "error"
+        tone: "error",
       });
     } finally {
       setIsSummaryMediaUploading(false);
@@ -1121,7 +1162,7 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
 
   const handleWikiLinkQueryChange = ({
     query,
-    suggestions
+    suggestions,
   }: {
     query: string;
     suggestions: string[];
@@ -1247,7 +1288,11 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
             </div>
 
             {activeBoardModeTab === "add" ? (
-              <form className="space-y-2" data-testid="curriculum-board-form" onSubmit={submitBoard}>
+              <form
+                className="space-y-2"
+                data-testid="curriculum-board-form"
+                onSubmit={submitBoard}
+              >
                 <p className="text-sm font-semibold text-text-primary">Add Board</p>
                 <Input
                   data-testid="curriculum-board-name-input"
@@ -1255,12 +1300,21 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                   onChange={(event) => setBoardName(event.target.value)}
                   placeholder="Board name (e.g. Punjab Board)"
                 />
-                <Button data-testid="curriculum-board-submit" type="submit" size="sm" variant="secondary" disabled={isSubmitting}>
+                <Button
+                  data-testid="curriculum-board-submit"
+                  type="submit"
+                  size="sm"
+                  variant="secondary"
+                  disabled={isSubmitting}
+                >
                   Add board
                 </Button>
               </form>
             ) : (
-              <div className="space-y-2 rounded-lg border border-border-default/60 bg-bg-base/50 p-3" data-testid="curriculum-board-manage">
+              <div
+                className="space-y-2 rounded-lg border border-border-default/60 bg-bg-base/50 p-3"
+                data-testid="curriculum-board-manage"
+              >
                 <p className="text-sm font-semibold text-text-primary">Update / Delete Board</p>
                 <Select
                   data-testid="curriculum-board-manage-select"
@@ -1337,7 +1391,11 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
             </div>
 
             {activeClassModeTab === "add" ? (
-              <form className="space-y-2" data-testid="curriculum-class-form" onSubmit={submitClass}>
+              <form
+                className="space-y-2"
+                data-testid="curriculum-class-form"
+                onSubmit={submitClass}
+              >
                 <p className="text-sm font-semibold text-text-primary">Add Class</p>
                 <Select
                   data-testid="curriculum-class-board-select"
@@ -1368,7 +1426,10 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 </Button>
               </form>
             ) : (
-              <div className="space-y-2 rounded-lg border border-border-default/60 bg-bg-base/50 p-3" data-testid="curriculum-class-manage">
+              <div
+                className="space-y-2 rounded-lg border border-border-default/60 bg-bg-base/50 p-3"
+                data-testid="curriculum-class-manage"
+              >
                 <p className="text-sm font-semibold text-text-primary">Update / Delete Class</p>
                 <Select
                   data-testid="curriculum-class-manage-select"
@@ -1445,7 +1506,11 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
             </div>
 
             {activeSubjectModeTab === "add" ? (
-              <form className="space-y-2" data-testid="curriculum-subject-form" onSubmit={submitSubject}>
+              <form
+                className="space-y-2"
+                data-testid="curriculum-subject-form"
+                onSubmit={submitSubject}
+              >
                 <p className="text-sm font-semibold text-text-primary">Add Subject</p>
                 <Select
                   data-testid="curriculum-subject-class-select"
@@ -1471,12 +1536,21 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                   onChange={(event) => setSubjectDescription(event.target.value)}
                   placeholder="Description (optional)"
                 />
-                <Button data-testid="curriculum-subject-submit" type="submit" size="sm" variant="secondary" disabled={isSubmitting}>
+                <Button
+                  data-testid="curriculum-subject-submit"
+                  type="submit"
+                  size="sm"
+                  variant="secondary"
+                  disabled={isSubmitting}
+                >
                   Add subject
                 </Button>
               </form>
             ) : (
-              <div className="space-y-2 rounded-lg border border-border-default/60 bg-bg-base/50 p-3" data-testid="curriculum-subject-manage">
+              <div
+                className="space-y-2 rounded-lg border border-border-default/60 bg-bg-base/50 p-3"
+                data-testid="curriculum-subject-manage"
+              >
                 <p className="text-sm font-semibold text-text-primary">Delete Subject</p>
                 <Select
                   data-testid="curriculum-subject-manage-select"
@@ -1537,7 +1611,11 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
             </div>
 
             {activeChapterModeTab === "add" ? (
-              <form className="space-y-2" data-testid="curriculum-chapter-form" onSubmit={submitChapter}>
+              <form
+                className="space-y-2"
+                data-testid="curriculum-chapter-form"
+                onSubmit={submitChapter}
+              >
                 <p className="text-sm font-semibold text-text-primary">Add Chapter</p>
                 <Select
                   data-testid="curriculum-chapter-subject-select"
@@ -1595,11 +1673,14 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                     disabled={isSubmitting}
                   />
                   <p className="text-xs text-text-secondary">
-                    Uploading a Markdown file loads it into the chapter summary field for review before you add the chapter.
+                    Uploading a Markdown file loads it into the chapter summary field for review
+                    before you add the chapter.
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs text-text-secondary">Supports Markdown, images, and math notation.</p>
+                  <p className="text-xs text-text-secondary">
+                    Supports Markdown, images, and math notation.
+                  </p>
                   <Button
                     data-testid="curriculum-chapter-summary-preview-toggle"
                     type="button"
@@ -1615,11 +1696,15 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                     className="rounded-lg border border-border-default/60 bg-bg-base/50 p-3"
                     data-testid="curriculum-chapter-summary-preview"
                   >
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">Summary preview</p>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">
+                      Summary preview
+                    </p>
                     {chapterSummary.trim().length > 0 ? (
                       <MarkdownRenderer content={chapterSummary} className="prose-sm" />
                     ) : (
-                      <p className="text-sm text-text-secondary">Preview appears here as rendered Markdown.</p>
+                      <p className="text-sm text-text-secondary">
+                        Preview appears here as rendered Markdown.
+                      </p>
                     )}
                   </div>
                 ) : null}
@@ -1635,7 +1720,9 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
               </form>
             ) : (
               <div className="space-y-3 rounded-lg border border-border-default/60 bg-bg-base/50 p-3">
-                <p className="text-sm font-semibold text-text-primary">Edit Existing Chapter Summary</p>
+                <p className="text-sm font-semibold text-text-primary">
+                  Edit Existing Chapter Summary
+                </p>
                 <Select
                   data-testid="curriculum-summary-editor-chapter-select"
                   value={summaryEditorChapterId}
@@ -1649,7 +1736,10 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                   ))}
                 </Select>
 
-                <div className="space-y-2 rounded-lg border border-border-default/60 bg-bg-base/60 p-3" data-testid="curriculum-chapter-manage">
+                <div
+                  className="space-y-2 rounded-lg border border-border-default/60 bg-bg-base/60 p-3"
+                  data-testid="curriculum-chapter-manage"
+                >
                   <p className="text-sm font-semibold text-text-primary">Update / Delete Chapter</p>
                   <div className="grid gap-2 md:grid-cols-2">
                     <Input
@@ -1726,7 +1816,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                     disabled={!summaryEditorChapterId || isSummaryLoading || isSummarySaving}
                   />
                   <p className="text-xs text-text-secondary">
-                    Uploading a Markdown file loads it into the editor for review. Use Save summary to persist it.
+                    Uploading a Markdown file loads it into the editor for review. Use Save summary
+                    to persist it.
                   </p>
                 </div>
 
@@ -1832,8 +1923,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 </div>
 
                 <p className="text-xs text-text-secondary">
-                  Uploaded image markdown is inserted at cursor position. Width/height are emitted as image title metadata
-                  (`&quot;width=640 height=320&quot;`).
+                  Uploaded image markdown is inserted at cursor position. Width/height are emitted
+                  as image title metadata (`&quot;width=640 height=320&quot;`).
                 </p>
 
                 <div
@@ -1841,8 +1932,16 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                   data-testid="curriculum-summary-editor-links-panel"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">Links</p>
-                    <Button type="button" size="sm" variant="secondary" onClick={refreshSummaryLinks} disabled={isSummaryLinksLoading}>
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">
+                      Links
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={refreshSummaryLinks}
+                      disabled={isSummaryLinksLoading}
+                    >
                       {isSummaryLinksLoading ? "Refreshing..." : "Refresh links"}
                     </Button>
                   </div>
@@ -1853,10 +1952,15 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                     ) : (
                       <ul className="space-y-1 text-text-primary/90">
                         {resolvedOutgoingLinks.map((link) => (
-                          <li key={`${link.sourceChapterId}-${link.normalizedTarget}`}>- {link.targetChapterTitle ?? link.targetTitle}</li>
+                          <li key={`${link.sourceChapterId}-${link.normalizedTarget}`}>
+                            - {link.targetChapterTitle ?? link.targetTitle}
+                          </li>
                         ))}
                         {unresolvedOutgoingLinks.map((link) => (
-                          <li key={`${link.sourceChapterId}-${link.normalizedTarget}`} className="text-amber-700">
+                          <li
+                            key={`${link.sourceChapterId}-${link.normalizedTarget}`}
+                            className="text-amber-700"
+                          >
                             - {link.targetTitle} (unresolved)
                           </li>
                         ))}
@@ -1866,21 +1970,36 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                   <div className="space-y-1 text-sm">
                     <p className="font-medium text-text-primary">Backlinks</p>
                     {summaryEditorBacklinks.length === 0 ? (
-                      <p className="text-text-secondary">No other summaries currently link to this chapter.</p>
+                      <p className="text-text-secondary">
+                        No other summaries currently link to this chapter.
+                      </p>
                     ) : (
                       <ul className="space-y-1 text-text-primary/90">
                         {summaryEditorBacklinks.map((link) => (
-                          <li key={`${link.sourceChapterId}-${link.normalizedTarget}`}>- {link.sourceChapterTitle}</li>
+                          <li key={`${link.sourceChapterId}-${link.normalizedTarget}`}>
+                            - {link.sourceChapterTitle}
+                          </li>
                         ))}
                       </ul>
                     )}
                   </div>
                 </div>
 
-                <div className="space-y-3 rounded-lg border border-border-default/60 bg-bg-base p-3" data-testid="curriculum-summary-graph-panel">
+                <div
+                  className="space-y-3 rounded-lg border border-border-default/60 bg-bg-base p-3"
+                  data-testid="curriculum-summary-graph-panel"
+                >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">Summary Graph</p>
-                    <Button type="button" size="sm" variant="secondary" onClick={loadSummaryGraph} disabled={isSummaryGraphLoading}>
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">
+                      Summary Graph
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={loadSummaryGraph}
+                      disabled={isSummaryGraphLoading}
+                    >
                       {isSummaryGraphLoading ? "Refreshing..." : "Refresh graph"}
                     </Button>
                   </div>
@@ -1894,16 +2013,22 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                     <ChapterLinkGraph
                       nodes={filteredGraphNodes}
                       edges={filteredGraphEdges}
-                      activeChapterId={summaryEditorChapterId ? Number(summaryEditorChapterId) : null}
+                      activeChapterId={
+                        summaryEditorChapterId ? Number(summaryEditorChapterId) : null
+                      }
                       onOpenChapter={(chapterId) => {
                         setSummaryEditorChapterId(String(chapterId));
                       }}
                     />
                   ) : (
-                    <p className="text-sm text-text-secondary">No graph nodes match the current filter.</p>
+                    <p className="text-sm text-text-secondary">
+                      No graph nodes match the current filter.
+                    </p>
                   )}
                   <div className="max-h-32 overflow-auto rounded-md border border-border-default/50 bg-bg-base/60 p-2">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">Open chapter</p>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">
+                      Open chapter
+                    </p>
                     <div className="flex flex-wrap gap-1.5">
                       {filteredGraphNodes.slice(0, 20).map((node) => (
                         <button
@@ -1925,11 +2050,15 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                     className="rounded-lg border border-border-default/60 bg-bg-base p-3"
                     data-testid="curriculum-summary-editor-preview"
                   >
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">Editor preview</p>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-text-secondary">
+                      Editor preview
+                    </p>
                     {summaryEditorContent.trim().length > 0 ? (
                       <MarkdownRenderer content={summaryEditorContent} className="prose-sm" />
                     ) : (
-                      <p className="text-sm text-text-secondary">Select a chapter to load and preview summary markdown.</p>
+                      <p className="text-sm text-text-secondary">
+                        Select a chapter to load and preview summary markdown.
+                      </p>
                     )}
                   </div>
                 ) : null}
@@ -1968,7 +2097,11 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
             </div>
 
             {activeExerciseModeTab === "add" ? (
-              <form className="space-y-2" data-testid="curriculum-exercise-form" onSubmit={submitExercise}>
+              <form
+                className="space-y-2"
+                data-testid="curriculum-exercise-form"
+                onSubmit={submitExercise}
+              >
                 <p className="text-sm font-semibold text-text-primary">Add Exercise</p>
                 <Select
                   data-testid="curriculum-exercise-chapter-select"
@@ -1996,7 +2129,9 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 <Select
                   data-testid="curriculum-exercise-difficulty-select"
                   value={exerciseDifficulty}
-                  onChange={(event) => setExerciseDifficulty(event.target.value as "easy" | "medium" | "hard")}
+                  onChange={(event) =>
+                    setExerciseDifficulty(event.target.value as "easy" | "medium" | "hard")
+                  }
                 >
                   <option value="easy">Easy</option>
                   <option value="medium">Medium</option>
@@ -2022,7 +2157,9 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                   className="min-h-32 resize-y"
                   placeholder="Step-by-step solution (Markdown and math supported)"
                 />
-                <p className="text-xs text-text-secondary">Numerical problems are available for Physics chapters.</p>
+                <p className="text-xs text-text-secondary">
+                  Numerical problems are available for Physics chapters.
+                </p>
                 <Button
                   data-testid="curriculum-exercise-submit"
                   type="submit"
@@ -2034,8 +2171,13 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 </Button>
               </form>
             ) : (
-              <div className="space-y-2 rounded-lg border border-border-default/60 bg-bg-base/50 p-3" data-testid="curriculum-exercise-manage">
-                <p className="text-sm font-semibold text-text-primary">Read / Update / Delete Exercises</p>
+              <div
+                className="space-y-2 rounded-lg border border-border-default/60 bg-bg-base/50 p-3"
+                data-testid="curriculum-exercise-manage"
+              >
+                <p className="text-sm font-semibold text-text-primary">
+                  Read / Update / Delete Exercises
+                </p>
                 <p className="text-xs text-text-secondary">
                   {isExerciseListLoading
                     ? "Loading exercises..."
@@ -2069,7 +2211,9 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 <Select
                   data-testid="curriculum-exercise-manage-difficulty-select"
                   value={manageExerciseDifficulty}
-                  onChange={(event) => setManageExerciseDifficulty(event.target.value as "easy" | "medium" | "hard")}
+                  onChange={(event) =>
+                    setManageExerciseDifficulty(event.target.value as "easy" | "medium" | "hard")
+                  }
                   disabled={!manageExerciseId}
                 >
                   <option value="easy">Easy</option>
@@ -2130,7 +2274,13 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
       <div className="rounded-lg border border-border-default/70 p-3" data-testid="curriculum-tree">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-sm font-semibold text-text-primary">Curriculum Tree</p>
-          <Button type="button" size="sm" variant="secondary" onClick={refreshTree} disabled={isRefreshing}>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={refreshTree}
+            disabled={isRefreshing}
+          >
             {isRefreshing ? "Refreshing..." : "Refresh"}
           </Button>
         </div>
@@ -2145,13 +2295,17 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                 aria-label={`Toggle ${board.name}`}
                 onClick={() => toggleBoard(board.id)}
               >
-                <span className="text-text-secondary">{expandedBoardIds.has(board.id) ? "-" : "+"}</span>
+                <span className="text-text-secondary">
+                  {expandedBoardIds.has(board.id) ? "-" : "+"}
+                </span>
                 <span className="font-semibold text-text-primary">{board.name}</span>
               </button>
 
               {expandedBoardIds.has(board.id) ? (
                 <div className="mt-2 space-y-2 pl-6">
-                  {board.classes.length === 0 ? <p className="text-text-secondary">No classes</p> : null}
+                  {board.classes.length === 0 ? (
+                    <p className="text-text-secondary">No classes</p>
+                  ) : null}
                   {board.classes.map((boardClass) => (
                     <div key={boardClass.id} className="space-y-1">
                       <p className="font-medium text-text-primary/90">- {boardClass.name}</p>
@@ -2161,7 +2315,8 @@ export function AdminCurriculumBuilder({ initialBoards }: AdminCurriculumBuilder
                         <ul className="space-y-1 pl-4 text-text-primary/80">
                           {boardClass.subjects.map((subject) => (
                             <li key={subject.id}>
-                              - {subject.name} ({subject.chapters.length} chapter{subject.chapters.length === 1 ? "" : "s"})
+                              - {subject.name} ({subject.chapters.length} chapter
+                              {subject.chapters.length === 1 ? "" : "s"})
                             </li>
                           ))}
                         </ul>

@@ -4,7 +4,11 @@ import { useState } from "react";
 
 import { SectionCard } from "@/components/foundation/section-card";
 import { Button } from "@/components/ui/button";
-import { getAdminContentAuditLogs, type AdminAuditLogResponseEntry, type AdminCurriculumBoard } from "@/lib/admin-api";
+import {
+  getAdminContentAuditLogs,
+  type AdminAuditLogResponseEntry,
+  type AdminCurriculumBoard,
+} from "@/lib/admin-api";
 
 import { AdminAuditLogList, type AdminAuditLogEntry } from "./admin-audit-log-list";
 import { AdminCurriculumBuilder } from "./admin-curriculum-builder";
@@ -23,7 +27,7 @@ export function AdminContentPanel({
   chapters,
   curriculumBoards,
   initialAuditEntries,
-  initialAuditTotal
+  initialAuditTotal,
 }: AdminContentPanelProps) {
   const [auditEntries, setAuditEntries] = useState<AdminAuditLogEntry[]>(initialAuditEntries);
   const [auditTotal, setAuditTotal] = useState(initialAuditTotal);
@@ -36,7 +40,7 @@ export function AdminContentPanel({
     try {
       const payload = await getAdminContentAuditLogs({
         page: 1,
-        pageSize: auditPageSize
+        pageSize: auditPageSize,
       });
 
       setAuditEntries(payload.entries);
@@ -59,7 +63,7 @@ export function AdminContentPanel({
       const nextPage = auditPage + 1;
       const payload = await getAdminContentAuditLogs({
         page: nextPage,
-        pageSize: auditPageSize
+        pageSize: auditPageSize,
       });
 
       setAuditEntries((previous) => [...previous, ...payload.entries]);
@@ -96,11 +100,23 @@ export function AdminContentPanel({
         title="Audit Log"
         actions={
           <div className="flex items-center gap-2">
-            <Button type="button" size="sm" variant="secondary" onClick={refreshAuditLog} disabled={isRefreshing}>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={refreshAuditLog}
+              disabled={isRefreshing}
+            >
               {isRefreshing ? "Refreshing..." : "Refresh"}
             </Button>
             {auditEntries.length < auditTotal ? (
-              <Button type="button" size="sm" variant="secondary" onClick={loadMoreAuditLog} disabled={isLoadingMore}>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={loadMoreAuditLog}
+                disabled={isLoadingMore}
+              >
                 {isLoadingMore ? "Loading..." : "Load more"}
               </Button>
             ) : null}

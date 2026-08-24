@@ -5,7 +5,13 @@ import { eq } from "drizzle-orm";
 import request from "supertest";
 
 import { db, pool } from "../../lib/db/index.js";
-import { aiChatSessions, aiConversationEvents, chapters, forumThreads, users } from "../../lib/db/schema.js";
+import {
+  aiChatSessions,
+  aiConversationEvents,
+  chapters,
+  forumThreads,
+  users,
+} from "../../lib/db/schema.js";
 import { redis } from "../../lib/redis.js";
 import { createApp } from "../../server.js";
 
@@ -23,7 +29,7 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
     email,
     password: TEST_PASSWORD,
     class: "9th",
-    board: "fbise"
+    board: "fbise",
   });
 
   assert.ok(
@@ -54,7 +60,7 @@ const createThreadFixture = async ({
   userId,
   titlePrefix,
   isPinned,
-  isSolved
+  isSolved,
 }: {
   userId: string;
   titlePrefix: string;
@@ -69,11 +75,11 @@ const createThreadFixture = async ({
       title: `${titlePrefix} ${suffix}`,
       body: "Community moderation fixture body.",
       isPinned,
-      isSolved
+      isSolved,
     })
     .returning({
       id: forumThreads.id,
-      title: forumThreads.title
+      title: forumThreads.title,
     });
 
   const thread = rows[0];
@@ -82,7 +88,13 @@ const createThreadFixture = async ({
   return thread;
 };
 
-const createOpenThreadFlag = async ({ targetId, targetLabel }: { targetId: string; targetLabel: string }): Promise<void> => {
+const createOpenThreadFlag = async ({
+  targetId,
+  targetLabel,
+}: {
+  targetId: string;
+  targetLabel: string;
+}): Promise<void> => {
   await pool.query(
     `
       insert into moderation_flags (target_type, target_id, target_label, reason, status)
@@ -116,22 +128,22 @@ test("admin community threads listing enforces auth/role and supports solved+pin
     userId: memberUser.id,
     titlePrefix: "Expected community thread",
     isPinned: false,
-    isSolved: false
+    isSolved: false,
   });
   await createOpenThreadFlag({
     targetId: expected.id,
-    targetLabel: expected.title
+    targetLabel: expected.title,
   });
 
   await createThreadFixture({
     userId: memberUser.id,
     titlePrefix: "Excluded solved thread",
     isPinned: false,
-    isSolved: true
+    isSolved: true,
   }).then((thread) =>
     createOpenThreadFlag({
       targetId: thread.id,
-      targetLabel: thread.title
+      targetLabel: thread.title,
     })
   );
 
@@ -139,11 +151,11 @@ test("admin community threads listing enforces auth/role and supports solved+pin
     userId: memberUser.id,
     titlePrefix: "Excluded pinned thread",
     isPinned: true,
-    isSolved: false
+    isSolved: false,
   }).then((thread) =>
     createOpenThreadFlag({
       targetId: thread.id,
-      targetLabel: thread.title
+      targetLabel: thread.title,
     })
   );
 
@@ -151,7 +163,7 @@ test("admin community threads listing enforces auth/role and supports solved+pin
     userId: memberUser.id,
     titlePrefix: "Excluded no-flag thread",
     isPinned: false,
-    isSolved: false
+    isSolved: false,
   });
 
   const unauthenticated = await anonAgent.get("/api/admin/community/threads");
@@ -165,7 +177,7 @@ test("admin community threads listing enforces auth/role and supports solved+pin
     pinned: "unpinned",
     flagState: "openFlags",
     page: 1,
-    pageSize: 10
+    pageSize: 10,
   });
 
   assert.equal(filtered.status, 200);
@@ -182,8 +194,16 @@ test("admin analytics overview enforces auth/role and returns windowed KPI aggre
   const adminAgent = request.agent(app);
   const memberAgent = request.agent(app);
 
-  await signUp(adminAgent, "Analytics Admin", `tst_phase3_analytics_admin_${Date.now()}@example.com`);
-  await signUp(memberAgent, "Analytics Member", `tst_phase3_analytics_member_${Date.now()}@example.com`);
+  await signUp(
+    adminAgent,
+    "Analytics Admin",
+    `tst_phase3_analytics_admin_${Date.now()}@example.com`
+  );
+  await signUp(
+    memberAgent,
+    "Analytics Member",
+    `tst_phase3_analytics_member_${Date.now()}@example.com`
+  );
 
   const adminUser = await getSessionUser(adminAgent);
   const memberUser = await getSessionUser(memberAgent);
@@ -198,10 +218,10 @@ test("admin analytics overview enforces auth/role and returns windowed KPI aggre
     .values({
       userId: memberUser.id,
       chapterId,
-      title: "Confusion analytics fixture"
+      title: "Confusion analytics fixture",
     })
     .returning({
-      id: aiChatSessions.id
+      id: aiChatSessions.id,
     });
   const insertedSessionId = insertedSessionRows[0]?.id;
   assert.ok(insertedSessionId, "Expected ai_chat_sessions fixture insert.");
@@ -211,9 +231,10 @@ test("admin analytics overview enforces auth/role and returns windowed KPI aggre
     eventType: "confusion_detected",
     metadata: {
       topic: "Fixture topic",
-      message: "It looks like you're working through Fixture topic. Would you like me to break this down differently?",
-      reasons: ["short_consecutive_messages"]
-    }
+      message:
+        "It looks like you're working through Fixture topic. Would you like me to break this down differently?",
+      reasons: ["short_consecutive_messages"],
+    },
   });
 
   const unauthenticated = await anonAgent.get("/api/admin/analytics/overview");
@@ -232,7 +253,8 @@ test("admin analytics overview enforces auth/role and returns windowed KPI aggre
   assert.equal(typeof analytics.body.summary?.openModerationFlags, "number");
   assert.equal(typeof analytics.body.summary?.confusionEvents, "number");
   assert.ok(Array.isArray(analytics.body.subjectPerformance), "Expected subject performance list.");
-  assert.ok(Array.isArray(analytics.body.confusionByChapter), "Expected confusion by chapter list.");
+  assert.ok(
+    Array.isArray(analytics.body.confusionByChapter),
+    "Expected confusion by chapter list."
+  );
 });
-
-

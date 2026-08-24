@@ -29,7 +29,9 @@ export async function processEmailJob(job: EmailJob): Promise<void> {
       await sendEmail({
         to: data.email,
         subject: "Reset your password - LearningoPK",
-        text: String(data.data.resetLink ?? "Use the code sent to your email to reset your password."),
+        text: String(
+          data.data.resetLink ?? "Use the code sent to your email to reset your password."
+        ),
       });
       break;
     }

@@ -3,7 +3,7 @@ import test from "node:test";
 
 import {
   curriculumExerciseCreateBodySchema,
-  curriculumExerciseUpdateBodySchema
+  curriculumExerciseUpdateBodySchema,
 } from "../../routes/admin/index.js";
 
 // curriculumExerciseCreateBodySchema tests
@@ -15,7 +15,7 @@ test("curriculumExerciseCreateBodySchema accepts valid non-numerical exercise wi
     question: "What is 2+2?",
     solution: "4",
     difficulty: "medium",
-    type: "short"
+    type: "short",
   };
 
   const parsed = curriculumExerciseCreateBodySchema.safeParse(payload);
@@ -31,7 +31,7 @@ test("curriculumExerciseCreateBodySchema accepts valid numerical exercise with p
     difficulty: "hard",
     type: "numerical",
     problemMarkdown: "# Problem\nCalculate the trajectory...",
-    solutionCode: "<canvas id='sim'></canvas><script>// physics simulation</script>"
+    solutionCode: "<canvas id='sim'></canvas><script>// physics simulation</script>",
   };
 
   const parsed = curriculumExerciseCreateBodySchema.safeParse(payload);
@@ -46,7 +46,7 @@ test("curriculumExerciseCreateBodySchema rejects numerical exercise without prob
     solution: "The answer is...",
     difficulty: "hard",
     type: "numerical",
-    solutionCode: "<canvas id='sim'></canvas><script>// physics simulation</script>"
+    solutionCode: "<canvas id='sim'></canvas><script>// physics simulation</script>",
   };
 
   const parsed = curriculumExerciseCreateBodySchema.safeParse(payload);
@@ -67,7 +67,7 @@ test("curriculumExerciseCreateBodySchema rejects numerical exercise without solu
     solution: "The answer is...",
     difficulty: "hard",
     type: "numerical",
-    problemMarkdown: "# Problem\nCalculate the trajectory..."
+    problemMarkdown: "# Problem\nCalculate the trajectory...",
   };
 
   const parsed = curriculumExerciseCreateBodySchema.safeParse(payload);
@@ -89,7 +89,7 @@ test("curriculumExerciseCreateBodySchema rejects numerical exercise with empty p
     difficulty: "hard",
     type: "numerical",
     problemMarkdown: "   ",
-    solutionCode: "<canvas id='sim'></canvas>"
+    solutionCode: "<canvas id='sim'></canvas>",
   };
 
   const parsed = curriculumExerciseCreateBodySchema.safeParse(payload);
@@ -105,7 +105,7 @@ test("curriculumExerciseCreateBodySchema rejects numerical exercise with empty s
     difficulty: "hard",
     type: "numerical",
     problemMarkdown: "# Problem",
-    solutionCode: "   "
+    solutionCode: "   ",
   };
 
   const parsed = curriculumExerciseCreateBodySchema.safeParse(payload);
@@ -120,7 +120,7 @@ test("curriculumExerciseUpdateBodySchema accepts valid non-numerical exercise up
     question: "Updated question",
     solution: "Updated solution",
     difficulty: "easy",
-    type: "mcq"
+    type: "mcq",
   };
 
   const parsed = curriculumExerciseUpdateBodySchema.safeParse(payload);
@@ -135,7 +135,7 @@ test("curriculumExerciseUpdateBodySchema accepts valid numerical exercise update
     difficulty: "hard",
     type: "numerical",
     problemMarkdown: "# Updated Problem",
-    solutionCode: "<canvas id='updated'></canvas>"
+    solutionCode: "<canvas id='updated'></canvas>",
   };
 
   const parsed = curriculumExerciseUpdateBodySchema.safeParse(payload);
@@ -149,7 +149,7 @@ test("curriculumExerciseUpdateBodySchema rejects numerical update without proble
     solution: "Updated explanation",
     difficulty: "hard",
     type: "numerical",
-    solutionCode: "<canvas id='updated'></canvas>"
+    solutionCode: "<canvas id='updated'></canvas>",
   };
 
   const parsed = curriculumExerciseUpdateBodySchema.safeParse(payload);
@@ -169,7 +169,7 @@ test("curriculumExerciseUpdateBodySchema rejects numerical update without soluti
     solution: "Updated explanation",
     difficulty: "hard",
     type: "numerical",
-    problemMarkdown: "# Updated Problem"
+    problemMarkdown: "# Updated Problem",
   };
 
   const parsed = curriculumExerciseUpdateBodySchema.safeParse(payload);

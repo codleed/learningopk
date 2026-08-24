@@ -113,13 +113,30 @@ function resolveArt(subject: string): SubjectArtConfig {
   return SUBJECT_ART[subject] ?? DEFAULT_ART;
 }
 
-function Motif({ motif, accent, seed }: { motif: SubjectArtConfig["motif"]; accent: string; seed: number }) {
+function Motif({
+  motif,
+  accent,
+  seed,
+}: {
+  motif: SubjectArtConfig["motif"];
+  accent: string;
+  seed: number;
+}) {
   if (motif === "orbit") {
     return (
       <>
-        <div className="absolute inset-4 rounded-full border" style={{ borderColor: `${accent}40`, transform: `rotate(${seed * 6}deg)` }} />
-        <div className="absolute inset-9 rounded-full border" style={{ borderColor: `${accent}30`, transform: `rotate(${-seed * 4}deg)` }} />
-        <div className="absolute left-1/2 top-5 h-3 w-3 -translate-x-1/2 rounded-full" style={{ backgroundColor: accent }} />
+        <div
+          className="absolute inset-4 rounded-full border"
+          style={{ borderColor: `${accent}40`, transform: `rotate(${seed * 6}deg)` }}
+        />
+        <div
+          className="absolute inset-9 rounded-full border"
+          style={{ borderColor: `${accent}30`, transform: `rotate(${-seed * 4}deg)` }}
+        />
+        <div
+          className="absolute left-1/2 top-5 h-3 w-3 -translate-x-1/2 rounded-full"
+          style={{ backgroundColor: accent }}
+        />
       </>
     );
   }
@@ -140,8 +157,14 @@ function Motif({ motif, accent, seed }: { motif: SubjectArtConfig["motif"]; acce
   if (motif === "organic") {
     return (
       <>
-        <div className="absolute -right-8 top-3 h-28 w-28 rounded-full border" style={{ borderColor: `${accent}30` }} />
-        <div className="absolute left-6 top-10 h-20 w-20 rounded-[45%] border" style={{ borderColor: `${accent}35` }} />
+        <div
+          className="absolute -right-8 top-3 h-28 w-28 rounded-full border"
+          style={{ borderColor: `${accent}30` }}
+        />
+        <div
+          className="absolute left-6 top-10 h-20 w-20 rounded-[45%] border"
+          style={{ borderColor: `${accent}35` }}
+        />
       </>
     );
   }
@@ -150,8 +173,14 @@ function Motif({ motif, accent, seed }: { motif: SubjectArtConfig["motif"]; acce
     return (
       <>
         <div className="absolute inset-x-6 top-7 h-px" style={{ backgroundColor: `${accent}45` }} />
-        <div className="absolute inset-x-10 top-14 h-px" style={{ backgroundColor: `${accent}35` }} />
-        <div className="absolute inset-x-4 top-21 h-px" style={{ backgroundColor: `${accent}25` }} />
+        <div
+          className="absolute inset-x-10 top-14 h-px"
+          style={{ backgroundColor: `${accent}35` }}
+        />
+        <div
+          className="absolute inset-x-4 top-21 h-px"
+          style={{ backgroundColor: `${accent}25` }}
+        />
       </>
     );
   }
@@ -159,9 +188,18 @@ function Motif({ motif, accent, seed }: { motif: SubjectArtConfig["motif"]; acce
   if (motif === "editorial") {
     return (
       <>
-        <div className="absolute -left-6 top-4 h-20 w-20 rounded-full" style={{ backgroundColor: `${accent}1f` }} />
-        <div className="absolute right-5 top-7 h-12 w-24 rounded-full" style={{ border: `1px solid ${accent}35` }} />
-        <div className="absolute bottom-6 left-6 h-px w-24" style={{ backgroundColor: `${accent}55` }} />
+        <div
+          className="absolute -left-6 top-4 h-20 w-20 rounded-full"
+          style={{ backgroundColor: `${accent}1f` }}
+        />
+        <div
+          className="absolute right-5 top-7 h-12 w-24 rounded-full"
+          style={{ border: `1px solid ${accent}35` }}
+        />
+        <div
+          className="absolute bottom-6 left-6 h-px w-24"
+          style={{ backgroundColor: `${accent}55` }}
+        />
       </>
     );
   }
@@ -197,8 +235,12 @@ export function StudyCardArt({
     <div
       className={cn(
         "relative overflow-hidden rounded-[1.25rem] border border-white/40",
-        isChapter ? "min-h-[150px] w-full sm:min-h-[170px]" : isCompact ? "min-h-[132px]" : "min-h-[188px]",
-        className,
+        isChapter
+          ? "min-h-[150px] w-full sm:min-h-[170px]"
+          : isCompact
+            ? "min-h-[132px]"
+            : "min-h-[188px]",
+        className
       )}
       style={{
         background: hasCustomImage
@@ -209,17 +251,11 @@ export function StudyCardArt({
     >
       {hasCustomImage && (
         <>
-          <Image
-            src={coverImageUrl}
-            alt=""
-            fill
-            className="object-cover"
-            unoptimized
-          />
+          <Image src={coverImageUrl} alt="" fill className="object-cover" unoptimized />
           <div
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(135deg, rgba(0,0,0,0.35), transparent 48%, rgba(0,0,0,0.25))`
+              background: `linear-gradient(135deg, rgba(0,0,0,0.35), transparent 48%, rgba(0,0,0,0.25))`,
             }}
           />
         </>
@@ -245,9 +281,7 @@ export function StudyCardArt({
 
       <div className="relative flex h-full flex-col justify-between p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
-          <div
-            className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-2.5 py-1 text-[0.625rem] font-medium uppercase tracking-[0.18em] text-text-secondary shadow-sm backdrop-blur"
-          >
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-2.5 py-1 text-[0.625rem] font-medium uppercase tracking-[0.18em] text-text-secondary shadow-sm backdrop-blur">
             {isChapter ? `Module ${String(chapterNumber ?? index + 1).padStart(2, "0")}` : subject}
           </div>
 
@@ -259,7 +293,12 @@ export function StudyCardArt({
           </div>
         </div>
 
-        <div className={cn("relative flex items-end justify-between gap-3", isChapter ? "mt-6" : "mt-8") }>
+        <div
+          className={cn(
+            "relative flex items-end justify-between gap-3",
+            isChapter ? "mt-6" : "mt-8"
+          )}
+        >
           <div className="min-w-0">
             {title ? (
               <p className="line-clamp-2 max-w-[16rem] text-sm font-medium leading-5 text-text-primary/80">
@@ -269,8 +308,18 @@ export function StudyCardArt({
           </div>
 
           {art.imageSrc ? (
-            <div className={cn("relative shrink-0 opacity-90", isCompact ? "h-14 w-14" : "h-20 w-20 sm:h-24 sm:w-24")}>
-              <Image src={art.imageSrc} alt="" fill className="object-contain drop-shadow-[0_12px_24px_rgba(15,23,42,0.12)]" />
+            <div
+              className={cn(
+                "relative shrink-0 opacity-90",
+                isCompact ? "h-14 w-14" : "h-20 w-20 sm:h-24 sm:w-24"
+              )}
+            >
+              <Image
+                src={art.imageSrc}
+                alt=""
+                fill
+                className="object-contain drop-shadow-[0_12px_24px_rgba(15,23,42,0.12)]"
+              />
             </div>
           ) : null}
         </div>

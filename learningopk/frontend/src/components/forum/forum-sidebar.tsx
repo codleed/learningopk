@@ -39,7 +39,10 @@ export function ForumSidebar({ filters, selected }: ForumSidebarProps) {
     <div className="sticky top-6 space-y-5">
       {/* ── Board Filter ── */}
       {filters.boards.length > 0 ? (
-        <nav className="rounded-xl border border-border-default bg-bg-surface p-4" aria-label="Board filter">
+        <nav
+          className="rounded-xl border border-border-default bg-bg-surface p-4"
+          aria-label="Board filter"
+        >
           <div className="mb-2.5 flex items-center gap-2">
             <GraduationCap className="h-4 w-4 text-text-muted" aria-hidden="true" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">Board</h3>
@@ -52,7 +55,7 @@ export function ForumSidebar({ filters, selected }: ForumSidebarProps) {
                   grade: selected.grade,
                   subjectId: selected.subjectId,
                   chapterId: selected.chapterId,
-                  solved: selected.solved
+                  solved: selected.solved,
                 })}
                 className={cn(
                   "block rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-150",
@@ -73,13 +76,11 @@ export function ForumSidebar({ filters, selected }: ForumSidebarProps) {
                     grade: selected.grade,
                     subjectId: selected.subjectId,
                     chapterId: selected.chapterId,
-                    solved: selected.solved
+                    solved: selected.solved,
                   })}
                   className={cn(
                     "flex items-center gap-2 rounded-md px-2.5 py-1.5 transition-all duration-150",
-                    selected.board === board.slug
-                      ? "bg-accent-primary/10"
-                      : "hover:bg-bg-subtle"
+                    selected.board === board.slug ? "bg-accent-primary/10" : "hover:bg-bg-subtle"
                   )}
                 >
                   <BoardBadge board={board.slug} size="sm" />
@@ -92,7 +93,10 @@ export function ForumSidebar({ filters, selected }: ForumSidebarProps) {
 
       {/* ── Subject Filter Tags ── */}
       {filteredSubjects.length > 0 ? (
-        <nav className="rounded-xl border border-border-default bg-bg-surface p-4" aria-label="Subject filter">
+        <nav
+          className="rounded-xl border border-border-default bg-bg-surface p-4"
+          aria-label="Subject filter"
+        >
           <div className="mb-2.5 flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-text-muted" aria-hidden="true" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">Subjects</h3>
@@ -103,7 +107,7 @@ export function ForumSidebar({ filters, selected }: ForumSidebarProps) {
                 q: selected.q,
                 board: selected.board,
                 grade: selected.grade,
-                solved: selected.solved
+                solved: selected.solved,
               })}
               className={cn(
                 "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all duration-150",
@@ -124,11 +128,13 @@ export function ForumSidebar({ filters, selected }: ForumSidebarProps) {
                     board: selected.board,
                     grade: selected.grade,
                     subjectId: subject.id,
-                    solved: selected.solved
+                    solved: selected.solved,
                   })}
                   className={cn(
                     "transition-all duration-150",
-                    isActive ? "ring-1 ring-accent-primary/30 rounded-full" : "opacity-80 hover:opacity-100"
+                    isActive
+                      ? "ring-1 ring-accent-primary/30 rounded-full"
+                      : "opacity-80 hover:opacity-100"
                   )}
                 >
                   <SubjectBadge name={subject.name} size="sm" />
@@ -141,7 +147,10 @@ export function ForumSidebar({ filters, selected }: ForumSidebarProps) {
 
       {/* ── Class Filter ── */}
       {filters.classes.length > 0 ? (
-        <nav className="rounded-xl border border-border-default bg-bg-surface p-4" aria-label="Class filter">
+        <nav
+          className="rounded-xl border border-border-default bg-bg-surface p-4"
+          aria-label="Class filter"
+        >
           <div className="mb-2.5 flex items-center gap-2">
             <Layers className="h-4 w-4 text-text-muted" aria-hidden="true" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">Class</h3>
@@ -154,7 +163,7 @@ export function ForumSidebar({ filters, selected }: ForumSidebarProps) {
                   board: selected.board,
                   subjectId: selected.subjectId,
                   chapterId: selected.chapterId,
-                  solved: selected.solved
+                  solved: selected.solved,
                 })}
                 className={cn(
                   "block rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-150",
@@ -181,7 +190,7 @@ export function ForumSidebar({ filters, selected }: ForumSidebarProps) {
                       grade: entry.slug,
                       subjectId: selected.subjectId,
                       chapterId: selected.chapterId,
-                      solved: selected.solved
+                      solved: selected.solved,
                     })}
                     className={cn(
                       "block rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-150",

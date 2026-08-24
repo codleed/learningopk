@@ -183,7 +183,11 @@ type StatementBlockProps = {
   checked: CheckedState | null;
   disabled: boolean;
   onChange: (stmtIndex: number, blankIndex: number, value: string) => void;
-  onKeyDown: (stmtIndex: number, blankIndex: number, event: React.KeyboardEvent<HTMLInputElement>) => void;
+  onKeyDown: (
+    stmtIndex: number,
+    blankIndex: number,
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) => void;
   inputRefs: React.MutableRefObject<(HTMLInputElement | null)[][]>;
 };
 
@@ -229,10 +233,7 @@ function StatementBlock({
             <span key={segIdx} className="contents">
               {segment && (
                 <span className="inline md-root [&_p]:inline [&_p]:m-0">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkMath]}
-                    rehypePlugins={[rehypeKatex]}
-                  >
+                  <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                     {segment}
                   </ReactMarkdown>
                 </span>
@@ -287,9 +288,7 @@ export function FillInBlanksRenderer({
 
   // Per-statement user answers: array of arrays, each with the correct number of blanks
   const [userAnswers, setUserAnswers] = useState<string[][]>(() =>
-    internalStatements.map((s) =>
-      Array.from<string>({ length: s.blanksAnswer.length }).fill("")
-    )
+    internalStatements.map((s) => Array.from<string>({ length: s.blanksAnswer.length }).fill(""))
   );
   // Per-statement checked state
   const [checkedStates, setCheckedStates] = useState<CheckedState[]>(() =>
@@ -299,9 +298,7 @@ export function FillInBlanksRenderer({
     }))
   );
 
-  const inputRefs = useRef<(HTMLInputElement | null)[][]>(
-    internalStatements.map(() => [])
-  );
+  const inputRefs = useRef<(HTMLInputElement | null)[][]>(internalStatements.map(() => []));
 
   const anyChecked = checkedStates.some((cs) => cs.statuses.length > 0);
   const hasAtLeastOneAnswer = useMemo(
@@ -323,36 +320,27 @@ export function FillInBlanksRenderer({
   const totalCorrect = stmtScores.reduce((sum, s) => sum + s.correct, 0);
   const allCorrect = totalBlanks > 0 && totalCorrect === totalBlanks;
 
-  const handleInputChange = useCallback(
-    (stmtIndex: number, blankIndex: number, value: string) => {
-      setUserAnswers((prev) => {
-        const next = prev.map((arr) => [...arr]);
-        if (next[stmtIndex]) {
-          next[stmtIndex][blankIndex] = value;
-        }
-        return next;
-      });
-    },
-    []
-  );
+  const handleInputChange = useCallback((stmtIndex: number, blankIndex: number, value: string) => {
+    setUserAnswers((prev) => {
+      const next = prev.map((arr) => [...arr]);
+      if (next[stmtIndex]) {
+        next[stmtIndex][blankIndex] = value;
+      }
+      return next;
+    });
+  }, []);
 
   const handleCheckAll = useCallback(() => {
-    const newCheckedStates: CheckedState[] = internalStatements.map(
-      (statement, stmtIndex) => {
-        const statuses: BlankStatus[] = statement.blanksAnswer.map(
-          (correct, blankIndex) => {
-            const userValue = userAnswers[stmtIndex]?.[blankIndex] ?? "";
-            return normalizeAnswer(userValue) === normalizeAnswer(correct)
-              ? "correct"
-              : "incorrect";
-          }
-        );
-        return {
-          statuses,
-          allCorrect: statuses.every((s) => s === "correct"),
-        };
-      }
-    );
+    const newCheckedStates: CheckedState[] = internalStatements.map((statement, stmtIndex) => {
+      const statuses: BlankStatus[] = statement.blanksAnswer.map((correct, blankIndex) => {
+        const userValue = userAnswers[stmtIndex]?.[blankIndex] ?? "";
+        return normalizeAnswer(userValue) === normalizeAnswer(correct) ? "correct" : "incorrect";
+      });
+      return {
+        statuses,
+        allCorrect: statuses.every((s) => s === "correct"),
+      };
+    });
 
     setCheckedStates(newCheckedStates);
 
@@ -387,9 +375,7 @@ export function FillInBlanksRenderer({
 
   const handleReset = useCallback(() => {
     setUserAnswers(
-      internalStatements.map((s) =>
-        Array.from<string>({ length: s.blanksAnswer.length }).fill("")
-      )
+      internalStatements.map((s) => Array.from<string>({ length: s.blanksAnswer.length }).fill(""))
     );
     setCheckedStates(
       internalStatements.map(() => ({
@@ -423,12 +409,9 @@ export function FillInBlanksRenderer({
                 "rounded-lg border p-3 transition-colors duration-200",
                 checkedStates[stmtIndex]?.allCorrect
                   ? "border-emerald-500/30 bg-emerald-500/[0.03]"
-                  : anyChecked &&
-                    checkedStates[stmtIndex]?.statuses.some(
-                      (s) => s === "incorrect"
-                    )
-                  ? "border-rose-500/30 bg-rose-500/[0.03]"
-                  : "border-border-default bg-bg-surface"
+                  : anyChecked && checkedStates[stmtIndex]?.statuses.some((s) => s === "incorrect")
+                    ? "border-rose-500/30 bg-rose-500/[0.03]"
+                    : "border-border-default bg-bg-surface"
               )}
             >
               <StatementBlock
@@ -475,12 +458,7 @@ export function FillInBlanksRenderer({
               transition={reduced ? { duration: 0 } : { duration: 0.2 }}
               className="flex items-center gap-3 flex-wrap"
             >
-              <Button
-                variant="secondary"
-                size="sm"
-                iconLeft={<RotateCcw />}
-                onClick={handleReset}
-              >
+              <Button variant="secondary" size="sm" iconLeft={<RotateCcw />} onClick={handleReset}>
                 Try Again
               </Button>
 

@@ -22,10 +22,7 @@ function PriorityBar({ priority }: { priority: number }) {
   const width = priority === 1 ? "33%" : priority === 2 ? "66%" : "100%";
   return (
     <div className="h-1 w-8 rounded-full bg-bg-subtle overflow-hidden">
-      <div
-        className="h-full rounded-full bg-accent-warning"
-        style={{ width }}
-      />
+      <div className="h-full rounded-full bg-accent-warning" style={{ width }} />
     </div>
   );
 }
@@ -51,9 +48,7 @@ export function FocusAreasWidget({ recommendations }: { recommendations: FocusAr
               <h3 className="font-[var(--font-display)] text-base font-bold text-text-primary">
                 Focus Areas
               </h3>
-              <p className="text-[11px] text-text-muted">
-                Prioritized by quiz + practice data
-              </p>
+              <p className="text-[11px] text-text-muted">Prioritized by quiz + practice data</p>
             </div>
           </div>
           <Badge variant="warning" size="sm">
@@ -64,11 +59,7 @@ export function FocusAreasWidget({ recommendations }: { recommendations: FocusAr
       <CardBody className="flex-1 pt-0">
         <div className="space-y-2">
           {recommendations.slice(0, 3).map((chapter) => (
-            <Link
-              key={chapter.chapterId}
-              href={chapter.href}
-              className="group block"
-            >
+            <Link key={chapter.chapterId} href={chapter.href} className="group block">
               <div className="rounded-xl border border-border-default bg-bg-base p-3 transition-all duration-200 hover:border-accent-warning/30 hover:shadow-[var(--shadow-sm)]">
                 <div className="flex items-start gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent-warning/10 text-accent-warning">
@@ -92,7 +83,10 @@ export function FocusAreasWidget({ recommendations }: { recommendations: FocusAr
                       {chapter.reason}
                     </p>
                   </div>
-                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-text-muted opacity-0 transition-opacity duration-200 group-hover:opacity-100" aria-hidden />
+                  <ArrowRight
+                    className="mt-1 h-4 w-4 shrink-0 text-text-muted opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                    aria-hidden
+                  />
                 </div>
               </div>
             </Link>

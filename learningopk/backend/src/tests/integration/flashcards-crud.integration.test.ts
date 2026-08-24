@@ -5,13 +5,7 @@ import { eq } from "drizzle-orm";
 import request from "supertest";
 
 import { db } from "../../lib/db/index.js";
-import {
-  boards,
-  subjects,
-  chapters,
-  flashcards,
-  users
-} from "../../lib/db/schema.js";
+import { boards, subjects, chapters, flashcards, users } from "../../lib/db/schema.js";
 import { createApp } from "../../server.js";
 
 const APP_ORIGIN = "http://localhost:3000";
@@ -28,7 +22,7 @@ const createFlashcardFixture = async () => {
     .insert(boards)
     .values({
       name: `Flashcard Test Board ${suffix}`,
-      slug: `flashcard-test-board-${suffix}`
+      slug: `flashcard-test-board-${suffix}`,
     })
     .returning({ id: boards.id, slug: boards.slug });
 
@@ -42,7 +36,7 @@ const createFlashcardFixture = async () => {
       boardId: board.id,
       grade: "10",
       name: `Flashcard Test Subject ${suffix}`,
-      slug: `flashcard-test-subject-${suffix}`
+      slug: `flashcard-test-subject-${suffix}`,
     })
     .returning({ id: subjects.id, slug: subjects.slug });
 
@@ -58,7 +52,7 @@ const createFlashcardFixture = async () => {
       title: `Flashcard Test Chapter ${suffix}`,
       slug: `flashcard-test-chapter-${suffix}`,
       summary: "Test chapter for flashcards.",
-      isPublished: true
+      isPublished: true,
     })
     .returning({ id: chapters.id });
 
@@ -70,7 +64,7 @@ const createFlashcardFixture = async () => {
     subjectId: subject.id,
     chapterId: chapter.id,
     boardSlug: board.slug,
-    subjectSlug: subject.slug
+    subjectSlug: subject.slug,
   };
 };
 
@@ -85,7 +79,7 @@ const createAndLoginAdmin = async (agent: request.Agent, nameSuffix: string) => 
     .send({
       name: `Flashcard Admin Test ${nameSuffix}`,
       email,
-      password: TEST_PASSWORD
+      password: TEST_PASSWORD,
     });
 
   assert.ok(
@@ -122,13 +116,16 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
       chapterId,
       front: "What is photosynthesis?",
       back: "The process by which plants convert sunlight into energy",
-      orderIndex: 0
+      orderIndex: 0,
     });
 
   assert.equal(createResponse1.status, 201, `Expected 201 Created, got ${createResponse1.status}`);
   assert.ok(createResponse1.body.data?.id, "Expected flashcard ID in response");
   assert.equal(createResponse1.body.data.front, "What is photosynthesis?");
-  assert.equal(createResponse1.body.data.back, "The process by which plants convert sunlight into energy");
+  assert.equal(
+    createResponse1.body.data.back,
+    "The process by which plants convert sunlight into energy"
+  );
   assert.equal(createResponse1.body.data.orderIndex, 0);
   assert.equal(createResponse1.body.data.chapterId, chapterId);
 
@@ -141,7 +138,7 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
     .send({
       chapterId,
       front: "What is cellular respiration?",
-      back: "The process of breaking down glucose to release energy"
+      back: "The process of breaking down glucose to release energy",
     });
 
   assert.equal(createResponse2.status, 201, `Expected 201 Created, got ${createResponse2.status}`);
@@ -158,7 +155,7 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
       chapterId,
       front: "What is mitosis?",
       back: "Cell division resulting in two identical daughter cells",
-      orderIndex: 0
+      orderIndex: 0,
     });
 
   assert.equal(createResponse3.status, 201);
@@ -181,7 +178,11 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
   // Note: The actual order may vary if there are concurrent tests
   const listedFlashcards = listResponse.body.data;
   assert.ok(listedFlashcards[0].id, "First flashcard should have an ID");
-  assert.equal(listedFlashcards[0].front, "What is mitosis?", "First flashcard should be the newest one with orderIndex 0");
+  assert.equal(
+    listedFlashcards[0].front,
+    "What is mitosis?",
+    "First flashcard should be the newest one with orderIndex 0"
+  );
 
   // TEST 5: Get flashcards for non-existent chapter
   const listEmptyResponse = await agent
@@ -189,7 +190,11 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
     .set("origin", APP_ORIGIN);
 
   assert.equal(listEmptyResponse.status, 200);
-  assert.equal(listEmptyResponse.body.data.length, 0, "Should have 0 flashcards for non-existent chapter");
+  assert.equal(
+    listEmptyResponse.body.data.length,
+    0,
+    "Should have 0 flashcards for non-existent chapter"
+  );
   assert.equal(listEmptyResponse.body.total, 0);
 
   // TEST 6: Update flashcard front
@@ -197,12 +202,20 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
     .post(`/api/admin/content/flashcards/${flashcardId1}/update`)
     .set("origin", APP_ORIGIN)
     .send({
-      front: "What is photosynthesis? (updated)"
+      front: "What is photosynthesis? (updated)",
     });
 
-  assert.equal(updateFrontResponse.status, 200, `Expected 200 OK, got ${updateFrontResponse.status}`);
+  assert.equal(
+    updateFrontResponse.status,
+    200,
+    `Expected 200 OK, got ${updateFrontResponse.status}`
+  );
   assert.equal(updateFrontResponse.body.data.front, "What is photosynthesis? (updated)");
-  assert.equal(updateFrontResponse.body.data.back, "The process by which plants convert sunlight into energy", "Back should remain unchanged");
+  assert.equal(
+    updateFrontResponse.body.data.back,
+    "The process by which plants convert sunlight into energy",
+    "Back should remain unchanged"
+  );
   assert.equal(updateFrontResponse.body.data.id, flashcardId1);
 
   // TEST 7: Update flashcard back
@@ -210,12 +223,19 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
     .post(`/api/admin/content/flashcards/${flashcardId2}/update`)
     .set("origin", APP_ORIGIN)
     .send({
-      back: "The process of breaking down glucose to release energy (updated)"
+      back: "The process of breaking down glucose to release energy (updated)",
     });
 
   assert.equal(updateBackResponse.status, 200);
-  assert.equal(updateBackResponse.body.data.back, "The process of breaking down glucose to release energy (updated)");
-  assert.equal(updateBackResponse.body.data.front, "What is cellular respiration?", "Front should remain unchanged");
+  assert.equal(
+    updateBackResponse.body.data.back,
+    "The process of breaking down glucose to release energy (updated)"
+  );
+  assert.equal(
+    updateBackResponse.body.data.front,
+    "What is cellular respiration?",
+    "Front should remain unchanged"
+  );
 
   // TEST 8: Update both front and back
   const updateBothResponse = await agent
@@ -223,12 +243,15 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
     .set("origin", APP_ORIGIN)
     .send({
       front: "What is mitosis? (updated)",
-      back: "Cell division resulting in two identical daughter cells (updated)"
+      back: "Cell division resulting in two identical daughter cells (updated)",
     });
 
   assert.equal(updateBothResponse.status, 200);
   assert.equal(updateBothResponse.body.data.front, "What is mitosis? (updated)");
-  assert.equal(updateBothResponse.body.data.back, "Cell division resulting in two identical daughter cells (updated)");
+  assert.equal(
+    updateBothResponse.body.data.back,
+    "Cell division resulting in two identical daughter cells (updated)"
+  );
 
   // TEST 9: Delete flashcard
   const deleteResponse = await agent
@@ -269,7 +292,7 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
     .set("origin", APP_ORIGIN)
     .send({
       chapterId,
-      orderedIds: [remainingFlashcards[1]!.id, remainingFlashcards[0]!.id] // Reverse the order
+      orderedIds: [remainingFlashcards[1]!.id, remainingFlashcards[0]!.id], // Reverse the order
     });
 
   assert.equal(reorderResponse.status, 200, `Expected 200 OK, got ${reorderResponse.status}`);
@@ -284,9 +307,17 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
     .where(eq(flashcards.chapterId, chapterId))
     .orderBy(flashcards.orderIndex);
 
-  assert.equal(reorderedFlashcards[0]!.id, remainingFlashcards[1]!.id, "First should be originally second");
+  assert.equal(
+    reorderedFlashcards[0]!.id,
+    remainingFlashcards[1]!.id,
+    "First should be originally second"
+  );
   assert.equal(reorderedFlashcards[0]!.orderIndex, 0);
-  assert.equal(reorderedFlashcards[1]!.id, remainingFlashcards[0]!.id, "Second should be originally first");
+  assert.equal(
+    reorderedFlashcards[1]!.id,
+    remainingFlashcards[0]!.id,
+    "Second should be originally first"
+  );
   assert.equal(reorderedFlashcards[1]!.orderIndex, 1);
 
   // TEST 11: Flashcard not found for update
@@ -311,7 +342,7 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
     .send({
       chapterId: "invalid",
       front: "",
-      back: ""
+      back: "",
     });
 
   assert.equal(invalidCreateResponse.status, 400, "Expected 400 for invalid input");
@@ -322,7 +353,7 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
     .set("origin", APP_ORIGIN)
     .send({
       front: "",
-      back: ""
+      back: "",
     });
 
   assert.equal(invalidUpdateResponse.status, 400, "Expected 400 for invalid update input");
@@ -339,7 +370,7 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
     .post("/api/admin/content/flashcards/reorder")
     .set("origin", APP_ORIGIN)
     .send({
-      chapterId
+      chapterId,
     });
 
   assert.equal(invalidReorderResponse.status, 400, "Expected 400 for missing orderedIds");
@@ -350,11 +381,17 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
     .set("origin", APP_ORIGIN)
     .send({
       chapterId,
-      orderedIds: [99998, 99999] // Wrong IDs
+      orderedIds: [99998, 99999], // Wrong IDs
     });
 
-  assert.equal(wrongReorderResponse.status, 400, "Expected 400 when orderedIds don't match existing");
-  assert.ok(wrongReorderResponse.body.error.includes("orderedIds must contain exactly all flashcard IDs"));
+  assert.equal(
+    wrongReorderResponse.status,
+    400,
+    "Expected 400 when orderedIds don't match existing"
+  );
+  assert.ok(
+    wrongReorderResponse.body.error.includes("orderedIds must contain exactly all flashcard IDs")
+  );
 
   // TEST 18: Reorder validation - partial IDs
   const partialReorderResponse = await agent
@@ -362,7 +399,7 @@ test("Flashcard CRUD operations (TASK-FLASHCARD-CUD)", async () => {
     .set("origin", APP_ORIGIN)
     .send({
       chapterId,
-      orderedIds: [remainingFlashcards[0]!.id] // Only one ID, but there are two flashcards
+      orderedIds: [remainingFlashcards[0]!.id], // Only one ID, but there are two flashcards
     });
 
   assert.equal(partialReorderResponse.status, 400, "Expected 400 when orderedIds are partial");
@@ -397,7 +434,7 @@ test("Flashcard reorder validates all IDs are present", async () => {
       .send({
         chapterId,
         front: `Front ${i}`,
-        back: `Back ${i}`
+        back: `Back ${i}`,
       });
     ids.push(res.body.data.id);
   }
@@ -408,7 +445,7 @@ test("Flashcard reorder validates all IDs are present", async () => {
     .set("origin", APP_ORIGIN)
     .send({
       chapterId,
-      orderedIds: [...ids, 99999] // Includes non-existent ID
+      orderedIds: [...ids, 99999], // Includes non-existent ID
     });
 
   assert.equal(invalidReorderResponse.status, 400, "Expected 400 for extra ID in orderedIds");
@@ -419,7 +456,7 @@ test("Flashcard reorder validates all IDs are present", async () => {
     .set("origin", APP_ORIGIN)
     .send({
       chapterId,
-      orderedIds: ids.slice(0, 2) // Missing one ID
+      orderedIds: ids.slice(0, 2), // Missing one ID
     });
 
   assert.equal(missingReorderResponse.status, 400, "Expected 400 for missing ID in orderedIds");
@@ -434,39 +471,30 @@ test("Flashcard create appends to end when orderIndex not provided", async () =>
   const { chapterId } = await createFlashcardFixture();
 
   // Create first flashcard with explicit orderIndex
-  const res1 = await agent
-    .post("/api/admin/content/flashcards")
-    .set("origin", APP_ORIGIN)
-    .send({
-      chapterId,
-      front: "First",
-      back: "First back",
-      orderIndex: 5
-    });
+  const res1 = await agent.post("/api/admin/content/flashcards").set("origin", APP_ORIGIN).send({
+    chapterId,
+    front: "First",
+    back: "First back",
+    orderIndex: 5,
+  });
 
   assert.equal(res1.body.data.orderIndex, 5);
 
   // Create second flashcard without orderIndex (should append)
-  const res2 = await agent
-    .post("/api/admin/content/flashcards")
-    .set("origin", APP_ORIGIN)
-    .send({
-      chapterId,
-      front: "Second",
-      back: "Second back"
-    });
+  const res2 = await agent.post("/api/admin/content/flashcards").set("origin", APP_ORIGIN).send({
+    chapterId,
+    front: "Second",
+    back: "Second back",
+  });
 
   assert.equal(res2.body.data.orderIndex, 6, "Should append with orderIndex = max + 1");
 
   // Create third flashcard without orderIndex
-  const res3 = await agent
-    .post("/api/admin/content/flashcards")
-    .set("origin", APP_ORIGIN)
-    .send({
-      chapterId,
-      front: "Third",
-      back: "Third back"
-    });
+  const res3 = await agent.post("/api/admin/content/flashcards").set("origin", APP_ORIGIN).send({
+    chapterId,
+    front: "Third",
+    back: "Third back",
+  });
 
   assert.equal(res3.body.data.orderIndex, 7, "Should continue appending");
 

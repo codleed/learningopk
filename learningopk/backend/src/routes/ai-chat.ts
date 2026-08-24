@@ -13,9 +13,13 @@ import {
   chapterSubparts,
   chapters,
   exercises,
-  subjects
+  subjects,
 } from "../lib/db/schema.js";
-import { buildProactiveHint, detectConfusionPattern, getConfusionTopicLabel } from "../lib/ai-confusion.js";
+import {
+  buildProactiveHint,
+  detectConfusionPattern,
+  getConfusionTopicLabel,
+} from "../lib/ai-confusion.js";
 import { env } from "../lib/env.js";
 import { consumeAiChatRateLimit, moderateAiInput } from "../lib/ai-guardrails.js";
 import { extractConversationConcepts } from "../lib/ai-concept-extractor.js";
@@ -31,14 +35,19 @@ import {
   type ChatMessage,
   type TutorMode,
   type TutorChapterContext,
-  type TutorPersonalContext
+  type TutorPersonalContext,
 } from "../lib/mistral.js";
 import { aiContextRepository } from "../repositories/ai-context.repository.js";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { learningPathService } from "../services/learning-path.service.js";
 import { progressService } from "../services/progress.service.js";
 import { createAiModelStrategy } from "../services/ai-model-strategy.js";
-import { getCachedAiResponse, readAiCircuitState, setCachedAiResponse, writeAiCircuitState } from "../services/ai-model-strategy.store.js";
+import {
+  getCachedAiResponse,
+  readAiCircuitState,
+  setCachedAiResponse,
+  writeAiCircuitState,
+} from "../services/ai-model-strategy.store.js";
 
 /** Max content length for user-authored messages (abuse prevention). */
 const USER_MESSAGE_MAX_LENGTH = 4000;
@@ -53,19 +62,19 @@ const ASSISTANT_MESSAGE_MAX_LENGTH = 16_000;
 const chatMessageSchema = z.discriminatedUnion("role", [
   z.object({
     role: z.literal("user"),
-    content: z.string().trim().min(1).max(USER_MESSAGE_MAX_LENGTH)
+    content: z.string().trim().min(1).max(USER_MESSAGE_MAX_LENGTH),
   }),
   z.object({
     role: z.literal("assistant"),
-    content: z.string().trim().min(1).max(ASSISTANT_MESSAGE_MAX_LENGTH)
-  })
+    content: z.string().trim().min(1).max(ASSISTANT_MESSAGE_MAX_LENGTH),
+  }),
 ]);
 
 const chatInputSchema = z.object({
   messages: z.array(chatMessageSchema).min(1).max(40),
   mode: z.enum(["explain", "socratic"]).default("explain"),
   chapterId: z.number().int().positive().optional(),
-  sessionId: z.string().uuid().optional()
+  sessionId: z.string().uuid().optional(),
 });
 
 type ChapterContextPayload = {
@@ -84,7 +93,10 @@ const tokenize = (value: string): string[] =>
     .split(/\s+/)
     .filter((token) => token.length >= 3);
 
-const pickRelevantExerciseQuestion = (exerciseRows: ExerciseQuestionRow[], latestPrompt: string): string | undefined => {
+const pickRelevantExerciseQuestion = (
+  exerciseRows: ExerciseQuestionRow[],
+  latestPrompt: string
+): string | undefined => {
   if (exerciseRows.length === 0) {
     return undefined;
   }
@@ -98,11 +110,14 @@ const pickRelevantExerciseQuestion = (exerciseRows: ExerciseQuestionRow[], lates
 
   for (const row of exerciseRows) {
     const questionTokens = tokenize(row.question);
-    const score = questionTokens.reduce((total, token) => (promptTokens.has(token) ? total + 1 : total), 0);
+    const score = questionTokens.reduce(
+      (total, token) => (promptTokens.has(token) ? total + 1 : total),
+      0
+    );
     if (!bestMatch || score > bestMatch.score) {
       bestMatch = {
         question: row.question,
-        score
+        score,
       };
     }
   }
@@ -110,7 +125,10 @@ const pickRelevantExerciseQuestion = (exerciseRows: ExerciseQuestionRow[], lates
   return bestMatch?.question ?? exerciseRows[0]?.question;
 };
 
-const loadChapterContext = async (chapterId: number, latestPrompt: string): Promise<ChapterContextPayload | null> => {
+const loadChapterContext = async (
+  chapterId: number,
+  latestPrompt: string
+): Promise<ChapterContextPayload | null> => {
   const chapterRows = await db
     .select({
       chapterId: chapters.id,
@@ -118,7 +136,7 @@ const loadChapterContext = async (chapterId: number, latestPrompt: string): Prom
       chapterSummary: chapters.summary,
       grade: subjects.grade,
       subjectName: subjects.name,
-      boardName: boards.name
+      boardName: boards.name,
     })
     .from(chapters)
     .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
@@ -138,7 +156,7 @@ const loadChapterContext = async (chapterId: number, latestPrompt: string): Prom
     const subpartRows = await db
       .select({
         heading: chapterSubparts.heading,
-        content: chapterSubparts.content
+        content: chapterSubparts.content,
       })
       .from(chapterSubparts)
       .where(eq(chapterSubparts.chapterId, chapterId))
@@ -155,7 +173,7 @@ const loadChapterContext = async (chapterId: number, latestPrompt: string): Prom
 
   const exerciseRows = await db
     .select({
-      question: exercises.question
+      question: exercises.question,
     })
     .from(exercises)
     .where(eq(exercises.chapterId, chapterId))
@@ -170,9 +188,10 @@ const loadChapterContext = async (chapterId: number, latestPrompt: string): Prom
       grade: chapterRow.grade ?? "9",
       subject: chapterRow.subjectName,
       chapterTitle: chapterRow.chapterTitle,
-      chapterSummary: summary.trim().length > 0 ? summary : "No chapter summary available for this chapter.",
-      ...(focusExerciseQuestion ? { focusExerciseQuestion } : {})
-    }
+      chapterSummary:
+        summary.trim().length > 0 ? summary : "No chapter summary available for this chapter.",
+      ...(focusExerciseQuestion ? { focusExerciseQuestion } : {}),
+    },
   };
 };
 
@@ -181,7 +200,7 @@ const fallbackContext: TutorChapterContext = {
   grade: "9",
   subject: "General",
   chapterTitle: "Current topic",
-  chapterSummary: "No chapter context was provided. Clarify the topic before teaching."
+  chapterSummary: "No chapter context was provided. Clarify the topic before teaching.",
 };
 
 const truncateTitle = (value: string): string => {
@@ -192,9 +211,14 @@ const truncateTitle = (value: string): string => {
   return `${clean.slice(0, 87)}...`;
 };
 
-const buildSessionTitle = (chapterContext: ChapterContextPayload | null, latestPrompt: string): string => {
+const buildSessionTitle = (
+  chapterContext: ChapterContextPayload | null,
+  latestPrompt: string
+): string => {
   if (chapterContext) {
-    return truncateTitle(`${chapterContext.context.subject}: ${chapterContext.context.chapterTitle}`);
+    return truncateTitle(
+      `${chapterContext.context.subject}: ${chapterContext.context.chapterTitle}`
+    );
   }
   return truncateTitle(latestPrompt);
 };
@@ -203,7 +227,8 @@ const aiModelStrategy = createAiModelStrategy({
   readCircuitState: async () => readAiCircuitState(),
   writeCircuitState: async ({ state }) => writeAiCircuitState(state),
   getCachedResponse: async ({ normalizedPrompt }) => getCachedAiResponse(normalizedPrompt),
-  setCachedResponse: async ({ normalizedPrompt, responseText }) => setCachedAiResponse(normalizedPrompt, responseText),
+  setCachedResponse: async ({ normalizedPrompt, responseText }) =>
+    setCachedAiResponse(normalizedPrompt, responseText),
   invokeModel: async ({ tier, system, messages, maxOutputTokens, temperature }) => {
     const model = getMistralModel(tier);
     const modelId = getMistralModelId(tier);
@@ -212,7 +237,7 @@ const aiModelStrategy = createAiModelStrategy({
       system,
       messages: messages as ModelMessage[],
       maxOutputTokens,
-      temperature
+      temperature,
     });
 
     return {
@@ -220,7 +245,7 @@ const aiModelStrategy = createAiModelStrategy({
       model: modelId,
       modelTier: tier,
       promptTokens: result.usage.inputTokens ?? 0,
-      completionTokens: result.usage.outputTokens ?? 0
+      completionTokens: result.usage.outputTokens ?? 0,
     };
   },
   invokeModelStreaming: ({ tier, system, messages, maxOutputTokens, temperature }) => {
@@ -232,7 +257,7 @@ const aiModelStrategy = createAiModelStrategy({
       system,
       messages: messages as ModelMessage[],
       maxOutputTokens,
-      temperature
+      temperature,
     });
 
     return {
@@ -244,26 +269,26 @@ const aiModelStrategy = createAiModelStrategy({
           model: modelId,
           modelTier: tier,
           promptTokens: usage.inputTokens ?? 0,
-          completionTokens: usage.outputTokens ?? 0
+          completionTokens: usage.outputTokens ?? 0,
         };
-      })()
+      })(),
     };
   },
   sleep: async (delayMs) => {
     await new Promise((resolve) => setTimeout(resolve, delayMs));
-  }
+  },
 });
 
 export const aiChatRouter = Router();
 
 const sessionParamsSchema = z.object({
-  sessionId: z.string().uuid()
+  sessionId: z.string().uuid(),
 });
 
 const proactiveHintHeaderSchema = z.object({
   topic: z.string(),
   message: z.string(),
-  reasons: z.array(z.string())
+  reasons: z.array(z.string()),
 });
 
 aiChatRouter.get("/sessions", requireSession, async (req, res) => {
@@ -274,14 +299,14 @@ aiChatRouter.get("/sessions", requireSession, async (req, res) => {
     .select({
       id: aiChatSessions.id,
       title: aiChatSessions.title,
-      lastMessageAt: aiChatSessions.lastMessageAt
+      lastMessageAt: aiChatSessions.lastMessageAt,
     })
     .from(aiChatSessions)
     .where(and(eq(aiChatSessions.userId, userId), isNull(aiChatSessions.chapterId)))
     .orderBy(desc(aiChatSessions.lastMessageAt), desc(aiChatSessions.createdAt));
 
   res.status(200).json({
-    sessions: sessionRows
+    sessions: sessionRows,
   });
 });
 
@@ -289,7 +314,7 @@ aiChatRouter.get("/sessions/:sessionId/messages", requireSession, async (req, re
   const parsedParams = sessionParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
     res.status(400).json({
-      error: "Invalid AI session ID."
+      error: "Invalid AI session ID.",
     });
     return;
   }
@@ -302,16 +327,22 @@ aiChatRouter.get("/sessions/:sessionId/messages", requireSession, async (req, re
     .select({
       id: aiChatSessions.id,
       title: aiChatSessions.title,
-      lastMessageAt: aiChatSessions.lastMessageAt
+      lastMessageAt: aiChatSessions.lastMessageAt,
     })
     .from(aiChatSessions)
-    .where(and(eq(aiChatSessions.id, sessionId), eq(aiChatSessions.userId, userId), isNull(aiChatSessions.chapterId)))
+    .where(
+      and(
+        eq(aiChatSessions.id, sessionId),
+        eq(aiChatSessions.userId, userId),
+        isNull(aiChatSessions.chapterId)
+      )
+    )
     .limit(1);
 
   const sessionRow = sessionRows[0];
   if (!sessionRow) {
     res.status(404).json({
-      error: "AI session not found."
+      error: "AI session not found.",
     });
     return;
   }
@@ -321,7 +352,7 @@ aiChatRouter.get("/sessions/:sessionId/messages", requireSession, async (req, re
       id: aiMessages.id,
       role: aiMessages.role,
       content: aiMessages.content,
-      createdAt: aiMessages.createdAt
+      createdAt: aiMessages.createdAt,
     })
     .from(aiMessages)
     .where(eq(aiMessages.sessionId, sessionRow.id))
@@ -329,14 +360,21 @@ aiChatRouter.get("/sessions/:sessionId/messages", requireSession, async (req, re
 
   const latestConfusionEventRows = await db
     .select({
-      metadata: aiConversationEvents.metadata
+      metadata: aiConversationEvents.metadata,
     })
     .from(aiConversationEvents)
-    .where(and(eq(aiConversationEvents.sessionId, sessionRow.id), eq(aiConversationEvents.eventType, "confusion_detected")))
+    .where(
+      and(
+        eq(aiConversationEvents.sessionId, sessionRow.id),
+        eq(aiConversationEvents.eventType, "confusion_detected")
+      )
+    )
     .orderBy(desc(aiConversationEvents.createdAt))
     .limit(1);
 
-  const latestConfusionEvent = proactiveHintHeaderSchema.safeParse(latestConfusionEventRows[0]?.metadata);
+  const latestConfusionEvent = proactiveHintHeaderSchema.safeParse(
+    latestConfusionEventRows[0]?.metadata
+  );
 
   res.status(200).json({
     session: sessionRow,
@@ -345,9 +383,9 @@ aiChatRouter.get("/sessions/:sessionId/messages", requireSession, async (req, re
       ? {
           topic: latestConfusionEvent.data.topic,
           message: latestConfusionEvent.data.message,
-          reasons: latestConfusionEvent.data.reasons
+          reasons: latestConfusionEvent.data.reasons,
         }
-      : null
+      : null,
   });
 });
 
@@ -372,7 +410,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
     }
     res.status(400).json({
       error: "Invalid AI chat payload",
-      details: flattenedErrors
+      details: flattenedErrors,
     });
     return;
   }
@@ -381,7 +419,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
   const latestUserMessage = [...messages].reverse().find((message) => message.role === "user");
   if (!latestUserMessage) {
     res.status(400).json({
-      error: "At least one user message is required."
+      error: "At least one user message is required.",
     });
     return;
   }
@@ -393,7 +431,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
   if (moderation.blocked) {
     res.status(422).json({
       error: "Message blocked by AI safety checks.",
-      reason: moderation.reason
+      reason: moderation.reason,
     });
     return;
   }
@@ -404,7 +442,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
   } catch (error) {
     logger.error({ error }, "AI rate limit check failed");
     res.status(503).json({
-      error: "AI rate limiting is temporarily unavailable."
+      error: "AI rate limiting is temporarily unavailable.",
     });
     return;
   }
@@ -417,16 +455,18 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
     res.setHeader("retry-after", String(rateLimit.resetSeconds));
     res.status(429).json({
       error: "AI chat rate limit exceeded.",
-      retryAfterSeconds: rateLimit.resetSeconds
+      retryAfterSeconds: rateLimit.resetSeconds,
     });
     return;
   }
 
-  const chapterContext = chapterId ? await loadChapterContext(chapterId, latestUserMessage.content) : null;
+  const chapterContext = chapterId
+    ? await loadChapterContext(chapterId, latestUserMessage.content)
+    : null;
 
   if (chapterId && !chapterContext) {
     res.status(404).json({
-      error: "Chapter not found for AI context injection."
+      error: "Chapter not found for AI context injection.",
     });
     return;
   }
@@ -435,7 +475,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
     ? await db
         .select({
           id: aiChatSessions.id,
-          chapterId: aiChatSessions.chapterId
+          chapterId: aiChatSessions.chapterId,
         })
         .from(aiChatSessions)
         .where(and(eq(aiChatSessions.id, sessionId), eq(aiChatSessions.userId, userId)))
@@ -444,7 +484,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
 
   if (sessionId && sessionRows.length === 0) {
     res.status(404).json({
-      error: "AI session not found."
+      error: "AI session not found.",
     });
     return;
   }
@@ -457,17 +497,17 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
         .values({
           userId,
           chapterId: chapterContext?.chapterId ?? chapterId ?? null,
-          title: buildSessionTitle(chapterContext, latestUserMessage.content)
+          title: buildSessionTitle(chapterContext, latestUserMessage.content),
         })
         .returning({
           id: aiChatSessions.id,
-          chapterId: aiChatSessions.chapterId
+          chapterId: aiChatSessions.chapterId,
         })
     )[0];
 
   if (!sessionRow) {
     res.status(500).json({
-      error: "Unable to initialize AI chat session."
+      error: "Unable to initialize AI chat session.",
     });
     return;
   }
@@ -475,40 +515,48 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
   const latestStoredMessage = await db
     .select({
       role: aiMessages.role,
-      content: aiMessages.content
+      content: aiMessages.content,
     })
     .from(aiMessages)
     .where(eq(aiMessages.sessionId, sessionRow.id))
     .orderBy(desc(aiMessages.createdAt))
     .limit(1);
 
-  if (latestStoredMessage[0]?.role !== "user" || latestStoredMessage[0]?.content !== latestUserMessage.content) {
+  if (
+    latestStoredMessage[0]?.role !== "user" ||
+    latestStoredMessage[0]?.content !== latestUserMessage.content
+  ) {
     await db.insert(aiMessages).values({
       sessionId: sessionRow.id,
       role: "user",
-      content: latestUserMessage.content
+      content: latestUserMessage.content,
     });
   }
 
-  await db.update(aiChatSessions).set({ lastMessageAt: new Date() }).where(eq(aiChatSessions.id, sessionRow.id));
+  await db
+    .update(aiChatSessions)
+    .set({ lastMessageAt: new Date() })
+    .where(eq(aiChatSessions.id, sessionRow.id));
 
   const persistedMessageRows = await db
     .select({
       role: aiMessages.role,
-      content: aiMessages.content
+      content: aiMessages.content,
     })
     .from(aiMessages)
     .where(eq(aiMessages.sessionId, sessionRow.id))
     .orderBy(asc(aiMessages.createdAt));
 
   const confusionResult = detectConfusionPattern({
-    messages: persistedMessageRows as ChatMessage[]
+    messages: persistedMessageRows as ChatMessage[],
   });
   const proactiveHint = confusionResult.triggered
     ? {
         topic: getConfusionTopicLabel(chapterContext?.context ?? fallbackContext),
-        message: buildProactiveHint(getConfusionTopicLabel(chapterContext?.context ?? fallbackContext)),
-        reasons: confusionResult.reasons
+        message: buildProactiveHint(
+          getConfusionTopicLabel(chapterContext?.context ?? fallbackContext)
+        ),
+        reasons: confusionResult.reasons,
       }
     : null;
 
@@ -520,8 +568,8 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
         topic: proactiveHint.topic,
         message: proactiveHint.message,
         reasons: proactiveHint.reasons,
-        chapterId: chapterContext?.chapterId ?? sessionRow.chapterId ?? null
-      }
+        chapterId: chapterContext?.chapterId ?? sessionRow.chapterId ?? null,
+      },
     });
   }
 
@@ -534,12 +582,14 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
       aiContextRepository.findByUserId(userId),
       learningPathService.getLearningPath(userId, {
         boardSlug: authedReq.session.user.board ?? null,
-        classSlug: authedReq.session.user.class ?? null
+        classSlug: authedReq.session.user.class ?? null,
       }),
-      progressService.getAdaptiveWeakAreaLabels(userId, 5)
+      progressService.getAdaptiveWeakAreaLabels(userId, 5),
     ]);
 
-    const mergedWeakAreas = Array.from(new Set([...adaptiveWeakAreas, ...learningPath.studentWeakAreas])).slice(0, 5);
+    const mergedWeakAreas = Array.from(
+      new Set([...adaptiveWeakAreas, ...learningPath.studentWeakAreas])
+    ).slice(0, 5);
 
     if (aiCtx) {
       personalContext = {
@@ -547,7 +597,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
         strongTopics: aiCtx.strongTopics,
         studentWeakAreas: mergedWeakAreas,
         preferredExplanationStyle: aiCtx.preferredExplanationStyle,
-        lastConceptsDiscussed: aiCtx.lastConceptsDiscussed
+        lastConceptsDiscussed: aiCtx.lastConceptsDiscussed,
       };
     } else if (mergedWeakAreas.length > 0) {
       personalContext = {
@@ -555,7 +605,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
         strongTopics: [],
         studentWeakAreas: mergedWeakAreas,
         preferredExplanationStyle: "balanced",
-        lastConceptsDiscussed: []
+        lastConceptsDiscussed: [],
       };
     }
   } catch (error) {
@@ -571,7 +621,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
 
   const modelMessages: ModelMessage[] = messages.map((message) => ({
     role: message.role,
-    content: message.content
+    content: message.content,
   }));
 
   let providerError: string | null = null;
@@ -614,7 +664,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
       await db.insert(aiMessages).values({
         sessionId: sessionRow.id,
         role: "assistant",
-        content: assistantText
+        content: assistantText,
       });
     }
 
@@ -624,10 +674,13 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
       modelTier: result.modelTier,
       model: result.model,
       promptTokens: result.promptTokens,
-      completionTokens: result.completionTokens
+      completionTokens: result.completionTokens,
     });
 
-    await db.update(aiChatSessions).set({ lastMessageAt: new Date() }).where(eq(aiChatSessions.id, sessionRow.id));
+    await db
+      .update(aiChatSessions)
+      .set({ lastMessageAt: new Date() })
+      .where(eq(aiChatSessions.id, sessionRow.id));
 
     if (assistantText.length > 0) {
       try {
@@ -676,7 +729,7 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
           await db.insert(aiMessages).values({
             sessionId: sessionRow.id,
             role: "assistant",
-            content: assistantText
+            content: assistantText,
           });
         }
 
@@ -686,10 +739,13 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
           modelTier: fallbackResult.modelTier,
           model: fallbackResult.model,
           promptTokens: fallbackResult.promptTokens,
-          completionTokens: fallbackResult.completionTokens
+          completionTokens: fallbackResult.completionTokens,
         });
 
-        await db.update(aiChatSessions).set({ lastMessageAt: new Date() }).where(eq(aiChatSessions.id, sessionRow.id));
+        await db
+          .update(aiChatSessions)
+          .set({ lastMessageAt: new Date() })
+          .where(eq(aiChatSessions.id, sessionRow.id));
 
         res.status(200);
         res.setHeader("content-type", "text/plain; charset=utf-8");
@@ -702,10 +758,13 @@ aiChatRouter.post("/chat", requireSession, async (req, res) => {
         res.end();
       } catch (fallbackError) {
         logger.error({ error: fallbackError }, "AI fallback generation also failed");
-        providerError = fallbackError instanceof Error ? fallbackError.message : "Unknown provider generation error.";
+        providerError =
+          fallbackError instanceof Error
+            ? fallbackError.message
+            : "Unknown provider generation error.";
         res.status(502).json({
           error: providerError ?? "Failed to generate AI response from the provider.",
-          sessionId: sessionRow.id
+          sessionId: sessionRow.id,
         });
       }
     } else {

@@ -41,4 +41,3 @@ learningopk/
 |-- drizzle.config.ts
 `-- README.md
 ```
-

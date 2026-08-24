@@ -29,13 +29,7 @@ export function PasswordInput({
   const inputId = id || label.toLowerCase().replace(/\s+/g, "-");
 
   return (
-    <FormField
-      htmlFor={inputId}
-      label={label}
-      error={error}
-      action={action}
-      className={className}
-    >
+    <FormField htmlFor={inputId} label={label} error={error} action={action} className={className}>
       <div className="relative">
         {Icon && iconPosition === "left" && (
           <Icon

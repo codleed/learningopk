@@ -79,8 +79,8 @@ function IllustrationEmptyState() {
           No illustrations yet
         </p>
         <p className="mt-1 max-w-sm text-sm text-text-secondary">
-          This chapter doesn&apos;t have any numerical exercises with
-          visualizations. Check back after new content is added.
+          This chapter doesn&apos;t have any numerical exercises with visualizations. Check back
+          after new content is added.
         </p>
       </div>
     </div>
@@ -102,8 +102,7 @@ export function QuestIllustrationView({
   const totalCount = exercises.length;
   const completedCount = completedIds.length;
   const allCompleted = totalCount > 0 && completedCount >= totalCount;
-  const progressPercent =
-    totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+  const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   /* ─── Navigation helpers ─── */
 
@@ -155,20 +154,13 @@ export function QuestIllustrationView({
 
   const exercise = exercises[currentIndex]!;
   const isComplete = completedIds.includes(exercise.id);
-  const difficulty = (exercise.difficulty?.toLowerCase() ?? "easy") as
-    | "easy"
-    | "medium"
-    | "hard";
+  const difficulty = (exercise.difficulty?.toLowerCase() ?? "easy") as "easy" | "medium" | "hard";
   const config = DIFFICULTY_CONFIG[difficulty] ?? DIFFICULTY_CONFIG.easy;
   const hasVisualization =
-    typeof exercise.visualizationHtml === "string" &&
-    exercise.visualizationHtml.trim().length > 0;
+    typeof exercise.visualizationHtml === "string" && exercise.visualizationHtml.trim().length > 0;
 
   return (
-    <div
-      className="flex flex-col"
-      style={{ height: "calc(100vh - 19rem)" }}
-    >
+    <div className="flex flex-col" style={{ height: "calc(100vh - 19rem)" }}>
       {/* ─── A) Progress strip ─── */}
       <div className="flex items-center justify-between px-1 pb-3">
         {/* Left: icon + label + count */}
@@ -342,7 +334,10 @@ export function QuestIllustrationView({
               transition={
                 reduced
                   ? { duration: 0 }
-                  : { height: { duration: 0.25, ease: [0.23, 1, 0.32, 1] }, opacity: { duration: 0.2 } }
+                  : {
+                      height: { duration: 0.25, ease: [0.23, 1, 0.32, 1] },
+                      opacity: { duration: 0.2 },
+                    }
               }
               className="overflow-hidden"
             >
@@ -399,8 +394,7 @@ export function QuestIllustrationView({
               Illustrations Mastered!
             </p>
             <span className="ml-auto flex items-center gap-1 rounded-full bg-accent-primary px-3 py-1 font-[var(--font-mono)] text-[0.625rem] font-bold text-white">
-              <Sparkles className="h-3 w-3" />
-              +{XP_REWARDS.EXERCISE_BONUS_ALL} XP
+              <Sparkles className="h-3 w-3" />+{XP_REWARDS.EXERCISE_BONUS_ALL} XP
             </span>
           </motion.div>
         )}

@@ -53,10 +53,7 @@ export class FlashcardReviewRepository {
           .innerJoin(chapters, eq(flashcards.chapterId, chapters.id))
           .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
           .where(
-            and(
-              eq(flashcardReviews.userId, userId),
-              lte(flashcardReviews.nextReviewDate, now)
-            )
+            and(eq(flashcardReviews.userId, userId), lte(flashcardReviews.nextReviewDate, now))
           )
           .orderBy(flashcardReviews.nextReviewDate);
 
@@ -66,11 +63,7 @@ export class FlashcardReviewRepository {
     );
   }
 
-  async upsertReview(
-    userId: string,
-    cardId: number,
-    reviewState: ReviewState
-  ): Promise<void> {
+  async upsertReview(userId: string, cardId: number, reviewState: ReviewState): Promise<void> {
     const now = new Date();
 
     await db
@@ -121,10 +114,7 @@ export class FlashcardReviewRepository {
             .select({ total: count() })
             .from(flashcardReviews)
             .where(
-              and(
-                eq(flashcardReviews.userId, userId),
-                lte(flashcardReviews.nextReviewDate, now)
-              )
+              and(eq(flashcardReviews.userId, userId), lte(flashcardReviews.nextReviewDate, now))
             ),
           db
             .select({ total: count() })
@@ -150,12 +140,15 @@ export class FlashcardReviewRepository {
   async findReview(
     userId: string,
     cardId: number
-  ): Promise<{
-    intervalDays: number;
-    easeFactor: number;
-    repetitions: number;
-    nextReviewDate: Date;
-  } | undefined> {
+  ): Promise<
+    | {
+        intervalDays: number;
+        easeFactor: number;
+        repetitions: number;
+        nextReviewDate: Date;
+      }
+    | undefined
+  > {
     const rows = await db
       .select({
         intervalDays: flashcardReviews.intervalDays,
@@ -164,12 +157,7 @@ export class FlashcardReviewRepository {
         nextReviewDate: flashcardReviews.nextReviewDate,
       })
       .from(flashcardReviews)
-      .where(
-        and(
-          eq(flashcardReviews.userId, userId),
-          eq(flashcardReviews.cardId, cardId)
-        )
-      )
+      .where(and(eq(flashcardReviews.userId, userId), eq(flashcardReviews.cardId, cardId)))
       .limit(1);
 
     return rows[0];

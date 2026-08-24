@@ -26,7 +26,9 @@ export const getPktDayBounds = (dateKey: string): { startUtc: Date; endUtc: Date
   }
 
   const [, year, month, day] = match;
-  const startUtc = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), 0, 0, 0, 0) - PKT_OFFSET_MS);
+  const startUtc = new Date(
+    Date.UTC(Number(year), Number(month) - 1, Number(day), 0, 0, 0, 0) - PKT_OFFSET_MS
+  );
   const endUtc = new Date(startUtc.getTime() + 24 * 60 * 60 * 1000);
   return { startUtc, endUtc };
 };
@@ -40,7 +42,7 @@ export const getCurrentPktContext = (now: Date = new Date()) => {
     todayKey,
     pktHour: getPktHour(now),
     dayStartUtc: startUtc,
-    nextDayStartUtc: endUtc
+    nextDayStartUtc: endUtc,
   };
 };
 
@@ -70,8 +72,10 @@ export const buildDailyGoalProgress = (input: {
     chaptersTarget: STREAK_WAGER_CHAPTER_TARGET,
     quizzesCompleted: input.quizzesCompleted,
     quizzesTarget: STREAK_WAGER_QUIZ_TARGET,
-    completed: input.chaptersCompleted >= STREAK_WAGER_CHAPTER_TARGET && input.quizzesCompleted >= STREAK_WAGER_QUIZ_TARGET,
-    percent: Math.round((totalDone / totalTarget) * 100)
+    completed:
+      input.chaptersCompleted >= STREAK_WAGER_CHAPTER_TARGET &&
+      input.quizzesCompleted >= STREAK_WAGER_QUIZ_TARGET,
+    percent: Math.round((totalDone / totalTarget) * 100),
   };
 };
 
@@ -81,4 +85,5 @@ export const shouldShowStreakAtRiskWarning = (input: {
   streakDays: number;
   hasWagerForToday: boolean;
   pktHour: number;
-}): boolean => input.streakDays >= 5 && !input.hasWagerForToday && input.pktHour >= STREAK_AT_RISK_HOUR_PKT;
+}): boolean =>
+  input.streakDays >= 5 && !input.hasWagerForToday && input.pktHour >= STREAK_AT_RISK_HOUR_PKT;

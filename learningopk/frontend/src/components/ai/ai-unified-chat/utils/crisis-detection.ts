@@ -7,17 +7,17 @@
 
 const CRISIS_KEYWORDS: string[] = [
   // English
-  'kill myself',
-  'suicide',
-  'want to die',
-  'self-harm',
-  'hurt myself',
-  'no one cares',
+  "kill myself",
+  "suicide",
+  "want to die",
+  "self-harm",
+  "hurt myself",
+  "no one cares",
 
   // Urdu / Roman Urdu
-  'marna chahta',
-  'khudkushi',
-  'mar jana',
+  "marna chahta",
+  "khudkushi",
+  "mar jana",
 ];
 
 /**

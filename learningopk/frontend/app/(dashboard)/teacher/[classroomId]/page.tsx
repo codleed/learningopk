@@ -58,9 +58,11 @@ export default async function ClassroomDetailPage({ params }: Props) {
 
       <ClassroomDetailClient
         classroom={classroomData}
-        initialStudents={students.status === "fulfilled" ? students.value ?? [] : []}
-        initialAssignments={assignments.status === "fulfilled" ? assignments.value ?? [] : []}
-        initialAnnouncements={announcements.status === "fulfilled" ? announcements.value ?? [] : []}
+        initialStudents={students.status === "fulfilled" ? (students.value ?? []) : []}
+        initialAssignments={assignments.status === "fulfilled" ? (assignments.value ?? []) : []}
+        initialAnnouncements={
+          announcements.status === "fulfilled" ? (announcements.value ?? []) : []
+        }
       />
     </AppShell>
   );

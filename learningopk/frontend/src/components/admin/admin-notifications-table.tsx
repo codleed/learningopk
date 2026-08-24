@@ -9,7 +9,7 @@ type AdminNotificationsTableProps = {
 const audienceLabel: Record<AdminNotification["audience"], string> = {
   all: "All users",
   students: "Students",
-  admins: "Admins"
+  admins: "Admins",
 };
 
 export function AdminNotificationsTable({ rows }: AdminNotificationsTableProps) {
@@ -39,7 +39,9 @@ export function AdminNotificationsTable({ rows }: AdminNotificationsTableProps) 
               <td className="px-3 py-2 text-foreground/90">{audienceLabel[row.audience]}</td>
               <td className="px-3 py-2 text-foreground/90">{row.status}</td>
               <td className="px-3 py-2 text-foreground/90">{row.createdBy.name}</td>
-              <td className="px-3 py-2 text-foreground/90">{new Date(row.createdAt).toLocaleString()}</td>
+              <td className="px-3 py-2 text-foreground/90">
+                {new Date(row.createdAt).toLocaleString()}
+              </td>
             </tr>
           ))}
         </tbody>

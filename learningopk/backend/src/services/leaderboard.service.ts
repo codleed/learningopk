@@ -1,6 +1,11 @@
 import { calculateStreakDays, createUtcDay, toDateKey } from "../lib/progress-metrics.js";
 import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
-import { leaderboardRepository, type LeaderboardCandidateRow, type LeaderboardScope, type LeaderboardViewer } from "../repositories/leaderboard.repository.js";
+import {
+  leaderboardRepository,
+  type LeaderboardCandidateRow,
+  type LeaderboardScope,
+  type LeaderboardViewer,
+} from "../repositories/leaderboard.repository.js";
 
 export type LeaderboardMetric = "xp" | "streak" | "quizzes";
 export type LeaderboardBadge = "gold" | "silver" | "bronze";
@@ -53,7 +58,11 @@ type RankedCandidate = LeaderboardCandidateRow & {
 const REFRESH_INTERVAL_SECONDS = 300;
 
 export class LeaderboardService {
-  async getLeaderboard(userId: string, scope: LeaderboardScope, metric: LeaderboardMetric): Promise<LeaderboardResponse> {
+  async getLeaderboard(
+    userId: string,
+    scope: LeaderboardScope,
+    metric: LeaderboardMetric
+  ): Promise<LeaderboardResponse> {
     const viewer = await leaderboardRepository.findViewer(userId);
     if (!viewer) {
       throw new Error("User not found");
@@ -75,7 +84,7 @@ export class LeaderboardService {
     const badgeMap = await this.getBadgeMap();
     return {
       leaderboardPublic: viewer.leaderboardPublic,
-      badge: badgeMap.get(userId) ?? null
+      badge: badgeMap.get(userId) ?? null,
     };
   }
 
@@ -86,17 +95,21 @@ export class LeaderboardService {
     const badgeMap = await this.getBadgeMap();
     return {
       leaderboardPublic,
-      badge: badgeMap.get(userId) ?? null
+      badge: badgeMap.get(userId) ?? null,
     };
   }
 
-  private async buildLeaderboard(viewer: LeaderboardViewer, scope: LeaderboardScope, metric: LeaderboardMetric): Promise<LeaderboardResponse> {
+  private async buildLeaderboard(
+    viewer: LeaderboardViewer,
+    scope: LeaderboardScope,
+    metric: LeaderboardMetric
+  ): Promise<LeaderboardResponse> {
     const [candidateRows, activityRows, quizRows, weeklyRows, badgeMap] = await Promise.all([
       leaderboardRepository.listCandidates(scope, viewer),
       leaderboardRepository.listActivityDates(scope, viewer),
       leaderboardRepository.listQuizCounts(scope, viewer),
       leaderboardRepository.listWeeklyActivityCounts(scope, viewer),
-      this.getBadgeMap()
+      this.getBadgeMap(),
     ]);
 
     const activityMap = new Map<string, Date[]>();
@@ -109,7 +122,13 @@ export class LeaderboardService {
 
     const quizMap = new Map(quizRows.map((row) => [row.userId, row.count]));
     const weeklyMap = new Map(
-      weeklyRows.map((row) => [row.userId, { currentWeekActivity: row.currentWeekActivity, previousWeekActivity: row.previousWeekActivity }])
+      weeklyRows.map((row) => [
+        row.userId,
+        {
+          currentWeekActivity: row.currentWeekActivity,
+          previousWeekActivity: row.previousWeekActivity,
+        },
+      ])
     );
 
     const ranked = candidateRows
@@ -141,14 +160,14 @@ export class LeaderboardService {
           quizzes: row.quizzes,
           weeklyChange: row.weeklyChange,
           badge: badgeMap.get(row.id) ?? null,
-          isCurrentUser: row.id === viewer.id
+          isCurrentUser: row.id === viewer.id,
         })),
       currentUser: {
         rank: currentUser.rank,
         totalStudents: ranked.length,
         leaderboardPublic: viewer.leaderboardPublic,
-        badge: badgeMap.get(viewer.id) ?? null
-      }
+        badge: badgeMap.get(viewer.id) ?? null,
+      },
     };
   }
 
@@ -159,30 +178,45 @@ export class LeaderboardService {
     weeklyMap: Map<string, { currentWeekActivity: number; previousWeekActivity: number }>
   ): RankedCandidate {
     const dates = activityMap.get(row.id) ?? [];
-    const uniqueDates = Array.from(new Set(dates.map((date) => toDateKey(date)))).map((dateKey) => new Date(`${dateKey}T00:00:00.000Z`));
+    const uniqueDates = Array.from(new Set(dates.map((date) => toDateKey(date)))).map(
+      (dateKey) => new Date(`${dateKey}T00:00:00.000Z`)
+    );
     const now = new Date();
     const todayUtc = createUtcDay(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-    const weeklyCounts = weeklyMap.get(row.id) ?? { currentWeekActivity: 0, previousWeekActivity: 0 };
+    const weeklyCounts = weeklyMap.get(row.id) ?? {
+      currentWeekActivity: 0,
+      previousWeekActivity: 0,
+    };
 
     return {
       ...row,
       quizzes: quizMap.get(row.id) ?? 0,
       streak: calculateStreakDays(uniqueDates, todayUtc),
       weeklyChange: weeklyCounts.currentWeekActivity - weeklyCounts.previousWeekActivity,
-      rank: 0
+      rank: 0,
     };
   }
 
-  private compareByMetric(a: RankedCandidate, b: RankedCandidate, metric: LeaderboardMetric): number {
+  private compareByMetric(
+    a: RankedCandidate,
+    b: RankedCandidate,
+    metric: LeaderboardMetric
+  ): number {
     if (metric === "streak") {
-      return b.streak - a.streak || b.xp - a.xp || b.quizzes - a.quizzes || a.name.localeCompare(b.name);
+      return (
+        b.streak - a.streak || b.xp - a.xp || b.quizzes - a.quizzes || a.name.localeCompare(b.name)
+      );
     }
 
     if (metric === "quizzes") {
-      return b.quizzes - a.quizzes || b.xp - a.xp || b.streak - a.streak || a.name.localeCompare(b.name);
+      return (
+        b.quizzes - a.quizzes || b.xp - a.xp || b.streak - a.streak || a.name.localeCompare(b.name)
+      );
     }
 
-    return b.xp - a.xp || b.streak - a.streak || b.quizzes - a.quizzes || a.name.localeCompare(b.name);
+    return (
+      b.xp - a.xp || b.streak - a.streak || b.quizzes - a.quizzes || a.name.localeCompare(b.name)
+    );
   }
 
   private async getBadgeMap(): Promise<Map<string, LeaderboardBadge>> {

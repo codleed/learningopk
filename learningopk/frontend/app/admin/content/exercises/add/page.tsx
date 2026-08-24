@@ -7,7 +7,9 @@ export default async function AddExercisePage() {
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
-  const boards = await getAdminCurriculumTree(cookieHeader).catch(() => [] as AdminCurriculumBoard[]);
+  const boards = await getAdminCurriculumTree(cookieHeader).catch(
+    () => [] as AdminCurriculumBoard[]
+  );
 
   return <AddExerciseForm boards={boards} />;
 }

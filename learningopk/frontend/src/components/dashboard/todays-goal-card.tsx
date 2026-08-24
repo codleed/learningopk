@@ -33,9 +33,7 @@ export interface TodaysGoalCardProps {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function TodaysGoalCard({
-  summary,
-}: TodaysGoalCardProps) {
+export function TodaysGoalCard({ summary }: TodaysGoalCardProps) {
   const goal = summary?.todaysGoal;
   const initialFocus = summary?.todaysFocus ?? null;
   const [focus, setFocus] = useState(initialFocus);
@@ -107,8 +105,12 @@ export function TodaysGoalCard({
           <CardBody className="space-y-3 pt-0">
             {/* Meta badges */}
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant={difficultyVariant} size="sm">{focus.difficulty}</Badge>
-              <Badge variant="primary" size="sm">+{focus.xpReward} XP</Badge>
+              <Badge variant={difficultyVariant} size="sm">
+                {focus.difficulty}
+              </Badge>
+              <Badge variant="primary" size="sm">
+                +{focus.xpReward} XP
+              </Badge>
             </div>
 
             {/* Reason card */}

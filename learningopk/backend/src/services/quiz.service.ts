@@ -12,7 +12,7 @@ import {
   QuizAttemptSaveError,
   QuizChallengeConflictError,
   QuizChallengeExpiredError,
-  QuizChallengeNotFoundError
+  QuizChallengeNotFoundError,
 } from "../lib/errors/index.js";
 
 const QUIZ_DUEL_EXPIRY_HOURS = 48;
@@ -142,7 +142,12 @@ export class QuizService {
 
     return {
       challengeId: challenge.id,
-      status: challenge.expiresAt <= new Date() ? "expired" : challenge.recipientAttemptId ? "completed" : "open",
+      status:
+        challenge.expiresAt <= new Date()
+          ? "expired"
+          : challenge.recipientAttemptId
+            ? "completed"
+            : "open",
       expiresAt: challenge.expiresAt.toISOString(),
       challenger: {
         userId: challenge.challengerUserId,
@@ -150,8 +155,9 @@ export class QuizService {
         score: challengerScore,
         totalMarks: challengerTotalMarks,
         percentage: this.toPercentage(challengerScore, challengerTotalMarks),
-        completedAt: challenge.challengerCompletedAt?.toISOString() ?? challenge.createdAt.toISOString(),
-        isCurrentUser: challenge.challengerUserId === currentUserId
+        completedAt:
+          challenge.challengerCompletedAt?.toISOString() ?? challenge.createdAt.toISOString(),
+        isCurrentUser: challenge.challengerUserId === currentUserId,
       },
       recipient: challenge.recipientAttemptId
         ? {
@@ -159,11 +165,15 @@ export class QuizService {
             name: challenge.recipientName ?? "Friend",
             score: challenge.recipientScore ?? 0,
             totalMarks: challenge.recipientTotalMarks ?? 0,
-            percentage: this.toPercentage(challenge.recipientScore ?? 0, challenge.recipientTotalMarks ?? 0),
-            completedAt: challenge.recipientCompletedAt?.toISOString() ?? challenge.createdAt.toISOString(),
-            isCurrentUser: challenge.recipientUserId === currentUserId
+            percentage: this.toPercentage(
+              challenge.recipientScore ?? 0,
+              challenge.recipientTotalMarks ?? 0
+            ),
+            completedAt:
+              challenge.recipientCompletedAt?.toISOString() ?? challenge.createdAt.toISOString(),
+            isCurrentUser: challenge.recipientUserId === currentUserId,
           }
-        : null
+        : null,
     };
   }
 
@@ -181,7 +191,9 @@ export class QuizService {
     const attempt = attemptRows[0] ?? null;
 
     if (!attempt || attempt.userId !== input.userId || attempt.quizId !== input.quizId) {
-      throw new QuizChallengeConflictError("Challenge can only be created from your own attempt for this quiz.");
+      throw new QuizChallengeConflictError(
+        "Challenge can only be created from your own attempt for this quiz."
+      );
     }
 
     const expiresAt = new Date(Date.now() + QUIZ_DUEL_EXPIRY_HOURS * 60 * 60 * 1000);
@@ -189,7 +201,7 @@ export class QuizService {
       quizId: input.quizId,
       challengerUserId: input.userId,
       challengerAttemptId: input.attemptId,
-      expiresAt
+      expiresAt,
     });
     const created = createdRows[0];
 
@@ -201,7 +213,7 @@ export class QuizService {
       challengeId: created.id,
       quizId: created.quizId,
       expiresAt: created.expiresAt.toISOString(),
-      createdAt: created.createdAt.toISOString()
+      createdAt: created.createdAt.toISOString(),
     };
   }
 
@@ -240,7 +252,10 @@ export class QuizService {
         throw new QuizChallengeConflictError("You cannot accept your own challenge.");
       }
 
-      if (challengeBeforeSubmit.recipientUserId && challengeBeforeSubmit.recipientUserId !== userId) {
+      if (
+        challengeBeforeSubmit.recipientUserId &&
+        challengeBeforeSubmit.recipientUserId !== userId
+      ) {
         throw new QuizChallengeConflictError("This challenge has already been accepted.");
       }
 
@@ -267,7 +282,7 @@ export class QuizService {
     const { questionResults, score, totalMarks, percentage } = scoreQuizSubmission({
       questionRows,
       answers,
-      configuredTotalMarks: quizRow.totalMarks
+      configuredTotalMarks: quizRow.totalMarks,
     });
 
     // Build question results with chapter information
@@ -287,13 +302,13 @@ export class QuizService {
         isCorrect: qr.isCorrect,
         marks: qr.marks,
         awardedMarks: qr.awardedMarks,
-        explanation: qr.explanation
+        explanation: qr.explanation,
       };
     });
 
     // Calculate section-wise scores (by chapter)
     const sectionMap = new Map<number | null, SectionScore>();
-    
+
     for (const questionRow of questionRows) {
       const chapterId = questionRow.chapterId ?? null;
       if (!sectionMap.has(chapterId)) {
@@ -304,14 +319,14 @@ export class QuizService {
           score: 0,
           totalMarks: 0,
           questionCount: 0,
-          correctCount: 0
+          correctCount: 0,
         });
       }
-      
+
       const section = sectionMap.get(chapterId)!;
       section.totalMarks += questionRow.marks;
       section.questionCount += 1;
-      
+
       const result = questionResults.find((r) => r.questionId === questionRow.id);
       if (result) {
         if (result.isCorrect) {
@@ -339,7 +354,7 @@ export class QuizService {
             chapterNumber: section.chapterNumber ?? 0,
             correctPercentage,
             wrongQuestionCount: section.questionCount - section.correctCount,
-            totalQuestions: section.questionCount
+            totalQuestions: section.questionCount,
           });
         }
       }
@@ -347,7 +362,10 @@ export class QuizService {
 
     const completedAt = new Date();
     const startedAtDate = startedAt ? new Date(startedAt) : completedAt;
-    const normalizedStartedAt = !Number.isNaN(startedAtDate.getTime()) && startedAtDate <= completedAt ? startedAtDate : completedAt;
+    const normalizedStartedAt =
+      !Number.isNaN(startedAtDate.getTime()) && startedAtDate <= completedAt
+        ? startedAtDate
+        : completedAt;
 
     const insertedAttemptRows = await quizRepository.createAttempt({
       userId,
@@ -357,7 +375,7 @@ export class QuizService {
       score,
       totalMarks,
       startedAt: normalizedStartedAt,
-      completedAt
+      completedAt,
     });
 
     const insertedAttempt = insertedAttemptRows[0];
@@ -370,10 +388,13 @@ export class QuizService {
       userId,
       chapterId: quizRow.chapterId,
       score,
-      occurredAt: completedAt
+      occurredAt: completedAt,
     });
 
-    const timeSpentSeconds = Math.max(0, Math.floor((completedAt.getTime() - normalizedStartedAt.getTime()) / 1000));
+    const timeSpentSeconds = Math.max(
+      0,
+      Math.floor((completedAt.getTime() - normalizedStartedAt.getTime()) / 1000)
+    );
 
     // Award XP if passed (pass threshold+)
     let xpResult: {
@@ -394,7 +415,7 @@ export class QuizService {
             newXp: xpAwardResult.newXp,
             level: xpAwardResult.level,
             levelName: xpAwardResult.levelName,
-            leveledUp: xpAwardResult.leveledUp
+            leveledUp: xpAwardResult.leveledUp,
           };
         }
       } catch (error) {
@@ -420,7 +441,7 @@ export class QuizService {
       const attachedRows = await quizRepository.attachRecipientToDuelChallenge({
         challengeId,
         recipientUserId: userId,
-        recipientAttemptId: insertedAttempt.id
+        recipientAttemptId: insertedAttempt.id,
       });
 
       if (attachedRows.length === 0) {
@@ -452,7 +473,7 @@ export class QuizService {
       weakAreas,
       xp: xpResult,
       xpFailed,
-      ...(duel ? { duel } : {})
+      ...(duel ? { duel } : {}),
     };
   }
 }

@@ -6,7 +6,7 @@ import { leaderboardService } from "../services/leaderboard.service.js";
 
 const leaderboardQuerySchema = z.object({
   scope: z.enum(["global", "board", "school"]).default("global"),
-  metric: z.enum(["xp", "streak", "quizzes"]).default("xp")
+  metric: z.enum(["xp", "streak", "quizzes"]).default("xp"),
 });
 
 export const leaderboardRouter = Router();
@@ -16,7 +16,7 @@ leaderboardRouter.get("/", requireSession, async (req, res) => {
   if (!parsed.success) {
     res.status(400).json({
       error: "Invalid leaderboard query",
-      details: parsed.error.flatten()
+      details: parsed.error.flatten(),
     });
     return;
   }

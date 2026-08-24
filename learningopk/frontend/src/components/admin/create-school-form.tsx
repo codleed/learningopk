@@ -78,7 +78,11 @@ export function CreateSchoolForm() {
       return;
     }
     if (principalPassword.length < 6) {
-      pushToast({ title: "Error", description: "Password must be at least 6 characters", tone: "error" });
+      pushToast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
+        tone: "error",
+      });
       return;
     }
 
@@ -142,7 +146,9 @@ export function CreateSchoolForm() {
               <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[var(--text-secondary)]">Name</span>
-                  <span className="text-sm font-medium text-[var(--text-primary)]">{createdResult.school.name}</span>
+                  <span className="text-sm font-medium text-[var(--text-primary)]">
+                    {createdResult.school.name}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[var(--text-secondary)]">Invite Code</span>
@@ -154,7 +160,11 @@ export function CreateSchoolForm() {
                       onClick={() => handleCopy(createdResult.school.inviteCode, "invite")}
                       className="rounded-md p-1.5 text-[var(--text-secondary)] hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)] transition-colors"
                     >
-                      {copiedField === "invite" ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                      {copiedField === "invite" ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -169,17 +179,25 @@ export function CreateSchoolForm() {
               <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[var(--text-secondary)]">Name</span>
-                  <span className="text-sm font-medium text-[var(--text-primary)]">{createdResult.principal.name}</span>
+                  <span className="text-sm font-medium text-[var(--text-primary)]">
+                    {createdResult.principal.name}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[var(--text-secondary)]">Email</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-[var(--text-primary)]">{createdResult.principal.email}</span>
+                    <span className="text-sm font-medium text-[var(--text-primary)]">
+                      {createdResult.principal.email}
+                    </span>
                     <button
                       onClick={() => handleCopy(createdResult.principal.email, "email")}
                       className="rounded-md p-1.5 text-[var(--text-secondary)] hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)] transition-colors"
                     >
-                      {copiedField === "email" ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                      {copiedField === "email" ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -193,7 +211,11 @@ export function CreateSchoolForm() {
                       onClick={() => handleCopy(createdResult.principal.password, "password")}
                       className="rounded-md p-1.5 text-[var(--text-secondary)] hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)] transition-colors"
                     >
-                      {copiedField === "password" ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                      {copiedField === "password" ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>

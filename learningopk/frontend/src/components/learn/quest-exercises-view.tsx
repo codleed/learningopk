@@ -2,7 +2,16 @@
 
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { CheckCircle2, Flame, Sparkles, Trophy, ChevronDown, GripVertical, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  CheckCircle2,
+  Flame,
+  Sparkles,
+  Trophy,
+  ChevronDown,
+  GripVertical,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -66,7 +75,9 @@ export function QuestExercisesView({
           return;
         }
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     setOrderOverride(null);
   }, [chapterId, exercises]);
 
@@ -76,28 +87,37 @@ export function QuestExercisesView({
     return orderOverride.map((id) => map.get(id)!).filter(Boolean);
   }, [exercises, orderOverride]);
 
-  const saveOrder = useCallback((newOrder: number[]) => {
-    setOrderOverride(newOrder);
-    if (chapterId) {
-      localStorage.setItem(STORAGE_KEY(chapterId), JSON.stringify(newOrder));
-    }
-  }, [chapterId]);
+  const saveOrder = useCallback(
+    (newOrder: number[]) => {
+      setOrderOverride(newOrder);
+      if (chapterId) {
+        localStorage.setItem(STORAGE_KEY(chapterId), JSON.stringify(newOrder));
+      }
+    },
+    [chapterId]
+  );
 
-  const moveUp = useCallback((index: number) => {
-    if (index <= 0) return;
-    const ids = orderedExercises.map((e) => e.id);
-    const newIds = [...ids];
-    [newIds[index], newIds[index - 1]] = [newIds[index - 1], newIds[index]];
-    saveOrder(newIds);
-  }, [orderedExercises, saveOrder]);
+  const moveUp = useCallback(
+    (index: number) => {
+      if (index <= 0) return;
+      const ids = orderedExercises.map((e) => e.id);
+      const newIds = [...ids];
+      [newIds[index], newIds[index - 1]] = [newIds[index - 1], newIds[index]];
+      saveOrder(newIds);
+    },
+    [orderedExercises, saveOrder]
+  );
 
-  const moveDown = useCallback((index: number) => {
-    if (index >= orderedExercises.length - 1) return;
-    const ids = orderedExercises.map((e) => e.id);
-    const newIds = [...ids];
-    [newIds[index], newIds[index + 1]] = [newIds[index + 1], newIds[index]];
-    saveOrder(newIds);
-  }, [orderedExercises, saveOrder]);
+  const moveDown = useCallback(
+    (index: number) => {
+      if (index >= orderedExercises.length - 1) return;
+      const ids = orderedExercises.map((e) => e.id);
+      const newIds = [...ids];
+      [newIds[index], newIds[index + 1]] = [newIds[index + 1], newIds[index]];
+      saveOrder(newIds);
+    },
+    [orderedExercises, saveOrder]
+  );
 
   const resetOrder = useCallback(() => {
     setOrderOverride(null);
@@ -151,9 +171,7 @@ export function QuestExercisesView({
         {orderedExercises.map((exercise, index) => {
           const isComplete = completedIds.includes(exercise.id);
           const difficulty = (exercise.difficulty?.toLowerCase() ?? "easy") as
-            | "easy"
-            | "medium"
-            | "hard";
+            "easy" | "medium" | "hard";
           const config = DIFFICULTY_CONFIG[difficulty] ?? DIFFICULTY_CONFIG.easy;
 
           return (
@@ -238,7 +256,10 @@ export function QuestExercisesView({
                   {exercise.solution && (
                     <details className="mt-3 group/sol">
                       <summary className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-text-muted hover:text-text-secondary [&::-webkit-details-marker]:hidden">
-                        <ChevronDown className="h-3 w-3 transition-transform group-open/sol:rotate-180" aria-hidden />
+                        <ChevronDown
+                          className="h-3 w-3 transition-transform group-open/sol:rotate-180"
+                          aria-hidden
+                        />
                         View solution
                       </summary>
                       <div className="mt-2 rounded-lg border border-border-default bg-bg-subtle/50 p-3">
@@ -307,8 +328,7 @@ export function QuestExercisesView({
               </p>
             </div>
             <div className="flex items-center gap-2 rounded-full bg-accent-primary px-4 py-2 font-[var(--font-mono)] text-sm font-bold text-white">
-              <Sparkles className="h-4 w-4" />
-              +{XP_REWARDS.EXERCISE_BONUS_ALL} XP Bonus!
+              <Sparkles className="h-4 w-4" />+{XP_REWARDS.EXERCISE_BONUS_ALL} XP Bonus!
             </div>
           </motion.div>
         )}

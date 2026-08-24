@@ -3,8 +3,18 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, Pencil, Trash2, Loader2, Brain, Filter,
-  X, CheckCircle, FileText, MessageSquare, TextCursorInput, Atom,
+  Plus,
+  Pencil,
+  Trash2,
+  Loader2,
+  Brain,
+  Filter,
+  X,
+  CheckCircle,
+  FileText,
+  MessageSquare,
+  TextCursorInput,
+  Atom,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -85,7 +95,9 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
   const [typeFilter, setTypeFilter] = useState<ExerciseFilterType>("all");
   const [formData, setFormData] = useState<ExerciseFormData>(initialFormData);
   const [activeSection, setActiveSection] = useState<ExerciseSectionType>("long");
-  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id?: number }>({ show: false });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id?: number }>({
+    show: false,
+  });
 
   const fetchExercises = useCallback(async () => {
     setIsLoading(true);
@@ -184,7 +196,8 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
           type: apiType,
           problemMarkdown: apiType === "numerical" ? formData.question : undefined,
           solutionCode: apiType === "numerical" ? formData.solution : undefined,
-          visualizationHtml: apiType === "numerical" ? formData.visualizationHtml || undefined : undefined,
+          visualizationHtml:
+            apiType === "numerical" ? formData.visualizationHtml || undefined : undefined,
           blanksAnswer: apiType === "fill_in_blanks" ? formData.blanksAnswer : undefined,
           statements: apiType === "fill_in_blanks" ? formData.statements : undefined,
         });
@@ -205,7 +218,8 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
           type: apiType,
           problemMarkdown: apiType === "numerical" ? formData.question : undefined,
           solutionCode: apiType === "numerical" ? formData.solution : undefined,
-          visualizationHtml: apiType === "numerical" ? formData.visualizationHtml || undefined : undefined,
+          visualizationHtml:
+            apiType === "numerical" ? formData.visualizationHtml || undefined : undefined,
           blanksAnswer: apiType === "fill_in_blanks" ? formData.blanksAnswer : undefined,
           statements: apiType === "fill_in_blanks" ? formData.statements : undefined,
         });
@@ -315,12 +329,18 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
 
   const getTypeLabel = (type: string): string => {
     switch (type) {
-      case "short": return "Short";
-      case "long": return "Long";
-      case "numerical": return "Physics";
-      case "fill_in_blanks": return "Fill Blanks";
-      case "mcq": return "MCQ (Legacy)";
-      default: return type;
+      case "short":
+        return "Short";
+      case "long":
+        return "Long";
+      case "numerical":
+        return "Physics";
+      case "fill_in_blanks":
+        return "Fill Blanks";
+      case "mcq":
+        return "MCQ (Legacy)";
+      default:
+        return type;
     }
   };
 
@@ -408,7 +428,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
 
       {/* Add/Edit Form */}
       {showForm && (
-         <div className="rounded-xl border bg-bg-surface shadow-sm overflow-hidden animate-in slide-in-from-top duration-300">
+        <div className="rounded-xl border bg-bg-surface shadow-sm overflow-hidden animate-in slide-in-from-top duration-300">
           <div className="p-6 space-y-5">
             <div className="flex items-center justify-between">
               <h4 className="font-medium flex items-center gap-2">
@@ -419,12 +439,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                   </Badge>
                 )}
               </h4>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={resetForm}
-                className="text-text-secondary"
-              >
+              <Button variant="ghost" size="sm" onClick={resetForm} className="text-text-secondary">
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -437,7 +452,9 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                 </label>
                 <Input
                   value={formData.exerciseNumber}
-                  onChange={(e) => setFormData(prev => ({ ...prev, exerciseNumber: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, exerciseNumber: e.target.value }))
+                  }
                   placeholder="e.g., 1, 2, Q1"
                 />
               </div>
@@ -445,10 +462,12 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                 <label className="text-sm font-medium">Difficulty</label>
                 <Select
                   value={formData.difficulty}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
-                    difficulty: e.target.value as "easy" | "medium" | "hard" 
-                  }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      difficulty: e.target.value as "easy" | "medium" | "hard",
+                    }))
+                  }
                 >
                   <option value="easy">Easy</option>
                   <option value="medium">Medium</option>
@@ -460,10 +479,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
             {/* Exercise Type Tabs */}
             <div className="space-y-4">
               <label className="text-sm font-medium">Exercise Type</label>
-              <ExerciseTypeTabs
-                value={activeSection}
-                onValueChange={setActiveSection}
-              />
+              <ExerciseTypeTabs value={activeSection} onValueChange={setActiveSection} />
 
               {/* Animated Section Panel */}
               <AnimatePresence mode="wait">
@@ -499,7 +515,9 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                           </label>
                           <FillInBlanksEditor
                             statementsValue={formData.statements}
-                            onStatementsChange={(statements) => setFormData(prev => ({ ...prev, statements }))}
+                            onStatementsChange={(statements) =>
+                              setFormData((prev) => ({ ...prev, statements }))
+                            }
                           />
                         </div>
                       ) : (
@@ -509,7 +527,9 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                           </label>
                           <GithubMarkdownEditor
                             value={formData.question}
-                            onChange={(value) => setFormData(prev => ({ ...prev, question: value }))}
+                            onChange={(value) =>
+                              setFormData((prev) => ({ ...prev, question: value }))
+                            }
                             onImageUpload={handleImageUpload}
                             placeholder="Enter the exercise question in markdown..."
                             minHeight={activeSection === "short" ? 128 : 200}
@@ -525,7 +545,9 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                           </label>
                           <GithubMarkdownEditor
                             value={formData.solution}
-                            onChange={(value) => setFormData(prev => ({ ...prev, solution: value }))}
+                            onChange={(value) =>
+                              setFormData((prev) => ({ ...prev, solution: value }))
+                            }
                             onImageUpload={handleImageUpload}
                             placeholder="Enter the solution in markdown..."
                             minHeight={activeSection === "short" ? 128 : 200}
@@ -537,12 +559,14 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                       {activeSection === "physics" && (
                         <div className="space-y-2">
                           <label className="text-sm font-medium">Illustration (HTML/CSS/JS)</label>
-                           <p className="text-xs text-text-secondary">
+                          <p className="text-xs text-text-secondary">
                             Create an interactive visualization for students
                           </p>
                           <NumericalVisualizationEditor
                             value={formData.visualizationHtml}
-                            onChange={(value) => setFormData(prev => ({ ...prev, visualizationHtml: value }))}
+                            onChange={(value) =>
+                              setFormData((prev) => ({ ...prev, visualizationHtml: value }))
+                            }
                           />
                         </div>
                       )}
@@ -557,12 +581,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
             <Button variant="secondary" onClick={resetForm}>
               Cancel
             </Button>
-            <Button 
-              variant="primary" 
-              onClick={handleSave} 
-              disabled={isSaving}
-              className="gap-2"
-            >
+            <Button variant="primary" onClick={handleSave} disabled={isSaving} className="gap-2">
               {isSaving ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -629,7 +648,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
         <div className="space-y-3">
           {filteredExercises.map((exercise) => {
             return (
-              <div 
+              <div
                 key={exercise.id}
                 className="group rounded-xl border bg-bg-surface shadow-sm overflow-hidden transition-all hover:shadow-md hover:border-[var(--primary)]/20"
               >
@@ -642,7 +661,7 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                         <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] font-mono font-semibold text-sm">
                           {exercise.exerciseNumber}
                         </span>
-                        
+
                         {/* Type Badge */}
                         <Badge variant={getTypeBadgeVariant(exercise.type)} className="gap-1">
                           {getTypeLabel(exercise.type)}
@@ -650,10 +669,12 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
 
                         {/* Difficulty Indicator */}
                         <div className="flex items-center gap-1.5">
-                          <div className={cn(
-                            "w-2 h-2 rounded-full",
-                            getDifficultyColor(exercise.difficulty)
-                          )} />
+                          <div
+                            className={cn(
+                              "w-2 h-2 rounded-full",
+                              getDifficultyColor(exercise.difficulty)
+                            )}
+                          />
                           <span className="text-xs text-text-secondary capitalize">
                             {exercise.difficulty}
                           </span>
@@ -662,7 +683,9 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
 
                       {/* Question */}
                       <div className="text-sm font-medium mb-3 leading-relaxed prose prose-sm dark:prose-invert max-w-none">
-                        {exercise.type === "fill_in_blanks" && exercise.statements && exercise.statements.length > 0 ? (
+                        {exercise.type === "fill_in_blanks" &&
+                        exercise.statements &&
+                        exercise.statements.length > 0 ? (
                           <div className="space-y-1.5 not-prose">
                             <p className="text-text-primary flex items-center gap-1.5">
                               <TextCursorInput className="h-3.5 w-3.5 text-violet-500" />
@@ -688,29 +711,27 @@ export function ChapterExerciseManager({ chapterId }: ChapterExerciseManagerProp
                           Solution
                         </p>
                         <div className="text-sm text-text-secondary prose prose-sm dark:prose-invert max-w-none">
-                          <MarkdownMathRenderer content={
-                            exercise.solution.length > 300
-                              ? `${exercise.solution.substring(0, 300)}...`
-                              : exercise.solution
-                          } />
+                          <MarkdownMathRenderer
+                            content={
+                              exercise.solution.length > 300
+                                ? `${exercise.solution.substring(0, 300)}...`
+                                : exercise.solution
+                            }
+                          />
                         </div>
                       </div>
                     </div>
 
                     {/* Actions */}
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleEdit(exercise)}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(exercise)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setDeleteConfirm({ show: true, id: exercise.id })}
-                         className="text-accent-danger hover:text-accent-danger"
+                        className="text-accent-danger hover:text-accent-danger"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

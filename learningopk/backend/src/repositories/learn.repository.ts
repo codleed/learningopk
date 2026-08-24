@@ -13,7 +13,7 @@ import {
   quizQuestions,
   quizzes,
   revisionNotes,
-  subjects
+  subjects,
 } from "../lib/db/schema.js";
 import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
 import { quizRepository } from "./quiz.repository.js";
@@ -21,18 +21,20 @@ import { quizRepository } from "./quiz.repository.js";
 export class LearnRepository {
   async findAllBoards() {
     const cacheKey = "learn:boards";
-    const cached = await cacheService.get<Array<{
-      id: number;
-      name: string;
-      slug: string;
-    }>>(cacheKey);
+    const cached = await cacheService.get<
+      Array<{
+        id: number;
+        name: string;
+        slug: string;
+      }>
+    >(cacheKey);
     if (cached) return cached;
 
     const result = await db
       .select({
         id: boards.id,
         name: boards.name,
-        slug: boards.slug
+        slug: boards.slug,
       })
       .from(boards)
       .orderBy(asc(boards.name));
@@ -43,12 +45,14 @@ export class LearnRepository {
 
   async findAllBoardClasses() {
     const cacheKey = "learn:boardClasses";
-    const cached = await cacheService.get<Array<{
-      id: number;
-      boardId: number;
-      name: string;
-      slug: string;
-    }>>(cacheKey);
+    const cached = await cacheService.get<
+      Array<{
+        id: number;
+        boardId: number;
+        name: string;
+        slug: string;
+      }>
+    >(cacheKey);
     if (cached) return cached;
 
     const result = await db
@@ -56,7 +60,7 @@ export class LearnRepository {
         id: boardClasses.id,
         boardId: boardClasses.boardId,
         name: boardClasses.name,
-        slug: boardClasses.slug
+        slug: boardClasses.slug,
       })
       .from(boardClasses)
       .orderBy(asc(boardClasses.boardId), asc(boardClasses.name));
@@ -67,19 +71,21 @@ export class LearnRepository {
 
   async findAllSubjectsWithBoard() {
     const cacheKey = "learn:subjectsWithBoard";
-    const cached = await cacheService.get<Array<{
-      id: number;
-      name: string;
-      slug: string;
-      grade: string | null;
-      className: string | null;
-      classSlug: string | null;
-      boardClassId: number | null;
-      boardId: number;
-      boardName: string;
-      boardSlug: string;
-      coverImageUrl: string | null;
-    }>>(cacheKey);
+    const cached = await cacheService.get<
+      Array<{
+        id: number;
+        name: string;
+        slug: string;
+        grade: string | null;
+        className: string | null;
+        classSlug: string | null;
+        boardClassId: number | null;
+        boardId: number;
+        boardName: string;
+        boardSlug: string;
+        coverImageUrl: string | null;
+      }>
+    >(cacheKey);
     if (cached) return cached;
 
     const result = await db
@@ -88,18 +94,24 @@ export class LearnRepository {
         name: subjects.name,
         slug: subjects.slug,
         grade: subjects.grade,
-        className: sql<string | null>`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
+        className: sql<
+          string | null
+        >`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
         classSlug: sql<string | null>`coalesce(${boardClasses.slug}, ${subjects.grade}::text)`,
         boardClassId: subjects.boardClassId,
         boardId: subjects.boardId,
         boardName: boards.name,
         boardSlug: boards.slug,
-        coverImageUrl: subjects.coverImageUrl
+        coverImageUrl: subjects.coverImageUrl,
       })
       .from(subjects)
       .innerJoin(boards, eq(subjects.boardId, boards.id))
       .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
-      .orderBy(asc(subjects.boardId), asc(sql`coalesce(${boardClasses.name}, ${subjects.grade}::text)`), asc(subjects.name));
+      .orderBy(
+        asc(subjects.boardId),
+        asc(sql`coalesce(${boardClasses.name}, ${subjects.grade}::text)`),
+        asc(subjects.name)
+      );
 
     await cacheService.set(cacheKey, result, { ttlSeconds: 3600 });
     return result;
@@ -107,15 +119,17 @@ export class LearnRepository {
 
   async findAllSubjects() {
     const cacheKey = CacheKeys.subjectList();
-    const cached = await cacheService.get<Array<{
-      id: number;
-      boardId: number;
-      grade: string | null;
-      name: string;
-      slug: string;
-      icon: string | null;
-      description: string | null;
-    }>>(cacheKey);
+    const cached = await cacheService.get<
+      Array<{
+        id: number;
+        boardId: number;
+        grade: string | null;
+        name: string;
+        slug: string;
+        icon: string | null;
+        description: string | null;
+      }>
+    >(cacheKey);
     if (cached) return cached;
 
     const result = await db
@@ -126,7 +140,7 @@ export class LearnRepository {
         name: subjects.name,
         slug: subjects.slug,
         icon: subjects.icon,
-        description: subjects.description
+        description: subjects.description,
       })
       .from(subjects)
       .orderBy(asc(subjects.name));
@@ -146,7 +160,7 @@ export class LearnRepository {
         subjectId: subjects.id,
         subjectName: subjects.name,
         subjectSlug: subjects.slug,
-        subjectDescription: subjects.description
+        subjectDescription: subjects.description,
       })
       .from(subjects)
       .innerJoin(boards, eq(subjects.boardId, boards.id))
@@ -163,14 +177,16 @@ export class LearnRepository {
 
   async findChaptersBySubject(subjectId: number, isPublished = true) {
     const cacheKey = CacheKeys.chapterList(subjectId);
-    const cached = await cacheService.get<Array<{
-      id: number;
-      chapterNumber: number;
-      title: string;
-      slug: string;
-      isPublished: boolean;
-      coverImageUrl: string | null;
-    }>>(cacheKey);
+    const cached = await cacheService.get<
+      Array<{
+        id: number;
+        chapterNumber: number;
+        title: string;
+        slug: string;
+        isPublished: boolean;
+        coverImageUrl: string | null;
+      }>
+    >(cacheKey);
     if (cached) return cached;
 
     const result = await db
@@ -180,17 +196,27 @@ export class LearnRepository {
         title: chapters.title,
         slug: chapters.slug,
         isPublished: chapters.isPublished,
-        coverImageUrl: chapters.coverImageUrl
+        coverImageUrl: chapters.coverImageUrl,
       })
       .from(chapters)
-      .where(and(eq(chapters.subjectId, subjectId), isPublished ? eq(chapters.isPublished, true) : undefined))
+      .where(
+        and(
+          eq(chapters.subjectId, subjectId),
+          isPublished ? eq(chapters.isPublished, true) : undefined
+        )
+      )
       .orderBy(asc(chapters.chapterNumber));
 
     await cacheService.set(cacheKey, result, { ttlSeconds: 3600 });
     return result;
   }
 
-  async findChapterBySlug(params: { board: string; grade: string; subject: string; chapter: string }) {
+  async findChapterBySlug(params: {
+    board: string;
+    grade: string;
+    subject: string;
+    chapter: string;
+  }) {
     return db
       .select({
         chapterId: chapters.id,
@@ -205,7 +231,7 @@ export class LearnRepository {
         classSlug: boardClasses.slug,
         subjectId: subjects.id,
         subjectName: subjects.name,
-        subjectSlug: subjects.slug
+        subjectSlug: subjects.slug,
       })
       .from(chapters)
       .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
@@ -230,7 +256,7 @@ export class LearnRepository {
         chapterId: chapterSubparts.chapterId,
         orderIndex: chapterSubparts.orderIndex,
         heading: chapterSubparts.heading,
-        content: chapterSubparts.content
+        content: chapterSubparts.content,
       })
       .from(chapterSubparts)
       .where(eq(chapterSubparts.chapterId, chapterId))
@@ -248,7 +274,7 @@ export class LearnRepository {
         type: exercises.type,
         visualizationHtml: exercises.visualizationHtml,
         blanksAnswer: exercises.blanksAnswer,
-        statements: exercises.statements
+        statements: exercises.statements,
       })
       .from(exercises)
       .where(eq(exercises.chapterId, chapterId))
@@ -261,7 +287,7 @@ export class LearnRepository {
         id: flashcards.id,
         front: flashcards.front,
         back: flashcards.back,
-        orderIndex: flashcards.orderIndex
+        orderIndex: flashcards.orderIndex,
       })
       .from(flashcards)
       .where(eq(flashcards.chapterId, chapterId))
@@ -277,7 +303,7 @@ export class LearnRepository {
         title: quizzes.title,
         durationMinutes: quizzes.durationMinutes,
         totalMarks: quizzes.totalMarks,
-        type: quizzes.type
+        type: quizzes.type,
       })
       .from(quizzes)
       .where(and(eq(quizzes.chapterId, chapterId), eq(quizzes.type, "chapter_quiz")))
@@ -292,7 +318,7 @@ export class LearnRepository {
     // Check if there's a mock exam with custom duration
     const mockExamData = await db
       .select({
-        durationMinutes: mockExams.durationMinutes
+        durationMinutes: mockExams.durationMinutes,
       })
       .from(mockExams)
       .where(eq(mockExams.quizId, quiz.id))
@@ -302,26 +328,28 @@ export class LearnRepository {
     // For mock exams, use duration from mock_exams table (120 min) instead of quizzes table (90 min)
     const durationMinutes = mockExam?.durationMinutes ?? quiz.durationMinutes;
 
-    return [{
-      id: quiz.id,
-      title: quiz.title,
-      durationMinutes,
-      totalMarks: quiz.totalMarks,
-      type: quiz.type
-    }];
+    return [
+      {
+        id: quiz.id,
+        title: quiz.title,
+        durationMinutes,
+        totalMarks: quiz.totalMarks,
+        type: quiz.type,
+      },
+    ];
   }
 
   async findQuizQuestions(quizId: number) {
     // Use QuizRepository for quiz questions to avoid duplication
     const questions = await quizRepository.findQuestionsByQuizId(quizId);
-    return questions.map(q => ({
+    return questions.map((q) => ({
       id: q.id,
       question: q.question,
       optionA: q.optionA,
       optionB: q.optionB,
       optionC: q.optionC,
       optionD: q.optionD,
-      marks: q.marks
+      marks: q.marks,
     }));
   }
 
@@ -334,7 +362,7 @@ export class LearnRepository {
             keyFormulas: revisionNotes.keyFormulas,
             keyDefinitions: revisionNotes.keyDefinitions,
             commonMistakes: revisionNotes.commonMistakes,
-            examTips: revisionNotes.examTips
+            examTips: revisionNotes.examTips,
           })
           .from(revisionNotes)
           .where(eq(revisionNotes.chapterId, chapterId))

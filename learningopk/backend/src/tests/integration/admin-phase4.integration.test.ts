@@ -23,7 +23,7 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
     email,
     password: TEST_PASSWORD,
     class: "9th",
-    board: "fbise"
+    board: "fbise",
   });
 
   assert.ok(
@@ -54,7 +54,7 @@ const seedSettingFixture = async ({
   key,
   value,
   description,
-  updatedBy
+  updatedBy,
 }: {
   key: string;
   value: string;
@@ -100,14 +100,14 @@ test("admin notifications listing and creation enforce auth/role with validation
   const invalidCreate = await adminAgent.post("/api/admin/notifications").send({
     title: "Hi",
     message: "short",
-    audience: "all"
+    audience: "all",
   });
   assert.equal(invalidCreate.status, 400);
 
   const created = await adminAgent.post("/api/admin/notifications").send({
     title: "Maintenance window",
     message: "Platform maintenance starts at 10 PM with expected 15 minute downtime.",
-    audience: "students"
+    audience: "students",
   });
   assert.equal(created.status, 201);
   assert.equal(created.body.notification.audience, "students");
@@ -150,8 +150,16 @@ test("admin settings listing and update enforce auth/role and key validation", a
   const adminAgent = request.agent(app);
   const memberAgent = request.agent(app);
 
-  await signUp(adminAgent, "Phase4 Settings Admin", `tst_phase4_settings_admin_${Date.now()}@example.com`);
-  await signUp(memberAgent, "Phase4 Settings Member", `tst_phase4_settings_member_${Date.now()}@example.com`);
+  await signUp(
+    adminAgent,
+    "Phase4 Settings Admin",
+    `tst_phase4_settings_admin_${Date.now()}@example.com`
+  );
+  await signUp(
+    memberAgent,
+    "Phase4 Settings Member",
+    `tst_phase4_settings_member_${Date.now()}@example.com`
+  );
 
   const adminUser = await getSessionUser(adminAgent);
   await assignAdminRole(adminUser.id);
@@ -159,7 +167,7 @@ test("admin settings listing and update enforce auth/role and key validation", a
     key: "forum_auto_lock_hours",
     value: "24",
     description: "Auto-lock inactive forum threads after N hours.",
-    updatedBy: adminUser.id
+    updatedBy: adminUser.id,
   });
 
   const unauthenticated = await anonAgent.get("/api/admin/settings");
@@ -179,10 +187,14 @@ test("admin settings listing and update enforce auth/role and key validation", a
   const notFound = await adminAgent.post("/api/admin/settings/unknown_key").send({ value: "true" });
   assert.equal(notFound.status, 404);
 
-  const invalid = await adminAgent.post("/api/admin/settings/forum_auto_lock_hours").send({ value: "   " });
+  const invalid = await adminAgent
+    .post("/api/admin/settings/forum_auto_lock_hours")
+    .send({ value: "   " });
   assert.equal(invalid.status, 400);
 
-  const updated = await adminAgent.post("/api/admin/settings/forum_auto_lock_hours").send({ value: "48" });
+  const updated = await adminAgent
+    .post("/api/admin/settings/forum_auto_lock_hours")
+    .send({ value: "48" });
   assert.equal(updated.status, 200);
   assert.equal(updated.body.setting.key, "forum_auto_lock_hours");
   assert.equal(updated.body.setting.value, "48");
@@ -209,5 +221,3 @@ test("admin settings listing and update enforce auth/role and key validation", a
   assert.equal(settingsAudit.actor_id, adminUser.id);
   assert.match(settingsAudit.message, /forum_auto_lock_hours/i);
 });
-
-

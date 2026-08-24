@@ -51,7 +51,7 @@ export function CodeBlock({
     <div
       className={cn(
         "group relative rounded-lg border border-border-default overflow-hidden",
-        className,
+        className
       )}
     >
       {/* Header bar */}
@@ -63,9 +63,7 @@ export function CodeBlock({
           </span>
           {/* Optional filename */}
           {filename ? (
-            <span className="text-xs text-white/50 font-mono truncate max-w-48">
-              {filename}
-            </span>
+            <span className="text-xs text-white/50 font-mono truncate max-w-48">{filename}</span>
           ) : null}
         </div>
 
@@ -76,7 +74,7 @@ export function CodeBlock({
           className={cn(
             "flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition",
             "text-white/60 hover:text-white hover:bg-white/10",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40"
           )}
           aria-label={copied ? "Copied to clipboard" : "Copy code to clipboard"}
         >

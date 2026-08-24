@@ -33,7 +33,8 @@ const getShellBackgroundColor = async (page: Page) => {
   const shell = page.locator("main#main-content > div.rounded-\\[1\\.6rem\\]").first();
   return shell.evaluate((element) => getComputedStyle(element).backgroundColor);
 };
-const getShellWrapper = (page: Page) => page.locator("main#main-content > div.rounded-\\[1\\.6rem\\]");
+const getShellWrapper = (page: Page) =>
+  page.locator("main#main-content > div.rounded-\\[1\\.6rem\\]");
 
 test("login page is accessible for guests", async ({ page }) => {
   await page.goto("/login");
@@ -108,7 +109,9 @@ test("left rail can collapse and expand on desktop", async ({ page }) => {
   await expect(leftRail.getByText("Dashboard", { exact: true })).toBeVisible();
 });
 
-test("settings screen provides profile management and light/dark theme controls", async ({ page }) => {
+test("settings screen provides profile management and light/dark theme controls", async ({
+  page,
+}) => {
   await registerAndOpenDashboard("phase2_settings", page);
 
   await page.getByRole("link", { name: "Settings", exact: true }).click();
@@ -222,4 +225,3 @@ test("learn screens keep shell background theme-aware in dark mode", async ({ pa
   await expect(page.getByRole("heading", { name: /Chapter 1:/ })).toBeVisible();
   await expect(getShellWrapper(page)).toHaveCount(0);
 });
-

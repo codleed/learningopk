@@ -63,7 +63,8 @@ export const createChildLogger = (bindings?: Record<string, unknown>): pino.Logg
 export const createRequestLogger = () => {
   return (req: Request, res: Response, next: NextFunction): void => {
     const correlationId =
-      (typeof req.headers["x-correlation-id"] === "string" && req.headers["x-correlation-id"].length > 0)
+      typeof req.headers["x-correlation-id"] === "string" &&
+      req.headers["x-correlation-id"].length > 0
         ? req.headers["x-correlation-id"]
         : randomUUID();
 

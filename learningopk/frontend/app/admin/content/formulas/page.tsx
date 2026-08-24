@@ -9,7 +9,7 @@ export default async function FormulasPageRoute() {
 
   const [curriculumBoards, initialFormulas] = await Promise.all([
     getAdminCurriculumTree(cookieHeader).catch(() => []),
-    getAdminFormulas({ cookieHeader }).catch(() => [])
+    getAdminFormulas({ cookieHeader }).catch(() => []),
   ]);
 
   const boardCount = curriculumBoards.length;

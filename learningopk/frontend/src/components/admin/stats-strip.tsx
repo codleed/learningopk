@@ -15,9 +15,7 @@ type AdminStatsStripProps = {
 
 export function AdminStatsStrip({ stats, className }: AdminStatsStripProps) {
   return (
-    <div
-      className={cn("flex flex-wrap items-center gap-[var(--space-6)]", className)}
-    >
+    <div className={cn("flex flex-wrap items-center gap-[var(--space-6)]", className)}>
       {stats.map((stat, index) => (
         <div key={index} className="flex items-center gap-3">
           {stat.icon && (

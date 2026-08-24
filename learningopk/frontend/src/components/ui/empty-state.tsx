@@ -47,14 +47,10 @@ export function EmptyState({
       </h3>
 
       {description ? (
-        <p className="mt-1.5 max-w-sm text-sm text-text-secondary">
-          {description}
-        </p>
+        <p className="mt-1.5 max-w-sm text-sm text-text-secondary">{description}</p>
       ) : null}
 
-      {action ? (
-        <div className="mt-5">{action}</div>
-      ) : null}
+      {action ? <div className="mt-5">{action}</div> : null}
     </section>
   );
 }

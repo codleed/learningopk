@@ -33,20 +33,14 @@ export function AdminCommunityPanel({ initialEntries, initialTotal }: AdminCommu
   const { pushToast } = useToast();
   const hasMore = entries.length < total;
 
-  const runFetch = async ({
-    nextPage,
-    append
-  }: {
-    nextPage: number;
-    append: boolean;
-  }) => {
+  const runFetch = async ({ nextPage, append }: { nextPage: number; append: boolean }) => {
     try {
       const payload = await getAdminCommunityThreads({
         page: nextPage,
         pageSize: communityPageSize,
         solved,
         pinned,
-        flagState
+        flagState,
       });
 
       setEntries((previous) => (append ? [...previous, ...payload.entries] : payload.entries));
@@ -57,7 +51,7 @@ export function AdminCommunityPanel({ initialEntries, initialTotal }: AdminCommu
       pushToast({
         tone: "error",
         title: "Community data unavailable",
-        description: message
+        description: message,
       });
     }
   };
@@ -67,7 +61,7 @@ export function AdminCommunityPanel({ initialEntries, initialTotal }: AdminCommu
     try {
       await runFetch({
         nextPage: 1,
-        append: false
+        append: false,
       });
     } finally {
       setIsApplying(false);
@@ -83,7 +77,7 @@ export function AdminCommunityPanel({ initialEntries, initialTotal }: AdminCommu
     try {
       await runFetch({
         nextPage: page + 1,
-        append: true
+        append: true,
       });
     } finally {
       setIsLoadingMore(false);
@@ -96,7 +90,13 @@ export function AdminCommunityPanel({ initialEntries, initialTotal }: AdminCommu
       description="Review community thread volume, engagement, and open moderation pressure."
       actions={
         hasMore ? (
-          <Button type="button" size="sm" variant="secondary" onClick={() => void loadMore()} disabled={isLoadingMore}>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => void loadMore()}
+            disabled={isLoadingMore}
+          >
             {isLoadingMore ? "Loading..." : "Load more"}
           </Button>
         ) : null
@@ -105,7 +105,10 @@ export function AdminCommunityPanel({ initialEntries, initialTotal }: AdminCommu
       <div className="space-y-4">
         <div className="grid gap-3 md:grid-cols-4 md:items-end">
           <div className="space-y-1.5">
-            <label htmlFor="community-solved" className="text-xs font-semibold uppercase tracking-wide text-foreground">
+            <label
+              htmlFor="community-solved"
+              className="text-xs font-semibold uppercase tracking-wide text-foreground"
+            >
               Solved state
             </label>
             <Select
@@ -120,7 +123,10 @@ export function AdminCommunityPanel({ initialEntries, initialTotal }: AdminCommu
             </Select>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="community-pinned" className="text-xs font-semibold uppercase tracking-wide text-foreground">
+            <label
+              htmlFor="community-pinned"
+              className="text-xs font-semibold uppercase tracking-wide text-foreground"
+            >
               Pinned state
             </label>
             <Select
@@ -152,7 +158,12 @@ export function AdminCommunityPanel({ initialEntries, initialTotal }: AdminCommu
               <option value="noOpenFlags">No open flags</option>
             </Select>
           </div>
-          <Button type="button" variant="secondary" onClick={() => void applyFilters()} disabled={isApplying}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => void applyFilters()}
+            disabled={isApplying}
+          >
             {isApplying ? "Applying..." : "Apply filters"}
           </Button>
         </div>

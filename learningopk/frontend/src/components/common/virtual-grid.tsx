@@ -51,10 +51,7 @@ const BREAKPOINTS = {
 /**
  * Returns the number of columns appropriate for the given viewport width.
  */
-function getColumnsForWidth(
-  width: number,
-  columns: GridColumns,
-): number {
+function getColumnsForWidth(width: number, columns: GridColumns): number {
   if (width >= BREAKPOINTS.xl) return columns.xl;
   if (width >= BREAKPOINTS.lg) return columns.lg;
   if (width >= BREAKPOINTS.md) return columns.md;
@@ -125,14 +122,8 @@ export function VirtualGrid<T>({
   const virtualRows = virtualizer.getVirtualItems();
 
   return (
-    <div
-      ref={parentRef}
-      className={cn("overflow-auto scrollbar-thin", className)}
-    >
-      <div
-        className="relative w-full"
-        style={{ height: `${virtualizer.getTotalSize()}px` }}
-      >
+    <div ref={parentRef} className={cn("overflow-auto scrollbar-thin", className)}>
+      <div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
         {virtualRows.map((virtualRow) => {
           const row = rows[virtualRow.index];
           if (!row) return null;

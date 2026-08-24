@@ -32,11 +32,10 @@ Express backend to keep the Mistral API key secure.
   production business APIs in Next.js route handlers for this project.**
 
 - **Streaming AI responses --- use Vercel AI SDK\'s useChat in frontend
-  + streamText in backend for real-time Socratic dialogue**
+  - streamText in backend for real-time Socratic dialogue**
 
 - **PDF seeding is a one-time CLI script --- not part of the running
   app. Run once to populate the DB.**
 
 - **No external file storage needed --- store extracted text in
   PostgreSQL, not binary PDFs**
-

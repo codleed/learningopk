@@ -34,7 +34,7 @@ export function AdminModerationPanel({ initialEntries, initialTotal }: AdminMode
     nextPage,
     nextStatus,
     nextTargetType,
-    append
+    append,
   }: {
     nextPage: number;
     nextStatus: ModerationStatusFilter;
@@ -46,30 +46,34 @@ export function AdminModerationPanel({ initialEntries, initialTotal }: AdminMode
         page: nextPage,
         pageSize: moderationPageSize,
         status: nextStatus,
-        ...(nextTargetType ? { targetType: nextTargetType } : {})
+        ...(nextTargetType ? { targetType: nextTargetType } : {}),
       });
 
       setEntries((previous) => (append ? [...previous, ...payload.entries] : payload.entries));
       setTotal(payload.total);
       setPage(payload.page);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to refresh moderation queue.";
+      const message =
+        error instanceof Error ? error.message : "Unable to refresh moderation queue.";
       pushToast({
         tone: "error",
         title: "Moderation queue unavailable",
-        description: message
+        description: message,
       });
     }
   };
 
-  const refreshWithFilters = async (nextStatus: ModerationStatusFilter, nextTargetType: ModerationTargetTypeFilter) => {
+  const refreshWithFilters = async (
+    nextStatus: ModerationStatusFilter,
+    nextTargetType: ModerationTargetTypeFilter
+  ) => {
     setIsRefreshing(true);
     try {
       await loadFlags({
         nextPage: 1,
         nextStatus,
         nextTargetType,
-        append: false
+        append: false,
       });
     } finally {
       setIsRefreshing(false);
@@ -87,7 +91,7 @@ export function AdminModerationPanel({ initialEntries, initialTotal }: AdminMode
         nextPage: page + 1,
         nextStatus: status,
         nextTargetType: targetType,
-        append: true
+        append: true,
       });
     } finally {
       setIsLoadingMore(false);
@@ -110,7 +114,13 @@ export function AdminModerationPanel({ initialEntries, initialTotal }: AdminMode
             {isRefreshing ? "Refreshing..." : "Refresh"}
           </Button>
           {entries.length < total ? (
-            <Button type="button" size="sm" variant="secondary" onClick={() => void loadMore()} disabled={isLoadingMore}>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => void loadMore()}
+              disabled={isLoadingMore}
+            >
               {isLoadingMore ? "Loading..." : "Load more"}
             </Button>
           ) : null}
@@ -120,7 +130,10 @@ export function AdminModerationPanel({ initialEntries, initialTotal }: AdminMode
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <label htmlFor="moderation-status" className="text-xs font-semibold uppercase tracking-wide text-foreground">
+            <label
+              htmlFor="moderation-status"
+              className="text-xs font-semibold uppercase tracking-wide text-foreground"
+            >
               Status
             </label>
             <Select

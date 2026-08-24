@@ -27,11 +27,9 @@ const contentPaddingClasses = {
  * Check whether a breadcrumbs prop is a structured BreadcrumbItem array
  * (as expected by the canonical PageHeader) vs. arbitrary ReactNode markup.
  */
-function isBreadcrumbItemArray(
-  value: BreadcrumbItem[] | ReactNode,
-): value is BreadcrumbItem[] {
-  return Array.isArray(value) && value.every(
-    (v) => typeof v === "object" && v !== null && "label" in v,
+function isBreadcrumbItemArray(value: BreadcrumbItem[] | ReactNode): value is BreadcrumbItem[] {
+  return (
+    Array.isArray(value) && value.every((v) => typeof v === "object" && v !== null && "label" in v)
   );
 }
 
@@ -58,20 +56,22 @@ export function PageContainer({
   return (
     <div className={cn("mx-auto w-full max-w-7xl px-4 pb-14 pt-6 sm:px-6 lg:px-8", className)}>
       {/* Render raw ReactNode breadcrumbs above the header (legacy compat) */}
-      {breadcrumbsNode && (
-        <div className="mb-3 animate-fade-in">{breadcrumbsNode}</div>
-      )}
+      {breadcrumbsNode && <div className="mb-3 animate-fade-in">{breadcrumbsNode}</div>}
 
       {hasHeader && (
         <div className={cn("border-b border-border-default/75 pb-6", headerClassName)}>
           <PageHeader
             title={typeof title === "string" ? title : String(title ?? "")}
-            subtitle={typeof subtitle === "string" ? subtitle : subtitle ? String(subtitle) : undefined}
+            subtitle={
+              typeof subtitle === "string" ? subtitle : subtitle ? String(subtitle) : undefined
+            }
             breadcrumbs={structuredBreadcrumbs}
             actions={actions}
           />
           {headerExtra && (
-            <div className="mt-2 animate-slide-up" style={{ animationDelay: "100ms" }}>{headerExtra}</div>
+            <div className="mt-2 animate-slide-up" style={{ animationDelay: "100ms" }}>
+              {headerExtra}
+            </div>
           )}
         </div>
       )}
@@ -101,11 +101,7 @@ export function ContentSection({
 }: ContentSectionProps) {
   return (
     <section
-      className={cn(
-        "pb-6",
-        !noBorder && "border-b border-border-default/70",
-        className
-      )}
+      className={cn("pb-6", !noBorder && "border-b border-border-default/70", className)}
       {...props}
     >
       {(title || subtitle || actions) && (
@@ -133,12 +129,7 @@ type PageFooterProps = ComponentPropsWithoutRef<"div"> & {
   sticky?: boolean;
 };
 
-export function PageFooter({
-  sticky = false,
-  className,
-  children,
-  ...props
-}: PageFooterProps) {
+export function PageFooter({ sticky = false, className, children, ...props }: PageFooterProps) {
   return (
     <div
       className={cn(

@@ -9,7 +9,12 @@ import { boards } from "../lib/db/schema.js";
 import { eq } from "drizzle-orm";
 
 export const pastPaperService = {
-  async startAttempt(userId: string, mockExamId: number, userClass?: string, userBoardSlug?: string) {
+  async startAttempt(
+    userId: string,
+    mockExamId: number,
+    userClass?: string,
+    userBoardSlug?: string
+  ) {
     const paper = await pastPaperRepository.getPaperById(mockExamId);
     if (!paper) throw new Error("PAST_PAPER_NOT_FOUND");
     if (!paper.published) throw new Error("PAST_PAPER_NOT_AVAILABLE");
@@ -46,26 +51,39 @@ export const pastPaperService = {
       userId,
       mockExamId,
       timeLimitSeconds,
-      totalMarks
+      totalMarks,
     });
 
     return { attempt, exercises, savedAnswers: {} as Record<number, unknown> };
   },
 
-  async saveAnswer(userId: string, attemptId: string, exerciseId: number, answer: unknown, mockExamId?: number) {
+  async saveAnswer(
+    userId: string,
+    attemptId: string,
+    exerciseId: number,
+    answer: unknown,
+    mockExamId?: number
+  ) {
     const data = await pastPaperRepository.getAttemptWithAnswers(attemptId, userId);
     if (!data) throw new Error("ATTEMPT_NOT_FOUND");
     if (data.attempt.status !== "in_progress") throw new Error("ATTEMPT_ALREADY_COMPLETED");
-    if (mockExamId !== undefined && data.attempt.mockExamId !== mockExamId) throw new Error("ATTEMPT_NOT_FOUND");
+    if (mockExamId !== undefined && data.attempt.mockExamId !== mockExamId)
+      throw new Error("ATTEMPT_NOT_FOUND");
 
     await pastPaperRepository.upsertAnswer({ attemptId, exerciseId, answer });
   },
 
-  async submitAttempt(userId: string, attemptId: string, status: "submitted" | "timed_out" = "submitted", mockExamId?: number) {
+  async submitAttempt(
+    userId: string,
+    attemptId: string,
+    status: "submitted" | "timed_out" = "submitted",
+    mockExamId?: number
+  ) {
     const data = await pastPaperRepository.getAttemptWithAnswers(attemptId, userId);
     if (!data) throw new Error("ATTEMPT_NOT_FOUND");
     if (data.attempt.status !== "in_progress") throw new Error("ATTEMPT_ALREADY_COMPLETED");
-    if (mockExamId !== undefined && data.attempt.mockExamId !== mockExamId) throw new Error("ATTEMPT_NOT_FOUND");
+    if (mockExamId !== undefined && data.attempt.mockExamId !== mockExamId)
+      throw new Error("ATTEMPT_NOT_FOUND");
 
     // Atomically claim the attempt to prevent concurrent processing
     const claimed = await pastPaperRepository.claimAttempt(attemptId);
@@ -77,7 +95,7 @@ export const pastPaperService = {
     }
 
     const graded = autoGradeExercises(
-      data.exercises.map(e => ({
+      data.exercises.map((e) => ({
         id: e.id,
         type: e.type as GradableExercise["type"],
         options: e.options as GradableExercise["options"],
@@ -85,29 +103,29 @@ export const pastPaperService = {
         blanksAnswer: e.blanksAnswer,
         statements: e.statements as GradableExercise["statements"],
         marks: e.marks,
-        solution: e.solution ?? undefined
+        solution: e.solution ?? undefined,
       })),
       answersMap
     );
 
     // Collect exercises needing AI grading
     const aiRequests = graded
-      .filter(q => q.needsAiGrading)
-      .map(q => {
-        const exercise = data.exercises.find(e => e.id === q.exerciseId);
+      .filter((q) => q.needsAiGrading)
+      .map((q) => {
+        const exercise = data.exercises.find((e) => e.id === q.exerciseId);
         return {
           exerciseId: q.exerciseId,
           question: exercise?.question ?? "",
           studentAnswer: String(answersMap[q.exerciseId] ?? ""),
           modelSolution: exercise?.solution ?? "",
-          maxMarks: q.maxMarks
+          maxMarks: q.maxMarks,
         };
       });
 
     if (aiRequests.length > 0) {
       const aiResults = await gradeWithAI(aiRequests);
       for (const aiResult of aiResults) {
-        const q = graded.find(g => g.exerciseId === aiResult.exerciseId);
+        const q = graded.find((g) => g.exerciseId === aiResult.exerciseId);
         if (q) {
           q.score = aiResult.score;
           q.aiFeedback = aiResult.feedback;
@@ -115,7 +133,7 @@ export const pastPaperService = {
             attemptId,
             exerciseId: aiResult.exerciseId,
             score: aiResult.score,
-            aiFeedback: aiResult.feedback
+            aiFeedback: aiResult.feedback,
           });
         }
       }
@@ -127,7 +145,7 @@ export const pastPaperService = {
         await pastPaperRepository.updateAnswerScore({
           attemptId,
           exerciseId: q.exerciseId,
-          score: q.score
+          score: q.score,
         });
       }
     }
@@ -135,7 +153,9 @@ export const pastPaperService = {
     const { totalScore, totalMarks, percentage } = calculateTotalScore(graded);
 
     // Award XP proportional to percentage
-    const xpToAward = Math.round((percentage / 100) * (totalMarks > 0 ? Math.min(totalMarks, 100) : 50));
+    const xpToAward = Math.round(
+      (percentage / 100) * (totalMarks > 0 ? Math.min(totalMarks, 100) : 50)
+    );
     await xpService.awardXp(userId, xpToAward, "past_paper_attempt");
 
     // Record progress event
@@ -144,7 +164,7 @@ export const pastPaperService = {
     await pastPaperRepository.finalizeAttempt(attemptId, {
       status,
       score: totalScore,
-      percentage
+      percentage,
     });
 
     return {
@@ -152,11 +172,11 @@ export const pastPaperService = {
       totalScore,
       totalMarks,
       percentage,
-      gradedQuestions: graded.map(q => ({
+      gradedQuestions: graded.map((q) => ({
         ...q,
-        userAnswer: answersMap[q.exerciseId]
+        userAnswer: answersMap[q.exerciseId],
       })),
-      xpAwarded: xpToAward
+      xpAwarded: xpToAward,
     };
-  }
+  },
 };

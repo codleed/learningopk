@@ -42,11 +42,7 @@ function TopicTag({
   onRemove: (topic: string) => void;
 }) {
   return (
-    <Badge
-      variant={variant}
-      size="sm"
-      className="group/tag gap-1 pr-1 cursor-default select-none"
-    >
+    <Badge variant={variant} size="sm" className="group/tag gap-1 pr-1 cursor-default select-none">
       <span className="max-w-[140px] truncate">{topic}</span>
       <button
         type="button"
@@ -122,9 +118,7 @@ function AiMemoryEmpty() {
           <Sparkles className="h-6 w-6 text-accent-primary" aria-hidden />
         </div>
         <div className="text-center space-y-1">
-          <p className="text-sm font-medium text-text-primary">
-            No memory yet
-          </p>
+          <p className="text-sm font-medium text-text-primary">No memory yet</p>
           <p className="text-xs text-text-secondary max-w-[220px]">
             Chat with the AI tutor or take quizzes — it&apos;ll learn about you automatically.
           </p>
@@ -164,54 +158,59 @@ export function AiMemoryCard() {
     }
 
     void load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   /* ---- Remove weak topic ---- */
-  const handleRemoveWeakTopic = useCallback(async (topic: string) => {
-    if (!context) return;
-    setContext((prev) =>
-      prev ? { ...prev, weakTopics: prev.weakTopics.filter((t) => t !== topic) } : prev
-    );
-    try {
-      await removeWeakTopic(topic);
-    } catch {
+  const handleRemoveWeakTopic = useCallback(
+    async (topic: string) => {
+      if (!context) return;
       setContext((prev) =>
-        prev ? { ...prev, weakTopics: [...prev.weakTopics, topic] } : prev
+        prev ? { ...prev, weakTopics: prev.weakTopics.filter((t) => t !== topic) } : prev
       );
-    }
-  }, [context]);
+      try {
+        await removeWeakTopic(topic);
+      } catch {
+        setContext((prev) => (prev ? { ...prev, weakTopics: [...prev.weakTopics, topic] } : prev));
+      }
+    },
+    [context]
+  );
 
   /* ---- Remove strong topic ---- */
-  const handleRemoveStrongTopic = useCallback(async (topic: string) => {
-    if (!context) return;
-    setContext((prev) =>
-      prev ? { ...prev, strongTopics: prev.strongTopics.filter((t) => t !== topic) } : prev
-    );
-    try {
-      await removeStrongTopic(topic);
-    } catch {
+  const handleRemoveStrongTopic = useCallback(
+    async (topic: string) => {
+      if (!context) return;
       setContext((prev) =>
-        prev ? { ...prev, strongTopics: [...prev.strongTopics, topic] } : prev
+        prev ? { ...prev, strongTopics: prev.strongTopics.filter((t) => t !== topic) } : prev
       );
-    }
-  }, [context]);
+      try {
+        await removeStrongTopic(topic);
+      } catch {
+        setContext((prev) =>
+          prev ? { ...prev, strongTopics: [...prev.strongTopics, topic] } : prev
+        );
+      }
+    },
+    [context]
+  );
 
   /* ---- Update preferred style ---- */
-  const handleStyleChange = useCallback(async (style: string) => {
-    if (!context) return;
-    const prevStyle = context.preferredExplanationStyle;
-    setContext((prev) =>
-      prev ? { ...prev, preferredExplanationStyle: style } : prev
-    );
-    try {
-      await updateAiContext({ preferredExplanationStyle: style });
-    } catch {
-      setContext((prev) =>
-        prev ? { ...prev, preferredExplanationStyle: prevStyle } : prev
-      );
-    }
-  }, [context]);
+  const handleStyleChange = useCallback(
+    async (style: string) => {
+      if (!context) return;
+      const prevStyle = context.preferredExplanationStyle;
+      setContext((prev) => (prev ? { ...prev, preferredExplanationStyle: style } : prev));
+      try {
+        await updateAiContext({ preferredExplanationStyle: style });
+      } catch {
+        setContext((prev) => (prev ? { ...prev, preferredExplanationStyle: prevStyle } : prev));
+      }
+    },
+    [context]
+  );
 
   /* ---- Render states ---- */
   if (loading) return <AiMemorySkeleton />;
@@ -229,9 +228,7 @@ export function AiMemoryCard() {
         </CardHeader>
         <CardBody className="flex-1 flex flex-col items-center justify-center gap-2 py-6">
           <AlertTriangle className="h-8 w-8 text-text-muted" aria-hidden />
-          <p className="text-xs text-text-secondary text-center">
-            Could not load AI memory.
-          </p>
+          <p className="text-xs text-text-secondary text-center">Could not load AI memory.</p>
         </CardBody>
       </Card>
     );
@@ -323,11 +320,7 @@ export function AiMemoryCard() {
             placeholder="Choose style…"
           >
             {STYLE_OPTIONS.map((opt) => (
-              <SelectItem
-                key={opt.value}
-                value={opt.value}
-                description={opt.description}
-              >
+              <SelectItem key={opt.value} value={opt.value} description={opt.description}>
                 {opt.label}
               </SelectItem>
             ))}

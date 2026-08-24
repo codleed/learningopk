@@ -1,19 +1,19 @@
 /**
  * Standard API Response Helper
- * 
+ *
  * Provides consistent response shapes across all API endpoints.
- * 
+ *
  * Response Shapes:
- * 
+ *
  * Success (with data):
  * { data: T }
- * 
+ *
  * Success (with pagination):
  * { data: T[], pagination: { page, limit, total, totalPages } }
- * 
+ *
  * Success (no content):
  * { success: true }
- * 
+ *
  * Error:
  * { error: string, code?: string, details?: unknown }
  */
@@ -66,15 +66,19 @@ export function errorResponse(
   code?: string,
   details?: unknown
 ): ApiResponse<null> {
-  return { error: message, ...(code !== undefined && { code }), ...(details !== undefined && { details }) };
+  return {
+    error: message,
+    ...(code !== undefined && { code }),
+    ...(details !== undefined && { details }),
+  };
 }
 
 /**
  * Usage Example:
- * 
+ *
  * // In your route handler
  * import { successResponse, errorResponse } from './response';
- * 
+ *
  * router.get('/users', async (req, res) => {
  *   try {
  *     const users = await getUsers();

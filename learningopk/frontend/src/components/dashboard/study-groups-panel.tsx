@@ -16,16 +16,31 @@ export function StudyGroupsPanel({ groups }: { groups: StudyGroupsListResponse["
   const [invites, setInvites] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const parsedInvites = useMemo(() => invites.split(",").map((item) => item.trim()).filter(Boolean), [invites]);
+  const parsedInvites = useMemo(
+    () =>
+      invites
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean),
+    [invites]
+  );
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
       await createStudyGroup({ name, invites: parsedInvites });
-      pushToast({ title: "Study group created", description: "Shared progress and async notifications are now live.", tone: "success" });
+      pushToast({
+        title: "Study group created",
+        description: "Shared progress and async notifications are now live.",
+        tone: "success",
+      });
       window.location.reload();
     } catch (error) {
-      pushToast({ title: "Unable to create study group", description: error instanceof Error ? error.message : "Please try again.", tone: "error" });
+      pushToast({
+        title: "Unable to create study group",
+        description: error instanceof Error ? error.message : "Please try again.",
+        tone: "error",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -55,14 +70,27 @@ export function StudyGroupsPanel({ groups }: { groups: StudyGroupsListResponse["
 
       {showCreateForm && (
         <CardBody className="space-y-4 border-b border-border-default/60">
-          <Input label="Group name" placeholder="e.g. Physics Sprint Crew" value={name} onChange={(event) => setName(event.target.value)} />
-          <Input label="Invite classmates" placeholder="username or email, separated by commas" value={invites} onChange={(event) => setInvites(event.target.value)} />
+          <Input
+            label="Group name"
+            placeholder="e.g. Physics Sprint Crew"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+          <Input
+            label="Invite classmates"
+            placeholder="username or email, separated by commas"
+            value={invites}
+            onChange={(event) => setInvites(event.target.value)}
+          />
           <div className="rounded-xl border border-border-default bg-bg-subtle/70 p-4 text-sm text-text-secondary">
-            Members are added immediately if they already exist. Unknown usernames/emails are rejected.
+            Members are added immediately if they already exist. Unknown usernames/emails are
+            rejected.
           </div>
           <div className="flex items-center justify-between">
             <p className="text-xs text-text-secondary">Max 6 members per group.</p>
-            <Button loading={isSubmitting} onClick={handleSubmit} iconRight={<Sparkles />}>Create group</Button>
+            <Button loading={isSubmitting} onClick={handleSubmit} iconRight={<Sparkles />}>
+              Create group
+            </Button>
           </div>
         </CardBody>
       )}
@@ -72,24 +100,38 @@ export function StudyGroupsPanel({ groups }: { groups: StudyGroupsListResponse["
           <div className="py-8 text-center">
             <Users className="mx-auto h-8 w-8 text-text-muted" aria-hidden />
             <p className="mt-2 text-sm font-medium text-text-secondary">No groups yet</p>
-            <p className="mt-1 text-xs text-text-muted">Start with one high-signal study group instead of a noisy chat room.</p>
+            <p className="mt-1 text-xs text-text-muted">
+              Start with one high-signal study group instead of a noisy chat room.
+            </p>
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {groups.map((group) => (
-              <div key={group.id} className="flex items-center justify-between rounded-xl border border-border-default bg-bg-base p-4">
+              <div
+                key={group.id}
+                className="flex items-center justify-between rounded-xl border border-border-default bg-bg-base p-4"
+              >
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-text-primary truncate">{group.name}</p>
-                  <p className="text-xs text-text-muted">{group.memberCount} members · {new Date(group.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                  <p className="text-xs text-text-muted">
+                    {group.memberCount} members ·{" "}
+                    {new Date(group.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-3">
                   {group.notificationCount > 0 ? (
                     <div className="inline-flex items-center gap-1 rounded-full border border-accent-warning/30 bg-accent-warning-light px-2 py-1 text-xs font-semibold text-accent-warning">
-                      <Bell className="h-3 w-3" />{group.notificationCount}
+                      <Bell className="h-3 w-3" />
+                      {group.notificationCount}
                     </div>
                   ) : null}
                   <Link href={`/dashboard/groups/${group.id}`}>
-                    <Button variant="secondary" size="sm">Open</Button>
+                    <Button variant="secondary" size="sm">
+                      Open
+                    </Button>
                   </Link>
                 </div>
               </div>

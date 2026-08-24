@@ -9,7 +9,7 @@ export default async function AdminBackupPage() {
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
   const payload = await getAdminBackups({ cookieHeader }).catch(() => ({
-    backups: []
+    backups: [],
   }));
 
   return (
@@ -19,7 +19,10 @@ export default async function AdminBackupPage() {
         title="Backup & Restore"
         subtitle="Create, restore, and manage database backup snapshots."
         actions={
-          <Link href="/admin" className="text-sm font-medium text-text-primary underline underline-offset-4">
+          <Link
+            href="/admin"
+            className="text-sm font-medium text-text-primary underline underline-offset-4"
+          >
             Back to admin
           </Link>
         }

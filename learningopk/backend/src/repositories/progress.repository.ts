@@ -13,16 +13,12 @@ import {
   subjects,
   userActivityLog,
   userDailyMomentumGoals,
-  userProgress
+  userProgress,
 } from "../lib/db/schema.js";
 
 export class ProgressRepository {
   async findChapterById(chapterId: number) {
-    return db
-      .select({ id: chapters.id })
-      .from(chapters)
-      .where(eq(chapters.id, chapterId))
-      .limit(1);
+    return db.select({ id: chapters.id }).from(chapters).where(eq(chapters.id, chapterId)).limit(1);
   }
 
   async findSubjectBySlug(boardSlug: string, grade: "9" | "10", subjectSlug: string) {
@@ -37,7 +33,7 @@ export class ProgressRepository {
             grade: subjects.grade,
             boardName: boards.name,
             boardSlug: boards.slug,
-            examDate: subjects.examDate
+            examDate: subjects.examDate,
           })
           .from(subjects)
           .innerJoin(boards, eq(subjects.boardId, boards.id))
@@ -57,7 +53,7 @@ export class ProgressRepository {
             grade: subjects.grade,
             boardName: boards.name,
             boardSlug: boards.slug,
-            examDate: sql<Date | null>`null`
+            examDate: sql<Date | null>`null`,
           })
           .from(subjects)
           .innerJoin(boards, eq(subjects.boardId, boards.id))
@@ -85,11 +81,14 @@ export class ProgressRepository {
             exercisesViewed: userProgress.exercisesViewed,
             quizAttemptsCount: userProgress.quizAttemptsCount,
             quizBestScore: userProgress.quizBestScore,
-            examDate: subjects.examDate
+            examDate: subjects.examDate,
           })
           .from(chapters)
           .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
-          .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+          .leftJoin(
+            userProgress,
+            and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId))
+          )
           .where(and(eq(chapters.subjectId, subjectId), eq(chapters.isPublished, true)))
           .orderBy(asc(chapters.chapterNumber)),
       () =>
@@ -103,11 +102,14 @@ export class ProgressRepository {
             exercisesViewed: userProgress.exercisesViewed,
             quizAttemptsCount: userProgress.quizAttemptsCount,
             quizBestScore: userProgress.quizBestScore,
-            examDate: sql<Date | null>`null`
+            examDate: sql<Date | null>`null`,
           })
           .from(chapters)
           .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
-          .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+          .leftJoin(
+            userProgress,
+            and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId))
+          )
           .where(and(eq(chapters.subjectId, subjectId), eq(chapters.isPublished, true)))
           .orderBy(asc(chapters.chapterNumber))
     );
@@ -117,7 +119,7 @@ export class ProgressRepository {
     return db
       .select({
         chapterId: quizzes.chapterId,
-        totalMarks: quizzes.totalMarks
+        totalMarks: quizzes.totalMarks,
       })
       .from(quizzes)
       .innerJoin(chapters, eq(quizzes.chapterId, chapters.id))
@@ -130,7 +132,7 @@ export class ProgressRepository {
       .select({
         activityAt: userProgress.visitedAt,
         exercisesViewed: userProgress.exercisesViewed,
-        quizAttemptsCount: userProgress.quizAttemptsCount
+        quizAttemptsCount: userProgress.quizAttemptsCount,
       })
       .from(userProgress)
       .where(eq(userProgress.userId, userId));
@@ -142,7 +144,7 @@ export class ProgressRepository {
       () =>
         db
           .select({
-            occurredAt: userActivityLog.occurredAt
+            occurredAt: userActivityLog.occurredAt,
           })
           .from(userActivityLog)
           .where(eq(userActivityLog.userId, userId)),
@@ -151,7 +153,7 @@ export class ProgressRepository {
           .select({
             activityAt: userProgress.visitedAt,
             exercisesViewed: userProgress.exercisesViewed,
-            quizAttemptsCount: userProgress.quizAttemptsCount
+            quizAttemptsCount: userProgress.quizAttemptsCount,
           })
           .from(userProgress)
           .where(eq(userProgress.userId, userId));
@@ -169,7 +171,13 @@ export class ProgressRepository {
         const rows = await db
           .select({ id: userActivityLog.id })
           .from(userActivityLog)
-          .where(and(eq(userActivityLog.userId, userId), gte(userActivityLog.occurredAt, startUtc), lt(userActivityLog.occurredAt, endUtc)))
+          .where(
+            and(
+              eq(userActivityLog.userId, userId),
+              gte(userActivityLog.occurredAt, startUtc),
+              lt(userActivityLog.occurredAt, endUtc)
+            )
+          )
           .limit(1);
         return rows.length > 0;
       },
@@ -177,7 +185,13 @@ export class ProgressRepository {
         const rows = await db
           .select({ id: userProgress.id })
           .from(userProgress)
-          .where(and(eq(userProgress.userId, userId), gte(userProgress.visitedAt, startUtc), lt(userProgress.visitedAt, endUtc)))
+          .where(
+            and(
+              eq(userProgress.userId, userId),
+              gte(userProgress.visitedAt, startUtc),
+              lt(userProgress.visitedAt, endUtc)
+            )
+          )
           .limit(1);
         return rows.length > 0;
       }
@@ -191,7 +205,7 @@ export class ProgressRepository {
         subjectSlug: subjects.slug,
         subjectName: subjects.name,
         chapterSlug: chapters.slug,
-        chapterTitle: chapters.title
+        chapterTitle: chapters.title,
       })
       .from(userProgress)
       .innerJoin(chapters, eq(userProgress.chapterId, chapters.id))
@@ -210,7 +224,7 @@ export class ProgressRepository {
         subjectSlug: subjects.slug,
         subjectName: subjects.name,
         chapterSlug: chapters.slug,
-        chapterTitle: chapters.title
+        chapterTitle: chapters.title,
       })
       .from(quizAttempts)
       .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
@@ -230,7 +244,7 @@ export class ProgressRepository {
         subjectSlug: subjects.slug,
         subjectName: subjects.name,
         chapterSlug: chapters.slug,
-        chapterTitle: chapters.title
+        chapterTitle: chapters.title,
       })
       .from(quizAttempts)
       .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
@@ -245,7 +259,7 @@ export class ProgressRepository {
     return db
       .select({
         chapterId: quizzes.chapterId,
-        totalMarks: quizzes.totalMarks
+        totalMarks: quizzes.totalMarks,
       })
       .from(quizzes)
       .where(eq(quizzes.type, "chapter_quiz"))
@@ -256,7 +270,7 @@ export class ProgressRepository {
     return db
       .select({
         chapterId: quizzes.chapterId,
-        totalMarks: quizzes.totalMarks
+        totalMarks: quizzes.totalMarks,
       })
       .from(quizzes)
       .where(and(eq(quizzes.chapterId, chapterId), eq(quizzes.type, "chapter_quiz")))
@@ -266,7 +280,8 @@ export class ProgressRepository {
   async findSubjectProgress(userId: string, boardSlug?: string, grade?: string) {
     const conditions: SQL[] = [];
     if (boardSlug) conditions.push(eq(boards.slug, boardSlug));
-    if (grade) conditions.push(sql`coalesce(${boardClasses.slug}, ${subjects.grade}::text) = ${grade}`);
+    if (grade)
+      conditions.push(sql`coalesce(${boardClasses.slug}, ${subjects.grade}::text) = ${grade}`);
 
     return withOptionalDbFallback(
       "subjects.exam_date.findSubjectProgress",
@@ -286,13 +301,19 @@ export class ProgressRepository {
             chapterNumber: chapters.chapterNumber,
             chapterSlug: chapters.slug,
             chapterTitle: chapters.title,
-            examDate: subjects.examDate
+            examDate: subjects.examDate,
           })
           .from(subjects)
           .innerJoin(boards, eq(subjects.boardId, boards.id))
           .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
-          .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
-          .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+          .innerJoin(
+            chapters,
+            and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true))
+          )
+          .leftJoin(
+            userProgress,
+            and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId))
+          )
           .where(conditions.length > 0 ? and(...conditions) : undefined)
           .orderBy(asc(subjects.name), asc(chapters.chapterNumber)),
       () =>
@@ -311,13 +332,19 @@ export class ProgressRepository {
             chapterNumber: chapters.chapterNumber,
             chapterSlug: chapters.slug,
             chapterTitle: chapters.title,
-            examDate: sql<Date | null>`null`
+            examDate: sql<Date | null>`null`,
           })
           .from(subjects)
           .innerJoin(boards, eq(subjects.boardId, boards.id))
           .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
-          .innerJoin(chapters, and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true)))
-          .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+          .innerJoin(
+            chapters,
+            and(eq(chapters.subjectId, subjects.id), eq(chapters.isPublished, true))
+          )
+          .leftJoin(
+            userProgress,
+            and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId))
+          )
           .where(conditions.length > 0 ? and(...conditions) : undefined)
           .orderBy(asc(subjects.name), asc(chapters.chapterNumber))
     );
@@ -341,7 +368,7 @@ export class ProgressRepository {
         boardSlug: boards.slug,
         chapterId: chapters.id,
         chapterSlug: chapters.slug,
-        chapterTitle: chapters.title
+        chapterTitle: chapters.title,
       })
       .from(quizAttempts)
       .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
@@ -363,7 +390,7 @@ export class ProgressRepository {
         quizId: quizQuestions.quizId,
         chapterId: quizQuestions.chapterId,
         question: quizQuestions.question,
-        correctOption: quizQuestions.correctOption
+        correctOption: quizQuestions.correctOption,
       })
       .from(quizQuestions)
       .where(inArray(quizQuestions.quizId, quizIds));
@@ -379,7 +406,7 @@ export class ProgressRepository {
         exerciseId: exercises.id,
         chapterId: exercises.chapterId,
         exerciseNumber: exercises.exerciseNumber,
-        question: exercises.question
+        question: exercises.question,
       })
       .from(exercises)
       .where(inArray(exercises.chapterId, chapterIds))
@@ -397,7 +424,9 @@ export class ProgressRepository {
         completedAt: userDailyMomentumGoals.completedAt,
       })
       .from(userDailyMomentumGoals)
-      .where(and(eq(userDailyMomentumGoals.userId, userId), eq(userDailyMomentumGoals.dateKey, dateKey)))
+      .where(
+        and(eq(userDailyMomentumGoals.userId, userId), eq(userDailyMomentumGoals.dateKey, dateKey))
+      )
       .limit(1);
 
     return rows[0] ?? null;

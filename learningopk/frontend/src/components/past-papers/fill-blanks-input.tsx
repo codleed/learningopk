@@ -17,7 +17,7 @@ export function FillBlanksInput({
   statements,
   blanksAnswer,
   blankCount,
-  onChange
+  onChange,
 }: FillBlanksProps) {
   const totalBlankCount = useMemo(() => {
     if (blankCount != null) return blankCount;
@@ -31,19 +31,16 @@ export function FillBlanksInput({
     Array.from({ length: totalBlankCount }, () => "")
   );
 
-  const handleChange = useCallback(
-    (index: number, value: string) => {
-      setValues(prev => {
-        const next = [...prev];
-        next[index] = value;
-        return next;
-      });
-    },
-    []
-  );
+  const handleChange = useCallback((index: number, value: string) => {
+    setValues((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  }, []);
 
   const syncToParent = useCallback(() => {
-    setValues(prev => {
+    setValues((prev) => {
       onChange(prev);
       return prev;
     });

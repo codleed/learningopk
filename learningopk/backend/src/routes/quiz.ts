@@ -10,16 +10,16 @@ export const submitQuizSchema = z.object({
   quizId: z.number().int().positive(),
   answers: z.record(z.string().regex(/^\d+$/), z.enum(["a", "b", "c", "d"])),
   startedAt: z.string().datetime().optional(),
-  challengeId: z.string().uuid().optional()
+  challengeId: z.string().uuid().optional(),
 });
 
 const createQuizChallengeSchema = z.object({
   quizId: z.number().int().positive(),
-  attemptId: z.string().uuid()
+  attemptId: z.string().uuid(),
 });
 
 const quizChallengeParamsSchema = z.object({
-  challengeId: z.string().uuid()
+  challengeId: z.string().uuid(),
 });
 
 export const quizRouter = Router();
@@ -30,7 +30,7 @@ quizRouter.post("/submit", requireSession, async (req, res) => {
   if (!parsed.success) {
     res.status(400).json({
       error: "Invalid quiz submission payload",
-      details: parsed.error.flatten()
+      details: parsed.error.flatten(),
     });
     return;
   }
@@ -45,7 +45,7 @@ quizRouter.post("/submit", requireSession, async (req, res) => {
       answers,
       startedAt,
       challengeId,
-      userId
+      userId,
     });
 
     res.status(200).json(result);
@@ -65,7 +65,7 @@ quizRouter.post("/challenges", requireSession, async (req, res) => {
   if (!parsed.success) {
     res.status(400).json({
       error: "Invalid quiz challenge payload",
-      details: parsed.error.flatten()
+      details: parsed.error.flatten(),
     });
     return;
   }
@@ -75,7 +75,7 @@ quizRouter.post("/challenges", requireSession, async (req, res) => {
   try {
     const result = await quizService.createQuizDuelChallenge({
       ...parsed.data,
-      userId: authedReq.session.user.id
+      userId: authedReq.session.user.id,
     });
 
     res.status(201).json(successResponse(result));
@@ -95,7 +95,7 @@ quizRouter.get("/challenges/:challengeId", requireSession, async (req, res) => {
   if (!parsed.success) {
     res.status(400).json({
       error: "Invalid quiz challenge route parameters",
-      details: parsed.error.flatten()
+      details: parsed.error.flatten(),
     });
     return;
   }
@@ -105,7 +105,7 @@ quizRouter.get("/challenges/:challengeId", requireSession, async (req, res) => {
   try {
     const result = await quizService.getQuizDuelChallenge({
       challengeId: parsed.data.challengeId,
-      userId: authedReq.session.user.id
+      userId: authedReq.session.user.id,
     });
 
     res.status(200).json(successResponse(result));

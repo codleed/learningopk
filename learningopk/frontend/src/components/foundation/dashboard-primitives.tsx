@@ -10,7 +10,7 @@ const dashboardSurfaceToneClassNames = {
   panel: "border-b border-border-default/70",
   card: "border-b border-border-default/60",
   toolbarButton:
-    "rounded-full border border-[var(--primary)]/35 bg-[var(--primary)]/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--primary)] transition hover:border-[var(--primary)]/55 hover:bg-[var(--primary)]/15"
+    "rounded-full border border-[var(--primary)]/35 bg-[var(--primary)]/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--primary)] transition hover:border-[var(--primary)]/55 hover:bg-[var(--primary)]/15",
 } as const;
 
 export type DashboardSurfaceTone = keyof typeof dashboardSurfaceToneClassNames;
@@ -41,7 +41,12 @@ export function DashboardSurface<T extends ElementType = "div">({
 type DashboardToolbarProps = ComponentPropsWithoutRef<"div">;
 
 export function DashboardToolbar({ className, ...props }: DashboardToolbarProps) {
-  return <div className={cn("flex flex-wrap items-center justify-between gap-3", className)} {...props} />;
+  return (
+    <div
+      className={cn("flex flex-wrap items-center justify-between gap-3", className)}
+      {...props}
+    />
+  );
 }
 
 type DashboardSectionProps = {
@@ -59,14 +64,20 @@ export function DashboardSection({
   actions,
   children,
   className,
-  contentClassName
+  contentClassName,
 }: DashboardSectionProps) {
   return (
     <DashboardSurface as="section" tone="panel" className={cn("pb-6", className)}>
       <DashboardToolbar>
         <div>
-          <h2 className="text-[1.1rem] font-semibold tracking-[-0.01em] text-text-primary sm:text-xl">{title}</h2>
-          {subtitle ? <p className="mt-1 text-xs font-medium uppercase tracking-[0.08em] text-text-secondary">{subtitle}</p> : null}
+          <h2 className="text-[1.1rem] font-semibold tracking-[-0.01em] text-text-primary sm:text-xl">
+            {title}
+          </h2>
+          {subtitle ? (
+            <p className="mt-1 text-xs font-medium uppercase tracking-[0.08em] text-text-secondary">
+              {subtitle}
+            </p>
+          ) : null}
         </div>
         {actions ? <div>{actions}</div> : null}
       </DashboardToolbar>

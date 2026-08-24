@@ -6,7 +6,7 @@ export function QuestionNavigator({
   totalQuestions,
   answeredQuestions,
   currentIndex,
-  onNavigate
+  onNavigate,
 }: {
   totalQuestions: number;
   answeredQuestions: Set<number>;

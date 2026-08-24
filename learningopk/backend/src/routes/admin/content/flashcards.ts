@@ -15,25 +15,25 @@ const flashcardCreateBodySchema = z.object({
   chapterId: z.coerce.number().int().positive(),
   front: z.string().trim().min(1),
   back: z.string().trim().min(1),
-  orderIndex: z.coerce.number().int().min(0).optional()
+  orderIndex: z.coerce.number().int().min(0).optional(),
 });
 
 const flashcardUpdateBodySchema = z.object({
   front: z.string().trim().min(1).optional(),
-  back: z.string().trim().min(1).optional()
+  back: z.string().trim().min(1).optional(),
 });
 
 const flashcardListQuerySchema = z.object({
-  chapterId: z.coerce.number().int().positive()
+  chapterId: z.coerce.number().int().positive(),
 });
 
 const flashcardParamsSchema = z.object({
-  id: z.coerce.number().int().positive()
+  id: z.coerce.number().int().positive(),
 });
 
 const flashcardReorderBodySchema = z.object({
   chapterId: z.coerce.number().int().positive(),
-  orderedIds: z.array(z.coerce.number().int().positive()).min(1)
+  orderedIds: z.array(z.coerce.number().int().positive()).min(1),
 });
 
 /**
@@ -50,7 +50,7 @@ flashcardsAdminRouter.post("/content/flashcards", requireSession, async (req, re
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid flashcard payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -63,7 +63,7 @@ flashcardsAdminRouter.post("/content/flashcards", requireSession, async (req, re
   if (orderIndex === undefined) {
     const maxOrderResult = await db
       .select({
-        maxOrder: sql<number>`coalesce(max(${flashcards.orderIndex}), -1)::int`
+        maxOrder: sql<number>`coalesce(max(${flashcards.orderIndex}), -1)::int`,
       })
       .from(flashcards)
       .where(eq(flashcards.chapterId, parsedBody.data.chapterId));
@@ -76,14 +76,14 @@ flashcardsAdminRouter.post("/content/flashcards", requireSession, async (req, re
       chapterId: parsedBody.data.chapterId,
       front: parsedBody.data.front.trim(),
       back: parsedBody.data.back.trim(),
-      orderIndex
+      orderIndex,
     })
     .returning({
       id: flashcards.id,
       chapterId: flashcards.chapterId,
       front: flashcards.front,
       back: flashcards.back,
-      orderIndex: flashcards.orderIndex
+      orderIndex: flashcards.orderIndex,
     });
 
   const newFlashcard = insertedRows[0];
@@ -95,7 +95,7 @@ flashcardsAdminRouter.post("/content/flashcards", requireSession, async (req, re
       status: "failed",
       message: "Flashcard creation failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(500).json({ error: "Failed to create flashcard" });
     return;
@@ -111,11 +111,11 @@ flashcardsAdminRouter.post("/content/flashcards", requireSession, async (req, re
     status: "success",
     message: `Created flashcard for chapter ${newFlashcard.chapterId}`,
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(201).json({
-    data: newFlashcard
+    data: newFlashcard,
   });
 });
 
@@ -133,14 +133,14 @@ flashcardsAdminRouter.get("/content/flashcards", requireSession, async (req, res
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid flashcard query",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
 
   if (!parsedQuery.data.chapterId) {
     res.status(400).json({
-      error: "chapterId is required"
+      error: "chapterId is required",
     });
     return;
   }
@@ -151,7 +151,7 @@ flashcardsAdminRouter.get("/content/flashcards", requireSession, async (req, res
       chapterId: flashcards.chapterId,
       front: flashcards.front,
       back: flashcards.back,
-      orderIndex: flashcards.orderIndex
+      orderIndex: flashcards.orderIndex,
     })
     .from(flashcards)
     .where(eq(flashcards.chapterId, parsedQuery.data.chapterId))
@@ -159,7 +159,7 @@ flashcardsAdminRouter.get("/content/flashcards", requireSession, async (req, res
 
   res.status(200).json({
     data: flashcardRows,
-    total: flashcardRows.length
+    total: flashcardRows.length,
   });
 });
 
@@ -171,7 +171,7 @@ flashcardsAdminRouter.post("/content/flashcards/:id/update", requireSession, asy
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid flashcard identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -180,7 +180,7 @@ flashcardsAdminRouter.post("/content/flashcards/:id/update", requireSession, asy
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid flashcard payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -200,7 +200,7 @@ flashcardsAdminRouter.post("/content/flashcards/:id/update", requireSession, asy
       chapterId: flashcards.chapterId,
       front: flashcards.front,
       back: flashcards.back,
-      orderIndex: flashcards.orderIndex
+      orderIndex: flashcards.orderIndex,
     })
     .from(flashcards)
     .where(eq(flashcards.id, parsedParams.data.id))
@@ -215,7 +215,7 @@ flashcardsAdminRouter.post("/content/flashcards/:id/update", requireSession, asy
       status: "failed",
       message: "Flashcard not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({ error: "Flashcard not found" });
     return;
@@ -225,7 +225,7 @@ flashcardsAdminRouter.post("/content/flashcards/:id/update", requireSession, asy
     .update(flashcards)
     .set({
       ...(parsedBody.data.front !== undefined && { front: parsedBody.data.front.trim() }),
-      ...(parsedBody.data.back !== undefined && { back: parsedBody.data.back.trim() })
+      ...(parsedBody.data.back !== undefined && { back: parsedBody.data.back.trim() }),
     })
     .where(eq(flashcards.id, existingFlashcard.id))
     .returning({
@@ -233,7 +233,7 @@ flashcardsAdminRouter.post("/content/flashcards/:id/update", requireSession, asy
       chapterId: flashcards.chapterId,
       front: flashcards.front,
       back: flashcards.back,
-      orderIndex: flashcards.orderIndex
+      orderIndex: flashcards.orderIndex,
     });
 
   const updatedFlashcard = updatedRows[0];
@@ -245,7 +245,7 @@ flashcardsAdminRouter.post("/content/flashcards/:id/update", requireSession, asy
       status: "failed",
       message: "Flashcard update failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(500).json({ error: "Failed to update flashcard" });
     return;
@@ -261,11 +261,11 @@ flashcardsAdminRouter.post("/content/flashcards/:id/update", requireSession, asy
     status: "success",
     message: `Updated flashcard for chapter ${updatedFlashcard.chapterId}`,
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
-    data: updatedFlashcard
+    data: updatedFlashcard,
   });
 });
 
@@ -277,7 +277,7 @@ flashcardsAdminRouter.post("/content/flashcards/:id/delete", requireSession, asy
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid flashcard identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -293,7 +293,7 @@ flashcardsAdminRouter.post("/content/flashcards/:id/delete", requireSession, asy
   const flashcardRows = await db
     .select({
       id: flashcards.id,
-      chapterId: flashcards.chapterId
+      chapterId: flashcards.chapterId,
     })
     .from(flashcards)
     .where(eq(flashcards.id, parsedParams.data.id))
@@ -308,7 +308,7 @@ flashcardsAdminRouter.post("/content/flashcards/:id/delete", requireSession, asy
       status: "failed",
       message: "Flashcard not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({ error: "Flashcard not found" });
     return;
@@ -326,12 +326,12 @@ flashcardsAdminRouter.post("/content/flashcards/:id/delete", requireSession, asy
     status: "success",
     message: "Deleted flashcard",
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
     success: true,
-    deletedId: flashcard.id
+    deletedId: flashcard.id,
   });
 });
 
@@ -349,7 +349,7 @@ flashcardsAdminRouter.post("/content/flashcards/reorder", requireSession, async 
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid reorder payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -370,19 +370,22 @@ flashcardsAdminRouter.post("/content/flashcards/reorder", requireSession, async 
   // Validate no duplicates in orderedIds
   if (new Set(orderedIds).size !== orderedIds.length) {
     res.status(400).json({
-      error: "orderedIds contains duplicate values"
+      error: "orderedIds contains duplicate values",
     });
     return;
   }
 
   // Validate that orderedIds contains ALL flashcards for this chapter
-  if (existingIds.size !== providedIds.size || ![...existingIds].every((id) => providedIds.has(id))) {
+  if (
+    existingIds.size !== providedIds.size ||
+    ![...existingIds].every((id) => providedIds.has(id))
+  ) {
     res.status(400).json({
       error: "orderedIds must contain exactly all flashcard IDs for the chapter",
       details: {
         existingIds: [...existingIds],
-        providedIds
-      }
+        providedIds,
+      },
     });
     return;
   }
@@ -412,7 +415,7 @@ flashcardsAdminRouter.post("/content/flashcards/reorder", requireSession, async 
       status: "failed",
       message: error instanceof Error ? error.message : "Reorder failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(500).json({ error: "Failed to reorder flashcards" });
     return;
@@ -428,11 +431,11 @@ flashcardsAdminRouter.post("/content/flashcards/reorder", requireSession, async 
     status: "success",
     message: `Reordered ${updatedFlashcards.length} flashcards`,
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
     success: true,
-    updated: updatedFlashcards
+    updated: updatedFlashcards,
   });
 });

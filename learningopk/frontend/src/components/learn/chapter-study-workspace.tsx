@@ -5,10 +5,7 @@ import { BookOpen, Dumbbell, HelpCircle, Atom, NotebookPen } from "lucide-react"
 
 import type { ChapterDetailResponse } from "@/lib/learn-api";
 import type { TabItem } from "@/components/foundation/tabs";
-import {
-  StaggerContainer,
-  MotionSection,
-} from "@/components/motion";
+import { StaggerContainer, MotionSection } from "@/components/motion";
 import { cn } from "@/lib/utils";
 import { trackProgressEvent } from "@/lib/progress-client";
 
@@ -84,17 +81,23 @@ export function ChapterStudyWorkspace({
   challengeId,
 }: ChapterStudyWorkspaceProps) {
   const [, setPrompt] = useState<string | null>(
-    autoOpenAi ? "Guide me through this chapter using hints first." : null,
+    autoOpenAi ? "Guide me through this chapter using hints first." : null
   );
 
-  const { state, xpQueue, dismissXpNotification, leveledUp, markSummaryRead, markSubpartRead, markExerciseComplete, completeQuiz } = useGamification();
+  const {
+    state,
+    xpQueue,
+    dismissXpNotification,
+    leveledUp,
+    markSummaryRead,
+    markSubpartRead,
+    markExerciseComplete,
+    completeQuiz,
+  } = useGamification();
   const { streak } = useStreakTracking();
   const { visibleNotifications, dismiss } = useXpNotifications(xpQueue, dismissXpNotification);
 
-  const readProgress = useCallback(
-    () => getChapterProgress(String(chapterId)),
-    [chapterId]
-  );
+  const readProgress = useCallback(() => getChapterProgress(String(chapterId)), [chapterId]);
 
   const [chapterProgress, setChapterProgress] = useState(readProgress);
 
@@ -299,9 +302,7 @@ export function ChapterStudyWorkspace({
               )}
             >
               <div className="mb-4 flex items-center gap-2 border-b border-border-default pb-3">
-                <span className="text-text-secondary">
-                  {TAB_ICONS[activeTab]}
-                </span>
+                <span className="text-text-secondary">{TAB_ICONS[activeTab]}</span>
                 <h2 className="font-[var(--font-display)] text-lg font-semibold text-text-primary">
                   {tabs.find((t) => t.key === activeTab)?.label || "Study Content"}
                 </h2>

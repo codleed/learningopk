@@ -76,10 +76,7 @@ export function ChapterCard({ chapter, href, index = 0 }: ChapterCardProps) {
                   Chapter {String(chapter.chapterNumber).padStart(2, "0")}
                 </p>
 
-                <Badge
-                  variant={chapter.isPublished ? "success" : "warning"}
-                  size="sm"
-                >
+                <Badge variant={chapter.isPublished ? "success" : "warning"} size="sm">
                   {chapter.isPublished ? "Published" : "Draft"}
                 </Badge>
               </div>
@@ -100,8 +97,6 @@ export function ChapterCard({ chapter, href, index = 0 }: ChapterCardProps) {
                   </span>
                 ) : null}
               </div>
-
-
             </div>
 
             <div className="mt-5 flex items-center justify-between border-t border-border-default/70 pt-4">
@@ -109,9 +104,7 @@ export function ChapterCard({ chapter, href, index = 0 }: ChapterCardProps) {
                 <p className="text-[0.6875rem] font-medium uppercase tracking-[0.16em] text-text-muted">
                   Next step
                 </p>
-                <p className="mt-1 text-sm font-medium text-text-primary">
-                  Open chapter workspace
-                </p>
+                <p className="mt-1 text-sm font-medium text-text-primary">Open chapter workspace</p>
               </div>
 
               <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent-primary transition-transform duration-200 group-hover:translate-x-0.5">

@@ -12,7 +12,11 @@ import {
 import { boards, users } from "../schema.js";
 
 export const assignmentTypeEnum = pgEnum("assignment_type", ["chapter", "quiz", "mock_exam"]);
-export const submissionStatusEnum = pgEnum("submission_status", ["not_started", "in_progress", "submitted"]);
+export const submissionStatusEnum = pgEnum("submission_status", [
+  "not_started",
+  "in_progress",
+  "submitted",
+]);
 
 export const classrooms = pgTable("classrooms", {
   id: serial("id").primaryKey(),
@@ -41,9 +45,13 @@ export const classroomStudents = pgTable(
     studentId: text("student_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    enrolledAt: timestamp("enrolled_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    enrolledAt: timestamp("enrolled_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .defaultNow(),
   },
-  (table) => [uniqueIndex("classroom_students_classroom_student_idx").on(table.classroomId, table.studentId)]
+  (table) => [
+    uniqueIndex("classroom_students_classroom_student_idx").on(table.classroomId, table.studentId),
+  ]
 );
 
 export const assignments = pgTable("assignments", {
@@ -76,7 +84,12 @@ export const assignmentSubmissions = pgTable(
     startedAt: timestamp("started_at", { withTimezone: true, mode: "date" }),
     submittedAt: timestamp("submitted_at", { withTimezone: true, mode: "date" }),
   },
-  (table) => [uniqueIndex("assignment_submissions_assignment_student_idx").on(table.assignmentId, table.studentId)]
+  (table) => [
+    uniqueIndex("assignment_submissions_assignment_student_idx").on(
+      table.assignmentId,
+      table.studentId
+    ),
+  ]
 );
 
 export const classroomAnnouncements = pgTable("classroom_announcements", {

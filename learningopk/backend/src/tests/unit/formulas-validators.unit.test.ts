@@ -8,7 +8,7 @@ test("formulasQuerySchema accepts valid search and filter params", () => {
     q: "quadratic formula",
     subjectId: "12",
     chapterId: "44",
-    tag: "algebra"
+    tag: "algebra",
   });
 
   assert.equal(parsed.success, true);
@@ -16,7 +16,7 @@ test("formulasQuerySchema accepts valid search and filter params", () => {
 
 test("formulasQuerySchema rejects invalid numeric filters", () => {
   const parsed = formulasQuerySchema.safeParse({
-    subjectId: "zero"
+    subjectId: "zero",
   });
 
   assert.equal(parsed.success, false);

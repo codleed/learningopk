@@ -78,14 +78,14 @@ const checkMinio = async (): Promise<CheckResult> => {
       secretKey: env.MINIO_SECRET_KEY,
     });
     const exists = await client.bucketExists(env.MINIO_BUCKET);
-    const latencyMs = Math.round(Number(process.hrtime.bigint() - start) / 1_000_000 * 100) / 100;
+    const latencyMs = Math.round((Number(process.hrtime.bigint() - start) / 1_000_000) * 100) / 100;
 
     if (exists) {
       return { status: "up", latencyMs };
     }
     return { status: "degraded", latencyMs, message: "Bucket does not exist" };
   } catch (error: unknown) {
-    const latencyMs = Math.round(Number(process.hrtime.bigint() - start) / 1_000_000 * 100) / 100;
+    const latencyMs = Math.round((Number(process.hrtime.bigint() - start) / 1_000_000) * 100) / 100;
     const message = error instanceof Error ? error.message : "Unknown MinIO error";
     return { status: "down", latencyMs, message };
   }

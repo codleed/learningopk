@@ -1,26 +1,20 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  MessageSquareText,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Plus,
-  Sparkles,
-} from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MessageSquareText, PanelLeftClose, PanelLeftOpen, Plus, Sparkles } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
-import { Button } from '@/components/ui/button';
-import { LoadingSkeleton } from '@/components/ui/states';
-import { cn } from '@/lib/utils';
+import { Button } from "@/components/ui/button";
+import { LoadingSkeleton } from "@/components/ui/states";
+import { cn } from "@/lib/utils";
 
-import { useAIChatContext } from './ai-chat-context';
-import { AIChatMessages } from './components/ai-chat-messages';
-import { AIChatInput } from './components/ai-chat-input';
-import { AIChatEmptyState } from './components/ai-chat-empty-state';
-import { CrisisBanner } from './components/crisis-banner';
-import { useMobileKeyboard } from './hooks/use-mobile-keyboard';
-import type { ChatSession } from './types';
+import { useAIChatContext } from "./ai-chat-context";
+import { AIChatMessages } from "./components/ai-chat-messages";
+import { AIChatInput } from "./components/ai-chat-input";
+import { AIChatEmptyState } from "./components/ai-chat-empty-state";
+import { CrisisBanner } from "./components/crisis-banner";
+import { useMobileKeyboard } from "./hooks/use-mobile-keyboard";
+import type { ChatSession } from "./types";
 
 // ============================================================================
 // Constants
@@ -32,11 +26,11 @@ import type { ChatSession } from './types';
 // Utilities
 // ============================================================================
 
-const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
 function formatRelativeTimestamp(value: string): string {
   const target = new Date(value).getTime();
-  if (!Number.isFinite(target)) return '';
+  if (!Number.isFinite(target)) return "";
 
   const diffMs = target - Date.now();
   const minuteMs = 60 * 1000;
@@ -44,11 +38,11 @@ function formatRelativeTimestamp(value: string): string {
   const dayMs = 24 * hourMs;
   const absDiff = Math.abs(diffMs);
 
-  if (absDiff < minuteMs) return 'just now';
-  if (absDiff < hourMs) return rtf.format(Math.round(diffMs / minuteMs), 'minute');
-  if (absDiff < dayMs) return rtf.format(Math.round(diffMs / hourMs), 'hour');
-  if (absDiff < 30 * dayMs) return rtf.format(Math.round(diffMs / dayMs), 'day');
-  return rtf.format(Math.round(diffMs / (30 * dayMs)), 'month');
+  if (absDiff < minuteMs) return "just now";
+  if (absDiff < hourMs) return rtf.format(Math.round(diffMs / minuteMs), "minute");
+  if (absDiff < dayMs) return rtf.format(Math.round(diffMs / hourMs), "hour");
+  if (absDiff < 30 * dayMs) return rtf.format(Math.round(diffMs / dayMs), "day");
+  return rtf.format(Math.round(diffMs / (30 * dayMs)), "month");
 }
 
 // ============================================================================
@@ -77,10 +71,10 @@ function SessionGroup({
           type="button"
           onClick={() => onSelectSession(session.id)}
           className={cn(
-            'mb-0.5 w-full rounded-lg px-3 py-2 text-left transition-colors duration-150',
+            "mb-0.5 w-full rounded-lg px-3 py-2 text-left transition-colors duration-150",
             session.id === activeSessionId
-              ? 'bg-accent-primary/10 text-text-primary'
-              : 'text-text-secondary hover:bg-bg-subtle hover:text-text-primary'
+              ? "bg-accent-primary/10 text-text-primary"
+              : "text-text-secondary hover:bg-bg-subtle hover:text-text-primary"
           )}
         >
           <p className="truncate text-[13px] font-medium">{session.title}</p>
@@ -160,9 +154,7 @@ function ConversationHistoryPanel({
           <div className="py-10 text-center">
             <MessageSquareText className="mx-auto mb-2 h-8 w-8 text-text-muted/40" />
             <p className="text-xs text-text-muted">No conversations yet</p>
-            <p className="mt-1 text-[11px] text-text-muted/60">
-              Start a new conversation to begin
-            </p>
+            <p className="mt-1 text-[11px] text-text-muted/60">Start a new conversation to begin</p>
           </div>
         ) : (
           <div className="flex flex-col gap-1">
@@ -225,17 +217,17 @@ export function AIChatFullPage() {
     refreshSessionsList,
   } = useAIChatContext();
 
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const { keyboardVisible, viewportHeight } = useMobileKeyboard();
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
 
-    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
     const syncHistoryPanel = (matches: boolean) => {
       setIsHistoryPanelOpen(matches);
     };
@@ -246,10 +238,10 @@ export function AIChatFullPage() {
       syncHistoryPanel(event.matches);
     };
 
-    mediaQuery.addEventListener('change', handleChange);
+    mediaQuery.addEventListener("change", handleChange);
 
     return () => {
-      mediaQuery.removeEventListener('change', handleChange);
+      mediaQuery.removeEventListener("change", handleChange);
     };
   }, []);
 
@@ -268,7 +260,7 @@ export function AIChatFullPage() {
   const handleSubmit = useCallback(async () => {
     if (!inputValue.trim() || isSending) return;
     const text = inputValue;
-    setInputValue('');
+    setInputValue("");
     await sendMessage(text);
   }, [inputValue, isSending, sendMessage]);
 
@@ -286,18 +278,22 @@ export function AIChatFullPage() {
 
   const handleNewChat = useCallback(() => {
     startNewSession();
-    setInputValue('');
+    setInputValue("");
   }, [startNewSession]);
 
   const placeholder =
-    messages.length > 0 ? 'Ask a follow-up question...' : 'Ask anything about your studies...';
+    messages.length > 0 ? "Ask a follow-up question..." : "Ask anything about your studies...";
 
   const hasMessages = messages.length > 0;
 
   return (
     <div
       className="flex h-[calc(100dvh-var(--shell-header-height,0px))] flex-row bg-bg-base -mx-3 sm:-mx-5 lg:-mx-6 -mt-3 -mb-10"
-      style={keyboardVisible ? { height: `calc(${viewportHeight}px - var(--shell-header-height, 0px))` } : undefined}
+      style={
+        keyboardVisible
+          ? { height: `calc(${viewportHeight}px - var(--shell-header-height, 0px))` }
+          : undefined
+      }
     >
       {/* ====== LEFT: Conversation History Panel ====== */}
       <AnimatePresence initial={false}>
@@ -307,7 +303,7 @@ export function AIChatFullPage() {
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 280, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
             aria-label="Conversation history"
           >
             <div className="w-[280px]">
@@ -336,7 +332,9 @@ export function AIChatFullPage() {
               size="sm"
               onClick={() => setIsHistoryPanelOpen((v) => !v)}
               className="hidden text-text-muted hover:text-text-primary md:inline-flex"
-              aria-label={isHistoryPanelOpen ? 'Hide conversation history' : 'Show conversation history'}
+              aria-label={
+                isHistoryPanelOpen ? "Hide conversation history" : "Show conversation history"
+              }
             >
               {isHistoryPanelOpen ? (
                 <PanelLeftClose className="h-4 w-4" />
@@ -353,7 +351,7 @@ export function AIChatFullPage() {
                 AI Tutor
               </h1>
               <p className="text-[11px] text-text-muted leading-tight">
-                {isSending ? 'Thinking...' : 'Ask me anything'}
+                {isSending ? "Thinking..." : "Ask me anything"}
               </p>
             </div>
           </div>
@@ -392,7 +390,13 @@ export function AIChatFullPage() {
 
         {/* Messages Area */}
         <div className="relative flex-1 overflow-hidden">
-          <div ref={messagesContainerRef} className="h-full overflow-y-auto scrollbar-thin" role="log" aria-label="Conversation" aria-live="polite">
+          <div
+            ref={messagesContainerRef}
+            className="h-full overflow-y-auto scrollbar-thin"
+            role="log"
+            aria-label="Conversation"
+            aria-live="polite"
+          >
             <div className="mx-auto max-w-3xl px-4">
               {!hasMessages ? (
                 <AIChatEmptyState
@@ -403,7 +407,9 @@ export function AIChatFullPage() {
                 <AIChatMessages
                   messages={messages}
                   isStreaming={isStreaming}
-                  topBanner={showCrisisBanner ? <CrisisBanner onDismiss={dismissCrisisBanner} /> : null}
+                  topBanner={
+                    showCrisisBanner ? <CrisisBanner onDismiss={dismissCrisisBanner} /> : null
+                  }
                   className="pb-4"
                 />
               )}
@@ -508,7 +514,7 @@ export function AIChatFullPage() {
               initial={{ x: -280 }}
               animate={{ x: 0 }}
               exit={{ x: -280 }}
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
             >
               <ConversationHistoryPanel
                 sessions={sessions}

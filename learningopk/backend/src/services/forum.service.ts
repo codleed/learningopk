@@ -1,7 +1,15 @@
 import { and, asc, eq, sql, type SQL } from "drizzle-orm";
 
 import { consumeForumMutationRateLimit, moderateForumInput } from "../lib/ai-guardrails.js";
-import { boardClasses, boards, chapters, forumReplies, forumReplyVotes, forumThreads, subjects } from "../lib/db/schema.js";
+import {
+  boardClasses,
+  boards,
+  chapters,
+  forumReplies,
+  forumReplyVotes,
+  forumThreads,
+  subjects,
+} from "../lib/db/schema.js";
 import { db } from "../lib/db/index.js";
 import { forumRepository } from "../repositories/forum.repository.js";
 import { xpService } from "./xp.service.js";
@@ -12,7 +20,7 @@ import {
   NotFoundError,
   ServiceUnavailableError,
   ValidationError,
-  isHttpError
+  isHttpError,
 } from "../lib/errors/index.js";
 
 export interface ThreadFeedFilters {
@@ -84,19 +92,21 @@ export class ForumService {
     return clauses.length > 0 ? and(...clauses) : undefined;
   }
 
-  shapeThreadReplies(replyRows: Array<{
-    id: string;
-    threadId: string;
-    userId: string;
-    userName: string;
-    parentReplyId: string | null;
-    body: string;
-    isAcceptedAnswer: boolean;
-    upvotes: number;
-    viewerVoteType: "upvote" | "downvote" | null;
-    createdAt: Date;
-    updatedAt: Date;
-  }>) {
+  shapeThreadReplies(
+    replyRows: Array<{
+      id: string;
+      threadId: string;
+      userId: string;
+      userName: string;
+      parentReplyId: string | null;
+      body: string;
+      isAcceptedAnswer: boolean;
+      upvotes: number;
+      viewerVoteType: "upvote" | "downvote" | null;
+      createdAt: Date;
+      updatedAt: Date;
+    }>
+  ) {
     type NestedReply = {
       id: string;
       threadId: string;
@@ -143,7 +153,7 @@ export class ForumService {
           viewerVoteType: row.viewerVoteType,
           createdAt: row.createdAt,
           updatedAt: row.updatedAt,
-          replies: []
+          replies: [],
         };
         topLevelById.set(row.id, topLevelReply);
         topLevelReplies.push(topLevelReply);
@@ -171,14 +181,17 @@ export class ForumService {
         upvotes: row.upvotes,
         viewerVoteType: row.viewerVoteType,
         createdAt: row.createdAt,
-        updatedAt: row.updatedAt
+        updatedAt: row.updatedAt,
       });
     }
 
     return topLevelReplies;
   }
 
-  async resolveThreadSubjectId(input: { subjectId?: number; chapterId?: number }): Promise<{ subjectId: number }> {
+  async resolveThreadSubjectId(input: {
+    subjectId?: number;
+    chapterId?: number;
+  }): Promise<{ subjectId: number }> {
     let resolvedSubjectId = input.subjectId ?? null;
 
     if (input.chapterId) {
@@ -216,7 +229,9 @@ export class ForumService {
     return { subjectId: resolvedSubjectId };
   }
 
-  async checkMutationRateLimit(userId: string): Promise<{ allowed: boolean; limit: number; remaining: number; resetSeconds: number }> {
+  async checkMutationRateLimit(
+    userId: string
+  ): Promise<{ allowed: boolean; limit: number; remaining: number; resetSeconds: number }> {
     let rateLimit: Awaited<ReturnType<typeof consumeForumMutationRateLimit>>;
     try {
       rateLimit = await consumeForumMutationRateLimit(userId);
@@ -229,7 +244,7 @@ export class ForumService {
       allowed: rateLimit.allowed,
       limit: rateLimit.limit,
       remaining: rateLimit.remaining,
-      resetSeconds: rateLimit.resetSeconds
+      resetSeconds: rateLimit.resetSeconds,
     };
   }
 
@@ -238,12 +253,15 @@ export class ForumService {
 
     const moderation = moderateForumInput(`${title}\n${body}`);
     if (moderation.blocked) {
-      throw new ModerationError("Forum content blocked by safety checks.", moderation.reason ?? undefined);
+      throw new ModerationError(
+        "Forum content blocked by safety checks.",
+        moderation.reason ?? undefined
+      );
     }
 
     const subjectResolution = await this.resolveThreadSubjectId({
       ...(input.subjectId ? { subjectId: input.subjectId } : {}),
-      ...(chapterId ? { chapterId } : {})
+      ...(chapterId ? { chapterId } : {}),
     });
 
     const result = await forumRepository.createThread({
@@ -251,18 +269,24 @@ export class ForumService {
       title,
       body,
       subjectId: subjectResolution.subjectId,
-      chapterId: chapterId ?? null
+      chapterId: chapterId ?? null,
     });
 
     return result;
   }
 
-  async createReply(input: CreateReplyInput, userName: string): Promise<{ reply: Record<string, unknown> }> {
+  async createReply(
+    input: CreateReplyInput,
+    userName: string
+  ): Promise<{ reply: Record<string, unknown> }> {
     const { body, parentReplyId, threadId, userId } = input;
 
     const moderation = moderateForumInput(body);
     if (moderation.blocked) {
-      throw new ModerationError("Forum content blocked by safety checks.", moderation.reason ?? undefined);
+      throw new ModerationError(
+        "Forum content blocked by safety checks.",
+        moderation.reason ?? undefined
+      );
     }
 
     const threadRows = await forumRepository.findThreadByIdForReply(threadId);
@@ -292,18 +316,20 @@ export class ForumService {
       userId,
       body,
       parentReplyId: resolvedParentId,
-      threadId
+      threadId,
     });
 
     return {
       reply: {
         ...result.reply,
-        userName
-      }
+        userName,
+      },
     };
   }
 
-  async voteReply(input: VoteInput): Promise<{ replyId: string; voteType: string; upvotes: number }> {
+  async voteReply(
+    input: VoteInput
+  ): Promise<{ replyId: string; voteType: string; upvotes: number }> {
     const replyRows = await forumRepository.findReplyById(input.replyId);
     if (replyRows.length === 0) {
       throw new NotFoundError("Reply not found.");
@@ -313,7 +339,7 @@ export class ForumService {
       return await forumRepository.voteReply({
         replyId: input.replyId,
         userId: input.userId,
-        voteType: input.voteType
+        voteType: input.voteType,
       });
     } catch (error) {
       if (isHttpError(error)) {
@@ -323,15 +349,18 @@ export class ForumService {
     }
   }
 
-  async acceptReply(replyId: string, userId: string): Promise<{ 
-    replyId: string; 
-    threadId: string; 
-    isAcceptedAnswer: boolean; 
-    isSolved: boolean; 
-    replyAuthorId?: string; 
-    xpAwarded?: boolean; 
+  async acceptReply(
+    replyId: string,
+    userId: string
+  ): Promise<{
+    replyId: string;
+    threadId: string;
+    isAcceptedAnswer: boolean;
+    isSolved: boolean;
+    replyAuthorId?: string;
+    xpAwarded?: boolean;
     xp?: { xpAwarded: number; newXp: number; level: number; levelName: string; leveledUp: boolean };
-    xpFailed?: boolean 
+    xpFailed?: boolean;
   }> {
     try {
       const result = await forumRepository.acceptReply({ replyId, userId });
@@ -347,14 +376,14 @@ export class ForumService {
               newXp: xpResult.newXp,
               level: xpResult.level,
               levelName: xpResult.levelName,
-              leveledUp: xpResult.leveledUp
-            }
+              leveledUp: xpResult.leveledUp,
+            },
           };
         } catch (error) {
           console.error("Failed to award XP for accepted forum answer:", error);
           return {
             ...result,
-            xpFailed: true
+            xpFailed: true,
           };
         }
       }

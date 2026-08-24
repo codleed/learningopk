@@ -13,7 +13,7 @@ import {
   chapters,
   subjects,
   userProgress,
-  users
+  users,
 } from "../../lib/db/schema.js";
 import { redis } from "../../lib/redis.js";
 import { createApp } from "../../server.js";
@@ -27,21 +27,30 @@ type SessionUser = {
   role?: "student" | "admin";
 };
 
-const signUp = async (agent: AuthAgent, input: { name: string; email: string; board: string; className: string }) => {
+const signUp = async (
+  agent: AuthAgent,
+  input: { name: string; email: string; board: string; className: string }
+) => {
   const response = await agent.post("/api/auth/sign-up/email").set("origin", APP_ORIGIN).send({
     name: input.name,
     email: input.email,
     password: TEST_PASSWORD,
     board: input.board,
-    class: input.className
+    class: input.className,
   });
 
-  assert.ok(response.status < 400, `Expected sign-up success, got ${response.status} ${JSON.stringify(response.body)}`);
+  assert.ok(
+    response.status < 400,
+    `Expected sign-up success, got ${response.status} ${JSON.stringify(response.body)}`
+  );
 };
 
 const getSessionUser = async (agent: AuthAgent): Promise<SessionUser> => {
   const response = await agent.get("/api/auth/get-session").set("origin", APP_ORIGIN);
-  assert.ok(response.status < 400, `Expected session success, got ${response.status} ${JSON.stringify(response.body)}`);
+  assert.ok(
+    response.status < 400,
+    `Expected session success, got ${response.status} ${JSON.stringify(response.body)}`
+  );
 
   const user = response.body?.user as SessionUser | undefined;
   assert.ok(user?.id, "Expected authenticated session user ID.");
@@ -51,7 +60,7 @@ const getSessionUser = async (agent: AuthAgent): Promise<SessionUser> => {
 const setStudentProfileScope = async ({
   userId,
   boardSlug,
-  classSlug
+  classSlug,
 }: {
   userId: string;
   boardSlug: string;
@@ -61,7 +70,7 @@ const setStudentProfileScope = async ({
     .update(users)
     .set({
       board: boardSlug,
-      class: classSlug
+      class: classSlug,
     })
     .where(eq(users.id, userId));
 };
@@ -79,11 +88,11 @@ const createSubjectScopedGraphFixture = async () => {
     .insert(boards)
     .values({
       name: `Graph Board ${suffix}`,
-      slug: boardSlug
+      slug: boardSlug,
     })
     .returning({
       id: boards.id,
-      slug: boards.slug
+      slug: boards.slug,
     });
   assert.ok(board, "Expected board fixture insert.");
 
@@ -92,11 +101,11 @@ const createSubjectScopedGraphFixture = async () => {
     .values({
       boardId: board.id,
       name: `Graph Class ${suffix}`,
-      slug: classSlug
+      slug: classSlug,
     })
     .returning({
       id: boardClasses.id,
-      slug: boardClasses.slug
+      slug: boardClasses.slug,
     });
   assert.ok(boardClass, "Expected board class fixture insert.");
 
@@ -108,11 +117,11 @@ const createSubjectScopedGraphFixture = async () => {
       grade: null,
       name: `Graph Subject ${suffix}`,
       slug: `graph-subject-${suffix}`,
-      description: "Subject-scoped graph fixture subject."
+      description: "Subject-scoped graph fixture subject.",
     })
     .returning({
       id: subjects.id,
-      slug: subjects.slug
+      slug: subjects.slug,
     });
   assert.ok(subject, "Expected fixture subject insert.");
 
@@ -124,10 +133,10 @@ const createSubjectScopedGraphFixture = async () => {
       grade: null,
       name: `Foreign Subject ${suffix}`,
       slug: `foreign-subject-${suffix}`,
-      description: "Cross-subject graph exclusion fixture."
+      description: "Cross-subject graph exclusion fixture.",
     })
     .returning({
-      id: subjects.id
+      id: subjects.id,
     });
   assert.ok(foreignSubject, "Expected foreign subject fixture insert.");
 
@@ -140,7 +149,7 @@ const createSubjectScopedGraphFixture = async () => {
         title: sourceTitle,
         slug: `graph-source-${suffix}`,
         summary: "Graph source summary fixture.",
-        isPublished: true
+        isPublished: true,
       },
       {
         subjectId: subject.id,
@@ -148,7 +157,7 @@ const createSubjectScopedGraphFixture = async () => {
         title: targetTitle,
         slug: `graph-target-${suffix}`,
         summary: "Graph target summary fixture.",
-        isPublished: true
+        isPublished: true,
       },
       {
         subjectId: subject.id,
@@ -156,7 +165,7 @@ const createSubjectScopedGraphFixture = async () => {
         title: hiddenTitle,
         slug: `hidden-chapter-${suffix}`,
         summary: "Unpublished chapter should be excluded from student graph.",
-        isPublished: false
+        isPublished: false,
       },
       {
         subjectId: foreignSubject.id,
@@ -164,12 +173,12 @@ const createSubjectScopedGraphFixture = async () => {
         title: foreignTitle,
         slug: `foreign-chapter-${suffix}`,
         summary: "Foreign subject chapter should never appear in subject graph.",
-        isPublished: true
-      }
+        isPublished: true,
+      },
     ])
     .returning({
       id: chapters.id,
-      title: chapters.title
+      title: chapters.title,
     });
 
   const sourceChapter = insertedChapters.find((chapter) => chapter.title === sourceTitle);
@@ -188,36 +197,38 @@ const createSubjectScopedGraphFixture = async () => {
         chapterId: sourceChapter.id,
         orderIndex: 1,
         heading: `${sourceTitle} Subpart`,
-        content: "Source subpart content."
+        content: "Source subpart content.",
       },
       {
         chapterId: targetChapter.id,
         orderIndex: 1,
         heading: `${targetTitle} Subpart`,
-        content: "Target subpart content."
+        content: "Target subpart content.",
       },
       {
         chapterId: hiddenChapter.id,
         orderIndex: 1,
         heading: `${hiddenTitle} Subpart`,
-        content: "Hidden subpart content."
+        content: "Hidden subpart content.",
       },
       {
         chapterId: foreignChapter.id,
         orderIndex: 1,
         heading: `${foreignTitle} Subpart`,
-        content: "Foreign subpart content."
-      }
+        content: "Foreign subpart content.",
+      },
     ])
     .returning({
       id: chapterSubparts.id,
-      chapterId: chapterSubparts.chapterId
+      chapterId: chapterSubparts.chapterId,
     });
 
   const sourceSubpart = insertedSubparts.find((subpart) => subpart.chapterId === sourceChapter.id);
   const targetSubpart = insertedSubparts.find((subpart) => subpart.chapterId === targetChapter.id);
   const hiddenSubpart = insertedSubparts.find((subpart) => subpart.chapterId === hiddenChapter.id);
-  const foreignSubpart = insertedSubparts.find((subpart) => subpart.chapterId === foreignChapter.id);
+  const foreignSubpart = insertedSubparts.find(
+    (subpart) => subpart.chapterId === foreignChapter.id
+  );
   assert.ok(sourceSubpart, "Expected source subpart insert.");
   assert.ok(targetSubpart, "Expected target subpart insert.");
   assert.ok(hiddenSubpart, "Expected hidden subpart insert.");
@@ -229,43 +240,43 @@ const createSubjectScopedGraphFixture = async () => {
       targetSubpartId: targetSubpart.id,
       targetTitle: targetTitle,
       normalizedTarget: `target-${suffix}`,
-      isResolved: true
+      isResolved: true,
     },
     {
       sourceSubpartId: sourceSubpart.id,
       targetSubpartId: foreignSubpart.id,
       targetTitle: foreignTitle,
       normalizedTarget: `cross-subject-${suffix}`,
-      isResolved: true
+      isResolved: true,
     },
     {
       sourceSubpartId: sourceSubpart.id,
       targetSubpartId: hiddenSubpart.id,
       targetTitle: hiddenTitle,
       normalizedTarget: `hidden-target-${suffix}`,
-      isResolved: true
+      isResolved: true,
     },
     {
       sourceSubpartId: sourceSubpart.id,
       targetSubpartId: null,
       targetTitle: `Unresolved ${suffix}`,
       normalizedTarget: `unresolved-${suffix}`,
-      isResolved: false
+      isResolved: false,
     },
     {
       sourceSubpartId: foreignSubpart.id,
       targetSubpartId: targetSubpart.id,
       targetTitle: targetTitle,
       normalizedTarget: `foreign-source-${suffix}`,
-      isResolved: true
+      isResolved: true,
     },
     {
       sourceSubpartId: foreignSubpart.id,
       targetSubpartId: null,
       targetTitle: `Foreign Unresolved ${suffix}`,
       normalizedTarget: `foreign-unresolved-${suffix}`,
-      isResolved: false
-    }
+      isResolved: false,
+    },
   ]);
 
   return {
@@ -275,7 +286,7 @@ const createSubjectScopedGraphFixture = async () => {
     sourceChapterId: sourceChapter.id,
     targetChapterId: targetChapter.id,
     hiddenChapterId: hiddenChapter.id,
-    foreignChapterId: foreignChapter.id
+    foreignChapterId: foreignChapter.id,
   };
 };
 
@@ -291,7 +302,9 @@ test("learn subject graph route requires authenticated session", async () => {
   const anonAgent = request(app);
   const fixture = await createSubjectScopedGraphFixture();
 
-  const response = await anonAgent.get(`/api/learn/${fixture.boardSlug}/${fixture.classSlug}/${fixture.subjectSlug}/graph`);
+  const response = await anonAgent.get(
+    `/api/learn/${fixture.boardSlug}/${fixture.classSlug}/${fixture.subjectSlug}/graph`
+  );
   assert.equal(response.status, 401);
 });
 
@@ -304,17 +317,19 @@ test("learn subject graph route enforces student board/class scope", async () =>
     name: "Scoped Student",
     email,
     board: `different-board-${Date.now()}`,
-    className: `different-class-${Date.now()}`
+    className: `different-class-${Date.now()}`,
   });
   const sessionUser = await getSessionUser(agent);
 
   await setStudentProfileScope({
     userId: sessionUser.id,
     boardSlug: `different-board-${Date.now()}`,
-    classSlug: `different-class-${Date.now()}`
+    classSlug: `different-class-${Date.now()}`,
   });
 
-  const response = await agent.get(`/api/learn/${fixture.boardSlug}/${fixture.classSlug}/${fixture.subjectSlug}/graph`);
+  const response = await agent.get(
+    `/api/learn/${fixture.boardSlug}/${fixture.classSlug}/${fixture.subjectSlug}/graph`
+  );
   assert.equal(response.status, 403);
 });
 
@@ -328,13 +343,13 @@ test("learn subject graph route returns only published nodes/edges scoped to the
     name: "Graph Student",
     email,
     board: fixture.boardSlug,
-    className: fixture.classSlug
+    className: fixture.classSlug,
   });
   const sessionUser = await getSessionUser(agent);
   await setStudentProfileScope({
     userId: sessionUser.id,
     boardSlug: fixture.boardSlug,
-    classSlug: fixture.classSlug
+    classSlug: fixture.classSlug,
   });
 
   await db.insert(userProgress).values({
@@ -343,10 +358,12 @@ test("learn subject graph route returns only published nodes/edges scoped to the
     exercisesViewed: 2,
     flashcardsCompleted: true,
     quizBestScore: 1,
-    quizAttemptsCount: 1
+    quizAttemptsCount: 1,
   });
 
-  const response = await agent.get(`/api/learn/${fixture.boardSlug}/${fixture.classSlug}/${fixture.subjectSlug}/graph`);
+  const response = await agent.get(
+    `/api/learn/${fixture.boardSlug}/${fixture.classSlug}/${fixture.subjectSlug}/graph`
+  );
   assert.equal(response.status, 200);
 
   const nodes = response.body?.graph?.nodes as
@@ -374,19 +391,26 @@ test("learn subject graph route returns only published nodes/edges scoped to the
   assert.ok(nodeIds.has(fixture.sourceChapterId), "Expected source chapter node in graph.");
   assert.ok(nodeIds.has(fixture.targetChapterId), "Expected target chapter node in graph.");
   assert.ok(!nodeIds.has(fixture.hiddenChapterId), "Unpublished chapter must not be returned.");
-  assert.ok(!nodeIds.has(fixture.foreignChapterId), "Foreign-subject chapter must not be returned.");
+  assert.ok(
+    !nodeIds.has(fixture.foreignChapterId),
+    "Foreign-subject chapter must not be returned."
+  );
   for (const node of nodes ?? []) {
     assert.equal(node.isPublished, true, "Student graph must not return unpublished chapters.");
   }
 
   assert.ok(
     edges?.some(
-      (edge) => edge.sourceChapterId === fixture.sourceChapterId && edge.targetChapterId === fixture.targetChapterId
+      (edge) =>
+        edge.sourceChapterId === fixture.sourceChapterId &&
+        edge.targetChapterId === fixture.targetChapterId
     ),
     "Expected resolved edge within current subject."
   );
   assert.ok(
-    edges?.some((edge) => edge.sourceChapterId === fixture.sourceChapterId && edge.targetChapterId === null),
+    edges?.some(
+      (edge) => edge.sourceChapterId === fixture.sourceChapterId && edge.targetChapterId === null
+    ),
     "Expected unresolved edge sourced from current subject."
   );
   assert.ok(
@@ -411,7 +435,7 @@ test("learn subject graph route returns only published nodes/edges scoped to the
 
   const subjectLookup = await db
     .select({
-      id: subjects.id
+      id: subjects.id,
     })
     .from(subjects)
     .where(eq(subjects.slug, fixture.subjectSlug))
@@ -421,7 +445,7 @@ test("learn subject graph route returns only published nodes/edges scoped to the
   const returnedNodeIds = nodes?.map((node) => node.id) ?? [];
   const rowCount = await db
     .select({
-      count: chapters.id
+      count: chapters.id,
     })
     .from(chapters)
     .where(and(eq(chapters.subjectId, scopedSubjectId), eq(chapters.isPublished, true)));

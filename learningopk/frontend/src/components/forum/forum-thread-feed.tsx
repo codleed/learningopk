@@ -17,7 +17,12 @@ type ForumThreadFeedProps = {
   pageSize?: number;
 };
 
-export function ForumThreadFeed({ initialThreads, query, initialBatchSize, pageSize = 10 }: ForumThreadFeedProps) {
+export function ForumThreadFeed({
+  initialThreads,
+  query,
+  initialBatchSize,
+  pageSize = 10,
+}: ForumThreadFeedProps) {
   const [threads, setThreads] = useState(initialThreads);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialThreads.length >= initialBatchSize);
@@ -43,7 +48,7 @@ export function ForumThreadFeed({ initialThreads, query, initialBatchSize, pageS
       const response = await getForumThreads({
         ...query,
         limit: pageSize,
-        offset: threads.length
+        offset: threads.length,
       });
 
       if (response.threads.length === 0) {
@@ -81,7 +86,7 @@ export function ForumThreadFeed({ initialThreads, query, initialBatchSize, pageS
         }
       },
       {
-        rootMargin: "480px 0px"
+        rootMargin: "480px 0px",
       }
     );
 

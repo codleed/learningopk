@@ -4,13 +4,18 @@ import {
   calculateLongestStreakDays,
   calculateStreakDays,
   createUtcDay,
-  scoreToPercent
+  scoreToPercent,
 } from "../lib/progress-metrics.js";
 import { withOptionalDbFallback } from "../lib/db-schema-compat.js";
 import { logger } from "../lib/logger.js";
 import { applyProgressEvent } from "../lib/progress.js";
 import { getCurrentPktContext, getPktDateKey } from "../lib/streak-wager.js";
-import { attachCompletionState, buildTodaysFocus, resolveRamadanConfig, type TodaysFocus } from "../lib/todays-focus.js";
+import {
+  attachCompletionState,
+  buildTodaysFocus,
+  resolveRamadanConfig,
+  type TodaysFocus,
+} from "../lib/todays-focus.js";
 import { buildSubjectWeakAreas, type SubjectWeakArea } from "../lib/weak-areas.js";
 import { adminSettingsRepository } from "../repositories/admin-settings.repository.js";
 import { formulasRepository } from "../repositories/formulas.repository.js";
@@ -19,7 +24,14 @@ import { streakWagerService } from "./streak-wager.service.js";
 import { xpService } from "./xp.service.js";
 
 export interface ProgressEventInput {
-  eventType: "chapter_visit" | "summary_read" | "subpart_read" | "exercise_view" | "flashcard_complete" | "quiz_submit" | "past_paper_attempt";
+  eventType:
+    | "chapter_visit"
+    | "summary_read"
+    | "subpart_read"
+    | "exercise_view"
+    | "flashcard_complete"
+    | "quiz_submit"
+    | "past_paper_attempt";
   chapterId?: number;
   userId: string;
   subpartId?: number;
@@ -62,7 +74,8 @@ export interface SubjectAggregate {
   lastActiveAt: Date | null;
 }
 
-type DashboardTodaysFocus = (TodaysFocus & { completed: boolean; completedAt: string | null }) | null;
+type DashboardTodaysFocus =
+  (TodaysFocus & { completed: boolean; completedAt: string | null }) | null;
 
 export class ProgressService {
   async placeStreakWager(userId: string, amount: number): Promise<void> {
@@ -83,7 +96,7 @@ export class ProgressService {
         userId: input.userId,
         chapterId: input.chapterId!,
         score: input.score ?? 0,
-        occurredAt
+        occurredAt,
       });
     } else if (input.eventType === "past_paper_attempt") {
       snapshot = await applyProgressEvent({
@@ -91,7 +104,7 @@ export class ProgressService {
         userId: input.userId,
         chapterId: input.chapterId ?? 0,
         score: input.score ?? 0,
-        occurredAt
+        occurredAt,
       });
     } else if (input.eventType === "subpart_read") {
       if (typeof input.subpartId !== "number") {
@@ -102,7 +115,7 @@ export class ProgressService {
         userId: input.userId,
         chapterId: input.chapterId!,
         subpartId: input.subpartId,
-        occurredAt
+        occurredAt,
       });
     } else {
       if (typeof input.chapterId !== "number") {
@@ -112,7 +125,7 @@ export class ProgressService {
         eventType: input.eventType,
         userId: input.userId,
         chapterId: input.chapterId,
-        occurredAt
+        occurredAt,
       });
     }
 
@@ -134,7 +147,7 @@ export class ProgressService {
           newXp: result.newXp,
           level: result.level,
           levelName: result.levelName,
-          leveledUp: result.leveledUp
+          leveledUp: result.leveledUp,
         };
       } else if (input.eventType === "subpart_read") {
         // Only award XP if this was a new subpart read (not a duplicate submission)
@@ -145,7 +158,7 @@ export class ProgressService {
             newXp: result.newXp,
             level: result.level,
             levelName: result.levelName,
-            leveledUp: result.leveledUp
+            leveledUp: result.leveledUp,
           };
         } else {
           // No XP awarded for duplicate read
@@ -156,14 +169,14 @@ export class ProgressService {
                 newXp: userXpInfo.xp,
                 level: userXpInfo.level,
                 levelName: userXpInfo.levelName,
-                leveledUp: false
+                leveledUp: false,
               }
             : {
                 xpAwarded: 0,
                 newXp: 0,
                 level: 1,
                 levelName: "Beginner",
-                leveledUp: false
+                leveledUp: false,
               };
         }
       } else if (input.eventType === "summary_read") {
@@ -173,7 +186,7 @@ export class ProgressService {
           newXp: result.newXp,
           level: result.level,
           levelName: result.levelName,
-          leveledUp: result.leveledUp
+          leveledUp: result.leveledUp,
         };
       } else if (input.eventType === "exercise_view") {
         const result = await xpService.awardExerciseCompleteXp(input.userId);
@@ -182,7 +195,7 @@ export class ProgressService {
           newXp: result.newXp,
           level: result.level,
           levelName: result.levelName,
-          leveledUp: result.leveledUp
+          leveledUp: result.leveledUp,
         };
       } else if (input.eventType === "flashcard_complete") {
         const result = await xpService.awardFlashcardCompleteXp(input.userId);
@@ -191,7 +204,7 @@ export class ProgressService {
           newXp: result.newXp,
           level: result.level,
           levelName: result.levelName,
-          leveledUp: result.leveledUp
+          leveledUp: result.leveledUp,
         };
       }
       // Note: quiz_submit XP is awarded in quiz.service.ts to avoid double awards
@@ -210,10 +223,10 @@ export class ProgressService {
         exercisesViewed: snapshot.exercisesViewed,
         flashcardsCompleted: snapshot.flashcardsCompleted,
         quizBestScore: snapshot.quizBestScore,
-        quizAttemptsCount: snapshot.quizAttemptsCount
+        quizAttemptsCount: snapshot.quizAttemptsCount,
       },
       xp: xpResult,
-      xpFailed
+      xpFailed,
     };
   }
 
@@ -227,23 +240,26 @@ export class ProgressService {
       }
     }
 
-    const subjectProgressRows = await progressRepository.findSubjectProgress(userId, boardSlug, classSlug);
+    const subjectProgressRows = await progressRepository.findSubjectProgress(
+      userId,
+      boardSlug,
+      classSlug
+    );
 
     const subjectAggregates = this.aggregateSubjectProgress(subjectProgressRows, chapterTotalMarks);
 
     await streakWagerService.settleOutstandingWagers(userId);
 
     const activityLogRows = await progressRepository.findActivityLogByUserId(userId);
-    const recoveredProtectedDateKeys = await streakWagerService.getRecoveredProtectedDateKeys(userId);
+    const recoveredProtectedDateKeys =
+      await streakWagerService.getRecoveredProtectedDateKeys(userId);
     const lostProtectedDateKeys = await streakWagerService.getLostProtectedDateKeys(userId);
 
-    const { streakDays, longestStreakDays, weeklyActivity, activityCalendar } = this.calculateActivityMetrics(
-      activityLogRows,
-      {
+    const { streakDays, longestStreakDays, weeklyActivity, activityCalendar } =
+      this.calculateActivityMetrics(activityLogRows, {
         recoveredProtectedDateKeys,
-        lostProtectedDateKeys
-      }
-    );
+        lostProtectedDateKeys,
+      });
     const momentumContext = getCurrentPktContext();
     const hasActivityToday = await progressRepository.hasActivityInRange(
       userId,
@@ -255,7 +271,7 @@ export class ProgressService {
         "admin_settings.ramadan",
         () => adminSettingsRepository.findByKeys(["ramadan_mode", "ramadan_fasting_hours"]),
         () => []
-      )
+      ),
     });
 
     const recentChapterVisitRows = await progressRepository.findRecentChapterVisits(userId, 5);
@@ -271,7 +287,7 @@ export class ProgressService {
         subjectSlug: row.subjectSlug,
         subjectName: row.subjectName,
         chapterSlug: row.chapterSlug,
-        chapterTitle: row.chapterTitle
+        chapterTitle: row.chapterTitle,
       })),
       ...recentQuizRows.map((row) => ({
         type: "quiz_submit" as const,
@@ -282,14 +298,14 @@ export class ProgressService {
         chapterTitle: row.chapterTitle,
         score: row.score,
         totalMarks: row.totalMarks,
-        percentage: scoreToPercent(row.score, row.totalMarks)
-      }))
+        percentage: scoreToPercent(row.score, row.totalMarks),
+      })),
     ]
       .sort((left, right) => right.occurredAt.getTime() - left.occurredAt.getTime())
       .slice(0, 5)
       .map((entry) => ({
         ...entry,
-        occurredAt: entry.occurredAt.toISOString()
+        occurredAt: entry.occurredAt.toISOString(),
       }));
 
     const starredFormulas = await formulasRepository.findTopStarredByAccess(userId, 5);
@@ -310,10 +326,13 @@ export class ProgressService {
       grade: entry.grade,
       boardName: entry.boardName,
       boardSlug: entry.boardSlug,
-      chaptersVisitedPercent: entry.totalChapters > 0 ? Math.round((entry.visitedChapters / entry.totalChapters) * 100) : 0,
+      chaptersVisitedPercent:
+        entry.totalChapters > 0
+          ? Math.round((entry.visitedChapters / entry.totalChapters) * 100)
+          : 0,
       bestQuizScorePercent: entry.bestQuizScorePercent,
       lastActiveAt: entry.lastActiveAt ? entry.lastActiveAt.toISOString() : null,
-      weakAreas: weakAreasBySubject.get(entry.subjectId) ?? []
+      weakAreas: weakAreasBySubject.get(entry.subjectId) ?? [],
     }));
 
     // Get XP and level info
@@ -330,7 +349,7 @@ export class ProgressService {
       const freezeStatus = await xpService.checkStreakFreeze(userId);
       streakFreezeInfo = {
         canUseStreakFreeze: freezeStatus.canUseStreakFreeze,
-        nextFreezeAvailableAt: freezeStatus.nextFreezeAvailableAt?.toISOString() ?? null
+        nextFreezeAvailableAt: freezeStatus.nextFreezeAvailableAt?.toISOString() ?? null,
       };
     } catch (error) {
       logger.warn({ error }, "Failed to get streak freeze info");
@@ -346,7 +365,7 @@ export class ProgressService {
         quizzesCompleted: 0,
         quizzesTarget: 1,
         completed: false,
-        percent: 0
+        percent: 0,
       })
     );
     const streakWager = await withOptionalDbFallback(
@@ -362,7 +381,7 @@ export class ProgressService {
         showLockModal: false,
         warningAtRisk: false,
         activeWager: null,
-        brokenWager: null
+        brokenWager: null,
       })
     );
     const todaysFocus = await withOptionalDbFallback(
@@ -374,7 +393,7 @@ export class ProgressService {
           hasActivityToday,
           ramadanConfig,
           subjectProgressRows,
-          chapterTotalMarks
+          chapterTotalMarks,
         }),
       () => null
     );
@@ -391,7 +410,7 @@ export class ProgressService {
         formulaLatex: row.formulaLatex,
         subjectName: row.subjectName,
         chapterTitle: row.chapterTitle,
-        accessCount: row.accessCount
+        accessCount: row.accessCount,
       })),
       quizHistory: quizHistoryRows.map((row) => ({
         occurredAt: row.completedAt.toISOString(),
@@ -401,27 +420,34 @@ export class ProgressService {
         chapterTitle: row.chapterTitle,
         score: row.score,
         totalMarks: row.totalMarks,
-        percentage: scoreToPercent(row.score, row.totalMarks)
+        percentage: scoreToPercent(row.score, row.totalMarks),
       })),
       weeklyActivity,
       dailyActivity: activityCalendar,
       todaysFocus,
-      xp: xpInfo ? {
-        xp: xpInfo.xp,
-        level: xpInfo.level,
-        levelName: xpInfo.levelName,
-        xpToNextLevel: xpInfo.xpToNextLevel,
-        xpInCurrentLevel: xpInfo.xpInCurrentLevel,
-        xpRequiredForLevel: xpInfo.xpRequiredForLevel,
-        isMaxLevel: xpInfo.isMaxLevel
-      } : null,
+      xp: xpInfo
+        ? {
+            xp: xpInfo.xp,
+            level: xpInfo.level,
+            levelName: xpInfo.levelName,
+            xpToNextLevel: xpInfo.xpToNextLevel,
+            xpInCurrentLevel: xpInfo.xpInCurrentLevel,
+            xpRequiredForLevel: xpInfo.xpRequiredForLevel,
+            isMaxLevel: xpInfo.isMaxLevel,
+          }
+        : null,
       streakFreeze: streakFreezeInfo,
       todaysGoal,
-      streakWager
+      streakWager,
     };
   }
 
-  async getSubjectDashboard(userId: string, boardSlug: string, grade: "9" | "10", subjectSlug: string) {
+  async getSubjectDashboard(
+    userId: string,
+    boardSlug: string,
+    grade: "9" | "10",
+    subjectSlug: string
+  ) {
     const subjectRows = await progressRepository.findSubjectBySlug(boardSlug, grade, subjectSlug);
 
     const subjectRow = subjectRows[0];
@@ -429,9 +455,14 @@ export class ProgressService {
       return null;
     }
 
-    const chapterRows = await progressRepository.findChaptersBySubject(subjectRow.subjectId, userId);
+    const chapterRows = await progressRepository.findChaptersBySubject(
+      subjectRow.subjectId,
+      userId
+    );
 
-    const chapterQuizRows = await progressRepository.findQuizTotalMarksBySubject(subjectRow.subjectId);
+    const chapterQuizRows = await progressRepository.findQuizTotalMarksBySubject(
+      subjectRow.subjectId
+    );
 
     const chapterTotalMarks = new Map<number, number>();
     for (const row of chapterQuizRows) {
@@ -443,7 +474,10 @@ export class ProgressService {
     const chapterProgress = chapterRows.map((chapter) => {
       const quizAttemptsCount = chapter.quizAttemptsCount ?? 0;
       const quizAttempted = quizAttemptsCount > 0;
-      const bestScorePercent = scoreToPercent(chapter.quizBestScore ?? 0, chapterTotalMarks.get(chapter.chapterId) ?? 0);
+      const bestScorePercent = scoreToPercent(
+        chapter.quizBestScore ?? 0,
+        chapterTotalMarks.get(chapter.chapterId) ?? 0
+      );
       const status = quizAttempted ? (bestScorePercent > 70 ? "green" : "yellow") : "grey";
 
       return {
@@ -455,13 +489,16 @@ export class ProgressService {
         exercisesViewed: chapter.exercisesViewed ?? 0,
         quizAttempted,
         bestScorePercent,
-        status
+        status,
       };
     });
 
     const overallSubjectScorePercent =
       chapterProgress.length > 0
-        ? Math.round(chapterProgress.reduce((total, chapter) => total + chapter.bestScorePercent, 0) / chapterProgress.length)
+        ? Math.round(
+            chapterProgress.reduce((total, chapter) => total + chapter.bestScorePercent, 0) /
+              chapterProgress.length
+          )
         : 0;
 
     return {
@@ -471,10 +508,10 @@ export class ProgressService {
         name: subjectRow.subjectName,
         grade: subjectRow.grade,
         boardName: subjectRow.boardName,
-        boardSlug: subjectRow.boardSlug
+        boardSlug: subjectRow.boardSlug,
       },
       overallSubjectScorePercent,
-      chapters: chapterProgress
+      chapters: chapterProgress,
     };
   }
 
@@ -486,7 +523,7 @@ export class ProgressService {
       return {
         completedAt: existing.completedAt.toISOString(),
         xpAwarded: existing.xpAwarded,
-        alreadyCompleted: true
+        alreadyCompleted: true,
       };
     }
 
@@ -501,15 +538,23 @@ export class ProgressService {
     const activityLogRows = await progressRepository.findActivityLogByUserId(userId);
     const { streakDays } = this.calculateActivityMetrics(activityLogRows);
     const context = getCurrentPktContext();
-    const hasActivityToday = await progressRepository.hasActivityInRange(userId, context.dayStartUtc, context.nextDayStartUtc);
+    const hasActivityToday = await progressRepository.hasActivityInRange(
+      userId,
+      context.dayStartUtc,
+      context.nextDayStartUtc
+    );
     const ramadanConfig = resolveRamadanConfig({
       settings: await withOptionalDbFallback(
         "admin_settings.ramadan",
         () => adminSettingsRepository.findByKeys(["ramadan_mode", "ramadan_fasting_hours"]),
         () => []
-      )
+      ),
     });
-    const subjectProgressRows = await progressRepository.findSubjectProgress(userId, boardSlug, grade);
+    const subjectProgressRows = await progressRepository.findSubjectProgress(
+      userId,
+      boardSlug,
+      grade
+    );
 
     const focus = buildTodaysFocus({
       streakDays,
@@ -527,9 +572,12 @@ export class ProgressService {
         grade: (row.grade ?? "9") as "9" | "10",
         visited: Boolean(row.visitedAt),
         quizAttemptsCount: row.quizAttemptsCount ?? 0,
-        bestQuizScorePercent: scoreToPercent(row.quizBestScore ?? 0, chapterTotalMarks.get(row.chapterId) ?? 0),
-        examDate: row.examDate ? row.examDate.toISOString() : null
-      }))
+        bestQuizScorePercent: scoreToPercent(
+          row.quizBestScore ?? 0,
+          chapterTotalMarks.get(row.chapterId) ?? 0
+        ),
+        examDate: row.examDate ? row.examDate.toISOString() : null,
+      })),
     });
 
     if (!focus) {
@@ -541,7 +589,7 @@ export class ProgressService {
       dateKey: focus.dateKey,
       focusType: focus.type,
       chapterId: focus.chapterId,
-      xpAwarded: focus.xpReward
+      xpAwarded: focus.xpReward,
     });
 
     if (!created) {
@@ -554,7 +602,7 @@ export class ProgressService {
       completedAt: created.completedAt.toISOString(),
       xpAwarded: focus.xpReward,
       alreadyCompleted: false,
-      xp
+      xp,
     };
   }
 
@@ -570,13 +618,17 @@ export class ProgressService {
     return rankedWeakAreas.slice(0, limit).map((area) => area.label);
   }
 
-  async recordPastPaperAttempt(userId: string, mockExamId: number, percentage: number): Promise<void> {
+  async recordPastPaperAttempt(
+    userId: string,
+    mockExamId: number,
+    percentage: number
+  ): Promise<void> {
     try {
       await this.recordProgressEvent({
         eventType: "past_paper_attempt",
         userId,
         score: percentage,
-        occurredAt: new Date()
+        occurredAt: new Date(),
       });
     } catch (err) {
       console.error("Failed to record past paper progress:", err);
@@ -617,7 +669,7 @@ export class ProgressService {
           totalChapters: 1,
           visitedChapters: visitedAt ? 1 : 0,
           bestQuizScorePercent: quizPercent,
-          lastActiveAt: visitedAt
+          lastActiveAt: visitedAt,
         });
         continue;
       }
@@ -653,7 +705,10 @@ export class ProgressService {
     }
 
     for (const recoveredProtectedDateKey of options?.recoveredProtectedDateKeys ?? []) {
-      activityDailyCounts.set(recoveredProtectedDateKey, Math.max(1, activityDailyCounts.get(recoveredProtectedDateKey) ?? 0));
+      activityDailyCounts.set(
+        recoveredProtectedDateKey,
+        Math.max(1, activityDailyCounts.get(recoveredProtectedDateKey) ?? 0)
+      );
     }
 
     for (const lostProtectedDateKey of options?.lostProtectedDateKeys ?? []) {
@@ -666,18 +721,20 @@ export class ProgressService {
       Number(todayKey.slice(5, 7)) - 1,
       Number(todayKey.slice(8, 10))
     );
-    const activityDates = Array.from(activityDailyCounts.keys()).map((dateKey) => new Date(`${dateKey}T00:00:00.000Z`));
+    const activityDates = Array.from(activityDailyCounts.keys()).map(
+      (dateKey) => new Date(`${dateKey}T00:00:00.000Z`)
+    );
     const streakDays = calculateStreakDays(activityDates, todayUtc);
     const longestStreakDays = calculateLongestStreakDays(activityDates);
     const weeklyActivity = buildDailyActivitySeries({
       activityDailyCounts,
       endDate: todayUtc,
-      days: 7
+      days: 7,
     });
     const activityCalendar = buildActivityCalendarSeries({
       activityDailyCounts,
       endDate: todayUtc,
-      days: 365
+      days: 365,
     });
 
     return { streakDays, longestStreakDays, weeklyActivity, activityCalendar };
@@ -726,9 +783,12 @@ export class ProgressService {
         grade: (row.grade ?? "9") as "9" | "10",
         visited: Boolean(row.visitedAt),
         quizAttemptsCount: row.quizAttemptsCount ?? 0,
-        bestQuizScorePercent: scoreToPercent(row.quizBestScore ?? 0, input.chapterTotalMarks.get(row.chapterId) ?? 0),
-        examDate: row.examDate ? row.examDate.toISOString() : null
-      }))
+        bestQuizScorePercent: scoreToPercent(
+          row.quizBestScore ?? 0,
+          input.chapterTotalMarks.get(row.chapterId) ?? 0
+        ),
+        examDate: row.examDate ? row.examDate.toISOString() : null,
+      })),
     });
 
     if (!focus) {
@@ -742,7 +802,7 @@ export class ProgressService {
       completion
         ? {
             completedAt: completion.completedAt.toISOString(),
-            xpAwarded: completion.xpAwarded
+            xpAwarded: completion.xpAwarded,
           }
         : null
     );
@@ -754,13 +814,13 @@ export class ProgressService {
     const chapterIds = Array.from(new Set(attempts.map((attempt) => attempt.chapterId)));
     const [questions, chapterExercises] = await Promise.all([
       progressRepository.findQuizQuestionsForQuizzes(quizIds),
-      progressRepository.findExercisesForChapters(chapterIds)
+      progressRepository.findExercisesForChapters(chapterIds),
     ]);
 
     return buildSubjectWeakAreas({
       attempts,
       questions,
-      exercises: chapterExercises
+      exercises: chapterExercises,
     });
   }
 }

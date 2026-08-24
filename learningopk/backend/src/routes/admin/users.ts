@@ -14,26 +14,26 @@ const adminUsersQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
   q: z.string().trim().optional().default(""),
   role: z.enum(["student", "admin", "moderator"]).optional(),
-  status: z.enum(["active", "suspended"]).optional()
+  status: z.enum(["active", "suspended"]).optional(),
 });
 
 const adminUserParamsSchema = z.object({
-  id: z.string().trim().min(1)
+  id: z.string().trim().min(1),
 });
 
 const adminUserRoleUpdateBodySchema = z.object({
-  role: z.enum(["student", "admin", "moderator"])
+  role: z.enum(["student", "admin", "moderator"]),
 });
 
 const adminUserSuspensionBodySchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("suspend"),
-    reason: z.string().trim().min(10)
+    reason: z.string().trim().min(10),
   }),
   z.object({
     action: z.literal("reactivate"),
-    reason: z.string().trim().optional()
-  })
+    reason: z.string().trim().optional(),
+  }),
 ]);
 
 const listAdminUsers = async ({
@@ -41,7 +41,7 @@ const listAdminUsers = async ({
   pageSize,
   q,
   role,
-  status
+  status,
 }: {
   page: number;
   pageSize: number;
@@ -60,7 +60,9 @@ const listAdminUsers = async ({
           ilike(users.email, `%${escapeLikePattern(searchTerm)}%`)
         )
       : undefined;
-  const predicates = [rolePredicate, statusPredicate, searchPredicate].filter((value): value is SQL => Boolean(value));
+  const predicates = [rolePredicate, statusPredicate, searchPredicate].filter(
+    (value): value is SQL => Boolean(value)
+  );
   const whereClause = predicates.length > 0 ? and(...predicates) : undefined;
 
   const rows = await db
@@ -74,7 +76,7 @@ const listAdminUsers = async ({
       suspendedAt: users.suspendedAt,
       suspendedReason: users.suspendedReason,
       suspendedBy: users.suspendedBy,
-      createdAt: users.createdAt
+      createdAt: users.createdAt,
     })
     .from(users)
     .where(whereClause)
@@ -84,7 +86,7 @@ const listAdminUsers = async ({
 
   const totalRows = await db
     .select({
-      count: sql<number>`count(*)::int`
+      count: sql<number>`count(*)::int`,
     })
     .from(users)
     .where(whereClause);
@@ -101,10 +103,10 @@ const listAdminUsers = async ({
       suspendedAt: row.suspendedAt ? row.suspendedAt.toISOString() : null,
       suspendedReason: row.suspendedReason,
       suspendedBy: row.suspendedBy,
-      createdAt: row.createdAt.toISOString()
+      createdAt: row.createdAt.toISOString(),
     })),
     total,
-    hasMore: offset + rows.length < total
+    hasMore: offset + rows.length < total,
   };
 };
 
@@ -120,7 +122,7 @@ usersAdminRouter.get("/users", requireSession, async (req, res) => {
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid users query parameters",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
@@ -131,7 +133,7 @@ usersAdminRouter.get("/users", requireSession, async (req, res) => {
     pageSize,
     q,
     ...(role ? { role } : {}),
-    ...(status ? { status } : {})
+    ...(status ? { status } : {}),
   });
 
   res.status(200).json({
@@ -139,7 +141,7 @@ usersAdminRouter.get("/users", requireSession, async (req, res) => {
     total: payload.total,
     page,
     pageSize,
-    hasMore: payload.hasMore
+    hasMore: payload.hasMore,
   });
 });
 
@@ -153,7 +155,7 @@ usersAdminRouter.post("/users/:id/role", requireSession, async (req, res) => {
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid user identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -162,7 +164,7 @@ usersAdminRouter.post("/users/:id/role", requireSession, async (req, res) => {
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid role update payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -170,7 +172,7 @@ usersAdminRouter.post("/users/:id/role", requireSession, async (req, res) => {
   const targetUserId = parsedParams.data.id;
   if (targetUserId === authedReq.session.user.id) {
     res.status(409).json({
-      error: "Self role mutation is not allowed"
+      error: "Self role mutation is not allowed",
     });
     return;
   }
@@ -181,7 +183,7 @@ usersAdminRouter.post("/users/:id/role", requireSession, async (req, res) => {
       name: users.name,
       email: users.email,
       role: users.role,
-      createdAt: users.createdAt
+      createdAt: users.createdAt,
     })
     .from(users)
     .where(eq(users.id, targetUserId))
@@ -190,14 +192,14 @@ usersAdminRouter.post("/users/:id/role", requireSession, async (req, res) => {
   const target = targetRows[0];
   if (!target) {
     res.status(404).json({
-      error: "User not found"
+      error: "User not found",
     });
     return;
   }
 
   if (target.role === parsedBody.data.role) {
     res.status(409).json({
-      error: "User already has this role"
+      error: "User already has this role",
     });
     return;
   }
@@ -206,7 +208,7 @@ usersAdminRouter.post("/users/:id/role", requireSession, async (req, res) => {
     .update(users)
     .set({
       role: parsedBody.data.role,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     })
     .where(eq(users.id, target.id))
     .returning({
@@ -214,13 +216,13 @@ usersAdminRouter.post("/users/:id/role", requireSession, async (req, res) => {
       name: users.name,
       email: users.email,
       role: users.role,
-      createdAt: users.createdAt
+      createdAt: users.createdAt,
     });
 
   const updated = updatedRows[0];
   if (!updated) {
     res.status(404).json({
-      error: "User not found"
+      error: "User not found",
     });
     return;
   }
@@ -232,7 +234,7 @@ usersAdminRouter.post("/users/:id/role", requireSession, async (req, res) => {
     status: "success",
     message: `Updated role to ${updated.role}`,
     actorId: authedReq.session.user.id,
-    actorName: authedReq.session.user.name
+    actorName: authedReq.session.user.name,
   });
 
   res.status(200).json({
@@ -241,8 +243,8 @@ usersAdminRouter.post("/users/:id/role", requireSession, async (req, res) => {
       name: updated.name,
       email: updated.email,
       role: updated.role,
-      createdAt: updated.createdAt.toISOString()
-    }
+      createdAt: updated.createdAt.toISOString(),
+    },
   });
 });
 
@@ -256,7 +258,7 @@ usersAdminRouter.post("/users/:id/suspension", requireSession, async (req, res) 
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid user identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -265,7 +267,7 @@ usersAdminRouter.post("/users/:id/suspension", requireSession, async (req, res) 
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid suspension update payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -273,7 +275,7 @@ usersAdminRouter.post("/users/:id/suspension", requireSession, async (req, res) 
   const targetUserId = parsedParams.data.id;
   if (targetUserId === authedReq.session.user.id) {
     res.status(409).json({
-      error: "Self suspension mutation is not allowed"
+      error: "Self suspension mutation is not allowed",
     });
     return;
   }
@@ -288,7 +290,7 @@ usersAdminRouter.post("/users/:id/suspension", requireSession, async (req, res) 
       suspendedAt: users.suspendedAt,
       suspendedReason: users.suspendedReason,
       suspendedBy: users.suspendedBy,
-      createdAt: users.createdAt
+      createdAt: users.createdAt,
     })
     .from(users)
     .where(eq(users.id, targetUserId))
@@ -297,14 +299,14 @@ usersAdminRouter.post("/users/:id/suspension", requireSession, async (req, res) 
   const target = targetRows[0];
   if (!target) {
     res.status(404).json({
-      error: "User not found"
+      error: "User not found",
     });
     return;
   }
 
   if (target.role !== "student") {
     res.status(409).json({
-      error: "Only student users can be suspended or reactivated"
+      error: "Only student users can be suspended or reactivated",
     });
     return;
   }
@@ -312,14 +314,14 @@ usersAdminRouter.post("/users/:id/suspension", requireSession, async (req, res) 
   const action = parsedBody.data.action;
   if (action === "suspend" && target.status === "suspended") {
     res.status(409).json({
-      error: "User is already suspended"
+      error: "User is already suspended",
     });
     return;
   }
 
   if (action === "reactivate" && target.status === "active") {
     res.status(409).json({
-      error: "User is already active"
+      error: "User is already active",
     });
     return;
   }
@@ -332,14 +334,14 @@ usersAdminRouter.post("/users/:id/suspension", requireSession, async (req, res) 
           suspendedAt: now,
           suspendedReason: parsedBody.data.reason.trim(),
           suspendedBy: authedReq.session.user.id,
-          updatedAt: now
+          updatedAt: now,
         }
       : {
           status: "active" as const,
           suspendedAt: null,
           suspendedReason: null,
           suspendedBy: null,
-          updatedAt: now
+          updatedAt: now,
         };
 
   const updatedRows = await db
@@ -355,13 +357,13 @@ usersAdminRouter.post("/users/:id/suspension", requireSession, async (req, res) 
       suspendedAt: users.suspendedAt,
       suspendedReason: users.suspendedReason,
       suspendedBy: users.suspendedBy,
-      createdAt: users.createdAt
+      createdAt: users.createdAt,
     });
 
   const updated = updatedRows[0];
   if (!updated) {
     res.status(404).json({
-      error: "User not found"
+      error: "User not found",
     });
     return;
   }
@@ -376,7 +378,7 @@ usersAdminRouter.post("/users/:id/suspension", requireSession, async (req, res) 
         ? `Suspended user: ${updated.suspendedReason ?? "No reason supplied."}`
         : "Reactivated user.",
     actorId: authedReq.session.user.id,
-    actorName: authedReq.session.user.name
+    actorName: authedReq.session.user.name,
   });
 
   res.status(200).json({
@@ -389,7 +391,7 @@ usersAdminRouter.post("/users/:id/suspension", requireSession, async (req, res) 
       suspendedAt: updated.suspendedAt ? updated.suspendedAt.toISOString() : null,
       suspendedReason: updated.suspendedReason,
       suspendedBy: updated.suspendedBy,
-      createdAt: updated.createdAt.toISOString()
-    }
+      createdAt: updated.createdAt.toISOString(),
+    },
   });
 });

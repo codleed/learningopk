@@ -13,6 +13,7 @@
 ### Task 1: Runtime Database Routing And PgBouncer Config
 
 **Files:**
+
 - Modify: `docker-compose.yml`
 - Modify: `backend/src/lib/env.ts`
 - Modify: `backend/src/lib/db/index.ts`
@@ -31,7 +32,7 @@ import { buildDatabaseConfig } from "../../lib/db/index.js";
 test("prefers pooled runtime database url and preserves direct url", () => {
   const config = buildDatabaseConfig({
     DATABASE_URL: "postgresql://postgres:password@pgbouncer:6432/learningo",
-    DATABASE_DIRECT_URL: "postgresql://postgres:password@postgres:5432/learningo"
+    DATABASE_DIRECT_URL: "postgresql://postgres:password@postgres:5432/learningo",
   });
 
   assert.equal(config.runtimeUrl.includes(":6432"), true);
@@ -47,9 +48,12 @@ Expected: FAIL because `buildDatabaseConfig` does not exist yet.
 **Step 3: Write minimal implementation**
 
 ```ts
-export const buildDatabaseConfig = (input: { DATABASE_URL: string; DATABASE_DIRECT_URL?: string }) => ({
+export const buildDatabaseConfig = (input: {
+  DATABASE_URL: string;
+  DATABASE_DIRECT_URL?: string;
+}) => ({
   runtimeUrl: input.DATABASE_URL,
-  directUrl: input.DATABASE_DIRECT_URL ?? input.DATABASE_URL
+  directUrl: input.DATABASE_DIRECT_URL ?? input.DATABASE_URL,
 });
 ```
 
@@ -75,6 +79,7 @@ git commit -m "TASK-51A: add pgbouncer runtime database routing"
 ### Task 2: Health Split And Auth Validation Endpoint
 
 **Files:**
+
 - Modify: `backend/src/server.ts`
 - Modify: `backend/src/routes/health.ts`
 - Modify: `backend/src/lib/session.ts`
@@ -142,6 +147,7 @@ git commit -m "TASK-51C: add readiness and edge auth validation routes"
 ### Task 3: Cache Service Foundation
 
 **Files:**
+
 - Create: `backend/src/lib/cache/cache.service.ts`
 - Create: `backend/src/lib/cache/cache-keys.ts`
 - Modify: `backend/src/lib/redis.ts`
@@ -206,6 +212,7 @@ git commit -m "TASK-51B: add cache service foundation"
 ### Task 4: Learn Repository Cache-Through Reads
 
 **Files:**
+
 - Modify: `backend/src/repositories/learn.repository.ts`
 - Modify: `backend/src/services/learn.service.ts`
 - Modify: `backend/src/routes/learn.ts`
@@ -216,7 +223,12 @@ git commit -m "TASK-51B: add cache service foundation"
 ```ts
 test("returns cached chapter bundle before querying db", async () => {
   const repo = new LearnRepository({ db: fakeDb, cache: fakeCacheHit });
-  const result = await repo.findChapterBundleBySlug({ board: "punjab", grade: "9", subject: "physics", chapter: "motion" });
+  const result = await repo.findChapterBundleBySlug({
+    board: "punjab",
+    grade: "9",
+    subject: "physics",
+    chapter: "motion",
+  });
 
   assert.equal(fakeDb.wasCalled, false);
   assert.equal(result?.chapter.slug, "motion");
@@ -258,6 +270,7 @@ git commit -m "TASK-51B: add learn repository cache-through reads"
 ### Task 5: Forum Repository Cache-Through Reads And Invalidation
 
 **Files:**
+
 - Modify: `backend/src/repositories/forum.repository.ts`
 - Modify: `backend/src/services/forum.service.ts`
 - Modify: `backend/src/routes/forum.ts`
@@ -283,10 +296,7 @@ Expected: FAIL because repository mutations do not invalidate cache yet.
 
 ```ts
 await this.db.insert(forumReplies).values(input);
-await this.cache.deleteMany([
-  forumThreadKey(input.threadId),
-  forumThreadFeedKey("default")
-]);
+await this.cache.deleteMany([forumThreadKey(input.threadId), forumThreadFeedKey("default")]);
 ```
 
 Move route-level thread/filter/detail queries behind repository-backed methods.
@@ -306,6 +316,7 @@ git commit -m "TASK-51B: cache forum reads and invalidate on mutation"
 ### Task 6: Quiz And Progress Repository Consolidation
 
 **Files:**
+
 - Modify: `backend/src/repositories/quiz.repository.ts`
 - Modify: `backend/src/repositories/progress.repository.ts`
 - Modify: `backend/src/services/quiz.service.ts`
@@ -335,7 +346,7 @@ Expected: FAIL because repository boundaries are incomplete.
 ```ts
 export class QuizRepository {
   async findQuestionsByQuizId(quizId: number) {
-    return this.db.select({ /* ... */ }).from(quizQuestions).where(eq(quizQuestions.quizId, quizId));
+    return this.db.select({/* ... */}).from(quizQuestions).where(eq(quizQuestions.quizId, quizId));
   }
 }
 ```
@@ -357,6 +368,7 @@ git commit -m "TASK-51D: move quiz and progress access into repositories"
 ### Task 7: AI Chat Repository Extraction
 
 **Files:**
+
 - Create: `backend/src/repositories/ai-chat.repository.ts`
 - Modify: `backend/src/routes/ai-chat.ts`
 - Modify: `backend/src/repositories/index.ts`
@@ -386,7 +398,7 @@ export class AiChatRepository {
     return this.db.insert(aiMessages).values({
       sessionId: input.sessionId,
       role: "assistant",
-      content: input.content
+      content: input.content,
     });
   }
 }
@@ -409,6 +421,7 @@ git commit -m "TASK-51D: extract ai chat persistence repository"
 ### Task 8: Shared Catalog, Media, Graph, And Session Repository Cleanup
 
 **Files:**
+
 - Create: `backend/src/repositories/catalog.repository.ts`
 - Create: `backend/src/repositories/media.repository.ts`
 - Create: `backend/src/repositories/chapter-graph.repository.ts`
@@ -444,7 +457,10 @@ Expected: FAIL because the shared repositories do not exist.
 ```ts
 export class CatalogRepository {
   listBoards() {
-    return this.db.select({ id: boards.id, name: boards.name, slug: boards.slug }).from(boards).orderBy(asc(boards.name));
+    return this.db
+      .select({ id: boards.id, name: boards.name, slug: boards.slug })
+      .from(boards)
+      .orderBy(asc(boards.name));
   }
 }
 ```
@@ -472,6 +488,7 @@ git commit -m "TASK-51D: remove shared direct db access"
 ### Task 9: Admin Route Repository Consolidation And Cache Invalidation Hooks
 
 **Files:**
+
 - Create: `backend/src/repositories/admin.repository.ts`
 - Modify: `backend/src/routes/admin.ts`
 - Modify: `backend/src/repositories/index.ts`
@@ -488,7 +505,7 @@ test("publishing chapter content invalidates learn cache keys", async () => {
   assert.equal(response.status, 200);
   assert.deepEqual(fakeCache.deletedKeys, [
     "learn:chapter-content:123",
-    "learn:subject-list:subject-42"
+    "learn:subject-list:subject-42",
   ]);
 });
 ```
@@ -502,10 +519,7 @@ Expected: FAIL because admin mutations do not yet invalidate cache or route thro
 
 ```ts
 await adminRepository.publishChapter(chapterId);
-await cacheService.deleteMany([
-  chapterContentKeyById(chapterId),
-  subjectListingKey(subjectId)
-]);
+await cacheService.deleteMany([chapterContentKeyById(chapterId), subjectListingKey(subjectId)]);
 ```
 
 Consolidate direct admin route DB access into repository methods in incremental slices rather than leaving `routes/admin.ts` as the data layer.
@@ -525,6 +539,7 @@ git commit -m "TASK-51D: consolidate admin mutations and cache invalidation"
 ### Task 10: Nginx Load Balancing, Rate Limiting, And Compose Wiring
 
 **Files:**
+
 - Create: `infra/nginx.conf`
 - Modify: `docker-compose.yml`
 - Modify: `backend/src/server.ts`
@@ -586,6 +601,7 @@ git commit -m "TASK-51C: add nginx load balancing and rate limiting"
 ### Task 11: End-To-End Scaling Verification
 
 **Files:**
+
 - Create: `backend/src/scripts/verify-phase0-scaling.ts`
 - Create: `backend/src/tests/integration/phase0-scaling.integration.test.ts`
 - Modify: `backend/package.json`
@@ -612,7 +628,7 @@ const requests = Array.from({ length: 100 }, () => fetch(`${baseUrl}/api/health/
 const results = await Promise.allSettled(requests);
 return {
   concurrentRequestCount: results.length,
-  failures: results.filter((result) => result.status === "rejected").length
+  failures: results.filter((result) => result.status === "rejected").length,
 };
 ```
 
@@ -638,6 +654,7 @@ git commit -m "TASK-51A: verify phase 0 scaling behavior"
 ### Task 12: Final Verification And Kanban Update
 
 **Files:**
+
 - Modify: `../KANBAN.md`
 
 **Step 1: Run focused backend unit tests**

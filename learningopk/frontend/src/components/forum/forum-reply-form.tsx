@@ -16,7 +16,7 @@ const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001
 
 const createReplySchema = z.object({
   body: z.string().trim().min(2),
-  parentReplyId: z.string().uuid().optional()
+  parentReplyId: z.string().uuid().optional(),
 });
 
 type ForumReplyFormProps = {
@@ -25,7 +25,11 @@ type ForumReplyFormProps = {
   compact?: boolean;
 };
 
-export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: ForumReplyFormProps) => {
+export const ForumReplyForm = ({
+  threadId,
+  parentReplyId,
+  compact = false,
+}: ForumReplyFormProps) => {
   const router = useRouter();
   const { pushToast } = useToast();
   const [body, setBody] = useState("");
@@ -43,7 +47,7 @@ export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: For
 
     const parsed = createReplySchema.safeParse({
       body,
-      ...(parentReplyId ? { parentReplyId } : {})
+      ...(parentReplyId ? { parentReplyId } : {}),
     });
 
     if (!parsed.success) {
@@ -57,9 +61,9 @@ export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: For
         method: "POST",
         credentials: "include",
         headers: {
-          "content-type": "application/json"
+          "content-type": "application/json",
         },
-        body: JSON.stringify(parsed.data)
+        body: JSON.stringify(parsed.data),
       });
       const responseBody = (await response.json().catch(() => null)) as unknown;
 
@@ -71,7 +75,7 @@ export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: For
       if (!response.ok) {
         const parsedError = z
           .object({
-            error: z.string()
+            error: z.string(),
           })
           .safeParse(responseBody);
         setError(parsedError.success ? parsedError.data.error : "Reply failed.");
@@ -86,7 +90,7 @@ export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: For
       pushToast({
         title: "Failed to post reply",
         description: "The server could not be reached. Please try again.",
-        tone: "error"
+        tone: "error",
       });
     } finally {
       setIsPending(false);
@@ -96,9 +100,10 @@ export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: For
   return (
     <form
       onSubmit={onSubmit}
-      className={compact
-        ? "mt-3 rounded-lg border border-dashed border-border-default bg-bg-subtle/30 p-3"
-        : "rounded-xl border border-border-default bg-bg-surface p-4"
+      className={
+        compact
+          ? "mt-3 rounded-lg border border-dashed border-border-default bg-bg-subtle/30 p-3"
+          : "rounded-xl border border-border-default bg-bg-surface p-4"
       }
     >
       <div className="mb-3 flex items-center justify-between">
@@ -110,11 +115,19 @@ export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: For
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="mb-2 flex items-center justify-between">
           <TabList variant="pills">
-            <TabTrigger value="write" variant="pills" layoutId={`reply-tab-${parentReplyId ?? "root"}`}>
+            <TabTrigger
+              value="write"
+              variant="pills"
+              layoutId={`reply-tab-${parentReplyId ?? "root"}`}
+            >
               <Pencil className="h-3 w-3" aria-hidden="true" />
               Write
             </TabTrigger>
-            <TabTrigger value="preview" variant="pills" layoutId={`reply-tab-${parentReplyId ?? "root"}`}>
+            <TabTrigger
+              value="preview"
+              variant="pills"
+              layoutId={`reply-tab-${parentReplyId ?? "root"}`}
+            >
               <Eye className="h-3 w-3" aria-hidden="true" />
               Preview
             </TabTrigger>
@@ -157,7 +170,9 @@ export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: For
             onChange={(event) => setBody(event.target.value)}
             rows={compact ? 3 : 5}
             required
-            placeholder={parentReplyId ? "Add a nested reply..." : "Share your answer or thoughts..."}
+            placeholder={
+              parentReplyId ? "Add a nested reply..." : "Share your answer or thoughts..."
+            }
             autoResize
             maxRows={compact ? 8 : 15}
           />

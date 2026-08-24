@@ -81,25 +81,15 @@ export function Tabs({
 
 /** Props for the TabList component. */
 export interface TabListProps
-  extends HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof tabListVariants> {}
+  extends HTMLAttributes<HTMLDivElement>, VariantProps<typeof tabListVariants> {}
 
 /**
  * Horizontal tab trigger list with visual variants.
  *
  * Variants: underline | pills | boxed.
  */
-export function TabList({
-  className,
-  variant,
-  ...props
-}: TabListProps) {
-  return (
-    <TabsPrimitive.List
-      className={cn(tabListVariants({ variant }), className)}
-      {...props}
-    />
-  );
+export function TabList({ className, variant, ...props }: TabListProps) {
+  return <TabsPrimitive.List className={cn(tabListVariants({ variant }), className)} {...props} />;
 }
 
 /* ═══════════════════════════════════════════
@@ -132,32 +122,20 @@ export function TabTrigger({
   ...props
 }: TabTriggerProps) {
   const variantClasses: Record<string, string> = {
-    underline: cn(
-      "px-4 py-2.5 -mb-px",
-      "text-text-muted",
-      "data-[state=active]:text-text-primary",
-    ),
-    pills: cn(
-      "px-3 py-1.5 rounded-md",
-      "text-text-muted",
-      "data-[state=active]:text-text-primary",
-    ),
+    underline: cn("px-4 py-2.5 -mb-px", "text-text-muted", "data-[state=active]:text-text-primary"),
+    pills: cn("px-3 py-1.5 rounded-md", "text-text-muted", "data-[state=active]:text-text-primary"),
     boxed: cn(
       "flex-1 px-4 py-2.5",
       "text-text-muted",
       "data-[state=active]:text-text-primary",
-      "first:rounded-l-lg last:rounded-r-lg",
+      "first:rounded-l-lg last:rounded-r-lg"
     ),
   };
 
   return (
     <TabsPrimitive.Trigger
       value={value}
-      className={cn(
-        tabTriggerBaseClasses,
-        variantClasses[variant],
-        className
-      )}
+      className={cn(tabTriggerBaseClasses, variantClasses[variant], className)}
       {...props}
     >
       {children}
@@ -169,13 +147,7 @@ export function TabTrigger({
 }
 
 /* ─── Internal animated indicator ─── */
-function TabIndicator({
-  variant,
-  layoutId,
-}: {
-  variant: string;
-  layoutId: string;
-}) {
+function TabIndicator({ variant, layoutId }: { variant: string; layoutId: string }) {
   if (variant === "underline") {
     return (
       <motion.span
@@ -224,21 +196,12 @@ export interface TabContentProps extends HTMLAttributes<HTMLDivElement> {
 /**
  * Tab content panel. Only renders when the matching trigger is active.
  */
-export function TabContent({
-  className,
-  value,
-  forceMount,
-  ...props
-}: TabContentProps) {
+export function TabContent({ className, value, forceMount, ...props }: TabContentProps) {
   return (
     <TabsPrimitive.Content
       value={value}
       forceMount={forceMount}
-      className={cn(
-        "mt-3 focus-visible:outline-none",
-        "data-[state=inactive]:hidden",
-        className
-      )}
+      className={cn("mt-3 focus-visible:outline-none", "data-[state=inactive]:hidden", className)}
       {...props}
     />
   );

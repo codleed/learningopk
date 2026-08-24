@@ -5,7 +5,16 @@ import { eq } from "drizzle-orm";
 import request from "supertest";
 
 import { db, pool } from "../../lib/db/index.js";
-import { aiChatSessions, aiMessages, boards, chapters, forumThreads, revisionNotes, subjects, users } from "../../lib/db/schema.js";
+import {
+  aiChatSessions,
+  aiMessages,
+  boards,
+  chapters,
+  forumThreads,
+  revisionNotes,
+  subjects,
+  users,
+} from "../../lib/db/schema.js";
 import { redis } from "../../lib/redis.js";
 import { createApp } from "../../server.js";
 
@@ -26,7 +35,7 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
     email,
     password: TEST_PASSWORD,
     class: "9th",
-    board: "fbise"
+    board: "fbise",
   });
 
   assert.ok(
@@ -60,10 +69,10 @@ const createChapterFixture = async (): Promise<number> => {
     .insert(boards)
     .values({
       name: `Test Board ${suffix}`,
-      slug: `test-board-${suffix}`
+      slug: `test-board-${suffix}`,
     })
     .returning({
-      id: boards.id
+      id: boards.id,
     });
 
   const board = insertedBoards[0];
@@ -75,10 +84,10 @@ const createChapterFixture = async (): Promise<number> => {
       boardId: board.id,
       grade: "9",
       name: `Test Subject ${suffix}`,
-      slug: `test-subject-${suffix}`
+      slug: `test-subject-${suffix}`,
     })
     .returning({
-      id: subjects.id
+      id: subjects.id,
     });
 
   const subject = insertedSubjects[0];
@@ -92,10 +101,10 @@ const createChapterFixture = async (): Promise<number> => {
       title: `Test Chapter ${suffix}`,
       slug: `test-chapter-${suffix}`,
       summary: "Fixture chapter summary.",
-      isPublished: false
+      isPublished: false,
     })
     .returning({
-      id: chapters.id
+      id: chapters.id,
     });
 
   const chapter = insertedChapters[0];
@@ -115,10 +124,10 @@ const createChapterFixtureWithMetadata = async (): Promise<{
     .insert(boards)
     .values({
       name: `Audit Board ${suffix}`,
-      slug: `audit-board-${suffix}`
+      slug: `audit-board-${suffix}`,
     })
     .returning({
-      id: boards.id
+      id: boards.id,
     });
 
   const board = insertedBoards[0];
@@ -130,10 +139,10 @@ const createChapterFixtureWithMetadata = async (): Promise<{
       boardId: board.id,
       grade: "9",
       name: `Audit Subject ${suffix}`,
-      slug: `audit-subject-${suffix}`
+      slug: `audit-subject-${suffix}`,
     })
     .returning({
-      id: subjects.id
+      id: subjects.id,
     });
 
   const subject = insertedSubjects[0];
@@ -147,11 +156,11 @@ const createChapterFixtureWithMetadata = async (): Promise<{
       title,
       slug: `audit-chapter-${suffix}`,
       summary: "Audit chapter summary fixture.",
-      isPublished: false
+      isPublished: false,
     })
     .returning({
       id: chapters.id,
-      title: chapters.title
+      title: chapters.title,
     });
 
   const chapter = insertedChapters[0];
@@ -159,7 +168,7 @@ const createChapterFixtureWithMetadata = async (): Promise<{
 
   return {
     id: chapter.id,
-    title: chapter.title
+    title: chapter.title,
   };
 };
 
@@ -173,10 +182,10 @@ const createAdminContentFixture = async (): Promise<{
     .insert(boards)
     .values({
       name: `Admin Content Board ${suffix}`,
-      slug: `admin-content-board-${suffix}`
+      slug: `admin-content-board-${suffix}`,
     })
     .returning({
-      id: boards.id
+      id: boards.id,
     });
 
   const board = insertedBoards[0];
@@ -188,10 +197,10 @@ const createAdminContentFixture = async (): Promise<{
       boardId: board.id,
       grade: "10",
       name: `Admin Content Subject ${suffix}`,
-      slug: `admin-content-subject-${suffix}`
+      slug: `admin-content-subject-${suffix}`,
     })
     .returning({
-      id: subjects.id
+      id: subjects.id,
     });
 
   const subject = insertedSubjects[0];
@@ -206,7 +215,7 @@ const createAdminContentFixture = async (): Promise<{
         title: `Visible Chapter ${suffix}`,
         slug: `visible-chapter-${suffix}`,
         summary: "Published chapter summary fixture.",
-        isPublished: true
+        isPublished: true,
       },
       {
         subjectId: subject.id,
@@ -214,12 +223,12 @@ const createAdminContentFixture = async (): Promise<{
         title: `Hidden Chapter ${suffix}`,
         slug: `hidden-chapter-${suffix}`,
         summary: "Hidden chapter summary fixture.",
-        isPublished: false
-      }
+        isPublished: false,
+      },
     ])
     .returning({
       id: chapters.id,
-      isPublished: chapters.isPublished
+      isPublished: chapters.isPublished,
     });
 
   const publishedChapter = insertedChapters.find((chapter) => chapter.isPublished);
@@ -229,7 +238,7 @@ const createAdminContentFixture = async (): Promise<{
 
   return {
     publishedChapterId: publishedChapter.id,
-    hiddenChapterId: hiddenChapter.id
+    hiddenChapterId: hiddenChapter.id,
   };
 };
 
@@ -245,10 +254,10 @@ const createLinkingFixture = async (): Promise<{
     .insert(boards)
     .values({
       name: `Link Board ${suffix}`,
-      slug: `link-board-${suffix}`
+      slug: `link-board-${suffix}`,
     })
     .returning({
-      id: boards.id
+      id: boards.id,
     });
   const board = insertedBoards[0];
   assert.ok(board, "Expected board fixture insert.");
@@ -259,10 +268,10 @@ const createLinkingFixture = async (): Promise<{
       boardId: board.id,
       grade: "9",
       name: `Link Subject ${suffix}`,
-      slug: `link-subject-${suffix}`
+      slug: `link-subject-${suffix}`,
     })
     .returning({
-      id: subjects.id
+      id: subjects.id,
     });
   const subject = insertedSubjects[0];
   assert.ok(subject, "Expected subject fixture insert.");
@@ -279,7 +288,7 @@ const createLinkingFixture = async (): Promise<{
         title: sourceChapterTitle,
         slug: `link-source-${suffix}`,
         summary: "Source summary fixture.",
-        isPublished: true
+        isPublished: true,
       },
       {
         subjectId: subject.id,
@@ -287,12 +296,12 @@ const createLinkingFixture = async (): Promise<{
         title: targetChapterTitle,
         slug: `link-target-${suffix}`,
         summary: "Target summary fixture.",
-        isPublished: true
-      }
+        isPublished: true,
+      },
     ])
     .returning({
       id: chapters.id,
-      title: chapters.title
+      title: chapters.title,
     });
 
   const sourceChapter = insertedChapters.find((chapter) => chapter.title === sourceChapterTitle);
@@ -304,7 +313,7 @@ const createLinkingFixture = async (): Promise<{
     sourceChapterId: sourceChapter.id,
     targetChapterId: targetChapter.id,
     sourceChapterTitle,
-    targetChapterTitle
+    targetChapterTitle,
   };
 };
 
@@ -315,10 +324,10 @@ const createThreadFixture = async (userId: string): Promise<string> => {
       userId,
       title: `Thread ${Date.now()}`,
       body: "Fixture thread body for moderation tests.",
-      isPinned: false
+      isPinned: false,
     })
     .returning({
-      id: forumThreads.id
+      id: forumThreads.id,
     });
 
   const thread = insertedThreads[0];
@@ -327,7 +336,9 @@ const createThreadFixture = async (userId: string): Promise<string> => {
   return thread.id;
 };
 
-const createThreadFixtureWithMetadata = async (userId: string): Promise<{ id: string; title: string }> => {
+const createThreadFixtureWithMetadata = async (
+  userId: string
+): Promise<{ id: string; title: string }> => {
   const title = `Audit Thread ${Date.now()}`;
 
   const insertedThreads = await db
@@ -336,11 +347,11 @@ const createThreadFixtureWithMetadata = async (userId: string): Promise<{ id: st
       userId,
       title,
       body: "Fixture thread body for admin audit persistence tests.",
-      isPinned: false
+      isPinned: false,
     })
     .returning({
       id: forumThreads.id,
-      title: forumThreads.title
+      title: forumThreads.title,
     });
 
   const thread = insertedThreads[0];
@@ -373,7 +384,7 @@ test("key routes enforce expected public/authenticated/authorization status code
 
   const unauthThreadCreateResponse = await anonAgent.post("/api/forum/threads").send({
     title: "Need help with algebra",
-    body: "Can someone explain why we isolate x first?"
+    body: "Can someone explain why we isolate x first?",
   });
   assert.equal(unauthThreadCreateResponse.status, 401);
 
@@ -385,23 +396,29 @@ test("key routes enforce expected public/authenticated/authorization status code
 
   const threadCreateResponse = await threadAuthorAgent.post("/api/forum/threads").send({
     title: "Need help with algebra",
-    body: "Can someone explain why we isolate x first?"
+    body: "Can someone explain why we isolate x first?",
   });
   assert.equal(threadCreateResponse.status, 201);
   const threadId = threadCreateResponse.body?.thread?.id as string | undefined;
   assert.ok(threadId, "Expected created thread ID.");
 
-  const replyCreateResponse = await otherUserAgent.post(`/api/forum/threads/${threadId}/replies`).send({
-    body: "Start by moving constants to the right side."
-  });
+  const replyCreateResponse = await otherUserAgent
+    .post(`/api/forum/threads/${threadId}/replies`)
+    .send({
+      body: "Start by moving constants to the right side.",
+    });
   assert.equal(replyCreateResponse.status, 201);
   const replyId = replyCreateResponse.body?.reply?.id as string | undefined;
   assert.ok(replyId, "Expected created reply ID.");
 
-  const forbiddenAcceptResponse = await otherUserAgent.post(`/api/forum/replies/${replyId}/accept`).send({});
+  const forbiddenAcceptResponse = await otherUserAgent
+    .post(`/api/forum/replies/${replyId}/accept`)
+    .send({});
   assert.equal(forbiddenAcceptResponse.status, 403);
 
-  const authorAcceptResponse = await threadAuthorAgent.post(`/api/forum/replies/${replyId}/accept`).send({});
+  const authorAcceptResponse = await threadAuthorAgent
+    .post(`/api/forum/replies/${replyId}/accept`)
+    .send({});
   assert.equal(authorAcceptResponse.status, 200);
 });
 
@@ -410,14 +427,17 @@ test("sign-up persists learner profile fields class, degree, and board", async (
   const learnerAgent = request.agent(app);
   const email = `tst_profile_${Date.now()}@example.com`;
 
-  const signUpResponse = await learnerAgent.post("/api/auth/sign-up/email").set("origin", APP_ORIGIN).send({
-    name: "Learner Profile",
-    email,
-    password: TEST_PASSWORD,
-    class: "10th",
-    degree: "Matriculation",
-    board: "Balochistan"
-  });
+  const signUpResponse = await learnerAgent
+    .post("/api/auth/sign-up/email")
+    .set("origin", APP_ORIGIN)
+    .send({
+      name: "Learner Profile",
+      email,
+      password: TEST_PASSWORD,
+      class: "10th",
+      degree: "Matriculation",
+      board: "Balochistan",
+    });
   assert.ok(
     signUpResponse.status < 400,
     `Expected sign-up success, got ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`
@@ -444,26 +464,34 @@ test("admin chapter publish endpoint enforces auth/role and updates chapter visi
   const adminUser = await getSessionUser(adminAgent);
   const chapterId = await createChapterFixture();
 
-  const unauthenticatedResponse = await anonAgent.post(`/api/admin/content/chapters/${chapterId}/publish`).send({
-    isPublished: true
-  });
+  const unauthenticatedResponse = await anonAgent
+    .post(`/api/admin/content/chapters/${chapterId}/publish`)
+    .send({
+      isPublished: true,
+    });
   assert.equal(unauthenticatedResponse.status, 401);
 
-  const forbiddenResponse = await memberAgent.post(`/api/admin/content/chapters/${chapterId}/publish`).send({
-    isPublished: true
-  });
+  const forbiddenResponse = await memberAgent
+    .post(`/api/admin/content/chapters/${chapterId}/publish`)
+    .send({
+      isPublished: true,
+    });
   assert.equal(forbiddenResponse.status, 403);
 
   await assignAdminRole(adminUser.id);
 
-  const notFoundResponse = await adminAgent.post("/api/admin/content/chapters/999999/publish").send({
-    isPublished: true
-  });
+  const notFoundResponse = await adminAgent
+    .post("/api/admin/content/chapters/999999/publish")
+    .send({
+      isPublished: true,
+    });
   assert.equal(notFoundResponse.status, 404);
 
-  const successResponse = await adminAgent.post(`/api/admin/content/chapters/${chapterId}/publish`).send({
-    isPublished: true
-  });
+  const successResponse = await adminAgent
+    .post(`/api/admin/content/chapters/${chapterId}/publish`)
+    .send({
+      isPublished: true,
+    });
   assert.equal(successResponse.status, 200);
   assert.equal(successResponse.body?.chapter?.id, chapterId);
   assert.equal(successResponse.body?.chapter?.isPublished, true);
@@ -471,7 +499,7 @@ test("admin chapter publish endpoint enforces auth/role and updates chapter visi
 
   const chapterRows = await db
     .select({
-      isPublished: chapters.isPublished
+      isPublished: chapters.isPublished,
     })
     .from(chapters)
     .where(eq(chapters.id, chapterId))
@@ -492,7 +520,9 @@ test("admin chapter summary endpoints enforce auth/role and support summary upda
   const adminUser = await getSessionUser(adminAgent);
   const chapterId = await createChapterFixture();
 
-  const unauthenticatedGet = await anonAgent.get(`/api/admin/content/chapters/${chapterId}/summary`);
+  const unauthenticatedGet = await anonAgent.get(
+    `/api/admin/content/chapters/${chapterId}/summary`
+  );
   assert.equal(unauthenticatedGet.status, 401);
 
   const forbiddenGet = await memberAgent.get(`/api/admin/content/chapters/${chapterId}/summary`);
@@ -508,27 +538,32 @@ test("admin chapter summary endpoints enforce auth/role and support summary upda
   assert.equal(getResponse.body?.chapter?.id, chapterId);
   assert.equal(getResponse.body?.chapter?.summary, "Fixture chapter summary.");
 
-  const invalidUpdate = await adminAgent.post(`/api/admin/content/chapters/${chapterId}/summary`).send({
-    summary: ""
-  });
+  const invalidUpdate = await adminAgent
+    .post(`/api/admin/content/chapters/${chapterId}/summary`)
+    .send({
+      summary: "",
+    });
   assert.equal(invalidUpdate.status, 400);
 
   const missingUpdate = await adminAgent.post("/api/admin/content/chapters/999999/summary").send({
-    summary: "Updated summary markdown."
+    summary: "Updated summary markdown.",
   });
   assert.equal(missingUpdate.status, 404);
 
-  const updatedSummary = "Updated summary markdown with image.\n\n![Figure](https://example.com/fig.png)";
-  const updateResponse = await adminAgent.post(`/api/admin/content/chapters/${chapterId}/summary`).send({
-    summary: updatedSummary
-  });
+  const updatedSummary =
+    "Updated summary markdown with image.\n\n![Figure](https://example.com/fig.png)";
+  const updateResponse = await adminAgent
+    .post(`/api/admin/content/chapters/${chapterId}/summary`)
+    .send({
+      summary: updatedSummary,
+    });
   assert.equal(updateResponse.status, 200);
   assert.equal(updateResponse.body?.chapter?.id, chapterId);
   assert.equal(updateResponse.body?.chapter?.summary, updatedSummary);
 
   const chapterRows = await db
     .select({
-      summary: chapters.summary
+      summary: chapters.summary,
     })
     .from(chapters)
     .where(eq(chapters.id, chapterId))
@@ -549,34 +584,42 @@ test("admin revision notes endpoints enforce auth/role and upsert chapter revisi
   const adminUser = await getSessionUser(adminAgent);
   const chapterId = await createChapterFixture();
 
-  const unauthenticatedGet = await anonAgent.get(`/api/admin/content/chapters/${chapterId}/revision-notes`);
+  const unauthenticatedGet = await anonAgent.get(
+    `/api/admin/content/chapters/${chapterId}/revision-notes`
+  );
   assert.equal(unauthenticatedGet.status, 401);
 
-  const forbiddenGet = await memberAgent.get(`/api/admin/content/chapters/${chapterId}/revision-notes`);
+  const forbiddenGet = await memberAgent.get(
+    `/api/admin/content/chapters/${chapterId}/revision-notes`
+  );
   assert.equal(forbiddenGet.status, 403);
 
   await assignAdminRole(adminUser.id);
 
-  const getResponse = await adminAgent.get(`/api/admin/content/chapters/${chapterId}/revision-notes`);
+  const getResponse = await adminAgent.get(
+    `/api/admin/content/chapters/${chapterId}/revision-notes`
+  );
   assert.equal(getResponse.status, 200);
   assert.deepEqual(getResponse.body?.revisionNotes, {
     keyFormulas: [],
     keyDefinitions: [],
     commonMistakes: "",
-    examTips: ""
+    examTips: "",
   });
 
   const updatePayload = {
     keyFormulas: ["v = u + at", "F = ma"],
     keyDefinitions: [
       { term: "Velocity", definition: "Rate of change of displacement." },
-      { term: "Force", definition: "Push or pull causing acceleration." }
+      { term: "Force", definition: "Push or pull causing acceleration." },
     ],
     commonMistakes: "Using speed instead of velocity\nForgetting sign conventions",
-    examTips: "Write the known values first\nCheck SI units before solving"
+    examTips: "Write the known values first\nCheck SI units before solving",
   };
 
-  const updateResponse = await adminAgent.post(`/api/admin/content/chapters/${chapterId}/revision-notes`).send(updatePayload);
+  const updateResponse = await adminAgent
+    .post(`/api/admin/content/chapters/${chapterId}/revision-notes`)
+    .send(updatePayload);
   assert.equal(updateResponse.status, 200);
   assert.deepEqual(updateResponse.body?.revisionNotes, updatePayload);
 
@@ -585,7 +628,7 @@ test("admin revision notes endpoints enforce auth/role and upsert chapter revisi
       keyFormulas: revisionNotes.keyFormulas,
       keyDefinitions: revisionNotes.keyDefinitions,
       commonMistakes: revisionNotes.commonMistakes,
-      examTips: revisionNotes.examTips
+      examTips: revisionNotes.examTips,
     })
     .from(revisionNotes)
     .where(eq(revisionNotes.chapterId, chapterId))
@@ -609,18 +652,26 @@ test("admin chapter wiki-link endpoints persist backlinks and survive target ren
   const fixture = await createLinkingFixture();
 
   const updatedSummary = `Refer to [[${fixture.targetChapterTitle}]] and [[Missing Concept ${Date.now()}]].`;
-  const updateResponse = await adminAgent.post(`/api/admin/content/chapters/${fixture.sourceChapterId}/summary`).send({
-    summary: updatedSummary
-  });
+  const updateResponse = await adminAgent
+    .post(`/api/admin/content/chapters/${fixture.sourceChapterId}/summary`)
+    .send({
+      summary: updatedSummary,
+    });
   assert.equal(updateResponse.status, 200);
 
-  const unauthenticatedLinks = await anonAgent.get(`/api/admin/content/chapters/${fixture.sourceChapterId}/links`);
+  const unauthenticatedLinks = await anonAgent.get(
+    `/api/admin/content/chapters/${fixture.sourceChapterId}/links`
+  );
   assert.equal(unauthenticatedLinks.status, 401);
 
-  const forbiddenLinks = await memberAgent.get(`/api/admin/content/chapters/${fixture.sourceChapterId}/links`);
+  const forbiddenLinks = await memberAgent.get(
+    `/api/admin/content/chapters/${fixture.sourceChapterId}/links`
+  );
   assert.equal(forbiddenLinks.status, 403);
 
-  const linksResponse = await adminAgent.get(`/api/admin/content/chapters/${fixture.sourceChapterId}/links`);
+  const linksResponse = await adminAgent.get(
+    `/api/admin/content/chapters/${fixture.sourceChapterId}/links`
+  );
   assert.equal(linksResponse.status, 200);
   const outgoing = linksResponse.body?.links?.outgoing as
     | Array<{
@@ -631,10 +682,14 @@ test("admin chapter wiki-link endpoints persist backlinks and survive target ren
       }>
     | undefined;
   assert.ok(Array.isArray(outgoing), "Expected outgoing links payload.");
-  assert.ok(outgoing?.some((entry) => entry.targetChapterId === fixture.targetChapterId && entry.isResolved));
+  assert.ok(
+    outgoing?.some((entry) => entry.targetChapterId === fixture.targetChapterId && entry.isResolved)
+  );
   assert.ok(outgoing?.some((entry) => entry.targetChapterId === null && !entry.isResolved));
 
-  const backlinkResponse = await adminAgent.get(`/api/admin/content/chapters/${fixture.targetChapterId}/links`);
+  const backlinkResponse = await adminAgent.get(
+    `/api/admin/content/chapters/${fixture.targetChapterId}/links`
+  );
   assert.equal(backlinkResponse.status, 200);
   const backlinks = backlinkResponse.body?.links?.backlinks as
     | Array<{
@@ -645,14 +700,18 @@ test("admin chapter wiki-link endpoints persist backlinks and survive target ren
   assert.ok(backlinks?.some((entry) => entry.sourceChapterId === fixture.sourceChapterId));
 
   const newTitle = `${fixture.targetChapterTitle} Renamed`;
-  const renameResponse = await adminAgent.post(`/api/admin/content/chapters/${fixture.targetChapterId}/rename`).send({
-    title: newTitle,
-    slug: `renamed-${Date.now()}`
-  });
+  const renameResponse = await adminAgent
+    .post(`/api/admin/content/chapters/${fixture.targetChapterId}/rename`)
+    .send({
+      title: newTitle,
+      slug: `renamed-${Date.now()}`,
+    });
   assert.equal(renameResponse.status, 200);
   assert.equal(renameResponse.body?.chapter?.title, newTitle);
 
-  const postRenameLinksResponse = await adminAgent.get(`/api/admin/content/chapters/${fixture.sourceChapterId}/links`);
+  const postRenameLinksResponse = await adminAgent.get(
+    `/api/admin/content/chapters/${fixture.sourceChapterId}/links`
+  );
   assert.equal(postRenameLinksResponse.status, 200);
   const postRenameOutgoing = postRenameLinksResponse.body?.links?.outgoing as
     | Array<{
@@ -662,30 +721,39 @@ test("admin chapter wiki-link endpoints persist backlinks and survive target ren
       }>
     | undefined;
   assert.ok(Array.isArray(postRenameOutgoing), "Expected outgoing links payload after rename.");
-  const resolvedEntry = postRenameOutgoing?.find((entry) => entry.targetChapterId === fixture.targetChapterId);
+  const resolvedEntry = postRenameOutgoing?.find(
+    (entry) => entry.targetChapterId === fixture.targetChapterId
+  );
   assert.ok(resolvedEntry, "Expected renamed target link to stay resolved.");
   assert.equal(resolvedEntry?.isResolved, true);
   assert.equal(resolvedEntry?.targetChapterTitle, newTitle);
 
-  const suggestionsResponse = await adminAgent.get("/api/admin/content/chapters/link-suggestions").query({
-    q: "Link Target"
-  });
+  const suggestionsResponse = await adminAgent
+    .get("/api/admin/content/chapters/link-suggestions")
+    .query({
+      q: "Link Target",
+    });
   assert.equal(suggestionsResponse.status, 200);
-  const suggestions = suggestionsResponse.body?.suggestions as Array<{ id: number; title: string }> | undefined;
+  const suggestions = suggestionsResponse.body?.suggestions as
+    Array<{ id: number; title: string }> | undefined;
   assert.ok(Array.isArray(suggestions), "Expected suggestions payload.");
   assert.ok(suggestions?.some((entry) => entry.id === fixture.targetChapterId));
 
   const graphResponse = await adminAgent.get("/api/admin/content/chapters/graph");
   assert.equal(graphResponse.status, 200);
-  const graphNodes = graphResponse.body?.graph?.nodes as Array<{ id: number; title: string }> | undefined;
-  const graphEdges = graphResponse.body?.graph?.edges as Array<{ sourceChapterId: number; targetChapterId: number }> | undefined;
+  const graphNodes = graphResponse.body?.graph?.nodes as
+    Array<{ id: number; title: string }> | undefined;
+  const graphEdges = graphResponse.body?.graph?.edges as
+    Array<{ sourceChapterId: number; targetChapterId: number }> | undefined;
   assert.ok(Array.isArray(graphNodes), "Expected graph nodes payload.");
   assert.ok(Array.isArray(graphEdges), "Expected graph edges payload.");
   assert.ok(graphNodes?.some((node) => node.id === fixture.sourceChapterId));
   assert.ok(graphNodes?.some((node) => node.id === fixture.targetChapterId));
   assert.ok(
     graphEdges?.some(
-      (edge) => edge.sourceChapterId === fixture.sourceChapterId && edge.targetChapterId === fixture.targetChapterId
+      (edge) =>
+        edge.sourceChapterId === fixture.sourceChapterId &&
+        edge.targetChapterId === fixture.targetChapterId
     ),
     "Expected graph edge from source chapter to linked target chapter."
   );
@@ -704,25 +772,31 @@ test("admin thread pin endpoint enforces auth/role and updates thread pin status
   const memberUser = await getSessionUser(memberAgent);
   const threadId = await createThreadFixture(memberUser.id);
 
-  const unauthenticatedResponse = await anonAgent.post(`/api/admin/forum/threads/${threadId}/pin`).send({
-    isPinned: true
-  });
+  const unauthenticatedResponse = await anonAgent
+    .post(`/api/admin/forum/threads/${threadId}/pin`)
+    .send({
+      isPinned: true,
+    });
   assert.equal(unauthenticatedResponse.status, 401);
 
-  const forbiddenResponse = await memberAgent.post(`/api/admin/forum/threads/${threadId}/pin`).send({
-    isPinned: true
-  });
+  const forbiddenResponse = await memberAgent
+    .post(`/api/admin/forum/threads/${threadId}/pin`)
+    .send({
+      isPinned: true,
+    });
   assert.equal(forbiddenResponse.status, 403);
 
   await assignAdminRole(adminUser.id);
 
-  const notFoundResponse = await adminAgent.post("/api/admin/forum/threads/00000000-0000-0000-0000-000000000000/pin").send({
-    isPinned: true
-  });
+  const notFoundResponse = await adminAgent
+    .post("/api/admin/forum/threads/00000000-0000-0000-0000-000000000000/pin")
+    .send({
+      isPinned: true,
+    });
   assert.equal(notFoundResponse.status, 404);
 
   const successResponse = await adminAgent.post(`/api/admin/forum/threads/${threadId}/pin`).send({
-    isPinned: true
+    isPinned: true,
   });
   assert.equal(successResponse.status, 200);
   assert.equal(successResponse.body?.thread?.id, threadId);
@@ -731,7 +805,7 @@ test("admin thread pin endpoint enforces auth/role and updates thread pin status
 
   const threadRows = await db
     .select({
-      isPinned: forumThreads.isPinned
+      isPinned: forumThreads.isPinned,
     })
     .from(forumThreads)
     .where(eq(forumThreads.id, threadId))
@@ -747,7 +821,11 @@ test("admin content chapter listing includes published and hidden chapters for a
   const memberAgent = request.agent(app);
 
   await signUp(adminAgent, "Admin Content User", `tst_admin_content_${Date.now()}@example.com`);
-  await signUp(memberAgent, "Admin Content Member", `tst_admin_content_member_${Date.now()}@example.com`);
+  await signUp(
+    memberAgent,
+    "Admin Content Member",
+    `tst_admin_content_member_${Date.now()}@example.com`
+  );
 
   const adminUser = await getSessionUser(adminAgent);
   const fixture = await createAdminContentFixture();
@@ -763,18 +841,22 @@ test("admin content chapter listing includes published and hidden chapters for a
   const response = await adminAgent.get("/api/admin/content/chapters");
   assert.equal(response.status, 200);
 
-  const chaptersPayload = response.body?.chapters as Array<{
-    id: number;
-    chapterNumber: number;
-    title: string;
-    subjectName: string;
-    grade: "9" | "10";
-    boardName: string;
-    isPublished: boolean;
-  }> | undefined;
+  const chaptersPayload = response.body?.chapters as
+    | Array<{
+        id: number;
+        chapterNumber: number;
+        title: string;
+        subjectName: string;
+        grade: "9" | "10";
+        boardName: string;
+        isPublished: boolean;
+      }>
+    | undefined;
   assert.ok(Array.isArray(chaptersPayload), "Expected chapters array payload.");
 
-  const publishedChapter = chaptersPayload?.find((chapter) => chapter.id === fixture.publishedChapterId);
+  const publishedChapter = chaptersPayload?.find(
+    (chapter) => chapter.id === fixture.publishedChapterId
+  );
   const hiddenChapter = chaptersPayload?.find((chapter) => chapter.id === fixture.hiddenChapterId);
 
   assert.ok(publishedChapter, "Expected published chapter in admin listing.");
@@ -795,19 +877,23 @@ test("admin content audit logs persist publish actions and support paginated rea
 
   const chapter = await createChapterFixtureWithMetadata();
 
-  const publishResponse = await adminAgent.post(`/api/admin/content/chapters/${chapter.id}/publish`).send({
-    isPublished: true
-  });
+  const publishResponse = await adminAgent
+    .post(`/api/admin/content/chapters/${chapter.id}/publish`)
+    .send({
+      isPublished: true,
+    });
   assert.equal(publishResponse.status, 200);
 
-  const missingChapterResponse = await adminAgent.post("/api/admin/content/chapters/999999/publish").send({
-    isPublished: true
-  });
+  const missingChapterResponse = await adminAgent
+    .post("/api/admin/content/chapters/999999/publish")
+    .send({
+      isPublished: true,
+    });
   assert.equal(missingChapterResponse.status, 404);
 
   const firstPageResponse = await adminAgent.get("/api/admin/content/audit-logs").query({
     page: 1,
-    pageSize: 20
+    pageSize: 20,
   });
   assert.equal(firstPageResponse.status, 200);
 
@@ -847,7 +933,7 @@ test("admin content audit logs persist publish actions and support paginated rea
   while (hasMore && page <= 50) {
     const pagedResponse = await adminAgent.get("/api/admin/content/audit-logs").query({
       page,
-      pageSize: 20
+      pageSize: 20,
     });
     assert.equal(pagedResponse.status, 200);
 
@@ -869,15 +955,21 @@ test("admin content audit logs persist publish actions and support paginated rea
   }
 
   assert.ok(
-    allReturnedEntries.some((entry) => entry.actor.id === adminUser.id && entry.actor.name === "Audit Admin"),
+    allReturnedEntries.some(
+      (entry) => entry.actor.id === adminUser.id && entry.actor.name === "Audit Admin"
+    ),
     "Expected at least one audit entry created by the requesting admin."
   );
   assert.ok(
-    allReturnedEntries.some((entry) => entry.status === "success" && entry.target.includes(chapter.title)),
+    allReturnedEntries.some(
+      (entry) => entry.status === "success" && entry.target.includes(chapter.title)
+    ),
     "Expected persisted successful publish audit entry."
   );
   assert.ok(
-    allReturnedEntries.some((entry) => entry.status === "failed" && /not found/i.test(entry.message)),
+    allReturnedEntries.some(
+      (entry) => entry.status === "failed" && /not found/i.test(entry.message)
+    ),
     "Expected persisted failed publish audit entry."
   );
 });
@@ -888,7 +980,11 @@ test("admin forum audit logs persist pin actions and support paginated reads", a
   const memberAgent = request.agent(app);
 
   await signUp(adminAgent, "Forum Audit Admin", `tst_forum_audit_admin_${Date.now()}@example.com`);
-  await signUp(memberAgent, "Forum Audit Member", `tst_forum_audit_member_${Date.now()}@example.com`);
+  await signUp(
+    memberAgent,
+    "Forum Audit Member",
+    `tst_forum_audit_member_${Date.now()}@example.com`
+  );
 
   const adminUser = await getSessionUser(adminAgent);
   const memberUser = await getSessionUser(memberAgent);
@@ -897,18 +993,20 @@ test("admin forum audit logs persist pin actions and support paginated reads", a
   const thread = await createThreadFixtureWithMetadata(memberUser.id);
 
   const pinResponse = await adminAgent.post(`/api/admin/forum/threads/${thread.id}/pin`).send({
-    isPinned: true
+    isPinned: true,
   });
   assert.equal(pinResponse.status, 200);
 
-  const missingThreadResponse = await adminAgent.post("/api/admin/forum/threads/00000000-0000-0000-0000-000000000000/pin").send({
-    isPinned: true
-  });
+  const missingThreadResponse = await adminAgent
+    .post("/api/admin/forum/threads/00000000-0000-0000-0000-000000000000/pin")
+    .send({
+      isPinned: true,
+    });
   assert.equal(missingThreadResponse.status, 404);
 
   const firstPageResponse = await adminAgent.get("/api/admin/forum/audit-logs").query({
     page: 1,
-    pageSize: 20
+    pageSize: 20,
   });
   assert.equal(firstPageResponse.status, 200);
 
@@ -948,7 +1046,7 @@ test("admin forum audit logs persist pin actions and support paginated reads", a
   while (hasMore && page <= 50) {
     const pagedResponse = await adminAgent.get("/api/admin/forum/audit-logs").query({
       page,
-      pageSize: 20
+      pageSize: 20,
     });
     assert.equal(pagedResponse.status, 200);
 
@@ -970,15 +1068,21 @@ test("admin forum audit logs persist pin actions and support paginated reads", a
   }
 
   assert.ok(
-    allReturnedEntries.some((entry) => entry.actor.id === adminUser.id && entry.actor.name === "Forum Audit Admin"),
+    allReturnedEntries.some(
+      (entry) => entry.actor.id === adminUser.id && entry.actor.name === "Forum Audit Admin"
+    ),
     "Expected at least one forum audit entry created by the requesting admin."
   );
   assert.ok(
-    allReturnedEntries.some((entry) => entry.status === "success" && entry.target.includes(thread.title)),
+    allReturnedEntries.some(
+      (entry) => entry.status === "success" && entry.target.includes(thread.title)
+    ),
     "Expected persisted successful pin audit entry."
   );
   assert.ok(
-    allReturnedEntries.some((entry) => entry.status === "failed" && /not found/i.test(entry.message)),
+    allReturnedEntries.some(
+      (entry) => entry.status === "failed" && /not found/i.test(entry.message)
+    ),
     "Expected persisted failed pin audit entry."
   );
 });
@@ -1005,10 +1109,10 @@ test("ai general tutor sessions list is sorted by lastMessageAt and excludes cha
         userId: studentUser.id,
         chapterId: null,
         title: "Older General Session",
-        lastMessageAt: new Date(now - 5 * 60 * 60 * 1000)
+        lastMessageAt: new Date(now - 5 * 60 * 60 * 1000),
       })
       .returning({
-        id: aiChatSessions.id
+        id: aiChatSessions.id,
       })
   )[0];
   assert.ok(olderGeneralSession, "Expected older general session insert.");
@@ -1020,10 +1124,10 @@ test("ai general tutor sessions list is sorted by lastMessageAt and excludes cha
         userId: studentUser.id,
         chapterId: null,
         title: "Most Recent General Session",
-        lastMessageAt: new Date(now - 10 * 60 * 1000)
+        lastMessageAt: new Date(now - 10 * 60 * 1000),
       })
       .returning({
-        id: aiChatSessions.id
+        id: aiChatSessions.id,
       })
   )[0];
   assert.ok(newerGeneralSession, "Expected newer general session insert.");
@@ -1032,14 +1136,14 @@ test("ai general tutor sessions list is sorted by lastMessageAt and excludes cha
     userId: studentUser.id,
     chapterId,
     title: "Chapter Scoped Session",
-    lastMessageAt: new Date(now - 2 * 60 * 1000)
+    lastMessageAt: new Date(now - 2 * 60 * 1000),
   });
 
   await db.insert(aiChatSessions).values({
     userId: otherUser.id,
     chapterId: null,
     title: "Other User Session",
-    lastMessageAt: new Date(now - 1 * 60 * 1000)
+    lastMessageAt: new Date(now - 1 * 60 * 1000),
   });
 
   const unauthenticatedResponse = await anonAgent.get("/api/ai/sessions");
@@ -1080,10 +1184,10 @@ test("ai general tutor session history endpoint returns ordered messages and rej
         userId: ownerUser.id,
         chapterId: null,
         title: "Session Detail Test",
-        lastMessageAt: new Date(now)
+        lastMessageAt: new Date(now),
       })
       .returning({
-        id: aiChatSessions.id
+        id: aiChatSessions.id,
       })
   )[0];
   assert.ok(session, "Expected session insert for history details.");
@@ -1093,14 +1197,14 @@ test("ai general tutor session history endpoint returns ordered messages and rej
       sessionId: session.id,
       role: "user",
       content: "First message",
-      createdAt: new Date(now - 2000)
+      createdAt: new Date(now - 2000),
     },
     {
       sessionId: session.id,
       role: "assistant",
       content: "Second message",
-      createdAt: new Date(now - 1000)
-    }
+      createdAt: new Date(now - 1000),
+    },
   ]);
 
   const detailResponse = await studentAgent.get(`/api/ai/sessions/${session.id}/messages`);
@@ -1130,10 +1234,10 @@ test("ai general tutor session history endpoint returns ordered messages and rej
         userId: otherUser.id,
         chapterId: null,
         title: "Other User Session",
-        lastMessageAt: new Date(now + 1000)
+        lastMessageAt: new Date(now + 1000),
       })
       .returning({
-        id: aiChatSessions.id
+        id: aiChatSessions.id,
       })
   )[0];
   assert.ok(otherUserSession, "Expected other user session insert.");
@@ -1141,5 +1245,3 @@ test("ai general tutor session history endpoint returns ordered messages and rej
   const hiddenResponse = await studentAgent.get(`/api/ai/sessions/${otherUserSession.id}/messages`);
   assert.equal(hiddenResponse.status, 404);
 });
-
-

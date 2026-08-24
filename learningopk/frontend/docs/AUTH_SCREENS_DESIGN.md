@@ -7,13 +7,13 @@
 
 ## Design Decisions Summary
 
-| Aspect | Choice | Rationale |
-|--------|--------|-----------|
+| Aspect       | Choice                                          | Rationale                                    |
+| ------------ | ----------------------------------------------- | -------------------------------------------- |
 | Visual Style | Clean minimalist white/slate with green primary | Professional, trustworthy, educational focus |
-| Background | Hero Illustration (learning-themed) | Engaging, branded left panel on desktop |
-| Form Fields | rounded-lg (8px) with top labels | Modern, accessible, clear hierarchy |
-| Animations | Light (subtle fade + focus transitions) | Polished feel without distraction |
-| Social Login | Not included | Simplified for MVP |
+| Background   | Hero Illustration (learning-themed)             | Engaging, branded left panel on desktop      |
+| Form Fields  | rounded-lg (8px) with top labels                | Modern, accessible, clear hierarchy          |
+| Animations   | Light (subtle fade + focus transitions)         | Polished feel without distraction            |
+| Social Login | Not included                                    | Simplified for MVP                           |
 
 ---
 
@@ -22,34 +22,34 @@
 ### Primary Colors
 
 ```css
---color-primary: #7ac943;        /* Brand green - CTAs, links, focus */
---color-primary-hover: #68b036;   /* Darker green for hover states */
+--color-primary: #7ac943; /* Brand green - CTAs, links, focus */
+--color-primary-hover: #68b036; /* Darker green for hover states */
 --color-primary-light: rgba(122, 201, 67, 0.2); /* Focus ring */
 ```
 
 ### Neutral Palette (Slate)
 
 ```css
---color-slate-50: #f8fafc;   /* Page background */
---color-slate-100: #f1f5f9;   /* Card background, secondary areas */
---color-slate-200: #e2e8f0;   /* Borders */
---color-slate-300: #cbd5e1;   /* Input borders */
---color-slate-400: #94a3b8;   /* Placeholder text, icons */
---color-slate-500: #64748b;   /* Secondary text */
---color-slate-600: #475569;   /* Secondary text */
---color-slate-700: #334155;   /* Labels */
---color-slate-800: #1e293b;   /* Body text */
---color-slate-900: #0f172a;   /* Headings */
+--color-slate-50: #f8fafc; /* Page background */
+--color-slate-100: #f1f5f9; /* Card background, secondary areas */
+--color-slate-200: #e2e8f0; /* Borders */
+--color-slate-300: #cbd5e1; /* Input borders */
+--color-slate-400: #94a3b8; /* Placeholder text, icons */
+--color-slate-500: #64748b; /* Secondary text */
+--color-slate-600: #475569; /* Secondary text */
+--color-slate-700: #334155; /* Labels */
+--color-slate-800: #1e293b; /* Body text */
+--color-slate-900: #0f172a; /* Headings */
 ```
 
 ### Semantic Colors
 
 ```css
---color-error: #ef4444;        /* Validation errors */
---color-error-bg: #fef2f2;     /* Error backgrounds */
+--color-error: #ef4444; /* Validation errors */
+--color-error-bg: #fef2f2; /* Error backgrounds */
 --color-error-border: #fecaca; /* Error borders */
---color-success: #10b981;      /* Success states */
---color-success-bg: #ecfdf5;  /* Success backgrounds */
+--color-success: #10b981; /* Success states */
+--color-success-bg: #ecfdf5; /* Success backgrounds */
 ```
 
 ### Usage Pattern
@@ -103,10 +103,10 @@ text-xs   // 12px - Helper text, errors
 ### Weight Scale
 
 ```tsx
-font-bold      // 700 - Headings, primary actions
-font-semibold  // 600 - Labels, important text
-font-medium    // 500 - Links, secondary actions
-font-normal    // 400 - Body text, inputs
+font - bold; // 700 - Headings, primary actions
+font - semibold; // 600 - Labels, important text
+font - medium; // 500 - Links, secondary actions
+font - normal; // 400 - Body text, inputs
 ```
 
 ---
@@ -145,19 +145,21 @@ import { AuthLayout } from "@/components/auth/auth-layout";
   title="Welcome Back"
   subtitle="Sign in to continue your learning journey"
   topLink={{ href: "/register", label: "Create account" }}
-  showHero={true}  // Show/hide hero illustration
+  showHero={true} // Show/hide hero illustration
 >
   <LoginForm />
-</AuthLayout>
+</AuthLayout>;
 ```
 
 **Props:**
+
 - `title: string` - Page heading
 - `subtitle: string` - Description below heading
 - `topLink?: { href: string, label: string }` - Top right navigation link
 - `showHero?: boolean` - Show hero illustration (default: true, false for password reset)
 
 **Layout Behavior:**
+
 - Desktop: Split view - Hero left (40%), Form right (60%)
 - Mobile: Stacked - Hero top banner, form below
 - Full-height centered layout
@@ -173,6 +175,7 @@ import { HeroIllustration } from "@/components/auth/hero-illustration";
 **Usage:** Automatically included in AuthLayout. Can be used standalone if needed.
 
 **Customization:** The SVG can be modified to change:
+
 - Colors (match gradient definitions)
 - Elements (add/remove icons)
 - Size (viewBox adjustment)
@@ -195,6 +198,7 @@ import { FormField } from "@/components/auth/form-field";
 ```
 
 **Props:**
+
 - `htmlFor: string` - Label for attribute
 - `label: string` - Label text
 - `error?: string | null` - Error message to display
@@ -217,10 +221,11 @@ import { LockKeyhole } from "lucide-react";
   placeholder="••••••••"
   error={passwordError}
   action={<Link href="/forgot">Forgot?</Link>}
-/>
+/>;
 ```
 
 **Props:**
+
 - Extends InputProps
 - `label: string` - Label text
 - `icon?: LucideIcon` - Icon component
@@ -259,7 +264,7 @@ import { Button } from "@/components/ui/button";
              text-white shadow-sm hover:bg-[#68b036]"
 >
   Sign In
-</Button>
+</Button>;
 ```
 
 ---
@@ -293,13 +298,15 @@ className={`
 For consistent card styling:
 
 ```tsx
-<div className="
+<div
+  className="
   bg-white             // White background
   rounded-2xl         // 16px border radius
   border border-slate-200  // Subtle border
   shadow-sm           // Subtle shadow
   p-8                 // 32px internal padding
-">
+"
+>
   {/* Content */}
 </div>
 ```
@@ -311,9 +318,7 @@ For consistent card styling:
   <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
     {title}
   </h1>
-  <p className="mt-2 text-sm sm:text-base text-slate-500">
-    {subtitle}
-  </p>
+  <p className="mt-2 text-sm sm:text-base text-slate-500">{subtitle}</p>
 </div>
 ```
 
@@ -374,9 +379,7 @@ If adding page load animations:
 
 ```tsx
 // Card fade up (400ms)
-<div className="animate-fade-up">
-  {/* Content */}
-</div>
+<div className="animate-fade-up">{/* Content */}</div>
 
 // CSS:
 // @keyframes fade-up {
@@ -405,11 +408,7 @@ focus:ring-offset-2
 
 ```tsx
 <FormField htmlFor="email" label="Email Address" error={error}>
-  <Input
-    id="email"
-    aria-invalid={error ? true : undefined}
-    aria-label="Email"
-  />
+  <Input id="email" aria-invalid={error ? true : undefined} aria-label="Email" />
 </FormField>
 ```
 
@@ -445,11 +444,13 @@ focus:ring-offset-2
 ### Error Message
 
 ```tsx
-{errorMessage ? (
-  <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-    {errorMessage}
-  </p>
-) : null}
+{
+  errorMessage ? (
+    <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+      {errorMessage}
+    </p>
+  ) : null;
+}
 ```
 
 ### Inline Field Error

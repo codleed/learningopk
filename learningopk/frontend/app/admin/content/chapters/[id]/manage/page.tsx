@@ -23,7 +23,9 @@ export default async function ChapterManagePage({ params }: PageProps): Promise<
   }
 
   // Import client component dynamically to avoid SSR issues with hooks
-  const ChapterManageClient = await import("./chapter-manage-client").then((mod) => mod.ChapterManageClient);
+  const ChapterManageClient = await import("./chapter-manage-client").then(
+    (mod) => mod.ChapterManageClient
+  );
 
   return <ChapterManageClient chapterId={chapterId} />;
 }

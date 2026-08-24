@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui";
-import {
-  GraduationCap,
-} from "lucide-react";
+import { GraduationCap } from "lucide-react";
 
 import { HeroSection } from "./_landing/hero-section";
 import { StatsBar } from "./_landing/stats-bar";
@@ -41,8 +39,7 @@ const FEATURES = [
   {
     iconName: "MessageSquare" as const,
     title: "Community Forum",
-    description:
-      "Connect with fellow students and share knowledge. Learn better, together.",
+    description: "Connect with fellow students and share knowledge. Learn better, together.",
   },
   {
     iconName: "FileCheck" as const,
@@ -103,8 +100,8 @@ export default function LandingPage() {
               Built for Pakistani Students
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-lg text-text-secondary">
-              Every feature designed to help you score higher on your board
-              exams. No fluff, just results.
+              Every feature designed to help you score higher on your board exams. No fluff, just
+              results.
             </p>
           </div>
 
@@ -123,8 +120,8 @@ export default function LandingPage() {
               Choose Your Board
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-lg text-text-secondary">
-              Content tailored to your specific board. Every chapter, every
-              topic, exactly as your syllabus demands.
+              Content tailored to your specific board. Every chapter, every topic, exactly as your
+              syllabus demands.
             </p>
           </div>
 
@@ -147,8 +144,8 @@ export default function LandingPage() {
                 </span>
               </div>
               <p className="mt-4 text-sm leading-relaxed text-text-secondary">
-                Board-specific chapter learning with AI tutoring. Pakistan&apos;s
-                smartest study platform.
+                Board-specific chapter learning with AI tutoring. Pakistan&apos;s smartest study
+                platform.
               </p>
             </div>
 
@@ -177,18 +174,16 @@ export default function LandingPage() {
                 Legal
               </h4>
               <ul className="mt-4 space-y-3">
-                {["Privacy Policy", "Terms of Service", "Cookie Policy", "DMCA"].map(
-                  (item) => (
-                    <li key={item}>
-                      <Link
-                        href="#"
-                        className="text-sm text-text-secondary transition-colors hover:text-text-primary"
-                      >
-                        {item}
-                      </Link>
-                    </li>
-                  )
-                )}
+                {["Privacy Policy", "Terms of Service", "Cookie Policy", "DMCA"].map((item) => (
+                  <li key={item}>
+                    <Link
+                      href="#"
+                      className="text-sm text-text-secondary transition-colors hover:text-text-primary"
+                    >
+                      {item}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -198,30 +193,24 @@ export default function LandingPage() {
                 Social
               </h4>
               <ul className="mt-4 space-y-3">
-                {["YouTube", "Instagram", "Twitter / X", "Discord"].map(
-                  (item) => (
-                    <li key={item}>
-                      <Link
-                        href="#"
-                        className="text-sm text-text-secondary transition-colors hover:text-text-primary"
-                      >
-                        {item}
-                      </Link>
-                    </li>
-                  )
-                )}
+                {["YouTube", "Instagram", "Twitter / X", "Discord"].map((item) => (
+                  <li key={item}>
+                    <Link
+                      href="#"
+                      className="text-sm text-text-secondary transition-colors hover:text-text-primary"
+                    >
+                      {item}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
 
           {/* Bottom Bar */}
           <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-border-default pt-8 md:flex-row">
-            <p className="text-sm text-text-muted">
-              &copy; 2025 LearningoPK. All rights reserved.
-            </p>
-            <p className="text-sm text-text-muted">
-              Made with dedication for Pakistani students
-            </p>
+            <p className="text-sm text-text-muted">&copy; 2025 LearningoPK. All rights reserved.</p>
+            <p className="text-sm text-text-muted">Made with dedication for Pakistani students</p>
           </div>
         </div>
       </footer>

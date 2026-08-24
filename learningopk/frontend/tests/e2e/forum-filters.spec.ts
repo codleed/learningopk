@@ -13,10 +13,7 @@ const FORUM_URL = "/forum";
 /* ── Helpers ── */
 
 /** Navigate to the forum with seed params so we have a known baseline. */
-const gotoForumWith = async (
-  page: Page,
-  params: Record<string, string>
-): Promise<void> => {
+const gotoForumWith = async (page: Page, params: Record<string, string>): Promise<void> => {
   const search = new URLSearchParams(params).toString();
   const url = search ? `${FORUM_URL}?${search}` : FORUM_URL;
   await page.goto(url);
@@ -24,8 +21,7 @@ const gotoForumWith = async (
 };
 
 /** Return the current search-params object for the page URL. */
-const currentParams = (page: Page): URLSearchParams =>
-  new URL(page.url()).searchParams;
+const currentParams = (page: Page): URLSearchParams => new URL(page.url()).searchParams;
 
 /* ── Tests ── */
 

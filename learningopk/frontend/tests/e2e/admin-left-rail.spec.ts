@@ -4,7 +4,10 @@ const loginAsSeededAdmin = async (page: Page) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("admin@example.com");
   await page.getByLabel("Password", { exact: true }).fill("password");
-  await Promise.all([page.waitForURL(/\/dashboard$/), page.getByRole("button", { name: "Sign in" }).click()]);
+  await Promise.all([
+    page.waitForURL(/\/dashboard$/),
+    page.getByRole("button", { name: "Sign in" }).click(),
+  ]);
 };
 
 test.describe("admin left rail", () => {

@@ -12,7 +12,14 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { ContentRenderer } from "@/components/common/content-renderer";
-import { Sheet, SheetHeader, SheetBody, SheetFooter, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetHeader,
+  SheetBody,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { Tabs, TabList, TabTrigger, TabContent } from "@/components/ui/tabs";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
@@ -21,13 +28,13 @@ const createThreadSchema = z.object({
   title: z.string().trim().min(5).max(160),
   body: z.string().trim().min(10),
   subjectId: z.number().int().positive().optional(),
-  chapterId: z.number().int().positive().optional()
+  chapterId: z.number().int().positive().optional(),
 });
 
 const createThreadResponseSchema = z.object({
   thread: z.object({
-    id: z.string().uuid()
-  })
+    id: z.string().uuid(),
+  }),
 });
 
 type ForumSubjectOption = {
@@ -55,7 +62,12 @@ type ForumThreadFormProps = {
   closeHref: string;
 };
 
-export const ForumThreadForm = ({ subjects, chapters, isOpen, closeHref }: ForumThreadFormProps) => {
+export const ForumThreadForm = ({
+  subjects,
+  chapters,
+  isOpen,
+  closeHref,
+}: ForumThreadFormProps) => {
   const router = useRouter();
   const { pushToast } = useToast();
   const [title, setTitle] = useState("");
@@ -109,7 +121,7 @@ export const ForumThreadForm = ({ subjects, chapters, isOpen, closeHref }: Forum
       title,
       body,
       subjectId: maybeSubjectId,
-      chapterId: maybeChapterId
+      chapterId: maybeChapterId,
     });
 
     if (!parsed.success) {
@@ -123,9 +135,9 @@ export const ForumThreadForm = ({ subjects, chapters, isOpen, closeHref }: Forum
         method: "POST",
         credentials: "include",
         headers: {
-          "content-type": "application/json"
+          "content-type": "application/json",
         },
-        body: JSON.stringify(parsed.data)
+        body: JSON.stringify(parsed.data),
       });
       const responseBody = (await response.json().catch(() => null)) as unknown;
 
@@ -137,7 +149,7 @@ export const ForumThreadForm = ({ subjects, chapters, isOpen, closeHref }: Forum
       if (!response.ok) {
         const parsedError = z
           .object({
-            error: z.string()
+            error: z.string(),
           })
           .safeParse(responseBody);
         setError(parsedError.success ? parsedError.data.error : "Thread creation failed.");
@@ -161,7 +173,7 @@ export const ForumThreadForm = ({ subjects, chapters, isOpen, closeHref }: Forum
       pushToast({
         title: "Failed to create thread",
         description: "The server could not be reached. Please try again.",
-        tone: "error"
+        tone: "error",
       });
     } finally {
       setIsPending(false);
@@ -169,7 +181,14 @@ export const ForumThreadForm = ({ subjects, chapters, isOpen, closeHref }: Forum
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }} side="right" className="!w-[480px] !max-w-[92vw]">
+    <Sheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) handleClose();
+      }}
+      side="right"
+      className="!w-[480px] !max-w-[92vw]"
+    >
       <SheetHeader>
         <SheetTitle>New Post</SheetTitle>
         <SheetDescription>Ask a question or share something with the community.</SheetDescription>
@@ -266,7 +285,9 @@ export const ForumThreadForm = ({ subjects, chapters, isOpen, closeHref }: Forum
                   {body.trim().length > 0 ? (
                     <ContentRenderer content={body} variant="default" />
                   ) : (
-                    <p className="text-sm text-text-muted">Nothing to preview yet. Start writing above.</p>
+                    <p className="text-sm text-text-muted">
+                      Nothing to preview yet. Start writing above.
+                    </p>
                   )}
                 </div>
               </TabContent>

@@ -20,7 +20,7 @@ import { getForumThreadById } from "@/lib/forum-api";
 import { getServerSession } from "@/lib/session";
 
 const threadParamsSchema = z.object({
-  threadId: z.string().uuid()
+  threadId: z.string().uuid(),
 });
 
 type ForumThreadDetailPageProps = {
@@ -35,7 +35,7 @@ const formatDateTime = (value: string): string =>
     day: "numeric",
     year: "numeric",
     hour: "numeric",
-    minute: "2-digit"
+    minute: "2-digit",
   });
 
 const formatRelativeTime = (value: string): string => {
@@ -73,7 +73,7 @@ export default async function ForumThreadDetailPage({ params }: ForumThreadDetai
 
   const [session, threadPayload] = await Promise.all([
     getServerSession(),
-    getForumThreadById(parsedParams.data.threadId, { cookieHeader })
+    getForumThreadById(parsedParams.data.threadId, { cookieHeader }),
   ]);
 
   if (!threadPayload) {
@@ -117,11 +117,17 @@ export default async function ForumThreadDetailPage({ params }: ForumThreadDetai
         <article className="rounded-2xl border border-border-default bg-bg-surface overflow-hidden">
           {/* Post metadata strip */}
           <div className="flex flex-wrap items-center gap-2 border-b border-border-default bg-bg-subtle/50 px-6 py-3">
-            {thread.isPinned ? <Badge variant="info" size="sm">Pinned</Badge> : null}
+            {thread.isPinned ? (
+              <Badge variant="info" size="sm">
+                Pinned
+              </Badge>
+            ) : null}
             {thread.subjectName ? <SubjectBadge name={thread.subjectName} size="sm" /> : null}
             {thread.boardName ? <BoardBadge board={thread.boardName} size="sm" /> : null}
             {thread.className ? (
-              <Badge variant="default" size="sm">Class {thread.className}</Badge>
+              <Badge variant="default" size="sm">
+                Class {thread.className}
+              </Badge>
             ) : null}
           </div>
 
@@ -178,7 +184,10 @@ export default async function ForumThreadDetailPage({ params }: ForumThreadDetai
           ) : (
             <div className="rounded-xl border border-dashed border-border-default bg-bg-subtle/50 p-5 text-center">
               <p className="text-sm text-text-secondary">
-                <Link href="/login" className="font-semibold text-accent-primary underline underline-offset-4 transition-colors hover:text-accent-primary-hover">
+                <Link
+                  href="/login"
+                  className="font-semibold text-accent-primary underline underline-offset-4 transition-colors hover:text-accent-primary-hover"
+                >
                   Sign in
                 </Link>{" "}
                 to post a reply.

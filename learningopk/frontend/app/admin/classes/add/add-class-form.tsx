@@ -13,10 +13,7 @@ import {
 } from "@/components/admin";
 import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
 import { Select } from "@/components/ui/select";
-import {
-  createAdminCurriculumClass,
-  type AdminCurriculumBoard,
-} from "@/lib/admin-api";
+import { createAdminCurriculumClass, type AdminCurriculumBoard } from "@/lib/admin-api";
 import { useToast } from "@/components/ui/toast";
 
 const toSlug = (value: string) =>
@@ -136,19 +133,11 @@ export function AddClassForm({ boards }: AddClassFormProps) {
         />
       </StickyBreadcrumbWrapper>
 
-      <AdminPageHeader
-        title="Add Class"
-        subtitle="Create a new class under a board"
-      />
+      <AdminPageHeader title="Add Class" subtitle="Create a new class under a board" />
 
       <AdminFormCard>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <AdminFormField
-            id="class-board"
-            label="Board"
-            required
-            error={boardError}
-          >
+          <AdminFormField id="class-board" label="Board" required error={boardError}>
             <Select
               id="class-board"
               value={boardId}
@@ -166,12 +155,7 @@ export function AddClassForm({ boards }: AddClassFormProps) {
             </Select>
           </AdminFormField>
 
-          <AdminFormField
-            id="class-name"
-            label="Class Name"
-            required
-            error={nameError}
-          >
+          <AdminFormField id="class-name" label="Class Name" required error={nameError}>
             <input
               id="class-name"
               type="text"

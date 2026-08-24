@@ -16,19 +16,23 @@ const dashboardSchema = z.object({
   analytics: z.object({
     studentCount: z.number(),
     avgQuizScore: z.number(),
-    topStudents: z.array(z.object({
-      id: z.string(),
-      name: z.string(),
-      class: z.string().nullable(),
-      xp: z.number(),
-      level: z.number(),
-    })),
-    weakAreas: z.array(z.object({
-      chapterId: z.number(),
-      chapterTitle: z.string(),
-      avgScore: z.number(),
-      studentCount: z.number(),
-    })),
+    topStudents: z.array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        class: z.string().nullable(),
+        xp: z.number(),
+        level: z.number(),
+      })
+    ),
+    weakAreas: z.array(
+      z.object({
+        chapterId: z.number(),
+        chapterTitle: z.string(),
+        avgScore: z.number(),
+        studentCount: z.number(),
+      })
+    ),
   }),
 });
 
@@ -64,7 +68,11 @@ async function fetchSchoolJson<T>(
 }
 
 export async function getMySchool(cookieHeader?: string) {
-  return fetchSchoolJson("/api/schools/me", schoolSchema.nullable(), cookieHeader ? { cookieHeader } : undefined);
+  return fetchSchoolJson(
+    "/api/schools/me",
+    schoolSchema.nullable(),
+    cookieHeader ? { cookieHeader } : undefined
+  );
 }
 
 export async function joinSchool(inviteCode: string) {
@@ -75,15 +83,32 @@ export async function joinSchool(inviteCode: string) {
 }
 
 export async function getSchoolDashboard(cookieHeader?: string) {
-  return fetchSchoolJson("/api/schools/dashboard", dashboardSchema, cookieHeader ? { cookieHeader } : undefined);
+  return fetchSchoolJson(
+    "/api/schools/dashboard",
+    dashboardSchema,
+    cookieHeader ? { cookieHeader } : undefined
+  );
 }
 
 export async function getSchoolStudents(cookieHeader?: string) {
-  const schema = z.object({ students: z.array(z.object({
-    id: z.string(), name: z.string(), email: z.string(), class: z.string().nullable(),
-    xp: z.number(), level: z.number(), createdAt: z.string(),
-  })) });
-  return fetchSchoolJson("/api/schools/students", schema, cookieHeader ? { cookieHeader } : undefined);
+  const schema = z.object({
+    students: z.array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        email: z.string(),
+        class: z.string().nullable(),
+        xp: z.number(),
+        level: z.number(),
+        createdAt: z.string(),
+      })
+    ),
+  });
+  return fetchSchoolJson(
+    "/api/schools/students",
+    schema,
+    cookieHeader ? { cookieHeader } : undefined
+  );
 }
 
 export async function checkSchoolAdmin(): Promise<boolean> {
@@ -114,7 +139,11 @@ const schoolListSchema = z.object({
 export type SchoolListItem = z.infer<typeof schoolListItemSchema>;
 
 export async function getSchools(cookieHeader?: string) {
-  return fetchSchoolJson("/api/schools", schoolListSchema, cookieHeader ? { cookieHeader } : undefined);
+  return fetchSchoolJson(
+    "/api/schools",
+    schoolListSchema,
+    cookieHeader ? { cookieHeader } : undefined
+  );
 }
 
 const createSchoolResponseSchema = z.object({

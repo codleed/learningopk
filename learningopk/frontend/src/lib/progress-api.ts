@@ -22,9 +22,9 @@ const subjectSummarySchema = z.object({
       exerciseNumber: z.string().nullable(),
       exerciseQuestion: z.string().nullable(),
       wrongAnswerCount: z.number().int().nonnegative(),
-      quizAttemptsCount: z.number().int().nonnegative()
+      quizAttemptsCount: z.number().int().nonnegative(),
     })
-  )
+  ),
 });
 
 const chapterVisitActivitySchema = z.object({
@@ -33,7 +33,7 @@ const chapterVisitActivitySchema = z.object({
   subjectSlug: z.string(),
   subjectName: z.string(),
   chapterSlug: z.string(),
-  chapterTitle: z.string()
+  chapterTitle: z.string(),
 });
 
 const quizSubmitActivitySchema = z.object({
@@ -45,7 +45,7 @@ const quizSubmitActivitySchema = z.object({
   chapterTitle: z.string(),
   score: z.number().int().nonnegative(),
   totalMarks: z.number().int().positive(),
-  percentage: z.number().int().min(0).max(100)
+  percentage: z.number().int().min(0).max(100),
 });
 
 const dashboardSummarySchema = z.object({
@@ -53,7 +53,9 @@ const dashboardSummarySchema = z.object({
   streakDays: z.number().int().nonnegative(),
   longestStreakDays: z.number().int().nonnegative(),
   subjects: z.array(subjectSummarySchema),
-  recentActivity: z.array(z.discriminatedUnion("type", [chapterVisitActivitySchema, quizSubmitActivitySchema])),
+  recentActivity: z.array(
+    z.discriminatedUnion("type", [chapterVisitActivitySchema, quizSubmitActivitySchema])
+  ),
   starredFormulas: z.array(
     z.object({
       formulaId: z.number().int().positive(),
@@ -61,7 +63,7 @@ const dashboardSummarySchema = z.object({
       formulaLatex: z.string(),
       subjectName: z.string(),
       chapterTitle: z.string(),
-      accessCount: z.number().int().nonnegative()
+      accessCount: z.number().int().nonnegative(),
     })
   ),
   quizHistory: z.array(
@@ -73,21 +75,21 @@ const dashboardSummarySchema = z.object({
       chapterTitle: z.string(),
       score: z.number().int().nonnegative(),
       totalMarks: z.number().int().positive(),
-      percentage: z.number().int().min(0).max(100)
+      percentage: z.number().int().min(0).max(100),
     })
   ),
   weeklyActivity: z.array(
     z.object({
       date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
       active: z.boolean(),
-      activityCount: z.number().int().nonnegative()
+      activityCount: z.number().int().nonnegative(),
     })
   ),
   dailyActivity: z.array(
     z.object({
       date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
       count: z.number().int().nonnegative(),
-      level: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4)])
+      level: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
     })
   ),
   todaysFocus: z
@@ -106,7 +108,7 @@ const dashboardSummarySchema = z.object({
       chapterTitle: z.string().nullable(),
       subjectName: z.string().nullable(),
       completed: z.boolean(),
-      completedAt: z.string().datetime().nullable()
+      completedAt: z.string().datetime().nullable(),
     })
     .nullable(),
   xp: z
@@ -117,13 +119,13 @@ const dashboardSummarySchema = z.object({
       xpToNextLevel: z.number().int().nonnegative(),
       xpInCurrentLevel: z.number().int().nonnegative().optional(),
       xpRequiredForLevel: z.number().int().positive().optional(),
-      isMaxLevel: z.boolean().optional()
+      isMaxLevel: z.boolean().optional(),
     })
     .nullable(),
   streakFreeze: z
     .object({
       canUseStreakFreeze: z.boolean(),
-      nextFreezeAvailableAt: z.string().datetime().nullable()
+      nextFreezeAvailableAt: z.string().datetime().nullable(),
     })
     .nullable(),
   todaysGoal: z.object({
@@ -133,7 +135,7 @@ const dashboardSummarySchema = z.object({
     quizzesCompleted: z.number().int().nonnegative(),
     quizzesTarget: z.number().int().positive(),
     completed: z.boolean(),
-    percent: z.number().int().min(0).max(100)
+    percent: z.number().int().min(0).max(100),
   }),
   streakWager: z.object({
     timezone: z.literal("Asia/Karachi"),
@@ -144,22 +146,26 @@ const dashboardSummarySchema = z.object({
     canPlaceWager: z.boolean(),
     showLockModal: z.boolean(),
     warningAtRisk: z.boolean(),
-    activeWager: z.object({
-      id: z.string(),
-      amount: z.number().int().positive(),
-      bonusXp: z.number().int().nonnegative(),
-      protectedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-      placedAt: z.string().datetime(),
-      expiresAt: z.string().datetime()
-    }).nullable(),
-    brokenWager: z.object({
-      id: z.string(),
-      amount: z.number().int().positive(),
-      protectedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-      lostAt: z.string().datetime(),
-      canRecoverWithFreeze: z.boolean()
-    }).nullable()
-  })
+    activeWager: z
+      .object({
+        id: z.string(),
+        amount: z.number().int().positive(),
+        bonusXp: z.number().int().nonnegative(),
+        protectedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        placedAt: z.string().datetime(),
+        expiresAt: z.string().datetime(),
+      })
+      .nullable(),
+    brokenWager: z
+      .object({
+        id: z.string(),
+        amount: z.number().int().positive(),
+        protectedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        lostAt: z.string().datetime(),
+        canRecoverWithFreeze: z.boolean(),
+      })
+      .nullable(),
+  }),
 });
 
 export type DashboardSummaryResponse = z.infer<typeof dashboardSummarySchema>;
@@ -171,7 +177,7 @@ const subjectProgressResponseSchema = z.object({
     name: z.string(),
     grade: z.enum(["9", "10"]),
     boardName: z.string(),
-    boardSlug: z.string()
+    boardSlug: z.string(),
   }),
   overallSubjectScorePercent: z.number().int().min(0).max(100),
   chapters: z.array(
@@ -184,9 +190,9 @@ const subjectProgressResponseSchema = z.object({
       exercisesViewed: z.number().int().nonnegative(),
       quizAttempted: z.boolean(),
       bestScorePercent: z.number().int().min(0).max(100),
-      status: z.enum(["green", "yellow", "grey"])
+      status: z.enum(["green", "yellow", "grey"]),
     })
-  )
+  ),
 });
 
 export type SubjectProgressResponse = z.infer<typeof subjectProgressResponseSchema>;
@@ -202,16 +208,16 @@ const todaysFocusCompletionSchema = z.object({
       level: z.number().int().min(0),
       levelName: z.string(),
       leveledUp: z.boolean(),
-      previousLevel: z.number().int().min(0)
+      previousLevel: z.number().int().min(0),
     })
-    .optional()
+    .optional(),
 });
 
 export type TodaysFocusCompletionResponse = z.infer<typeof todaysFocusCompletionSchema>;
 
 const parseApiErrorMessage = async (response: Response, fallback: string): Promise<string> => {
   try {
-    const body = await response.json().catch(() => null) as { error?: string } | null;
+    const body = (await response.json().catch(() => null)) as { error?: string } | null;
     if (body?.error) return body.error;
   } catch {
     // Use fallback if body is not JSON
@@ -219,37 +225,51 @@ const parseApiErrorMessage = async (response: Response, fallback: string): Promi
   return fallback;
 };
 
-export const getDashboardSummary = async (cookieHeader: string): Promise<DashboardSummaryResponse> => {
+export const getDashboardSummary = async (
+  cookieHeader: string
+): Promise<DashboardSummaryResponse> => {
   const response = await fetch(`${backendUrl}/api/progress/dashboard`, {
     method: "GET",
     cache: "no-store",
     headers: {
-      cookie: cookieHeader
-    }
+      cookie: cookieHeader,
+    },
   });
 
   if (!response.ok) {
-    throw new Error(await parseApiErrorMessage(response, `Progress dashboard request failed: ${response.status}`));
+    throw new Error(
+      await parseApiErrorMessage(response, `Progress dashboard request failed: ${response.status}`)
+    );
   }
 
   return dashboardSummarySchema.parse((await response.json()) as unknown);
 };
 
-export const getSubjectProgress = async (boardSlug: string, grade: "9" | "10", subjectSlug: string, cookieHeader: string): Promise<SubjectProgressResponse | null> => {
-  const response = await fetch(`${backendUrl}/api/progress/dashboard/${boardSlug}/${grade}/${subjectSlug}`, {
-    method: "GET",
-    cache: "no-store",
-    headers: {
-      cookie: cookieHeader
+export const getSubjectProgress = async (
+  boardSlug: string,
+  grade: "9" | "10",
+  subjectSlug: string,
+  cookieHeader: string
+): Promise<SubjectProgressResponse | null> => {
+  const response = await fetch(
+    `${backendUrl}/api/progress/dashboard/${boardSlug}/${grade}/${subjectSlug}`,
+    {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        cookie: cookieHeader,
+      },
     }
-  });
+  );
 
   if (response.status === 404) {
     return null;
   }
 
   if (!response.ok) {
-    throw new Error(await parseApiErrorMessage(response, `Subject progress request failed: ${response.status}`));
+    throw new Error(
+      await parseApiErrorMessage(response, `Subject progress request failed: ${response.status}`)
+    );
   }
 
   return subjectProgressResponseSchema.parse((await response.json()) as unknown);
@@ -260,9 +280,9 @@ export const completeTodaysFocus = async (): Promise<TodaysFocusCompletionRespon
     method: "POST",
     credentials: "include",
     headers: {
-      "content-type": "application/json"
+      "content-type": "application/json",
     },
-    body: JSON.stringify({})
+    body: JSON.stringify({}),
   });
 
   if (!response.ok) {
@@ -277,9 +297,9 @@ export const placeStreakWager = async (amount: number): Promise<void> => {
     method: "POST",
     credentials: "include",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify({ amount })
+    body: JSON.stringify({ amount }),
   });
 
   if (!response.ok) {
@@ -291,7 +311,7 @@ export const placeStreakWager = async (amount: number): Promise<void> => {
 export const recoverStreakWager = async (): Promise<void> => {
   const response = await fetch(`${backendUrl}/api/progress/streak-wager/recover`, {
     method: "POST",
-    credentials: "include"
+    credentials: "include",
   });
 
   if (!response.ok) {

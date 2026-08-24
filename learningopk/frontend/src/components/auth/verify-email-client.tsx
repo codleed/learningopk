@@ -180,8 +180,8 @@ export function VerifyEmailClient() {
               <span className="text-accent-primary">email address.</span>
             </h2>
             <p className="mt-3 text-sm text-text-secondary leading-relaxed max-w-md">
-              We sent a 6-digit code to your email. Enter it below to verify
-              your account and unlock all features.
+              We sent a 6-digit code to your email. Enter it below to verify your account and unlock
+              all features.
             </p>
           </div>
 
@@ -226,9 +226,7 @@ export function VerifyEmailClient() {
                   </h1>
                   <p className="mt-2 text-sm text-text-secondary">
                     We&apos;ve sent a 6-digit verification code to{" "}
-                    <span className="font-semibold text-text-primary">
-                      {email}
-                    </span>
+                    <span className="font-semibold text-text-primary">{email}</span>
                   </p>
                 </div>
 
@@ -240,9 +238,7 @@ export function VerifyEmailClient() {
                     <p className="font-display text-lg font-semibold text-text-primary">
                       Email verified!
                     </p>
-                    <p className="text-sm text-text-secondary">
-                      Redirecting to your dashboard...
-                    </p>
+                    <p className="text-sm text-text-secondary">Redirecting to your dashboard...</p>
                   </div>
                 ) : (
                   <>
@@ -251,7 +247,9 @@ export function VerifyEmailClient() {
                       {otp.map((digit, index) => (
                         <input
                           key={index}
-                          ref={(el) => { inputRefs.current[index] = el; }}
+                          ref={(el) => {
+                            inputRefs.current[index] = el;
+                          }}
                           type="text"
                           inputMode="numeric"
                           autoComplete="one-time-code"
@@ -306,12 +304,8 @@ export function VerifyEmailClient() {
                             : "text-accent-primary hover:text-accent-primary-hover"
                         )}
                       >
-                        <RefreshCw
-                          className={cn("h-3.5 w-3.5", isResending && "animate-spin")}
-                        />
-                        {resendCooldown > 0
-                          ? `Resend code in ${resendCooldown}s`
-                          : "Resend code"}
+                        <RefreshCw className={cn("h-3.5 w-3.5", isResending && "animate-spin")} />
+                        {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
                       </button>
 
                       <Link

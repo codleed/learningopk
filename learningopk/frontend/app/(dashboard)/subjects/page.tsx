@@ -6,11 +6,7 @@ import { ArrowRight, Layers3 } from "lucide-react";
 
 import { StudyCardArt } from "@/components/common/study-card-art";
 import { AppShell } from "@/components/foundation/app-shell";
-import {
-  StaggerContainer,
-  MotionSection,
-  MotionCard,
-} from "@/components/motion";
+import { StaggerContainer, MotionSection, MotionCard } from "@/components/motion";
 import { PageHeader } from "@/components/common/page-header";
 import { BoardBadge } from "@/components/common/board-badge";
 import { ProgressRing } from "@/components/common/progress-ring";
@@ -22,8 +18,7 @@ import { getServerSession } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "My Subjects | LearningoPK",
-  description:
-    "Browse and study your enrolled subjects. Access chapters, exercises, and quizzes.",
+  description: "Browse and study your enrolled subjects. Access chapters, exercises, and quizzes.",
   openGraph: {
     title: "My Subjects | LearningoPK",
     description:
@@ -41,10 +36,7 @@ export default async function SubjectsPage() {
     .then((data) => ({ data, error: null as string | null }))
     .catch((error: unknown) => ({
       data: null,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Unable to load subjects from database.",
+      error: error instanceof Error ? error.message : "Unable to load subjects from database.",
     }));
 
   const progressBySubjectSlug = new Map<string, number>();
@@ -55,7 +47,7 @@ export default async function SubjectsPage() {
       const current = progressBySubjectSlug.get(subject.subjectSlug) ?? 0;
       progressBySubjectSlug.set(
         subject.subjectSlug,
-        Math.max(current, subject.chaptersVisitedPercent),
+        Math.max(current, subject.chaptersVisitedPercent)
       );
     }
   } catch {
@@ -116,10 +108,7 @@ export default async function SubjectsPage() {
         stickyClassName="-mx-3 -mt-3 sm:-mx-5 lg:-mx-6 px-3 sm:px-5 lg:px-6"
         title="Subjects"
         subtitle="Browse and access chapters from your enrolled subjects."
-        breadcrumbs={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Subjects" },
-        ]}
+        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Subjects" }]}
       />
 
       <StaggerContainer className="space-y-8">
@@ -153,10 +142,7 @@ export default async function SubjectsPage() {
                     href={`/${subject.boardSlug}/${subject.classSlug}/${subject.slug}`}
                     className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40 focus-visible:ring-offset-2 rounded-xl"
                   >
-                    <Card
-                      variant="default"
-                      className="group relative overflow-hidden"
-                    >
+                    <Card variant="default" className="group relative overflow-hidden">
                       <CardBody className="p-5 sm:p-6">
                         <div className="space-y-4">
                           <StudyCardArt
@@ -220,7 +206,9 @@ export default async function SubjectsPage() {
                             <p className="text-[0.6875rem] font-medium uppercase tracking-[0.18em] text-text-muted">
                               Explore
                             </p>
-                            <p className="mt-1 text-sm font-medium text-text-primary">Open chapters</p>
+                            <p className="mt-1 text-sm font-medium text-text-primary">
+                              Open chapters
+                            </p>
                           </div>
 
                           <div className="flex items-center gap-1.5 text-sm font-semibold text-accent-primary transition-colors group-hover:text-accent-primary-hover">

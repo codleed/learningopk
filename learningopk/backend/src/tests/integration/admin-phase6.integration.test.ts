@@ -25,7 +25,7 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
     email,
     password: TEST_PASSWORD,
     class: "9th",
-    board: "fbise"
+    board: "fbise",
   });
 
   assert.ok(
@@ -88,7 +88,7 @@ const seedAuditLog = async (input: SeedAuditLogInput): Promise<void> => {
       input.message,
       input.actorId,
       input.actorName,
-      input.createdAt.toISOString()
+      input.createdAt.toISOString(),
     ]
   );
 };
@@ -123,7 +123,7 @@ test("admin aggregated audit logs enforce auth/role and support scope+status+sea
     message: "Updated role to admin",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: new Date(now - 2000)
+    createdAt: new Date(now - 2000),
   });
   await seedAuditLog({
     id: randomUUID(),
@@ -134,7 +134,7 @@ test("admin aggregated audit logs enforce auth/role and support scope+status+sea
     message: "Self role mutation is not allowed",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: new Date(now - 1500)
+    createdAt: new Date(now - 1500),
   });
   await seedAuditLog({
     id: randomUUID(),
@@ -145,7 +145,7 @@ test("admin aggregated audit logs enforce auth/role and support scope+status+sea
     message: "Resolved abusive report",
     actorId: memberUser.id,
     actorName: memberUser.name,
-    createdAt: new Date(now - 1000)
+    createdAt: new Date(now - 1000),
   });
   await seedAuditLog({
     id: randomUUID(),
@@ -156,7 +156,7 @@ test("admin aggregated audit logs enforce auth/role and support scope+status+sea
     message: "Updated forum_auto_lock_hours to 48",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: new Date(now - 500)
+    createdAt: new Date(now - 500),
   });
 
   const unauthenticated = await anonAgent.get("/api/admin/audit-logs");
@@ -167,7 +167,7 @@ test("admin aggregated audit logs enforce auth/role and support scope+status+sea
 
   const listing = await adminAgent.get("/api/admin/audit-logs").query({
     page: 1,
-    pageSize: 50
+    pageSize: 50,
   });
   assert.equal(listing.status, 200);
   assert.ok(Array.isArray(listing.body?.entries), "Expected audit entries payload.");
@@ -176,7 +176,7 @@ test("admin aggregated audit logs enforce auth/role and support scope+status+sea
   const usersOnly = await adminAgent.get("/api/admin/audit-logs").query({
     scope: "users",
     page: 1,
-    pageSize: 50
+    pageSize: 50,
   });
   assert.equal(usersOnly.status, 200);
   assert.ok(usersOnly.body.entries.length >= 2, "Expected users-scope rows.");
@@ -188,7 +188,7 @@ test("admin aggregated audit logs enforce auth/role and support scope+status+sea
   const successOnly = await adminAgent.get("/api/admin/audit-logs").query({
     status: "success",
     page: 1,
-    pageSize: 50
+    pageSize: 50,
   });
   assert.equal(successOnly.status, 200);
   assert.ok(successOnly.body.entries.length >= 3, "Expected success rows.");
@@ -200,7 +200,7 @@ test("admin aggregated audit logs enforce auth/role and support scope+status+sea
   const searchHit = await adminAgent.get("/api/admin/audit-logs").query({
     q: "auto_lock",
     page: 1,
-    pageSize: 50
+    pageSize: 50,
   });
   assert.equal(searchHit.status, 200);
   assert.ok(
@@ -215,7 +215,11 @@ test("admin aggregated audit logs paginate deterministically", async () => {
   const app = createApp();
   const adminAgent = request.agent(app);
 
-  await signUp(adminAgent, "Phase6 Pagination Admin", `tst_phase6_pagination_admin_${Date.now()}@example.com`);
+  await signUp(
+    adminAgent,
+    "Phase6 Pagination Admin",
+    `tst_phase6_pagination_admin_${Date.now()}@example.com`
+  );
   const adminUser = await getSessionUser(adminAgent);
   await assignAdminRole(adminUser.id);
 
@@ -232,7 +236,7 @@ test("admin aggregated audit logs paginate deterministically", async () => {
     message: "Chapter published successfully.",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: new Date(base - 3000)
+    createdAt: new Date(base - 3000),
   });
   await seedAuditLog({
     id: seededIdTwo,
@@ -243,7 +247,7 @@ test("admin aggregated audit logs paginate deterministically", async () => {
     message: "Thread pinned successfully.",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: new Date(base - 2000)
+    createdAt: new Date(base - 2000),
   });
   await seedAuditLog({
     id: seededIdThree,
@@ -254,12 +258,12 @@ test("admin aggregated audit logs paginate deterministically", async () => {
     message: "Suspended user for repeated policy violations.",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: new Date(base - 1000)
+    createdAt: new Date(base - 1000),
   });
 
   const pageOne = await adminAgent.get("/api/admin/audit-logs").query({
     page: 1,
-    pageSize: 1
+    pageSize: 1,
   });
   assert.equal(pageOne.status, 200);
   assert.equal(pageOne.body.page, 1);
@@ -272,7 +276,7 @@ test("admin aggregated audit logs paginate deterministically", async () => {
 
   const pageTwo = await adminAgent.get("/api/admin/audit-logs").query({
     page: 2,
-    pageSize: 1
+    pageSize: 1,
   });
   assert.equal(pageTwo.status, 200);
   assert.equal(pageTwo.body.page, 2);
@@ -288,7 +292,11 @@ test("admin scoped audit log routes are available for moderation/users/notificat
   const app = createApp();
   const adminAgent = request.agent(app);
 
-  await signUp(adminAgent, "Phase6 Scoped Admin", `tst_phase6_scoped_admin_${Date.now()}@example.com`);
+  await signUp(
+    adminAgent,
+    "Phase6 Scoped Admin",
+    `tst_phase6_scoped_admin_${Date.now()}@example.com`
+  );
   const adminUser = await getSessionUser(adminAgent);
   await assignAdminRole(adminUser.id);
 
@@ -302,7 +310,7 @@ test("admin scoped audit log routes are available for moderation/users/notificat
     message: "Resolved reported thread after review.",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: new Date(now - 2000)
+    createdAt: new Date(now - 2000),
   });
   await seedAuditLog({
     id: randomUUID(),
@@ -313,7 +321,7 @@ test("admin scoped audit log routes are available for moderation/users/notificat
     message: "Suspended user for policy violations.",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: new Date(now - 1500)
+    createdAt: new Date(now - 1500),
   });
   await seedAuditLog({
     id: randomUUID(),
@@ -324,7 +332,7 @@ test("admin scoped audit log routes are available for moderation/users/notificat
     message: "Sent maintenance advisory.",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: new Date(now - 1000)
+    createdAt: new Date(now - 1000),
   });
   await seedAuditLog({
     id: randomUUID(),
@@ -335,14 +343,14 @@ test("admin scoped audit log routes are available for moderation/users/notificat
     message: "Updated threshold to 70.",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: new Date(now - 500)
+    createdAt: new Date(now - 500),
   });
 
   const routes = [
     { path: "/api/admin/moderation/audit-logs", expectedScope: "moderation" },
     { path: "/api/admin/users/audit-logs", expectedScope: "users" },
     { path: "/api/admin/notifications/audit-logs", expectedScope: "notifications" },
-    { path: "/api/admin/settings/audit-logs", expectedScope: "settings" }
+    { path: "/api/admin/settings/audit-logs", expectedScope: "settings" },
   ] as const;
 
   for (const route of routes) {
@@ -354,10 +362,10 @@ test("admin scoped audit log routes are available for moderation/users/notificat
     assert.ok(typeof response.body.hasMore === "boolean");
     assert.ok(Array.isArray(response.body.entries));
     assert.ok(
-      response.body.entries.every((row: { scope?: string }) => row.scope === undefined || row.scope === route.expectedScope),
+      response.body.entries.every(
+        (row: { scope?: string }) => row.scope === undefined || row.scope === route.expectedScope
+      ),
       `Expected ${route.path} entries to align with scope ${route.expectedScope}`
     );
   }
 });
-
-

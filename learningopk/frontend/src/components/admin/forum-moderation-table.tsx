@@ -44,23 +44,28 @@ export function ForumModerationTable({ rows, onMutationComplete }: ForumModerati
             <tr key={thread.id}>
               <td className="px-3 py-2 font-medium text-foreground">{thread.title}</td>
               <td className="px-3 py-2 text-foreground/90">{thread.userName}</td>
-              <td className="px-3 py-2 text-foreground/90">{new Date(thread.createdAt).toLocaleDateString()}</td>
+              <td className="px-3 py-2 text-foreground/90">
+                {new Date(thread.createdAt).toLocaleDateString()}
+              </td>
               <td className="px-3 py-2 text-foreground/90">{thread.replyCount}</td>
               <td className="px-3 py-2 text-foreground/90">{thread.views}</td>
               <td className="px-3 py-2">
                 <span
                   className={[
                     "rounded-full px-2 py-1 text-xs font-semibold",
-                    thread.isPinned ? "bg-blue-100 text-blue-800" : "bg-muted text-muted-foreground"
+                    thread.isPinned
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-muted text-muted-foreground",
                   ].join(" ")}
                 >
                   {thread.isPinned ? "Pinned" : "Not pinned"}
-                </span>
-                {" "}
+                </span>{" "}
                 <span
                   className={[
                     "rounded-full px-2 py-1 text-xs font-semibold",
-                    thread.isSolved ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                    thread.isSolved
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-amber-100 text-amber-800",
                   ].join(" ")}
                 >
                   {thread.isSolved ? "Solved" : "Unsolved"}
@@ -88,9 +93,11 @@ export function ForumModerationTable({ rows, onMutationComplete }: ForumModerati
                     onClick={async () => {
                       try {
                         await deleteModerationThread(thread.id);
-                        setItems(prev => prev.filter(item => item.id !== thread.id));
+                        setItems((prev) => prev.filter((item) => item.id !== thread.id));
                         onMutationComplete();
-                      } catch (err) { console.error("Delete thread failed:", err); }
+                      } catch (err) {
+                        console.error("Delete thread failed:", err);
+                      }
                     }}
                   >
                     Delete

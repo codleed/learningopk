@@ -21,9 +21,7 @@ export interface SubjectProgressGridProps {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-function getProgressColorVariant(
-  percent: number,
-): "success" | "primary" | "warning" {
+function getProgressColorVariant(percent: number): "success" | "primary" | "warning" {
   if (percent >= 80) return "success";
   if (percent >= 40) return "primary";
   return "warning";
@@ -39,9 +37,7 @@ function getAccentColor(percent: number): string {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function SubjectProgressGrid({
-  subjects,
-}: SubjectProgressGridProps) {
+export function SubjectProgressGrid({ subjects }: SubjectProgressGridProps) {
   if (subjects.length === 0) {
     return (
       <Card variant="default">
@@ -51,10 +47,7 @@ export function SubjectProgressGrid({
           </h3>
         </CardHeader>
         <CardBody className="py-12 text-center">
-          <BookOpen
-            className="mx-auto h-10 w-10 text-text-muted"
-            aria-hidden
-          />
+          <BookOpen className="mx-auto h-10 w-10 text-text-muted" aria-hidden />
           <p className="mt-3 text-sm text-text-secondary">
             No subjects enrolled yet. Start learning to see your progress.
           </p>
@@ -111,11 +104,7 @@ function SubjectCard({ subject }: { subject: SubjectSummary }) {
     >
       <div className="overflow-hidden rounded-xl border border-border-default bg-bg-base shadow-[var(--shadow-sm)] transition-all duration-200 hover:border-accent-primary/30 hover:shadow-[var(--shadow-card)]">
         {/* Color-coded top accent bar */}
-        <div
-          className="h-1.5 w-full"
-          style={{ backgroundColor: accentColor }}
-          aria-hidden="true"
-        />
+        <div className="h-1.5 w-full" style={{ backgroundColor: accentColor }} aria-hidden="true" />
 
         {/* Content */}
         <div className="p-4">
@@ -154,10 +143,7 @@ function SubjectCard({ subject }: { subject: SubjectSummary }) {
           {/* Quiz score line */}
           {hasQuizScore ? (
             <div className="mt-2 flex items-center gap-1.5">
-              <Trophy
-                className="h-3 w-3 text-accent-warning"
-                aria-hidden="true"
-              />
+              <Trophy className="h-3 w-3 text-accent-warning" aria-hidden="true" />
               <span className="text-[11px] font-medium text-text-secondary">
                 Best quiz: {subject.bestQuizScorePercent}%
               </span>

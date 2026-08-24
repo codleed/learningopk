@@ -59,10 +59,7 @@ export function FeaturesGrid({ features }: FeaturesGridProps) {
   const isInView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
-    <div
-      ref={ref}
-      className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3"
-    >
+    <div ref={ref} className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
       {features.map((feature, i) => {
         const Icon = ICON_MAP[feature.iconName] ?? BookOpen;
 
@@ -88,16 +85,10 @@ export function FeaturesGrid({ features }: FeaturesGridProps) {
               />
 
               {/* Card content */}
-              <Card
-                variant="bordered"
-                className="relative h-full border-transparent bg-bg-surface"
-              >
+              <Card variant="bordered" className="relative h-full border-transparent bg-bg-surface">
                 <CardBody className="p-6">
                   <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-primary-light">
-                    <Icon
-                      className="h-6 w-6 text-accent-primary"
-                      strokeWidth={1.8}
-                    />
+                    <Icon className="h-6 w-6 text-accent-primary" strokeWidth={1.8} />
                   </div>
                   <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-text-primary">
                     {feature.title}

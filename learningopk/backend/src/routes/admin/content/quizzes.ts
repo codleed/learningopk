@@ -15,37 +15,34 @@ const quizUpsertBodySchema = z.object({
   chapterId: z.coerce.number().int().positive(),
   title: z.string().trim().min(1),
   durationMinutes: z.coerce.number().int().positive().optional().default(30),
-  type: z.enum(["chapter_quiz", "mock_exam"]).optional().default("chapter_quiz")
+  type: z.enum(["chapter_quiz", "mock_exam"]).optional().default("chapter_quiz"),
 });
 
 const quizUpdateBodySchema = z.object({
   title: z.string().trim().min(1),
   durationMinutes: z.coerce.number().int().positive().optional(),
-  type: z.enum(["chapter_quiz", "mock_exam"]).optional()
+  type: z.enum(["chapter_quiz", "mock_exam"]).optional(),
 });
 
 const quizQuerySchema = z.object({
-  chapterId: z.coerce.number().int().positive().optional()
+  chapterId: z.coerce.number().int().positive().optional(),
 });
 
 const quizParamsSchema = z.object({
-  id: z.coerce.number().int().positive()
+  id: z.coerce.number().int().positive(),
 });
 
 export const recalculateQuizTotalMarks = async (quizId: number): Promise<number> => {
   const questionMarksResult = await db
     .select({
-      total: sql<number>`coalesce(sum(${quizQuestions.marks}), 0)::int`
+      total: sql<number>`coalesce(sum(${quizQuestions.marks}), 0)::int`,
     })
     .from(quizQuestions)
     .where(eq(quizQuestions.quizId, quizId));
 
   const totalMarks = questionMarksResult[0]?.total ?? 0;
 
-  await db
-    .update(quizzes)
-    .set({ totalMarks })
-    .where(eq(quizzes.id, quizId));
+  await db.update(quizzes).set({ totalMarks }).where(eq(quizzes.id, quizId));
 
   return totalMarks;
 };
@@ -60,7 +57,7 @@ quizzesAdminRouter.post("/content/quizzes", requireSession, async (req, res) => 
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid quiz payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -76,7 +73,7 @@ quizzesAdminRouter.post("/content/quizzes", requireSession, async (req, res) => 
       title: quizzes.title,
       durationMinutes: quizzes.durationMinutes,
       totalMarks: quizzes.totalMarks,
-      type: quizzes.type
+      type: quizzes.type,
     })
     .from(quizzes)
     .where(eq(quizzes.chapterId, parsedBody.data.chapterId))
@@ -91,7 +88,7 @@ quizzesAdminRouter.post("/content/quizzes", requireSession, async (req, res) => 
       .set({
         title: parsedBody.data.title.trim(),
         durationMinutes: parsedBody.data.durationMinutes ?? existingQuiz.durationMinutes,
-        type: parsedBody.data.type
+        type: parsedBody.data.type,
       })
       .where(eq(quizzes.id, existingQuiz.id))
       .returning({
@@ -100,7 +97,7 @@ quizzesAdminRouter.post("/content/quizzes", requireSession, async (req, res) => 
         title: quizzes.title,
         durationMinutes: quizzes.durationMinutes,
         totalMarks: quizzes.totalMarks,
-        type: quizzes.type
+        type: quizzes.type,
       });
 
     const updatedQuiz = updatedRows[0];
@@ -112,7 +109,7 @@ quizzesAdminRouter.post("/content/quizzes", requireSession, async (req, res) => 
         status: "failed",
         message: "Quiz update failed",
         actorId,
-        actorName
+        actorName,
       });
       res.status(500).json({ error: "Failed to update quiz" });
       return;
@@ -128,12 +125,12 @@ quizzesAdminRouter.post("/content/quizzes", requireSession, async (req, res) => 
       status: "success",
       message: "Updated existing quiz via upsert",
       actorId,
-      actorName
+      actorName,
     });
 
     res.status(200).json({
       data: updatedQuiz,
-      created: false
+      created: false,
     });
   } else {
     // CREATE new quiz
@@ -144,7 +141,7 @@ quizzesAdminRouter.post("/content/quizzes", requireSession, async (req, res) => 
         title: parsedBody.data.title.trim(),
         durationMinutes: parsedBody.data.durationMinutes ?? 30,
         totalMarks: 0, // Initial totalMarks is 0, will be updated when questions are added
-        type: parsedBody.data.type ?? "chapter_quiz"
+        type: parsedBody.data.type ?? "chapter_quiz",
       })
       .returning({
         id: quizzes.id,
@@ -152,7 +149,7 @@ quizzesAdminRouter.post("/content/quizzes", requireSession, async (req, res) => 
         title: quizzes.title,
         durationMinutes: quizzes.durationMinutes,
         totalMarks: quizzes.totalMarks,
-        type: quizzes.type
+        type: quizzes.type,
       });
 
     const newQuiz = insertedRows[0];
@@ -164,7 +161,7 @@ quizzesAdminRouter.post("/content/quizzes", requireSession, async (req, res) => 
         status: "failed",
         message: "Quiz creation failed",
         actorId,
-        actorName
+        actorName,
       });
       res.status(500).json({ error: "Failed to create quiz" });
       return;
@@ -180,12 +177,12 @@ quizzesAdminRouter.post("/content/quizzes", requireSession, async (req, res) => 
       status: "success",
       message: "Created new quiz via upsert",
       actorId,
-      actorName
+      actorName,
     });
 
     res.status(201).json({
       data: newQuiz,
-      created: true
+      created: true,
     });
   }
 });
@@ -203,14 +200,14 @@ quizzesAdminRouter.get("/content/quizzes", requireSession, async (req, res) => {
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid quiz query",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
 
   if (!parsedQuery.data.chapterId) {
     res.status(400).json({
-      error: "chapterId is required"
+      error: "chapterId is required",
     });
     return;
   }
@@ -222,7 +219,7 @@ quizzesAdminRouter.get("/content/quizzes", requireSession, async (req, res) => {
       title: quizzes.title,
       durationMinutes: quizzes.durationMinutes,
       totalMarks: quizzes.totalMarks,
-      type: quizzes.type
+      type: quizzes.type,
     })
     .from(quizzes)
     .where(eq(quizzes.chapterId, parsedQuery.data.chapterId))
@@ -231,7 +228,7 @@ quizzesAdminRouter.get("/content/quizzes", requireSession, async (req, res) => {
   const quiz = quizRows[0] ?? null;
 
   res.status(200).json({
-    data: quiz
+    data: quiz,
   });
 });
 
@@ -243,7 +240,7 @@ quizzesAdminRouter.post("/content/quizzes/:id/update", requireSession, async (re
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid quiz identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -252,7 +249,7 @@ quizzesAdminRouter.post("/content/quizzes/:id/update", requireSession, async (re
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid quiz payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -274,7 +271,7 @@ quizzesAdminRouter.post("/content/quizzes/:id/update", requireSession, async (re
       title: quizzes.title,
       durationMinutes: quizzes.durationMinutes,
       totalMarks: quizzes.totalMarks,
-      type: quizzes.type
+      type: quizzes.type,
     })
     .from(quizzes)
     .where(eq(quizzes.id, parsedParams.data.id))
@@ -289,7 +286,7 @@ quizzesAdminRouter.post("/content/quizzes/:id/update", requireSession, async (re
       status: "failed",
       message: "Quiz not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({ error: "Quiz not found" });
     return;
@@ -299,8 +296,10 @@ quizzesAdminRouter.post("/content/quizzes/:id/update", requireSession, async (re
     .update(quizzes)
     .set({
       title: parsedBody.data.title.trim(),
-      ...(parsedBody.data.durationMinutes !== undefined && { durationMinutes: parsedBody.data.durationMinutes }),
-      ...(parsedBody.data.type !== undefined && { type: parsedBody.data.type })
+      ...(parsedBody.data.durationMinutes !== undefined && {
+        durationMinutes: parsedBody.data.durationMinutes,
+      }),
+      ...(parsedBody.data.type !== undefined && { type: parsedBody.data.type }),
     })
     .where(eq(quizzes.id, quiz.id))
     .returning({
@@ -309,7 +308,7 @@ quizzesAdminRouter.post("/content/quizzes/:id/update", requireSession, async (re
       title: quizzes.title,
       durationMinutes: quizzes.durationMinutes,
       totalMarks: quizzes.totalMarks,
-      type: quizzes.type
+      type: quizzes.type,
     });
 
   const updatedQuiz = updatedRows[0];
@@ -321,7 +320,7 @@ quizzesAdminRouter.post("/content/quizzes/:id/update", requireSession, async (re
       status: "failed",
       message: "Quiz not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({ error: "Quiz not found" });
     return;
@@ -337,11 +336,11 @@ quizzesAdminRouter.post("/content/quizzes/:id/update", requireSession, async (re
     status: "success",
     message: "Updated quiz metadata",
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
-    data: updatedQuiz
+    data: updatedQuiz,
   });
 });
 
@@ -353,7 +352,7 @@ quizzesAdminRouter.post("/content/quizzes/:id/delete", requireSession, async (re
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid quiz identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -375,7 +374,7 @@ quizzesAdminRouter.post("/content/quizzes/:id/delete", requireSession, async (re
       title: quizzes.title,
       durationMinutes: quizzes.durationMinutes,
       totalMarks: quizzes.totalMarks,
-      type: quizzes.type
+      type: quizzes.type,
     })
     .from(quizzes)
     .where(eq(quizzes.id, parsedParams.data.id))
@@ -390,7 +389,7 @@ quizzesAdminRouter.post("/content/quizzes/:id/delete", requireSession, async (re
       status: "failed",
       message: "Quiz not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({ error: "Quiz not found" });
     return;
@@ -409,11 +408,11 @@ quizzesAdminRouter.post("/content/quizzes/:id/delete", requireSession, async (re
     status: "success",
     message: "Deleted quiz (questions cascade via FK)",
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
     success: true,
-    deletedId: quiz.id
+    deletedId: quiz.id,
   });
 });

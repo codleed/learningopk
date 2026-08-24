@@ -10,7 +10,7 @@ import { requireSession, type AuthenticatedRequest } from "../../../lib/session.
 import { persistAuditLog, type AdminAuditScope } from "../shared.js";
 
 const curriculumEntityParamsSchema = z.object({
-  id: z.coerce.number().int().positive()
+  id: z.coerce.number().int().positive(),
 });
 
 const curriculumSubjectCreateBodySchema = z.object({
@@ -19,7 +19,7 @@ const curriculumSubjectCreateBodySchema = z.object({
   slug: z.string().trim().min(1),
   icon: z.string().trim().optional(),
   description: z.string().trim().optional(),
-  coverImageUrl: z.string().trim().url().nullish()
+  coverImageUrl: z.string().trim().url().nullish(),
 });
 
 const curriculumSubjectUpdateBodySchema = z.object({
@@ -27,7 +27,7 @@ const curriculumSubjectUpdateBodySchema = z.object({
   slug: z.string().trim().min(1),
   icon: z.string().trim().nullish(),
   description: z.string().trim().nullish(),
-  coverImageUrl: z.string().trim().url().nullish()
+  coverImageUrl: z.string().trim().url().nullish(),
 });
 
 export const subjectsAdminRouter = Router();
@@ -42,7 +42,7 @@ subjectsAdminRouter.post("/content/subjects", requireSession, async (req, res) =
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid subject payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -57,7 +57,7 @@ subjectsAdminRouter.post("/content/subjects", requireSession, async (req, res) =
       id: boardClasses.id,
       boardId: boardClasses.boardId,
       name: boardClasses.name,
-      slug: boardClasses.slug
+      slug: boardClasses.slug,
     })
     .from(boardClasses)
     .where(eq(boardClasses.id, parsedBody.data.boardClassId))
@@ -72,10 +72,10 @@ subjectsAdminRouter.post("/content/subjects", requireSession, async (req, res) =
       status: "failed",
       message: "Class not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Class not found"
+      error: "Class not found",
     });
     return;
   }
@@ -92,7 +92,7 @@ subjectsAdminRouter.post("/content/subjects", requireSession, async (req, res) =
         slug,
         ...(parsedBody.data.icon ? { icon: parsedBody.data.icon.trim() } : {}),
         ...(parsedBody.data.description ? { description: parsedBody.data.description.trim() } : {}),
-        ...(parsedBody.data.coverImageUrl ? { coverImageUrl: parsedBody.data.coverImageUrl } : {})
+        ...(parsedBody.data.coverImageUrl ? { coverImageUrl: parsedBody.data.coverImageUrl } : {}),
       })
       .returning({
         id: subjects.id,
@@ -101,13 +101,13 @@ subjectsAdminRouter.post("/content/subjects", requireSession, async (req, res) =
         slug: subjects.slug,
         icon: subjects.icon,
         description: subjects.description,
-        coverImageUrl: subjects.coverImageUrl
+        coverImageUrl: subjects.coverImageUrl,
       });
 
     const subject = insertedRows[0];
     if (!subject) {
       res.status(500).json({
-        error: "Failed to create subject"
+        error: "Failed to create subject",
       });
       return;
     }
@@ -119,7 +119,7 @@ subjectsAdminRouter.post("/content/subjects", requireSession, async (req, res) =
       status: "success",
       message: `Created subject ${subject.slug}`,
       actorId,
-      actorName
+      actorName,
     });
 
     // Purge cached subject lists
@@ -127,7 +127,7 @@ subjectsAdminRouter.post("/content/subjects", requireSession, async (req, res) =
     void cacheService.invalidatePattern("learn:*");
 
     res.status(201).json({
-      subject
+      subject,
     });
   } catch {
     await persistAuditLog({
@@ -137,10 +137,10 @@ subjectsAdminRouter.post("/content/subjects", requireSession, async (req, res) =
       status: "failed",
       message: "Subject create failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(409).json({
-      error: "Subject already exists for class"
+      error: "Subject already exists for class",
     });
   }
 });
@@ -150,7 +150,7 @@ subjectsAdminRouter.post("/content/subjects/:id/delete", requireSession, async (
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid subject identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -172,7 +172,7 @@ subjectsAdminRouter.post("/content/subjects/:id/delete", requireSession, async (
       slug: subjects.slug,
       boardClassId: subjects.boardClassId,
       className: boardClasses.name,
-      boardName: boards.name
+      boardName: boards.name,
     })
     .from(subjects)
     .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
@@ -188,10 +188,10 @@ subjectsAdminRouter.post("/content/subjects/:id/delete", requireSession, async (
       status: "failed",
       message: "Subject not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Subject not found"
+      error: "Subject not found",
     });
     return;
   }
@@ -206,7 +206,7 @@ subjectsAdminRouter.post("/content/subjects/:id/delete", requireSession, async (
       status: "failed",
       message: error instanceof Error ? error.message : "Subject delete failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(500).json({ error: "Failed to delete subject" });
     return;
@@ -219,7 +219,7 @@ subjectsAdminRouter.post("/content/subjects/:id/delete", requireSession, async (
     status: "success",
     message: `Deleted subject ${subject.slug}`,
     actorId,
-    actorName
+    actorName,
   });
 
   // Purge cached subject/chapter lists
@@ -232,9 +232,9 @@ subjectsAdminRouter.post("/content/subjects/:id/delete", requireSession, async (
     subject: {
       id: subject.id,
       name: subject.name,
-      slug: subject.slug
+      slug: subject.slug,
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -243,7 +243,7 @@ subjectsAdminRouter.post("/content/subjects/:id/update", requireSession, async (
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid subject identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -252,7 +252,7 @@ subjectsAdminRouter.post("/content/subjects/:id/update", requireSession, async (
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid subject payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -277,7 +277,7 @@ subjectsAdminRouter.post("/content/subjects/:id/update", requireSession, async (
       coverImageUrl: subjects.coverImageUrl,
       boardClassId: subjects.boardClassId,
       className: boardClasses.name,
-      boardName: boards.name
+      boardName: boards.name,
     })
     .from(subjects)
     .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
@@ -294,10 +294,10 @@ subjectsAdminRouter.post("/content/subjects/:id/update", requireSession, async (
       status: "failed",
       message: "Subject not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Subject not found"
+      error: "Subject not found",
     });
     return;
   }
@@ -308,9 +308,15 @@ subjectsAdminRouter.post("/content/subjects/:id/update", requireSession, async (
       .set({
         name: parsedBody.data.name.trim(),
         slug: parsedBody.data.slug.trim().toLowerCase(),
-        ...(parsedBody.data.icon !== undefined ? { icon: parsedBody.data.icon?.trim() ?? null } : {}),
-        ...(parsedBody.data.description !== undefined ? { description: parsedBody.data.description?.trim() ?? null } : {}),
-        ...(parsedBody.data.coverImageUrl !== undefined ? { coverImageUrl: parsedBody.data.coverImageUrl } : {})
+        ...(parsedBody.data.icon !== undefined
+          ? { icon: parsedBody.data.icon?.trim() ?? null }
+          : {}),
+        ...(parsedBody.data.description !== undefined
+          ? { description: parsedBody.data.description?.trim() ?? null }
+          : {}),
+        ...(parsedBody.data.coverImageUrl !== undefined
+          ? { coverImageUrl: parsedBody.data.coverImageUrl }
+          : {}),
       })
       .where(eq(subjects.id, parsedParams.data.id))
       .returning({
@@ -319,7 +325,7 @@ subjectsAdminRouter.post("/content/subjects/:id/update", requireSession, async (
         slug: subjects.slug,
         icon: subjects.icon,
         description: subjects.description,
-        coverImageUrl: subjects.coverImageUrl
+        coverImageUrl: subjects.coverImageUrl,
       });
 
     const updatedSubject = updatedRows[0];
@@ -334,7 +340,7 @@ subjectsAdminRouter.post("/content/subjects/:id/update", requireSession, async (
       status: "success",
       message: `Updated subject ${subject.slug}`,
       actorId,
-      actorName
+      actorName,
     });
 
     // Purge cached subject/chapter lists
@@ -345,17 +351,18 @@ subjectsAdminRouter.post("/content/subjects/:id/update", requireSession, async (
 
     res.status(200).json({
       subject: updatedSubject,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     // Check if this is a unique constraint violation on slug
-    const isSlugConflict = error instanceof Error &&
+    const isSlugConflict =
+      error instanceof Error &&
       (error.message.includes("unique constraint") || error.message.includes("duplicate key")) &&
       error.message.toLowerCase().includes("slug");
 
     // Also check for PostgreSQL error code 23505 (unique_violation)
-    const isUniqueViolation = typeof error === 'object' && error !== null &&
-      ('code' in error && error.code === '23505');
+    const isUniqueViolation =
+      typeof error === "object" && error !== null && "code" in error && error.code === "23505";
 
     await persistAuditLog({
       scope: "content",
@@ -364,10 +371,13 @@ subjectsAdminRouter.post("/content/subjects/:id/update", requireSession, async (
       status: "failed",
       message: error instanceof Error ? error.message : "Subject update failed",
       actorId,
-      actorName
+      actorName,
     });
 
-    if (isSlugConflict || (isUniqueViolation && error instanceof Error && error.message.toLowerCase().includes("slug"))) {
+    if (
+      isSlugConflict ||
+      (isUniqueViolation && error instanceof Error && error.message.toLowerCase().includes("slug"))
+    ) {
       res.status(409).json({ error: "Subject slug already in use" });
     } else {
       res.status(500).json({ error: "Failed to update subject" });

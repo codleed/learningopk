@@ -6,15 +6,15 @@ const recommendedChapterSchema = z.object({
   chapterId: z.number().int().positive(),
   priority: z.number().int().positive(),
   reason: z.string(),
-  estimatedTime: z.string()
+  estimatedTime: z.string(),
 });
 
 const learningPathDataSchema = z.object({
-  recommendedChapters: z.array(recommendedChapterSchema)
+  recommendedChapters: z.array(recommendedChapterSchema),
 });
 
 const learningPathResponseSchema = z.object({
-  data: learningPathDataSchema
+  data: learningPathDataSchema,
 });
 
 export type LearningPathRecommendation = z.infer<typeof recommendedChapterSchema>;
@@ -30,7 +30,7 @@ export async function getLearningPath(cookieHeader?: string): Promise<LearningPa
     method: "GET",
     cache: "no-store",
     credentials: "include",
-    ...(Object.keys(headers).length > 0 ? { headers } : {})
+    ...(Object.keys(headers).length > 0 ? { headers } : {}),
   });
 
   if (!response.ok) {

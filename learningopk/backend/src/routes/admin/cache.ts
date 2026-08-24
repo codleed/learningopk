@@ -40,12 +40,12 @@ cacheAdminRouter.post("/cache/purge", requireSession, async (req, res) => {
     status: "success",
     message: `Purged ${deleted} cache entries`,
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
     success: true,
     deletedCount: deleted,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });

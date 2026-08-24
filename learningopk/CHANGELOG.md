@@ -5,6 +5,7 @@ All notable changes to the LearningoPK project will be documented in this file.
 ## [Unreleased] - 2026-03-25
 
 ### Added
+
 - **Architecture Decision Record** (`docs/redesign/ADR-001-architecture.md`)
   - Documented the decision to consolidate on CVA + Tailwind pattern
   - Defined migration path from design-system components to ui/ components
@@ -74,12 +75,14 @@ History tracked separately in git commits.
 ### Updating Imports
 
 **Before:**
+
 ```tsx
 import { Button } from "@/design-system/components/Button";
 import { Badge } from "@/design-system/components/Badge";
 ```
 
 **After:**
+
 ```tsx
 import { Button, Badge } from "@/components/ui";
 ```
@@ -87,6 +90,7 @@ import { Button, Badge } from "@/components/ui";
 ### Using New Components
 
 **Card with variants:**
+
 ```tsx
 <Card>Default</Card>
 <Card variant="elevated">Elevated</Card>
@@ -95,12 +99,14 @@ import { Button, Badge } from "@/components/ui";
 ```
 
 **Badge with pastel variants:**
+
 ```tsx
 <Badge variant="sage">Sage</Badge>
 <Badge variant="lavender">Lavender</Badge>
 ```
 
 **Button with loading:**
+
 ```tsx
 <Button loading>Save</Button>
 ```

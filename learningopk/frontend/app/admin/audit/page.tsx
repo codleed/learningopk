@@ -14,13 +14,13 @@ export default async function AdminAuditPage() {
     q: "",
     page: 1,
     pageSize: 20,
-    cookieHeader
+    cookieHeader,
   }).catch(() => ({
     entries: [],
     total: 0,
     page: 1,
     pageSize: 20,
-    hasMore: false
+    hasMore: false,
   }));
 
   return (
@@ -30,7 +30,10 @@ export default async function AdminAuditPage() {
         title="Audit Trail"
         subtitle="Review admin actions across all operational scopes with unified filtering."
         actions={
-          <Link href="/admin" className="text-sm font-medium text-text-primary underline underline-offset-4">
+          <Link
+            href="/admin"
+            className="text-sm font-medium text-text-primary underline underline-offset-4"
+          >
             Back to admin
           </Link>
         }

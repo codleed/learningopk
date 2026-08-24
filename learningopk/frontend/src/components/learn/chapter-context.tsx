@@ -6,12 +6,7 @@ import type { ChapterDetailResponse } from "@/lib/learn-api";
 
 // ── Tab type shared across chapter components ──
 
-export type ChapterTab =
-  | "summary"
-  | "quick-revision"
-  | "exercises"
-  | "quiz"
-  | "illustration";
+export type ChapterTab = "summary" | "quick-revision" | "exercises" | "quiz" | "illustration";
 
 // ── Context value ──
 
@@ -64,9 +59,7 @@ export function ChapterProvider({
   children: React.ReactNode;
   value: ChapterContextValue;
 }) {
-  return (
-    <ChapterContext.Provider value={value}>{children}</ChapterContext.Provider>
-  );
+  return <ChapterContext.Provider value={value}>{children}</ChapterContext.Provider>;
 }
 
 // ── Consumer hook ──

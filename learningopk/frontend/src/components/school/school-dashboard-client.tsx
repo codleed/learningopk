@@ -4,7 +4,9 @@ import { Card, CardHeader, CardBody, CardTitle, CardDescription } from "@/compon
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 
-type DashboardData = NonNullable<Awaited<ReturnType<typeof import("@/lib/school-api").getSchoolDashboard>>>;
+type DashboardData = NonNullable<
+  Awaited<ReturnType<typeof import("@/lib/school-api").getSchoolDashboard>>
+>;
 
 export function SchoolDashboardClient({ initialData }: { initialData: DashboardData }) {
   const [data] = useState(initialData);
@@ -23,7 +25,9 @@ export function SchoolDashboardClient({ initialData }: { initialData: DashboardD
         <div className="mt-2 flex items-center gap-3">
           <span className="text-sm text-text-secondary">Invite code:</span>
           <div className="flex items-center gap-2">
-            <code className="rounded bg-bg-subtle px-3 py-1.5 text-sm font-mono font-semibold">{data.school.inviteCode}</code>
+            <code className="rounded bg-bg-subtle px-3 py-1.5 text-sm font-mono font-semibold">
+              {data.school.inviteCode}
+            </code>
             <button
               onClick={handleCopy}
               className="rounded-md p-1.5 text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors"
@@ -38,13 +42,17 @@ export function SchoolDashboardClient({ initialData }: { initialData: DashboardD
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardBody>
-            <div className="text-3xl font-bold text-accent-primary">{data.analytics.studentCount}</div>
+            <div className="text-3xl font-bold text-accent-primary">
+              {data.analytics.studentCount}
+            </div>
             <div className="text-sm text-text-secondary">Enrolled Students</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody>
-            <div className="text-3xl font-bold text-accent-primary">{data.analytics.avgQuizScore}%</div>
+            <div className="text-3xl font-bold text-accent-primary">
+              {data.analytics.avgQuizScore}%
+            </div>
             <div className="text-sm text-text-secondary">Avg Quiz Score</div>
           </CardBody>
         </Card>
@@ -59,10 +67,14 @@ export function SchoolDashboardClient({ initialData }: { initialData: DashboardD
             {data.analytics.topStudents.map((s, i) => (
               <div key={s.id} className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-subtle text-sm font-bold">{i + 1}</span>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-subtle text-sm font-bold">
+                    {i + 1}
+                  </span>
                   <div>
                     <div className="font-medium">{s.name}</div>
-                    <div className="text-xs text-text-secondary">Level {s.level} &bull; {s.xp} XP</div>
+                    <div className="text-xs text-text-secondary">
+                      Level {s.level} &bull; {s.xp} XP
+                    </div>
                   </div>
                 </div>
               </div>
@@ -82,7 +94,9 @@ export function SchoolDashboardClient({ initialData }: { initialData: DashboardD
               {data.analytics.weakAreas.map((area) => (
                 <div key={area.chapterId} className="flex items-center justify-between py-3">
                   <span>{area.chapterTitle}</span>
-                  <span className="rounded-full bg-accent-danger-light px-2 py-1 text-xs font-semibold text-accent-danger">{area.avgScore}%</span>
+                  <span className="rounded-full bg-accent-danger-light px-2 py-1 text-xs font-semibold text-accent-danger">
+                    {area.avgScore}%
+                  </span>
                 </div>
               ))}
             </div>

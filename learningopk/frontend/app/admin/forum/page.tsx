@@ -13,13 +13,13 @@ export default async function AdminForumPage() {
   const forumAuditLogs = await getAdminForumAuditLogs({
     page: 1,
     pageSize: 10,
-    cookieHeader
+    cookieHeader,
   }).catch(() => ({
     entries: [],
     total: 0,
     page: 1,
     pageSize: 10,
-    hasMore: false
+    hasMore: false,
   }));
 
   const rows = feed.threads.map((thread) => ({
@@ -30,7 +30,7 @@ export default async function AdminForumPage() {
     replyCount: thread.replyCount,
     views: thread.views,
     isPinned: thread.isPinned,
-    isSolved: thread.isSolved
+    isSolved: thread.isSolved,
   }));
 
   return (
@@ -40,7 +40,10 @@ export default async function AdminForumPage() {
         title="Forum Moderation"
         subtitle="Prioritize important threads with pin controls and audit logs."
         actions={
-          <Link href="/admin" className="text-sm font-medium text-text-primary underline underline-offset-4">
+          <Link
+            href="/admin"
+            className="text-sm font-medium text-text-primary underline underline-offset-4"
+          >
             Back to admin
           </Link>
         }

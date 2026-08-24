@@ -9,17 +9,17 @@ import { requireSession, type AuthenticatedRequest } from "../../../lib/session.
 import { persistAuditLog, type AdminAuditScope } from "../shared.js";
 
 const curriculumEntityParamsSchema = z.object({
-  id: z.coerce.number().int().positive()
+  id: z.coerce.number().int().positive(),
 });
 
 const curriculumBoardCreateBodySchema = z.object({
   name: z.string().trim().min(2),
-  slug: z.string().trim().min(2)
+  slug: z.string().trim().min(2),
 });
 
 const curriculumBoardUpdateBodySchema = z.object({
   name: z.string().trim().min(2),
-  slug: z.string().trim().min(2)
+  slug: z.string().trim().min(2),
 });
 
 export const boardsAdminRouter = Router();
@@ -34,7 +34,7 @@ boardsAdminRouter.post("/content/boards", requireSession, async (req, res) => {
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid board payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -49,18 +49,18 @@ boardsAdminRouter.post("/content/boards", requireSession, async (req, res) => {
       .insert(boards)
       .values({
         name,
-        slug
+        slug,
       })
       .returning({
         id: boards.id,
         name: boards.name,
-        slug: boards.slug
+        slug: boards.slug,
       });
 
     const board = insertedRows[0];
     if (!board) {
       res.status(500).json({
-        error: "Failed to create board"
+        error: "Failed to create board",
       });
       return;
     }
@@ -72,7 +72,7 @@ boardsAdminRouter.post("/content/boards", requireSession, async (req, res) => {
       status: "success",
       message: `Created board ${board.slug}`,
       actorId,
-      actorName
+      actorName,
     });
 
     // Purge cached curriculum data
@@ -80,7 +80,7 @@ boardsAdminRouter.post("/content/boards", requireSession, async (req, res) => {
     void cacheService.delete(CacheKeys.subjectList());
 
     res.status(201).json({
-      board
+      board,
     });
   } catch {
     await persistAuditLog({
@@ -90,10 +90,10 @@ boardsAdminRouter.post("/content/boards", requireSession, async (req, res) => {
       status: "failed",
       message: "Board create failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(409).json({
-      error: "Board already exists"
+      error: "Board already exists",
     });
   }
 });
@@ -103,7 +103,7 @@ boardsAdminRouter.post("/content/boards/:id/update", requireSession, async (req,
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid board identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -112,7 +112,7 @@ boardsAdminRouter.post("/content/boards/:id/update", requireSession, async (req,
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid board payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -131,7 +131,7 @@ boardsAdminRouter.post("/content/boards/:id/update", requireSession, async (req,
     .select({
       id: boards.id,
       name: boards.name,
-      slug: boards.slug
+      slug: boards.slug,
     })
     .from(boards)
     .where(eq(boards.id, parsedParams.data.id))
@@ -145,10 +145,10 @@ boardsAdminRouter.post("/content/boards/:id/update", requireSession, async (req,
       status: "failed",
       message: "Board not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Board not found"
+      error: "Board not found",
     });
     return;
   }
@@ -158,13 +158,13 @@ boardsAdminRouter.post("/content/boards/:id/update", requireSession, async (req,
       .update(boards)
       .set({
         name: parsedBody.data.name.trim(),
-        slug: parsedBody.data.slug.trim().toLowerCase()
+        slug: parsedBody.data.slug.trim().toLowerCase(),
       })
       .where(eq(boards.id, board.id))
       .returning({
         id: boards.id,
         name: boards.name,
-        slug: boards.slug
+        slug: boards.slug,
       });
     const updatedBoard = updatedRows[0];
     if (!updatedBoard) {
@@ -175,10 +175,10 @@ boardsAdminRouter.post("/content/boards/:id/update", requireSession, async (req,
         status: "failed",
         message: "Board not found",
         actorId,
-        actorName
+        actorName,
       });
       res.status(404).json({
-        error: "Board not found"
+        error: "Board not found",
       });
       return;
     }
@@ -190,7 +190,7 @@ boardsAdminRouter.post("/content/boards/:id/update", requireSession, async (req,
       status: "success",
       message: `Updated board to ${updatedBoard.slug}`,
       actorId,
-      actorName
+      actorName,
     });
 
     // Purge cached curriculum data
@@ -199,7 +199,7 @@ boardsAdminRouter.post("/content/boards/:id/update", requireSession, async (req,
 
     res.status(200).json({
       board: updatedBoard,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch {
     await persistAuditLog({
@@ -209,10 +209,10 @@ boardsAdminRouter.post("/content/boards/:id/update", requireSession, async (req,
       status: "failed",
       message: "Board update failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(409).json({
-      error: "Board already exists"
+      error: "Board already exists",
     });
   }
 });
@@ -222,7 +222,7 @@ boardsAdminRouter.post("/content/boards/:id/delete", requireSession, async (req,
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid board identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -241,7 +241,7 @@ boardsAdminRouter.post("/content/boards/:id/delete", requireSession, async (req,
     .select({
       id: boards.id,
       name: boards.name,
-      slug: boards.slug
+      slug: boards.slug,
     })
     .from(boards)
     .where(eq(boards.id, parsedParams.data.id))
@@ -255,10 +255,10 @@ boardsAdminRouter.post("/content/boards/:id/delete", requireSession, async (req,
       status: "failed",
       message: "Board not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Board not found"
+      error: "Board not found",
     });
     return;
   }
@@ -277,7 +277,7 @@ boardsAdminRouter.post("/content/boards/:id/delete", requireSession, async (req,
       status: "failed",
       message: error instanceof Error ? error.message : "Board delete failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(500).json({ error: "Failed to delete board" });
     return;
@@ -290,7 +290,7 @@ boardsAdminRouter.post("/content/boards/:id/delete", requireSession, async (req,
     status: "success",
     message: `Deleted board ${board.slug}`,
     actorId,
-    actorName
+    actorName,
   });
 
   // Purge cached curriculum data
@@ -300,6 +300,6 @@ boardsAdminRouter.post("/content/boards/:id/delete", requireSession, async (req,
 
   res.status(200).json({
     board,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });

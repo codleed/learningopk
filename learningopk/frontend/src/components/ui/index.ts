@@ -100,17 +100,25 @@ export type {
 } from "./sheet";
 
 /* ── Select ── */
-export { Select, NativeSelect, RadixSelect, SelectItem, SelectGroup, SelectSeparator } from "./select";
-export type { SelectProps, NativeSelectProps, RadixSelectProps, SelectItemProps, SelectGroupProps } from "./select";
+export {
+  Select,
+  NativeSelect,
+  RadixSelect,
+  SelectItem,
+  SelectGroup,
+  SelectSeparator,
+} from "./select";
+export type {
+  SelectProps,
+  NativeSelectProps,
+  RadixSelectProps,
+  SelectItemProps,
+  SelectGroupProps,
+} from "./select";
 
 /* ── Tabs ── */
 export { Tabs, TabList, TabTrigger, TabContent } from "./tabs";
-export type {
-  TabsProps,
-  TabListProps,
-  TabTriggerProps,
-  TabContentProps,
-} from "./tabs";
+export type { TabsProps, TabListProps, TabTriggerProps, TabContentProps } from "./tabs";
 
 /* ── Switch ── */
 export { Switch } from "./switch";

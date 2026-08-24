@@ -69,7 +69,10 @@ export function ForumThreadCard({ thread, index }: ForumThreadCardProps) {
         aria-label={`Thread: ${thread.title}`}
       >
         {/* ── Vote Column ── */}
-        <div className="hidden shrink-0 flex-col items-center gap-0.5 sm:flex" aria-label={`Score: ${thread.views}`}>
+        <div
+          className="hidden shrink-0 flex-col items-center gap-0.5 sm:flex"
+          aria-label={`Score: ${thread.views}`}
+        >
           <ChevronUp className="h-4 w-4 text-text-muted" aria-hidden="true" />
           <span className="text-xs font-bold tabular-nums text-text-primary">
             {thread.replyCount}

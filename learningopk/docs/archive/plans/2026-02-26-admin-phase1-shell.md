@@ -13,6 +13,7 @@
 ### Task 1: Add failing admin shell E2E coverage (TDD start)
 
 **Files:**
+
 - Create: `frontend/tests/e2e/admin-phase1-shell.spec.ts`
 
 **Step 1: Write the failing test**
@@ -56,6 +57,7 @@ git commit -m "test: add failing admin phase 1 shell e2e coverage"
 ### Task 2: Implement shared admin shell, nav config, and topbar
 
 **Files:**
+
 - Create: `frontend/app/admin/layout.tsx`
 - Create: `frontend/components/admin/admin-shell.tsx`
 - Create: `frontend/components/admin/admin-sidebar.tsx`
@@ -88,11 +90,12 @@ export const adminNavItems = [
   { href: "/admin/community", label: "Community Forum", icon: MessagesSquare },
   { href: "/admin/analytics", label: "Analytics & Reporting", icon: BarChart3 },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
-  { href: "/admin/settings", label: "System Settings", icon: Settings }
+  { href: "/admin/settings", label: "System Settings", icon: Settings },
 ] as const;
 ```
 
 **Step 2: Update existing admin pages to use new layout contract**
+
 - Remove nested `AppShell` usage from admin pages.
 - Keep existing content/forum panel logic untouched.
 - Ensure `/admin` heading/title aligns with “Command Center”.
@@ -113,6 +116,7 @@ git commit -m "feat: add shared admin shell with sidebar and topbar"
 ### Task 3: Add placeholder section pages with explicit feedback actions
 
 **Files:**
+
 - Create: `frontend/components/admin/admin-section-placeholder.tsx`
 - Create: `frontend/components/admin/admin-coming-soon-action.tsx`
 - Create: `frontend/app/admin/users/page.tsx`
@@ -126,7 +130,14 @@ git commit -m "feat: add shared admin shell with sidebar and topbar"
 **Step 1: Extend failing test for placeholder route traversal**
 
 ```ts
-for (const target of ["/admin/users", "/admin/moderation", "/admin/community", "/admin/analytics", "/admin/notifications", "/admin/settings"]) {
+for (const target of [
+  "/admin/users",
+  "/admin/moderation",
+  "/admin/community",
+  "/admin/analytics",
+  "/admin/notifications",
+  "/admin/settings",
+]) {
   await page.goto(target);
   await expect(page.getByText("Coming in next sprint")).toBeVisible();
 }
@@ -158,6 +169,7 @@ git commit -m "feat: add admin placeholder routes for phase 1 navigation complet
 ### Task 4: Full verification and regression gate
 
 **Files:**
+
 - Modify as needed from prior tasks only.
 
 **Step 1: Run typecheck**
@@ -194,13 +206,16 @@ git commit -m "chore: finalize admin phase 1 shell verification fixes"
 ### Task 5: Completion notes and handoff
 
 **Files:**
+
 - Modify: `docs/plans/2026-02-26-admin-phase1-shell.md` (if verification commands differ)
 
 **Step 1: Record actual command outcomes**
+
 - Note any environment limitations (for example, backend not running for Playwright).
 - Capture pass/fail status for each command in the implementation summary.
 
 **Step 2: Prepare PR summary bullets**
+
 - Shell/layout files added
 - Placeholder routes added
 - Existing admin content/forum preserved
@@ -212,4 +227,3 @@ git commit -m "chore: finalize admin phase 1 shell verification fixes"
 git add docs/plans/2026-02-26-admin-phase1-shell.md
 git commit -m "docs: sync admin phase 1 plan with final verification notes"
 ```
-

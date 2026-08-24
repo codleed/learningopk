@@ -48,7 +48,9 @@ export function ChapterPublishTable({ rows, onMutationComplete }: ChapterPublish
                 <span
                   className={[
                     "rounded-full px-2 py-1 text-xs font-semibold",
-                    chapter.isPublished ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                    chapter.isPublished
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-amber-100 text-amber-800",
                   ].join(" ")}
                 >
                   {chapter.isPublished ? "Published" : "Hidden"}
@@ -62,7 +64,9 @@ export function ChapterPublishTable({ rows, onMutationComplete }: ChapterPublish
                   onComplete={(result) => {
                     setItems((previous) =>
                       previous.map((item) =>
-                        item.id === chapter.id ? { ...item, isPublished: result.nextPublished } : item
+                        item.id === chapter.id
+                          ? { ...item, isPublished: result.nextPublished }
+                          : item
                       )
                     );
                     onMutationComplete();

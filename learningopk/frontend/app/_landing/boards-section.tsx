@@ -45,10 +45,7 @@ export function BoardsSection({ boards }: BoardsSectionProps) {
   const isInView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
-    <div
-      ref={ref}
-      className="grid grid-cols-1 gap-6 md:grid-cols-3"
-    >
+    <div ref={ref} className="grid grid-cols-1 gap-6 md:grid-cols-3">
       {boards.map((board, i) => (
         <motion.div
           key={board.key}
@@ -58,10 +55,7 @@ export function BoardsSection({ boards }: BoardsSectionProps) {
           animate={isInView ? "visible" : "hidden"}
         >
           <Link href={`/${board.slug}`} className="block h-full">
-            <Card
-              variant="elevated"
-              className="group h-full cursor-pointer"
-            >
+            <Card variant="elevated" className="group h-full cursor-pointer">
               <CardBody className="flex flex-col gap-4 p-6">
                 <BoardBadge board={board.key} size="lg" />
 
@@ -69,9 +63,7 @@ export function BoardsSection({ boards }: BoardsSectionProps) {
                   <h3 className="font-[family-name:var(--font-display)] text-2xl font-bold text-text-primary">
                     {board.name}
                   </h3>
-                  <p className="mt-1.5 text-sm text-text-secondary">
-                    {board.description}
-                  </p>
+                  <p className="mt-1.5 text-sm text-text-secondary">{board.description}</p>
                 </div>
 
                 <div className="flex items-center justify-between border-t border-border-default pt-4">

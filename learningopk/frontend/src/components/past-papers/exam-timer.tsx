@@ -6,7 +6,7 @@ import { Clock, AlertTriangle } from "lucide-react";
 export function ExamTimer({
   timeLimitSeconds,
   onTimeout,
-  startedAt
+  startedAt,
 }: {
   timeLimitSeconds: number;
   onTimeout: () => void;
@@ -24,7 +24,7 @@ export function ExamTimer({
     }
 
     const interval = setInterval(() => {
-      setSecondsLeft(prev => {
+      setSecondsLeft((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
           onTimeout();
@@ -42,11 +42,17 @@ export function ExamTimer({
   const isWarning = secondsLeft <= 300;
 
   return (
-    <div className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-mono ${
-      isWarning ? "bg-accent-danger-light text-accent-danger" : "bg-surface-secondary text-text-primary"
-    }`}>
+    <div
+      className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-mono ${
+        isWarning
+          ? "bg-accent-danger-light text-accent-danger"
+          : "bg-surface-secondary text-text-primary"
+      }`}
+    >
       {isWarning ? <AlertTriangle className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
-      <span>{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}</span>
+      <span>
+        {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+      </span>
       {isWarning && <span className="text-xs font-medium">Time running out!</span>}
     </div>
   );

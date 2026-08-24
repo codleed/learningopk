@@ -7,7 +7,7 @@ import { getAdminContentAuditLogs, getAdminCurriculumTree } from "@/lib/admin-ap
 export default async function AdminContentPage() {
   // Redirect to boards tab by default
   redirect("/admin/content/boards");
-  
+
   /*
   // Keeping old dashboard code for reference - can be removed after migration
   const cookieStore = await cookies();

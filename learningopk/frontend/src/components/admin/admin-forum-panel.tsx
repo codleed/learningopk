@@ -17,7 +17,11 @@ type AdminForumPanelProps = {
 
 const auditPageSize = 10;
 
-export function AdminForumPanel({ threads, initialAuditEntries, initialAuditTotal }: AdminForumPanelProps) {
+export function AdminForumPanel({
+  threads,
+  initialAuditEntries,
+  initialAuditTotal,
+}: AdminForumPanelProps) {
   const [auditEntries, setAuditEntries] = useState<AdminAuditLogEntry[]>(initialAuditEntries);
   const [auditTotal, setAuditTotal] = useState(initialAuditTotal);
   const [auditPage, setAuditPage] = useState(1);
@@ -29,7 +33,7 @@ export function AdminForumPanel({ threads, initialAuditEntries, initialAuditTota
     try {
       const payload = await getAdminForumAuditLogs({
         page: 1,
-        pageSize: auditPageSize
+        pageSize: auditPageSize,
       });
 
       setAuditEntries(payload.entries);
@@ -52,7 +56,7 @@ export function AdminForumPanel({ threads, initialAuditEntries, initialAuditTota
       const nextPage = auditPage + 1;
       const payload = await getAdminForumAuditLogs({
         page: nextPage,
-        pageSize: auditPageSize
+        pageSize: auditPageSize,
       });
 
       setAuditEntries((previous) => [...previous, ...payload.entries]);
@@ -78,11 +82,23 @@ export function AdminForumPanel({ threads, initialAuditEntries, initialAuditTota
         title="Audit Log"
         actions={
           <div className="flex items-center gap-2">
-            <Button type="button" size="sm" variant="secondary" onClick={refreshAuditLog} disabled={isRefreshing}>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={refreshAuditLog}
+              disabled={isRefreshing}
+            >
               {isRefreshing ? "Refreshing..." : "Refresh"}
             </Button>
             {auditEntries.length < auditTotal ? (
-              <Button type="button" size="sm" variant="secondary" onClick={loadMoreAuditLog} disabled={isLoadingMore}>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={loadMoreAuditLog}
+                disabled={isLoadingMore}
+              >
                 {isLoadingMore ? "Loading..." : "Load more"}
               </Button>
             ) : null}

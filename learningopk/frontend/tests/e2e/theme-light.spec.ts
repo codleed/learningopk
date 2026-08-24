@@ -13,7 +13,7 @@ test("global theme defaults to light mode tokens", async ({ page }) => {
       backgroundToken: rootStyle.getPropertyValue("--background").trim(),
       cardToken: rootStyle.getPropertyValue("--card").trim(),
       primaryToken: rootStyle.getPropertyValue("--primary").trim(),
-      bodyBackground: bodyStyle.backgroundColor
+      bodyBackground: bodyStyle.backgroundColor,
     };
   });
 

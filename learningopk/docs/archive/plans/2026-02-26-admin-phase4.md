@@ -11,6 +11,7 @@
 ---
 
 ## Execution Guardrails
+
 - Follow RED -> GREEN -> refactor for every task.
 - If any command fails unexpectedly, invoke `superpowers:systematic-debugging` before fixing.
 - Commit after each task or logical task group.
@@ -19,6 +20,7 @@
 ### Task 1: Backend Notifications API + Persistence (TDD)
 
 **Files:**
+
 - Create: `backend/src/tests/integration/admin-phase4.integration.test.ts`
 - Modify: `backend/src/lib/db/schema.ts`
 - Create: `backend/drizzle/0005_admin_phase4_notifications_settings.sql` (or generated equivalent)
@@ -40,14 +42,14 @@ test("admin notifications listing and creation enforce auth/role with validation
   const invalidCreate = await adminAgent.post("/api/admin/notifications").send({
     title: "Hi",
     message: "short",
-    audience: "all"
+    audience: "all",
   });
   assert.equal(invalidCreate.status, 400);
 
   const created = await adminAgent.post("/api/admin/notifications").send({
     title: "Maintenance window",
     message: "Platform maintenance starts at 10 PM with expected 15 minute downtime.",
-    audience: "students"
+    audience: "students",
   });
   assert.equal(created.status, 201);
   assert.equal(created.body.notification.audience, "students");
@@ -90,6 +92,7 @@ git commit -m "feat: add admin notifications API with persistence and audit logs
 ### Task 2: Backend Settings API + Updates (TDD)
 
 **Files:**
+
 - Modify: `backend/src/tests/integration/admin-phase4.integration.test.ts`
 - Modify: `backend/seed.ts`
 - Modify: `backend/src/routes/admin.ts`
@@ -111,7 +114,9 @@ test("admin settings listing and update enforce auth/role and key validation", a
   const notFound = await adminAgent.post("/api/admin/settings/unknown_key").send({ value: "true" });
   assert.equal(notFound.status, 404);
 
-  const updated = await adminAgent.post("/api/admin/settings/forum_auto_lock_hours").send({ value: "48" });
+  const updated = await adminAgent
+    .post("/api/admin/settings/forum_auto_lock_hours")
+    .send({ value: "48" });
   assert.equal(updated.status, 200);
   assert.equal(updated.body.setting.value, "48");
 });
@@ -153,6 +158,7 @@ git commit -m "feat: add admin settings API with validated updates and audit log
 ### Task 3: Frontend Notifications UI + E2E (TDD)
 
 **Files:**
+
 - Create: `frontend/tests/e2e/admin-phase4-notifications-settings.spec.ts`
 - Modify: `frontend/lib/admin-api.ts`
 - Modify: `frontend/app/admin/notifications/page.tsx`
@@ -172,7 +178,9 @@ test("admin notifications page creates a broadcast and refreshes history", async
   await page.getByLabel("Message").fill("The platform will be unavailable from 10 PM to 10:15 PM.");
   await page.getByRole("button", { name: "Send notification" }).click();
 
-  await expect(page.getByTestId("admin-notification-row").first()).toContainText("Maintenance advisory");
+  await expect(page.getByTestId("admin-notification-row").first()).toContainText(
+    "Maintenance advisory"
+  );
 });
 ```
 
@@ -212,6 +220,7 @@ git commit -m "feat: implement admin notifications broadcast workflow"
 ### Task 4: Frontend Settings UI + E2E (TDD)
 
 **Files:**
+
 - Modify: `frontend/tests/e2e/admin-phase4-notifications-settings.spec.ts`
 - Modify: `frontend/lib/admin-api.ts`
 - Modify: `frontend/app/admin/settings/page.tsx`
@@ -226,7 +235,10 @@ test("admin settings page updates an allowlisted setting value", async ({ page }
   await page.goto("/admin/settings");
 
   await expect(page.getByRole("heading", { name: "System Settings" })).toBeVisible();
-  const row = page.getByTestId("admin-setting-row").filter({ hasText: "forum_auto_lock_hours" }).first();
+  const row = page
+    .getByTestId("admin-setting-row")
+    .filter({ hasText: "forum_auto_lock_hours" })
+    .first();
   await row.getByLabel("Setting value").fill("48");
   await row.getByRole("button", { name: "Save" }).click();
   await expect(row).toContainText("48");
@@ -269,6 +281,7 @@ git commit -m "feat: implement admin settings management workflow"
 ### Task 5: Final Verification and Regression Gate
 
 **Files:**
+
 - Modify only files required to address verification failures.
 
 **Step 1: Run backend Phase 4 integration tests**
@@ -326,6 +339,7 @@ Run: `pnpm.cmd --filter backend typecheck`
 Expected: PASS.
 
 **Step 10: Use completion verification skill**
+
 - Invoke `superpowers:verification-before-completion` before any success claim.
 
 **Step 11: Commit verification fixes**

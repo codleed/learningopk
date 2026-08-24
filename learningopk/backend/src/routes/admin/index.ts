@@ -23,7 +23,10 @@ import { formulasAdminRouter } from "./content/formulas.js";
 import { quizQuestionsAdminRouter } from "./content/quiz-questions.js";
 import { pastPapersAdminRouter } from "./content/past-papers.js";
 
-export { curriculumExerciseCreateBodySchema, curriculumExerciseUpdateBodySchema } from "./content/exercises.js";
+export {
+  curriculumExerciseCreateBodySchema,
+  curriculumExerciseUpdateBodySchema,
+} from "./content/exercises.js";
 
 export const adminRouter = Router();
 

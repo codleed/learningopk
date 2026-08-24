@@ -55,12 +55,14 @@ learningopk/
 ### 1.2 Source Code Organization Assessment
 
 **Backend (GOOD)**:
+
 - Clean separation: routes, lib, middleware, tests
 - Single responsibility per file
 - Routes properly segmented by domain (admin, auth, forum, quiz, progress, etc.)
 - Lib contains focused utilities (auth, db, redis, minio, etc.)
 
 **Frontend (NEEDS IMPROVEMENT)**:
+
 - `design-system/` properly separated
 - `components/` at root level is ambiguous (page components vs reusable?)
 - `lib/` location for utilities unclear
@@ -68,6 +70,7 @@ learningopk/
 ### 1.3 Documentation Organization Assessment
 
 **Root Level** (17 .md files):
+
 - `architecture.md` - Current system architecture
 - `database.md` - Database schema documentation
 - `features.md` - Feature list
@@ -85,34 +88,37 @@ learningopk/
 - Plus 2 implementation-phase audit files
 
 **SPECS/** (6 files, ~250KB total):
+
 - Large spec files for UI/UX specifications
 - ai-tutor-ui-spec.md, ai-tutor-ux-spec.md
 - sidebar-ui-spec.md, sidebar-ux-spec.md
 - unified-rail-ui-spec.md, unified-rail-impl-plan.md
 
 **learningopk/docs/** (~40 files):
+
 - `plans/`: 32 historical implementation plan files
 - `perf/`: 8 performance benchmark JSON files
 
 ### 1.4 Configuration Files Inventory
 
-| File | Purpose | Status |
-|------|---------|--------|
-| package.json | Workspace root | ✅ |
-| pnpm-workspace.yaml | Workspace config | ✅ |
-| docker-compose.yml | Local dev services | ✅ |
-| drizzle.config.ts | DB migrations | ✅ |
-| backend/.env.example | Backend env template | ✅ |
-| frontend/.env.local.example | Frontend env template | ✅ |
-| backend/tsconfig.json | Backend TypeScript | ✅ |
-| frontend/tsconfig.json | Frontend TypeScript | ✅ |
-| frontend/eslint.config.mjs | Frontend linting | ✅ |
-| frontend/next.config.ts | Next.js config | ✅ |
-| frontend/components.json | UI component config | ✅ |
-| frontend/postcss.config.mjs | PostCSS config | ✅ |
-| frontend/playwright.config.ts | E2E test config | ✅ |
+| File                          | Purpose               | Status |
+| ----------------------------- | --------------------- | ------ |
+| package.json                  | Workspace root        | ✅     |
+| pnpm-workspace.yaml           | Workspace config      | ✅     |
+| docker-compose.yml            | Local dev services    | ✅     |
+| drizzle.config.ts             | DB migrations         | ✅     |
+| backend/.env.example          | Backend env template  | ✅     |
+| frontend/.env.local.example   | Frontend env template | ✅     |
+| backend/tsconfig.json         | Backend TypeScript    | ✅     |
+| frontend/tsconfig.json        | Frontend TypeScript   | ✅     |
+| frontend/eslint.config.mjs    | Frontend linting      | ✅     |
+| frontend/next.config.ts       | Next.js config        | ✅     |
+| frontend/components.json      | UI component config   | ✅     |
+| frontend/postcss.config.mjs   | PostCSS config        | ✅     |
+| frontend/playwright.config.ts | E2E test config       | ✅     |
 
 **MISSING**:
+
 - No CI/CD configuration (.github/workflows/)
 - No Dockerfile for backend
 - No container registry configuration
@@ -215,6 +221,7 @@ learningopk/
 **Decision**: Restructure to use Turborepo-style monorepo with `apps/` and `packages/` directories.
 
 **Consequences**:
+
 - ✅ Easier cross-package imports
 - ✅ Shared TypeScript types between frontend and backend
 - ✅ Unified build pipeline
@@ -230,12 +237,14 @@ learningopk/
 **Context**: Repository has ~50+ documentation files across multiple locations with significant redundancy.
 
 **Decision**:
+
 - Consolidate SPECS into `docs/specs/`
 - Move historical plans to `docs/archive/plans/`
 - Keep only essential documentation at root
 - Create `docs/architecture/` for ADRs
 
 **Consequences**:
+
 - ✅ Cleaner repository root
 - ✅ Easier to find current documentation
 - ✅ Historical context preserved but not cluttering
@@ -252,6 +261,7 @@ learningopk/
 **Decision**: Remove empty `controllers/` directory.
 
 **Consequences**:
+
 - ✅ Cleaner structure
 - ✅ No confusion about MVC pattern vs route-based organization
 
@@ -264,11 +274,13 @@ learningopk/
 **Context**: No CI/CD configuration exists in repository.
 
 **Decision**: Add `.github/workflows/ci.yml` for:
+
 - Lint and typecheck on PR
 - Unit and integration tests
 - Security scanning
 
 **Consequences**:
+
 - ✅ Automated quality gates
 - ✅ Early vulnerability detection
 - ❌ Requires GitHub Actions setup
@@ -279,52 +291,52 @@ learningopk/
 
 ### 4.1 Essential Docs to KEEP
 
-| File | Location | Rationale |
-|------|----------|-----------|
-| README.md | root | Project entry point |
-| package.json | root | Package manager config |
-| pnpm-workspace.yaml | root | Workspace config |
-| docker-compose.yml | root | Local development |
-| drizzle.config.ts | root | Database migration config |
-| .gitignore | root | Git configuration |
+| File                | Location | Rationale                 |
+| ------------------- | -------- | ------------------------- |
+| README.md           | root     | Project entry point       |
+| package.json        | root     | Package manager config    |
+| pnpm-workspace.yaml | root     | Workspace config          |
+| docker-compose.yml  | root     | Local development         |
+| drizzle.config.ts   | root     | Database migration config |
+| .gitignore          | root     | Git configuration         |
 
 ### 4.2 Essential Docs to CONSOLIDATE
 
-| File | Action | Rationale |
-|------|--------|-----------|
-| architecture.md | Move to `docs/architecture/` | Historical architecture doc |
-| database.md | Move to `docs/architecture/` | Schema documentation |
-| features.md | Move to `docs/guides/` | Feature list |
-| folder-structure.md | Move to `docs/guides/` | Directory guide |
-| tech-stack.md | Move to `docs/guides/` | Tech overview |
-| setup.md | Move to `docs/guides/` | Setup instructions |
-| roadmap.md | Move to `docs/guides/` | Project roadmap |
-| project-overview.md | Merge into README.md | Redundant overview |
+| File                | Action                       | Rationale                   |
+| ------------------- | ---------------------------- | --------------------------- |
+| architecture.md     | Move to `docs/architecture/` | Historical architecture doc |
+| database.md         | Move to `docs/architecture/` | Schema documentation        |
+| features.md         | Move to `docs/guides/`       | Feature list                |
+| folder-structure.md | Move to `docs/guides/`       | Directory guide             |
+| tech-stack.md       | Move to `docs/guides/`       | Tech overview               |
+| setup.md            | Move to `docs/guides/`       | Setup instructions          |
+| roadmap.md          | Move to `docs/guides/`       | Project roadmap             |
+| project-overview.md | Merge into README.md         | Redundant overview          |
 
 ### 4.3 Docs to DELETE (Redundant/Auto-generated)
 
-| File | Rationale |
-|------|-----------|
+| File                                         | Rationale                                           |
+| -------------------------------------------- | --------------------------------------------------- |
 | `dashboard-style-unification-*.md` (4 files) | Phase-specific audit files, implementation complete |
-| `implementation-checklist.md` | Historical tracking, stale |
-| `improvements-v1.1.md` | Old version notes, superseded |
-| `ui-implementation-checklist.md` | Duplicate of other checklists |
-| `Learningo_Guide.md` | User guide, not developer doc |
-| `ai-coding-agent.md` | Agent config, not project doc |
+| `implementation-checklist.md`                | Historical tracking, stale                          |
+| `improvements-v1.1.md`                       | Old version notes, superseded                       |
+| `ui-implementation-checklist.md`             | Duplicate of other checklists                       |
+| `Learningo_Guide.md`                         | User guide, not developer doc                       |
+| `ai-coding-agent.md`                         | Agent config, not project doc                       |
 
 ### 4.4 SPECS to CONSOLIDATE
 
-| File | Action | Rationale |
-|------|--------|-----------|
+| File                   | Action                | Rationale                            |
+| ---------------------- | --------------------- | ------------------------------------ |
 | `SPECS/*.md` (6 files) | Move to `docs/specs/` | Large spec files, organized location |
 
 ### 4.5 Archive Historical Plans
 
-| Location | Action | Rationale |
-|----------|--------|-----------|
+| Location                     | Action                        | Rationale                       |
+| ---------------------------- | ----------------------------- | ------------------------------- |
 | `docs/plans/*.md` (32 files) | Move to `docs/archive/plans/` | Historical implementation plans |
-| `docs/perf/*.md` (4 files) | Move to `docs/archive/perf/` | Historical perf docs |
-| `docs/perf/*.json` (8 files) | Move to `docs/archive/perf/` | Performance benchmarks |
+| `docs/perf/*.md` (4 files)   | Move to `docs/archive/perf/`  | Historical perf docs            |
+| `docs/perf/*.json` (8 files) | Move to `docs/archive/perf/`  | Performance benchmarks          |
 
 ---
 
@@ -339,14 +351,15 @@ learningopk/
 
 ### 5.2 Build Configuration
 
-| Current | Target |
-|---------|--------|
-| Root package.json scripts | Turborepo pipeline |
-| Individual tsconfig.json | Per-app tsconfig with base |
+| Current                   | Target                     |
+| ------------------------- | -------------------------- |
+| Root package.json scripts | Turborepo pipeline         |
+| Individual tsconfig.json  | Per-app tsconfig with base |
 
 ### 5.3 CI/CD Alignment
 
 Target workflow structure:
+
 ```yaml
 .github/
 └── workflows/
@@ -360,10 +373,12 @@ Target workflow structure:
 ## 6. Migration Steps
 
 ### Phase 1: Branch and Backup
+
 1. Checkout `repo-cleanup/restructuring` branch
 2. Create backup tag or snapshot
 
 ### Phase 2: Documentation Cleanup
+
 1. Create `docs/archive/` directories
 2. Move SPECS to `docs/specs/`
 3. Move plans to `docs/archive/plans/`
@@ -373,6 +388,7 @@ Target workflow structure:
 7. Merge project-overview into README.md
 
 ### Phase 3: Source Restructure
+
 1. Create `apps/` directory
 2. Move `backend/` to `apps/backend/`
 3. Move `frontend/` to `apps/frontend/`
@@ -380,12 +396,14 @@ Target workflow structure:
 5. Remove empty `controllers/` directory
 
 ### Phase 4: Configuration Updates
+
 1. Update `drizzle.config.ts` path
 2. Update `package.json` scripts for new paths
 3. Update `pnpm-workspace.yaml` for new structure
 4. Add `.github/workflows/ci.yml`
 
 ### Phase 5: Verification
+
 1. Run lint and typecheck
 2. Run tests
 3. Verify docker-compose works
@@ -396,6 +414,7 @@ Target workflow structure:
 ## 7. Summary
 
 ### Issues Identified
+
 1. Flat directory structure doesn't scale
 2. 50+ documentation files with redundancy
 3. Empty `controllers/` directory
@@ -403,12 +422,14 @@ Target workflow structure:
 5. Historical plans cluttering active directories
 
 ### Decisions Proposed
+
 1. Turborepo-style monorepo structure
 2. Documentation consolidation and archival
 3. CI/CD pipeline addition
 4. Empty directory removal
 
 ### Risks
+
 1. Path changes require import updates
 2. Documentation references need updating
 3. CI/CD needs initial setup and testing

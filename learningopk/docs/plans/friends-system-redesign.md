@@ -19,6 +19,7 @@ Redesign the Friends System for LearningoPK with four cohesive features: Find Fr
 ### User Flows
 
 #### Find Friends Flow
+
 ```
 [User clicks "Find Friends" tab]
     → SearchInput focused
@@ -32,19 +33,21 @@ Redesign the Friends System for LearningoPK with four cohesive features: Find Fr
 ```
 
 #### Friend Request Flow
+
 ```
 [User receives request]
     → Request appears in "Requests" tab with badge count
     → User can Accept or Decline
     → Accept: Request moves to Friends list
     → Decline: Request removed (with confirmation)
-    
+
 [User sends request]
     → Appears in "Sent Requests" section
     → Can cancel pending request
 ```
 
 #### Chat Flow
+
 ```
 [User clicks "Message" on friend card]
     → Opens ChatWindow component
@@ -57,12 +60,13 @@ Redesign the Friends System for LearningoPK with four cohesive features: Find Fr
 ```
 
 #### Block Flow
+
 ```
 [User clicks "Block" action]
     → BlockFriendModal opens (portal)
     → Shows user name and warning text
     → Requires explicit confirmation ("Block" button)
-    → On confirm: 
+    → On confirm:
         - API call to block user
         - Friend removed from friends list
         - Chat closed if open
@@ -73,12 +77,12 @@ Redesign the Friends System for LearningoPK with four cohesive features: Find Fr
 
 ### Screen States
 
-| Component | Empty | Loading | Success | Error | Edge Cases |
-|-----------|-------|---------|---------|-------|------------|
-| `FriendSearch` | "No users found" with illustration | Skeleton cards (3-5) | User cards list | "Search failed" with retry | Self-search blocked, Rate limited |
-| `FriendRequestButton` | N/A | Spinner + "Sending..." | "Request Sent" / "Friends" | "Failed, try again" | Already friends, Blocked user |
-| `ChatWindow` | "No messages yet" centered | Message skeletons | Message bubbles | "Connection lost" banner | Blocked user, Offline friend |
-| `BlockFriendModal` | N/A | Spinner on confirm | Modal closes, UI updates | Error toast, modal stays open | Cannot block self |
+| Component             | Empty                              | Loading                | Success                    | Error                         | Edge Cases                        |
+| --------------------- | ---------------------------------- | ---------------------- | -------------------------- | ----------------------------- | --------------------------------- |
+| `FriendSearch`        | "No users found" with illustration | Skeleton cards (3-5)   | User cards list            | "Search failed" with retry    | Self-search blocked, Rate limited |
+| `FriendRequestButton` | N/A                                | Spinner + "Sending..." | "Request Sent" / "Friends" | "Failed, try again"           | Already friends, Blocked user     |
+| `ChatWindow`          | "No messages yet" centered         | Message skeletons      | Message bubbles            | "Connection lost" banner      | Blocked user, Offline friend      |
+| `BlockFriendModal`    | N/A                                | Spinner on confirm     | Modal closes, UI updates   | Error toast, modal stays open | Cannot block self                 |
 
 ### Component Tree
 
@@ -130,65 +134,66 @@ FriendsDemoPage
 export const friendsTokens = {
   // Spacing scale (4px base)
   space: {
-    0: '0',
-    1: '0.25rem',   // 4px
-    2: '0.5rem',    // 8px
-    3: '0.75rem',   // 12px
-    4: '1rem',      // 16px
-    5: '1.25rem',   // 20px
-    6: '1.5rem',    // 24px
-    8: '2rem',      // 32px
-    10: '2.5rem',   // 40px
-    12: '3rem',     // 48px
+    0: "0",
+    1: "0.25rem", // 4px
+    2: "0.5rem", // 8px
+    3: "0.75rem", // 12px
+    4: "1rem", // 16px
+    5: "1.25rem", // 20px
+    6: "1.5rem", // 24px
+    8: "2rem", // 32px
+    10: "2.5rem", // 40px
+    12: "3rem", // 48px
   },
-  
+
   // Border radius
   radius: {
-    sm: '0.25rem',   // 4px
-    md: '0.375rem',  // 6px
-    lg: '0.5rem',    // 8px
-    xl: '0.75rem',   // 12px
-    '2xl': '1rem',   // 16px
-    full: '9999px',
+    sm: "0.25rem", // 4px
+    md: "0.375rem", // 6px
+    lg: "0.5rem", // 8px
+    xl: "0.75rem", // 12px
+    "2xl": "1rem", // 16px
+    full: "9999px",
   },
-  
+
   // Shadows
   shadow: {
-    sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-    md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-    lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-    xl: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+    sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    md: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+    lg: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+    xl: "0 20px 25px -5px rgb(0 0 0 / 0.1)",
   },
-  
+
   // Typography
   font: {
-    xs: '0.75rem',    // 12px
-    sm: '0.875rem',   // 14px
-    base: '1rem',     // 16px
-    lg: '1.125rem',   // 18px
-    xl: '1.25rem',    // 20px
-    '2xl': '1.5rem',  // 24px
+    xs: "0.75rem", // 12px
+    sm: "0.875rem", // 14px
+    base: "1rem", // 16px
+    lg: "1.125rem", // 18px
+    xl: "1.25rem", // 20px
+    "2xl": "1.5rem", // 24px
   },
-  
+
   // Animation
   transition: {
-    fast: '150ms ease',
-    normal: '300ms ease',
-    slow: '500ms ease',
+    fast: "150ms ease",
+    normal: "300ms ease",
+    slow: "500ms ease",
   },
-  
+
   // Z-index scale
   z: {
-    dropdown: '50',
-    modal: '100',
-    toast: '150',
+    dropdown: "50",
+    modal: "100",
+    toast: "150",
   },
-}
+};
 ```
 
 ### Component Specifications
 
 #### FriendSearch
+
 - Max width: 640px centered
 - Search input: Full width, 44px height, 16px horizontal padding
 - Results list: Stack with 12px gap
@@ -196,13 +201,14 @@ export const friendsTokens = {
 - Avatar: 48x48px rounded-full
 
 #### FriendRequestButton (State Machine)
+
 ```
 States:
   idle → [user clicks "Add Friend"]
     → pending (spinner, disabled) → [API success]
     → accepted (shows "Friends", disabled) OR [API failure]
     → error (shows "Failed, tap to retry")
-  
+
   idle → [user clicks "Cancel" on pending]
     → canceling (spinner) → [API success]
     → idle (back to "Add Friend") OR [API failure]
@@ -212,10 +218,11 @@ States:
 ```
 
 #### ChatWindow
+
 - Container: Full width, max-height 600px
 - Header: 64px height, sticky top
 - Message list: Flex-1, overflow-y auto, padding 16px
-- Message bubbles: 
+- Message bubbles:
   - Max width: 70%
   - Sent: Primary color background, right-aligned
   - Received: Secondary background, left-aligned
@@ -224,6 +231,7 @@ States:
 - Input bar: 56px height, sticky bottom, full width
 
 #### BlockFriendModal
+
 - Width: 400px max, centered
 - Padding: 24px
 - Backdrop: rgba(0,0,0,0.5) with blur
@@ -232,13 +240,13 @@ States:
 
 ### Interactive States
 
-| Element | Default | Hover | Active | Disabled | Loading |
-|---------|---------|-------|--------|---------|---------|
-| Button (Primary) | bg-primary, text-white | bg-primary-hover, translateY(-1px) | scale(0.98) | opacity-50, cursor-not-allowed | Spinner |
-| Button (Secondary) | border-border, bg-card | border-primary/40 | scale(0.98) | opacity-50 | Spinner |
-| SearchInput | border-border | border-primary/40 | ring-2 ring-primary | bg-muted | Spinner in right |
-| UserCard | shadow-sm | shadow-md, translateY(-2px) | - | - | Skeleton overlay |
-| MessageBubble | fade-in 200ms | - | - | - | Opacity reduced |
+| Element            | Default                | Hover                              | Active              | Disabled                       | Loading          |
+| ------------------ | ---------------------- | ---------------------------------- | ------------------- | ------------------------------ | ---------------- |
+| Button (Primary)   | bg-primary, text-white | bg-primary-hover, translateY(-1px) | scale(0.98)         | opacity-50, cursor-not-allowed | Spinner          |
+| Button (Secondary) | border-border, bg-card | border-primary/40                  | scale(0.98)         | opacity-50                     | Spinner          |
+| SearchInput        | border-border          | border-primary/40                  | ring-2 ring-primary | bg-muted                       | Spinner in right |
+| UserCard           | shadow-sm              | shadow-md, translateY(-2px)        | -                   | -                              | Skeleton overlay |
+| MessageBubble      | fade-in 200ms          | -                                  | -                   | -                              | Opacity reduced  |
 
 ---
 
@@ -281,12 +289,12 @@ interface FriendSearchProps {
 // ============================================
 // FriendRequestButton (State Machine)
 // ============================================
-type RequestState = 'idle' | 'sending' | 'pending' | 'canceling' | 'accepted' | 'error';
+type RequestState = "idle" | "sending" | "pending" | "canceling" | "accepted" | "error";
 
 interface FriendRequestButtonProps {
   userId: string;
   initialState?: RequestState;
-  currentStatus: 'none' | 'pending_sent' | 'pending_received' | 'friends' | 'blocked';
+  currentStatus: "none" | "pending_sent" | "pending_received" | "friends" | "blocked";
   onStateChange?: (state: RequestState) => void;
   onAddFriend?: (userId: string) => Promise<void>;
   onCancelRequest?: (userId: string) => Promise<void>;
@@ -364,6 +372,7 @@ interface BlockFriendModalProps {
 ### Testing Approach
 
 Each component should have:
+
 - Unit tests for state transitions
 - Integration tests for API calls
 - Accessibility tests (axe-core)
@@ -373,15 +382,15 @@ Each component should have:
 
 ## Deliverables
 
-| Phase | Deliverable | Location |
-|-------|-------------|----------|
-| 1 | Flow diagram + component tree | This document |
-| 2 | Design tokens + specs | `docs/plans/friends-system-design.md` |
-| 3 | FriendSearch component | `components/friends/friend-search.tsx` |
-| 3 | FriendRequestButton component | `components/friends/friend-request-button.tsx` |
-| 3 | ChatWindow component | `components/friends/chat-window.tsx` |
-| 3 | BlockFriendModal component | `components/friends/block-friend-modal.tsx` |
-| 3 | Demo page | `app/friends/demo/page.tsx` |
+| Phase | Deliverable                   | Location                                       |
+| ----- | ----------------------------- | ---------------------------------------------- |
+| 1     | Flow diagram + component tree | This document                                  |
+| 2     | Design tokens + specs         | `docs/plans/friends-system-design.md`          |
+| 3     | FriendSearch component        | `components/friends/friend-search.tsx`         |
+| 3     | FriendRequestButton component | `components/friends/friend-request-button.tsx` |
+| 3     | ChatWindow component          | `components/friends/chat-window.tsx`           |
+| 3     | BlockFriendModal component    | `components/friends/block-friend-modal.tsx`    |
+| 3     | Demo page                     | `app/friends/demo/page.tsx`                    |
 
 ---
 

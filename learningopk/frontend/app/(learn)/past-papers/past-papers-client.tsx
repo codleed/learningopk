@@ -75,9 +75,12 @@ export function PastPapersClient() {
     loadPapers();
   }, [selectedSubject, selectedYear]);
 
-  const handleFilterChange = useCallback((setter: (value: string) => void) => (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setter(e.target.value);
-  }, []);
+  const handleFilterChange = useCallback(
+    (setter: (value: string) => void) => (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setter(e.target.value);
+    },
+    []
+  );
 
   const clearFilters = useCallback(() => {
     setSelectedSubject("");
@@ -120,7 +123,9 @@ export function PastPapersClient() {
         </div>
         <Skeleton variant="rectangular" className="h-20 w-full" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <SkeletonCard /><SkeletonCard /><SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
         </div>
       </div>
     );
@@ -138,10 +143,12 @@ export function PastPapersClient() {
         />
         <Card className="p-8 text-center">
           <UserCircle className="mx-auto mb-4 h-12 w-12 text-text-secondary" />
-          <h3 className="font-display text-lg font-semibold text-text-primary">Complete Your Profile</h3>
+          <h3 className="font-display text-lg font-semibold text-text-primary">
+            Complete Your Profile
+          </h3>
           <p className="mt-2 max-w-md mx-auto text-sm text-text-secondary">
-            To access past papers, please set your class and board in your profile settings.
-            This helps us show you the right papers for your curriculum.
+            To access past papers, please set your class and board in your profile settings. This
+            helps us show you the right papers for your curriculum.
           </p>
           <div className="mt-4">
             <Link href="/settings">
@@ -167,10 +174,10 @@ export function PastPapersClient() {
         />
         <Card className="p-8 text-center">
           <UserCircle className="mx-auto mb-4 h-12 w-12 text-text-secondary" />
-          <h3 className="font-display text-lg font-semibold text-text-primary">Class Not Recognized</h3>
-          <p className="mt-2 max-w-md mx-auto text-sm text-text-secondary">
-            {invalidClassMessage}
-          </p>
+          <h3 className="font-display text-lg font-semibold text-text-primary">
+            Class Not Recognized
+          </h3>
+          <p className="mt-2 max-w-md mx-auto text-sm text-text-secondary">{invalidClassMessage}</p>
           <div className="mt-4">
             <Link href="/settings">
               <Button size="sm" iconRight={<UserCircle className="h-4 w-4" />}>
@@ -212,30 +219,52 @@ export function PastPapersClient() {
         <Card className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <Filter className="h-4 w-4 text-text-secondary" />
-            <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Filters</span>
-            {activeFilterCount > 0 && <Badge variant="primary" size="sm">{activeFilterCount} active</Badge>}
+            <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+              Filters
+            </span>
+            {activeFilterCount > 0 && (
+              <Badge variant="primary" size="sm">
+                {activeFilterCount} active
+              </Badge>
+            )}
           </div>
           <div className="flex flex-wrap items-end gap-3">
             <div className="min-w-[160px] flex-1">
               <label className="mb-1 block text-xs font-medium text-text-secondary">Subject</label>
-              <Select value={selectedSubject} onChange={handleFilterChange(setSelectedSubject)} aria-label="Filter by subject" className="!h-10 !text-sm">
+              <Select
+                value={selectedSubject}
+                onChange={handleFilterChange(setSelectedSubject)}
+                aria-label="Filter by subject"
+                className="!h-10 !text-sm"
+              >
                 <option value="">All Subjects</option>
                 {availableSubjects.map(([id, name]) => (
-                  <option key={id} value={id}>{name}</option>
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
                 ))}
               </Select>
             </div>
             <div className="min-w-[100px] flex-1">
               <label className="mb-1 block text-xs font-medium text-text-secondary">Year</label>
-              <Select value={selectedYear} onChange={handleFilterChange(setSelectedYear)} aria-label="Filter by year" className="!h-10 !text-sm">
+              <Select
+                value={selectedYear}
+                onChange={handleFilterChange(setSelectedYear)}
+                aria-label="Filter by year"
+                className="!h-10 !text-sm"
+              >
                 <option value="">All Years</option>
-                {availableYears.map(y => (
-                  <option key={y} value={y}>{y}</option>
+                {availableYears.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
                 ))}
               </Select>
             </div>
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} iconLeft={<X />}>Clear</Button>
+              <Button variant="ghost" size="sm" onClick={clearFilters} iconLeft={<X />}>
+                Clear
+              </Button>
             )}
           </div>
         </Card>
@@ -260,7 +289,9 @@ export function PastPapersClient() {
                   {year}
                 </span>
                 <h2 className="font-display text-xl font-bold text-text-primary">Papers</h2>
-                <Badge variant="default" size="sm">{yearPapers.length} paper{yearPapers.length !== 1 ? "s" : ""}</Badge>
+                <Badge variant="default" size="sm">
+                  {yearPapers.length} paper{yearPapers.length !== 1 ? "s" : ""}
+                </Badge>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -278,13 +309,19 @@ export function PastPapersClient() {
                         <div className="flex flex-wrap items-center gap-2">
                           <BoardBadge board={paper.boardSlug ?? paper.boardName} size="sm" />
                           <SubjectBadge name={paper.subjectName} size="sm" />
-                          <Badge variant="default" size="sm">Class {paper.grade}</Badge>
+                          <Badge variant="default" size="sm">
+                            Class {paper.grade}
+                          </Badge>
                         </div>
 
-                        <h3 className="mt-3 font-display text-base font-semibold text-text-primary leading-snug">{paper.title}</h3>
+                        <h3 className="mt-3 font-display text-base font-semibold text-text-primary leading-snug">
+                          {paper.title}
+                        </h3>
 
                         {paper.description && (
-                          <p className="mt-1 text-xs text-text-secondary line-clamp-2">{paper.description}</p>
+                          <p className="mt-1 text-xs text-text-secondary line-clamp-2">
+                            {paper.description}
+                          </p>
                         )}
 
                         <div className="mt-3 flex flex-wrap gap-3 text-xs text-text-secondary">
@@ -297,7 +334,11 @@ export function PastPapersClient() {
                         <div className="mt-auto flex gap-2 pt-4">
                           {hasMarkdownContent ? (
                             <Link href={`/past-papers/${paper.id}/view`} className="flex-1">
-                              <Button width="full" size="sm" iconRight={<Eye className="h-4 w-4" />}>
+                              <Button
+                                width="full"
+                                size="sm"
+                                iconRight={<Eye className="h-4 w-4" />}
+                              >
                                 View
                               </Button>
                             </Link>

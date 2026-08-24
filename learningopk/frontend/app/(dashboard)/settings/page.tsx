@@ -15,7 +15,7 @@ export default async function SettingsPage() {
   const cookieStore = await cookies();
   const leaderboard = await getLeaderboardSettings(cookieStore.toString()).catch(() => ({
     leaderboardPublic: true,
-    badge: null
+    badge: null,
   }));
 
   const settingsProfile = {

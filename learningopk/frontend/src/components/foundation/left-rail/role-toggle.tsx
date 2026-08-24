@@ -4,11 +4,7 @@ import { GraduationCap, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RoleToggleProps } from "./left-rail-types";
 
-export function RoleToggle({
-  currentMode,
-  onModeChange,
-  isExpanded = true,
-}: RoleToggleProps) {
+export function RoleToggle({ currentMode, onModeChange, isExpanded = true }: RoleToggleProps) {
   if (!isExpanded) {
     const Icon = currentMode === "admin" ? ShieldCheck : GraduationCap;
     const nextMode: "admin" | "student" = currentMode === "admin" ? "student" : "admin";
@@ -67,9 +63,7 @@ export function RoleToggle({
           "relative z-10 flex flex-1 items-center justify-center gap-1.5",
           "h-full rounded-md px-2",
           "text-xs font-medium transition-colors duration-150",
-          currentMode === "admin"
-            ? "text-white"
-            : "text-text-muted hover:text-text-secondary",
+          currentMode === "admin" ? "text-white" : "text-text-muted hover:text-text-secondary",
           "focus-visible:outline-none"
         )}
       >
@@ -89,9 +83,7 @@ export function RoleToggle({
           "relative z-10 flex flex-1 items-center justify-center gap-1.5",
           "h-full rounded-md px-2",
           "text-xs font-medium transition-colors duration-150",
-          currentMode === "student"
-            ? "text-white"
-            : "text-text-muted hover:text-text-secondary",
+          currentMode === "student" ? "text-white" : "text-text-muted hover:text-text-secondary",
           "focus-visible:outline-none"
         )}
       >

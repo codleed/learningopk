@@ -18,6 +18,7 @@ The implementation successfully delivers the core school portal functionality fo
 ### 1. Invite Code Collision Risk — `backend/src/routes/schools.ts:120`
 
 **Problem:**
+
 ```typescript
 const inviteCode = "LPK-" + Math.random().toString(36).slice(2, 8).toUpperCase();
 ```
@@ -27,6 +28,7 @@ const inviteCode = "LPK-" + Math.random().toString(36).slice(2, 8).toUpperCase()
 **Impact:** Two schools could get the same invite code. A student joining with that code would be assigned to the wrong school.
 
 **Fix:**
+
 ```typescript
 import { randomBytes } from "node:crypto";
 
@@ -70,6 +72,7 @@ export default async function SchoolPage() {
 ### 3. No Transaction in Join Endpoint — `backend/src/routes/schools.ts:50-52`
 
 **Problem:**
+
 ```typescript
 await schoolRepository.assignUserToSchool(userId, school.id);
 await schoolRepository.updateStudentCount(school.id);
@@ -80,13 +83,20 @@ If the server crashes between these two calls, the student count will be incorre
 **Impact:** Stale `studentCount` in the database. Not critical for a demo, but bad data hygiene.
 
 **Fix:** Wrap in a Drizzle transaction:
+
 ```typescript
 await db.transaction(async (tx) => {
   await tx.update(users).set({ schoolId: school.id }).where(eq(users.id, userId));
-  const countResult = await tx.select({ count: count() })
+  const countResult = await tx
+    .select({ count: count() })
     .from(users)
-    .where(and(eq(users.schoolId, school.id), eq(users.role, "student"), eq(users.status, "active")));
-  await tx.update(schools).set({ studentCount: countResult[0]?.count ?? 0 }).where(eq(schools.id, school.id));
+    .where(
+      and(eq(users.schoolId, school.id), eq(users.role, "student"), eq(users.status, "active"))
+    );
+  await tx
+    .update(schools)
+    .set({ studentCount: countResult[0]?.count ?? 0 })
+    .where(eq(schools.id, school.id));
 });
 ```
 
@@ -95,6 +105,7 @@ await db.transaction(async (tx) => {
 ### 4. Weak Areas Show Raw Chapter IDs — `frontend/src/components/school/school-dashboard-client.tsx:64`
 
 **Problem:**
+
 ```tsx
 <span>Chapter ID {area.chapterId}</span>
 ```
@@ -166,8 +177,13 @@ if (!allowed) {
 **Impact:** A student could accidentally join the wrong school and need manual intervention to fix.
 
 **Fix:** Add a check:
+
 ```typescript
-const userRows = await db.select({ schoolId: users.schoolId }).from(users).where(eq(users.id, userId)).limit(1);
+const userRows = await db
+  .select({ schoolId: users.schoolId })
+  .from(users)
+  .where(eq(users.id, userId))
+  .limit(1);
 if (userRows[0]?.schoolId) {
   res.status(400).json(errorResponse("You are already in a school", "ALREADY_IN_SCHOOL"));
   return;
@@ -183,6 +199,7 @@ if (userRows[0]?.schoolId) {
 **Impact:** Minor UX confusion. Students might wonder why there's a School link they can't access.
 
 **Fix (optional for Approach A):** Conditionally show the nav item based on whether the user is a school admin. This requires either:
+
 - A client-side fetch to check admin status
 - Or passing an `isSchoolAdmin` flag in the session
 
@@ -195,6 +212,7 @@ For the demo, the current behavior is acceptable, but consider hiding it from no
 **Problem:** The school creation endpoint accepts any string for `board`. Typos like "punjb" or "Punjab" (capitalized) would create inconsistent data.
 
 **Fix:** Validate against known boards:
+
 ```typescript
 const createBodySchema = z.object({
   name: z.string().min(2).max(120),
@@ -210,6 +228,7 @@ const createBodySchema = z.object({
 **Problem:** `getSchoolDashboard()` can throw if the backend is unreachable. The layout doesn't catch this, resulting in a 500 error page.
 
 **Fix:** Wrap in try-catch:
+
 ```typescript
 let dashboard = null;
 try {
@@ -237,11 +256,13 @@ if (!dashboard) redirect("/dashboard");
 ## Recommendations
 
 ### For Demo (This Week)
+
 1. **Fix Critical #1** (invite code collision) — 2 minutes, prevents embarrassing demo failures
 2. **Fix Important #4** (chapter names in weak areas) — 10 minutes, makes the demo compelling
 3. **Fix Minor #6** (unused import) — 30 seconds, keeps code clean
 
 ### For Production (Next Sprint)
+
 1. Fix Critical #2 (double fetch)
 2. Fix Important #3 (transaction in join)
 3. Fix Important #5 (rate limiting)
@@ -255,12 +276,12 @@ if (!dashboard) redirect("/dashboard");
 
 ## Risk Assessment
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Invite code collision | Medium | High | Fix #1 |
-| Stale student count | Low | Low | Fix #3 |
-| Brute force invite codes | Low | Medium | Fix #5 |
-| Bad demo UX (raw chapter IDs) | High | High | Fix #4 |
-| Double API call | High | Low | Fix #2 |
+| Risk                          | Likelihood | Impact | Mitigation |
+| ----------------------------- | ---------- | ------ | ---------- |
+| Invite code collision         | Medium     | High   | Fix #1     |
+| Stale student count           | Low        | Low    | Fix #3     |
+| Brute force invite codes      | Low        | Medium | Fix #5     |
+| Bad demo UX (raw chapter IDs) | High       | High   | Fix #4     |
+| Double API call               | High       | Low    | Fix #2     |
 
 **Overall:** The feature is demo-ready with 2 quick fixes. The architecture is sound and production-ready after addressing the important issues.

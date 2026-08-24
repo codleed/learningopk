@@ -4,8 +4,20 @@ const backendBaseUrl = "http://localhost:3001";
 
 type ForumFiltersResponse = {
   boards: Array<{ id: number; slug: string; name: string }>;
-  subjects: Array<{ id: number; slug: string; name: string; classSlug: string | null; boardId: number }>;
-  chapters: Array<{ id: number; slug: string; title: string; chapterNumber: number; subjectId: number }>;
+  subjects: Array<{
+    id: number;
+    slug: string;
+    name: string;
+    classSlug: string | null;
+    boardId: number;
+  }>;
+  chapters: Array<{
+    id: number;
+    slug: string;
+    title: string;
+    chapterNumber: number;
+    subjectId: number;
+  }>;
 };
 
 type ChapterRoute = {
@@ -16,14 +28,18 @@ type ChapterRoute = {
 };
 
 const assertNoHorizontalOverflow = async (page: Page) => {
-  const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+  const hasOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth + 1
+  );
   expect(hasOverflow).toBeFalsy();
 };
 
 const pickChapterRouteWithQuiz = async (api: APIRequestContext): Promise<ChapterRoute> => {
   const filtersResponse = await api.get(`${backendBaseUrl}/api/forum/filters`);
   if (!filtersResponse.ok()) {
-    throw new Error(`Failed to fetch forum filters for UI quality precheck: ${filtersResponse.status()}`);
+    throw new Error(
+      `Failed to fetch forum filters for UI quality precheck: ${filtersResponse.status()}`
+    );
   }
 
   const filters = (await filtersResponse.json()) as ForumFiltersResponse;
@@ -49,13 +65,15 @@ const pickChapterRouteWithQuiz = async (api: APIRequestContext): Promise<Chapter
       continue;
     }
 
-    const chapterPayload = (await chapterResponse.json()) as { quiz: { questions: unknown[] } | null };
+    const chapterPayload = (await chapterResponse.json()) as {
+      quiz: { questions: unknown[] } | null;
+    };
     if (chapterPayload.quiz && chapterPayload.quiz.questions.length > 0) {
       return {
         boardSlug: board.slug,
         grade: subject.classSlug,
         subjectSlug: subject.slug,
-        chapterSlug: chapter.slug
+        chapterSlug: chapter.slug,
       };
     }
   }
@@ -109,7 +127,9 @@ test("critical UI routes render with expected structure", async ({ page }) => {
   await expect(page.getByLabel("Body (markdown supported)")).toHaveCount(0);
   await page.getByRole("button", { name: "Create thread" }).click();
   await page.getByLabel("Title").fill(`UI quality thread ${timestamp}`);
-  await page.getByLabel("Body (markdown supported)").fill("Testing forum detail route render for quality checks.");
+  await page
+    .getByLabel("Body (markdown supported)")
+    .fill("Testing forum detail route render for quality checks.");
   await page.getByRole("button", { name: "Post thread" }).click();
   await expect(page).toHaveURL(/\/forum\/[0-9a-fA-F-]{36}$/);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -117,7 +137,7 @@ test("critical UI routes render with expected structure", async ({ page }) => {
 
 test.describe("mobile layout smoke", () => {
   test.use({
-    viewport: { width: 390, height: 844 }
+    viewport: { width: 390, height: 844 },
   });
 
   test("root, auth, and forum render without horizontal overflow", async ({ page }) => {
@@ -135,4 +155,3 @@ test.describe("mobile layout smoke", () => {
     await assertNoHorizontalOverflow(page);
   });
 });
-

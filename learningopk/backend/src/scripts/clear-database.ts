@@ -9,8 +9,7 @@ config();
 
 const pool = new Pool({
   connectionString:
-    process.env.DATABASE_URL ??
-    "postgresql://postgres:password@localhost:5433/learningo"
+    process.env.DATABASE_URL ?? "postgresql://postgres:password@localhost:5433/learningo",
 });
 
 const db = drizzle(pool, { schema });

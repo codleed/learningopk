@@ -60,14 +60,13 @@ export function FlashCardsPage({ stats }: FlashCardsPageProps) {
                       Flash Card Management Coming Soon
                     </h3>
                     <p className="mt-1 text-sm text-amber-700">
-                      Flash Card management is not yet available. Backend API support is needed to enable flash card creation and management.
+                      Flash Card management is not yet available. Backend API support is needed to
+                      enable flash card creation and management.
                     </p>
                   </div>
-                  
+
                   <div className="rounded-md border border-amber-200 bg-amber-100/50 p-4">
-                    <h4 className="text-sm font-medium text-amber-800">
-                      What&apos;s Needed
-                    </h4>
+                    <h4 className="text-sm font-medium text-amber-800">What&apos;s Needed</h4>
                     <ul className="mt-2 space-y-1 text-sm text-amber-700">
                       <li className="flex items-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
