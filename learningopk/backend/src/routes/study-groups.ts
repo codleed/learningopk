@@ -29,15 +29,13 @@ studyGroupsRouter.post("/", requireSession, async (req, res) => {
   }
   const authedReq = req as AuthenticatedRequest;
   try {
-    res
-      .status(201)
-      .json(
-        await studyGroupsService.createGroup({
-          userId: authedReq.session.user.id,
-          name: parsed.data.name,
-          invites: parsed.data.invites,
-        })
-      );
+    res.status(201).json(
+      await studyGroupsService.createGroup({
+        userId: authedReq.session.user.id,
+        name: parsed.data.name,
+        invites: parsed.data.invites,
+      })
+    );
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : "Unknown error" });
   }

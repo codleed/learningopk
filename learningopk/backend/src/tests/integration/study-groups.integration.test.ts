@@ -64,20 +64,18 @@ const createLearningFixture = async () => {
     })
     .returning({ id: quizzes.id });
   assert.ok(quiz);
-  await db
-    .insert(quizQuestions)
-    .values({
-      quizId: quiz.id,
-      chapterId: chapter.id,
-      question: `Question ${suffix}`,
-      optionA: "Correct",
-      optionB: "Wrong",
-      optionC: "Wrong",
-      optionD: "Wrong",
-      correctOption: "a",
-      explanation: "Because A is correct.",
-      marks: 10,
-    });
+  await db.insert(quizQuestions).values({
+    quizId: quiz.id,
+    chapterId: chapter.id,
+    question: `Question ${suffix}`,
+    optionA: "Correct",
+    optionB: "Wrong",
+    optionC: "Wrong",
+    optionD: "Wrong",
+    correctOption: "a",
+    explanation: "Because A is correct.",
+    marks: 10,
+  });
   return { chapter, quiz };
 };
 
