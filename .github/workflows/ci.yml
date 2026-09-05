@@ -94,7 +94,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:password@localhost:5433/learningo
           REDIS_URL: redis://localhost:6379
-        run: pnpm test
+        run: pnpm run test:unit
       - name: Tear down services
         if: always()
         working-directory: ./learningopk
