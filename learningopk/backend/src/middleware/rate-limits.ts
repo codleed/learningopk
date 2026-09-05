@@ -16,6 +16,9 @@ export const authRateLimiter = createRateLimitMiddleware({
   windowMs: AUTH_RATE_LIMIT_WINDOW_MS,
   maxRequests: AUTH_RATE_LIMIT_MAX_REQUESTS,
   keyPrefix: "rl:auth",
+  // Fail closed: if Redis is unreachable, refuse traffic rather than allow
+  // unlimited credential-stuffing / brute-force attempts.
+  failClosed: true,
 });
 
 export const SCHOOL_JOIN_RATE_LIMIT_WINDOW_MS = 60 * 1000;
