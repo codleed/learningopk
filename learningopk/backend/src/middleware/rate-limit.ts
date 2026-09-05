@@ -33,10 +33,18 @@ export interface RateLimitConfig {
   windowMs: number;
   maxRequests: number;
   keyPrefix?: string;
+  /**
+   * If true (default false), the middleware fails closed: when Redis is
+   * unreachable, the request is rejected with 503. Used for limiters where
+   * letting requests through unchecked is worse than refusing traffic
+   * (e.g. the auth limiter, which would otherwise permit unlimited brute
+   * force). For global / informational limiters, fail-open is usually fine.
+   */
+  failClosed?: boolean;
 }
 
 export function createRateLimitMiddleware(config: RateLimitConfig) {
-  const { windowMs, maxRequests, keyPrefix = "rl" } = config;
+  const { windowMs, maxRequests, keyPrefix = "rl", failClosed = false } = config;
 
   return async (
     req: import("express").Request,
@@ -47,6 +55,17 @@ export function createRateLimitMiddleware(config: RateLimitConfig) {
       await ensureRateLimitRedisConnection();
     } catch (error) {
       console.error("Failed to connect to Redis for rate limiting:", error);
+      if (failClosed) {
+        res
+          .status(503)
+          .json(
+            errorResponse(
+              "Service temporarily unavailable. Please try again in a moment.",
+              "RATE_LIMIT_UNAVAILABLE"
+            )
+          );
+        return;
+      }
       next();
       return;
     }
@@ -80,6 +99,17 @@ export function createRateLimitMiddleware(config: RateLimitConfig) {
       next();
     } catch (error) {
       console.error("Rate limiting error:", error);
+      if (failClosed) {
+        res
+          .status(503)
+          .json(
+            errorResponse(
+              "Service temporarily unavailable. Please try again in a moment.",
+              "RATE_LIMIT_UNAVAILABLE"
+            )
+          );
+        return;
+      }
       next();
     }
   };

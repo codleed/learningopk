@@ -63,10 +63,13 @@ export const createApp = () => {
   );
 
   // Strict rate limit on auth mutations to prevent brute force.
-  // Skip GET endpoints (for example, /get-session) to avoid starving
-  // interactive sessions while still protecting sign-in/sign-up flows.
+  // Always enabled, including dev/staging (with opt-out via env var). The
+  // limiter is fail-closed so an unreachable Redis refuses traffic instead
+  // of letting attackers through. Skip GET endpoints (for example,
+  // /get-session) to avoid starving interactive sessions while still
+  // protecting sign-in/sign-up flows.
   app.use("/api/auth", (req, res, next) => {
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.DISABLE_AUTH_RATE_LIMIT === "1") {
       next();
       return;
     }
