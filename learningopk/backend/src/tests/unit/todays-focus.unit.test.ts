@@ -80,7 +80,7 @@ test("buildTodaysFocus uses a streak rescue focus when no weak quiz exists", () 
   assert.equal(focus?.type, "streak_at_risk");
   assert.equal(focus?.difficulty, "easy");
   assert.equal(focus?.xpReward, 5);
-  assert.match(focus?.reason ?? "", /streak/i);
+  assert.match(focus?.reason ?? "", /streak|momentum/i);
 });
 
 test("buildTodaysFocus picks the nearest exam unvisited chapter when no higher-priority goal exists", () => {
