@@ -1,25 +1,28 @@
 # ADR-001: Consolidate Competing Component Systems
 
 ## Status
+
 **Proposed** | Accepted | Deprecated | Superseded by ADR-XXX
 
 ## Context
 
 ### The Problem
+
 LearningoPK frontend has **two competing component systems** that implement the same UI elements:
 
-| Component | `src/components/ui/` | `src/design-system/components/` |
-|-----------|---------------------|-------------------------------|
-| Button | CVA + Tailwind classes | Framer Motion + inline CSS |
-| Badge | CVA + Tailwind | Framer Motion + inline CSS |
-| Input | Tailwind classes | Inline CSS with size variants |
-| ThemeToggle | Tailwind classes | Framer Motion + inline CSS |
-| Card | N/A | Framer Motion + inline CSS |
-| Typography | N/A | Inline CSS |
+| Component   | `src/components/ui/`   | `src/design-system/components/` |
+| ----------- | ---------------------- | ------------------------------- |
+| Button      | CVA + Tailwind classes | Framer Motion + inline CSS      |
+| Badge       | CVA + Tailwind         | Framer Motion + inline CSS      |
+| Input       | Tailwind classes       | Inline CSS with size variants   |
+| ThemeToggle | Tailwind classes       | Framer Motion + inline CSS      |
+| Card        | N/A                    | Framer Motion + inline CSS      |
+| Typography  | N/A                    | Inline CSS                      |
 
 ### Analysis
 
 **`src/components/ui/` Pattern:**
+
 ```tsx
 // Uses class-variance-authority (CVA) + Tailwind
 const buttonVariants = cva(
@@ -30,12 +33,14 @@ export function Button({ className, variant, size, ...props }) {
   return <button className={cn(buttonVariants({ variant, size }), className)} {...props} />;
 }
 ```
+
 - Bundle size: ~2kb (CVA is lightweight)
 - Tree-shakeable
 - Standard Tailwind classes
 - No runtime animation library
 
 **`src/design-system/components/` Pattern:**
+
 ```tsx
 // Uses Framer Motion + inline CSS properties
 const sizeStyles: Record<ButtonSize, React.CSSProperties> = {
@@ -53,6 +58,7 @@ export function Button({ children, variant = "primary", size = "md", style, ...p
   );
 }
 ```
+
 - Bundle size: ~50kb (Framer Motion)
 - Not tree-shakeable for unused variants
 - Inline styles harder to override
@@ -81,43 +87,49 @@ export function Button({ children, variant = "primary", size = "md", style, ...p
 ### Migration Plan
 
 #### Phase 1: Deprecate design-system Button, Badge, Input
+
 - Update imports to point to `ui/` components
 - Add any missing variants (e.g., `ui/badge` needs pastel variants)
 - Document breaking changes
 
 #### Phase 2: Extract reusable primitives
+
 - Move shared types to `src/lib/types/`
 - Ensure theme tokens are accessible via Tailwind classes
 
 #### Phase 3: Animation layer (optional)
+
 - Add `motion` wrapper components for specific animation needs
 - Use Framer Motion only for orchestrated animations, not base components
 
 ### Component Decision Matrix
 
-| Component | Target Location | Rationale |
-|-----------|----------------|-----------|
-| Button | `src/components/ui/button.tsx` | Standardize on CVA |
-| Badge | `src/components/ui/badge.tsx` | Add pastel variants to existing |
-| Input | `src/components/ui/input.tsx` | Standardize on CVA |
-| Card | `src/components/ui/card.tsx` | Create new Card using CVA |
-| Typography | `src/components/ui/typography.tsx` | Extract from design-system |
-| ThemeToggle | `src/components/ui/theme-toggle.tsx` | Migrate existing |
+| Component   | Target Location                      | Rationale                       |
+| ----------- | ------------------------------------ | ------------------------------- |
+| Button      | `src/components/ui/button.tsx`       | Standardize on CVA              |
+| Badge       | `src/components/ui/badge.tsx`        | Add pastel variants to existing |
+| Input       | `src/components/ui/input.tsx`        | Standardize on CVA              |
+| Card        | `src/components/ui/card.tsx`         | Create new Card using CVA       |
+| Typography  | `src/components/ui/typography.tsx`   | Extract from design-system      |
+| ThemeToggle | `src/components/ui/theme-toggle.tsx` | Migrate existing                |
 
 ## Consequences
 
 ### Easier
+
 - Single component to maintain per UI element
 - Consistent styling approach across codebase
 - Easier onboarding for new developers
 - Smaller bundle size (remove Framer Motion from base components)
 
 ### Harder
+
 - Migrating existing usages of design-system components
 - May need to recreate some animation effects with CSS
 - Pastel accent gradients need reimplementation
 
 ### New Considerations
+
 - Animation strategy must be defined (CSS transitions vs Framer Motion for complex sequences)
 - Card component needs new implementation
 - Typography component needs extraction
@@ -125,6 +137,7 @@ export function Button({ children, variant = "primary", size = "md", style, ...p
 ## Implementation Notes
 
 ### New Folder Structure
+
 ```
 src/
 ├── components/

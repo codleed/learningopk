@@ -17,7 +17,9 @@ const registerStudent = async (page: Page, name: string) => {
   await expect(page).toHaveURL(/\/dashboard$/);
 };
 
-test("student subject graph renders, filters by chapter title, and opens chapter from node action", async ({ page }) => {
+test("student subject graph renders, filters by chapter title, and opens chapter from node action", async ({
+  page,
+}) => {
   await registerStudent(page, "Subject Graph Student");
 
   await page.goto("/fbise/9th/physics");

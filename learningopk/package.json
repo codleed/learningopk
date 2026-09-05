@@ -2,26 +2,40 @@
   "name": "learningopk",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["frontend", "backend", "packages/shared", "mcp/content-gen", "mcp/db-mcp", "mcp/i18n-mcp", "mcp/routes-mcp"],
+  "packageManager": "pnpm@10.32.1",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "packages/shared",
+    "mcp/content-gen",
+    "mcp/db-mcp",
+    "mcp/i18n-mcp",
+    "mcp/routes-mcp"
+  ],
   "scripts": {
-    "dev:frontend": "npm --workspace frontend run dev",
-    "dev:backend": "npm --workspace backend run dev",
-    "dev:all": "concurrently -n frontend,backend -c blue,green \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "lint": "npm --workspaces --if-present run lint",
-    "typecheck": "npm --workspaces --if-present run typecheck",
+    "dev:frontend": "pnpm --filter frontend run dev",
+    "dev:backend": "pnpm --filter backend run dev",
+    "dev:all": "concurrently -n frontend,backend -c blue,green \"pnpm run dev:frontend\" \"pnpm run dev:backend\"",
+    "lint": "pnpm -r --if-present run lint",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "lefthook install",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:clear": "npm --workspace backend run db:clear",
-    "db:seed": "npm --workspace backend run db:seed",
-    "verify:services": "npm --workspace backend run healthcheck"
+    "db:clear": "pnpm --filter backend run db:clear",
+    "db:seed": "pnpm --filter backend run db:seed",
+    "verify:services": "pnpm --filter backend run healthcheck"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
-    "drizzle-kit": "^0.31.4"
+    "drizzle-kit": "^0.31.4",
+    "lefthook": "^2.1.10",
+    "prettier": "^3.9.6"
   },
   "overrides": {
     "path-to-regexp": "8.4.0",

@@ -95,19 +95,11 @@ export function AddBoardForm() {
         />
       </StickyBreadcrumbWrapper>
 
-      <AdminPageHeader
-        title="Add Board"
-        subtitle="Create a new educational board"
-      />
+      <AdminPageHeader title="Add Board" subtitle="Create a new educational board" />
 
       <AdminFormCard>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <AdminFormField
-            id="board-name"
-            label="Board Name"
-            required
-            error={nameError}
-          >
+          <AdminFormField id="board-name" label="Board Name" required error={nameError}>
             <input
               id="board-name"
               type="text"

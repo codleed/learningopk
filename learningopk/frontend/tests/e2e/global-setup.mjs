@@ -14,6 +14,6 @@ export default async function globalSetup() {
     cwd: workspaceRoot,
     env: process.env,
     maxBuffer: 10 * 1024 * 1024,
-    shell: true
+    shell: true,
   });
 }

@@ -5,6 +5,11 @@ node_modules/
 *.log
 frontend/.env.local
 backend/.env
+.env
+.env.local
+.tmp-*
 frontend/playwright-report/
 frontend/test-results/
 .worktrees/
+
+infra/pgbouncer-userlist.txt

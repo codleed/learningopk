@@ -67,7 +67,12 @@ export const captureMessage = (message: string, level: Sentry.SeverityLevel = "i
 // Express Error Handler Middleware (place AFTER all routes)
 // ---------------------------------------------------------------------------
 
-export const sentryErrorHandler = (err: unknown, _req: Request, _res: Response, next: NextFunction): void => {
+export const sentryErrorHandler = (
+  err: unknown,
+  _req: Request,
+  _res: Response,
+  next: NextFunction
+): void => {
   captureException(err);
   next(err);
 };

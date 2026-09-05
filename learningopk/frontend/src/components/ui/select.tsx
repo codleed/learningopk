@@ -21,20 +21,21 @@ export type SelectProps = SelectHTMLAttributes<HTMLSelectElement>;
  *
  * For new code that needs Radix-powered dropdowns, use `RadixSelect`.
  */
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  function Select({ className, ...props }, ref) {
-    return (
-      <select
-        ref={ref}
-        className={cn(
-          "h-12 w-full rounded-lg border border-border-default bg-bg-surface px-4 text-base text-text-primary shadow-[var(--shadow-sm)] focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/20 disabled:cursor-not-allowed disabled:opacity-50",
-          className
-        )}
-        {...props}
-      />
-    );
-  }
-);
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
+  { className, ...props },
+  ref
+) {
+  return (
+    <select
+      ref={ref}
+      className={cn(
+        "h-12 w-full rounded-lg border border-border-default bg-bg-surface px-4 text-base text-text-primary shadow-[var(--shadow-sm)] focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/20 disabled:cursor-not-allowed disabled:opacity-50",
+        className
+      )}
+      {...props}
+    />
+  );
+});
 
 /** @deprecated Use `Select` instead. Alias kept for explicit references. */
 export const NativeSelect = Select;
@@ -90,11 +91,7 @@ export function RadixSelect({
 
   return (
     <div className="w-full space-y-1.5">
-      {label ? (
-        <span className="block text-sm font-medium text-text-primary">
-          {label}
-        </span>
-      ) : null}
+      {label ? <span className="block text-sm font-medium text-text-primary">{label}</span> : null}
 
       <SelectPrimitive.Root
         value={value}
@@ -132,7 +129,7 @@ export function RadixSelect({
               "animate-in fade-in-0 zoom-in-95",
               "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
               "data-[side=top]:slide-in-from-bottom-2",
-              "data-[side=bottom]:slide-in-from-top-2",
+              "data-[side=bottom]:slide-in-from-top-2"
             )}
             position="popper"
             sideOffset={4}
@@ -211,15 +208,11 @@ export function SelectItem({
 
       <div className="flex items-center gap-2">
         {icon ? (
-          <span className="shrink-0 text-text-muted [&>svg]:h-4 [&>svg]:w-4">
-            {icon}
-          </span>
+          <span className="shrink-0 text-text-muted [&>svg]:h-4 [&>svg]:w-4">{icon}</span>
         ) : null}
         <div>
           <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-          {description ? (
-            <p className="text-xs text-text-muted mt-0.5">{description}</p>
-          ) : null}
+          {description ? <p className="text-xs text-text-muted mt-0.5">{description}</p> : null}
         </div>
       </div>
     </SelectPrimitive.Item>
@@ -254,9 +247,5 @@ export function SelectGroup({ label, children }: SelectGroupProps) {
 
 /** Visual separator between groups. */
 export function SelectSeparator({ className }: { className?: string }) {
-  return (
-    <SelectPrimitive.Separator
-      className={cn("my-1 h-px bg-border-default", className)}
-    />
-  );
+  return <SelectPrimitive.Separator className={cn("my-1 h-px bg-border-default", className)} />;
 }

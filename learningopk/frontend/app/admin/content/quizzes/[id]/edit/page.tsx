@@ -33,36 +33,41 @@ export default async function EditQuizPage({ params }: EditQuizPageProps) {
         />
       </StickyBreadcrumbWrapper>
 
-      <AdminPageHeader
-        title={`Edit Quiz #${quizId}`}
-        subtitle="Coming Soon"
-      />
+      <AdminPageHeader title={`Edit Quiz #${quizId}`} subtitle="Coming Soon" />
 
       <AdminFormCard>
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <div className="rounded-full bg-amber-100 p-4 mb-4">
             <AlertCircle className="h-8 w-8 text-amber-600" aria-hidden />
           </div>
-          
+
           <h3 className="font-heading text-lg font-semibold text-[var(--text-primary)] mb-2">
             Quiz Management Not Available
           </h3>
-          
+
           <p className="text-sm text-[var(--text-secondary)] max-w-md mb-6">
             The Quiz API is not yet available. Backend API support is needed to enable quiz editing.
           </p>
 
           <div className="w-full max-w-md rounded-lg border border-amber-200 bg-amber-50 p-4 mb-6 text-left">
-            <h4 className="text-sm font-medium text-amber-800 mb-2">
-              Quiz #{quizId}
-            </h4>
+            <h4 className="text-sm font-medium text-amber-800 mb-2">Quiz #{quizId}</h4>
             <p className="text-xs text-amber-700 mb-3">
-              This is a placeholder for quiz editing. The full form will appear here once the Quiz API is implemented.
+              This is a placeholder for quiz editing. The full form will appear here once the Quiz
+              API is implemented.
             </p>
             <ul className="space-y-1 text-xs text-amber-700">
-              <li><code className="bg-amber-100 px-1 rounded">GET /api/quizzes/{quizId}</code> - Fetch quiz</li>
-              <li><code className="bg-amber-100 px-1 rounded">PUT /api/quizzes/{quizId}</code> - Update quiz</li>
-              <li><code className="bg-amber-100 px-1 rounded">DELETE /api/quizzes/{quizId}</code> - Delete quiz</li>
+              <li>
+                <code className="bg-amber-100 px-1 rounded">GET /api/quizzes/{quizId}</code> - Fetch
+                quiz
+              </li>
+              <li>
+                <code className="bg-amber-100 px-1 rounded">PUT /api/quizzes/{quizId}</code> -
+                Update quiz
+              </li>
+              <li>
+                <code className="bg-amber-100 px-1 rounded">DELETE /api/quizzes/{quizId}</code> -
+                Delete quiz
+              </li>
             </ul>
           </div>
 

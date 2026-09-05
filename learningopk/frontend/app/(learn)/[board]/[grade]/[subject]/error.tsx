@@ -18,4 +18,3 @@ export default function SubjectError({ error: _error, reset }: SubjectErrorProps
     </div>
   );
 }
-

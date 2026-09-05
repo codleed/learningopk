@@ -5,14 +5,7 @@ import { eq } from "drizzle-orm";
 import request from "supertest";
 
 import { db } from "../../lib/db/index.js";
-import {
-  boards,
-  subjects,
-  chapters,
-  quizzes,
-  quizQuestions,
-  users
-} from "../../lib/db/schema.js";
+import { boards, subjects, chapters, quizzes, quizQuestions, users } from "../../lib/db/schema.js";
 import { createApp } from "../../server.js";
 
 const APP_ORIGIN = "http://localhost:3000";
@@ -29,7 +22,7 @@ const createQuizFixture = async () => {
     .insert(boards)
     .values({
       name: `Quiz Test Board ${suffix}`,
-      slug: `quiz-test-board-${suffix}`
+      slug: `quiz-test-board-${suffix}`,
     })
     .returning({ id: boards.id, slug: boards.slug });
 
@@ -43,7 +36,7 @@ const createQuizFixture = async () => {
       boardId: board.id,
       grade: "10",
       name: `Quiz Test Subject ${suffix}`,
-      slug: `quiz-test-subject-${suffix}`
+      slug: `quiz-test-subject-${suffix}`,
     })
     .returning({ id: subjects.id, slug: subjects.slug });
 
@@ -59,7 +52,7 @@ const createQuizFixture = async () => {
       title: `Quiz Test Chapter ${suffix}`,
       slug: `quiz-test-chapter-${suffix}`,
       summary: "Test chapter for quiz.",
-      isPublished: true
+      isPublished: true,
     })
     .returning({ id: chapters.id });
 
@@ -71,7 +64,7 @@ const createQuizFixture = async () => {
     subjectId: subject.id,
     chapterId: chapter.id,
     boardSlug: board.slug,
-    subjectSlug: subject.slug
+    subjectSlug: subject.slug,
   };
 };
 
@@ -86,7 +79,7 @@ const createAndLoginAdmin = async (agent: request.Agent, nameSuffix: string) => 
     .send({
       name: `Quiz Admin Test ${nameSuffix}`,
       email,
-      password: TEST_PASSWORD
+      password: TEST_PASSWORD,
     });
 
   assert.ok(
@@ -123,7 +116,7 @@ test("Quiz CRUD operations (TASK-QUIZ-CUD)", async () => {
       chapterId,
       title: "Test Quiz",
       durationMinutes: 30,
-      type: "chapter_quiz"
+      type: "chapter_quiz",
     });
 
   assert.equal(createResponse.status, 201, `Expected 201 Created, got ${createResponse.status}`);
@@ -143,10 +136,14 @@ test("Quiz CRUD operations (TASK-QUIZ-CUD)", async () => {
       chapterId,
       title: "Updated Quiz Title",
       durationMinutes: 45,
-      type: "chapter_quiz"
+      type: "chapter_quiz",
     });
 
-  assert.equal(upsertResponse.status, 200, `Expected 200 OK for upsert, got ${upsertResponse.status}`);
+  assert.equal(
+    upsertResponse.status,
+    200,
+    `Expected 200 OK for upsert, got ${upsertResponse.status}`
+  );
   assert.equal(upsertResponse.body.created, false, "Expected created=false for existing quiz");
   assert.equal(upsertResponse.body.data.id, quizId, "Quiz ID should remain the same");
   assert.equal(upsertResponse.body.data.title, "Updated Quiz Title");
@@ -177,7 +174,7 @@ test("Quiz CRUD operations (TASK-QUIZ-CUD)", async () => {
     .send({
       title: "Final Quiz Title",
       durationMinutes: 60,
-      type: "chapter_quiz"
+      type: "chapter_quiz",
     });
 
   assert.equal(updateResponse.status, 200, `Expected 200 OK, got ${updateResponse.status}`);
@@ -198,10 +195,14 @@ test("Quiz CRUD operations (TASK-QUIZ-CUD)", async () => {
       optionD: "6",
       correctOption: "b",
       explanation: "Basic arithmetic",
-      marks: 5
+      marks: 5,
     });
 
-  assert.equal(addQuestionResponse.status, 201, `Expected 201 Created, got ${addQuestionResponse.status}`);
+  assert.equal(
+    addQuestionResponse.status,
+    201,
+    `Expected 201 Created, got ${addQuestionResponse.status}`
+  );
   assert.ok(addQuestionResponse.body.data?.id, "Expected question ID");
   assert.equal(addQuestionResponse.body.data.question, "What is 2 + 2?");
   assert.equal(addQuestionResponse.body.data.marks, 5);
@@ -233,7 +234,7 @@ test("Quiz CRUD operations (TASK-QUIZ-CUD)", async () => {
       optionD: "Madrid",
       correctOption: "c",
       explanation: "Paris is the capital",
-      marks: 10
+      marks: 10,
     });
 
   assert.equal(addQuestion2Response.status, 201);
@@ -270,7 +271,7 @@ test("Quiz CRUD operations (TASK-QUIZ-CUD)", async () => {
       optionD: "7",
       correctOption: "c",
       explanation: "Basic arithmetic: 3 + 3 = 6",
-      marks: 8
+      marks: 8,
     });
 
   assert.equal(updateQuestionResponse.status, 200);
@@ -357,7 +358,7 @@ test("Quiz CRUD operations (TASK-QUIZ-CUD)", async () => {
       optionC: "C",
       optionD: "D",
       correctOption: "a",
-      explanation: "Test"
+      explanation: "Test",
     });
 
   assert.equal(questionNotFoundResponse.status, 404, "Expected 404 for non-existent question");
@@ -368,7 +369,7 @@ test("Quiz CRUD operations (TASK-QUIZ-CUD)", async () => {
     .set("origin", APP_ORIGIN)
     .send({
       chapterId: "invalid",
-      title: ""
+      title: "",
     });
 
   assert.equal(invalidQuizResponse.status, 400, "Expected 400 for invalid input");
@@ -384,7 +385,7 @@ test("Quiz CRUD operations (TASK-QUIZ-CUD)", async () => {
       optionC: "",
       optionD: "",
       correctOption: "invalid",
-      explanation: ""
+      explanation: "",
     });
 
   assert.equal(invalidQuestionResponse.status, 400, "Expected 400 for invalid question input");
@@ -414,7 +415,7 @@ test("Quiz enforces ONE quiz per chapter via upsert", async () => {
     .send({
       chapterId,
       title: "First Quiz",
-      durationMinutes: 30
+      durationMinutes: 30,
     });
 
   assert.equal(firstCreate.status, 201);
@@ -428,7 +429,7 @@ test("Quiz enforces ONE quiz per chapter via upsert", async () => {
     .send({
       chapterId,
       title: "Second Quiz (Updated)",
-      durationMinutes: 45
+      durationMinutes: 45,
     });
 
   assert.equal(secondCreate.status, 200);

@@ -23,7 +23,7 @@ test("buildTodaysFocus prioritizes weak quiz chapters before other candidates", 
         visited: true,
         quizAttemptsCount: 1,
         bestQuizScorePercent: 42,
-        examDate: "2026-04-10T00:00:00.000Z"
+        examDate: "2026-04-10T00:00:00.000Z",
       },
       {
         chapterId: 12,
@@ -38,9 +38,9 @@ test("buildTodaysFocus prioritizes weak quiz chapters before other candidates", 
         visited: false,
         quizAttemptsCount: 0,
         bestQuizScorePercent: 0,
-        examDate: "2026-03-20T00:00:00.000Z"
-      }
-    ]
+        examDate: "2026-03-20T00:00:00.000Z",
+      },
+    ],
   });
 
   assert.ok(focus);
@@ -71,16 +71,16 @@ test("buildTodaysFocus uses a streak rescue focus when no weak quiz exists", () 
         visited: false,
         quizAttemptsCount: 0,
         bestQuizScorePercent: 0,
-        examDate: null
-      }
-    ]
+        examDate: null,
+      },
+    ],
   });
 
   assert.ok(focus);
   assert.equal(focus?.type, "streak_at_risk");
   assert.equal(focus?.difficulty, "easy");
   assert.equal(focus?.xpReward, 5);
-  assert.match(focus?.reason ?? "", /streak/i);
+  assert.match(focus?.reason ?? "", /streak|momentum/i);
 });
 
 test("buildTodaysFocus picks the nearest exam unvisited chapter when no higher-priority goal exists", () => {
@@ -103,7 +103,7 @@ test("buildTodaysFocus picks the nearest exam unvisited chapter when no higher-p
         visited: false,
         quizAttemptsCount: 0,
         bestQuizScorePercent: 0,
-        examDate: "2026-04-01T00:00:00.000Z"
+        examDate: "2026-04-01T00:00:00.000Z",
       },
       {
         chapterId: 32,
@@ -118,9 +118,9 @@ test("buildTodaysFocus picks the nearest exam unvisited chapter when no higher-p
         visited: false,
         quizAttemptsCount: 0,
         bestQuizScorePercent: 0,
-        examDate: "2026-03-01T00:00:00.000Z"
-      }
-    ]
+        examDate: "2026-03-01T00:00:00.000Z",
+      },
+    ],
   });
 
   assert.ok(focus);
@@ -150,9 +150,9 @@ test("buildTodaysFocus shortens sessions during Ramadan fasting hours", () => {
         visited: false,
         quizAttemptsCount: 0,
         bestQuizScorePercent: 0,
-        examDate: "2026-05-01T00:00:00.000Z"
-      }
-    ]
+        examDate: "2026-05-01T00:00:00.000Z",
+      },
+    ],
   });
 
   assert.ok(focus);

@@ -22,7 +22,13 @@ export default async function EditClassPage({ params }: EditClassPageProps) {
   const curriculumBoards = await getAdminCurriculumTree(cookieHeader).catch(() => []);
 
   // Find the class in the curriculum tree
-  let classData: { id: number; name: string; slug: string; boardId: number; boardName: string } | null = null;
+  let classData: {
+    id: number;
+    name: string;
+    slug: string;
+    boardId: number;
+    boardName: string;
+  } | null = null;
 
   for (const board of curriculumBoards) {
     const foundClass = board.classes.find((c) => c.id === classId);

@@ -19,7 +19,7 @@ export class HttpError extends Error {
     return {
       error: this.message,
       ...(this.code !== undefined && { code: this.code }),
-      ...(this.details !== undefined && { details: this.details })
+      ...(this.details !== undefined && { details: this.details }),
     };
   }
 }
@@ -62,13 +62,20 @@ export class ConflictError extends HttpError {
 export class RateLimitError extends HttpError {
   constructor(message: string, retryAfterSeconds: number, details?: unknown) {
     super(429, message, "RATE_LIMIT_EXCEEDED", details);
-    Object.defineProperty(this, "retryAfterSeconds", { value: retryAfterSeconds, enumerable: true });
+    Object.defineProperty(this, "retryAfterSeconds", {
+      value: retryAfterSeconds,
+      enumerable: true,
+    });
     this.name = "RateLimitError";
   }
 }
 
 export class ServiceUnavailableError extends HttpError {
-  constructor(message: string = "Service temporarily unavailable", code?: string, details?: unknown) {
+  constructor(
+    message: string = "Service temporarily unavailable",
+    code?: string,
+    details?: unknown
+  ) {
     super(503, message, code ?? "SERVICE_UNAVAILABLE", details);
     this.name = "ServiceUnavailableError";
   }

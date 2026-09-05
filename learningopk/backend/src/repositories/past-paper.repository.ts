@@ -7,7 +7,7 @@ import {
   pastPaperAttemptAnswers,
   exercises,
   boards,
-  subjects
+  subjects,
 } from "../lib/db/schema.js";
 
 export const pastPaperRepository = {
@@ -26,7 +26,7 @@ export const pastPaperRepository = {
     const conditions: ReturnType<typeof eq>[] = [
       eq(mockExams.published, true),
       eq(mockExams.grade, grade as "9" | "10"),
-      eq(mockExams.boardId, boardId)
+      eq(mockExams.boardId, boardId),
     ];
     if (subjectId) conditions.push(eq(mockExams.subjectId, subjectId));
     if (year) conditions.push(eq(mockExams.year, year));
@@ -58,7 +58,7 @@ export const pastPaperRepository = {
         paperContent: mockExams.paperContent,
         solutionContent: mockExams.solutionContent,
         published: mockExams.published,
-        description: mockExams.description
+        description: mockExams.description,
       })
       .from(mockExams)
       .innerJoin(boards, eq(mockExams.boardId, boards.id))
@@ -68,26 +68,27 @@ export const pastPaperRepository = {
       .limit(limit)
       .offset(offset);
 
-    const paperIds = rows.map(r => r.id);
-    const exerciseCounts = paperIds.length > 0
-      ? await db
-          .select({
-            mockExamId: pastPaperExercises.mockExamId,
-            count: sql<number>`count(*)`
-          })
-          .from(pastPaperExercises)
-          .where(inArray(pastPaperExercises.mockExamId, paperIds))
-          .groupBy(pastPaperExercises.mockExamId)
-      : [];
+    const paperIds = rows.map((r) => r.id);
+    const exerciseCounts =
+      paperIds.length > 0
+        ? await db
+            .select({
+              mockExamId: pastPaperExercises.mockExamId,
+              count: sql<number>`count(*)`,
+            })
+            .from(pastPaperExercises)
+            .where(inArray(pastPaperExercises.mockExamId, paperIds))
+            .groupBy(pastPaperExercises.mockExamId)
+        : [];
 
-    const countMap = new Map(exerciseCounts.map(c => [c.mockExamId, Number(c.count)]));
+    const countMap = new Map(exerciseCounts.map((c) => [c.mockExamId, Number(c.count)]));
 
     return {
-      papers: rows.map(r => ({
+      papers: rows.map((r) => ({
         ...r,
-        exerciseCount: countMap.get(r.id) ?? 0
+        exerciseCount: countMap.get(r.id) ?? 0,
       })),
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   },
 
@@ -106,7 +107,7 @@ export const pastPaperRepository = {
         statements: exercises.statements,
         problemMarkdown: exercises.problemMarkdown,
         orderIndex: pastPaperExercises.orderIndex,
-        marks: pastPaperExercises.marks
+        marks: pastPaperExercises.marks,
       })
       .from(pastPaperExercises)
       .innerJoin(exercises, eq(pastPaperExercises.exerciseId, exercises.id))
@@ -133,12 +134,7 @@ export const pastPaperRepository = {
     const attemptRows = await db
       .select()
       .from(pastPaperAttempts)
-      .where(
-        and(
-          eq(pastPaperAttempts.id, attemptId),
-          eq(pastPaperAttempts.userId, userId)
-        )
-      )
+      .where(and(eq(pastPaperAttempts.id, attemptId), eq(pastPaperAttempts.userId, userId)))
       .limit(1);
 
     const attempt = attemptRows[0];
@@ -159,10 +155,7 @@ export const pastPaperRepository = {
       .select()
       .from(pastPaperAttempts)
       .where(
-        and(
-          eq(pastPaperAttempts.userId, userId),
-          eq(pastPaperAttempts.mockExamId, mockExamId)
-        )
+        and(eq(pastPaperAttempts.userId, userId), eq(pastPaperAttempts.mockExamId, mockExamId))
       )
       .orderBy(desc(pastPaperAttempts.startedAt));
   },
@@ -180,27 +173,23 @@ export const pastPaperRepository = {
         mockExamId: data.mockExamId,
         timeLimitSeconds: data.timeLimitSeconds,
         totalMarks: data.totalMarks,
-        status: "in_progress"
+        status: "in_progress",
       })
       .returning();
     return rows[0]!;
   },
 
-  async upsertAnswer(data: {
-    attemptId: string;
-    exerciseId: number;
-    answer: unknown;
-  }) {
+  async upsertAnswer(data: { attemptId: string; exerciseId: number; answer: unknown }) {
     await db
       .insert(pastPaperAttemptAnswers)
       .values({
         attemptId: data.attemptId,
         exerciseId: data.exerciseId,
-        answer: data.answer
+        answer: data.answer,
       })
       .onConflictDoUpdate({
         target: [pastPaperAttemptAnswers.attemptId, pastPaperAttemptAnswers.exerciseId],
-        set: { answer: data.answer }
+        set: { answer: data.answer },
       });
   },
 
@@ -227,38 +216,32 @@ export const pastPaperRepository = {
     const result = await db
       .update(pastPaperAttempts)
       .set({ status: "submitted" })
-      .where(
-        and(
-          eq(pastPaperAttempts.id, attemptId),
-          eq(pastPaperAttempts.status, "in_progress")
-        )
-      )
+      .where(and(eq(pastPaperAttempts.id, attemptId), eq(pastPaperAttempts.status, "in_progress")))
       .returning({ id: pastPaperAttempts.id });
     return result.length > 0;
   },
 
-  async finalizeAttempt(attemptId: string, data: {
-    status: "submitted" | "timed_out";
-    score: number;
-    percentage: number;
-  }) {
+  async finalizeAttempt(
+    attemptId: string,
+    data: {
+      status: "submitted" | "timed_out";
+      score: number;
+      percentage: number;
+    }
+  ) {
     await db
       .update(pastPaperAttempts)
       .set({
         status: data.status,
         score: data.score,
         percentage: data.percentage,
-        submittedAt: new Date()
+        submittedAt: new Date(),
       })
       .where(eq(pastPaperAttempts.id, attemptId));
   },
 
   async getPaperById(mockExamId: number) {
-    const rows = await db
-      .select()
-      .from(mockExams)
-      .where(eq(mockExams.id, mockExamId))
-      .limit(1);
+    const rows = await db.select().from(mockExams).where(eq(mockExams.id, mockExamId)).limit(1);
     return rows[0] ?? null;
   },
 
@@ -289,7 +272,7 @@ export const pastPaperRepository = {
         paperContent: mockExams.paperContent,
         solutionContent: mockExams.solutionContent,
         published: mockExams.published,
-        description: mockExams.description
+        description: mockExams.description,
       })
       .from(mockExams)
       .innerJoin(boards, eq(mockExams.boardId, boards.id))
@@ -304,7 +287,7 @@ export const pastPaperRepository = {
       .values({ mockExamId, exerciseId, orderIndex, marks: marks ?? null })
       .onConflictDoUpdate({
         target: [pastPaperExercises.mockExamId, pastPaperExercises.exerciseId],
-        set: { orderIndex, marks: marks ?? null }
+        set: { orderIndex, marks: marks ?? null },
       });
   },
 
@@ -323,10 +306,7 @@ export const pastPaperRepository = {
     const paper = await this.getPaperById(mockExamId);
     if (!paper) throw new Error("Paper not found");
     const newPublished = !paper.published;
-    await db
-      .update(mockExams)
-      .set({ published: newPublished })
-      .where(eq(mockExams.id, mockExamId));
+    await db.update(mockExams).set({ published: newPublished }).where(eq(mockExams.id, mockExamId));
     return newPublished;
-  }
+  },
 };

@@ -22,7 +22,7 @@ const quizQuestionCreateBodySchema = z.object({
   optionD: z.string().trim().min(1),
   correctOption: z.enum(["a", "b", "c", "d"]),
   explanation: z.string().trim().optional(),
-  marks: z.coerce.number().int().positive().optional().default(1)
+  marks: z.coerce.number().int().positive().optional().default(1),
 });
 
 const quizQuestionUpdateBodySchema = z.object({
@@ -33,15 +33,15 @@ const quizQuestionUpdateBodySchema = z.object({
   optionD: z.string().trim().min(1),
   correctOption: z.enum(["a", "b", "c", "d"]),
   explanation: z.string().trim().optional(),
-  marks: z.coerce.number().int().positive().optional().default(1)
+  marks: z.coerce.number().int().positive().optional().default(1),
 });
 
 const quizQuestionListQuerySchema = z.object({
-  quizId: z.coerce.number().int().positive()
+  quizId: z.coerce.number().int().positive(),
 });
 
 const quizQuestionParamsSchema = z.object({
-  id: z.coerce.number().int().positive()
+  id: z.coerce.number().int().positive(),
 });
 
 /**
@@ -57,11 +57,11 @@ quizQuestionsAdminRouter.post("/content/quiz-questions", requireSession, async (
   if (!parsedBody.success) {
     console.error("[quiz-questions POST] Validation failed:", {
       body: req.body,
-      errors: parsedBody.error.flatten()
+      errors: parsedBody.error.flatten(),
     });
     res.status(400).json({
       error: "Invalid quiz question payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -74,7 +74,7 @@ quizQuestionsAdminRouter.post("/content/quiz-questions", requireSession, async (
     .select({
       id: quizzes.id,
       title: quizzes.title,
-      chapterId: quizzes.chapterId
+      chapterId: quizzes.chapterId,
     })
     .from(quizzes)
     .where(eq(quizzes.id, parsedBody.data.quizId))
@@ -89,7 +89,7 @@ quizQuestionsAdminRouter.post("/content/quiz-questions", requireSession, async (
       status: "failed",
       message: "Quiz not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({ error: "Quiz not found" });
     return;
@@ -107,7 +107,7 @@ quizQuestionsAdminRouter.post("/content/quiz-questions", requireSession, async (
       optionD: parsedBody.data.optionD.trim(),
       correctOption: parsedBody.data.correctOption,
       explanation: parsedBody.data.explanation?.trim() ?? null,
-      marks: parsedBody.data.marks ?? 1
+      marks: parsedBody.data.marks ?? 1,
     })
     .returning({
       id: quizQuestions.id,
@@ -120,7 +120,7 @@ quizQuestionsAdminRouter.post("/content/quiz-questions", requireSession, async (
       optionD: quizQuestions.optionD,
       correctOption: quizQuestions.correctOption,
       explanation: quizQuestions.explanation,
-      marks: quizQuestions.marks
+      marks: quizQuestions.marks,
     });
 
   const newQuestion = insertedRows[0];
@@ -132,7 +132,7 @@ quizQuestionsAdminRouter.post("/content/quiz-questions", requireSession, async (
       status: "failed",
       message: "Failed to add quiz question",
       actorId,
-      actorName
+      actorName,
     });
     res.status(500).json({ error: "Failed to add quiz question" });
     return;
@@ -152,11 +152,11 @@ quizQuestionsAdminRouter.post("/content/quiz-questions", requireSession, async (
     status: "success",
     message: `Added question to quiz (new total marks: ${newTotalMarks})`,
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(201).json({
-    data: newQuestion
+    data: newQuestion,
   });
 });
 
@@ -173,7 +173,7 @@ quizQuestionsAdminRouter.get("/content/quiz-questions", requireSession, async (r
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid quiz question query",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
@@ -190,205 +190,213 @@ quizQuestionsAdminRouter.get("/content/quiz-questions", requireSession, async (r
       optionD: quizQuestions.optionD,
       correctOption: quizQuestions.correctOption,
       explanation: quizQuestions.explanation,
-      marks: quizQuestions.marks
+      marks: quizQuestions.marks,
     })
     .from(quizQuestions)
     .where(eq(quizQuestions.quizId, parsedQuery.data.quizId))
     .orderBy(asc(quizQuestions.id));
 
   res.status(200).json({
-    data: questionRows
+    data: questionRows,
   });
 });
 
 /**
  * POST /api/admin/content/quiz-questions/:id/update - Update question
  */
-quizQuestionsAdminRouter.post("/content/quiz-questions/:id/update", requireSession, async (req, res) => {
-  const parsedParams = quizQuestionParamsSchema.safeParse(req.params);
-  if (!parsedParams.success) {
-    res.status(400).json({
-      error: "Invalid quiz question identifier",
-      details: parsedParams.error.flatten()
-    });
-    return;
-  }
+quizQuestionsAdminRouter.post(
+  "/content/quiz-questions/:id/update",
+  requireSession,
+  async (req, res) => {
+    const parsedParams = quizQuestionParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+      res.status(400).json({
+        error: "Invalid quiz question identifier",
+        details: parsedParams.error.flatten(),
+      });
+      return;
+    }
 
-  const parsedBody = quizQuestionUpdateBodySchema.safeParse(req.body);
-  if (!parsedBody.success) {
-    res.status(400).json({
-      error: "Invalid quiz question payload",
-      details: parsedBody.error.flatten()
-    });
-    return;
-  }
+    const parsedBody = quizQuestionUpdateBodySchema.safeParse(req.body);
+    if (!parsedBody.success) {
+      res.status(400).json({
+        error: "Invalid quiz question payload",
+        details: parsedBody.error.flatten(),
+      });
+      return;
+    }
 
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
-    return;
-  }
+    const authedReq = req as AuthenticatedRequest;
+    if (!(await requireAdminRole(authedReq, res))) {
+      return;
+    }
 
-  const actorId = authedReq.session.user.id;
-  const actorName = authedReq.session.user.name;
-  const action = "Update quiz question";
-  const fallbackTarget = `Quiz Question #${parsedParams.data.id}`;
+    const actorId = authedReq.session.user.id;
+    const actorName = authedReq.session.user.name;
+    const action = "Update quiz question";
+    const fallbackTarget = `Quiz Question #${parsedParams.data.id}`;
 
-  const questionRows = await db
-    .select({
-      id: quizQuestions.id,
-      quizId: quizQuestions.quizId,
-      question: quizQuestions.question
-    })
-    .from(quizQuestions)
-    .where(eq(quizQuestions.id, parsedParams.data.id))
-    .limit(1);
+    const questionRows = await db
+      .select({
+        id: quizQuestions.id,
+        quizId: quizQuestions.quizId,
+        question: quizQuestions.question,
+      })
+      .from(quizQuestions)
+      .where(eq(quizQuestions.id, parsedParams.data.id))
+      .limit(1);
 
-  const question = questionRows[0];
-  if (!question) {
+    const question = questionRows[0];
+    if (!question) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: fallbackTarget,
+        status: "failed",
+        message: "Quiz question not found",
+        actorId,
+        actorName,
+      });
+      res.status(404).json({ error: "Quiz question not found" });
+      return;
+    }
+
+    const updatedRows = await db
+      .update(quizQuestions)
+      .set({
+        question: parsedBody.data.question.trim(),
+        optionA: parsedBody.data.optionA.trim(),
+        optionB: parsedBody.data.optionB.trim(),
+        optionC: parsedBody.data.optionC.trim(),
+        optionD: parsedBody.data.optionD.trim(),
+        correctOption: parsedBody.data.correctOption,
+        explanation: parsedBody.data.explanation?.trim() ?? null,
+        marks: parsedBody.data.marks ?? 1,
+      })
+      .where(eq(quizQuestions.id, question.id))
+      .returning({
+        id: quizQuestions.id,
+        quizId: quizQuestions.quizId,
+        chapterId: quizQuestions.chapterId,
+        question: quizQuestions.question,
+        optionA: quizQuestions.optionA,
+        optionB: quizQuestions.optionB,
+        optionC: quizQuestions.optionC,
+        optionD: quizQuestions.optionD,
+        correctOption: quizQuestions.correctOption,
+        explanation: quizQuestions.explanation,
+        marks: quizQuestions.marks,
+      });
+
+    const updatedQuestion = updatedRows[0];
+    if (!updatedQuestion) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: fallbackTarget,
+        status: "failed",
+        message: "Quiz question not found",
+        actorId,
+        actorName,
+      });
+      res.status(404).json({ error: "Quiz question not found" });
+      return;
+    }
+
+    // Recalculate quiz totalMarks
+    await recalculateQuizTotalMarks(question.quizId);
+
+    // Invalidate quiz questions cache
+    await cacheService.delete(CacheKeys.quizQuestions(question.quizId));
+
     await persistAuditLog({
       scope: "content",
       action,
-      target: fallbackTarget,
-      status: "failed",
-      message: "Quiz question not found",
+      target: `Quiz Question #${updatedQuestion.id}`,
+      status: "success",
+      message: "Updated quiz question",
       actorId,
-      actorName
+      actorName,
     });
-    res.status(404).json({ error: "Quiz question not found" });
-    return;
+
+    res.status(200).json({
+      data: updatedQuestion,
+    });
   }
-
-  const updatedRows = await db
-    .update(quizQuestions)
-    .set({
-      question: parsedBody.data.question.trim(),
-      optionA: parsedBody.data.optionA.trim(),
-      optionB: parsedBody.data.optionB.trim(),
-      optionC: parsedBody.data.optionC.trim(),
-      optionD: parsedBody.data.optionD.trim(),
-      correctOption: parsedBody.data.correctOption,
-      explanation: parsedBody.data.explanation?.trim() ?? null,
-      marks: parsedBody.data.marks ?? 1
-    })
-    .where(eq(quizQuestions.id, question.id))
-    .returning({
-      id: quizQuestions.id,
-      quizId: quizQuestions.quizId,
-      chapterId: quizQuestions.chapterId,
-      question: quizQuestions.question,
-      optionA: quizQuestions.optionA,
-      optionB: quizQuestions.optionB,
-      optionC: quizQuestions.optionC,
-      optionD: quizQuestions.optionD,
-      correctOption: quizQuestions.correctOption,
-      explanation: quizQuestions.explanation,
-      marks: quizQuestions.marks
-    });
-
-  const updatedQuestion = updatedRows[0];
-  if (!updatedQuestion) {
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: fallbackTarget,
-      status: "failed",
-      message: "Quiz question not found",
-      actorId,
-      actorName
-    });
-    res.status(404).json({ error: "Quiz question not found" });
-    return;
-  }
-
-  // Recalculate quiz totalMarks
-  await recalculateQuizTotalMarks(question.quizId);
-
-  // Invalidate quiz questions cache
-  await cacheService.delete(CacheKeys.quizQuestions(question.quizId));
-
-  await persistAuditLog({
-    scope: "content",
-    action,
-    target: `Quiz Question #${updatedQuestion.id}`,
-    status: "success",
-    message: "Updated quiz question",
-    actorId,
-    actorName
-  });
-
-  res.status(200).json({
-    data: updatedQuestion
-  });
-});
+);
 
 /**
  * POST /api/admin/content/quiz-questions/:id/delete - Delete question
  */
-quizQuestionsAdminRouter.post("/content/quiz-questions/:id/delete", requireSession, async (req, res) => {
-  const parsedParams = quizQuestionParamsSchema.safeParse(req.params);
-  if (!parsedParams.success) {
-    res.status(400).json({
-      error: "Invalid quiz question identifier",
-      details: parsedParams.error.flatten()
-    });
-    return;
-  }
+quizQuestionsAdminRouter.post(
+  "/content/quiz-questions/:id/delete",
+  requireSession,
+  async (req, res) => {
+    const parsedParams = quizQuestionParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+      res.status(400).json({
+        error: "Invalid quiz question identifier",
+        details: parsedParams.error.flatten(),
+      });
+      return;
+    }
 
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
-    return;
-  }
+    const authedReq = req as AuthenticatedRequest;
+    if (!(await requireAdminRole(authedReq, res))) {
+      return;
+    }
 
-  const actorId = authedReq.session.user.id;
-  const actorName = authedReq.session.user.name;
-  const action = "Delete quiz question";
-  const fallbackTarget = `Quiz Question #${parsedParams.data.id}`;
+    const actorId = authedReq.session.user.id;
+    const actorName = authedReq.session.user.name;
+    const action = "Delete quiz question";
+    const fallbackTarget = `Quiz Question #${parsedParams.data.id}`;
 
-  const questionRows = await db
-    .select({
-      id: quizQuestions.id,
-      quizId: quizQuestions.quizId,
-      question: quizQuestions.question
-    })
-    .from(quizQuestions)
-    .where(eq(quizQuestions.id, parsedParams.data.id))
-    .limit(1);
+    const questionRows = await db
+      .select({
+        id: quizQuestions.id,
+        quizId: quizQuestions.quizId,
+        question: quizQuestions.question,
+      })
+      .from(quizQuestions)
+      .where(eq(quizQuestions.id, parsedParams.data.id))
+      .limit(1);
 
-  const question = questionRows[0];
-  if (!question) {
+    const question = questionRows[0];
+    if (!question) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: fallbackTarget,
+        status: "failed",
+        message: "Quiz question not found",
+        actorId,
+        actorName,
+      });
+      res.status(404).json({ error: "Quiz question not found" });
+      return;
+    }
+
+    await db.delete(quizQuestions).where(eq(quizQuestions.id, question.id));
+
+    // Recalculate quiz totalMarks after deletion
+    await recalculateQuizTotalMarks(question.quizId);
+
+    // Invalidate quiz questions cache
+    await cacheService.delete(CacheKeys.quizQuestions(question.quizId));
+
     await persistAuditLog({
       scope: "content",
       action,
-      target: fallbackTarget,
-      status: "failed",
-      message: "Quiz question not found",
+      target: `Quiz Question #${question.id}`,
+      status: "success",
+      message: "Deleted quiz question",
       actorId,
-      actorName
+      actorName,
     });
-    res.status(404).json({ error: "Quiz question not found" });
-    return;
+
+    res.status(200).json({
+      success: true,
+      deletedId: question.id,
+    });
   }
-
-  await db.delete(quizQuestions).where(eq(quizQuestions.id, question.id));
-
-  // Recalculate quiz totalMarks after deletion
-  await recalculateQuizTotalMarks(question.quizId);
-
-  // Invalidate quiz questions cache
-  await cacheService.delete(CacheKeys.quizQuestions(question.quizId));
-
-  await persistAuditLog({
-    scope: "content",
-    action,
-    target: `Quiz Question #${question.id}`,
-    status: "success",
-    message: "Deleted quiz question",
-    actorId,
-    actorName
-  });
-
-  res.status(200).json({
-    success: true,
-    deletedId: question.id
-  });
-});
+);

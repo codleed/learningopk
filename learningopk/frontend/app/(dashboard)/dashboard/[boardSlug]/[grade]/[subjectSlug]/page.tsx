@@ -21,9 +21,15 @@ export default async function SubjectProgressPage({ params }: SubjectProgressPag
 
   const parsedParams = z
     .object({
-      boardSlug: z.string().trim().regex(/^[a-z0-9-]+$/),
+      boardSlug: z
+        .string()
+        .trim()
+        .regex(/^[a-z0-9-]+$/),
       grade: z.enum(["9", "10"]),
-      subjectSlug: z.string().trim().regex(/^[a-z0-9-]+$/)
+      subjectSlug: z
+        .string()
+        .trim()
+        .regex(/^[a-z0-9-]+$/),
     })
     .safeParse(await params);
 
@@ -49,8 +55,12 @@ export default async function SubjectProgressPage({ params }: SubjectProgressPag
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--primary)]">
             {progress.subject.boardName} | Grade {progress.subject.grade}
           </p>
-          <h1 className="mt-2 text-3xl font-medium text-text-primary sm:text-4xl">{progress.subject.name} Progress</h1>
-          <p className="mt-2 text-sm text-text-secondary">Overall subject score: {progress.overallSubjectScorePercent}%</p>
+          <h1 className="mt-2 text-3xl font-medium text-text-primary sm:text-4xl">
+            {progress.subject.name} Progress
+          </h1>
+          <p className="mt-2 text-sm text-text-secondary">
+            Overall subject score: {progress.overallSubjectScorePercent}%
+          </p>
           <Link
             href="/dashboard"
             className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--primary)] underline underline-offset-4"

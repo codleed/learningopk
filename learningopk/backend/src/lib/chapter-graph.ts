@@ -24,14 +24,14 @@ export const listAdminChapterGraph = async ({ query }: { query: string }) => {
     .select({
       id: chapters.id,
       title: chapters.title,
-      isPublished: chapters.isPublished
+      isPublished: chapters.isPublished,
     })
     .from(chapters)
     .orderBy(asc(chapters.title));
 
   const unresolvedEdgeCountRows = await db
     .select({
-      count: sql<number>`count(*)::int`
+      count: sql<number>`count(*)::int`,
     })
     .from(chapterSummaryLinks)
     .where(isNull(chapterSummaryLinks.targetSubpartId));
@@ -41,7 +41,7 @@ export const listAdminChapterGraph = async ({ query }: { query: string }) => {
     .select({
       sourceChapterId: sourceSubparts.chapterId,
       targetChapterId: targetSubparts.chapterId,
-      isResolved: chapterSummaryLinks.isResolved
+      isResolved: chapterSummaryLinks.isResolved,
     })
     .from(chapterSummaryLinks)
     .innerJoin(sourceSubparts, eq(chapterSummaryLinks.sourceSubpartId, sourceSubparts.id))
@@ -60,7 +60,7 @@ export const listAdminChapterGraph = async ({ query }: { query: string }) => {
     resolvedEdges.push({
       sourceChapterId: edge.sourceChapterId,
       targetChapterId: edge.targetChapterId,
-      isResolved: edge.isResolved
+      isResolved: edge.isResolved,
     });
   }
 
@@ -88,13 +88,15 @@ export const listAdminChapterGraph = async ({ query }: { query: string }) => {
 
   const nodes =
     loweredQuery.length > 0
-      ? filteredNodes.filter((node) => connectedNodeIds.has(node.id) || node.title.toLowerCase().includes(loweredQuery))
+      ? filteredNodes.filter(
+          (node) => connectedNodeIds.has(node.id) || node.title.toLowerCase().includes(loweredQuery)
+        )
       : filteredNodes;
 
   return {
     nodes,
     edges: filteredEdges,
-    unresolvedEdgeCount
+    unresolvedEdgeCount,
   };
 };
 
@@ -116,7 +118,7 @@ type SubjectGraphEdge = {
 
 export const listSubjectChapterGraph = async ({
   subjectId,
-  userId
+  userId,
 }: {
   subjectId: number;
   userId: string;
@@ -133,10 +135,13 @@ export const listSubjectChapterGraph = async ({
       isPublished: chapters.isPublished,
       visitedAt: userProgress.visitedAt,
       flashcardsCompleted: userProgress.flashcardsCompleted,
-      quizAttemptsCount: userProgress.quizAttemptsCount
+      quizAttemptsCount: userProgress.quizAttemptsCount,
     })
     .from(chapters)
-    .leftJoin(userProgress, and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId)))
+    .leftJoin(
+      userProgress,
+      and(eq(userProgress.chapterId, chapters.id), eq(userProgress.userId, userId))
+    )
     .where(and(eq(chapters.subjectId, subjectId), eq(chapters.isPublished, true)))
     .orderBy(asc(chapters.chapterNumber), asc(chapters.id));
 
@@ -147,13 +152,13 @@ export const listSubjectChapterGraph = async ({
     chapterNumber: row.chapterNumber,
     isPublished: row.isPublished,
     visited: Boolean(row.visitedAt),
-    completed: Boolean(row.flashcardsCompleted || (row.quizAttemptsCount ?? 0) > 0)
+    completed: Boolean(row.flashcardsCompleted || (row.quizAttemptsCount ?? 0) > 0),
   }));
 
   if (nodes.length === 0) {
     return {
       nodes,
-      edges: []
+      edges: [],
     };
   }
 
@@ -162,7 +167,7 @@ export const listSubjectChapterGraph = async ({
     .select({
       sourceChapterId: sourceSubparts.chapterId,
       targetChapterId: targetSubparts.chapterId,
-      isResolved: chapterSummaryLinks.isResolved
+      isResolved: chapterSummaryLinks.isResolved,
     })
     .from(chapterSummaryLinks)
     .innerJoin(sourceSubparts, eq(chapterSummaryLinks.sourceSubpartId, sourceSubparts.id))
@@ -186,13 +191,13 @@ export const listSubjectChapterGraph = async ({
     edges.push({
       sourceChapterId: edge.sourceChapterId,
       targetChapterId: edge.targetChapterId,
-      isResolved: edge.isResolved
+      isResolved: edge.isResolved,
     });
   }
 
   return {
     nodes,
-    edges
+    edges,
   };
 };
 

@@ -26,7 +26,7 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
   {
     key: "Strict-Transport-Security",
-    value: "max-age=63072000; includeSubDomains; preload"
+    value: "max-age=63072000; includeSubDomains; preload",
   },
   {
     key: "Content-Security-Policy",
@@ -41,14 +41,14 @@ const securityHeaders = [
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
-      "object-src 'none'"
-    ].join("; ")
-  }
+      "object-src 'none'",
+    ].join("; "),
+  },
 ];
 
 const nextConfig: NextConfig = {
   turbopack: {
-    root: join(frontendDir, "..")
+    root: join(frontendDir, ".."),
   },
   images: {
     remotePatterns: [
@@ -56,19 +56,19 @@ const nextConfig: NextConfig = {
         protocol: "http",
         hostname: "localhost",
         port: "9000",
-        pathname: "/**"
+        pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "*.s3.amazonaws.com",
-        pathname: "/**"
+        pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "*.s3.*.amazonaws.com",
-        pathname: "/**"
-      }
-    ]
+        pathname: "/**",
+      },
+    ],
   },
   // Vercel proxy: When BACKEND_URL is set, proxy /api/* to the backend.
   // This avoids CORS and mixed-content issues when frontend is on HTTPS
@@ -80,8 +80,8 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: `${backendUrl}/api/:path*`
-      }
+        destination: `${backendUrl}/api/:path*`,
+      },
     ];
   },
 
@@ -89,10 +89,10 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/:path*",
-        headers: securityHeaders
-      }
+        headers: securityHeaders,
+      },
     ];
-  }
+  },
 };
 
 export default withSentryConfig(nextConfig, {

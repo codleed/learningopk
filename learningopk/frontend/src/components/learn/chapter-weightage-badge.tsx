@@ -6,7 +6,11 @@ type ChapterWeightageBadgeProps = {
 };
 
 export function ChapterWeightageBadge({ examWeightage }: ChapterWeightageBadgeProps) {
-  if (!examWeightage || examWeightage.analysisWindowYears === 0 || examWeightage.weightagePercentage === 0) {
+  if (
+    !examWeightage ||
+    examWeightage.analysisWindowYears === 0 ||
+    examWeightage.weightagePercentage === 0
+  ) {
     return null;
   }
 
@@ -16,7 +20,9 @@ export function ChapterWeightageBadge({ examWeightage }: ChapterWeightageBadgePr
         <Badge variant="warning">Board Exam Weightage</Badge>
       </div>
       <p className="text-sm font-medium text-text-primary">
-        This chapter appeared in {examWeightage.weightagePercentage}% of past {examWeightage.analysisWindowYears} board exams (avg {Math.round(examWeightage.avgMarks)} marks)
+        This chapter appeared in {examWeightage.weightagePercentage}% of past{" "}
+        {examWeightage.analysisWindowYears} board exams (avg {Math.round(examWeightage.avgMarks)}{" "}
+        marks)
       </p>
     </div>
   );

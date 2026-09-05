@@ -4,8 +4,20 @@ const backendBaseUrl = "http://localhost:3001";
 
 type ForumFiltersResponse = {
   boards: Array<{ id: number; slug: string; name: string }>;
-  subjects: Array<{ id: number; slug: string; name: string; classSlug: string | null; boardId: number }>;
-  chapters: Array<{ id: number; slug: string; title: string; chapterNumber: number; subjectId: number }>;
+  subjects: Array<{
+    id: number;
+    slug: string;
+    name: string;
+    classSlug: string | null;
+    boardId: number;
+  }>;
+  chapters: Array<{
+    id: number;
+    slug: string;
+    title: string;
+    chapterNumber: number;
+    subjectId: number;
+  }>;
 };
 
 type ChapterRoute = {
@@ -16,14 +28,18 @@ type ChapterRoute = {
 };
 
 const assertNoHorizontalOverflow = async (page: Page) => {
-  const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+  const hasOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth + 1
+  );
   expect(hasOverflow).toBeFalsy();
 };
 
 const pickChapterRouteWithQuiz = async (api: APIRequestContext): Promise<ChapterRoute> => {
   const filtersResponse = await api.get(`${backendBaseUrl}/api/forum/filters`);
   if (!filtersResponse.ok()) {
-    throw new Error(`Failed to fetch forum filters for phase3 route precheck: ${filtersResponse.status()}`);
+    throw new Error(
+      `Failed to fetch forum filters for phase3 route precheck: ${filtersResponse.status()}`
+    );
   }
 
   const filters = (await filtersResponse.json()) as ForumFiltersResponse;
@@ -49,13 +65,15 @@ const pickChapterRouteWithQuiz = async (api: APIRequestContext): Promise<Chapter
       continue;
     }
 
-    const chapterPayload = (await chapterResponse.json()) as { quiz: { questions: unknown[] } | null };
+    const chapterPayload = (await chapterResponse.json()) as {
+      quiz: { questions: unknown[] } | null;
+    };
     if (chapterPayload.quiz && chapterPayload.quiz.questions.length > 0) {
       return {
         boardSlug: board.slug,
         grade: subject.classSlug,
         subjectSlug: subject.slug,
-        chapterSlug: chapter.slug
+        chapterSlug: chapter.slug,
       };
     }
   }
@@ -72,7 +90,9 @@ const registerStudent = async (page: Page, name: string) => {
   await page.getByLabel("Degree").fill("Matriculation");
   await page.getByLabel("Board").selectOption("fbise");
   await page.getByLabel("Class").selectOption("9th");
-  await page.getByLabel("Email").fill(`phase3_${name.toLowerCase().replace(/\s+/g, "_")}_${timestamp}@example.com`);
+  await page
+    .getByLabel("Email")
+    .fill(`phase3_${name.toLowerCase().replace(/\s+/g, "_")}_${timestamp}@example.com`);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm Password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
@@ -112,7 +132,9 @@ test("unified dashboard/learn routes preserve links, tabs, and actions", async (
   await expect(page.getByLabel("Primary navigation")).toBeVisible();
   await assertNoHorizontalOverflow(page);
 
-  await page.goto(`/${route.boardSlug}/${route.grade}/${route.subjectSlug}/${route.chapterSlug}?tab=summary`);
+  await page.goto(
+    `/${route.boardSlug}/${route.grade}/${route.subjectSlug}/${route.chapterSlug}?tab=summary`
+  );
   await expect(page.getByRole("link", { name: "Summary" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Exercises" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Flashcards" })).toBeVisible();
@@ -120,26 +142,36 @@ test("unified dashboard/learn routes preserve links, tabs, and actions", async (
   await expect(page.getByLabel("Primary navigation")).toBeVisible();
   await assertNoHorizontalOverflow(page);
 
-  await page.goto(`/${route.boardSlug}/${route.grade}/${route.subjectSlug}/${route.chapterSlug}?tab=exercises`);
+  await page.goto(
+    `/${route.boardSlug}/${route.grade}/${route.subjectSlug}/${route.chapterSlug}?tab=exercises`
+  );
   await expect(page.getByRole("button", { name: "Open AI Tutor" })).toBeVisible();
   await page.getByRole("button", { name: "Open AI Tutor" }).click();
   await assertNoHorizontalOverflow(page);
 
-  await page.goto(`/${route.boardSlug}/${route.grade}/${route.subjectSlug}/${route.chapterSlug}?tab=flashcards`);
+  await page.goto(
+    `/${route.boardSlug}/${route.grade}/${route.subjectSlug}/${route.chapterSlug}?tab=flashcards`
+  );
   await expect(page.getByRole("button", { name: "Next", exact: true })).toBeVisible();
   await assertNoHorizontalOverflow(page);
 
-  await page.goto(`/${route.boardSlug}/${route.grade}/${route.subjectSlug}/${route.chapterSlug}?tab=quiz`);
-  await expect(page.getByRole("button", { name: /Submit Quiz|Submit Time-Up Attempt/ })).toBeVisible();
+  await page.goto(
+    `/${route.boardSlug}/${route.grade}/${route.subjectSlug}/${route.chapterSlug}?tab=quiz`
+  );
+  await expect(
+    page.getByRole("button", { name: /Submit Quiz|Submit Time-Up Attempt/ })
+  ).toBeVisible();
   await assertNoHorizontalOverflow(page);
 });
 
 test.describe("mobile unified route overflow checks", () => {
   test.use({
-    viewport: { width: 390, height: 844 }
+    viewport: { width: 390, height: 844 },
   });
 
-  test("subject progress and learn routes avoid horizontal overflow on mobile", async ({ page }) => {
+  test("subject progress and learn routes avoid horizontal overflow on mobile", async ({
+    page,
+  }) => {
     const route = await pickChapterRouteWithQuiz(page.request);
 
     await registerStudent(page, "Phase 3 Mobile Student");
@@ -152,9 +184,10 @@ test.describe("mobile unified route overflow checks", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await assertNoHorizontalOverflow(page);
 
-    await page.goto(`/${route.boardSlug}/${route.grade}/${route.subjectSlug}/${route.chapterSlug}?tab=summary`);
+    await page.goto(
+      `/${route.boardSlug}/${route.grade}/${route.subjectSlug}/${route.chapterSlug}?tab=summary`
+    );
     await expect(page.getByRole("link", { name: "Summary" })).toBeVisible();
     await assertNoHorizontalOverflow(page);
   });
 });
-

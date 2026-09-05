@@ -27,6 +27,7 @@
 Use focused reviewer roles. If agent dispatch is available, run these roles in parallel where the scopes do not overlap. If dispatch is not available, execute the same roles sequentially and keep the output grouped by role.
 
 Reviewer roles:
+
 - `auth-backend-reviewer`: sessions, Better Auth wiring, backend trust boundaries, role checks
 - `auth-frontend-reviewer`: login/register/reset/logout UX, route protection, session fetches, redirect behavior
 - `tests-and-docs-reviewer`: Playwright/integration coverage, verification scripts, contract drift
@@ -41,11 +42,13 @@ Reviewer roles:
 **Why first:** Every protected route, admin flow, and user-scoped API depends on this layer. If auth assumptions are wrong, later findings are hard to interpret.
 
 **Primary reviewer split:**
+
 - `auth-backend-reviewer`
 - `auth-frontend-reviewer`
 - `tests-and-docs-reviewer`
 
 **Review files:**
+
 - `backend/src/lib/auth.ts`
 - `backend/src/lib/session.ts`
 - `backend/src/lib/admin.ts`
@@ -74,6 +77,7 @@ Reviewer roles:
 - `frontend/docs/AUTH_SCREENS_DESIGN.md`
 
 **Review questions:**
+
 - Is Better Auth configured correctly for trusted origins, session persistence, and user fields?
 - Does backend auth rely on secure server-side checks, not frontend assumptions?
 - Is `requireSession` sufficient for suspended, deleted, or partially provisioned users?
@@ -83,12 +87,14 @@ Reviewer roles:
 - Do docs describe the real auth contract, or outdated endpoint names and flows?
 
 **Known hotspots to verify carefully:**
+
 - `frontend/proxy.ts` only guards selected prefixes, while many other authenticated pages depend on page-level checks.
 - `frontend` code calls Better Auth generated endpoints such as `/api/auth/get-session`, `/sign-in/email`, `/sign-up/email`, while docs describe normalized `/login` and `/session` paths.
 - Admin protection is split across frontend `AdminGuard` and backend `requireAdminRole`; verify no admin path is missing backend enforcement.
 - Registration flow fetches board/class options from `/api/forum/filters`, which couples auth onboarding to forum data availability.
 
 **Outputs:**
+
 - Auth findings report
 - Auth coverage map
 - Docs drift list
@@ -99,10 +105,12 @@ Reviewer roles:
 **Why second:** After confirming auth boundaries, review how authenticated student pages fetch and trust data across dashboard, learn, forum, and AI entry points.
 
 **Primary reviewer split:**
+
 - `domain-reviewer`
 - `tests-and-docs-reviewer`
 
 **Review files:**
+
 - `frontend/app/(dashboard)/**/page.tsx`
 - `frontend/app/(learn)/**/page.tsx`
 - `frontend/app/forum/page.tsx`
@@ -119,6 +127,7 @@ Reviewer roles:
 - `frontend/tests/e2e/phase3-auth-layout-routes.spec.ts`
 
 **Review questions:**
+
 - Do protected pages consistently redirect or degrade safely when session fetches fail?
 - Is the split between proxy-level protection and page-level protection coherent?
 - Do server components leak assumptions about board, class, or role?
@@ -126,6 +135,7 @@ Reviewer roles:
 - Are shared shells and navigation safe for both student and admin states?
 
 **Outputs:**
+
 - Protected route coverage matrix
 - SSR/session propagation findings
 - Shell and navigation risk list
@@ -135,10 +145,12 @@ Reviewer roles:
 **Why here:** These are the main student product flows and they depend on correct session scoping and user identity.
 
 **Primary reviewer split:**
+
 - `domain-reviewer`
 - `tests-and-docs-reviewer`
 
 **Review files:**
+
 - `backend/src/routes/learn.ts`
 - `backend/src/routes/progress.ts`
 - `backend/src/routes/quiz.ts`
@@ -162,6 +174,7 @@ Reviewer roles:
 - `backend/src/tests/integration/curriculum-class-slug.integration.test.ts`
 
 **Review questions:**
+
 - Are board/class restrictions enforced server-side for learner-specific content?
 - Do progress and quiz updates trust the authenticated user correctly?
 - Are profile updates and image uploads scoped and validated safely?
@@ -169,6 +182,7 @@ Reviewer roles:
 - Are there missing tests around cross-user data isolation or invalid subject/chapter access?
 
 **Outputs:**
+
 - Student domain findings report
 - User-scope and data-integrity findings
 - Missing coverage list
@@ -178,11 +192,13 @@ Reviewer roles:
 **Why here:** Forum includes public reads plus authenticated writes, moderation-sensitive actions, and user-generated content handling.
 
 **Primary reviewer split:**
+
 - `domain-reviewer`
 - `admin-reviewer`
 - `tests-and-docs-reviewer`
 
 **Review files:**
+
 - `backend/src/routes/forum.ts`
 - `backend/src/services/forum.service.ts`
 - `backend/src/repositories/forum.repository.ts`
@@ -194,6 +210,7 @@ Reviewer roles:
 - `frontend/tests/e2e/phase1-forum-dashboard-chrome.spec.ts`
 
 **Review questions:**
+
 - Are write paths protected and scoped to the acting user?
 - Are accept-answer, vote, and reply actions safe against cross-user abuse?
 - Are moderation or content-blocking paths enforced consistently?
@@ -201,6 +218,7 @@ Reviewer roles:
 - Are public endpoints exposing more user data than needed?
 
 **Outputs:**
+
 - Forum security and behavior findings
 - Public/private boundary findings
 - Performance and pagination concerns
@@ -210,11 +228,13 @@ Reviewer roles:
 **Why here:** AI routes are authenticated, stateful, and expensive. They also mix user scope, persistence, and external provider interactions.
 
 **Primary reviewer split:**
+
 - `domain-reviewer`
 - `infra-reviewer`
 - `tests-and-docs-reviewer`
 
 **Review files:**
+
 - `backend/src/routes/ai-chat.ts`
 - `backend/src/lib/mistral.ts`
 - `backend/src/lib/queue.ts`
@@ -226,6 +246,7 @@ Reviewer roles:
 - `backend/src/tests/integration/api-routes.integration.test.ts`
 
 **Review questions:**
+
 - Are AI sessions and messages isolated per user?
 - Can one user read or mutate another user’s AI history?
 - Are rate-limiting and guardrail expectations implemented or only documented?
@@ -233,6 +254,7 @@ Reviewer roles:
 - Are costs, retries, and queue interactions bounded?
 
 **Outputs:**
+
 - AI authz and data-isolation findings
 - Operational risk list
 - Test gap list
@@ -242,11 +264,13 @@ Reviewer roles:
 **Why after auth:** This phase depends on Phase 1 conclusions because the admin route surface is large and high-risk.
 
 **Primary reviewer split:**
+
 - `admin-reviewer`
 - `tests-and-docs-reviewer`
 - `infra-reviewer`
 
 **Review files:**
+
 - `backend/src/routes/admin.ts`
 - `backend/src/routes/chapter-media.ts`
 - `backend/src/lib/chapter-graph.ts`
@@ -263,6 +287,7 @@ Reviewer roles:
 - `backend/src/tests/integration/admin-phase8.integration.test.ts`
 
 **Review questions:**
+
 - Does every admin endpoint enforce admin role server-side before data access or mutation?
 - Is the route file too large to review safely without extracting trust-boundary maps?
 - Are audit logs complete for success and failure paths?
@@ -270,6 +295,7 @@ Reviewer roles:
 - Are admin UX guards aligned with backend enforcement?
 
 **Outputs:**
+
 - Admin authz findings
 - Large-route maintainability risks
 - Auditability and mutation-safety findings
@@ -279,10 +305,12 @@ Reviewer roles:
 **Why late:** This phase is cross-cutting. Earlier phases will already identify which data-layer concerns are user-visible and which are structural.
 
 **Primary reviewer split:**
+
 - `infra-reviewer`
 - `tests-and-docs-reviewer`
 
 **Review files:**
+
 - `backend/src/lib/db/**`
 - `backend/drizzle/**`
 - `backend/src/repositories/**`
@@ -297,6 +325,7 @@ Reviewer roles:
 - `drizzle.config.ts`
 
 **Review questions:**
+
 - Are schema, migrations, and runtime assumptions consistent?
 - Do repositories enforce clear boundaries, or do routes bypass them inconsistently?
 - Are workers and jobs safe under retries, duplicates, and partial failure?
@@ -304,6 +333,7 @@ Reviewer roles:
 - Are infra docs and runtime config aligned with the current app topology?
 
 **Outputs:**
+
 - Infrastructure and data-layer findings
 - Reliability and operability risks
 - Migration and env drift list
@@ -313,10 +343,12 @@ Reviewer roles:
 **Why last:** This phase consolidates systemic issues discovered across all earlier phases.
 
 **Primary reviewer split:**
+
 - `tests-and-docs-reviewer`
 - `infra-reviewer`
 
 **Review files:**
+
 - `packages/shared/**`
 - `frontend/tests/e2e/**`
 - `backend/src/tests/**`
@@ -326,12 +358,14 @@ Reviewer roles:
 - `project-overview.md`
 
 **Review questions:**
+
 - Do shared types and validators reflect actual runtime contracts?
 - Are there dead docs, stale plans, or misleading architecture descriptions?
 - Is test coverage concentrated in happy paths while missing abuse cases and regression edges?
 - Are naming, response shapes, and route contracts internally consistent?
 
 **Outputs:**
+
 - Cross-cutting consistency report
 - Test strategy gaps
 - Documentation drift summary
@@ -373,6 +407,7 @@ pnpm --filter frontend test:e2e tests/e2e/phase3-auth-layout-routes.spec.ts
 ## Exit Criteria
 
 The full review is complete only when:
+
 - All eight phases have a written findings note
 - Authentication and admin findings have explicit severity
 - Test gaps are documented per phase

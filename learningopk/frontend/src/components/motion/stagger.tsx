@@ -39,10 +39,7 @@ export interface StaggerContainerProps {
  * Container that staggers the entrance animation of its children.
  * Automatically disables animations when the user prefers reduced motion.
  */
-export function StaggerContainer({
-  children,
-  className,
-}: StaggerContainerProps) {
+export function StaggerContainer({ children, className }: StaggerContainerProps) {
   const reduced = useReducedMotion();
   return (
     <motion.div
@@ -65,16 +62,10 @@ export interface MotionSectionProps {
  * Section-level fade-up animation wrapper.
  * Automatically disables animations when the user prefers reduced motion.
  */
-export function MotionSection({
-  children,
-  className,
-}: MotionSectionProps) {
+export function MotionSection({ children, className }: MotionSectionProps) {
   const reduced = useReducedMotion();
   return (
-    <motion.div
-      variants={reduced ? fadeUpReduced : fadeUp}
-      className={className}
-    >
+    <motion.div variants={reduced ? fadeUpReduced : fadeUp} className={className}>
       {children}
     </motion.div>
   );
@@ -89,17 +80,12 @@ export interface MotionCardProps {
  * Card-level fade-up animation wrapper with a subtle hover lift.
  * Automatically disables animations when the user prefers reduced motion.
  */
-export function MotionCard({
-  children,
-  className,
-}: MotionCardProps) {
+export function MotionCard({ children, className }: MotionCardProps) {
   const reduced = useReducedMotion();
   return (
     <motion.div
       variants={reduced ? fadeUpReduced : fadeUp}
-      whileHover={
-        reduced ? undefined : { y: -4, transition: { duration: 0.2 } }
-      }
+      whileHover={reduced ? undefined : { y: -4, transition: { duration: 0.2 } }}
       className={className}
     >
       {children}

@@ -7,7 +7,7 @@ export function useStreakTracking() {
   const initialState = getGamificationState();
   const [streak, setStreak] = useState(initialState.currentStreak);
   const [longestStreak, setLongestStreak] = useState(initialState.longestStreak);
-  
+
   const isHydrated = useSyncExternalStore(
     () => () => undefined,
     () => true,

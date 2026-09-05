@@ -13,6 +13,7 @@
 ### Task 1: Add shared study-card artwork primitives
 
 **Files:**
+
 - Create: `frontend/src/components/common/study-card-art.tsx`
 - Reuse: `frontend/src/components/common/subject-badge.tsx`
 
@@ -27,6 +28,7 @@
 ### Task 2: Redesign chapter cards
 
 **Files:**
+
 - Modify: `frontend/src/components/learn/chapter-card.tsx`
 
 **Step 1:** Replace the row-style chapter card with an editorial tile using `StudyCardArt`.
@@ -38,6 +40,7 @@
 ### Task 3: Redesign subject browse cards
 
 **Files:**
+
 - Modify: `frontend/app/(dashboard)/subjects/page.tsx`
 
 **Step 1:** Replace the small icon header with a large subject cover block.
@@ -49,6 +52,7 @@
 ### Task 4: Redesign dashboard subject progress cards
 
 **Files:**
+
 - Modify: `frontend/src/components/dashboard/subject-progress-grid.tsx`
 
 **Step 1:** Apply the same card language in a denser dashboard format.
@@ -58,6 +62,7 @@
 ### Task 5: Verify
 
 **Files:**
+
 - Verify: `frontend/`
 
 **Step 1:** Run `pnpm exec tsc --noEmit`

@@ -56,27 +56,16 @@ export function Tooltip({
       )}
     >
       {content}
-      <TooltipPrimitive.Arrow
-        className="fill-bg-elevated"
-        width={10}
-        height={5}
-      />
+      <TooltipPrimitive.Arrow className="fill-bg-elevated" width={10} height={5} />
     </TooltipPrimitive.Content>
   );
 
   return (
     <TooltipPrimitive.Provider>
-      <TooltipPrimitive.Root
-        delayDuration={delayDuration}
-        disableHoverableContent={false}
-      >
-        <TooltipPrimitive.Trigger asChild>
-          {children}
-        </TooltipPrimitive.Trigger>
+      <TooltipPrimitive.Root delayDuration={delayDuration} disableHoverableContent={false}>
+        <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
         {portal ? (
-          <TooltipPrimitive.Portal>
-            {tooltipContent}
-          </TooltipPrimitive.Portal>
+          <TooltipPrimitive.Portal>{tooltipContent}</TooltipPrimitive.Portal>
         ) : (
           tooltipContent
         )}

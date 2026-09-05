@@ -7,7 +7,11 @@ import { AdminPageHeader } from "@/components/admin";
 import { ContentTabs } from "@/components/admin/content-tabs";
 import { ContentStatsStrip } from "@/components/admin/content-stats-strip";
 import { ContentListTable, type ColumnDef } from "@/components/admin/content-list-table";
-import { deleteAdminCurriculumExercise, type AdminCurriculumBoard, type AdminCurriculumExerciseRead } from "@/lib/admin-api";
+import {
+  deleteAdminCurriculumExercise,
+  type AdminCurriculumBoard,
+  type AdminCurriculumExerciseRead,
+} from "@/lib/admin-api";
 import { useToast } from "@/components/ui/toast";
 
 type ExerciseWithContext = AdminCurriculumExerciseRead & {
@@ -81,9 +85,7 @@ export function ExercisesPage({ boards, initialExercises, stats }: ExercisesPage
       key: "exerciseNumber",
       header: "Exercise",
       render: (ex) => (
-        <span className="font-medium text-[var(--text-primary)]">
-          Exercise {ex.exerciseNumber}
-        </span>
+        <span className="font-medium text-[var(--text-primary)]">Exercise {ex.exerciseNumber}</span>
       ),
     },
     {

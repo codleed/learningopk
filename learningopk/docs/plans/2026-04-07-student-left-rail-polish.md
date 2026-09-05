@@ -13,6 +13,7 @@
 ### Task 1: Polish student nav items
 
 **Files:**
+
 - Modify: `frontend/src/components/foundation/left-rail.tsx`
 
 **Step 1:** Keep student nav item corners at `rounded-xl`.
@@ -22,6 +23,7 @@
 ### Task 2: Polish student utility items
 
 **Files:**
+
 - Modify: `frontend/src/components/foundation/left-rail.tsx`
 
 **Step 1:** Apply the same 12px edge language to theme toggle, sign out, and profile block in student mode.
@@ -31,6 +33,7 @@
 ### Task 3: Verify
 
 **Files:**
+
 - Verify: `frontend/`
 
 **Step 1:** Run `pnpm exec tsc --noEmit`

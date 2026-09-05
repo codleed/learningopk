@@ -12,13 +12,13 @@ const formulaItemSchema = z.object({
   variables: z.array(
     z.object({
       symbol: z.string(),
-      meaning: z.string()
+      meaning: z.string(),
     })
   ),
   tags: z.array(z.string()),
   subjectName: z.string(),
   chapterTitle: z.string(),
-  isStarred: z.boolean()
+  isStarred: z.boolean(),
 });
 
 const formulasResponseSchema = z.object({
@@ -29,11 +29,11 @@ const formulasResponseSchema = z.object({
       z.object({
         id: z.number().int().positive(),
         title: z.string(),
-        subjectId: z.number().int().positive()
+        subjectId: z.number().int().positive(),
       })
     ),
-    tags: z.array(z.string())
-  })
+    tags: z.array(z.string()),
+  }),
 });
 
 export type FormulasResponse = z.infer<typeof formulasResponseSchema>;
@@ -45,20 +45,26 @@ type FormulaQuery = {
   tag?: string;
 };
 
-export const getFormulas = async (cookieHeader: string, query: FormulaQuery): Promise<FormulasResponse> => {
+export const getFormulas = async (
+  cookieHeader: string,
+  query: FormulaQuery
+): Promise<FormulasResponse> => {
   const params = new URLSearchParams();
   if (query.q) params.set("q", query.q);
   if (query.subjectId) params.set("subjectId", String(query.subjectId));
   if (query.chapterId) params.set("chapterId", String(query.chapterId));
   if (query.tag) params.set("tag", query.tag);
 
-  const response = await fetch(`${backendUrl}/api/formulas${params.size > 0 ? `?${params.toString()}` : ""}`, {
-    method: "GET",
-    cache: "no-store",
-    headers: {
-      cookie: cookieHeader
+  const response = await fetch(
+    `${backendUrl}/api/formulas${params.size > 0 ? `?${params.toString()}` : ""}`,
+    {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        cookie: cookieHeader,
+      },
     }
-  });
+  );
 
   if (!response.ok) {
     throw new Error(`Formulas request failed: ${response.status}`);
@@ -70,7 +76,7 @@ export const getFormulas = async (cookieHeader: string, query: FormulaQuery): Pr
 export const toggleFormulaStar = async (formulaId: number): Promise<{ starred: boolean }> => {
   const response = await fetch(`${backendUrl}/api/formulas/${formulaId}/star`, {
     method: "POST",
-    credentials: "include"
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -83,7 +89,7 @@ export const toggleFormulaStar = async (formulaId: number): Promise<{ starred: b
 export const recordFormulaAccess = async (formulaId: number): Promise<void> => {
   const response = await fetch(`${backendUrl}/api/formulas/${formulaId}/access`, {
     method: "POST",
-    credentials: "include"
+    credentials: "include",
   });
 
   if (!response.ok && response.status !== 204) {

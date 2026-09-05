@@ -5,7 +5,12 @@ import { useState } from "react";
 import { SectionCard } from "@/components/foundation/section-card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { getAdminSettings, updateAdminSetting, type AdminSetting, type AdminSettingsResponse } from "@/lib/admin-api";
+import {
+  getAdminSettings,
+  updateAdminSetting,
+  type AdminSetting,
+  type AdminSettingsResponse,
+} from "@/lib/admin-api";
 
 import { AdminSettingsTable } from "./admin-settings-table";
 
@@ -24,7 +29,9 @@ const toDraftMap = (rows: AdminSetting[]): Record<string, string> =>
 export function AdminSettingsPanel({ initialPayload }: AdminSettingsPanelProps) {
   const [entries, setEntries] = useState(initialPayload.entries);
   const [total, setTotal] = useState(initialPayload.total);
-  const [draftValues, setDraftValues] = useState<Record<string, string>>(() => toDraftMap(initialPayload.entries));
+  const [draftValues, setDraftValues] = useState<Record<string, string>>(() =>
+    toDraftMap(initialPayload.entries)
+  );
   const [savingKeys, setSavingKeys] = useState<Set<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { pushToast } = useToast();
@@ -34,7 +41,7 @@ export function AdminSettingsPanel({ initialPayload }: AdminSettingsPanelProps) 
     try {
       const payload = await getAdminSettings({
         page: 1,
-        pageSize: settingsPageSize
+        pageSize: settingsPageSize,
       });
       setEntries(payload.entries);
       setTotal(payload.total);
@@ -44,7 +51,7 @@ export function AdminSettingsPanel({ initialPayload }: AdminSettingsPanelProps) 
       pushToast({
         tone: "error",
         title: "Settings unavailable",
-        description
+        description,
       });
     } finally {
       setIsRefreshing(false);
@@ -57,7 +64,7 @@ export function AdminSettingsPanel({ initialPayload }: AdminSettingsPanelProps) 
       pushToast({
         tone: "error",
         title: "Invalid value",
-        description: "Setting value cannot be empty."
+        description: "Setting value cannot be empty.",
       });
       return;
     }
@@ -71,12 +78,12 @@ export function AdminSettingsPanel({ initialPayload }: AdminSettingsPanelProps) 
     try {
       await updateAdminSetting({
         key,
-        value: nextValue
+        value: nextValue,
       });
       pushToast({
         tone: "success",
         title: "Setting saved",
-        description: `${key} updated successfully.`
+        description: `${key} updated successfully.`,
       });
       await refreshList();
     } catch (error) {
@@ -84,7 +91,7 @@ export function AdminSettingsPanel({ initialPayload }: AdminSettingsPanelProps) 
       pushToast({
         tone: "error",
         title: "Save failed",
-        description
+        description,
       });
     } finally {
       setSavingKeys((prev) => {
@@ -100,7 +107,13 @@ export function AdminSettingsPanel({ initialPayload }: AdminSettingsPanelProps) 
       title="Settings Registry"
       description={`Manage allowlisted key/value pairs (${entries.length} of ${total}).`}
       actions={
-        <Button type="button" size="sm" variant="secondary" onClick={() => void refreshList()} disabled={isRefreshing}>
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          onClick={() => void refreshList()}
+          disabled={isRefreshing}
+        >
           {isRefreshing ? "Refreshing..." : "Refresh"}
         </Button>
       }

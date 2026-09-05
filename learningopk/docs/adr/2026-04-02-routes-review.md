@@ -15,11 +15,11 @@ However, this review identified **7 blockers**, **14 suggestions**, and **6 nits
 
 ### Issue Summary
 
-| Priority | Count | Category |
-|----------|-------|----------|
-| 🔴 Blocker | 7 | Route ordering, type safety, missing error classes, response inconsistency |
-| 🟡 Suggestion | 14 | Validation gaps, code duplication, missing tests, hardcoded values |
-| 💭 Nit | 6 | Naming, style, minor improvements |
+| Priority      | Count | Category                                                                   |
+| ------------- | ----- | -------------------------------------------------------------------------- |
+| 🔴 Blocker    | 7     | Route ordering, type safety, missing error classes, response inconsistency |
+| 🟡 Suggestion | 14    | Validation gaps, code duplication, missing tests, hardcoded values         |
+| 💭 Nit        | 6     | Naming, style, minor improvements                                          |
 
 ---
 
@@ -36,6 +36,7 @@ However, this review identified **7 blockers**, **14 suggestions**, and **6 nits
 **Impact**: The `/filters/options` endpoint is completely unreachable. Any call will hit the `/:id` handler, which will attempt `parseInt("filters")` → `NaN`, then fail with a Zod validation error or return unexpected results.
 
 **Fix**: Move the `/filters/options` route definition **before** the `/:id` route:
+
 ```typescript
 // Register static routes FIRST
 mockExamsRouter.get("/filters/options", async (_req, res) => { ... });
@@ -55,8 +56,9 @@ mockExamsRouter.get("/:id/questions", requireSession, async (req, res) => { ... 
 **Why**: As new past papers are added for 2025, 2026, etc., this validation will reject valid data. Hardcoded temporal limits are a maintenance trap.
 
 **Fix**: Use the current year or remove the upper bound:
+
 ```typescript
-year: z.coerce.number().int().min(2000).max(new Date().getFullYear())
+year: z.coerce.number().int().min(2000).max(new Date().getFullYear());
 ```
 
 ---
@@ -68,8 +70,9 @@ year: z.coerce.number().int().min(2000).max(new Date().getFullYear())
 **Why**: `parseInt("abc")` returns `NaN`, which will pass through the transform without error, leading to downstream query failures.
 
 **Fix**: Add a `.refine()` or use `z.coerce.number()` instead of manual `parseInt`:
+
 ```typescript
-id: z.coerce.number().int().positive()
+id: z.coerce.number().int().positive();
 ```
 
 ---
@@ -87,6 +90,7 @@ id: z.coerce.number().int().positive()
 #### 🔴 **Blocker: Fragile Error Handling via String Matching**
 
 **Lines 35-48**: Error handling relies on matching error message strings:
+
 ```typescript
 if (message === "Quiz not found") { res.status(404)... }
 else if (message.includes("Answers include question IDs")) { res.status(400)... }
@@ -95,6 +99,7 @@ else if (message.includes("Answers include question IDs")) { res.status(400)... 
 **Why**: If `quiz.service.ts` changes any error message wording, these checks silently break. The user would get a generic 500 instead of a proper 404 or 400. This is especially dangerous because there's no test covering these error paths.
 
 **Fix**: Use typed error classes (like forum routes already do):
+
 ```typescript
 // In quiz.service.ts
 throw new NotFoundError("Quiz not found");
@@ -118,6 +123,7 @@ if (isHttpError(error)) {
 **Why**: Under `strict: true`, this will fail TypeScript compilation. Even if it works at runtime today, a better-auth upgrade could silently break it.
 
 **Fix**: Align the `getSessionFromRequest` return type with the actual better-auth session shape, or add proper type narrowing:
+
 ```typescript
 const session = await getSessionFromRequest(req);
 const viewerUserId = session ? session.user.id : null;
@@ -141,6 +147,7 @@ Lines 173-307: Forum routes consistently use `isHttpError()` with typed error cl
 **Why**: A "user not found" error and a database connection failure both return 500, making debugging impossible and client-side error handling unreliable.
 
 **Fix**: Use typed error classes and return appropriate status codes:
+
 ```typescript
 catch (error) {
   if (isHttpError(error)) {
@@ -172,6 +179,7 @@ catch (error) {
 **Why**: If the session type doesn't include `board` and `class` properties, this will either fail at compile time (good) or silently return `undefined` (bad), bypassing access control entirely.
 
 **Fix**: Verify the session type includes these fields, or add explicit null checks:
+
 ```typescript
 const userBoard = authedReq.session.user.board;
 if (!userBoard) {
@@ -242,12 +250,14 @@ All four routes use the exact same `try/catch` → `console.error` → `res.stat
 **Entire file**: All admin business logic, database queries, audit logging, and response formatting are embedded directly in route handlers. This is the only route file that bypasses the service/repository pattern used by forum, quiz, and progress routes.
 
 **Why this matters**:
+
 1. **Untestable**: You cannot unit test admin business logic without spinning up an Express server
 2. **Unreadable**: At 5,371 lines, navigating this file requires IDE search — no human can hold it in working memory
 3. **Duplication-prone**: Helper functions like `persistAuditLog`, `listAuditLogs`, `listModerationFlags`, `listAdminUsers` are defined inline instead of in a shared service
 4. **Inconsistent response shapes**: Some endpoints return `{ board: {...} }`, others `{ data: {...} }`, others `{ success: true, deletedId: N }`
 
 **Fix**: Extract into modules:
+
 ```
 routes/admin/
   index.ts          # Re-exports the combined router
@@ -291,6 +301,7 @@ services/admin.service.ts  # Shared business logic
 #### 🟡 **Suggestion: Inconsistent Response Shapes Across Admin Endpoints**
 
 Examples of different shapes used within the same file:
+
 - `{ board: { id, name, slug } }` (content CRUD)
 - `{ data: updatedQuiz, created: false }` (quiz upsert)
 - `{ success: true, deletedId: quiz.id }` (quiz delete)
@@ -333,15 +344,16 @@ This file simply proxies all `/api/auth/*` requests to `better-auth`. This is fi
 
 The codebase has three competing response patterns:
 
-| Pattern | Used By | Example |
-|---------|---------|---------|
-| `successResponse(data)` / `errorResponse(msg, code)` | `forum.ts`, `chapter-media.ts` | `{ success: true, data: {...} }` |
-| Raw JSON | `quiz.ts`, `progress.ts`, `learn.ts`, `mock-exams.ts`, `boards.ts`, etc. | `{ threads: [...] }`, `{ error: "..." }` |
-| Mixed admin shapes | `admin.ts` | `{ board: {...} }`, `{ data: {...} }`, `{ success: true }` |
+| Pattern                                              | Used By                                                                  | Example                                                    |
+| ---------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| `successResponse(data)` / `errorResponse(msg, code)` | `forum.ts`, `chapter-media.ts`                                           | `{ success: true, data: {...} }`                           |
+| Raw JSON                                             | `quiz.ts`, `progress.ts`, `learn.ts`, `mock-exams.ts`, `boards.ts`, etc. | `{ threads: [...] }`, `{ error: "..." }`                   |
+| Mixed admin shapes                                   | `admin.ts`                                                               | `{ board: {...} }`, `{ data: {...} }`, `{ success: true }` |
 
 **Impact**: Frontend must handle multiple response shapes, and there's no single contract to type-check against.
 
 **Recommendation**: Mandate `successResponse()`/`errorResponse()` for all routes. Create a shared `ApiResponse<T>` type:
+
 ```typescript
 type ApiResponse<T> = { success: true; data: T } | { success: false; error: string; code?: string };
 ```
@@ -355,6 +367,7 @@ type ApiResponse<T> = { success: true; data: T } | { success: false; error: stri
 **Why this is a problem**: The `requireSession` middleware attaches session data to `req`, but TypeScript doesn't know about it. The `as AuthenticatedRequest` cast is unsafe — it tells TypeScript to trust the programmer, but there's no runtime guarantee. If `requireSession` fails silently, the handler proceeds with an invalid cast.
 
 **Fix**: Create a typed middleware that returns a narrowed request:
+
 ```typescript
 function withAuth(handler: (req: AuthenticatedRequest, res: Response) => Promise<void>) {
   return async (req: Request, res: Response) => {
@@ -373,14 +386,15 @@ function withAuth(handler: (req: AuthenticatedRequest, res: Response) => Promise
 
 ### 3. 🟡 Error Handling: Four Different Patterns
 
-| Pattern | Used By | Robustness |
-|---------|---------|------------|
-| `isHttpError()` + typed error classes | `forum.ts` | ✅ Best — proper status codes, extensible |
-| String matching on error messages | `quiz.ts` | ❌ Fragile — breaks on message changes |
-| Blanket `catch` → 500 | `progress.ts`, `boards.ts`, `classes.ts`, etc. | ⚠️ Loses error specificity |
-| Custom per-route handling | `ai-chat.ts`, `admin.ts` | ⚠️ Inconsistent, hard to maintain |
+| Pattern                               | Used By                                        | Robustness                                |
+| ------------------------------------- | ---------------------------------------------- | ----------------------------------------- |
+| `isHttpError()` + typed error classes | `forum.ts`                                     | ✅ Best — proper status codes, extensible |
+| String matching on error messages     | `quiz.ts`                                      | ❌ Fragile — breaks on message changes    |
+| Blanket `catch` → 500                 | `progress.ts`, `boards.ts`, `classes.ts`, etc. | ⚠️ Loses error specificity                |
+| Custom per-route handling             | `ai-chat.ts`, `admin.ts`                       | ⚠️ Inconsistent, hard to maintain         |
 
 **Recommendation**: Standardize on the forum pattern. Create a shared error-handling middleware:
+
 ```typescript
 app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
   if (isHttpError(err)) {
@@ -406,31 +420,32 @@ app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
 
 ### Missing Unit Tests
 
-| Component | What's Missing | Priority |
-|-----------|---------------|----------|
-| `ForumService` | No unit tests for any business logic — thread creation, reply creation, vote toggling, accept answer | 🔴 High |
-| `QuizService` | No unit tests for quiz fetching, answer validation, scoring logic | 🔴 High |
-| `ProgressService` | No unit tests for progress recording, streak calculation, visit tracking | 🔴 High |
-| `XpService` | No unit tests for XP awarding, level calculation, streak freeze logic | 🟡 Medium |
-| Admin helpers | No unit tests for `listAdminUsers`, `listModerationFlags`, `listAdminOverview`, `listAdminAnalyticsOverview` | 🟡 Medium |
+| Component         | What's Missing                                                                                               | Priority  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------ | --------- |
+| `ForumService`    | No unit tests for any business logic — thread creation, reply creation, vote toggling, accept answer         | 🔴 High   |
+| `QuizService`     | No unit tests for quiz fetching, answer validation, scoring logic                                            | 🔴 High   |
+| `ProgressService` | No unit tests for progress recording, streak calculation, visit tracking                                     | 🔴 High   |
+| `XpService`       | No unit tests for XP awarding, level calculation, streak freeze logic                                        | 🟡 Medium |
+| Admin helpers     | No unit tests for `listAdminUsers`, `listModerationFlags`, `listAdminOverview`, `listAdminAnalyticsOverview` | 🟡 Medium |
 
 ### Missing Integration Tests
 
-| Route | What's Missing | Priority |
-|-------|---------------|----------|
-| `ai-chat.ts` | No integration tests for any AI chat endpoint | 🟡 Medium |
-| `profile.ts` | No integration tests for image upload/retrieval | 🟡 Medium |
-| `chapter-media.ts` | No integration tests for presigned URL flow, media CRUD | 🟡 Medium |
-| `progress.ts` | No integration tests for progress events, quiz completion recording | 🟡 Medium |
-| `mock-exams.ts` | No integration tests for filter options, question retrieval | 🟡 Medium |
-| `boards.ts`, `classes.ts`, `subjects.ts`, `institutes.ts` | No integration tests at all | 💭 Low |
-| `health.ts` | No tests for failure paths (Redis down, Postgres down) | 💭 Low |
+| Route                                                     | What's Missing                                                      | Priority  |
+| --------------------------------------------------------- | ------------------------------------------------------------------- | --------- |
+| `ai-chat.ts`                                              | No integration tests for any AI chat endpoint                       | 🟡 Medium |
+| `profile.ts`                                              | No integration tests for image upload/retrieval                     | 🟡 Medium |
+| `chapter-media.ts`                                        | No integration tests for presigned URL flow, media CRUD             | 🟡 Medium |
+| `progress.ts`                                             | No integration tests for progress events, quiz completion recording | 🟡 Medium |
+| `mock-exams.ts`                                           | No integration tests for filter options, question retrieval         | 🟡 Medium |
+| `boards.ts`, `classes.ts`, `subjects.ts`, `institutes.ts` | No integration tests at all                                         | 💭 Low    |
+| `health.ts`                                               | No tests for failure paths (Redis down, Postgres down)              | 💭 Low    |
 
 ### Existing Test Issues
 
 #### `phase11-access-control.integration.test.ts` — TypeScript Errors
 
 **Lines 38, 39, 47, 62-63, 103, 267, 270**: Array destructuring with `noUncheckedIndexedAccess`:
+
 ```typescript
 // Current (TS error under noUncheckedIndexedAccess)
 const [board] = await db.insert(boards).values({...}).returning();
@@ -480,20 +495,20 @@ This test file only checks that repository methods exist as functions — it doe
 
 ## Summary Table
 
-| File | Blockers | Suggestions | Nits | Status |
-|------|----------|-------------|------|--------|
-| `routes/mock-exams.ts` | 1 (route ordering) | 3 | 0 | ❌ Needs fix |
-| `routes/quiz.ts` | 1 (string matching errors) | 0 | 0 | ❌ Needs fix |
-| `routes/forum.ts` | 1 (session type) | 0 | 0 | ⚠️ Type fix needed |
-| `routes/admin.ts` | 2 (monolith, cascade deletes) | 4 | 1 | ❌ Major refactor needed |
-| `routes/progress.ts` | 0 | 2 | 0 | ⚠️ Improvements needed |
-| `routes/learn.ts` | 0 | 1 | 0 | ⚠️ Type safety check |
-| `routes/ai-chat.ts` | 0 | 1 | 0 | ⚠️ Error pattern |
-| `routes/chapter-media.ts` | 0 | 1 | 0 | ✅ Good overall |
-| `routes/profile.ts` | 0 | 1 | 0 | ⚠️ Response helpers |
-| `routes/health.ts` | 0 | 0 | 1 | ✅ Fine as-is |
-| `routes/boards.ts` et al. | 0 | 1 (shared) | 0 | ⚠️ Error pattern |
-| `routes/auth.ts` | 0 | 0 | 1 | ✅ Fine as-is |
-| Cross-cutting | 2 | 2 | 0 | — |
-| Tests | 0 | 0 | 3 | ⚠️ Coverage gaps |
-| **Total** | **7** | **14** | **6** | — |
+| File                      | Blockers                      | Suggestions | Nits  | Status                   |
+| ------------------------- | ----------------------------- | ----------- | ----- | ------------------------ |
+| `routes/mock-exams.ts`    | 1 (route ordering)            | 3           | 0     | ❌ Needs fix             |
+| `routes/quiz.ts`          | 1 (string matching errors)    | 0           | 0     | ❌ Needs fix             |
+| `routes/forum.ts`         | 1 (session type)              | 0           | 0     | ⚠️ Type fix needed       |
+| `routes/admin.ts`         | 2 (monolith, cascade deletes) | 4           | 1     | ❌ Major refactor needed |
+| `routes/progress.ts`      | 0                             | 2           | 0     | ⚠️ Improvements needed   |
+| `routes/learn.ts`         | 0                             | 1           | 0     | ⚠️ Type safety check     |
+| `routes/ai-chat.ts`       | 0                             | 1           | 0     | ⚠️ Error pattern         |
+| `routes/chapter-media.ts` | 0                             | 1           | 0     | ✅ Good overall          |
+| `routes/profile.ts`       | 0                             | 1           | 0     | ⚠️ Response helpers      |
+| `routes/health.ts`        | 0                             | 0           | 1     | ✅ Fine as-is            |
+| `routes/boards.ts` et al. | 0                             | 1 (shared)  | 0     | ⚠️ Error pattern         |
+| `routes/auth.ts`          | 0                             | 0           | 1     | ✅ Fine as-is            |
+| Cross-cutting             | 2                             | 2           | 0     | —                        |
+| Tests                     | 0                             | 0           | 3     | ⚠️ Coverage gaps         |
+| **Total**                 | **7**                         | **14**      | **6** | —                        |

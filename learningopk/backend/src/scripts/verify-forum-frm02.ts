@@ -13,23 +13,30 @@ const signUpUser = async (agent: RequestAgent, prefix: string) => {
   const email = `${prefix}_${Date.now()}_${Math.floor(Math.random() * 100000)}@example.com`;
   const password = "StrongPass123";
 
-  const signUpResponse = await agent.post("/api/auth/sign-up/email").set("origin", "http://localhost:3000").send({
-    name: `${prefix} user`,
-    email,
-    password,
-    class: "9th",
-    board: "fbise"
-  });
+  const signUpResponse = await agent
+    .post("/api/auth/sign-up/email")
+    .set("origin", "http://localhost:3000")
+    .send({
+      name: `${prefix} user`,
+      email,
+      password,
+      class: "9th",
+      board: "fbise",
+    });
   if (signUpResponse.status >= 400) {
-    throw new Error(`Sign-up failed for ${prefix}: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`);
+    throw new Error(
+      `Sign-up failed for ${prefix}: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`
+    );
   }
 
-  const sessionResponse = await agent.get("/api/auth/get-session").set("origin", "http://localhost:3000");
+  const sessionResponse = await agent
+    .get("/api/auth/get-session")
+    .set("origin", "http://localhost:3000");
   const userId = z
     .object({
       user: z.object({
-        id: z.string().min(1)
-      })
+        id: z.string().min(1),
+      }),
     })
     .safeParse(sessionResponse.body).data?.user.id;
 
@@ -51,7 +58,7 @@ const run = async (): Promise<void> => {
 
   const threadCreateResponse = await ownerAgent.post("/api/forum/threads").send({
     title: "Need help proving a geometry theorem",
-    body: "I can draw the triangle and angles, but I get stuck proving the congruent sides part."
+    body: "I can draw the triangle and angles, but I get stuck proving the congruent sides part.",
   });
   if (threadCreateResponse.status !== 201) {
     throw new Error(`Owner thread creation failed with ${threadCreateResponse.status}`);
@@ -59,27 +66,29 @@ const run = async (): Promise<void> => {
   const threadId = z
     .object({
       thread: z.object({
-        id: z.string().uuid()
-      })
+        id: z.string().uuid(),
+      }),
     })
     .parse(threadCreateResponse.body).thread.id;
 
-  const helperReplyResponse = await helperAgent.post(`/api/forum/threads/${threadId}/replies`).send({
-    body: "Start by adding the auxiliary line from the vertex, then compare corresponding angles."
-  });
+  const helperReplyResponse = await helperAgent
+    .post(`/api/forum/threads/${threadId}/replies`)
+    .send({
+      body: "Start by adding the auxiliary line from the vertex, then compare corresponding angles.",
+    });
   if (helperReplyResponse.status !== 201) {
     throw new Error(`Helper reply creation failed with ${helperReplyResponse.status}`);
   }
   const helperReplyId = z
     .object({
       reply: z.object({
-        id: z.string().uuid()
-      })
+        id: z.string().uuid(),
+      }),
     })
     .parse(helperReplyResponse.body).reply.id;
 
   const ownerReplyResponse = await ownerAgent.post(`/api/forum/threads/${threadId}/replies`).send({
-    body: "I think using alternate interior angles might simplify this."
+    body: "I think using alternate interior angles might simplify this.",
   });
   if (ownerReplyResponse.status !== 201) {
     throw new Error(`Owner reply creation failed with ${ownerReplyResponse.status}`);
@@ -87,27 +96,29 @@ const run = async (): Promise<void> => {
   const ownerReplyId = z
     .object({
       reply: z.object({
-        id: z.string().uuid()
-      })
+        id: z.string().uuid(),
+      }),
     })
     .parse(ownerReplyResponse.body).reply.id;
 
   const unauthVoteResponse = await anonAgent.post(`/api/forum/replies/${helperReplyId}/vote`).send({
-    voteType: "upvote"
+    voteType: "upvote",
   });
   if (unauthVoteResponse.status !== 401) {
     throw new Error(`Expected unauthenticated vote 401, got ${unauthVoteResponse.status}`);
   }
 
-  const firstVoteResponse = await helperAgent.post(`/api/forum/replies/${helperReplyId}/vote`).send({
-    voteType: "upvote"
-  });
+  const firstVoteResponse = await helperAgent
+    .post(`/api/forum/replies/${helperReplyId}/vote`)
+    .send({
+      voteType: "upvote",
+    });
   if (firstVoteResponse.status !== 200) {
     throw new Error(`Expected first vote status 200, got ${firstVoteResponse.status}`);
   }
 
   const sameVoteResponse = await helperAgent.post(`/api/forum/replies/${helperReplyId}/vote`).send({
-    voteType: "upvote"
+    voteType: "upvote",
   });
   if (sameVoteResponse.status !== 200) {
     throw new Error(`Expected repeated vote status 200, got ${sameVoteResponse.status}`);
@@ -115,16 +126,18 @@ const run = async (): Promise<void> => {
 
   const uniqueVoteRows = await db
     .select({
-      id: forumReplyVotes.id
+      id: forumReplyVotes.id,
     })
     .from(forumReplyVotes)
-    .where(and(eq(forumReplyVotes.userId, helper.userId), eq(forumReplyVotes.replyId, helperReplyId)));
+    .where(
+      and(eq(forumReplyVotes.userId, helper.userId), eq(forumReplyVotes.replyId, helperReplyId))
+    );
   if (uniqueVoteRows.length !== 1) {
     throw new Error(`Expected one vote row for user/reply, found ${uniqueVoteRows.length}`);
   }
 
   const downvoteResponse = await helperAgent.post(`/api/forum/replies/${helperReplyId}/vote`).send({
-    voteType: "downvote"
+    voteType: "downvote",
   });
   if (downvoteResponse.status !== 200) {
     throw new Error(`Expected vote change status 200, got ${downvoteResponse.status}`);
@@ -132,7 +145,7 @@ const run = async (): Promise<void> => {
 
   const votedReplyRows = await db
     .select({
-      upvotes: forumReplies.upvotes
+      upvotes: forumReplies.upvotes,
     })
     .from(forumReplies)
     .where(eq(forumReplies.id, helperReplyId))
@@ -145,31 +158,41 @@ const run = async (): Promise<void> => {
     throw new Error(`Expected upvotes=-1 after upvote->downvote switch, got ${votedReply.upvotes}`);
   }
 
-  const nonOwnerAcceptResponse = await helperAgent.post(`/api/forum/replies/${helperReplyId}/accept`).send({});
+  const nonOwnerAcceptResponse = await helperAgent
+    .post(`/api/forum/replies/${helperReplyId}/accept`)
+    .send({});
   if (nonOwnerAcceptResponse.status !== 403) {
     throw new Error(`Expected non-owner accept status 403, got ${nonOwnerAcceptResponse.status}`);
   }
 
-  const ownerAcceptFirstResponse = await ownerAgent.post(`/api/forum/replies/${helperReplyId}/accept`).send({});
+  const ownerAcceptFirstResponse = await ownerAgent
+    .post(`/api/forum/replies/${helperReplyId}/accept`)
+    .send({});
   if (ownerAcceptFirstResponse.status !== 200) {
     throw new Error(`Expected owner accept status 200, got ${ownerAcceptFirstResponse.status}`);
   }
 
-  const ownerAcceptSecondResponse = await ownerAgent.post(`/api/forum/replies/${ownerReplyId}/accept`).send({});
+  const ownerAcceptSecondResponse = await ownerAgent
+    .post(`/api/forum/replies/${ownerReplyId}/accept`)
+    .send({});
   if (ownerAcceptSecondResponse.status !== 200) {
-    throw new Error(`Expected second owner accept status 200, got ${ownerAcceptSecondResponse.status}`);
+    throw new Error(
+      `Expected second owner accept status 200, got ${ownerAcceptSecondResponse.status}`
+    );
   }
 
   const acceptedRows = await db
     .select({
       id: forumReplies.id,
-      isAcceptedAnswer: forumReplies.isAcceptedAnswer
+      isAcceptedAnswer: forumReplies.isAcceptedAnswer,
     })
     .from(forumReplies)
     .where(eq(forumReplies.threadId, threadId));
   const acceptedAnswerRows = acceptedRows.filter((row) => row.isAcceptedAnswer);
   if (acceptedAnswerRows.length !== 1) {
-    throw new Error(`Expected exactly one accepted answer in thread, found ${acceptedAnswerRows.length}`);
+    throw new Error(
+      `Expected exactly one accepted answer in thread, found ${acceptedAnswerRows.length}`
+    );
   }
   if (acceptedAnswerRows[0]?.id !== ownerReplyId) {
     throw new Error("Latest accepted answer should be the owner's reply.");
@@ -177,7 +200,7 @@ const run = async (): Promise<void> => {
 
   const threadRows = await db
     .select({
-      isSolved: forumThreads.isSolved
+      isSolved: forumThreads.isSolved,
     })
     .from(forumThreads)
     .where(and(eq(forumThreads.id, threadId), eq(forumThreads.userId, owner.userId)))
@@ -213,4 +236,3 @@ run()
       await redis.quit().catch(() => undefined);
     }
   });
-

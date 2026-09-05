@@ -46,7 +46,12 @@ export function AdminFormField({
         {children}
       </div>
       {error && (
-        <p id={errorId} className="text-[var(--destructive)]" style={{ fontSize: "0.75rem" }} role="alert">
+        <p
+          id={errorId}
+          className="text-[var(--destructive)]"
+          style={{ fontSize: "0.75rem" }}
+          role="alert"
+        >
           {error}
         </p>
       )}

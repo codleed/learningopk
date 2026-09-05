@@ -10,8 +10,8 @@ test("detectConfusionPattern triggers for three short consecutive user turns", (
       { role: "assistant", content: "What part feels unclear?" },
       { role: "user", content: "idk" },
       { role: "assistant", content: "Try describing the step that feels hard." },
-      { role: "user", content: "still lost" }
-    ]
+      { role: "user", content: "still lost" },
+    ],
   });
 
   assert.equal(result.triggered, true);
@@ -24,8 +24,8 @@ test("detectConfusionPattern triggers for repeated wrong answer after corrective
       { role: "assistant", content: "What is 2 + 2?" },
       { role: "user", content: "5" },
       { role: "assistant", content: "Not quite. Try again." },
-      { role: "user", content: "5" }
-    ]
+      { role: "user", content: "5" },
+    ],
   });
 
   assert.equal(result.triggered, true);
@@ -36,8 +36,8 @@ test("detectConfusionPattern triggers for off-topic keywords", () => {
   const result = detectConfusionPattern({
     messages: [
       { role: "assistant", content: "Let's focus on forces." },
-      { role: "user", content: "tell me a joke" }
-    ]
+      { role: "user", content: "tell me a joke" },
+    ],
   });
 
   assert.equal(result.triggered, true);

@@ -27,35 +27,37 @@ export class TeacherService {
     const totalAssignments = assignmentList.length;
 
     // Batch: completed counts + avg scores per student
-    const submissionAgg = studentIds.length > 0
-      ? await db
-          .select({
-            studentId: assignmentSubmissions.studentId,
-            completed: count(),
-            avgScore: sql<number>`coalesce(avg(${assignmentSubmissions.score}), 0)::int`,
-          })
-          .from(assignmentSubmissions)
-          .innerJoin(assignments, eq(assignmentSubmissions.assignmentId, assignments.id))
-          .where(
-            and(
-              eq(assignments.classroomId, classroomId),
-              eq(assignmentSubmissions.status, "submitted"),
-              inArray(assignmentSubmissions.studentId, studentIds)
+    const submissionAgg =
+      studentIds.length > 0
+        ? await db
+            .select({
+              studentId: assignmentSubmissions.studentId,
+              completed: count(),
+              avgScore: sql<number>`coalesce(avg(${assignmentSubmissions.score}), 0)::int`,
+            })
+            .from(assignmentSubmissions)
+            .innerJoin(assignments, eq(assignmentSubmissions.assignmentId, assignments.id))
+            .where(
+              and(
+                eq(assignments.classroomId, classroomId),
+                eq(assignmentSubmissions.status, "submitted"),
+                inArray(assignmentSubmissions.studentId, studentIds)
+              )
             )
-          )
-          .groupBy(assignmentSubmissions.studentId)
-      : [];
+            .groupBy(assignmentSubmissions.studentId)
+        : [];
 
     const submissionMap = new Map(submissionAgg.map((row) => [row.studentId, row]));
 
     // Batch: last active per student
-    const lastActiveRows = studentIds.length > 0
-      ? await db
-          .select({ userId: userProgress.userId, visitedAt: userProgress.visitedAt })
-          .from(userProgress)
-          .where(inArray(userProgress.userId, studentIds))
-          .orderBy(desc(userProgress.visitedAt))
-      : [];
+    const lastActiveRows =
+      studentIds.length > 0
+        ? await db
+            .select({ userId: userProgress.userId, visitedAt: userProgress.visitedAt })
+            .from(userProgress)
+            .where(inArray(userProgress.userId, studentIds))
+            .orderBy(desc(userProgress.visitedAt))
+        : [];
 
     const lastActiveMap = new Map<string, Date>();
     for (const row of lastActiveRows) {
@@ -71,7 +73,8 @@ export class TeacherService {
         ...student,
         assignmentsCompleted,
         totalAssignments,
-        completionPercent: totalAssignments > 0 ? Math.round((assignmentsCompleted / totalAssignments) * 100) : null,
+        completionPercent:
+          totalAssignments > 0 ? Math.round((assignmentsCompleted / totalAssignments) * 100) : null,
         avgScore: sub?.avgScore ?? 0,
         lastActive: lastActiveMap.get(student.id) ?? null,
       };
@@ -94,10 +97,7 @@ export class TeacherService {
       .from(userProgress)
       .innerJoin(chapters, eq(userProgress.chapterId, chapters.id))
       .where(
-        and(
-          inArray(userProgress.userId, studentIds),
-          sql`${userProgress.quizBestScore} < 50`
-        )
+        and(inArray(userProgress.userId, studentIds), sql`${userProgress.quizBestScore} < 50`)
       );
 
     const topicsByStudent = new Map<string, typeof weakTopics>();
@@ -141,10 +141,7 @@ export class TeacherService {
       .from(chapters)
       .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
       .where(
-        and(
-          eq(subjects.boardId, classroom.boardId),
-          sql`${subjects.grade} = ${classroom.grade}`
-        )
+        and(eq(subjects.boardId, classroom.boardId), sql`${subjects.grade} = ${classroom.grade}`)
       );
 
     const students = await classroomRepository.getStudents(classroomId);
@@ -161,7 +158,10 @@ export class TeacherService {
       })
       .from(quizAttempts)
       .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
-      .innerJoin(assignments, and(eq(assignments.type, "quiz"), eq(assignments.targetId, quizzes.id)))
+      .innerJoin(
+        assignments,
+        and(eq(assignments.type, "quiz"), eq(assignments.targetId, quizzes.id))
+      )
       .innerJoin(users, eq(quizAttempts.userId, users.id))
       .innerJoin(classroomStudents, eq(users.id, classroomStudents.studentId))
       .where(
@@ -182,9 +182,8 @@ export class TeacherService {
 
     return chaptersList.map((chapter) => {
       const scores = scoresByChapter.get(chapter.chapterId) ?? [];
-      const avgScore = scores.length > 0
-        ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
-        : 0;
+      const avgScore =
+        scores.length > 0 ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length) : 0;
       const above70 = scores.filter((s) => s >= 70).length;
       const below50 = scores.filter((s) => s < 50).length;
 

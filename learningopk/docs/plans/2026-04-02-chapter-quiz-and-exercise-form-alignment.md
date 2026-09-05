@@ -13,6 +13,7 @@
 ### Task 1: Add Failing Integration Test for Chapter Quiz Selection
 
 **Files:**
+
 - Create: `backend/src/tests/integration/learn-chapter-quiz-selection.integration.test.ts`
 - Reuse patterns from: `backend/src/tests/integration/curriculum-class-slug.integration.test.ts`, `backend/src/tests/integration/learn-subject-graph.integration.test.ts`
 
@@ -29,15 +30,15 @@ test("learn chapter detail returns chapter_quiz when chapter has both quiz types
       title: "Mock Exam Should Not Be Used",
       durationMinutes: 90,
       totalMarks: 10,
-      type: "mock_exam"
+      type: "mock_exam",
     },
     {
       chapterId: fixture.chapter.id,
       title: "Chapter Quiz Expected",
       durationMinutes: 30,
       totalMarks: 10,
-      type: "chapter_quiz"
-    }
+      type: "chapter_quiz",
+    },
   ]);
 
   const response = await request(app).get(
@@ -68,6 +69,7 @@ git commit -m "test: reproduce chapter challenge quiz selection bug"
 ### Task 2: Fix Learn Repository Query to Select Only Chapter Quiz
 
 **Files:**
+
 - Modify: `backend/src/repositories/learn.repository.ts`
 
 **Step 1: Implement minimal fix**
@@ -80,7 +82,7 @@ const quizzesData = await db
     title: quizzes.title,
     durationMinutes: quizzes.durationMinutes,
     totalMarks: quizzes.totalMarks,
-    type: quizzes.type
+    type: quizzes.type,
   })
   .from(quizzes)
   .where(and(eq(quizzes.chapterId, chapterId), eq(quizzes.type, "chapter_quiz")))
@@ -112,11 +114,13 @@ git commit -m "fix: return chapter quiz consistently in learn chapter detail"
 ### Task 3: Align Chapter Manage Exercise Form by Type
 
 **Files:**
+
 - Modify: `frontend/src/components/admin/chapter-exercise-manager.tsx`
 
 **Step 1: Write/adjust component behavior tests if present**
 
 If a frontend test harness exists for this component, add tests for type-specific visibility:
+
 - `short/long` show markdown question + markdown solution only
 - `fill_in_blanks` shows blanks editor + markdown solution
 - `numerical` shows markdown question + markdown solution + visualization editor
@@ -126,6 +130,7 @@ If no harness exists, add a manual verification checklist to PR notes for this t
 **Step 2: Replace unconditional question/solution block with type-aware fields**
 
 Implementation outline:
+
 - Keep `question` and `solution` in state for all types.
 - For `fill_in_blanks`, route question editing through `FillInBlanksEditor`, keep solution markdown editor visible.
 - For `numerical`, keep markdown question/solution plus `NumericalVisualizationEditor`.
@@ -151,6 +156,7 @@ if (formData.type === "fill_in_blanks" && formData.blanksAnswer.length === 0) {
 **Step 4: Verify payload mapping remains correct**
 
 Ensure create/update calls continue sending:
+
 - `blanksAnswer` only for `fill_in_blanks`
 - `visualizationHtml` for `numerical`
 - existing required fields for all types
@@ -173,17 +179,20 @@ git commit -m "feat: enforce type-specific exercise fields in chapter manage"
 ### Task 4: Align Global Admin Add Exercise Form
 
 **Files:**
+
 - Modify: `frontend/app/admin/content/exercises/add/add-exercise-form.tsx`
 
 **Step 1: Write failing UI test (if harness exists) or define manual checks**
 
 Required behavior:
+
 - Include `fill_in_blanks` in type options
 - Type-specific fields match chapter manage behavior
 
 **Step 2: Add missing type option and field logic**
 
 Minimum changes:
+
 - Add `<option value="fill_in_blanks">Fill in the Blanks</option>`
 - Add blanks answers state
 - Add numerical visualization state
@@ -200,7 +209,7 @@ await createAdminCurriculumExercise({
   difficulty: difficulty as "easy" | "medium" | "hard",
   type: type as "mcq" | "short" | "long" | "numerical" | "fill_in_blanks",
   visualizationHtml: type === "numerical" ? visualizationHtml : undefined,
-  blanksAnswer: type === "fill_in_blanks" ? blanksAnswer : undefined
+  blanksAnswer: type === "fill_in_blanks" ? blanksAnswer : undefined,
 });
 ```
 
@@ -222,11 +231,13 @@ git commit -m "feat: add type-aware fields to admin add exercise form"
 ### Task 5: Align Global Admin Edit Exercise Form
 
 **Files:**
+
 - Modify: `frontend/app/admin/content/exercises/[id]/edit/edit-exercise-form.tsx`
 
 **Step 1: Write failing UI test (if harness exists) or define manual checks**
 
 Required behavior:
+
 - Existing exercise data preloads correctly by type
 - Type switch updates visible fields without data corruption
 
@@ -245,7 +256,7 @@ await updateAdminCurriculumExercise({
   difficulty: difficulty as "easy" | "medium" | "hard",
   type: type as "mcq" | "short" | "long" | "numerical" | "fill_in_blanks",
   visualizationHtml: type === "numerical" ? visualizationHtml : undefined,
-  blanksAnswer: type === "fill_in_blanks" ? blanksAnswer : undefined
+  blanksAnswer: type === "fill_in_blanks" ? blanksAnswer : undefined,
 });
 ```
 
@@ -267,6 +278,7 @@ git commit -m "feat: add type-aware fields to admin edit exercise form"
 ### Task 6: Ensure Markdown Rendering Consistency in Student Exercise View
 
 **Files:**
+
 - Verify (modify only if needed): `frontend/src/components/learn/quest-exercises-view.tsx`
 
 **Step 1: Confirm rendering path**
@@ -295,6 +307,7 @@ git commit -m "fix: keep student exercise content consistently markdown-rendered
 ### Task 7: End-to-End Verification and Final Integration Check
 
 **Files:**
+
 - Verify changed files from Tasks 1-6
 
 **Step 1: Backend tests**

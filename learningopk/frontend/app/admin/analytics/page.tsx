@@ -10,7 +10,7 @@ export default async function AdminAnalyticsPage() {
   const cookieHeader = cookieStore.toString();
   const payload = await getAdminAnalyticsOverview({
     windowDays: 30,
-    cookieHeader
+    cookieHeader,
   }).catch(() => ({
     windowDays: 30 as const,
     summary: {
@@ -19,10 +19,10 @@ export default async function AdminAnalyticsPage() {
       averageQuizScorePercent: 0,
       threadsCreated: 0,
       openModerationFlags: 0,
-      confusionEvents: 0
+      confusionEvents: 0,
     },
     subjectPerformance: [],
-    confusionByChapter: []
+    confusionByChapter: [],
   }));
 
   return (
@@ -32,7 +32,10 @@ export default async function AdminAnalyticsPage() {
         title="Analytics & Reporting"
         subtitle="Inspect learning and moderation health trends across recent activity windows."
         actions={
-          <Link href="/admin" className="text-sm font-medium text-text-primary underline underline-offset-4">
+          <Link
+            href="/admin"
+            className="text-sm font-medium text-text-primary underline underline-offset-4"
+          >
             Back to admin
           </Link>
         }

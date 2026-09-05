@@ -84,9 +84,7 @@ export function AddFlashCardForm({ boards, preSelectedChapterId }: AddFlashCardF
   };
 
   const updateCard = (id: string, field: keyof FlashCard, value: string) => {
-    setCards(
-      cards.map((c) => (c.id === id ? { ...c, [field]: value } : c))
-    );
+    setCards(cards.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
   };
 
   const validateForm = (): boolean => {
@@ -168,12 +166,7 @@ export function AddFlashCardForm({ boards, preSelectedChapterId }: AddFlashCardF
 
       <AdminFormCard>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <AdminFormField
-            id="flashcard-chapter"
-            label="Chapter"
-            required
-            error={chapterError}
-          >
+          <AdminFormField id="flashcard-chapter" label="Chapter" required error={chapterError}>
             <Select
               id="flashcard-chapter"
               value={chapterId}
@@ -228,9 +221,7 @@ export function AddFlashCardForm({ boards, preSelectedChapterId }: AddFlashCardF
               </button>
             </div>
 
-            {cardsError && (
-              <p className="text-sm text-red-600">{cardsError}</p>
-            )}
+            {cardsError && <p className="text-sm text-red-600">{cardsError}</p>}
 
             <div className="space-y-4">
               {cards.map((card, index) => (
@@ -239,9 +230,7 @@ export function AddFlashCardForm({ boards, preSelectedChapterId }: AddFlashCardF
                   className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] p-4"
                 >
                   <div className="mb-4 flex items-center justify-between">
-                    <h4 className="font-medium text-[var(--text-primary)]">
-                      Card {index + 1}
-                    </h4>
+                    <h4 className="font-medium text-[var(--text-primary)]">Card {index + 1}</h4>
                     {cards.length > 1 && (
                       <button
                         type="button"

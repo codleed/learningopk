@@ -41,17 +41,26 @@ classroomRouter.post("/join", requireSession, async (req, res) => {
   // Prevent enrollment in multiple classrooms (one-classroom-per-student policy)
   const existingEnrollment = await classroomRepository.getStudentClassroom(userId);
   if (existingEnrollment) {
-    res.status(409).json(errorResponse("You are already enrolled in a classroom. Leave it before joining another.", "ALREADY_ENROLLED"));
+    res
+      .status(409)
+      .json(
+        errorResponse(
+          "You are already enrolled in a classroom. Leave it before joining another.",
+          "ALREADY_ENROLLED"
+        )
+      );
     return;
   }
 
   await classroomRepository.addStudent(classroom.id, userId);
 
-  res.status(200).json(successResponse({
-    classroomId: classroom.id,
-    name: classroom.name,
-    teacherId: classroom.teacherId,
-  }));
+  res.status(200).json(
+    successResponse({
+      classroomId: classroom.id,
+      name: classroom.name,
+      teacherId: classroom.teacherId,
+    })
+  );
 });
 
 // GET /api/classrooms/me — get student's enrolled classroom
@@ -118,7 +127,10 @@ classroomRouter.get("/:id/assignments", requireSession, async (req, res) => {
   const assignmentRows = await classroomRepository.getAssignments(classroomId);
 
   // Batch: get all submissions for this student in this classroom
-  const submissions = await classroomRepository.getSubmissionsForStudentInClassroom(classroomId, userId);
+  const submissions = await classroomRepository.getSubmissionsForStudentInClassroom(
+    classroomId,
+    userId
+  );
   const submissionMap = new Map(submissions.map((s) => [s.assignmentId, s]));
 
   const withStatus = assignmentRows.map((row) => {

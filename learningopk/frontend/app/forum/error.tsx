@@ -18,4 +18,3 @@ export default function ForumError({ error: _error, reset }: ForumErrorProps) {
     </div>
   );
 }
-

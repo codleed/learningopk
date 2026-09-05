@@ -17,7 +17,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Dialog, DialogHeader, DialogBody, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { createClassroom } from "@/lib/teacher-api";
 
 type Classroom = {
@@ -147,13 +154,7 @@ export function TeacherDashboardClient({ initialClassrooms }: TeacherDashboardCl
   );
 }
 
-function ClassroomCard({
-  classroom,
-  onClick,
-}: {
-  classroom: Classroom;
-  onClick: () => void;
-}) {
+function ClassroomCard({ classroom, onClick }: { classroom: Classroom; onClick: () => void }) {
   const { copied, copy: copyCode } = useClipboard();
 
   const handleCopy = (e: React.MouseEvent) => {
@@ -191,10 +192,7 @@ function ClassroomCard({
           <span className="text-xs font-mono uppercase text-[var(--muted-foreground)]">
             Code: {classroom.inviteCode}
           </span>
-          <button
-            onClick={handleCopy}
-            className="rounded p-1 hover:bg-[var(--muted)]"
-          >
+          <button onClick={handleCopy} className="rounded p-1 hover:bg-[var(--muted)]">
             {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
           </button>
         </div>

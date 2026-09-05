@@ -3,12 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  FileText,
-  BookOpen,
-  AlertCircle
-} from "lucide-react";
+import { ArrowLeft, FileText, BookOpen, AlertCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/common/page-header";
 import { BoardBadge } from "@/components/common/board-badge";
@@ -18,10 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
-import {
-  getMockExam,
-  type MockExamDetail
-} from "@/lib/mock-exams-api";
+import { getMockExam, type MockExamDetail } from "@/lib/mock-exams-api";
 
 interface PastPaperViewClientProps {
   examId: number;
@@ -44,7 +36,8 @@ export function PastPaperViewClient({ examId }: PastPaperViewClientProps) {
         setExam(examData);
       } catch (err: unknown) {
         console.error("Failed to load past paper:", err);
-        const errorMessage = err instanceof Error ? err.message : "Failed to load past paper. Please try again.";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load past paper. Please try again.";
         setError(errorMessage);
       } finally {
         setIsLoading(false);
@@ -89,9 +82,7 @@ export function PastPaperViewClient({ examId }: PastPaperViewClientProps) {
           <h3 className="font-display text-lg font-semibold text-text-primary">
             Unable to Load Paper
           </h3>
-          <p className="mt-2 text-sm text-text-secondary">
-            {error || "Paper not found"}
-          </p>
+          <p className="mt-2 text-sm text-text-secondary">{error || "Paper not found"}</p>
           <div className="mt-5">
             <Link href="/past-papers">
               <Button variant="secondary" iconLeft={<ArrowLeft />}>
@@ -141,9 +132,8 @@ export function PastPaperViewClient({ examId }: PastPaperViewClientProps) {
   }
 
   const hasSolution = !!exam.solutionContent;
-  const displayContent = activeTab === "solution" && hasSolution
-    ? exam.solutionContent
-    : exam.paperContent;
+  const displayContent =
+    activeTab === "solution" && hasSolution ? exam.solutionContent : exam.paperContent;
 
   return (
     <div className="space-y-6">

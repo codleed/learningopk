@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Pencil, Send, Bold, Italic, Code } from "lucide-react";
 import { z } from "zod";
@@ -11,13 +12,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { ContentRenderer } from "@/components/common/content-renderer";
 import { Tabs, TabList, TabTrigger, TabContent } from "@/components/ui/tabs";
+import { ForumApiError, forumKeys } from "@/lib/forum-api";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
 const createReplySchema = z.object({
   body: z.string().trim().min(2),
-  parentReplyId: z.string().uuid().optional()
+  parentReplyId: z.string().uuid().optional(),
 });
+
+const replyErrorSchema = z.object({
+  error: z.string(),
+});
+
+type CreateReplyInput = z.infer<typeof createReplySchema>;
 
 type ForumReplyFormProps = {
   threadId: string;
@@ -25,25 +33,70 @@ type ForumReplyFormProps = {
   compact?: boolean;
 };
 
-export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: ForumReplyFormProps) => {
+export const ForumReplyForm = ({
+  threadId,
+  parentReplyId,
+  compact = false,
+}: ForumReplyFormProps) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { pushToast } = useToast();
   const [body, setBody] = useState("");
   const [activeTab, setActiveTab] = useState("write");
-  const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const insertMarkdown = (prefix: string, suffix: string) => {
     setBody((current) => `${current}${prefix}text${suffix}`);
   };
 
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const submitMutation = useMutation({
+    mutationFn: async (input: CreateReplyInput) => {
+      const response = await fetch(`${backendUrl}/api/forum/threads/${threadId}/replies`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(input),
+      });
+      const responseBody = (await response.json().catch(() => null)) as unknown;
+
+      if (response.status === 401) {
+        throw new ForumApiError("You must sign in before replying.");
+      }
+
+      if (!response.ok) {
+        const parsedError = replyErrorSchema.safeParse(responseBody);
+        throw new ForumApiError(parsedError.success ? parsedError.data.error : "Reply failed.");
+      }
+    },
+    onSuccess: () => {
+      setBody("");
+      setActiveTab("write");
+      void queryClient.invalidateQueries({ queryKey: forumKeys.all });
+      router.refresh();
+    },
+    onError: (mutationError) => {
+      if (mutationError instanceof ForumApiError) {
+        setError(mutationError.message);
+        return;
+      }
+      setError("Network error. Check your connection and try again.");
+      pushToast({
+        title: "Failed to post reply",
+        description: "The server could not be reached. Please try again.",
+        tone: "error",
+      });
+    },
+  });
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
 
     const parsed = createReplySchema.safeParse({
       body,
-      ...(parentReplyId ? { parentReplyId } : {})
+      ...(parentReplyId ? { parentReplyId } : {}),
     });
 
     if (!parsed.success) {
@@ -51,54 +104,16 @@ export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: For
       return;
     }
 
-    setIsPending(true);
-    try {
-      const response = await fetch(`${backendUrl}/api/forum/threads/${threadId}/replies`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "content-type": "application/json"
-        },
-        body: JSON.stringify(parsed.data)
-      });
-      const responseBody = (await response.json().catch(() => null)) as unknown;
-
-      if (response.status === 401) {
-        setError("You must sign in before replying.");
-        return;
-      }
-
-      if (!response.ok) {
-        const parsedError = z
-          .object({
-            error: z.string()
-          })
-          .safeParse(responseBody);
-        setError(parsedError.success ? parsedError.data.error : "Reply failed.");
-        return;
-      }
-
-      setBody("");
-      setActiveTab("write");
-      router.refresh();
-    } catch {
-      setError("Network error. Check your connection and try again.");
-      pushToast({
-        title: "Failed to post reply",
-        description: "The server could not be reached. Please try again.",
-        tone: "error"
-      });
-    } finally {
-      setIsPending(false);
-    }
+    submitMutation.mutate(parsed.data);
   };
 
   return (
     <form
       onSubmit={onSubmit}
-      className={compact
-        ? "mt-3 rounded-lg border border-dashed border-border-default bg-bg-subtle/30 p-3"
-        : "rounded-xl border border-border-default bg-bg-surface p-4"
+      className={
+        compact
+          ? "mt-3 rounded-lg border border-dashed border-border-default bg-bg-subtle/30 p-3"
+          : "rounded-xl border border-border-default bg-bg-surface p-4"
       }
     >
       <div className="mb-3 flex items-center justify-between">
@@ -110,11 +125,19 @@ export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: For
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="mb-2 flex items-center justify-between">
           <TabList variant="pills">
-            <TabTrigger value="write" variant="pills" layoutId={`reply-tab-${parentReplyId ?? "root"}`}>
+            <TabTrigger
+              value="write"
+              variant="pills"
+              layoutId={`reply-tab-${parentReplyId ?? "root"}`}
+            >
               <Pencil className="h-3 w-3" aria-hidden="true" />
               Write
             </TabTrigger>
-            <TabTrigger value="preview" variant="pills" layoutId={`reply-tab-${parentReplyId ?? "root"}`}>
+            <TabTrigger
+              value="preview"
+              variant="pills"
+              layoutId={`reply-tab-${parentReplyId ?? "root"}`}
+            >
               <Eye className="h-3 w-3" aria-hidden="true" />
               Preview
             </TabTrigger>
@@ -157,7 +180,9 @@ export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: For
             onChange={(event) => setBody(event.target.value)}
             rows={compact ? 3 : 5}
             required
-            placeholder={parentReplyId ? "Add a nested reply..." : "Share your answer or thoughts..."}
+            placeholder={
+              parentReplyId ? "Add a nested reply..." : "Share your answer or thoughts..."
+            }
             autoResize
             maxRows={compact ? 8 : 15}
           />
@@ -191,8 +216,14 @@ export const ForumReplyForm = ({ threadId, parentReplyId, compact = false }: For
       </AnimatePresence>
 
       <div className="mt-3 flex items-center justify-end">
-        <Button type="submit" size="sm" variant="primary" loading={isPending} iconLeft={<Send />}>
-          {isPending ? "Posting..." : "Submit Reply"}
+        <Button
+          type="submit"
+          size="sm"
+          variant="primary"
+          loading={submitMutation.isPending}
+          iconLeft={<Send />}
+        >
+          {submitMutation.isPending ? "Posting..." : "Submit Reply"}
         </Button>
       </div>
     </form>

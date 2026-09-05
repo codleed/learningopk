@@ -17,7 +17,9 @@ export function TopicTrendChart({ points }: TopicTrendChartProps) {
             <div className="flex h-24 w-full items-end rounded-md bg-slate-100 px-1 dark:bg-slate-900/70">
               <div
                 className="w-full rounded-t-md bg-gradient-to-t from-cyan-500 to-blue-500"
-                style={{ height: `${Math.max((point.marks / max) * 100, point.marks > 0 ? 8 : 2)}%` }}
+                style={{
+                  height: `${Math.max((point.marks / max) * 100, point.marks > 0 ? 8 : 2)}%`,
+                }}
               />
             </div>
             <div className="text-center">

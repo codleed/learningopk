@@ -36,7 +36,7 @@ export function ServiceUnavailable({
       aria-live="polite"
       className={cn(
         "mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center px-6 py-16 text-center",
-        className,
+        className
       )}
     >
       {/* Icon */}
@@ -57,12 +57,7 @@ export function ServiceUnavailable({
       {/* Retry button */}
       {onRetry ? (
         <div className="mt-8">
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={onRetry}
-            iconLeft={<RefreshCw />}
-          >
+          <Button variant="primary" size="lg" onClick={onRetry} iconLeft={<RefreshCw />}>
             {retryLabel}
           </Button>
         </div>

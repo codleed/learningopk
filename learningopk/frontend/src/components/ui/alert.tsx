@@ -2,13 +2,7 @@
 
 import { useState, type HTMLAttributes, type ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import {
-  Info,
-  CheckCircle2,
-  TriangleAlert,
-  CircleAlert,
-  X,
-} from "lucide-react";
+import { Info, CheckCircle2, TriangleAlert, CircleAlert, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -22,25 +16,16 @@ const variantIcons: Record<string, ReactNode> = {
 
 /* ─── CVA Variants ─── */
 const alertVariants = cva(
-  [
-    "relative flex gap-3 rounded-lg border px-4 py-3 text-sm",
-    "transition-all duration-200",
-  ].join(" "),
+  ["relative flex gap-3 rounded-lg border px-4 py-3 text-sm", "transition-all duration-200"].join(
+    " "
+  ),
   {
     variants: {
       variant: {
-        info: [
-          "border-accent-info/30 bg-accent-info-light text-accent-info",
-        ].join(" "),
-        success: [
-          "border-accent-success/30 bg-accent-success-light text-accent-success",
-        ].join(" "),
-        warning: [
-          "border-accent-warning/30 bg-accent-warning-light text-accent-warning",
-        ].join(" "),
-        danger: [
-          "border-accent-danger/30 bg-accent-danger-light text-accent-danger",
-        ].join(" "),
+        info: ["border-accent-info/30 bg-accent-info-light text-accent-info"].join(" "),
+        success: ["border-accent-success/30 bg-accent-success-light text-accent-success"].join(" "),
+        warning: ["border-accent-warning/30 bg-accent-warning-light text-accent-warning"].join(" "),
+        danger: ["border-accent-danger/30 bg-accent-danger-light text-accent-danger"].join(" "),
       },
     },
     defaultVariants: {
@@ -51,8 +36,7 @@ const alertVariants = cva(
 
 /** Props for the Alert component. */
 export interface AlertProps
-  extends HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof alertVariants> {
+  extends HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
   /** Alert title text. */
   title?: string;
   /** Whether the alert can be dismissed with an X button. */
@@ -90,22 +74,12 @@ export function Alert({
   const displayIcon = icon ?? variantIcons[variant ?? "info"];
 
   return (
-    <div
-      className={cn(alertVariants({ variant }), className)}
-      role="alert"
-      {...props}
-    >
+    <div className={cn(alertVariants({ variant }), className)} role="alert" {...props}>
       <span className="mt-0.5 shrink-0">{displayIcon}</span>
 
       <div className="flex-1 min-w-0">
-        {title ? (
-          <p className="font-semibold">{title}</p>
-        ) : null}
-        {children ? (
-          <div className={cn(title && "mt-1", "text-current/80")}>
-            {children}
-          </div>
-        ) : null}
+        {title ? <p className="font-semibold">{title}</p> : null}
+        {children ? <div className={cn(title && "mt-1", "text-current/80")}>{children}</div> : null}
       </div>
 
       {dismissible ? (

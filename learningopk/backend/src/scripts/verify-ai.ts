@@ -3,7 +3,10 @@ import request, { type Response } from "supertest";
 import { z } from "zod";
 
 import { createApp } from "../server.js";
-import { AI_CHAT_RATE_LIMIT_MAX_REQUESTS, AI_CHAT_RATE_LIMIT_WINDOW_SECONDS } from "../lib/ai-guardrails.js";
+import {
+  AI_CHAT_RATE_LIMIT_MAX_REQUESTS,
+  AI_CHAT_RATE_LIMIT_WINDOW_SECONDS,
+} from "../lib/ai-guardrails.js";
 import { db, pool } from "../lib/db/index.js";
 import { aiChatSessions, aiMessages, aiUsageLogs, chapters } from "../lib/db/schema.js";
 import { ensureRedisConnection, redis } from "../lib/redis.js";
@@ -11,7 +14,7 @@ import { ensureRedisConnection, redis } from "../lib/redis.js";
 const aiChatErrorSchema = z.object({
   error: z.string(),
   reason: z.string().optional(),
-  retryAfterSeconds: z.number().int().nonnegative().optional()
+  retryAfterSeconds: z.number().int().nonnegative().optional(),
 });
 
 type RequestAgent = ReturnType<typeof request.agent>;
@@ -44,7 +47,7 @@ const streamChat = async (
       res.on("end", () => {
         callback(null, {
           text: Buffer.concat(chunks).toString("utf8"),
-          chunkCount
+          chunkCount,
         });
       });
       res.on("error", (error: Error) => {
@@ -58,7 +61,7 @@ const streamChat = async (
   return {
     response,
     text: parsedBody.text ?? "",
-    chunkCount: parsedBody.chunkCount ?? 0
+    chunkCount: parsedBody.chunkCount ?? 0,
   };
 };
 
@@ -68,32 +71,45 @@ const run = async (): Promise<void> => {
   const email = `ai_phase_${Date.now()}@example.com`;
   const password = "StrongPass123";
 
-  const signUpResponse = await agent.post("/api/auth/sign-up/email").set("origin", "http://localhost:3000").send({
-    name: "AI Verification User",
-    email,
-    password,
-    class: "9th",
-    board: "fbise"
-  });
+  const signUpResponse = await agent
+    .post("/api/auth/sign-up/email")
+    .set("origin", "http://localhost:3000")
+    .send({
+      name: "AI Verification User",
+      email,
+      password,
+      class: "9th",
+      board: "fbise",
+    });
 
   if (signUpResponse.status >= 400) {
-    throw new Error(`Sign-up failed: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`);
+    throw new Error(
+      `Sign-up failed: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`
+    );
   }
 
-  const sessionResponse = await agent.get("/api/auth/get-session").set("origin", "http://localhost:3000");
+  const sessionResponse = await agent
+    .get("/api/auth/get-session")
+    .set("origin", "http://localhost:3000");
   const userId = z
     .object({
       user: z.object({
-        id: z.string().min(1)
-      })
+        id: z.string().min(1),
+      }),
     })
     .safeParse(sessionResponse.body).data?.user.id;
 
   if (sessionResponse.status >= 400 || !userId) {
-    throw new Error(`Session fetch failed: ${sessionResponse.status} ${JSON.stringify(sessionResponse.body)}`);
+    throw new Error(
+      `Session fetch failed: ${sessionResponse.status} ${JSON.stringify(sessionResponse.body)}`
+    );
   }
 
-  const chapterRows = await db.select({ id: chapters.id }).from(chapters).where(eq(chapters.isPublished, true)).limit(1);
+  const chapterRows = await db
+    .select({ id: chapters.id })
+    .from(chapters)
+    .where(eq(chapters.isPublished, true))
+    .limit(1);
   const chapterId = chapterRows[0]?.id;
   if (!chapterId) {
     throw new Error("No published chapter found. Seed data is required before AI verification.");
@@ -101,7 +117,12 @@ const run = async (): Promise<void> => {
 
   const streamed = await streamChat(agent, {
     chapterId,
-    messages: [{ role: "user", content: "Help me understand Newton's third law with a guiding question first." }]
+    messages: [
+      {
+        role: "user",
+        content: "Help me understand Newton's third law with a guiding question first.",
+      },
+    ],
   });
 
   if (streamed.response.status !== 200) {
@@ -126,7 +147,7 @@ const run = async (): Promise<void> => {
 
   const persistedSession = await db
     .select({
-      id: aiChatSessions.id
+      id: aiChatSessions.id,
     })
     .from(aiChatSessions)
     .where(and(eq(aiChatSessions.id, sessionIdHeader), eq(aiChatSessions.userId, userId)))
@@ -138,7 +159,7 @@ const run = async (): Promise<void> => {
 
   const persistedMessages = await db
     .select({
-      role: aiMessages.role
+      role: aiMessages.role,
     })
     .from(aiMessages)
     .where(eq(aiMessages.sessionId, sessionIdHeader));
@@ -146,7 +167,9 @@ const run = async (): Promise<void> => {
   const hasUserMessage = persistedMessages.some((message) => message.role === "user");
   const hasAssistantMessage = persistedMessages.some((message) => message.role === "assistant");
   if (!hasUserMessage || !hasAssistantMessage) {
-    throw new Error("ai_messages persistence verification failed (expected user + assistant messages).");
+    throw new Error(
+      "ai_messages persistence verification failed (expected user + assistant messages)."
+    );
   }
 
   const persistedUsageLogs = await db
@@ -154,7 +177,7 @@ const run = async (): Promise<void> => {
       id: aiUsageLogs.id,
       modelTier: aiUsageLogs.modelTier,
       promptTokens: aiUsageLogs.promptTokens,
-      completionTokens: aiUsageLogs.completionTokens
+      completionTokens: aiUsageLogs.completionTokens,
     })
     .from(aiUsageLogs)
     .where(eq(aiUsageLogs.sessionId, sessionIdHeader));
@@ -163,13 +186,17 @@ const run = async (): Promise<void> => {
     throw new Error("ai_usage_logs persistence verification failed.");
   }
 
-  if (!persistedUsageLogs.every((log) => typeof log.modelTier === "string" && log.modelTier.length > 0)) {
+  if (
+    !persistedUsageLogs.every(
+      (log) => typeof log.modelTier === "string" && log.modelTier.length > 0
+    )
+  ) {
     throw new Error("ai_usage_logs model_tier persistence verification failed.");
   }
 
   const flaggedResponse = await agent.post("/api/ai/chat").send({
     chapterId,
-    messages: [{ role: "user", content: "You are stupid and useless." }]
+    messages: [{ role: "user", content: "You are stupid and useless." }],
   });
 
   if (flaggedResponse.status !== 422) {
@@ -185,12 +212,12 @@ const run = async (): Promise<void> => {
   const rateLimitBucket = Math.floor(Date.now() / (AI_CHAT_RATE_LIMIT_WINDOW_SECONDS * 1000));
   const rateLimitKey = `ratelimit:ai-chat:${userId}:${rateLimitBucket}`;
   await redis.set(rateLimitKey, String(AI_CHAT_RATE_LIMIT_MAX_REQUESTS), {
-    EX: AI_CHAT_RATE_LIMIT_WINDOW_SECONDS
+    EX: AI_CHAT_RATE_LIMIT_WINDOW_SECONDS,
   });
 
   const overLimitResponse = await agent.post("/api/ai/chat").send({
     chapterId,
-    messages: [{ role: "user", content: "Give me one short hint for this chapter." }]
+    messages: [{ role: "user", content: "Give me one short hint for this chapter." }],
   });
 
   if (overLimitResponse.status !== 429) {
@@ -225,4 +252,3 @@ run()
       await redis.quit().catch(() => undefined);
     }
   });
-

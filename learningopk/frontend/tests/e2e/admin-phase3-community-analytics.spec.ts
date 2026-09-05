@@ -4,7 +4,10 @@ const loginAsSeededAdmin = async (page: Page) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("admin@example.com");
   await page.getByLabel("Password").fill("password");
-  await Promise.all([page.waitForURL(/\/dashboard$/), page.getByRole("button", { name: "Sign in" }).click()]);
+  await Promise.all([
+    page.waitForURL(/\/dashboard$/),
+    page.getByRole("button", { name: "Sign in" }).click(),
+  ]);
 };
 
 test("admin community page filters thread health rows and paginates", async ({ page }) => {
@@ -30,7 +33,9 @@ test("admin community page filters thread health rows and paginates", async ({ p
   }
 });
 
-test("admin analytics page switches windows and renders KPI + subject table data", async ({ page }) => {
+test("admin analytics page switches windows and renders KPI + subject table data", async ({
+  page,
+}) => {
   await loginAsSeededAdmin(page);
   await page.goto("/admin/analytics");
 

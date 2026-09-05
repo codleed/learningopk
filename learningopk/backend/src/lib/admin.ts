@@ -5,10 +5,13 @@ import { db } from "./db/index.js";
 import { users } from "./db/schema.js";
 import type { AuthenticatedRequest } from "./session.js";
 
-export const requireAdminRole = async (req: AuthenticatedRequest, res: Response): Promise<boolean> => {
+export const requireAdminRole = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<boolean> => {
   const userRows = await db
     .select({
-      role: users.role
+      role: users.role,
     })
     .from(users)
     .where(eq(users.id, req.session.user.id))
@@ -16,7 +19,7 @@ export const requireAdminRole = async (req: AuthenticatedRequest, res: Response)
 
   if (userRows[0]?.role !== "admin") {
     res.status(403).json({
-      error: "Forbidden"
+      error: "Forbidden",
     });
     return false;
   }
@@ -24,10 +27,13 @@ export const requireAdminRole = async (req: AuthenticatedRequest, res: Response)
   return true;
 };
 
-export const requireStaffRole = async (req: AuthenticatedRequest, res: Response): Promise<boolean> => {
+export const requireStaffRole = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<boolean> => {
   const userRows = await db
     .select({
-      role: users.role
+      role: users.role,
     })
     .from(users)
     .where(eq(users.id, req.session.user.id))
@@ -36,7 +42,7 @@ export const requireStaffRole = async (req: AuthenticatedRequest, res: Response)
   const role = userRows[0]?.role;
   if (role !== "admin" && role !== "moderator") {
     res.status(403).json({
-      error: "Forbidden"
+      error: "Forbidden",
     });
     return false;
   }

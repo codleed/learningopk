@@ -1,9 +1,6 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
+import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { glob } from "glob";
 import { readFile } from "fs/promises";
 import { join, resolve, normalize } from "path";
@@ -46,7 +43,9 @@ async function listRoutes(): Promise<Array<{ method: string; path: string; file:
     const content = await readFile(join(ROUTES_DIR, file), "utf-8");
     const lines = content.split("\n");
     for (const line of lines) {
-      const match = line.match(/(router\.|app\.)((get|post|patch|put|delete)\s*\(\s*["'`])([^"'`]+)/);
+      const match = line.match(
+        /(router\.|app\.)((get|post|patch|put|delete)\s*\(\s*["'`])([^"'`]+)/
+      );
       if (match) {
         routes.push({
           method: match[3].toUpperCase(),

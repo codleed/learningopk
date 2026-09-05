@@ -70,9 +70,7 @@ export function AddToNotesDialog({
     <Dialog open={open} onOpenChange={handleOpenChange} size="sm">
       <DialogHeader>
         <DialogTitle>Add to Notes</DialogTitle>
-        <DialogDescription>
-          Save this content as a new note.
-        </DialogDescription>
+        <DialogDescription>Save this content as a new note.</DialogDescription>
       </DialogHeader>
 
       <DialogBody className="space-y-3">
@@ -88,9 +86,7 @@ export function AddToNotesDialog({
         <div className="space-y-1.5">
           <span className="block text-sm font-medium text-text-primary">Preview</span>
           <div className="max-h-40 overflow-y-auto rounded-lg border border-border-default bg-bg-subtle/50 p-3 text-sm text-text-secondary">
-            {initialContent.length > 300
-              ? `${initialContent.slice(0, 300)}…`
-              : initialContent}
+            {initialContent.length > 300 ? `${initialContent.slice(0, 300)}…` : initialContent}
           </div>
         </div>
       </DialogBody>
@@ -99,12 +95,7 @@ export function AddToNotesDialog({
         <Button variant="secondary" size="sm" onClick={() => onOpenChange(false)}>
           Cancel
         </Button>
-        <Button
-          size="sm"
-          onClick={handleSave}
-          loading={isSaving}
-          disabled={!title.trim()}
-        >
+        <Button size="sm" onClick={handleSave} loading={isSaving} disabled={!title.trim()}>
           Save Note
         </Button>
       </DialogFooter>

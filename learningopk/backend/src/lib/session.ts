@@ -19,7 +19,7 @@ export type AuthenticatedRequest = Request & {
 export const requireSession: RequestHandler = async (req, res, next) => {
   try {
     const session = await auth.api.getSession({
-      headers: fromNodeHeaders(req.headers)
+      headers: fromNodeHeaders(req.headers),
     });
 
     if (!session) {
@@ -53,14 +53,14 @@ export const requireSession: RequestHandler = async (req, res, next) => {
         } else {
           res.status(403).json({
             error: "Account suspended",
-            code: "ACCOUNT_SUSPENDED"
+            code: "ACCOUNT_SUSPENDED",
           });
           return;
         }
       } catch {
         res.status(403).json({
           error: "Account suspended",
-          code: "ACCOUNT_SUSPENDED"
+          code: "ACCOUNT_SUSPENDED",
         });
         return;
       }
@@ -74,12 +74,15 @@ export const requireSession: RequestHandler = async (req, res, next) => {
     // Auth service or database error - treat as service unavailable
     res.status(503).json({
       error: "Authentication service unavailable",
-      code: "AUTH_SERVICE_UNAVAILABLE"
+      code: "AUTH_SERVICE_UNAVAILABLE",
     });
   }
 };
 
-export const requireTeacherRole = async (req: AuthenticatedRequest, res: Response): Promise<boolean> => {
+export const requireTeacherRole = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<boolean> => {
   if (req.userRole !== "teacher") {
     res.status(403).json(errorResponse("Teacher access required", "FORBIDDEN"));
     return false;
@@ -90,12 +93,15 @@ export const requireTeacherRole = async (req: AuthenticatedRequest, res: Respons
 export const getSessionFromRequest = async (req: Request): Promise<SessionResult> => {
   try {
     const session = await auth.api.getSession({
-      headers: fromNodeHeaders(req.headers)
+      headers: fromNodeHeaders(req.headers),
     });
     return session;
   } catch (error) {
     logger.error({ error }, "Session retrieval error");
     // Throw service unavailable error so route can handle appropriately
-    throw new ServiceUnavailableError("Authentication service unavailable.", "AUTH_SERVICE_UNAVAILABLE");
+    throw new ServiceUnavailableError(
+      "Authentication service unavailable.",
+      "AUTH_SERVICE_UNAVAILABLE"
+    );
   }
 };

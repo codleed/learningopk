@@ -4,8 +4,20 @@ const backendBaseUrl = "http://localhost:3001";
 
 type ForumFiltersResponse = {
   boards: Array<{ id: number; slug: string; name: string }>;
-  subjects: Array<{ id: number; slug: string; name: string; classSlug: string | null; boardId: number }>;
-  chapters: Array<{ id: number; slug: string; title: string; chapterNumber: number; subjectId: number }>;
+  subjects: Array<{
+    id: number;
+    slug: string;
+    name: string;
+    classSlug: string | null;
+    boardId: number;
+  }>;
+  chapters: Array<{
+    id: number;
+    slug: string;
+    title: string;
+    chapterNumber: number;
+    subjectId: number;
+  }>;
 };
 
 type ChapterRoute = {
@@ -18,7 +30,9 @@ type ChapterRoute = {
 const pickChapterRouteWithQuiz = async (api: APIRequestContext): Promise<ChapterRoute> => {
   const filtersResponse = await api.get(`${backendBaseUrl}/api/forum/filters`);
   if (!filtersResponse.ok()) {
-    throw new Error(`Failed to fetch forum filters for smoke precheck: ${filtersResponse.status()}`);
+    throw new Error(
+      `Failed to fetch forum filters for smoke precheck: ${filtersResponse.status()}`
+    );
   }
 
   const filters = (await filtersResponse.json()) as ForumFiltersResponse;
@@ -44,13 +58,15 @@ const pickChapterRouteWithQuiz = async (api: APIRequestContext): Promise<Chapter
       continue;
     }
 
-    const chapterPayload = (await chapterResponse.json()) as { quiz: { questions: unknown[] } | null };
+    const chapterPayload = (await chapterResponse.json()) as {
+      quiz: { questions: unknown[] } | null;
+    };
     if (chapterPayload.quiz && chapterPayload.quiz.questions.length > 0) {
       return {
         boardSlug: board.slug,
         grade: subject.classSlug,
         subjectSlug: subject.slug,
-        chapterSlug: chapter.slug
+        chapterSlug: chapter.slug,
       };
     }
   }
@@ -84,12 +100,17 @@ test("register -> chapter -> quiz -> AI chat -> dashboard", async ({ page }) => 
   const quizTab = page.getByRole("link", { name: /Quiz|Mock Exam/ }).first();
   await Promise.all([page.waitForURL(/tab=quiz/), quizTab.click()]);
 
-  await expect(page.getByRole("button", { name: /Submit Quiz|Submit Time-Up Attempt/ })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Submit Quiz|Submit Time-Up Attempt/ })
+  ).toBeVisible();
   await page.locator("button").filter({ hasText: /^A\./ }).first().click();
   await page.getByRole("button", { name: /Submit Quiz|Submit Time-Up Attempt/ }).click();
   await expect(page.getByText("Result", { exact: true })).toBeVisible();
 
-  await Promise.all([page.waitForURL(/tab=exercises/), page.getByRole("link", { name: "Exercises" }).click()]);
+  await Promise.all([
+    page.waitForURL(/tab=exercises/),
+    page.getByRole("link", { name: "Exercises" }).click(),
+  ]);
   await page.getByRole("button", { name: "Open AI Tutor" }).click();
 
   const aiInput = page.locator("#ai-chat-input");
@@ -108,7 +129,10 @@ test("register -> chapter -> quiz -> AI chat -> dashboard", async ({ page }) => 
   } else {
     const assistantError = page
       .locator("aside p")
-      .filter({ hasText: /Mistral API key is not configured on the server|AI request failed|Unable to reach AI service/i })
+      .filter({
+        hasText:
+          /Mistral API key is not configured on the server|AI request failed|Unable to reach AI service/i,
+      })
       .first();
     await expect(assistantError).toBeVisible();
   }
@@ -118,4 +142,3 @@ test("register -> chapter -> quiz -> AI chat -> dashboard", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "Recent Activity" })).toBeVisible();
   await expect(page.getByText(/Quiz submitted in/i)).toBeVisible();
 });
-

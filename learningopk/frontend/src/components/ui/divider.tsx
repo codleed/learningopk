@@ -15,12 +15,7 @@ export interface DividerProps extends HTMLAttributes<HTMLDivElement> {
  *
  * Supports horizontal and vertical orientations.
  */
-export function Divider({
-  className,
-  orientation = "horizontal",
-  label,
-  ...props
-}: DividerProps) {
+export function Divider({ className, orientation = "horizontal", label, ...props }: DividerProps) {
   if (orientation === "vertical") {
     return (
       <div
@@ -41,9 +36,7 @@ export function Divider({
         {...props}
       >
         <span className="h-px flex-1 bg-border-default" />
-        <span className="shrink-0 text-xs font-medium text-text-muted select-none">
-          {label}
-        </span>
+        <span className="shrink-0 text-xs font-medium text-text-muted select-none">{label}</span>
         <span className="h-px flex-1 bg-border-default" />
       </div>
     );

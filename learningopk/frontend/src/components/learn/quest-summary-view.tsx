@@ -37,7 +37,8 @@ export function QuestSummaryView({
 }: QuestSummaryViewProps) {
   const reduced = useReducedMotion();
   const orderedSubparts = useMemo(
-    () => [...subparts].sort((left, right) => left.orderIndex - right.orderIndex || left.id - right.id),
+    () =>
+      [...subparts].sort((left, right) => left.orderIndex - right.orderIndex || left.id - right.id),
     [subparts]
   );
   const hasSubparts = orderedSubparts.length > 0;
@@ -56,7 +57,7 @@ export function QuestSummaryView({
   const canGoPrev = currentIndex > 0;
   const canGoNext = currentIndex < totalParts - 1;
   const isLastPart = currentIndex >= totalParts - 1;
-  const progressPercent = (currentIndex + 1) / totalParts * 100;
+  const progressPercent = ((currentIndex + 1) / totalParts) * 100;
 
   // Track which subparts have been read in this session
   const [readSubpartIds, setReadSubpartIds] = useState<Set<number>>(new Set());
@@ -284,7 +285,8 @@ export function QuestSummaryView({
                     ].join(" ")}
                   >
                     <p className="font-[var(--font-mono)] text-[0.625rem] uppercase tracking-[0.08em] text-text-muted">
-                      Part {index + 1}{isSubpartRead ? " ✓" : ""}
+                      Part {index + 1}
+                      {isSubpartRead ? " ✓" : ""}
                     </p>
                     <p className="max-w-[12rem] truncate text-xs font-medium">{part.heading}</p>
                   </button>
@@ -319,7 +321,11 @@ export function QuestSummaryView({
         ) : null}
 
         <div
-          id={activeSubpart ? `summary-subpart-panel-${activeSubpart.id}` : "summary-subpart-panel-fallback"}
+          id={
+            activeSubpart
+              ? `summary-subpart-panel-${activeSubpart.id}`
+              : "summary-subpart-panel-fallback"
+          }
           role={hasSubparts ? "tabpanel" : undefined}
           aria-labelledby={activeSubpart ? `summary-subpart-tab-${activeSubpart.id}` : undefined}
         >
@@ -385,7 +391,7 @@ export function QuestSummaryView({
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary/10">
             <Sparkles className="h-6 w-6 text-accent-primary" />
           </div>
-          
+
           <div>
             <p className="font-semibold text-text-primary">Finished reading?</p>
             <p className="text-sm text-text-secondary">
@@ -394,24 +400,25 @@ export function QuestSummaryView({
           </div>
 
           {isLastPart ? (
-            <Button onClick={() => {
-              const currentId = activeSubpart?.id;
-              if (typeof currentId === "number") {
-                onMarkRead(currentId);
-                setReadSubpartIds((prev) => {
-                  const next = new Set(prev);
-                  next.add(currentId);
-                  return next;
-                });
-              } else {
-                onMarkRead();
-              }
-            }} className="gap-2">
+            <Button
+              onClick={() => {
+                const currentId = activeSubpart?.id;
+                if (typeof currentId === "number") {
+                  onMarkRead(currentId);
+                  setReadSubpartIds((prev) => {
+                    const next = new Set(prev);
+                    next.add(currentId);
+                    return next;
+                  });
+                } else {
+                  onMarkRead();
+                }
+              }}
+              className="gap-2"
+            >
               <CheckCircle2 className="h-4 w-4" />
               I&apos;ve Read This
-              <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">
-                +10 XP
-              </span>
+              <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">+10 XP</span>
             </Button>
           ) : (
             <Button onClick={goToNext} className="gap-2" disabled={!canGoNext}>

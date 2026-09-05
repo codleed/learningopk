@@ -38,7 +38,7 @@ const streamChat = async (
       res.on("end", () => {
         callback(null, {
           text: Buffer.concat(chunks).toString("utf8"),
-          chunkCount
+          chunkCount,
         });
       });
       res.on("error", (error: Error) => {
@@ -52,7 +52,7 @@ const streamChat = async (
   return {
     response,
     text: parsedBody.text ?? "",
-    chunkCount: parsedBody.chunkCount ?? 0
+    chunkCount: parsedBody.chunkCount ?? 0,
   };
 };
 
@@ -62,22 +62,33 @@ const run = async (): Promise<void> => {
   const email = `ai_concurrency_${Date.now()}@example.com`;
   const password = "StrongPass123";
 
-  const signUpResponse = await agent.post("/api/auth/sign-up/email").set("origin", "http://localhost:3000").send({
-    name: "AI Concurrency User",
-    email,
-    password,
-    class: "9th",
-    board: "fbise"
-  });
+  const signUpResponse = await agent
+    .post("/api/auth/sign-up/email")
+    .set("origin", "http://localhost:3000")
+    .send({
+      name: "AI Concurrency User",
+      email,
+      password,
+      class: "9th",
+      board: "fbise",
+    });
 
   if (signUpResponse.status >= 400) {
-    throw new Error(`Sign-up failed: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`);
+    throw new Error(
+      `Sign-up failed: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`
+    );
   }
 
-  const chapterRows = await db.select({ id: chapters.id }).from(chapters).where(eq(chapters.isPublished, true)).limit(1);
+  const chapterRows = await db
+    .select({ id: chapters.id })
+    .from(chapters)
+    .where(eq(chapters.isPublished, true))
+    .limit(1);
   const chapterId = chapterRows[0]?.id;
   if (!chapterId) {
-    throw new Error("No published chapter found. Seed data is required before AI concurrency verification.");
+    throw new Error(
+      "No published chapter found. Seed data is required before AI concurrency verification."
+    );
   }
 
   const startedAt = Date.now();
@@ -85,7 +96,12 @@ const run = async (): Promise<void> => {
     Array.from({ length: CONCURRENT_REQUESTS }, (_value, index) =>
       streamChat(agent, {
         chapterId,
-        messages: [{ role: "user", content: `Give me one concise hint for exercise strategy #${index + 1}.` }]
+        messages: [
+          {
+            role: "user",
+            content: `Give me one concise hint for exercise strategy #${index + 1}.`,
+          },
+        ],
       })
     )
   );
@@ -93,17 +109,24 @@ const run = async (): Promise<void> => {
 
   const nonSuccessResponses = responses.filter((entry) => entry.response.status !== 200);
   if (nonSuccessResponses.length > 0) {
-    const statusCounts = nonSuccessResponses.reduce<Record<string, number>>((accumulator, entry) => {
-      const key = String(entry.response.status);
-      accumulator[key] = (accumulator[key] ?? 0) + 1;
-      return accumulator;
-    }, {});
-    throw new Error(`Expected all concurrent AI requests to return 200. Failures: ${JSON.stringify(statusCounts)}`);
+    const statusCounts = nonSuccessResponses.reduce<Record<string, number>>(
+      (accumulator, entry) => {
+        const key = String(entry.response.status);
+        accumulator[key] = (accumulator[key] ?? 0) + 1;
+        return accumulator;
+      },
+      {}
+    );
+    throw new Error(
+      `Expected all concurrent AI requests to return 200. Failures: ${JSON.stringify(statusCounts)}`
+    );
   }
 
   const emptyResponses = responses.filter((entry) => entry.text.trim().length === 0);
   if (emptyResponses.length > 0) {
-    throw new Error(`Expected all concurrent AI responses to contain streamed text. Empty responses: ${emptyResponses.length}`);
+    throw new Error(
+      `Expected all concurrent AI responses to contain streamed text. Empty responses: ${emptyResponses.length}`
+    );
   }
 
   const sessionHeaderCount = responses.filter((entry) => {
@@ -136,4 +159,3 @@ run()
       await redis.quit().catch(() => undefined);
     }
   });
-

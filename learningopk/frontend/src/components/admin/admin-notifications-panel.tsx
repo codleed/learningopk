@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import {
   createAdminNotification,
   getAdminNotifications,
-  type AdminNotificationsResponse
+  type AdminNotificationsResponse,
 } from "@/lib/admin-api";
 
 import { AdminNotificationsTable } from "./admin-notifications-table";
@@ -37,16 +37,17 @@ export function AdminNotificationsPanel({ initialPayload }: AdminNotificationsPa
     try {
       const payload = await getAdminNotifications({
         page: 1,
-        pageSize: notificationsPageSize
+        pageSize: notificationsPageSize,
       });
       setEntries(payload.entries);
       setTotal(payload.total);
     } catch (error) {
-      const description = error instanceof Error ? error.message : "Unable to refresh notifications.";
+      const description =
+        error instanceof Error ? error.message : "Unable to refresh notifications.";
       pushToast({
         tone: "error",
         title: "Notifications unavailable",
-        description
+        description,
       });
     } finally {
       setIsRefreshing(false);
@@ -64,7 +65,7 @@ export function AdminNotificationsPanel({ initialPayload }: AdminNotificationsPa
       await createAdminNotification({
         title,
         message,
-        audience
+        audience,
       });
       setTitle("");
       setMessage("");
@@ -72,7 +73,7 @@ export function AdminNotificationsPanel({ initialPayload }: AdminNotificationsPa
       pushToast({
         tone: "success",
         title: "Notification sent",
-        description: "Broadcast was sent successfully."
+        description: "Broadcast was sent successfully.",
       });
       await refreshList();
     } catch (error) {
@@ -80,7 +81,7 @@ export function AdminNotificationsPanel({ initialPayload }: AdminNotificationsPa
       pushToast({
         tone: "error",
         title: "Send failed",
-        description
+        description,
       });
     } finally {
       setIsSubmitting(false);
@@ -89,11 +90,17 @@ export function AdminNotificationsPanel({ initialPayload }: AdminNotificationsPa
 
   return (
     <div className="space-y-6">
-      <SectionCard title="Compose broadcast" description="Send immediate updates to admins, students, or everyone.">
+      <SectionCard
+        title="Compose broadcast"
+        description="Send immediate updates to admins, students, or everyone."
+      >
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1.5">
-              <label htmlFor="notification-title" className="text-xs font-semibold uppercase tracking-wide text-foreground">
+              <label
+                htmlFor="notification-title"
+                className="text-xs font-semibold uppercase tracking-wide text-foreground"
+              >
                 Title
               </label>
               <Input
@@ -117,7 +124,9 @@ export function AdminNotificationsPanel({ initialPayload }: AdminNotificationsPa
               <Select
                 id="notification-audience"
                 value={audience}
-                onChange={(event) => setAudience(event.target.value as "all" | "students" | "admins")}
+                onChange={(event) =>
+                  setAudience(event.target.value as "all" | "students" | "admins")
+                }
                 disabled={isSubmitting}
               >
                 <option value="all">All users</option>
@@ -127,7 +136,10 @@ export function AdminNotificationsPanel({ initialPayload }: AdminNotificationsPa
             </div>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="notification-message" className="text-xs font-semibold uppercase tracking-wide text-foreground">
+            <label
+              htmlFor="notification-message"
+              className="text-xs font-semibold uppercase tracking-wide text-foreground"
+            >
               Message
             </label>
             <Textarea
@@ -151,7 +163,13 @@ export function AdminNotificationsPanel({ initialPayload }: AdminNotificationsPa
         title="Notification history"
         description={`Showing latest broadcasts (${entries.length} of ${total}).`}
         actions={
-          <Button type="button" size="sm" variant="secondary" onClick={() => void refreshList()} disabled={isRefreshing}>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => void refreshList()}
+            disabled={isRefreshing}
+          >
             {isRefreshing ? "Refreshing..." : "Refresh"}
           </Button>
         }

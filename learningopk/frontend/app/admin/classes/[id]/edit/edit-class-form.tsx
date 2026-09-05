@@ -12,10 +12,7 @@ import {
   AdminActionButton,
 } from "@/components/admin";
 import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
-import {
-  updateAdminCurriculumClass,
-  deleteAdminCurriculumClass,
-} from "@/lib/admin-api";
+import { updateAdminCurriculumClass, deleteAdminCurriculumClass } from "@/lib/admin-api";
 import { useToast } from "@/components/ui/toast";
 
 const toSlug = (value: string) =>
@@ -142,10 +139,7 @@ export function EditClassForm({ classData }: EditClassFormProps) {
         />
       </StickyBreadcrumbWrapper>
 
-      <AdminPageHeader
-        title="Edit Class"
-        subtitle={`Editing "${classData.name}"`}
-      />
+      <AdminPageHeader title="Edit Class" subtitle={`Editing "${classData.name}"`} />
 
       <AdminFormCard>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -159,12 +153,7 @@ export function EditClassForm({ classData }: EditClassFormProps) {
             />
           </AdminFormField>
 
-          <AdminFormField
-            id="class-name"
-            label="Class Name"
-            required
-            error={nameError}
-          >
+          <AdminFormField id="class-name" label="Class Name" required error={nameError}>
             <input
               id="class-name"
               type="text"

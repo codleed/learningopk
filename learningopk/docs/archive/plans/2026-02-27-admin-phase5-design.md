@@ -1,6 +1,7 @@
 ﻿# Admin Phase 5 Design
 
 ## Context
+
 - Admin Phases 1-4 established:
   - admin shell + route completeness
   - moderation and users read workflows
@@ -16,21 +17,25 @@
 ## Approach Options
 
 ### Option A: Role management only
+
 - Add promote/demote role mutations and keep account status unchanged.
 - Pros: lowest schema and behavioral risk.
 - Cons: does not address suspension lifecycle.
 
 ### Option B (Recommended): Role + suspension lifecycle
+
 - Add role mutation and student suspension/reactivation operations with audit logs and route-level suspension enforcement.
 - Pros: complete first lifecycle slice with bounded scope.
 - Cons: introduces schema + middleware changes.
 
 ### Option C: Full governance suite
+
 - Option B plus bulk actions, session revocation tooling, and history dashboards.
 - Pros: maximum governance capabilities.
 - Cons: oversized phase and higher regression risk.
 
 ## Approved Direction
+
 - Approach: **Option B with students-only suspension**
 - Constraints:
   - suspension can target only users currently in role `student`
@@ -38,6 +43,7 @@
 - Execution model: backend-first vertical slices under strict TDD.
 
 ## Goals
+
 - Extend `/admin/users` with lifecycle controls:
   - promote student to admin
   - demote admin to student
@@ -49,6 +55,7 @@
 - Preserve all existing admin and student flows from Phases 1-4.
 
 ## Non-goals
+
 - No bulk user actions.
 - No session revocation dashboard.
 - No suspension support for admin-role users.
@@ -56,6 +63,7 @@
 - No new notification, settings, analytics, moderation, or content scope beyond regression-safe integration.
 
 ## Data Model
+
 - Add enum `user_status`: `active | suspended`.
 - Extend table `user` with:
   - `status` enum `user_status` default `active`
@@ -70,6 +78,7 @@
 ## Backend Architecture
 
 ### Session Enforcement
+
 - Keep `requireSession` as the central auth gate.
 - Extend `requireSession` to load current user status from DB after session validation.
 - If user status is `suspended`, reject with `403` and structured payload:
@@ -80,6 +89,7 @@
 ### Users API Contracts
 
 #### GET `/api/admin/users`
+
 - Query params:
   - `page` (default 1)
   - `pageSize` (default 20, max 100)
@@ -96,6 +106,7 @@
   - `suspendedBy` (nullable actor metadata)
 
 #### POST `/api/admin/users/:id/role`
+
 - Body:
   - `role` (`student|admin`)
 - Auth:
@@ -111,6 +122,7 @@
   - write admin audit log (`scope: users`)
 
 #### POST `/api/admin/users/:id/suspension`
+
 - Body:
   - `action` (`suspend|reactivate`)
   - `reason` required for `suspend`, optional/ignored for `reactivate`
@@ -127,6 +139,7 @@
   - write admin audit log (`scope: users`)
 
 ## Admin Audit Logging
+
 - Add `users` audit scope.
 - Action names:
   - `Promote user role`
@@ -136,6 +149,7 @@
 - Log actor identity from authenticated session and concise target/message payload.
 
 ## Frontend Architecture
+
 - `frontend/lib/admin-api.ts`
   - extend users schema with status + suspension metadata
   - add typed helpers:
@@ -153,6 +167,7 @@
   - add action buttons with disabled/loading states
 
 ## UI Behavior
+
 - Role mutation:
   - action button reflects current role (`Promote`/`Demote`)
   - success: refresh list, success toast
@@ -165,6 +180,7 @@
 - Empty state and fetch failure behavior remain consistent with existing admin panels.
 
 ## Error and Guardrail Rules
+
 - Prevent self-role mutation.
 - Prevent suspension/reactivation for non-student users.
 - Require non-trivial suspension reason (trimmed min length).
@@ -172,6 +188,7 @@
 - Preserve last-known UI data on transient fetch/mutation refresh failures.
 
 ## Testing Strategy (Strict TDD)
+
 - Backend integration tests (new phase file):
   - users list auth/role/status/query filtering
   - role mutation auth/validation/not-found/conflict/success
@@ -186,6 +203,7 @@
   - keep smoke spec green
 
 ## Verification Targets
+
 - `pnpm.cmd --filter backend exec tsx --test src/tests/integration/admin-phase5.integration.test.ts`
 - `pnpm.cmd --filter frontend typecheck`
 - `pnpm.cmd --filter frontend lint`
@@ -198,6 +216,7 @@
 - `pnpm.cmd --filter backend typecheck`
 
 ## Verification Run Rules
+
 - Before each Playwright command, run:
   - `pnpm.cmd --filter backend db:clear`
 - Use PowerShell env vars for backend/frontend verification commands when needed:
@@ -208,6 +227,7 @@
   - `FRONTEND_ORIGIN=http://localhost:3000`
 
 ## Risks and Mitigations
+
 - Risk: privilege misuse from lifecycle mutations.
   - Mitigation: strict admin role checks + self-guard + deterministic response codes.
 - Risk: suspended users retaining access via active sessions.

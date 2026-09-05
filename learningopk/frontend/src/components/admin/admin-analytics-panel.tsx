@@ -27,7 +27,7 @@ export function AdminAnalyticsPanel({ initialPayload }: AdminAnalyticsPanelProps
     setIsRefreshing(true);
     try {
       const payload = await getAdminAnalyticsOverview({
-        windowDays: nextWindowDays
+        windowDays: nextWindowDays,
       });
 
       setWindowDays(payload.windowDays);
@@ -39,7 +39,7 @@ export function AdminAnalyticsPanel({ initialPayload }: AdminAnalyticsPanelProps
       pushToast({
         tone: "error",
         title: "Analytics unavailable",
-        description: message
+        description: message,
       });
     } finally {
       setIsRefreshing(false);
@@ -51,7 +51,10 @@ export function AdminAnalyticsPanel({ initialPayload }: AdminAnalyticsPanelProps
       <div className="space-y-4">
         <div className="grid gap-3 md:grid-cols-[220px_1fr] md:items-end">
           <div className="space-y-1.5">
-            <label htmlFor="analytics-window" className="text-xs font-semibold uppercase tracking-wide text-text-primary">
+            <label
+              htmlFor="analytics-window"
+              className="text-xs font-semibold uppercase tracking-wide text-text-primary"
+            >
               Time window
             </label>
             <Select
@@ -72,28 +75,46 @@ export function AdminAnalyticsPanel({ initialPayload }: AdminAnalyticsPanelProps
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <div className="rounded-lg border border-border-default bg-bg-surface p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Active students</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+              Active students
+            </p>
             <p className="mt-1 text-xl font-semibold text-text-primary">{summary.activeStudents}</p>
           </div>
           <div className="rounded-lg border border-border-default bg-bg-surface p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Quiz attempts</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+              Quiz attempts
+            </p>
             <p className="mt-1 text-xl font-semibold text-text-primary">{summary.quizAttempts}</p>
           </div>
           <div className="rounded-lg border border-border-default bg-bg-surface p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Average score</p>
-            <p className="mt-1 text-xl font-semibold text-text-primary">{summary.averageQuizScorePercent.toFixed(1)}%</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+              Average score
+            </p>
+            <p className="mt-1 text-xl font-semibold text-text-primary">
+              {summary.averageQuizScorePercent.toFixed(1)}%
+            </p>
           </div>
           <div className="rounded-lg border border-border-default bg-bg-surface p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Threads created</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+              Threads created
+            </p>
             <p className="mt-1 text-xl font-semibold text-text-primary">{summary.threadsCreated}</p>
           </div>
           <div className="rounded-lg border border-border-default bg-bg-surface p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Open moderation flags</p>
-            <p className="mt-1 text-xl font-semibold text-text-primary">{summary.openModerationFlags}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+              Open moderation flags
+            </p>
+            <p className="mt-1 text-xl font-semibold text-text-primary">
+              {summary.openModerationFlags}
+            </p>
           </div>
           <div className="rounded-lg border border-border-default bg-bg-surface p-3 sm:col-span-2 xl:col-span-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Confusion events</p>
-            <p className="mt-1 text-xl font-semibold text-text-primary">{summary.confusionEvents}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+              Confusion events
+            </p>
+            <p className="mt-1 text-xl font-semibold text-text-primary">
+              {summary.confusionEvents}
+            </p>
           </div>
         </div>
 
@@ -101,21 +122,32 @@ export function AdminAnalyticsPanel({ initialPayload }: AdminAnalyticsPanelProps
 
         <div className="rounded-xl border border-border-default bg-bg-surface p-4">
           <div className="mb-3">
-            <h3 className="text-sm font-semibold text-text-primary">Confusion patterns by chapter</h3>
-            <p className="text-sm text-text-secondary">Shows where proactive hints are firing most often.</p>
+            <h3 className="text-sm font-semibold text-text-primary">
+              Confusion patterns by chapter
+            </h3>
+            <p className="text-sm text-text-secondary">
+              Shows where proactive hints are firing most often.
+            </p>
           </div>
 
           {confusionRows.length === 0 ? (
-            <p className="text-sm text-text-secondary">No confusion patterns recorded in this window.</p>
+            <p className="text-sm text-text-secondary">
+              No confusion patterns recorded in this window.
+            </p>
           ) : (
             <div className="space-y-2">
               {confusionRows.map((row) => (
-                <div key={row.chapterId} className="flex items-center justify-between rounded-lg border border-border-default/80 px-3 py-2">
+                <div
+                  key={row.chapterId}
+                  className="flex items-center justify-between rounded-lg border border-border-default/80 px-3 py-2"
+                >
                   <div>
                     <p className="text-sm font-medium text-text-primary">{row.chapterTitle}</p>
                     <p className="text-xs text-text-secondary">{row.subjectName}</p>
                   </div>
-                  <div className="rounded-full bg-accent-primary/10 px-2.5 py-1 text-xs font-semibold text-accent-primary">{row.count}</div>
+                  <div className="rounded-full bg-accent-primary/10 px-2.5 py-1 text-xs font-semibold text-accent-primary">
+                    {row.count}
+                  </div>
                 </div>
               ))}
             </div>

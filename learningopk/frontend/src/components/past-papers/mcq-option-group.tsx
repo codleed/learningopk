@@ -3,7 +3,7 @@
 export function MCQOptionGroup({
   options,
   selectedOption,
-  onChange
+  onChange,
 }: {
   options: Array<{ key: string; text: string }>;
   selectedOption: string | null;
@@ -11,7 +11,7 @@ export function MCQOptionGroup({
 }) {
   return (
     <div className="space-y-2">
-      {options.map(opt => (
+      {options.map((opt) => (
         <label
           key={opt.key}
           className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-all ${

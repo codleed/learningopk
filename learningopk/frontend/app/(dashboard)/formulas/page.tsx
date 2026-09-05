@@ -38,7 +38,7 @@ export default async function FormulasPage({
     q: getFirstValue(params.q),
     subjectId: toOptionalNumber(getFirstValue(params.subjectId)),
     chapterId: toOptionalNumber(getFirstValue(params.chapterId)),
-    tag: getFirstValue(params.tag)
+    tag: getFirstValue(params.tag),
   };
 
   const cookieStore = await cookies();
@@ -47,7 +47,7 @@ export default async function FormulasPage({
     .then((data) => ({ data, error: null as string | null }))
     .catch((error: unknown) => ({
       data: null,
-      error: error instanceof Error ? error.message : "Unable to load formulas."
+      error: error instanceof Error ? error.message : "Unable to load formulas.",
     }));
 
   return (
@@ -62,10 +62,7 @@ export default async function FormulasPage({
           stickyClassName="-mx-4 -mt-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
           title="Formula Library"
           subtitle="Search and filter a centralized repository of formulas, then star the ones you revisit most."
-          breadcrumbs={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Formula Library" }
-          ]}
+          breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Formula Library" }]}
         />
 
         {formulasResult.error || !formulasResult.data ? (

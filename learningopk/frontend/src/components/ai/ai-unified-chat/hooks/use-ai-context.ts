@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-import { useAIChatContext } from '../ai-chat-context';
-import type { AIContext } from '../types';
+import { useEffect, useRef } from "react";
+import { useAIChatContext } from "../ai-chat-context";
+import type { AIContext } from "../types";
 
 export function useAIContextSync(context: AIContext | null | undefined) {
   const { updateContext } = useAIChatContext();

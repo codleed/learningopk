@@ -15,12 +15,7 @@ import {
 import { useClipboard } from "@/hooks/useClipboard";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardBody, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabList, TabTrigger, TabContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -121,9 +116,7 @@ export function ClassroomDetailClient({
       </TabContent>
 
       <TabContent value="reports">
-        <div className="py-8 text-center text-[var(--muted-foreground)]">
-          Reports coming soon.
-        </div>
+        <div className="py-8 text-center text-[var(--muted-foreground)]">Reports coming soon.</div>
       </TabContent>
     </Tabs>
   );
@@ -306,16 +299,18 @@ function AssignmentsTab({
             />
           </div>
           {createError && <p className="text-sm text-red-500">{createError}</p>}
-          <Button onClick={handleCreate} loading={isCreating} iconLeft={<Plus className="h-4 w-4" />}>
+          <Button
+            onClick={handleCreate}
+            loading={isCreating}
+            iconLeft={<Plus className="h-4 w-4" />}
+          >
             Create Assignment
           </Button>
         </CardBody>
       </Card>
 
       {assignments.length === 0 ? (
-        <div className="py-8 text-center text-[var(--muted-foreground)]">
-          No assignments yet.
-        </div>
+        <div className="py-8 text-center text-[var(--muted-foreground)]">No assignments yet.</div>
       ) : (
         <div className="space-y-2">
           {assignments.map((a) => (
@@ -323,7 +318,8 @@ function AssignmentsTab({
               <div>
                 <div className="font-medium">{a.title}</div>
                 <div className="text-xs text-[var(--muted-foreground)]">
-                  {a.type} • Due: {a.dueDate ? new Date(a.dueDate).toLocaleDateString() : "No due date"}
+                  {a.type} • Due:{" "}
+                  {a.dueDate ? new Date(a.dueDate).toLocaleDateString() : "No due date"}
                 </div>
               </div>
               <Badge variant="default">
@@ -390,9 +386,7 @@ function AnnouncementsTab({
       </div>
 
       {announcements.length === 0 ? (
-        <div className="py-8 text-center text-[var(--muted-foreground)]">
-          No announcements yet.
-        </div>
+        <div className="py-8 text-center text-[var(--muted-foreground)]">No announcements yet.</div>
       ) : (
         <div className="space-y-2">
           {announcements.map((a) => (
@@ -400,7 +394,11 @@ function AnnouncementsTab({
               <div className="text-sm">{a.content}</div>
               <div className="mt-2 text-xs text-[var(--muted-foreground)]">
                 {new Date(a.createdAt).toLocaleString()}
-                {a.pinned && <Badge variant="primary" className="ml-2">Pinned</Badge>}
+                {a.pinned && (
+                  <Badge variant="primary" className="ml-2">
+                    Pinned
+                  </Badge>
+                )}
               </div>
             </Card>
           ))}

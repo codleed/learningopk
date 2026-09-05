@@ -20,7 +20,14 @@ type QuizResultSummaryProps = {
   onCreateChallenge?: () => Promise<string | null>;
 };
 
-export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber, chapterTitle, onCreateChallenge }: QuizResultSummaryProps) {
+export function QuizResultSummary({
+  result,
+  onRetake,
+  subjectName,
+  chapterNumber,
+  chapterTitle,
+  onCreateChallenge,
+}: QuizResultSummaryProps) {
   const passed = result.percentage >= 70;
   const reduced = useReducedMotion();
   const [showShareCard, setShowShareCard] = useState(false);
@@ -30,7 +37,9 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
   const displaySubjectName = subjectName || "Quiz";
 
   const correctCount = result.questionResults.filter((q) => q.isCorrect).length;
-  const incorrectCount = result.questionResults.filter((q) => !q.isCorrect && q.selectedOption !== null).length;
+  const incorrectCount = result.questionResults.filter(
+    (q) => !q.isCorrect && q.selectedOption !== null
+  ).length;
   const skippedCount = result.questionResults.filter((q) => q.selectedOption === null).length;
 
   const ringColor = passed ? "var(--accent-success)" : "var(--accent-warning)";
@@ -64,16 +73,26 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {[result.duel.challenger, result.duel.recipient].filter(Boolean).map((player) => (
-                  <div key={`${player!.userId}-${player!.completedAt}`} className="rounded-xl border border-border-default bg-bg-surface/90 p-4">
+                  <div
+                    key={`${player!.userId}-${player!.completedAt}`}
+                    className="rounded-xl border border-border-default bg-bg-surface/90 p-4"
+                  >
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-text-primary">{player!.name}</p>
-                        <p className="text-xs text-text-secondary">{player!.isCurrentUser ? "You" : "Friend"}</p>
+                        <p className="text-xs text-text-secondary">
+                          {player!.isCurrentUser ? "You" : "Friend"}
+                        </p>
                       </div>
-                      <Badge variant={player!.isCurrentUser ? "primary" : "default"} size="sm">{player!.percentage}%</Badge>
+                      <Badge variant={player!.isCurrentUser ? "primary" : "default"} size="sm">
+                        {player!.percentage}%
+                      </Badge>
                     </div>
                     <p className="mt-3 font-display text-2xl font-bold text-text-primary">
-                      {player!.score} <span className="text-sm font-medium text-text-secondary">/ {player!.totalMarks}</span>
+                      {player!.score}{" "}
+                      <span className="text-sm font-medium text-text-secondary">
+                        / {player!.totalMarks}
+                      </span>
                     </p>
                   </div>
                 ))}
@@ -90,10 +109,7 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
                 strokeWidth={8}
                 color={ringColor}
               />
-              <Badge
-                variant={passed ? "success" : "warning"}
-                size="lg"
-              >
+              <Badge variant={passed ? "success" : "warning"} size="lg">
                 {passed ? "Passed" : "Needs Review"}
               </Badge>
             </div>
@@ -104,10 +120,12 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
                 Your Score
               </p>
               <p className="mt-1 font-display text-3xl font-bold text-text-primary">
-                {result.score} <span className="text-lg text-text-secondary">/ {result.totalMarks}</span>
+                {result.score}{" "}
+                <span className="text-lg text-text-secondary">/ {result.totalMarks}</span>
               </p>
               <p className="mt-1 text-sm text-text-secondary">
-                {result.percentage}% in {Math.max(1, Math.ceil(result.timeSpentSeconds / 60))} minute{Math.ceil(result.timeSpentSeconds / 60) !== 1 ? "s" : ""}
+                {result.percentage}% in {Math.max(1, Math.ceil(result.timeSpentSeconds / 60))}{" "}
+                minute{Math.ceil(result.timeSpentSeconds / 60) !== 1 ? "s" : ""}
               </p>
               <p className="mt-0.5 text-xs text-text-secondary">
                 Submitted {new Date(result.completedAt).toLocaleString()}
@@ -117,7 +135,11 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
               <motion.div
                 initial={reduced ? false : { scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={reduced ? { duration: 0 } : { delay: 0.5, type: "spring", stiffness: 400, damping: 15 }}
+                transition={
+                  reduced
+                    ? { duration: 0 }
+                    : { delay: 0.5, type: "spring", stiffness: 400, damping: 15 }
+                }
                 className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-accent-warning-light px-3 py-1"
               >
                 <Sparkles className="h-3.5 w-3.5 text-accent-warning" />
@@ -139,7 +161,9 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-success text-white">
                 <Check className="h-3.5 w-3.5" />
               </div>
-              <span className="font-display text-xl font-bold text-accent-success">{correctCount}</span>
+              <span className="font-display text-xl font-bold text-accent-success">
+                {correctCount}
+              </span>
               <span className="text-[11px] font-medium text-accent-success">Correct</span>
             </motion.div>
 
@@ -152,7 +176,9 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-danger text-white">
                 <X className="h-3.5 w-3.5" />
               </div>
-              <span className="font-display text-xl font-bold text-accent-danger">{incorrectCount}</span>
+              <span className="font-display text-xl font-bold text-accent-danger">
+                {incorrectCount}
+              </span>
               <span className="text-[11px] font-medium text-accent-danger">Incorrect</span>
             </motion.div>
 
@@ -165,19 +191,16 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-warning text-white">
                 <Minus className="h-3.5 w-3.5" />
               </div>
-              <span className="font-display text-xl font-bold text-accent-warning">{skippedCount}</span>
+              <span className="font-display text-xl font-bold text-accent-warning">
+                {skippedCount}
+              </span>
               <span className="text-[11px] font-medium text-accent-warning">Skipped</span>
             </motion.div>
           </div>
 
           {/* Action buttons */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Button
-              type="button"
-              variant="primary"
-              onClick={onRetake}
-              iconLeft={<RotateCcw />}
-            >
+            <Button type="button" variant="primary" onClick={onRetake} iconLeft={<RotateCcw />}>
               Try Again
             </Button>
             <Button
@@ -198,9 +221,15 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
                     setIsCreatingChallenge(true);
                     setChallengeMessage(null);
                     const url = await onCreateChallenge();
-                    setChallengeMessage(url ? "Challenge link copied to clipboard." : "Unable to create challenge link.");
+                    setChallengeMessage(
+                      url
+                        ? "Challenge link copied to clipboard."
+                        : "Unable to create challenge link."
+                    );
                   } catch (error) {
-                    setChallengeMessage(error instanceof Error ? error.message : "Unable to create challenge link.");
+                    setChallengeMessage(
+                      error instanceof Error ? error.message : "Unable to create challenge link."
+                    );
                   } finally {
                     setIsCreatingChallenge(false);
                   }
@@ -211,7 +240,9 @@ export function QuizResultSummary({ result, onRetake, subjectName, chapterNumber
               </Button>
             ) : null}
           </div>
-          {challengeMessage ? <p className="mt-3 text-center text-sm text-text-secondary">{challengeMessage}</p> : null}
+          {challengeMessage ? (
+            <p className="mt-3 text-center text-sm text-text-secondary">{challengeMessage}</p>
+          ) : null}
         </div>
       </Card>
 

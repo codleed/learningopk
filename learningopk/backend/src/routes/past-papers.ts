@@ -16,7 +16,7 @@ const pastPaperListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).optional().default(20),
   search: z.string().optional(),
   subjectId: z.coerce.number().int().positive().optional(),
-  year: z.coerce.number().int().optional()
+  year: z.coerce.number().int().optional(),
 });
 
 // GET /api/past-papers — List published papers filtered by student's class & board
@@ -29,13 +29,27 @@ pastPapersRouter.get("/", requireSession, async (req, res) => {
     const userBoard = user.board as string | undefined;
 
     if (!rawUserClass || !userBoard) {
-      res.status(400).json(errorResponse("Please complete your profile with class and board to access past papers.", "INCOMPLETE_PROFILE"));
+      res
+        .status(400)
+        .json(
+          errorResponse(
+            "Please complete your profile with class and board to access past papers.",
+            "INCOMPLETE_PROFILE"
+          )
+        );
       return;
     }
 
     const userClass = inferLegacyGrade(rawUserClass);
     if (!userClass) {
-      res.status(400).json(errorResponse(`Your class "${rawUserClass}" is not recognized. Accepted values are "9" or "10".`, "INVALID_CLASS"));
+      res
+        .status(400)
+        .json(
+          errorResponse(
+            `Your class "${rawUserClass}" is not recognized. Accepted values are "9" or "10".`,
+            "INVALID_CLASS"
+          )
+        );
       return;
     }
 
@@ -47,13 +61,19 @@ pastPapersRouter.get("/", requireSession, async (req, res) => {
 
     const board = boardRows[0];
     if (!board) {
-      res.status(400).json(errorResponse("Your selected board is not available.", "BOARD_NOT_FOUND"));
+      res
+        .status(400)
+        .json(errorResponse("Your selected board is not available.", "BOARD_NOT_FOUND"));
       return;
     }
 
     const parsed = pastPaperListQuerySchema.safeParse(req.query);
     if (!parsed.success) {
-      res.status(400).json(errorResponse("Invalid query parameters", "VALIDATION_ERROR", parsed.error.flatten()));
+      res
+        .status(400)
+        .json(
+          errorResponse("Invalid query parameters", "VALIDATION_ERROR", parsed.error.flatten())
+        );
       return;
     }
 
@@ -69,7 +89,7 @@ pastPapersRouter.get("/", requireSession, async (req, res) => {
       grade: userClass,
       boardId: board.id,
       page: parsed.data.page,
-      limit: parsed.data.limit
+      limit: parsed.data.limit,
     };
     if (parsed.data.search !== undefined) listParams.search = parsed.data.search;
     if (parsed.data.subjectId !== undefined) listParams.subjectId = parsed.data.subjectId;
@@ -77,7 +97,14 @@ pastPapersRouter.get("/", requireSession, async (req, res) => {
 
     const result = await pastPaperRepository.listPublishedPapers(listParams);
 
-    res.json(paginatedResponse(result.papers, result.pagination.page, result.pagination.limit, result.pagination.total));
+    res.json(
+      paginatedResponse(
+        result.papers,
+        result.pagination.page,
+        result.pagination.limit,
+        result.pagination.total
+      )
+    );
   } catch (error) {
     console.error("Get past papers error:", error);
     res.status(500).json(errorResponse("Failed to fetch past papers", "FETCH_ERROR"));
@@ -102,23 +129,26 @@ pastPapersRouter.get("/:id/attempt/start", requireSession, async (req, res) => {
       user.class as string | undefined,
       user.board as string | undefined
     );
-    res.json(successResponse({
-      attempt: result.attempt,
-      exercises: result.exercises.map(e => ({
-        id: e.id,
-        exerciseNumber: e.exerciseNumber,
-        question: e.question,
-        type: e.type,
-        difficulty: e.difficulty,
-        options: e.options,
-        blankCount: e.blanksAnswer?.length ?? 0,
-        statements: e.statements?.map(s => ({ text: s.text, blankCount: s.blanksAnswer.length })) ?? null,
-        problemMarkdown: e.problemMarkdown,
-        orderIndex: e.orderIndex,
-        marks: e.marks
-      })),
-      savedAnswers: result.savedAnswers
-    }));
+    res.json(
+      successResponse({
+        attempt: result.attempt,
+        exercises: result.exercises.map((e) => ({
+          id: e.id,
+          exerciseNumber: e.exerciseNumber,
+          question: e.question,
+          type: e.type,
+          difficulty: e.difficulty,
+          options: e.options,
+          blankCount: e.blanksAnswer?.length ?? 0,
+          statements:
+            e.statements?.map((s) => ({ text: s.text, blankCount: s.blanksAnswer.length })) ?? null,
+          problemMarkdown: e.problemMarkdown,
+          orderIndex: e.orderIndex,
+          marks: e.marks,
+        })),
+        savedAnswers: result.savedAnswers,
+      })
+    );
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Unknown error";
     if (msg === "PAST_PAPER_NOT_FOUND") {
@@ -126,7 +156,11 @@ pastPapersRouter.get("/:id/attempt/start", requireSession, async (req, res) => {
       return;
     }
     if (msg === "PAST_PAPER_NOT_AVAILABLE") {
-      res.status(403).json(errorResponse("This paper is not available for your class or board", "ACCESS_DENIED"));
+      res
+        .status(403)
+        .json(
+          errorResponse("This paper is not available for your class or board", "ACCESS_DENIED")
+        );
       return;
     }
     if (msg === "NO_EXERCISES_LINKED") {
@@ -145,12 +179,14 @@ pastPapersRouter.post("/:id/attempt/save", requireSession, async (req, res) => {
     const saveSchema = z.object({
       attemptId: z.string().uuid(),
       exerciseId: z.number().int().positive(),
-      answer: z.unknown()
+      answer: z.unknown(),
     });
 
     const parsed = saveSchema.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json(errorResponse("Invalid save payload", "VALIDATION_ERROR", parsed.error.flatten()));
+      res
+        .status(400)
+        .json(errorResponse("Invalid save payload", "VALIDATION_ERROR", parsed.error.flatten()));
       return;
     }
 
@@ -187,12 +223,14 @@ pastPapersRouter.post("/:id/attempt/submit", requireSession, async (req, res) =>
     const authedReq = req as AuthenticatedRequest;
     const submitSchema = z.object({
       attemptId: z.string().uuid(),
-      timedOut: z.boolean().optional().default(false)
+      timedOut: z.boolean().optional().default(false),
     });
 
     const parsed = submitSchema.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json(errorResponse("Invalid submit payload", "VALIDATION_ERROR", parsed.error.flatten()));
+      res
+        .status(400)
+        .json(errorResponse("Invalid submit payload", "VALIDATION_ERROR", parsed.error.flatten()));
       return;
     }
 
@@ -232,7 +270,10 @@ pastPapersRouter.get("/:id/attempts", requireSession, async (req, res) => {
       return;
     }
 
-    const attempts = await pastPaperRepository.getUserAttempts(authedReq.session.user.id, parsed.data.id);
+    const attempts = await pastPaperRepository.getUserAttempts(
+      authedReq.session.user.id,
+      parsed.data.id
+    );
     res.json(successResponse({ attempts }));
   } catch (error) {
     console.error("Get attempts error:", error);
@@ -246,7 +287,7 @@ pastPapersRouter.get("/:id/attempts/:attemptId", requireSession, async (req, res
     const authedReq = req as AuthenticatedRequest;
     const paramsSchema = z.object({
       id: z.coerce.number().int().positive(),
-      attemptId: z.string().uuid()
+      attemptId: z.string().uuid(),
     });
     const parsed = paramsSchema.safeParse(req.params);
     if (!parsed.success) {
@@ -254,17 +295,22 @@ pastPapersRouter.get("/:id/attempts/:attemptId", requireSession, async (req, res
       return;
     }
 
-    const data = await pastPaperRepository.getAttemptWithAnswers(parsed.data.attemptId, authedReq.session.user.id);
+    const data = await pastPaperRepository.getAttemptWithAnswers(
+      parsed.data.attemptId,
+      authedReq.session.user.id
+    );
     if (!data) {
       res.status(404).json(errorResponse("Attempt not found", "NOT_FOUND"));
       return;
     }
 
-    res.json(successResponse({
-      attempt: data.attempt,
-      answers: data.answers,
-      exercises: data.exercises
-    }));
+    res.json(
+      successResponse({
+        attempt: data.attempt,
+        answers: data.answers,
+        exercises: data.exercises,
+      })
+    );
   } catch (error) {
     console.error("Get attempt detail error:", error);
     res.status(500).json(errorResponse("Failed to fetch attempt detail", "FETCH_ERROR"));

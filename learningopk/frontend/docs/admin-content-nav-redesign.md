@@ -17,6 +17,7 @@ Replace the **Entity Tree navigation** (Board → Class → Subject → Chapter 
 5. **Context switching is slow**: Moving from editing a Board to editing a Chapter requires navigating back up and down the tree
 
 ### Entity Hierarchy (for reference)
+
 ```
 Board
 └── Class
@@ -34,6 +35,7 @@ Board
 ### Design Decision: Tab-Based Content Type Navigation
 
 **Rationale:**
+
 - Flattens the hierarchy for faster content discovery
 - Consistent pattern across all content types (Boards, Classes, Subjects, Chapters, Exercises, Quizzes, Flash Cards)
 - Edit actions visible immediately on each row
@@ -71,17 +73,18 @@ Board
 
 ### Tab Specifications
 
-| Tab | Route | Icon | Shows |
-|-----|-------|------|-------|
-| Boards | `/admin/content/boards` | BookOpen | All boards with class/subject/chapter counts |
-| Classes | `/admin/content/classes` | GraduationCap | All classes with subject/chapter counts |
-| Subjects | `/admin/content/subjects` | Book | All subjects with chapter counts |
-| Chapters | `/admin/content/chapters` | FileText | All chapters with exercise/quiz/flashcard counts |
-| Exercises | `/admin/content/exercises` | Brain | All exercises across all chapters |
-| Quizzes | `/admin/content/quizzes` | ClipboardList | All quizzes with question counts |
-| Flash Cards | `/admin/content/flashcards` | Layers | All flash card decks with card counts |
+| Tab         | Route                       | Icon          | Shows                                            |
+| ----------- | --------------------------- | ------------- | ------------------------------------------------ |
+| Boards      | `/admin/content/boards`     | BookOpen      | All boards with class/subject/chapter counts     |
+| Classes     | `/admin/content/classes`    | GraduationCap | All classes with subject/chapter counts          |
+| Subjects    | `/admin/content/subjects`   | Book          | All subjects with chapter counts                 |
+| Chapters    | `/admin/content/chapters`   | FileText      | All chapters with exercise/quiz/flashcard counts |
+| Exercises   | `/admin/content/exercises`  | Brain         | All exercises across all chapters                |
+| Quizzes     | `/admin/content/quizzes`    | ClipboardList | All quizzes with question counts                 |
+| Flash Cards | `/admin/content/flashcards` | Layers        | All flash card decks with card counts            |
 
 ### Default State
+
 - **Boards tab active by default** when entering Content Management
 - **URL reflects active tab**: `/admin/content/boards`, `/admin/content/exercises`, etc.
 - **Tab state preserved** in URL for bookmarkability and refresh resilience
@@ -97,6 +100,7 @@ Board
 **Purpose**: Main hub showing content overview with tabs for each content type.
 
 **Components**:
+
 - Page header with title "Content Management"
 - Stats strip showing total counts for each content type
 - Tab navigation for content types
@@ -105,13 +109,14 @@ Board
 
 ### 3.2 Exercise Screens
 
-| Screen | Route | Purpose |
-|--------|-------|---------|
-| Exercise List | `/admin/content/exercises` | Table of all exercises with chapter, difficulty, type, Edit action |
-| Add Exercise | `/admin/content/exercises/add?chapterId=X` | Create exercise under specific chapter |
-| Edit Exercise | `/admin/content/exercises/[id]/edit` | Edit exercise metadata + question/solution |
+| Screen        | Route                                      | Purpose                                                            |
+| ------------- | ------------------------------------------ | ------------------------------------------------------------------ |
+| Exercise List | `/admin/content/exercises`                 | Table of all exercises with chapter, difficulty, type, Edit action |
+| Add Exercise  | `/admin/content/exercises/add?chapterId=X` | Create exercise under specific chapter                             |
+| Edit Exercise | `/admin/content/exercises/[id]/edit`       | Edit exercise metadata + question/solution                         |
 
 **Exercise Table Columns**:
+
 - Exercise # (e.g., "Exercise 3.2")
 - Chapter (breadCrumb format: "Board / Class / Subject / Chapter")
 - Type (MCQ, Short Answer, Long Answer, Numerical)
@@ -119,6 +124,7 @@ Board
 - Actions [Edit] [Delete]
 
 **Add/Edit Exercise Form Fields**:
+
 - Chapter (select dropdown - shows hierarchy path)
 - Exercise Number (auto-suggest next available)
 - Type (select: MCQ, Short Answer, Long Answer, Numerical)
@@ -129,13 +135,14 @@ Board
 
 ### 3.3 Quiz Screens
 
-| Screen | Route | Purpose |
-|--------|-------|---------|
-| Quiz List | `/admin/content/quizzes` | Table of all quizzes |
-| Add Quiz | `/admin/content/quizzes/add?chapterId=X` | Create quiz with questions |
-| Edit Quiz | `/admin/content/quizzes/[id]/edit` | Edit quiz metadata + questions |
+| Screen    | Route                                    | Purpose                        |
+| --------- | ---------------------------------------- | ------------------------------ |
+| Quiz List | `/admin/content/quizzes`                 | Table of all quizzes           |
+| Add Quiz  | `/admin/content/quizzes/add?chapterId=X` | Create quiz with questions     |
+| Edit Quiz | `/admin/content/quizzes/[id]/edit`       | Edit quiz metadata + questions |
 
 **Quiz Table Columns**:
+
 - Quiz Title
 - Chapter (breadcrumb)
 - Type (Chapter Quiz, Mock Exam)
@@ -145,6 +152,7 @@ Board
 - Actions [Edit] [Delete]
 
 **Add/Edit Quiz Form Fields**:
+
 - Chapter (select)
 - Title
 - Type (Chapter Quiz / Mock Exam)
@@ -159,19 +167,21 @@ Board
 
 ### 3.4 Flash Card Screens
 
-| Screen | Route | Purpose |
-|--------|-------|---------|
-| Flash Card List | `/admin/content/flashcards` | Table of all flash card decks |
-| Add Flash Cards | `/admin/content/flashcards/add?chapterId=X` | Create deck with cards |
-| Edit Flash Cards | `/admin/content/flashcards/[id]/edit` | Edit deck name + cards |
+| Screen           | Route                                       | Purpose                       |
+| ---------------- | ------------------------------------------- | ----------------------------- |
+| Flash Card List  | `/admin/content/flashcards`                 | Table of all flash card decks |
+| Add Flash Cards  | `/admin/content/flashcards/add?chapterId=X` | Create deck with cards        |
+| Edit Flash Cards | `/admin/content/flashcards/[id]/edit`       | Edit deck name + cards        |
 
 **Flash Card Table Columns**:
+
 - Deck Title
 - Chapter (breadcrumb)
 - Card Count
 - Actions [Edit] [Delete]
 
 **Add/Edit Flash Card Form Fields**:
+
 - Chapter (select)
 - Deck Title
 - Cards (dynamic list):
@@ -477,31 +487,32 @@ For users who know the chapter they want:
 
 ### New Components to Create
 
-| Component | Purpose | File Location |
-|-----------|---------|--------------|
-| `ContentTabs` | Tab navigation for content types | `components/admin/content-tabs.tsx` |
-| `ContentListTable` | Reusable table for all content lists | `components/admin/content-list-table.tsx` |
-| `ContentStatsStrip` | Stats cards showing counts | `components/admin/content-stats-strip.tsx` |
-| `ExerciseForm` | Add/Edit exercise form | `app/admin/exercises/add/exercise-form.tsx` |
-| `ExerciseEditForm` | Edit exercise form | `app/admin/exercises/[id]/edit/exercise-form.tsx` |
-| `QuizForm` | Add/Edit quiz form | `app/admin/quizzes/add/quiz-form.tsx` |
-| `QuizEditForm` | Edit quiz with questions | `app/admin/quizzes/[id]/edit/quiz-form.tsx` |
-| `FlashCardForm` | Add/Edit flash card deck | `app/admin/flashcards/add/flashcard-form.tsx` |
-| `FlashCardEditForm` | Edit flash card deck | `app/admin/flashcards/[id]/edit/flashcard-form.tsx` |
+| Component           | Purpose                              | File Location                                       |
+| ------------------- | ------------------------------------ | --------------------------------------------------- |
+| `ContentTabs`       | Tab navigation for content types     | `components/admin/content-tabs.tsx`                 |
+| `ContentListTable`  | Reusable table for all content lists | `components/admin/content-list-table.tsx`           |
+| `ContentStatsStrip` | Stats cards showing counts           | `components/admin/content-stats-strip.tsx`          |
+| `ExerciseForm`      | Add/Edit exercise form               | `app/admin/exercises/add/exercise-form.tsx`         |
+| `ExerciseEditForm`  | Edit exercise form                   | `app/admin/exercises/[id]/edit/exercise-form.tsx`   |
+| `QuizForm`          | Add/Edit quiz form                   | `app/admin/quizzes/add/quiz-form.tsx`               |
+| `QuizEditForm`      | Edit quiz with questions             | `app/admin/quizzes/[id]/edit/quiz-form.tsx`         |
+| `FlashCardForm`     | Add/Edit flash card deck             | `app/admin/flashcards/add/flashcard-form.tsx`       |
+| `FlashCardEditForm` | Edit flash card deck                 | `app/admin/flashcards/[id]/edit/flashcard-form.tsx` |
 
 ### Components to Modify
 
-| Component | Changes |
-|-----------|---------|
-| `admin-nav-config.ts` | No changes needed - Content Management is one nav item |
-| `entity-tree.tsx` | Mark as deprecated, keep for backward compatibility |
-| `entity-detail-panel.tsx` | Will be replaced by new content tabs UI |
-| `content-dashboard.tsx` | Replace with new tab-based dashboard |
-| `admin/index.ts` | Export new components |
+| Component                 | Changes                                                |
+| ------------------------- | ------------------------------------------------------ |
+| `admin-nav-config.ts`     | No changes needed - Content Management is one nav item |
+| `entity-tree.tsx`         | Mark as deprecated, keep for backward compatibility    |
+| `entity-detail-panel.tsx` | Will be replaced by new content tabs UI                |
+| `content-dashboard.tsx`   | Replace with new tab-based dashboard                   |
+| `admin/index.ts`          | Export new components                                  |
 
 ### Reusable Pattern: Content List Table
 
 The `ContentListTable` component should accept:
+
 ```typescript
 type ContentListTableProps<T> = {
   title: string;
@@ -527,7 +538,7 @@ type ContentListTableProps<T> = {
 
 ```css
 /* Use existing design system tokens */
---primary: #7ac943;           /* Brand green */
+--primary: #7ac943; /* Brand green */
 --primary-light: rgba(122, 201, 67, 0.15);
 --foreground: #1a1a1a;
 --muted-foreground: #666666;
@@ -546,12 +557,14 @@ type ContentListTableProps<T> = {
 ```
 
 ### Typography
+
 - Page headers: `font-heading`, `text-2xl`, `font-semibold`
 - Section titles: `font-heading`, `text-lg`, `font-semibold`
 - Table headers: `text-sm`, `font-medium`, uppercase, tracking-wide
 - Table cells: `text-sm`
 
 ### Spacing
+
 - Container padding: `var(--space-4)` (16px)
 - Section gaps: `var(--space-6)` (24px)
 - Card padding: `var(--space-6)` (24px)
@@ -561,18 +574,21 @@ type ContentListTableProps<T> = {
 ## 9. Implementation Priority
 
 ### Phase 1: Navigation Foundation
+
 1. Create `ContentTabs` component
 2. Create `ContentStatsStrip` component
 3. Create new `ContentDashboard` with tab navigation
 4. Update `/admin/content/page.tsx`
 
 ### Phase 2: Content Type Pages
+
 5. Create `/admin/content/boards/page.tsx`
 6. Create `/admin/content/classes/page.tsx`
 7. Create `/admin/content/subjects/page.tsx`
 8. Create `/admin/content/chapters/page.tsx`
 
 ### Phase 3: New Content Types
+
 9. Create `/admin/content/exercises/page.tsx` (list)
 10. Create `/admin/content/exercises/add/page.tsx`
 11. Create `/admin/content/exercises/[id]/edit/page.tsx`
@@ -584,6 +600,7 @@ type ContentListTableProps<T> = {
 17. Create `/admin/content/flashcards/[id]/edit/page.tsx`
 
 ### Phase 4: Cleanup
+
 18. Mark `entity-tree.tsx` as deprecated (keep for migration period)
 19. Update breadcrumb patterns across all new pages
 20. Add URL redirect from old patterns if any
@@ -606,14 +623,17 @@ type ContentListTableProps<T> = {
 ## 11. Responsive Behavior
 
 ### Desktop (1024px+)
+
 - Full table with all columns visible
 - Tab bar horizontal, all tabs visible
 
 ### Tablet (768px - 1023px)
+
 - Some columns may be hidden (configurable per content type)
 - Tab bar scrollable if needed
 
 ### Mobile (< 768px)
+
 - Table transforms to card list
 - Each "row" becomes a card with all info
 - Tab bar becomes horizontally scrollable
@@ -624,10 +644,12 @@ type ContentListTableProps<T> = {
 ## 12. Migration Notes
 
 ### Preserving User Context
+
 - When a user clicks "Edit" from entity-detail-panel, redirect to new URL
 - Entity tree selection should highlight corresponding tab row
 
 ### API Compatibility
+
 - All existing API functions remain unchanged
 - New API functions needed for:
   - `getAdminExercises(chapterId?)` - already exists
@@ -644,13 +666,13 @@ type ContentListTableProps<T> = {
 
 This redesign transforms the content management experience from:
 
-| Aspect | Before | After |
-|--------|--------|-------|
-| Navigation | Hierarchical tree (4 levels) | Flat tabs (1 level) |
-| Finding content | Expand 4 levels | Click 1 tab |
-| Edit access | Hidden behind selections | Visible on every row |
-| New content types | Not accessible | First-class tabs |
-| Clicks to edit | 6-8 | 2-3 |
-| URL structure | Flat with tree selection | RESTful, bookmarkable |
+| Aspect            | Before                       | After                 |
+| ----------------- | ---------------------------- | --------------------- |
+| Navigation        | Hierarchical tree (4 levels) | Flat tabs (1 level)   |
+| Finding content   | Expand 4 levels              | Click 1 tab           |
+| Edit access       | Hidden behind selections     | Visible on every row  |
+| New content types | Not accessible               | First-class tabs      |
+| Clicks to edit    | 6-8                          | 2-3                   |
+| URL structure     | Flat with tree selection     | RESTful, bookmarkable |
 
 The result is a **faster, more intuitive, and more maintainable** content management system that scales well as new content types are added.

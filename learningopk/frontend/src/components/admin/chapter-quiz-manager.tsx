@@ -1,9 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { 
-  Plus, Pencil, Trash2, Loader2, Clock, Award, CheckCircle2, 
-  ChevronDown, ChevronUp, X, CheckCircle
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Loader2,
+  Clock,
+  Award,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  X,
+  CheckCircle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -61,7 +70,11 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
   const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuizQuestionResponse | null>(null);
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; type: "quiz" | "question"; id?: number }>({
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    show: boolean;
+    type: "quiz" | "question";
+    id?: number;
+  }>({
     show: false,
     type: "quiz",
   });
@@ -171,8 +184,13 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
       });
       return;
     }
-    if (!questionForm.questionText.trim() || !questionForm.optionA.trim() || 
-        !questionForm.optionB.trim() || !questionForm.optionC.trim() || !questionForm.optionD.trim()) {
+    if (
+      !questionForm.questionText.trim() ||
+      !questionForm.optionA.trim() ||
+      !questionForm.optionB.trim() ||
+      !questionForm.optionC.trim() ||
+      !questionForm.optionD.trim()
+    ) {
       pushToast({
         title: "Validation Error",
         description: "All question fields are required",
@@ -196,9 +214,7 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
             marks: questionForm.marks,
           },
         });
-        setQuestions((prev) =>
-          prev.map((q) => (q.id === editingQuestion.id ? updated.data : q))
-        );
+        setQuestions((prev) => prev.map((q) => (q.id === editingQuestion.id ? updated.data : q)));
         pushToast({
           title: "Question updated",
           tone: "success",
@@ -312,12 +328,14 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
             <div className="w-1 h-8 bg-gradient-to-b from-[var(--primary)] to-[var(--primary-hover)] rounded-full" />
             <div>
               <h2 className="text-xl font-semibold tracking-tight">Quiz</h2>
-              <p className="text-sm text-muted-foreground">Create interactive assessments for this chapter</p>
+              <p className="text-sm text-muted-foreground">
+                Create interactive assessments for this chapter
+              </p>
             </div>
           </div>
-          <Button 
-            variant="primary" 
-            size="sm" 
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => setShowQuizForm(true)}
             className="gap-2"
           >
@@ -336,9 +354,9 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
             <p className="text-sm text-muted-foreground max-w-xs mb-6">
               Create a quiz to test student understanding of the chapter content
             </p>
-            <Button 
-              variant="primary" 
-              size="sm" 
+            <Button
+              variant="primary"
+              size="sm"
               onClick={() => setShowQuizForm(true)}
               className="gap-2"
             >
@@ -396,9 +414,9 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
             <Button variant="secondary" onClick={resetQuizForm}>
               Cancel
             </Button>
-            <Button 
-              variant="primary" 
-              onClick={handleCreateQuiz} 
+            <Button
+              variant="primary"
+              onClick={handleCreateQuiz}
               disabled={isSaving}
               className="gap-2"
             >
@@ -432,7 +450,7 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
                 <div className="w-1 h-8 bg-gradient-to-b from-[var(--primary)] to-[var(--primary-hover)] rounded-full" />
                 <h2 className="text-xl font-semibold tracking-tight truncate">{quiz!.title}</h2>
               </div>
-              
+
               {/* Stats Bar */}
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 text-sm">
@@ -451,15 +469,15 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
             </div>
 
             <div className="flex items-center gap-2">
-              <Badge 
+              <Badge
                 variant={quiz!.type === "chapter_quiz" ? "info" : "warning"}
                 className="text-xs"
               >
                 {quiz!.type === "chapter_quiz" ? "Chapter Quiz" : "Mock Exam"}
               </Badge>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setDeleteConfirm({ show: true, type: "quiz" })}
                 className="text-muted-foreground hover:text-destructive"
               >
@@ -498,9 +516,9 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
                 <h4 className="font-medium">
                   {editingQuestion ? "Edit Question" : "Add New Question"}
                 </h4>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={resetQuestionForm}
                   className="text-muted-foreground"
                 >
@@ -515,7 +533,9 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
                   </label>
                   <Textarea
                     value={questionForm.questionText}
-                    onChange={(e) => setQuestionForm(prev => ({ ...prev, questionText: e.target.value }))}
+                    onChange={(e) =>
+                      setQuestionForm((prev) => ({ ...prev, questionText: e.target.value }))
+                    }
                     placeholder="Enter the question text..."
                     rows={3}
                     className="resize-none"
@@ -530,14 +550,18 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
                       </label>
                       <Input
                         value={questionForm[`option${option}` as keyof QuestionFormData] as string}
-                        onChange={(e) => setQuestionForm(prev => ({ 
-                          ...prev, 
-                          [`option${option}`]: e.target.value 
-                        }))}
+                        onChange={(e) =>
+                          setQuestionForm((prev) => ({
+                            ...prev,
+                            [`option${option}`]: e.target.value,
+                          }))
+                        }
                         placeholder={`Option ${option}`}
-                        className={questionForm.correctOption === option.toLowerCase() 
-                          ? "border-[var(--primary)] bg-[var(--primary)]/5" 
-                          : ""}
+                        className={
+                          questionForm.correctOption === option.toLowerCase()
+                            ? "border-[var(--primary)] bg-[var(--primary)]/5"
+                            : ""
+                        }
                       />
                     </div>
                   ))}
@@ -548,10 +572,12 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
                     <label className="text-sm font-medium mb-2 block">Correct Answer</label>
                     <Select
                       value={questionForm.correctOption}
-                      onChange={(e) => setQuestionForm(prev => ({ 
-                        ...prev, 
-                        correctOption: e.target.value as "a" | "b" | "c" | "d" 
-                      }))}
+                      onChange={(e) =>
+                        setQuestionForm((prev) => ({
+                          ...prev,
+                          correctOption: e.target.value as "a" | "b" | "c" | "d",
+                        }))
+                      }
                       className="bg-[var(--primary)]/10 border-[var(--primary)]/30"
                     >
                       <option value="a">A</option>
@@ -565,10 +591,12 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
                     <Input
                       type="number"
                       value={questionForm.marks}
-                      onChange={(e) => setQuestionForm(prev => ({ 
-                        ...prev, 
-                        marks: parseInt(e.target.value) || 1 
-                      }))}
+                      onChange={(e) =>
+                        setQuestionForm((prev) => ({
+                          ...prev,
+                          marks: parseInt(e.target.value) || 1,
+                        }))
+                      }
                       min={1}
                       max={100}
                     />
@@ -579,7 +607,9 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
                   <label className="text-sm font-medium mb-2 block">Explanation</label>
                   <Textarea
                     value={questionForm.explanation ?? ""}
-                    onChange={(e) => setQuestionForm(prev => ({ ...prev, explanation: e.target.value }))}
+                    onChange={(e) =>
+                      setQuestionForm((prev) => ({ ...prev, explanation: e.target.value }))
+                    }
                     placeholder="Explain why the correct answer is correct..."
                     rows={2}
                     className="resize-none"
@@ -592,9 +622,9 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
               <Button variant="secondary" onClick={resetQuestionForm}>
                 Cancel
               </Button>
-              <Button 
-                variant="primary" 
-                onClick={handleSaveQuestion} 
+              <Button
+                variant="primary"
+                onClick={handleSaveQuestion}
                 disabled={isSaving}
                 className="gap-2"
               >
@@ -647,13 +677,15 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
         ) : (
           <div className="space-y-3">
             {questions.map((question, index) => (
-              <div 
+              <div
                 key={question.id}
                 className="rounded-xl border bg-card shadow-sm overflow-hidden transition-shadow hover:shadow-md"
               >
                 {/* Question Header */}
                 <button
-                  onClick={() => setExpandedQuestion(expandedQuestion === question.id ? null : question.id)}
+                  onClick={() =>
+                    setExpandedQuestion(expandedQuestion === question.id ? null : question.id)
+                  }
                   className="w-full p-4 flex items-center justify-between text-left"
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -666,10 +698,7 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
                     <Badge variant="neutral" className="hidden sm:inline-flex">
                       {question.marks} {question.marks === 1 ? "mark" : "marks"}
                     </Badge>
-                    <Badge 
-                      variant="success" 
-                      className="hidden sm:inline-flex gap-1"
-                    >
+                    <Badge variant="success" className="hidden sm:inline-flex gap-1">
                       <CheckCircle className="h-3 w-3" />
                       {question.correctOption.toUpperCase()}
                     </Badge>
@@ -690,18 +719,20 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
                         const optionKey = `option${option}` as keyof QuizQuestionResponse;
                         const isCorrect = question.correctOption === option.toLowerCase();
                         return (
-                          <div 
+                          <div
                             key={option}
                             className={`p-3 rounded-lg border transition-colors ${
-                              isCorrect 
-                                ? "bg-success/10 border-success/30 text-success" 
+                              isCorrect
+                                ? "bg-success/10 border-success/30 text-success"
                                 : "bg-muted/50 border-border"
                             }`}
                           >
                             <div className="flex items-center gap-2">
-                              <span className={`font-semibold text-sm ${
-                                isCorrect ? "text-success" : "text-muted-foreground"
-                              }`}>
+                              <span
+                                className={`font-semibold text-sm ${
+                                  isCorrect ? "text-success" : "text-muted-foreground"
+                                }`}
+                              >
                                 {option}.
                               </span>
                               <span className="text-sm truncate">
@@ -719,26 +750,30 @@ export function ChapterQuizManager({ chapterId }: ChapterQuizManagerProps) {
                     {/* Explanation */}
                     {question.explanation && (
                       <div className="p-3 rounded-lg bg-muted/50 border border-border">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Explanation</p>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">
+                          Explanation
+                        </p>
                         <p className="text-sm">{question.explanation}</p>
                       </div>
                     )}
 
                     {/* Actions */}
                     <div className="flex items-center justify-end gap-2 pt-2 border-t">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleEditQuestion(question)}
                         className="gap-2"
                       >
                         <Pencil className="h-4 w-4" />
                         Edit
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setDeleteConfirm({ show: true, type: "question", id: question.id })}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setDeleteConfirm({ show: true, type: "question", id: question.id })
+                        }
                         className="gap-2 text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />

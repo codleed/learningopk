@@ -18,4 +18,3 @@ export default function AuthError({ error: _error, reset }: AuthErrorProps) {
     </div>
   );
 }
-

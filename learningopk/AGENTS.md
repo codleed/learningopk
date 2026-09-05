@@ -4,46 +4,48 @@
 
 ### Root Commands (from `learningopk/`)
 
+This is a pnpm workspace (`pnpm-workspace.yaml`); use `pnpm` for install/CI. The pnpm version is pinned via `packageManager` in `package.json`.
+
 ```bash
-npm run dev:all       # Start frontend + backend concurrently
-npm run lint          # Lint all packages
-npm run typecheck     # TypeScript check all packages
-npm run db:generate   # Generate Drizzle migrations
-npm run db:migrate    # Run pending migrations
-npm run db:seed       # Seed database
+pnpm run dev:all       # Start frontend + backend concurrently
+pnpm run lint          # Lint all packages
+pnpm run typecheck     # TypeScript check all packages
+pnpm run db:generate   # Generate Drizzle migrations
+pnpm run db:migrate    # Run pending migrations
+pnpm run db:seed       # Seed database
 ```
 
 ### Backend Commands (from `learningopk/backend/`)
 
 ```bash
-npm run dev           # Start with tsx watch (port 3001)
-npm run build         # Compile to dist/
-npm run lint          # TypeScript check only
-npm run typecheck     # Same as lint
+pnpm run dev           # Start with tsx watch (port 3001)
+pnpm run build         # Compile to dist/
+pnpm run lint          # TypeScript check only
+pnpm run typecheck     # Same as lint
 
 # Testing
-npm run test                 # Run all tests
-npm run test:unit            # Unit tests only
-npm run test:integration     # Integration tests only
-npm run test src/tests/unit/validators.unit.test.ts  # Single test
+pnpm run test                 # Run all tests
+pnpm run test:unit            # Unit tests only
+pnpm run test:integration     # Integration tests only
+pnpm run test src/tests/unit/validators.unit.test.ts  # Single test
 
 # Verification
-npm run healthcheck          # Verify services running
-npm run ai:verify            # Test AI chat
-npm run quiz:verify          # Test quiz submission
-npm run auth:verify          # Test authentication
+pnpm run healthcheck          # Verify services running
+pnpm run ai:verify            # Test AI chat
+pnpm run quiz:verify          # Test quiz submission
+pnpm run auth:verify          # Test authentication
 ```
 
 ### Frontend Commands (from `learningopk/frontend/`)
 
 ```bash
-npm run dev           # Start Next.js dev server (port 3000)
-npm run build         # Production build
-npm run lint          # ESLint check
-npm run typecheck     # TypeScript check
-npm run test:e2e                    # Run all e2e tests
-npm run test:e2e:smoke              # Smoke tests only
-npm run test:e2e tests/e2e/smoke.spec.ts  # Single e2e test
+pnpm run dev           # Start Next.js dev server (port 3000)
+pnpm run build         # Production build
+pnpm run lint          # ESLint check
+pnpm run typecheck     # TypeScript check
+pnpm run test:e2e                    # Run all e2e tests
+pnpm run test:e2e:smoke              # Smoke tests only
+pnpm run test:e2e tests/e2e/smoke.spec.ts  # Single e2e test
 ```
 
 ---
@@ -51,6 +53,7 @@ npm run test:e2e tests/e2e/smoke.spec.ts  # Single e2e test
 ## Code Style Guidelines
 
 ### General Principles
+
 - **Strict TypeScript** - All code must pass strict mode
 - **No `any`** - Use `unknown` or proper generics
 - **ES Modules** - Use `.js` extensions in imports
@@ -58,6 +61,7 @@ npm run test:e2e tests/e2e/smoke.spec.ts  # Single e2e test
 ### Backend (Express + Drizzle + Better Auth)
 
 #### File Structure
+
 ```
 backend/src/
 ├── routes/        # Express routers (ai-chat.ts, quiz.ts, etc.)
@@ -72,21 +76,24 @@ backend/src/
 ```
 
 #### Naming
+
 - Routes: `kebab-case` (e.g., `ai-chat.ts`)
 - Services/Repositories: `camelCase` (e.g., `quiz.service.ts`)
 - Database tables: `snake_case` (e.g., `user_progress`)
 - Zod schemas: `CamelCase` + `Schema` suffix
 
 #### Error Handling
+
 ```typescript
 // Use errorResponse from src/lib/response.ts
-res.status(400).json(errorResponse('Invalid input', 'VALIDATION_ERROR'))
+res.status(400).json(errorResponse("Invalid input", "VALIDATION_ERROR"));
 
 // Success
-res.json(successResponse(data))
+res.json(successResponse(data));
 ```
 
 #### Database
+
 - Use **Drizzle ORM** for all queries
 - Never interpolate user input in queries
 
@@ -95,6 +102,7 @@ res.json(successResponse(data))
 ### Frontend (Next.js 16 + Heroui + Tailwind CSS)
 
 #### File Structure
+
 ```
 frontend/
 ├── app/              # Next.js App Router pages
@@ -104,11 +112,13 @@ frontend/
 ```
 
 #### UI Components
+
 - Use `@/components/ui` (Button, Badge, Card, Input, etc.)
 - Defined via **CVA** (Class Variance Authority)
 - Follow 4px spacing grid, dark theme supported
 
 #### Imports
+
 ```typescript
 // Good
 import { Button, Card, Badge } from "@/components/ui";
@@ -117,11 +127,46 @@ import { Button, Card, Badge } from "@/components/ui";
 import { Button } from "@/design-system/components/Button";
 ```
 
+#### Client-Side Data Fetching (TanStack Query)
+
+New client-side data fetching **MUST** use TanStack Query (`useQuery`, `useSuspenseQuery`, `useInfiniteQuery`, `useMutation`). Raw `fetch` + `useEffect` + `useState` is banned for server state. The provider lives in `frontend/app/providers.tsx` (staleTime 30s, retry 1, refetchOnWindowFocus false).
+
+Reference implementation: the forum feed (`src/components/forum/forum-thread-feed.tsx`, `forum-reply-actions.tsx`, `forum-reply-form.tsx`, `forum-thread-form.tsx`) with shared keys/errors in `src/lib/forum-api.ts`.
+
+```typescript
+// Queries: domain key factory from the api module; SSR data hydrates via initialData.
+const feedQuery = useInfiniteQuery({
+  queryKey: forumKeys.threads(filters),
+  queryFn: ({ pageParam }) => getForumThreads({ ...filters, offset: pageParam }),
+  initialPageParam: 0,
+  getNextPageParam: (lastPage) => /* undefined when no full page remains */,
+  initialData: { pages: [{ threads }], pageParams: [0] }, // server-rendered first paint
+});
+
+// Mutations: invalidate the domain root, then refresh RSC-rendered markup.
+const queryClient = useQueryClient();
+const voteMutation = useMutation({
+  mutationFn: postVote,
+  onSuccess: () => {
+    void queryClient.invalidateQueries({ queryKey: forumKeys.all });
+    router.refresh(); // needed when the page is server-rendered
+  },
+});
+```
+
+Rules of thumb:
+
+- Cache keys are hierarchical (`["forum"]` → `["forum", "threads", filters]`); mutations invalidate at the domain root.
+- Throw typed errors (e.g. `ForumApiError`) from `mutationFn` for non-2xx responses so UI can distinguish API errors from network errors.
+- Fire-and-forget side-effect pings (view tracking) may stay as raw `fetch` — they read no server state.
+- Server components keep fetching directly (RSC `fetch`/api modules); TanStack Query is for the client tree only.
+
 ---
 
 ### Shared Conventions
 
 #### Import Syntax
+
 ```typescript
 // Backend - use .js extension for ESM
 import { auth } from "../lib/auth.js";
@@ -131,10 +176,12 @@ import { Button } from "@/components/ui";
 ```
 
 #### TypeScript
+
 - Backend: `strict: true`, `NodeNext` module, `noUncheckedIndexedAccess`
 - Frontend: `strict: true`, `bundler` module resolution
 
 #### Git
+
 - Branch: `feature/description`, `fix/description`
 - Never commit secrets - use `.env` files
 
@@ -152,7 +199,7 @@ import { Button } from "@/components/ui";
 
 1. Copy `backend/.env.example` → `backend/.env`, add `DATABASE_URL`, `REDIS_URL`, `MISTRAL_API_KEY`
 2. Copy `frontend/.env.local.example` → `frontend/.env.local`
-3. Run `npm run docker:up` to start PostgreSQL (port 5433) + Redis
+3. Run `pnpm run docker:up` to start PostgreSQL (port 5433) + Redis
 
 ---
 

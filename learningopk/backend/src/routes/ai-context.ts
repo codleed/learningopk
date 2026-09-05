@@ -6,16 +6,22 @@ import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { successResponse, errorResponse } from "../lib/response.js";
 import { learningPathService } from "../services/learning-path.service.js";
 
-const VALID_EXPLANATION_STYLES = ["balanced", "visual", "step-by-step", "examples", "analogies"] as const;
+const VALID_EXPLANATION_STYLES = [
+  "balanced",
+  "visual",
+  "step-by-step",
+  "examples",
+  "analogies",
+] as const;
 
 const updateContextSchema = z.object({
   preferredExplanationStyle: z.enum(VALID_EXPLANATION_STYLES).optional(),
   weakTopics: z.array(z.string().trim().min(1).max(200)).max(20).optional(),
-  strongTopics: z.array(z.string().trim().min(1).max(200)).max(20).optional()
+  strongTopics: z.array(z.string().trim().min(1).max(200)).max(20).optional(),
 });
 
 const topicParamSchema = z.object({
-  topic: z.string().trim().min(1).max(200)
+  topic: z.string().trim().min(1).max(200),
 });
 
 export const aiContextRouter = Router();
@@ -27,12 +33,14 @@ aiContextRouter.get("/learning-path", requireSession, async (req, res) => {
   try {
     const result = await learningPathService.getLearningPath(userId, {
       boardSlug: authedReq.session.user.board ?? null,
-      classSlug: authedReq.session.user.class ?? null
+      classSlug: authedReq.session.user.class ?? null,
     });
 
-    res.status(200).json(successResponse({
-      recommendedChapters: result.recommendedChapters
-    }));
+    res.status(200).json(
+      successResponse({
+        recommendedChapters: result.recommendedChapters,
+      })
+    );
   } catch (error) {
     console.error("Failed to build learning path:", error);
     res.status(500).json(errorResponse("Failed to generate learning path.", "LEARNING_PATH_ERROR"));
@@ -46,13 +54,15 @@ aiContextRouter.get("/context", requireSession, async (req, res) => {
   try {
     const context = await aiContextRepository.findByUserId(userId);
 
-    res.status(200).json(successResponse({
-      weakTopics: context?.weakTopics ?? [],
-      strongTopics: context?.strongTopics ?? [],
-      preferredExplanationStyle: context?.preferredExplanationStyle ?? "balanced",
-      lastConceptsDiscussed: context?.lastConceptsDiscussed ?? [],
-      updatedAt: context?.updatedAt?.toISOString() ?? null
-    }));
+    res.status(200).json(
+      successResponse({
+        weakTopics: context?.weakTopics ?? [],
+        strongTopics: context?.strongTopics ?? [],
+        preferredExplanationStyle: context?.preferredExplanationStyle ?? "balanced",
+        lastConceptsDiscussed: context?.lastConceptsDiscussed ?? [],
+        updatedAt: context?.updatedAt?.toISOString() ?? null,
+      })
+    );
   } catch (error) {
     console.error("Failed to get AI context:", error);
     res.status(500).json(errorResponse("Failed to retrieve AI context.", "AI_CONTEXT_FETCH_ERROR"));
@@ -65,7 +75,9 @@ aiContextRouter.patch("/context", requireSession, async (req, res) => {
 
   const parsed = updateContextSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json(errorResponse("Invalid update payload.", "VALIDATION_ERROR", parsed.error.flatten()));
+    res
+      .status(400)
+      .json(errorResponse("Invalid update payload.", "VALIDATION_ERROR", parsed.error.flatten()));
     return;
   }
 
@@ -84,19 +96,24 @@ aiContextRouter.patch("/context", requireSession, async (req, res) => {
       updateData.strongTopics = strongTopics.map((t) => t.toLowerCase());
     }
 
-    const updated = await aiContextRepository.upsertContext(userId, updateData as {
-      preferredExplanationStyle?: string;
-      weakTopics?: string[];
-      strongTopics?: string[];
-    });
+    const updated = await aiContextRepository.upsertContext(
+      userId,
+      updateData as {
+        preferredExplanationStyle?: string;
+        weakTopics?: string[];
+        strongTopics?: string[];
+      }
+    );
 
-    res.status(200).json(successResponse({
-      weakTopics: updated.weakTopics,
-      strongTopics: updated.strongTopics,
-      preferredExplanationStyle: updated.preferredExplanationStyle,
-      lastConceptsDiscussed: updated.lastConceptsDiscussed,
-      updatedAt: updated.updatedAt.toISOString()
-    }));
+    res.status(200).json(
+      successResponse({
+        weakTopics: updated.weakTopics,
+        strongTopics: updated.strongTopics,
+        preferredExplanationStyle: updated.preferredExplanationStyle,
+        lastConceptsDiscussed: updated.lastConceptsDiscussed,
+        updatedAt: updated.updatedAt.toISOString(),
+      })
+    );
   } catch (error) {
     console.error("Failed to update AI context:", error);
     res.status(500).json(errorResponse("Failed to update AI context.", "AI_CONTEXT_UPDATE_ERROR"));
@@ -108,7 +125,7 @@ aiContextRouter.delete("/context/weak-topics/:topic", requireSession, async (req
   const userId = authedReq.session.user.id;
 
   const rawTopic = req.params.topic;
-  const topicStr = Array.isArray(rawTopic) ? rawTopic[0] ?? "" : rawTopic ?? "";
+  const topicStr = Array.isArray(rawTopic) ? (rawTopic[0] ?? "") : (rawTopic ?? "");
   const parsed = topicParamSchema.safeParse({ topic: decodeURIComponent(topicStr) });
   if (!parsed.success) {
     res.status(400).json(errorResponse("Invalid topic parameter.", "VALIDATION_ERROR"));
@@ -129,7 +146,7 @@ aiContextRouter.delete("/context/strong-topics/:topic", requireSession, async (r
   const userId = authedReq.session.user.id;
 
   const rawTopic = req.params.topic;
-  const topicStr = Array.isArray(rawTopic) ? rawTopic[0] ?? "" : rawTopic ?? "";
+  const topicStr = Array.isArray(rawTopic) ? (rawTopic[0] ?? "") : (rawTopic ?? "");
   const parsed = topicParamSchema.safeParse({ topic: decodeURIComponent(topicStr) });
   if (!parsed.success) {
     res.status(400).json(errorResponse("Invalid topic parameter.", "VALIDATION_ERROR"));
@@ -141,6 +158,8 @@ aiContextRouter.delete("/context/strong-topics/:topic", requireSession, async (r
     res.status(200).json(successResponse({ removed: parsed.data.topic.toLowerCase() }));
   } catch (error) {
     console.error("Failed to remove strong topic:", error);
-    res.status(500).json(errorResponse("Failed to remove strong topic.", "AI_CONTEXT_UPDATE_ERROR"));
+    res
+      .status(500)
+      .json(errorResponse("Failed to remove strong topic.", "AI_CONTEXT_UPDATE_ERROR"));
   }
 });

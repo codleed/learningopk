@@ -3,15 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  Check,
-  Clock,
-  FileText,
-  Lock,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { ArrowLeft, Check, Clock, FileText, Lock, ChevronDown, ChevronUp } from "lucide-react";
 
 import { PageHeader } from "@/components/common/page-header";
 import { BoardBadge } from "@/components/common/board-badge";
@@ -27,7 +19,7 @@ import {
   getQuizQuestions,
   MockExamApiError,
   type MockExamDetail,
-  type QuizQuestion
+  type QuizQuestion,
 } from "@/lib/mock-exams-api";
 
 interface MockExamSolutionsClientProps {
@@ -38,7 +30,7 @@ const optionLabels: Record<string, string> = {
   a: "A",
   b: "B",
   c: "C",
-  d: "D"
+  d: "D",
 };
 
 export function MockExamSolutionsClient({ examId }: MockExamSolutionsClientProps) {
@@ -54,16 +46,22 @@ export function MockExamSolutionsClient({ examId }: MockExamSolutionsClientProps
         setIsLoading(true);
         const [examData, questionsData] = await Promise.all([
           getMockExam(examId),
-          getQuizQuestions(examId)
+          getQuizQuestions(examId),
         ]);
         setExam(examData);
         setQuestions(questionsData);
       } catch (err: unknown) {
-        if (err instanceof MockExamApiError && (err.status === 403 || err.code === "EXAM_NOT_COMPLETED")) {
-          setError("Solutions are only available after you complete the exam. Please attempt the mock exam first.");
+        if (
+          err instanceof MockExamApiError &&
+          (err.status === 403 || err.code === "EXAM_NOT_COMPLETED")
+        ) {
+          setError(
+            "Solutions are only available after you complete the exam. Please attempt the mock exam first."
+          );
         } else {
           console.error("Failed to load mock exam solutions:", err);
-          const errorMessage = err instanceof Error ? err.message : "Failed to load solutions. Please try again.";
+          const errorMessage =
+            err instanceof Error ? err.message : "Failed to load solutions. Please try again.";
           setError(errorMessage);
         }
       } finally {
@@ -122,9 +120,7 @@ export function MockExamSolutionsClient({ examId }: MockExamSolutionsClientProps
           <h3 className="font-display text-lg font-semibold text-text-primary">
             {isAccessDenied ? "Exam Not Completed" : "Unable to Load Solutions"}
           </h3>
-          <p className="mt-2 text-sm text-text-secondary">
-            {error || "Exam not found"}
-          </p>
+          <p className="mt-2 text-sm text-text-secondary">{error || "Exam not found"}</p>
           <div className="mt-5 flex items-center justify-center gap-3">
             {isAccessDenied && (
               <Link href={`/past-papers/${examId}/attempt`}>
@@ -181,9 +177,7 @@ export function MockExamSolutionsClient({ examId }: MockExamSolutionsClientProps
         <div className="min-w-0 flex-1 space-y-4">
           {questions.length === 0 ? (
             <Card className="p-8 text-center">
-              <p className="text-sm text-text-secondary">
-                No questions available for this exam.
-              </p>
+              <p className="text-sm text-text-secondary">No questions available for this exam.</p>
             </Card>
           ) : (
             questions.map((question, index) => (
@@ -234,12 +228,7 @@ export function MockExamSolutionsClient({ examId }: MockExamSolutionsClientProps
                 {/* Back to papers */}
                 <div className="mt-3 border-t border-border-default pt-3">
                   <Link href="/past-papers">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      width="full"
-                      iconLeft={<ArrowLeft />}
-                    >
+                    <Button variant="ghost" size="sm" width="full" iconLeft={<ArrowLeft />}>
                       Back to Papers
                     </Button>
                   </Link>
@@ -327,7 +316,8 @@ function SolutionQuestionCard({
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {(["a", "b", "c", "d"] as const).map((option) => {
               const isCorrect = question.correctOption === option;
-              const optionKey = `option${option.charAt(0).toUpperCase() + option.slice(1)}` as keyof QuizQuestion;
+              const optionKey =
+                `option${option.charAt(0).toUpperCase() + option.slice(1)}` as keyof QuizQuestion;
               const optionText = question[optionKey] as string;
 
               return (
@@ -350,10 +340,12 @@ function SolutionQuestionCard({
                   >
                     {isCorrect ? <Check className="h-3 w-3" /> : optionLabels[option]}
                   </span>
-                  <span className={cn(
-                    "flex-1",
-                    isCorrect ? "font-medium text-accent-success" : "text-text-secondary"
-                  )}>
+                  <span
+                    className={cn(
+                      "flex-1",
+                      isCorrect ? "font-medium text-accent-success" : "text-text-secondary"
+                    )}
+                  >
                     {optionText}
                   </span>
                 </div>

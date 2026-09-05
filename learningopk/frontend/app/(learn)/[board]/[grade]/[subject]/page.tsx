@@ -4,10 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
 import { AppShell } from "@/components/foundation/app-shell";
-import {
-  StaggerContainer,
-  MotionSection,
-} from "@/components/motion";
+import { StaggerContainer, MotionSection } from "@/components/motion";
 import { PageHeader } from "@/components/common/page-header";
 import { SubjectHeader } from "@/components/learn/subject-header";
 import { SubjectViewSwitcher } from "@/components/learn/subject-view-switcher";
@@ -15,9 +12,18 @@ import { getSubjectOverview } from "@/lib/learn-api";
 import { getServerSession } from "@/lib/session";
 
 const routeParamsSchema = z.object({
-  board: z.string().trim().regex(/^[a-z0-9-]+$/),
-  grade: z.string().trim().regex(/^[a-z0-9-]+$/),
-  subject: z.string().trim().regex(/^[a-z0-9-]+$/)
+  board: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/),
+  grade: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/),
+  subject: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/),
 });
 
 type SubjectPageProps = {
@@ -108,8 +114,8 @@ export default async function SubjectPage({ params, searchParams }: SubjectPageP
                   Chapters
                 </h2>
                 <p className="mt-0.5 text-sm text-text-secondary">
-                  {payload.chapters.length}{" "}
-                  {payload.chapters.length === 1 ? "chapter" : "chapters"} available
+                  {payload.chapters.length} {payload.chapters.length === 1 ? "chapter" : "chapters"}{" "}
+                  available
                 </p>
               </div>
               <Link

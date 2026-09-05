@@ -11,6 +11,7 @@
 ---
 
 ## Execution Guardrails
+
 - Follow strict runtime TDD for every behavior change: RED -> GREEN -> refactor.
 - Do not write compile-time-only tests.
 - If any unexpected command failure occurs, invoke `superpowers:systematic-debugging` before code changes.
@@ -35,6 +36,7 @@ pnpm.cmd --filter backend db:clear
 ### Task 1: Backend Command Center Integration Coverage (TDD RED)
 
 **Files:**
+
 - Create: `backend/src/tests/integration/admin-phase7.integration.test.ts`
 - Reference: `backend/src/tests/integration/admin-phase6.integration.test.ts`
 - Reference: `backend/src/tests/integration/admin-phase5.integration.test.ts`
@@ -66,6 +68,7 @@ test("admin overview applies 7/30/90 window to notifications KPI", async () => {
 ```
 
 Use deterministic SQL seed helpers in test file for:
+
 - `moderation_flags`
 - `user`
 - `admin_audit_logs`
@@ -91,17 +94,20 @@ git commit -m "test: add failing admin phase 7 overview API coverage"
 ### Task 2: Backend Overview API Implementation (TDD GREEN)
 
 **Files:**
+
 - Modify: `backend/src/routes/admin.ts`
 - Modify: `backend/src/tests/integration/admin-phase7.integration.test.ts` (only if assertions need tightening)
 
 **Step 1: Add strict query schema and response builder**
 
 Implement `windowDays` query parsing:
+
 - enum/refine to `7|30|90`
 - default `30`
 - invalid query returns `400` with existing details shape
 
 Implement list/aggregate helper:
+
 - `openModerationFlags` count (`moderation_flags.status = 'open'`)
 - `suspendedUsers` count (`user.status = 'suspended'`)
 - `failedAdminActionsLast24h` count (`admin_audit_logs.status = 'failed'` and `created_at >= now - 24h`)
@@ -114,6 +120,7 @@ Implement list/aggregate helper:
 **Step 2: Add route**
 
 Add:
+
 - `GET /api/admin/overview`
 - `requireSession`
 - `requireAdminRole`
@@ -130,6 +137,7 @@ pnpm.cmd --filter backend exec tsx --test src/tests/integration/admin-phase7.int
 Expected: PASS.
 
 **Step 4: Refactor lightly**
+
 - Keep metric calculations in a single helper with minimal duplication.
 - Keep audit serialization aligned with existing admin audit payload shape.
 
@@ -143,6 +151,7 @@ git commit -m "feat: add admin command center overview API"
 ### Task 3: Frontend Command Center E2E Coverage (TDD RED)
 
 **Files:**
+
 - Create: `frontend/tests/e2e/admin-phase7-command-center.spec.ts`
 
 **Step 1: Write failing Playwright tests for live `/admin`**
@@ -190,6 +199,7 @@ git commit -m "test: add failing admin phase 7 command center e2e coverage"
 ### Task 4: Frontend Command Center Implementation (TDD GREEN)
 
 **Files:**
+
 - Modify: `frontend/lib/admin-api.ts`
 - Modify: `frontend/app/admin/page.tsx`
 - Create: `frontend/components/admin/admin-command-center-panel.tsx`
@@ -200,6 +210,7 @@ git commit -m "test: add failing admin phase 7 command center e2e coverage"
 **Step 1: Add admin overview API client contract**
 
 In `frontend/lib/admin-api.ts`:
+
 - add zod schema/types for `AdminOverviewResponse`
 - add `getAdminOverview({ windowDays, cookieHeader? })`
 - use existing `fetchAdminJson` path `/api/admin/overview`
@@ -207,11 +218,13 @@ In `frontend/lib/admin-api.ts`:
 **Step 2: Replace static `/admin` content with live panel**
 
 In `frontend/app/admin/page.tsx`:
+
 - server-side prefetch `windowDays: 30`
 - fallback payload on fetch error (empty-safe values)
 - render command center panel component
 
 In new panel component(s):
+
 - window selector: 7/30/90
 - refresh action
 - KPI cards with links:
@@ -235,6 +248,7 @@ pnpm.cmd --filter frontend exec playwright test tests/e2e/admin-phase7-command-c
 Expected: PASS.
 
 **Step 4: Refactor lightly**
+
 - Keep scope-to-link mapping deterministic and local.
 - Keep window/refresh state transitions simple and predictable.
 
@@ -250,6 +264,7 @@ If split files were not created, adjust `git add` paths accordingly.
 ### Task 5: Full Verification and Regression Gate
 
 **Files:**
+
 - Modify only if required for verification fixes.
 
 **Step 1: Set required env vars in shell**
@@ -370,6 +385,7 @@ pnpm.cmd --filter backend typecheck
 ```
 
 **Step 14: Completion verification skill**
+
 - Invoke `superpowers:verification-before-completion` and re-check that all required verification commands were executed successfully.
 
 **Step 15: Commit any verification-only fixes**
@@ -382,8 +398,10 @@ git commit -m "chore: finalize admin phase 7 verification fixes"
 ### Task 6: Branch Finalization
 
 **Step 1: Use branch finishing skill**
+
 - Invoke `superpowers:finishing-a-development-branch`.
 - Follow its checklist to summarize commits, verification status, and integration options.
 
 **Step 2: Present final integration recommendation**
+
 - Recommend PR or merge path with exact branch/worktree context.

@@ -5,15 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Building2,
-  Check,
-  GraduationCap,
-  Lock,
-  Mail,
-  ShieldCheck,
-  User,
-} from "lucide-react";
+import { Building2, Check, GraduationCap, Lock, Mail, ShieldCheck, User } from "lucide-react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -27,8 +19,7 @@ import { PasswordInput } from "@/components/auth/password-input";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
-const backendUrl =
-  process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
 const steps = [
   { id: 1, label: "Profile", icon: User },
@@ -49,9 +40,7 @@ const academicSchema = z.object({
 
 const accountSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters."),
-  confirmPassword: z
-    .string()
-    .min(8, "Confirm password must be at least 8 characters."),
+  confirmPassword: z.string().min(8, "Confirm password must be at least 8 characters."),
   agreedToTerms: z.boolean().refine((val) => val === true, {
     message: "You must agree to the terms and conditions.",
   }),
@@ -142,14 +131,10 @@ export function RegisterPageClient() {
         });
 
         if (!response.ok) {
-          throw new Error(
-            `Profile options request failed: ${response.status}`
-          );
+          throw new Error(`Profile options request failed: ${response.status}`);
         }
 
-        const parsed = registerProfileOptionsSchema.safeParse(
-          (await response.json()) as unknown
-        );
+        const parsed = registerProfileOptionsSchema.safeParse((await response.json()) as unknown);
         if (!parsed.success) {
           throw new Error("Invalid profile options payload.");
         }
@@ -178,9 +163,7 @@ export function RegisterPageClient() {
       (board) => board.slug === formData.board
     )?.id;
     if (!selectedBoardId) return [];
-    return profileOptions.classes.filter(
-      (option) => option.boardId === selectedBoardId
-    );
+    return profileOptions.classes.filter((option) => option.boardId === selectedBoardId);
   }, [profileOptions, formData.board]);
 
   const passwordStrength = useMemo(
@@ -328,9 +311,8 @@ export function RegisterPageClient() {
               <span className="text-accent-primary">learning journey.</span>
             </h2>
             <p className="mt-3 text-sm text-text-secondary leading-relaxed max-w-md">
-              Join thousands of Pakistani students preparing for their board
-              exams with AI-powered tools, personalized study plans, and
-              gamified learning.
+              Join thousands of Pakistani students preparing for their board exams with AI-powered
+              tools, personalized study plans, and gamified learning.
             </p>
 
             {/* Stats */}
@@ -414,25 +396,19 @@ export function RegisterPageClient() {
                       const Icon = step.icon;
 
                       return (
-                        <div
-                          key={step.id}
-                          className="flex items-center flex-1"
-                        >
+                        <div key={step.id} className="flex items-center flex-1">
                           <div className="flex items-center gap-2">
                             <motion.div
                               className={cn(
                                 "flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all duration-300",
-                                isCompleted &&
-                                  "border-accent-primary bg-accent-primary text-white",
+                                isCompleted && "border-accent-primary bg-accent-primary text-white",
                                 isCurrent &&
                                   "border-accent-primary bg-accent-primary/10 text-accent-primary",
                                 !isCompleted &&
                                   !isCurrent &&
                                   "border-border-default bg-bg-subtle text-text-muted"
                               )}
-                              animate={
-                                isCurrent ? { scale: [1, 1.05, 1] } : {}
-                              }
+                              animate={isCurrent ? { scale: [1, 1.05, 1] } : {}}
                               transition={{ duration: 0.3 }}
                             >
                               {isCompleted ? (
@@ -445,9 +421,7 @@ export function RegisterPageClient() {
                               className={cn(
                                 "text-xs font-medium hidden sm:inline",
                                 isCurrent && "text-accent-primary",
-                                !isCurrent &&
-                                  !isCompleted &&
-                                  "text-text-muted",
+                                !isCurrent && !isCompleted && "text-text-muted",
                                 isCompleted && "text-text-primary"
                               )}
                             >
@@ -458,9 +432,7 @@ export function RegisterPageClient() {
                             <div
                               className={cn(
                                 "mx-3 flex-1 h-0.5 rounded-full transition-all duration-300",
-                                currentStep > step.id
-                                  ? "bg-accent-primary"
-                                  : "bg-border-default"
+                                currentStep > step.id ? "bg-accent-primary" : "bg-border-default"
                               )}
                               aria-hidden
                             />
@@ -498,9 +470,7 @@ export function RegisterPageClient() {
                           error={errors.name}
                           aria-invalid={!!errors.name}
                           value={formData.name}
-                          onChange={(e) =>
-                            handleInputChange("name", e.target.value)
-                          }
+                          onChange={(e) => handleInputChange("name", e.target.value)}
                         />
 
                         <Input
@@ -515,9 +485,7 @@ export function RegisterPageClient() {
                           error={errors.email}
                           aria-invalid={!!errors.email}
                           value={formData.email}
-                          onChange={(e) =>
-                            handleInputChange("email", e.target.value)
-                          }
+                          onChange={(e) => handleInputChange("email", e.target.value)}
                         />
                       </motion.div>
                     )}
@@ -566,10 +534,7 @@ export function RegisterPageClient() {
                             </Select>
                           </div>
                           {errors.board ? (
-                            <p
-                              className="text-xs text-accent-danger"
-                              role="alert"
-                            >
+                            <p className="text-xs text-accent-danger" role="alert">
                               {errors.board}
                             </p>
                           ) : null}
@@ -591,13 +556,9 @@ export function RegisterPageClient() {
                               id="class"
                               name="class"
                               value={formData.class}
-                              onChange={(e) =>
-                                handleInputChange("class", e.target.value)
-                              }
+                              onChange={(e) => handleInputChange("class", e.target.value)}
                               required
-                              disabled={
-                                !formData.board || classOptions.length === 0
-                              }
+                              disabled={!formData.board || classOptions.length === 0}
                               aria-invalid={!!errors.class}
                               className="pl-10"
                             >
@@ -610,10 +571,7 @@ export function RegisterPageClient() {
                             </Select>
                           </div>
                           {errors.class ? (
-                            <p
-                              className="text-xs text-accent-danger"
-                              role="alert"
-                            >
+                            <p className="text-xs text-accent-danger" role="alert">
                               {errors.class}
                             </p>
                           ) : null}
@@ -630,9 +588,7 @@ export function RegisterPageClient() {
                           error={errors.degree}
                           aria-invalid={!!errors.degree}
                           value={formData.degree}
-                          onChange={(e) =>
-                            handleInputChange("degree", e.target.value)
-                          }
+                          onChange={(e) => handleInputChange("degree", e.target.value)}
                         />
                       </motion.div>
                     )}
@@ -659,9 +615,7 @@ export function RegisterPageClient() {
                             autoComplete="new-password"
                             placeholder="At least 8 characters"
                             value={formData.password}
-                            onChange={(e) =>
-                              handleInputChange("password", e.target.value)
-                            }
+                            onChange={(e) => handleInputChange("password", e.target.value)}
                             error={errors.password}
                             aria-invalid={!!errors.password}
                           />
@@ -680,14 +634,10 @@ export function RegisterPageClient() {
                               <p
                                 className={cn(
                                   "text-xs font-medium",
-                                  passwordStrength.color === "danger" &&
-                                    "text-accent-danger",
-                                  passwordStrength.color === "warning" &&
-                                    "text-accent-warning",
-                                  passwordStrength.color === "primary" &&
-                                    "text-accent-primary",
-                                  passwordStrength.color === "success" &&
-                                    "text-accent-success"
+                                  passwordStrength.color === "danger" && "text-accent-danger",
+                                  passwordStrength.color === "warning" && "text-accent-warning",
+                                  passwordStrength.color === "primary" && "text-accent-primary",
+                                  passwordStrength.color === "success" && "text-accent-success"
                                 )}
                               >
                                 {passwordStrength.label}
@@ -706,12 +656,7 @@ export function RegisterPageClient() {
                           autoComplete="new-password"
                           placeholder="Re-enter your password"
                           value={formData.confirmPassword}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "confirmPassword",
-                              e.target.value
-                            )
-                          }
+                          onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                           error={errors.confirmPassword}
                           aria-invalid={!!errors.confirmPassword}
                         />
@@ -732,10 +677,7 @@ export function RegisterPageClient() {
                           hint="By creating an account, you agree to our terms."
                         />
                         {errors.agreedToTerms ? (
-                          <p
-                            className="text-xs text-accent-danger"
-                            role="alert"
-                          >
+                          <p className="text-xs text-accent-danger" role="alert">
                             {errors.agreedToTerms}
                           </p>
                         ) : null}
@@ -767,12 +709,7 @@ export function RegisterPageClient() {
                       </Button>
                     )}
                     {currentStep < 3 ? (
-                      <Button
-                        type="button"
-                        onClick={handleNext}
-                        className="flex-1"
-                        size="lg"
-                      >
+                      <Button type="button" onClick={handleNext} className="flex-1" size="lg">
                         Continue
                       </Button>
                     ) : (

@@ -25,10 +25,7 @@ const MIN_EASE_FACTOR = 1.3;
  * - Good  (quality=3): rep=0 → 1 day, rep=1 → 2 days, else → current * ease, repetitions+1
  * - Easy  (quality=5): interval = current * ease * 1.3, ease += 0.15, repetitions+1
  */
-export function calculateNextReview(
-  current: ReviewState,
-  rating: RecallRating
-): ReviewState {
+export function calculateNextReview(current: ReviewState, rating: RecallRating): ReviewState {
   const now = new Date();
 
   switch (rating) {
@@ -100,7 +97,12 @@ export function getNextReviewPreviews(current: ReviewState): Record<RecallRating
   return {
     again: "Now",
     hard: "+1 day",
-    good: current.repetitions === 0 ? "+1 day" : current.repetitions === 1 ? "+2 days" : `+${Math.round(current.intervalDays * current.easeFactor)} days`,
+    good:
+      current.repetitions === 0
+        ? "+1 day"
+        : current.repetitions === 1
+          ? "+2 days"
+          : `+${Math.round(current.intervalDays * current.easeFactor)} days`,
     easy: `+${Math.round((current.intervalDays > 0 ? current.intervalDays : 1) * current.easeFactor * 1.3)} days`,
   };
 }

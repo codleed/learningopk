@@ -13,29 +13,17 @@ type FormFieldProps = {
   className?: string;
 };
 
-export function FormField({
-  htmlFor,
-  label,
-  error,
-  action,
-  children,
-  className,
-}: FormFieldProps) {
+export function FormField({ htmlFor, label, error, action, children, className }: FormFieldProps) {
   return (
     <div className={cn("space-y-2", className)}>
       <div className="flex items-center justify-between">
-        <label
-          htmlFor={htmlFor}
-          className="text-sm font-medium text-foreground"
-        >
+        <label htmlFor={htmlFor} className="text-sm font-medium text-foreground">
           {label}
         </label>
         {action ? <div>{action}</div> : null}
       </div>
       {children}
-      {error ? (
-        <p className="text-xs font-medium text-destructive">{error}</p>
-      ) : null}
+      {error ? <p className="text-xs font-medium text-destructive">{error}</p> : null}
     </div>
   );
 }

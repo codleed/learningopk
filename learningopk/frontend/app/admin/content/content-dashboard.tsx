@@ -170,7 +170,9 @@ export function ContentDashboard({ boards, auditLogs }: ContentDashboardProps) {
       }
       handleRefresh();
     } catch (error) {
-      window.alert(`Failed to delete ${entity.type}: ${error instanceof Error ? error.message : "Unknown error"}`);
+      window.alert(
+        `Failed to delete ${entity.type}: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     }
   };
 
@@ -247,9 +249,7 @@ export function ContentDashboard({ boards, auditLogs }: ContentDashboardProps) {
           <h3 className="mb-2 font-heading text-lg font-semibold text-[var(--text-primary)]">
             No content yet
           </h3>
-          <p className="mb-6 text-sm text-[var(--text-secondary)]">
-            Start by adding a board.
-          </p>
+          <p className="mb-6 text-sm text-[var(--text-secondary)]">Start by adding a board.</p>
           <Link
             href="/admin/boards/add"
             className="inline-flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-light)]"

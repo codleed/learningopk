@@ -14,13 +14,7 @@ import { fetchReviewStats, type ReviewStats } from "@/lib/srs-api";
 /*  Stat row                                                           */
 /* ------------------------------------------------------------------ */
 
-function StatRow({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function StatRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between rounded-xl border border-border-default bg-bg-base px-3 py-2">
       <span className="text-sm text-text-secondary">{label}</span>
@@ -115,10 +109,7 @@ export function ReviewNowWidget() {
       <CardBody className="flex-1 flex flex-col justify-between gap-3">
         <div className="space-y-2">
           <StatRow label="Due now">
-            <Badge
-              variant={stats.dueToday > 0 ? "danger" : "success"}
-              size="sm"
-            >
+            <Badge variant={stats.dueToday > 0 ? "danger" : "success"} size="sm">
               {stats.dueToday} card{stats.dueToday !== 1 ? "s" : ""}
             </Badge>
           </StatRow>
@@ -136,23 +127,13 @@ export function ReviewNowWidget() {
 
         {stats.dueToday > 0 ? (
           <Link href="/review" className="block">
-            <Button
-              variant="primary"
-              size="md"
-              width="full"
-              iconRight={<ArrowRight />}
-            >
+            <Button variant="primary" size="md" width="full" iconRight={<ArrowRight />}>
               Review Now ({stats.dueToday})
             </Button>
           </Link>
         ) : (
           <Link href="/review" className="block">
-            <Button
-              variant="secondary"
-              size="md"
-              width="full"
-              iconRight={<ChevronRight />}
-            >
+            <Button variant="secondary" size="md" width="full" iconRight={<ChevronRight />}>
               Review Dashboard
             </Button>
           </Link>

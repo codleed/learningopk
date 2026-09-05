@@ -11,6 +11,7 @@
 ---
 
 ## Execution Guardrails
+
 - Follow RED -> GREEN -> refactor in every task.
 - If any command fails unexpectedly, invoke `superpowers:systematic-debugging` before applying fixes.
 - Commit after each task.
@@ -19,6 +20,7 @@
 ### Task 1: Backend Community Threads Health API (TDD)
 
 **Files:**
+
 - Create: `backend/src/tests/integration/admin-phase3.integration.test.ts`
 - Modify: `backend/src/routes/admin.ts`
 
@@ -37,7 +39,7 @@ test("admin community threads listing enforces auth/role and supports solved+pin
     pinned: "unpinned",
     flagState: "openFlags",
     page: 1,
-    pageSize: 10
+    pageSize: 10,
   });
 
   assert.equal(filtered.status, 200);
@@ -80,6 +82,7 @@ git commit -m "feat: add admin community thread health API"
 ### Task 2: Backend Analytics Overview API (TDD)
 
 **Files:**
+
 - Modify: `backend/src/tests/integration/admin-phase3.integration.test.ts`
 - Modify: `backend/src/routes/admin.ts`
 
@@ -135,6 +138,7 @@ git commit -m "feat: add admin analytics overview API"
 ### Task 3: Frontend Community Page + E2E (TDD)
 
 **Files:**
+
 - Create: `frontend/tests/e2e/admin-phase3-community-analytics.spec.ts`
 - Modify: `frontend/lib/admin-api.ts`
 - Modify: `frontend/app/admin/community/page.tsx`
@@ -175,7 +179,7 @@ const initial = await getAdminCommunityThreads({
   solved: "all",
   pinned: "all",
   flagState: "all",
-  cookieHeader
+  cookieHeader,
 });
 return <AdminCommunityPanel initialPayload={initial} />;
 ```
@@ -203,6 +207,7 @@ git commit -m "feat: implement admin community thread health view"
 ### Task 4: Frontend Analytics Page + E2E (TDD)
 
 **Files:**
+
 - Modify: `frontend/tests/e2e/admin-phase3-community-analytics.spec.ts`
 - Modify: `frontend/lib/admin-api.ts`
 - Modify: `frontend/app/admin/analytics/page.tsx`
@@ -212,7 +217,9 @@ git commit -m "feat: implement admin community thread health view"
 **Step 1: Write the failing analytics Playwright test**
 
 ```ts
-test("admin analytics page switches windows and renders KPI + subject table data", async ({ page }) => {
+test("admin analytics page switches windows and renders KPI + subject table data", async ({
+  page,
+}) => {
   await loginAsSeededAdmin(page);
   await page.goto("/admin/analytics");
 
@@ -261,6 +268,7 @@ git commit -m "feat: implement admin analytics dashboard overview"
 ### Task 5: Final Verification and Regression Gate
 
 **Files:**
+
 - Modify: only files required to address verification failures.
 
 **Step 1: Run backend Phase 3 integration tests**
@@ -312,6 +320,7 @@ Run: `pnpm.cmd --filter backend typecheck`
 Expected: PASS.
 
 **Step 9: Use completion verification skill**
+
 - Invoke `superpowers:verification-before-completion` before any success claim.
 
 **Step 10: Commit verification fixes**

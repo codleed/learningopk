@@ -13,6 +13,7 @@
 ### Task 1: Backend Moderation Queue + Resolve Lifecycle (TDD)
 
 **Files:**
+
 - Create: `backend/src/tests/integration/admin-phase2.integration.test.ts`
 - Modify: `backend/src/lib/db/schema.ts`
 - Create: `backend/drizzle/0004_admin_phase2_moderation.sql` (or generated equivalent from `drizzle-kit`)
@@ -35,7 +36,7 @@ test("admin moderation flags listing enforces auth/role and supports status + ta
     status: "open",
     targetType: "thread",
     page: 1,
-    pageSize: 10
+    pageSize: 10,
   });
   assert.equal(openThreads.status, 200);
   assert.ok(openThreads.body.entries.every((row: { status: string }) => row.status === "open"));
@@ -84,7 +85,11 @@ adminRouter.post("/moderation/flags/:id/resolve", requireSession, async (req, re
 
 ```ts
 // backend/src/lib/db/schema.ts (new enums/table)
-export const moderationTargetTypeEnum = pgEnum("moderation_target_type", ["thread", "reply", "chapter"]);
+export const moderationTargetTypeEnum = pgEnum("moderation_target_type", [
+  "thread",
+  "reply",
+  "chapter",
+]);
 export const moderationStatusEnum = pgEnum("moderation_status", ["open", "resolved"]);
 ```
 
@@ -113,6 +118,7 @@ git commit -m "feat: add admin moderation queue APIs with resolve lifecycle"
 ### Task 2: Backend Users Directory API (TDD)
 
 **Files:**
+
 - Modify: `backend/src/tests/integration/admin-phase2.integration.test.ts`
 - Modify: `backend/src/routes/admin.ts`
 
@@ -126,11 +132,17 @@ test("admin users listing enforces auth/role and supports search + role filters 
   const forbidden = await memberAgent.get("/api/admin/users");
   assert.equal(forbidden.status, 403);
 
-  const byEmail = await adminAgent.get("/api/admin/users").query({ q: "admin@example.com", page: 1, pageSize: 10 });
+  const byEmail = await adminAgent
+    .get("/api/admin/users")
+    .query({ q: "admin@example.com", page: 1, pageSize: 10 });
   assert.equal(byEmail.status, 200);
-  assert.ok(byEmail.body.entries.some((row: { email: string }) => row.email === "admin@example.com"));
+  assert.ok(
+    byEmail.body.entries.some((row: { email: string }) => row.email === "admin@example.com")
+  );
 
-  const studentsOnly = await adminAgent.get("/api/admin/users").query({ role: "student", page: 1, pageSize: 10 });
+  const studentsOnly = await adminAgent
+    .get("/api/admin/users")
+    .query({ role: "student", page: 1, pageSize: 10 });
   assert.equal(studentsOnly.status, 200);
   assert.ok(studentsOnly.body.entries.every((row: { role: string }) => row.role === "student"));
 });
@@ -169,6 +181,7 @@ git commit -m "feat: add admin users directory API with search and role filters"
 ### Task 3: Frontend Moderation Queue UI + E2E (TDD)
 
 **Files:**
+
 - Create: `frontend/tests/e2e/admin-phase2-moderation-users.spec.ts`
 - Modify: `frontend/lib/admin-api.ts`
 - Modify: `frontend/app/admin/moderation/page.tsx`
@@ -191,12 +204,16 @@ test("admin moderation queue filters open/resolved and resolves an open flag", a
   await expect(firstOpenRow).toContainText("Open");
 
   await firstOpenRow.getByRole("button", { name: "Resolve" }).click();
-  await page.getByLabel("Resolution note").fill("This report was reviewed and valid corrective action was taken.");
+  await page
+    .getByLabel("Resolution note")
+    .fill("This report was reviewed and valid corrective action was taken.");
   await page.getByRole("button", { name: "Resolve flag" }).click();
 
   await expect(firstOpenRow).toHaveCount(0);
   await page.getByLabel("Status").selectOption("resolved");
-  await expect(page.getByText("This report was reviewed and valid corrective action was taken.")).toBeVisible();
+  await expect(
+    page.getByText("This report was reviewed and valid corrective action was taken.")
+  ).toBeVisible();
 });
 ```
 
@@ -210,7 +227,12 @@ Expected: FAIL because `/admin/moderation` is still placeholder and lacks queue 
 
 ```tsx
 // frontend/app/admin/moderation/page.tsx
-const initial = await getAdminModerationFlags({ page: 1, pageSize: 10, status: "open", cookieHeader });
+const initial = await getAdminModerationFlags({
+  page: 1,
+  pageSize: 10,
+  status: "open",
+  cookieHeader,
+});
 return <AdminModerationPanel initialEntries={initial.entries} initialTotal={initial.total} />;
 ```
 
@@ -239,6 +261,7 @@ git commit -m "feat: implement admin moderation queue with resolve workflow"
 ### Task 4: Frontend Users Directory UI + E2E (TDD)
 
 **Files:**
+
 - Modify: `frontend/tests/e2e/admin-phase2-moderation-users.spec.ts`
 - Modify: `frontend/lib/admin-api.ts`
 - Modify: `frontend/app/admin/users/page.tsx`
@@ -300,6 +323,7 @@ git commit -m "feat: implement admin users directory with search and filters"
 ### Task 5: Final Verification and Regression Gate
 
 **Files:**
+
 - Modify: only files needed to address verification failures.
 
 **Step 1: Run frontend typecheck**

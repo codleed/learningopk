@@ -14,12 +14,12 @@ const progressEventResponseSchema = z.object({
     exercisesViewed: z.number().int().nonnegative(),
     flashcardsCompleted: z.boolean(),
     quizBestScore: z.number().int().nonnegative(),
-    quizAttemptsCount: z.number().int().nonnegative()
-  })
+    quizAttemptsCount: z.number().int().nonnegative(),
+  }),
 });
 
 const quizSubmitResponseSchema = z.object({
-  score: z.number().int().nonnegative()
+  score: z.number().int().nonnegative(),
 });
 
 const delay = async (ms: number): Promise<void> => {
@@ -35,7 +35,7 @@ const getProgressRow = async (userId: string, chapterId: number) => {
       exercisesViewed: userProgress.exercisesViewed,
       flashcardsCompleted: userProgress.flashcardsCompleted,
       quizBestScore: userProgress.quizBestScore,
-      quizAttemptsCount: userProgress.quizAttemptsCount
+      quizAttemptsCount: userProgress.quizAttemptsCount,
     })
     .from(userProgress)
     .where(and(eq(userProgress.userId, userId), eq(userProgress.chapterId, chapterId)))
@@ -53,54 +53,69 @@ const run = async (): Promise<void> => {
 
   const unauthProgressMutation = await anonAgent.post("/api/progress/events").send({
     eventType: "chapter_visit",
-    chapterId: 1
+    chapterId: 1,
   });
   if (unauthProgressMutation.status !== 401) {
-    throw new Error(`Expected 401 for unauthenticated progress mutation, got ${unauthProgressMutation.status}`);
+    throw new Error(
+      `Expected 401 for unauthenticated progress mutation, got ${unauthProgressMutation.status}`
+    );
   }
 
   const unauthQuizMutation = await anonAgent.post("/api/quiz/submit").send({
     quizId: 1,
-    answers: {}
+    answers: {},
   });
   if (unauthQuizMutation.status !== 401) {
-    throw new Error(`Expected 401 for unauthenticated quiz mutation, got ${unauthQuizMutation.status}`);
+    throw new Error(
+      `Expected 401 for unauthenticated quiz mutation, got ${unauthQuizMutation.status}`
+    );
   }
 
-  const signUpResponse = await agent.post("/api/auth/sign-up/email").set("origin", "http://localhost:3000").send({
-    name: "Progress Verification User",
-    email,
-    password,
-    class: "9th",
-    board: "fbise"
-  });
+  const signUpResponse = await agent
+    .post("/api/auth/sign-up/email")
+    .set("origin", "http://localhost:3000")
+    .send({
+      name: "Progress Verification User",
+      email,
+      password,
+      class: "9th",
+      board: "fbise",
+    });
   if (signUpResponse.status >= 400) {
-    throw new Error(`Sign-up failed: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`);
+    throw new Error(
+      `Sign-up failed: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`
+    );
   }
 
-  const sessionResponse = await agent.get("/api/auth/get-session").set("origin", "http://localhost:3000");
+  const sessionResponse = await agent
+    .get("/api/auth/get-session")
+    .set("origin", "http://localhost:3000");
   const userId = z
     .object({
       user: z.object({
-        id: z.string().min(1)
-      })
+        id: z.string().min(1),
+      }),
     })
     .safeParse(sessionResponse.body).data?.user.id;
   if (!userId) {
-    throw new Error(`Session fetch failed: ${sessionResponse.status} ${JSON.stringify(sessionResponse.body)}`);
+    throw new Error(
+      `Session fetch failed: ${sessionResponse.status} ${JSON.stringify(sessionResponse.body)}`
+    );
   }
 
   const invalidPayloadResponse = await agent.post("/api/progress/events").send({
-    eventType: "chapter_visit"
+    eventType: "chapter_visit",
   });
   if (invalidPayloadResponse.status !== 400) {
-    throw new Error(`Expected 400 for invalid progress payload, got ${invalidPayloadResponse.status}`);
+    throw new Error(
+      `Expected 400 for invalid progress payload, got ${invalidPayloadResponse.status}`
+    );
   }
 
   const chapterQuizRows = await db
     .select({
       quizId: quizzes.id,
-      chapterId: quizzes.chapterId
+      chapterId: quizzes.chapterId,
     })
     .from(quizzes)
     .where(eq(quizzes.type, "chapter_quiz"))
@@ -112,7 +127,7 @@ const run = async (): Promise<void> => {
 
   const missingChapterResponse = await agent.post("/api/progress/events").send({
     eventType: "chapter_visit",
-    chapterId: 9999999
+    chapterId: 9999999,
   });
   if (missingChapterResponse.status !== 404) {
     throw new Error(`Expected 404 for missing chapter, got ${missingChapterResponse.status}`);
@@ -120,7 +135,7 @@ const run = async (): Promise<void> => {
 
   const chapterVisitResponse = await agent.post("/api/progress/events").send({
     eventType: "chapter_visit",
-    chapterId: chapterQuiz.chapterId
+    chapterId: chapterQuiz.chapterId,
   });
   if (chapterVisitResponse.status !== 200) {
     throw new Error(`Expected chapter visit to return 200, got ${chapterVisitResponse.status}`);
@@ -136,10 +151,12 @@ const run = async (): Promise<void> => {
 
   const secondChapterVisitResponse = await agent.post("/api/progress/events").send({
     eventType: "chapter_visit",
-    chapterId: chapterQuiz.chapterId
+    chapterId: chapterQuiz.chapterId,
   });
   if (secondChapterVisitResponse.status !== 200) {
-    throw new Error(`Expected second chapter visit to return 200, got ${secondChapterVisitResponse.status}`);
+    throw new Error(
+      `Expected second chapter visit to return 200, got ${secondChapterVisitResponse.status}`
+    );
   }
 
   const progressAfterSecondVisit = await getProgressRow(userId, chapterQuiz.chapterId);
@@ -152,7 +169,7 @@ const run = async (): Promise<void> => {
 
   const firstExerciseView = await agent.post("/api/progress/events").send({
     eventType: "exercise_view",
-    chapterId: chapterQuiz.chapterId
+    chapterId: chapterQuiz.chapterId,
   });
   if (firstExerciseView.status !== 200) {
     throw new Error(`Expected first exercise view to return 200, got ${firstExerciseView.status}`);
@@ -160,10 +177,12 @@ const run = async (): Promise<void> => {
 
   const secondExerciseView = await agent.post("/api/progress/events").send({
     eventType: "exercise_view",
-    chapterId: chapterQuiz.chapterId
+    chapterId: chapterQuiz.chapterId,
   });
   if (secondExerciseView.status !== 200) {
-    throw new Error(`Expected second exercise view to return 200, got ${secondExerciseView.status}`);
+    throw new Error(
+      `Expected second exercise view to return 200, got ${secondExerciseView.status}`
+    );
   }
 
   const progressAfterExerciseViews = await getProgressRow(userId, chapterQuiz.chapterId);
@@ -171,15 +190,19 @@ const run = async (): Promise<void> => {
     throw new Error("Expected user_progress row after exercise views.");
   }
   if (progressAfterExerciseViews.exercisesViewed !== 2) {
-    throw new Error(`Expected exercisesViewed=2, got ${progressAfterExerciseViews.exercisesViewed}`);
+    throw new Error(
+      `Expected exercisesViewed=2, got ${progressAfterExerciseViews.exercisesViewed}`
+    );
   }
 
   const flashcardCompleteResponse = await agent.post("/api/progress/events").send({
     eventType: "flashcard_complete",
-    chapterId: chapterQuiz.chapterId
+    chapterId: chapterQuiz.chapterId,
   });
   if (flashcardCompleteResponse.status !== 200) {
-    throw new Error(`Expected flashcard complete to return 200, got ${flashcardCompleteResponse.status}`);
+    throw new Error(
+      `Expected flashcard complete to return 200, got ${flashcardCompleteResponse.status}`
+    );
   }
 
   const progressAfterFlashcards = await getProgressRow(userId, chapterQuiz.chapterId);
@@ -190,19 +213,23 @@ const run = async (): Promise<void> => {
   const quizSubmitEventOne = await agent.post("/api/progress/events").send({
     eventType: "quiz_submit",
     chapterId: chapterQuiz.chapterId,
-    score: 5
+    score: 5,
   });
   if (quizSubmitEventOne.status !== 200) {
-    throw new Error(`Expected first quiz_submit progress event to return 200, got ${quizSubmitEventOne.status}`);
+    throw new Error(
+      `Expected first quiz_submit progress event to return 200, got ${quizSubmitEventOne.status}`
+    );
   }
 
   const quizSubmitEventTwo = await agent.post("/api/progress/events").send({
     eventType: "quiz_submit",
     chapterId: chapterQuiz.chapterId,
-    score: 3
+    score: 3,
   });
   if (quizSubmitEventTwo.status !== 200) {
-    throw new Error(`Expected second quiz_submit progress event to return 200, got ${quizSubmitEventTwo.status}`);
+    throw new Error(
+      `Expected second quiz_submit progress event to return 200, got ${quizSubmitEventTwo.status}`
+    );
   }
 
   const progressAfterQuizEvents = await getProgressRow(userId, chapterQuiz.chapterId);
@@ -210,16 +237,20 @@ const run = async (): Promise<void> => {
     throw new Error("Expected user_progress row after quiz_submit events.");
   }
   if (progressAfterQuizEvents.quizAttemptsCount !== 2) {
-    throw new Error(`Expected quizAttemptsCount=2 after quiz_submit events, got ${progressAfterQuizEvents.quizAttemptsCount}`);
+    throw new Error(
+      `Expected quizAttemptsCount=2 after quiz_submit events, got ${progressAfterQuizEvents.quizAttemptsCount}`
+    );
   }
   if (progressAfterQuizEvents.quizBestScore !== 5) {
-    throw new Error(`Expected quizBestScore=5 after quiz_submit events, got ${progressAfterQuizEvents.quizBestScore}`);
+    throw new Error(
+      `Expected quizBestScore=5 after quiz_submit events, got ${progressAfterQuizEvents.quizBestScore}`
+    );
   }
 
   const questionRows = await db
     .select({
       id: quizQuestions.id,
-      correctOption: quizQuestions.correctOption
+      correctOption: quizQuestions.correctOption,
     })
     .from(quizQuestions)
     .where(eq(quizQuestions.quizId, chapterQuiz.quizId));
@@ -239,7 +270,7 @@ const run = async (): Promise<void> => {
 
   const firstQuizSubmit = await agent.post("/api/quiz/submit").send({
     quizId: chapterQuiz.quizId,
-    answers: { [String(firstQuestion.id)]: firstQuestion.correctOption }
+    answers: { [String(firstQuestion.id)]: firstQuestion.correctOption },
   });
   if (firstQuizSubmit.status !== 200) {
     throw new Error(`Expected first /api/quiz/submit to return 200, got ${firstQuizSubmit.status}`);
@@ -252,16 +283,18 @@ const run = async (): Promise<void> => {
 
   const secondQuizSubmit = await agent.post("/api/quiz/submit").send({
     quizId: chapterQuiz.quizId,
-    answers: allCorrectAnswers
+    answers: allCorrectAnswers,
   });
   if (secondQuizSubmit.status !== 200) {
-    throw new Error(`Expected second /api/quiz/submit to return 200, got ${secondQuizSubmit.status}`);
+    throw new Error(
+      `Expected second /api/quiz/submit to return 200, got ${secondQuizSubmit.status}`
+    );
   }
   const secondQuizResult = quizSubmitResponseSchema.parse(secondQuizSubmit.body);
 
   const thirdQuizSubmit = await agent.post("/api/quiz/submit").send({
     quizId: chapterQuiz.quizId,
-    answers: {}
+    answers: {},
   });
   if (thirdQuizSubmit.status !== 200) {
     throw new Error(`Expected third /api/quiz/submit to return 200, got ${thirdQuizSubmit.status}`);
@@ -279,7 +312,9 @@ const run = async (): Promise<void> => {
 
   const expectedAttempts = beforeQuizSubmitRow.quizAttemptsCount + 3;
   if (afterQuizSubmitRow.quizAttemptsCount !== expectedAttempts) {
-    throw new Error(`Expected quizAttemptsCount=${expectedAttempts}, got ${afterQuizSubmitRow.quizAttemptsCount}`);
+    throw new Error(
+      `Expected quizAttemptsCount=${expectedAttempts}, got ${afterQuizSubmitRow.quizAttemptsCount}`
+    );
   }
 
   const expectedBestScore = Math.max(
@@ -289,7 +324,9 @@ const run = async (): Promise<void> => {
     thirdQuizResult.score
   );
   if (afterQuizSubmitRow.quizBestScore !== expectedBestScore) {
-    throw new Error(`Expected quizBestScore=${expectedBestScore}, got ${afterQuizSubmitRow.quizBestScore}`);
+    throw new Error(
+      `Expected quizBestScore=${expectedBestScore}, got ${afterQuizSubmitRow.quizBestScore}`
+    );
   }
 
   console.log(`UNAUTH_PROGRESS_STATUS=${unauthProgressMutation.status}`);
@@ -313,4 +350,3 @@ run()
   .finally(async () => {
     await pool.end().catch(() => undefined);
   });
-

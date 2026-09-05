@@ -7,7 +7,11 @@ import { AdminPageHeader } from "@/components/admin";
 import { ContentTabs } from "@/components/admin/content-tabs";
 import { ContentStatsStrip } from "@/components/admin/content-stats-strip";
 import { ContentListTable, type ColumnDef } from "@/components/admin/content-list-table";
-import { deleteAdminFormula, type AdminCurriculumBoard, type FormulaResponse } from "@/lib/admin-api";
+import {
+  deleteAdminFormula,
+  type AdminCurriculumBoard,
+  type FormulaResponse,
+} from "@/lib/admin-api";
 import { useToast } from "@/components/ui/toast";
 
 type FormulasPageProps = {
@@ -37,7 +41,7 @@ export function FormulasPage({ boards, initialFormulas, stats }: FormulasPagePro
         for (const subject of boardClass.subjects) {
           options.push({
             id: subject.id,
-            label: `${board.name} / ${boardClass.name} / ${subject.name}`
+            label: `${board.name} / ${boardClass.name} / ${subject.name}`,
           });
         }
       }
@@ -56,11 +60,7 @@ export function FormulasPage({ boards, initialFormulas, stats }: FormulasPagePro
     {
       key: "name",
       header: "Name",
-      render: (f) => (
-        <span className="font-medium text-[var(--text-primary)]">
-          {f.name}
-        </span>
-      ),
+      render: (f) => <span className="font-medium text-[var(--text-primary)]">{f.name}</span>,
     },
     {
       key: "formula",
@@ -99,9 +99,7 @@ export function FormulasPage({ boards, initialFormulas, stats }: FormulasPagePro
             </span>
           ))}
           {f.tags.length > 3 && (
-            <span className="text-xs text-[var(--text-secondary)]">
-              +{f.tags.length - 3}
-            </span>
+            <span className="text-xs text-[var(--text-secondary)]">+{f.tags.length - 3}</span>
           )}
         </div>
       ),

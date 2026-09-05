@@ -27,7 +27,9 @@ test("classifyAiQuery marks multi-step reasoning prompts as complex", () => {
 });
 
 test("classifyAiQuery keeps ordinary tutoring prompts on the standard tier", () => {
-  const result = classifyAiQuery("Can you explain Newton's third law with a simple classroom example?");
+  const result = classifyAiQuery(
+    "Can you explain Newton's third law with a simple classroom example?"
+  );
 
   assert.equal(result.classification, "standard");
   assert.equal(result.modelTier, "mistral-small");
@@ -75,11 +77,15 @@ test("strategy falls back across tiers with exponential backoff", async () => {
 });
 
 test("strategy opens the circuit after five failures in one minute and uses normalized prompt cache", async () => {
-  const stateByKey = new Map<string, { consecutiveFailures: number; lastFailureAt: number | null; openedAt: number | null }>();
+  const stateByKey = new Map<
+    string,
+    { consecutiveFailures: number; lastFailureAt: number | null; openedAt: number | null }
+  >();
   const cacheByPrompt = new Map<string, string>();
 
   const strategy = createAiModelStrategy({
-    readCircuitState: async ({ key }) => stateByKey.get(key) ?? { consecutiveFailures: 0, lastFailureAt: null, openedAt: null },
+    readCircuitState: async ({ key }) =>
+      stateByKey.get(key) ?? { consecutiveFailures: 0, lastFailureAt: null, openedAt: null },
     writeCircuitState: async ({ key, state }) => {
       stateByKey.set(key, state);
     },

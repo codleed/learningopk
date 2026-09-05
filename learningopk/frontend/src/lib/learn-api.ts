@@ -3,19 +3,19 @@ import { z } from "zod";
 const boardOptionSchema = z.object({
   id: z.number().int().positive(),
   name: z.string(),
-  slug: z.string()
+  slug: z.string(),
 });
 
 const boardClassOptionSchema = z.object({
   id: z.number().int().positive(),
   boardId: z.number().int().positive(),
   name: z.string(),
-  slug: z.string()
+  slug: z.string(),
 });
 
 const boardsResponseSchema = z.object({
   boards: z.array(boardOptionSchema),
-  classes: z.array(boardClassOptionSchema)
+  classes: z.array(boardClassOptionSchema),
 });
 
 const subjectListItemSchema = z.object({
@@ -29,11 +29,11 @@ const subjectListItemSchema = z.object({
   boardId: z.number().int().positive(),
   boardName: z.string(),
   boardSlug: z.string(),
-  coverImageUrl: z.string().nullable().optional().default(null)
+  coverImageUrl: z.string().nullable().optional().default(null),
 });
 
 const subjectsListResponseSchema = z.object({
-  subjects: z.array(subjectListItemSchema)
+  subjects: z.array(subjectListItemSchema),
 });
 
 const chapterListItemSchema = z.object({
@@ -46,35 +46,35 @@ const chapterListItemSchema = z.object({
   weightagePercentage: z.number().int().min(0).max(100).optional().default(0),
   occurrenceCount: z.number().int().min(0).optional().default(0),
   avgMarks: z.number().min(0).optional().default(0),
-  lastSeenYear: z.number().int().nullable().optional().default(null)
+  lastSeenYear: z.number().int().nullable().optional().default(null),
 });
 
 const subjectResponseSchema = z.object({
   board: z.object({
     slug: z.string(),
-    name: z.string()
+    name: z.string(),
   }),
   grade: z.string(),
   class: z.object({
     slug: z.string(),
-    name: z.string()
+    name: z.string(),
   }),
   subject: z.object({
     id: z.number().int().positive(),
     slug: z.string(),
     name: z.string(),
-    description: z.string()
+    description: z.string(),
   }),
   chapters: z.array(chapterListItemSchema),
   recommendation: z
     .object({
       focusPercent: z.number().int().positive(),
       chapterCount: z.number().int().positive(),
-      chapters: z.array(z.string())
+      chapters: z.array(z.string()),
     })
     .nullable()
     .optional()
-    .default(null)
+    .default(null),
 });
 
 const subjectGraphResponseSchema = z.object({
@@ -87,33 +87,33 @@ const subjectGraphResponseSchema = z.object({
         slug: z.string(),
         isPublished: z.boolean(),
         visited: z.boolean().optional(),
-        completed: z.boolean().optional()
+        completed: z.boolean().optional(),
       })
     ),
     edges: z.array(
       z.object({
         sourceChapterId: z.number().int().positive(),
         targetChapterId: z.number().int().positive().nullable(),
-        isResolved: z.boolean()
+        isResolved: z.boolean(),
       })
-    )
-  })
+    ),
+  }),
 });
 
 const chapterDetailResponseSchema = z.object({
   board: z.object({
     slug: z.string(),
-    name: z.string()
+    name: z.string(),
   }),
   grade: z.string(),
   class: z.object({
     slug: z.string(),
-    name: z.string()
+    name: z.string(),
   }),
   subject: z.object({
     id: z.number().int().positive(),
     slug: z.string(),
-    name: z.string()
+    name: z.string(),
   }),
   chapter: z.object({
     id: z.number().int().positive(),
@@ -127,7 +127,7 @@ const chapterDetailResponseSchema = z.object({
         chapterId: z.number().int().positive(),
         orderIndex: z.number().int().nonnegative(),
         heading: z.string(),
-        content: z.string()
+        content: z.string(),
       })
     ),
     coverImageUrl: z.string().nullable().optional().default(null),
@@ -137,15 +137,15 @@ const chapterDetailResponseSchema = z.object({
         avgMarks: z.number().min(0),
         lastSeenYear: z.number().int().nullable(),
         weightagePercentage: z.number().int().min(0).max(100),
-        analysisWindowYears: z.number().int().min(0)
+        analysisWindowYears: z.number().int().min(0),
       })
       .nullable(),
     revisionNotes: z.object({
       keyFormulas: z.array(z.string()),
       keyDefinitions: z.array(z.object({ term: z.string(), definition: z.string() })),
       commonMistakes: z.string(),
-      examTips: z.string()
-    })
+      examTips: z.string(),
+    }),
   }),
   exercises: z.array(
     z.object({
@@ -157,20 +157,28 @@ const chapterDetailResponseSchema = z.object({
       type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]),
       visualizationHtml: z.string().nullable().optional(),
       blanksAnswer: z.array(z.string()).nullable().optional(),
-      statements: z.array(z.object({
-        text: z.string().min(1),
-        blanksAnswer: z.array(z.string().min(1)).min(1)
-      })).nullable().optional()
+      statements: z
+        .array(
+          z.object({
+            text: z.string().min(1),
+            blanksAnswer: z.array(z.string().min(1)).min(1),
+          })
+        )
+        .nullable()
+        .optional(),
     })
   ),
-  flashcards: z.array(
-    z.object({
-      id: z.number().int().positive(),
-      front: z.string(),
-      back: z.string(),
-      orderIndex: z.number().int().min(0)
-    })
-  ).optional().default([]),
+  flashcards: z
+    .array(
+      z.object({
+        id: z.number().int().positive(),
+        front: z.string(),
+        back: z.string(),
+        orderIndex: z.number().int().min(0),
+      })
+    )
+    .optional()
+    .default([]),
   quiz: z
     .object({
       id: z.number().int().positive(),
@@ -186,23 +194,23 @@ const chapterDetailResponseSchema = z.object({
           optionB: z.string(),
           optionC: z.string(),
           optionD: z.string(),
-          marks: z.number().int().positive()
+          marks: z.number().int().positive(),
         })
-      )
+      ),
     })
-    .nullable()
+    .nullable(),
 });
 
 const patternAnalysisResponseSchema = z.object({
   board: z.object({
     id: z.number().int().positive(),
     name: z.string(),
-    slug: z.string()
+    slug: z.string(),
   }),
   subject: z.object({
     id: z.number().int().positive(),
     name: z.string(),
-    slug: z.string()
+    slug: z.string(),
   }),
   grade: z.string(),
   analysisWindowYears: z.number().int().min(0),
@@ -220,18 +228,18 @@ const patternAnalysisResponseSchema = z.object({
       trend: z.array(
         z.object({
           year: z.number().int(),
-          marks: z.number().min(0)
+          marks: z.number().min(0),
         })
-      )
+      ),
     })
   ),
   recommendation: z
     .object({
       focusPercent: z.number().int().positive(),
       chapterCount: z.number().int().positive(),
-      chapters: z.array(z.string())
+      chapters: z.array(z.string()),
     })
-    .nullable()
+    .nullable(),
 });
 
 export type SubjectResponse = z.infer<typeof subjectResponseSchema>;
@@ -261,7 +269,9 @@ const fetchLearnJson = async <T>(
     method: "GET",
     cache: "no-store",
     ...(Object.keys(headers).length > 0 ? { headers } : {}),
-    ...(options?.includeCredentials && !options.cookieHeader ? { credentials: "include" as const } : {})
+    ...(options?.includeCredentials && !options.cookieHeader
+      ? { credentials: "include" as const }
+      : {}),
   });
 
   if (response.status === 404) {
@@ -281,17 +291,30 @@ const fetchLearnJson = async <T>(
   return schema.parse(json);
 };
 
-export const getSubjectOverview = async (params: { board: string; grade: string; subject: string }) => {
+export const getSubjectOverview = async (params: {
+  board: string;
+  grade: string;
+  subject: string;
+}) => {
   const url = `${backendUrl}/api/learn/${params.board}/${params.grade}/${params.subject}`;
   return fetchLearnJson(url, subjectResponseSchema);
 };
 
-export const getChapterDetail = async (params: { board: string; grade: string; subject: string; chapter: string }) => {
+export const getChapterDetail = async (params: {
+  board: string;
+  grade: string;
+  subject: string;
+  chapter: string;
+}) => {
   const url = `${backendUrl}/api/learn/${params.board}/${params.grade}/${params.subject}/${params.chapter}`;
   return fetchLearnJson(url, chapterDetailResponseSchema);
 };
 
-export const getSubjectGraph = async (params: { board: string; grade: string; subject: string }) => {
+export const getSubjectGraph = async (params: {
+  board: string;
+  grade: string;
+  subject: string;
+}) => {
   const url = `${backendUrl}/api/learn/${params.board}/${params.grade}/${params.subject}/graph`;
   return fetchLearnJson(url, subjectGraphResponseSchema, { includeCredentials: true });
 };
@@ -306,7 +329,11 @@ export const getSubjectsList = async (): Promise<SubjectsListResponse | null> =>
   return fetchLearnJson(url, subjectsListResponseSchema);
 };
 
-export const getPatternAnalysis = async (params: { board: string; grade: string; subject: string }) => {
+export const getPatternAnalysis = async (params: {
+  board: string;
+  grade: string;
+  subject: string;
+}) => {
   const url = `${backendUrl}/api/learn/patterns/${params.board}/${params.subject}?grade=${params.grade}`;
   return fetchLearnJson(url, patternAnalysisResponseSchema);
 };

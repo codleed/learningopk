@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 
-import { AdminPageHeader, ContentTabs, ContentStatsStrip, ContentListTable } from "@/components/admin";
+import {
+  AdminPageHeader,
+  ContentTabs,
+  ContentStatsStrip,
+  ContentListTable,
+} from "@/components/admin";
 import type { AdminCurriculumBoard } from "@/lib/admin-api";
 import { deleteAdminCurriculumClass } from "@/lib/admin-api";
 

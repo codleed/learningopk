@@ -1,12 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  FileText,
-  MessageSquare,
-  TextCursorInput,
-  Atom,
-} from "lucide-react";
+import { FileText, MessageSquare, TextCursorInput, Atom } from "lucide-react";
 import { type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -65,7 +60,7 @@ export interface ExerciseTypeTabsProps {
 
 /**
  * Exercise type tab bar with accent-colored indicators.
- * 
+ *
  * Features:
  * - Framer Motion `layoutId` for smooth sliding background
  * - Per-tab accent color from CSS variables
@@ -73,11 +68,7 @@ export interface ExerciseTypeTabsProps {
  * - Responsive: scrolls horizontally if needed
  * - Keyboard accessible (native button focus management)
  */
-export function ExerciseTypeTabs({
-  value,
-  onValueChange,
-  className,
-}: ExerciseTypeTabsProps) {
+export function ExerciseTypeTabs({ value, onValueChange, className }: ExerciseTypeTabsProps) {
   return (
     <div
       role="tablist"
@@ -86,7 +77,7 @@ export function ExerciseTypeTabs({
         "flex gap-1 rounded-xl bg-bg-subtle/50 p-1",
         "border border-border-default",
         "overflow-x-auto scrollbar-thin",
-        className,
+        className
       )}
     >
       {TAB_CONFIG.map((tab) => {
@@ -108,9 +99,7 @@ export function ExerciseTypeTabs({
               "transition-colors duration-150 ease-out",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40",
               "active:scale-[0.97]",
-              isActive
-                ? "text-text-primary"
-                : "text-text-muted hover:text-text-secondary",
+              isActive ? "text-text-primary" : "text-text-muted hover:text-text-secondary"
             )}
           >
             {/* Animated background indicator */}
@@ -131,9 +120,7 @@ export function ExerciseTypeTabs({
 
             {/* Icon */}
             <span
-              className={cn(
-                "relative z-10 [&>svg]:h-4 [&>svg]:w-4 transition-colors duration-150",
-              )}
+              className={cn("relative z-10 [&>svg]:h-4 [&>svg]:w-4 transition-colors duration-150")}
               style={{ color: isActive ? accentColor : undefined }}
             >
               {tab.icon}

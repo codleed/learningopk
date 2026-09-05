@@ -67,11 +67,7 @@ function NavItem({ item, isActive, isExpanded, variant, onNavigate }: NavItemPro
           isStudentVariant ? "w-11" : "w-[52px]"
         )}
       >
-        <LinkIcon
-          className="h-5 w-5 shrink-0"
-          strokeWidth={isActive ? 2.5 : 2}
-          aria-hidden
-        />
+        <LinkIcon className="h-5 w-5 shrink-0" strokeWidth={isActive ? 2.5 : 2} aria-hidden />
       </div>
       {isExpanded && (
         <span
@@ -109,15 +105,14 @@ export function LeftRail({
     checkSchoolAdmin().then((isAdmin) => {
       if (!cancelled) setIsSchoolAdmin(isAdmin);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   /* ── Set CSS variable for main content offset ── */
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--left-rail-width",
-      isMobile ? "0px" : "72px"
-    );
+    document.documentElement.style.setProperty("--left-rail-width", isMobile ? "0px" : "72px");
   }, [isMobile]);
 
   useEffect(() => {
@@ -197,16 +192,17 @@ export function LeftRail({
 
   const renderStudentNav = () => (
     <div className="flex w-full flex-col gap-1">
-      {isTeacher && teacherNavItems.map((item) => (
-        <NavItem
-          key={item.href}
-          item={item}
-          isActive={isNavItemActive(currentPath, item)}
-          isExpanded={actualExpanded}
-          variant="student"
-          onNavigate={handleNavItemClick}
-        />
-      ))}
+      {isTeacher &&
+        teacherNavItems.map((item) => (
+          <NavItem
+            key={item.href}
+            item={item}
+            isActive={isNavItemActive(currentPath, item)}
+            isExpanded={actualExpanded}
+            variant="student"
+            onNavigate={handleNavItemClick}
+          />
+        ))}
       {studentNavItems
         .filter((item) => {
           if (item.href === "/school") return isSchoolAdmin;
@@ -310,16 +306,18 @@ export function LeftRail({
           aria-hidden="true"
         />
       )}
-      
+
       <div
         ref={sidebarRef}
         className={cn(
           "left-rail-container fixed inset-y-0 left-0 z-40 flex",
-          isMobile ? (
-            isMobileOpen ? "translate-x-0" : "-translate-x-full"
-          ) : (
-            isExpanded ? "w-[280px]" : "w-[72px]"
-          ),
+          isMobile
+            ? isMobileOpen
+              ? "translate-x-0"
+              : "-translate-x-full"
+            : isExpanded
+              ? "w-[280px]"
+              : "w-[72px]",
           isMobile
             ? "transition-transform duration-300 ease-in-out"
             : "transition-[width] duration-300 ease-in-out"
@@ -384,7 +382,14 @@ export function LeftRail({
           </div>
 
           {isAdmin && (
-            <div className={cn("shrink-0", !actualExpanded ? "h-[52px] flex items-center justify-center" : "px-[var(--sidebar-padding-x)]")}>
+            <div
+              className={cn(
+                "shrink-0",
+                !actualExpanded
+                  ? "h-[52px] flex items-center justify-center"
+                  : "px-[var(--sidebar-padding-x)]"
+              )}
+            >
               <RoleToggle
                 currentMode={viewMode}
                 onModeChange={onViewModeChange}
@@ -395,7 +400,11 @@ export function LeftRail({
 
           <div className="flex-1 px-[var(--sidebar-padding-x)]">
             <div className="flex items-center justify-center">
-              {isModerator ? renderModeratorNav() : viewMode === "student" ? renderStudentNav() : renderAdminNav()}
+              {isModerator
+                ? renderModeratorNav()
+                : viewMode === "student"
+                  ? renderStudentNav()
+                  : renderAdminNav()}
             </div>
           </div>
 
@@ -405,10 +414,7 @@ export function LeftRail({
             <LogoutButton
               ariaLabel="Sign out"
               icon={
-                <LogOut
-                  className="h-5 w-5 shrink-0 transition-colors duration-150"
-                  aria-hidden
-                />
+                <LogOut className="h-5 w-5 shrink-0 transition-colors duration-150" aria-hidden />
               }
               hideLabel={!actualExpanded}
               className={cn(
@@ -431,10 +437,9 @@ export function LeftRail({
               onClick={handleNavItemClick}
               className={cn(
                 "group flex items-center rounded-2xl border border-[var(--sidebar-profile-border)] bg-[var(--sidebar-profile-bg)] p-3 transition-all duration-150 hover:border-[var(--sidebar-border)] hover:bg-[var(--sidebar-nav-hover-bg)]",
-                viewMode === "student" && "rounded-xl hover:-translate-y-[1px] hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,0.35)]",
-                !actualExpanded
-                  ? "justify-center p-2"
-                  : "gap-3"
+                viewMode === "student" &&
+                  "rounded-xl hover:-translate-y-[1px] hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,0.35)]",
+                !actualExpanded ? "justify-center p-2" : "gap-3"
               )}
             >
               <Avatar

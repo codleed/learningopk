@@ -33,36 +33,42 @@ export default async function EditFlashCardsPage({ params }: EditFlashCardsPageP
         />
       </StickyBreadcrumbWrapper>
 
-      <AdminPageHeader
-        title={`Edit Flash Cards #${deckId}`}
-        subtitle="Coming Soon"
-      />
+      <AdminPageHeader title={`Edit Flash Cards #${deckId}`} subtitle="Coming Soon" />
 
       <AdminFormCard>
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <div className="rounded-full bg-amber-100 p-4 mb-4">
             <AlertCircle className="h-8 w-8 text-amber-600" aria-hidden />
           </div>
-          
+
           <h3 className="font-heading text-lg font-semibold text-[var(--text-primary)] mb-2">
             Flash Card Management Not Available
           </h3>
-          
+
           <p className="text-sm text-[var(--text-secondary)] max-w-md mb-6">
-            The Flash Card API is not yet available. Backend API support is needed to enable flash card editing.
+            The Flash Card API is not yet available. Backend API support is needed to enable flash
+            card editing.
           </p>
 
           <div className="w-full max-w-md rounded-lg border border-amber-200 bg-amber-50 p-4 mb-6 text-left">
-            <h4 className="text-sm font-medium text-amber-800 mb-2">
-              Flash Card Deck #{deckId}
-            </h4>
+            <h4 className="text-sm font-medium text-amber-800 mb-2">Flash Card Deck #{deckId}</h4>
             <p className="text-xs text-amber-700 mb-3">
-              This is a placeholder for flash card editing. The full form will appear here once the Flash Card API is implemented.
+              This is a placeholder for flash card editing. The full form will appear here once the
+              Flash Card API is implemented.
             </p>
             <ul className="space-y-1 text-xs text-amber-700">
-              <li><code className="bg-amber-100 px-1 rounded">GET /api/flashcards/{deckId}</code> - Fetch deck</li>
-              <li><code className="bg-amber-100 px-1 rounded">PUT /api/flashcards/{deckId}</code> - Update deck</li>
-              <li><code className="bg-amber-100 px-1 rounded">DELETE /api/flashcards/{deckId}</code> - Delete deck</li>
+              <li>
+                <code className="bg-amber-100 px-1 rounded">GET /api/flashcards/{deckId}</code> -
+                Fetch deck
+              </li>
+              <li>
+                <code className="bg-amber-100 px-1 rounded">PUT /api/flashcards/{deckId}</code> -
+                Update deck
+              </li>
+              <li>
+                <code className="bg-amber-100 px-1 rounded">DELETE /api/flashcards/{deckId}</code> -
+                Delete deck
+              </li>
             </ul>
           </div>
 

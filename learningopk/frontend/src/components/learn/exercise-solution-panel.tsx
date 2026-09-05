@@ -27,13 +27,7 @@ export function ExerciseSolutionPanel({ solution }: ExerciseSolutionPanelProps) 
           "overflow-x-auto"
         )}
       >
-        <ContentRenderer
-          content={solution}
-          variant="default"
-          enableMath
-          enableCode
-          enableGfm
-        />
+        <ContentRenderer content={solution} variant="default" enableMath enableCode enableGfm />
       </div>
     </div>
   );

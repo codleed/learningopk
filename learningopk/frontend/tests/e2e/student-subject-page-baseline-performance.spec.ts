@@ -31,7 +31,7 @@ test("subject page list view baseline performance", async ({ page }, testInfo) =
 
   const metrics = {
     capturedAt: new Date().toISOString(),
-    subjectRouteLoadMs
+    subjectRouteLoadMs,
   };
 
   const reportDir = path.resolve(process.cwd(), "../docs/perf");
@@ -41,6 +41,6 @@ test("subject page list view baseline performance", async ({ page }, testInfo) =
 
   await testInfo.attach("student-subject-graph-baseline", {
     body: JSON.stringify(metrics, null, 2),
-    contentType: "application/json"
+    contentType: "application/json",
   });
 });

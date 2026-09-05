@@ -60,7 +60,7 @@ export function MobileAiFab() {
         setActiveSnap("50%");
       }
     },
-    [chapterId, hasUsedAi],
+    [chapterId, hasUsedAi]
   );
 
   const showPulse = !hasUsedAi && !open;
@@ -117,7 +117,7 @@ export function MobileAiFab() {
               // Focus ring
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary focus-visible:ring-offset-2",
               // Hide when drawer is open
-              open && "pointer-events-none opacity-0",
+              open && "pointer-events-none opacity-0"
             )}
           >
             {/* Pulse ring – only when AI hasn't been used */}
@@ -147,7 +147,7 @@ export function MobileAiFab() {
               "rounded-t-2xl border-t border-border-default bg-bg-surface",
               "shadow-[0_-8px_32px_rgba(0,0,0,0.15)]",
               // When at the 90% snap the content should scroll internally
-              activeSnap === "90%" ? "max-h-[90dvh]" : "max-h-[50dvh]",
+              activeSnap === "90%" ? "max-h-[90dvh]" : "max-h-[50dvh]"
             )}
             aria-describedby={undefined}
           >

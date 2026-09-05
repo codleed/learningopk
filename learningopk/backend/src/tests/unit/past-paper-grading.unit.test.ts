@@ -1,48 +1,38 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { gradeMcq, gradeFillInBlanks, autoGradeExercises, calculateTotalScore } from "../../services/past-paper-grading.service.js";
+import {
+  gradeMcq,
+  gradeFillInBlanks,
+  autoGradeExercises,
+  calculateTotalScore,
+} from "../../services/past-paper-grading.service.js";
 
 describe("gradeMcq", () => {
   it("awards full marks for correct answer", () => {
-    const result = gradeMcq(
-      { id: 1, type: "mcq", correctOption: "b", marks: 2 },
-      "b"
-    );
+    const result = gradeMcq({ id: 1, type: "mcq", correctOption: "b", marks: 2 }, "b");
     assert.equal(result.score, 2);
     assert.equal(result.isCorrect, true);
   });
 
   it("awards 0 for wrong answer", () => {
-    const result = gradeMcq(
-      { id: 1, type: "mcq", correctOption: "b", marks: 2 },
-      "a"
-    );
+    const result = gradeMcq({ id: 1, type: "mcq", correctOption: "b", marks: 2 }, "a");
     assert.equal(result.score, 0);
     assert.equal(result.isCorrect, false);
   });
 
   it("handles case-insensitive matching", () => {
-    const result = gradeMcq(
-      { id: 1, type: "mcq", correctOption: "B", marks: 1 },
-      "b"
-    );
+    const result = gradeMcq({ id: 1, type: "mcq", correctOption: "B", marks: 1 }, "b");
     assert.equal(result.isCorrect, true);
   });
 
   it("returns 0 for missing correctOption", () => {
-    const result = gradeMcq(
-      { id: 1, type: "mcq", marks: 5 },
-      "b"
-    );
+    const result = gradeMcq({ id: 1, type: "mcq", marks: 5 }, "b");
     assert.equal(result.score, 0);
   });
 
   it("defaults marks to 1 when not specified", () => {
-    const result = gradeMcq(
-      { id: 1, type: "mcq", correctOption: "a" },
-      "a"
-    );
+    const result = gradeMcq({ id: 1, type: "mcq", correctOption: "a" }, "a");
     assert.equal(result.score, 1);
   });
 });
@@ -100,7 +90,7 @@ describe("gradeFillInBlanks", () => {
         type: "fill_in_blanks",
         blanksAnswer: ["apple"],
         statements: [{ text: "The ___ is red", blanksAnswer: ["sky"] }],
-        marks: 4
+        marks: 4,
       },
       ["apple", "sky"]
     );

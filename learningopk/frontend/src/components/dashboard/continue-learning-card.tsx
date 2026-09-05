@@ -38,10 +38,7 @@ function getEncouragement(percent: number): string {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function ContinueLearningCard({
-  subject,
-  continueHref,
-}: ContinueLearningCardProps) {
+export function ContinueLearningCard({ subject, continueHref }: ContinueLearningCardProps) {
   /* ── Empty state ── */
   if (!subject) {
     return (
@@ -55,10 +52,7 @@ export function ContinueLearningCard({
               background: "var(--accent-primary-light)",
             }}
           >
-            <BookOpen
-              className="h-6 w-6 text-accent-primary"
-              aria-hidden
-            />
+            <BookOpen className="h-6 w-6 text-accent-primary" aria-hidden />
           </div>
 
           <div className="text-center">
@@ -87,11 +81,7 @@ export function ContinueLearningCard({
 
         {/* Center: progress ring + subject info */}
         <div className="flex items-center gap-5">
-          <ProgressRing
-            percentage={percent}
-            size={72}
-            strokeWidth={5}
-          />
+          <ProgressRing percentage={percent} size={72} strokeWidth={5} />
 
           <div className="min-w-0 flex-1 space-y-1.5">
             <SubjectBadge name={subject.subjectName} size="sm" />
@@ -107,19 +97,12 @@ export function ContinueLearningCard({
         </div>
 
         {/* Motivational micro-copy */}
-        <p className="text-sm font-medium text-accent-primary">
-          {getEncouragement(percent)}
-        </p>
+        <p className="text-sm font-medium text-accent-primary">{getEncouragement(percent)}</p>
 
         {/* CTA */}
         {continueHref ? (
           <Link href={continueHref} className="block">
-            <Button
-              variant="primary"
-              size="md"
-              width="full"
-              iconRight={<ArrowRight />}
-            >
+            <Button variant="primary" size="md" width="full" iconRight={<ArrowRight />}>
               Continue
             </Button>
           </Link>
@@ -128,12 +111,7 @@ export function ContinueLearningCard({
             href={`/dashboard/${subject.boardSlug}/${subject.grade}/${subject.subjectSlug}`}
             className="block"
           >
-            <Button
-              variant="secondary"
-              size="md"
-              width="full"
-              iconRight={<ArrowRight />}
-            >
+            <Button variant="secondary" size="md" width="full" iconRight={<ArrowRight />}>
               View Subject
             </Button>
           </Link>

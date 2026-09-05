@@ -3,12 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ThumbsUp, ThumbsDown, CheckCircle, Award } from "lucide-react";
 import { z } from "zod";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
+import { ForumApiError, forumKeys } from "@/lib/forum-api";
 import { cn } from "@/lib/utils";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
@@ -23,8 +25,26 @@ type ForumReplyActionsProps = {
 };
 
 const errorSchema = z.object({
-  error: z.string()
+  error: z.string(),
 });
+
+const postForumReplyAction = async (
+  url: string,
+  init?: RequestInit,
+  fallbackMessage = "Request failed."
+): Promise<void> => {
+  const response = await fetch(url, {
+    method: "POST",
+    credentials: "include",
+    ...init,
+  });
+  const responseBody = (await response.json().catch(() => null)) as unknown;
+
+  if (!response.ok) {
+    const parsedError = errorSchema.safeParse(responseBody);
+    throw new ForumApiError(parsedError.success ? parsedError.data.error : fallbackMessage);
+  }
+};
 
 export const ForumReplyActions = ({
   replyId,
@@ -32,84 +52,60 @@ export const ForumReplyActions = ({
   viewerVoteType,
   isAcceptedAnswer,
   canMarkAccepted,
-  isAuthenticated
+  isAuthenticated,
 }: ForumReplyActionsProps) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { pushToast } = useToast();
-  const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleVote = async (voteType: "upvote" | "downvote") => {
-    if (!isAuthenticated) {
-      setError("Sign in to vote.");
+  const onError = (mutationError: Error, fallbackMessage: string) => {
+    if (mutationError instanceof ForumApiError) {
+      setError(mutationError.message);
       return;
     }
+    setError("Network error. Check your connection and try again.");
+    pushToast({
+      title: fallbackMessage,
+      description: "The server could not be reached. Please try again.",
+      tone: "error",
+    });
+  };
 
-    setError(null);
-    setIsPending(true);
-    try {
-      const response = await fetch(`${backendUrl}/api/forum/replies/${replyId}/vote`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "content-type": "application/json"
+  const voteMutation = useMutation({
+    mutationFn: async (voteType: "upvote" | "downvote") => {
+      await postForumReplyAction(
+        `${backendUrl}/api/forum/replies/${replyId}/vote`,
+        {
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ voteType }),
         },
-        body: JSON.stringify({ voteType })
-      });
-      const responseBody = (await response.json().catch(() => null)) as unknown;
-
-      if (!response.ok) {
-        const parsedError = errorSchema.safeParse(responseBody);
-        setError(parsedError.success ? parsedError.data.error : "Vote failed.");
-        return;
-      }
-
+        "Vote failed."
+      );
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: forumKeys.all });
       router.refresh();
-    } catch {
-      setError("Network error. Check your connection and try again.");
-      pushToast({
-        title: "Vote failed",
-        description: "The server could not be reached. Please try again.",
-        tone: "error"
-      });
-    } finally {
-      setIsPending(false);
-    }
-  };
+    },
+    onError: (mutationError) => onError(mutationError, "Vote failed"),
+  });
 
-  const handleAccept = async () => {
-    if (!isAuthenticated) {
-      setError("Sign in to mark an accepted answer.");
-      return;
-    }
-
-    setError(null);
-    setIsPending(true);
-    try {
-      const response = await fetch(`${backendUrl}/api/forum/replies/${replyId}/accept`, {
-        method: "POST",
-        credentials: "include"
-      });
-      const responseBody = (await response.json().catch(() => null)) as unknown;
-
-      if (!response.ok) {
-        const parsedError = errorSchema.safeParse(responseBody);
-        setError(parsedError.success ? parsedError.data.error : "Accept answer failed.");
-        return;
-      }
-
+  const acceptMutation = useMutation({
+    mutationFn: async () => {
+      await postForumReplyAction(
+        `${backendUrl}/api/forum/replies/${replyId}/accept`,
+        undefined,
+        "Accept answer failed."
+      );
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: forumKeys.all });
       router.refresh();
-    } catch {
-      setError("Network error. Check your connection and try again.");
-      pushToast({
-        title: "Accept answer failed",
-        description: "The server could not be reached. Please try again.",
-        tone: "error"
-      });
-    } finally {
-      setIsPending(false);
-    }
-  };
+    },
+    onError: (mutationError) => onError(mutationError, "Accept answer failed"),
+  });
+
+  const isPending = voteMutation.isPending || acceptMutation.isPending;
 
   return (
     <div className="mt-3 space-y-1.5">
@@ -118,7 +114,14 @@ export const ForumReplyActions = ({
         <button
           type="button"
           disabled={isPending}
-          onClick={() => handleVote("upvote")}
+          onClick={() => {
+            if (!isAuthenticated) {
+              setError("Sign in to vote.");
+              return;
+            }
+            setError(null);
+            voteMutation.mutate("upvote");
+          }}
           className={cn(
             "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-all duration-150",
             "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40",
@@ -135,10 +138,16 @@ export const ForumReplyActions = ({
         </button>
 
         {/* Score */}
-        <span className={cn(
-          "px-1.5 text-xs font-bold tabular-nums",
-          upvotes > 0 ? "text-accent-success" : upvotes < 0 ? "text-accent-danger" : "text-text-muted"
-        )}>
+        <span
+          className={cn(
+            "px-1.5 text-xs font-bold tabular-nums",
+            upvotes > 0
+              ? "text-accent-success"
+              : upvotes < 0
+                ? "text-accent-danger"
+                : "text-text-muted"
+          )}
+        >
           {upvotes > 0 ? `+${upvotes}` : upvotes}
         </span>
 
@@ -146,7 +155,14 @@ export const ForumReplyActions = ({
         <button
           type="button"
           disabled={isPending}
-          onClick={() => handleVote("downvote")}
+          onClick={() => {
+            if (!isAuthenticated) {
+              setError("Sign in to vote.");
+              return;
+            }
+            setError(null);
+            voteMutation.mutate("downvote");
+          }}
           className={cn(
             "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-all duration-150",
             "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40",
@@ -169,7 +185,14 @@ export const ForumReplyActions = ({
           <button
             type="button"
             disabled={isPending}
-            onClick={handleAccept}
+            onClick={() => {
+              if (!isAuthenticated) {
+                setError("Sign in to mark an accepted answer.");
+                return;
+              }
+              setError(null);
+              acceptMutation.mutate();
+            }}
             className={cn(
               "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-all duration-150",
               "border border-border-default bg-bg-subtle text-text-secondary",

@@ -14,7 +14,7 @@ interface XpToastProps {
 export function XpToast({ notifications, onDismiss }: XpToastProps) {
   useEffect(() => {
     if (notifications.length === 0) return;
-    
+
     const latest = notifications[notifications.length - 1];
     const timer = setTimeout(() => {
       onDismiss(latest.id);

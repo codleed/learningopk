@@ -4,7 +4,10 @@ const loginAsSeededAdmin = async (page: Page) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("admin@example.com");
   await page.getByLabel("Password").fill("password");
-  await Promise.all([page.waitForURL(/\/dashboard$/), page.getByRole("button", { name: "Sign in" }).click()]);
+  await Promise.all([
+    page.waitForURL(/\/dashboard$/),
+    page.getByRole("button", { name: "Sign in" }).click(),
+  ]);
 };
 
 test("admin moderation queue filters open/resolved and resolves an open flag", async ({ page }) => {
@@ -19,12 +22,16 @@ test("admin moderation queue filters open/resolved and resolves an open flag", a
   await expect(firstOpenRow).toContainText("Open");
 
   await firstOpenRow.getByRole("button", { name: "Resolve" }).click();
-  await page.getByLabel("Resolution note").fill("This report was reviewed and valid corrective action was taken.");
+  await page
+    .getByLabel("Resolution note")
+    .fill("This report was reviewed and valid corrective action was taken.");
   await page.getByRole("button", { name: "Resolve flag" }).click();
 
   await expect(firstOpenRow).toHaveCount(0);
   await page.getByLabel("Status").selectOption("resolved");
-  await expect(page.getByText("This report was reviewed and valid corrective action was taken.")).toBeVisible();
+  await expect(
+    page.getByText("This report was reviewed and valid corrective action was taken.")
+  ).toBeVisible();
 });
 
 test("admin users directory supports text search and role filtering", async ({ page }) => {

@@ -31,7 +31,7 @@ const DEFAULT_TTL: Record<string, number> = {
   leaderboard: 300,
   quizQuestions: 0,
   progress: 0,
-  aiResponses: 0
+  aiResponses: 0,
 };
 
 /** Ratio of remaining TTL below which a background refresh is triggered. */
@@ -303,6 +303,7 @@ export const CacheKeys = {
   quizQuestions: (quizId: number) => `quiz:questions:${quizId}`,
   userProgress: (userId: string) => `user:progress:${userId}`,
   userDashboard: (userId: string) => `user:dashboard:${userId}`,
-  leaderboard: (userId: string, scope: string, metric: string) => `leaderboard:${userId}:${scope}:${metric}`,
-  leaderboardBadges: () => "leaderboard:badges:global:xp"
+  leaderboard: (userId: string, scope: string, metric: string) =>
+    `leaderboard:${userId}:${scope}:${metric}`,
+  leaderboardBadges: () => "leaderboard:badges:global:xp",
 };

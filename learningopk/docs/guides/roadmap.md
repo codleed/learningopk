@@ -124,4 +124,3 @@ produces a testable, working slice of the app.
 | | - Seed 2-3 complete | | |
 | | subjects for demo | | |
 +------------+---------------------------+------------+--------------+
-

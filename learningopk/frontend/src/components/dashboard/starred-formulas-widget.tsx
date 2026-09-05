@@ -27,9 +27,7 @@ export function StarredFormulasWidget({ formulas }: StarredFormulasWidgetProps) 
               <h3 className="font-[var(--font-display)] text-base font-bold text-text-primary">
                 Starred Formulas
               </h3>
-              <p className="text-[11px] text-text-muted">
-                Your most-used formulas
-              </p>
+              <p className="text-[11px] text-text-muted">Your most-used formulas</p>
             </div>
           </div>
           <Badge variant="warning" size="sm">
@@ -67,7 +65,10 @@ export function StarredFormulasWidget({ formulas }: StarredFormulasWidgetProps) 
           className="group mt-1 flex items-center gap-1.5 text-sm font-semibold text-accent-primary hover:text-accent-primary-hover transition-colors"
         >
           Open Formula Library
-          <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden />
+          <ArrowRight
+            className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
+            aria-hidden
+          />
         </Link>
       </CardBody>
     </Card>

@@ -23,7 +23,7 @@ export function ChapterPublishToggle({
   chapterId,
   chapterLabel,
   isPublished,
-  onComplete
+  onComplete,
 }: ChapterPublishToggleProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
@@ -34,16 +34,19 @@ export function ChapterPublishToggle({
     setIsPending(true);
 
     try {
-      const response = await fetch(`${backendUrl}/api/admin/content/chapters/${chapterId}/publish`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "content-type": "application/json"
-        },
-        body: JSON.stringify({
-          isPublished: nextPublished
-        })
-      });
+      const response = await fetch(
+        `${backendUrl}/api/admin/content/chapters/${chapterId}/publish`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            isPublished: nextPublished,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Admin content endpoint returned ${response.status}.`);
@@ -53,12 +56,12 @@ export function ChapterPublishToggle({
       onComplete({
         status: "success",
         message,
-        nextPublished
+        nextPublished,
       });
       pushToast({
         tone: "success",
         title: "Chapter status updated",
-        description: message
+        description: message,
       });
     } catch (error) {
       const message =
@@ -69,12 +72,12 @@ export function ChapterPublishToggle({
       onComplete({
         status: "failed",
         message,
-        nextPublished: isPublished
+        nextPublished: isPublished,
       });
       pushToast({
         tone: "error",
         title: "Chapter status update failed",
-        description: message
+        description: message,
       });
     } finally {
       setIsPending(false);
@@ -84,7 +87,12 @@ export function ChapterPublishToggle({
 
   return (
     <>
-      <Button type="button" size="sm" variant={isPublished ? "danger" : "secondary"} onClick={() => setIsDialogOpen(true)}>
+      <Button
+        type="button"
+        size="sm"
+        variant={isPublished ? "danger" : "secondary"}
+        onClick={() => setIsDialogOpen(true)}
+      >
         {isPublished ? "Unpublish" : "Publish"}
       </Button>
       <ConfirmDialog
@@ -100,4 +108,3 @@ export function ChapterPublishToggle({
     </>
   );
 }
-

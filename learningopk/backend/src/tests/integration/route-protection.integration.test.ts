@@ -39,21 +39,27 @@ test("forum mutation endpoints reject unauthenticated requests", async () => {
 
   const createThread = await agent.post("/api/forum/threads").send({
     title: "Auth test thread",
-    body: "Should be rejected without auth."
+    body: "Should be rejected without auth.",
   });
   assert.equal(createThread.status, 401, "POST /api/forum/threads should require auth.");
 
-  const createReply = await agent.post("/api/forum/threads/00000000-0000-0000-0000-000000000001/replies").send({
-    body: "Should be rejected."
-  });
+  const createReply = await agent
+    .post("/api/forum/threads/00000000-0000-0000-0000-000000000001/replies")
+    .send({
+      body: "Should be rejected.",
+    });
   assert.equal(createReply.status, 401, "POST /api/forum/threads/:id/replies should require auth.");
 
-  const voteReply = await agent.post("/api/forum/replies/00000000-0000-0000-0000-000000000001/vote").send({
-    voteType: "upvote"
-  });
+  const voteReply = await agent
+    .post("/api/forum/replies/00000000-0000-0000-0000-000000000001/vote")
+    .send({
+      voteType: "upvote",
+    });
   assert.equal(voteReply.status, 401, "POST /api/forum/replies/:id/vote should require auth.");
 
-  const acceptReply = await agent.post("/api/forum/replies/00000000-0000-0000-0000-000000000001/accept").send({});
+  const acceptReply = await agent
+    .post("/api/forum/replies/00000000-0000-0000-0000-000000000001/accept")
+    .send({});
   assert.equal(acceptReply.status, 401, "POST /api/forum/replies/:id/accept should require auth.");
 });
 
@@ -70,7 +76,11 @@ test("todays focus completion endpoint requires authentication", async () => {
   const agent = request(app);
 
   const response = await agent.post("/api/progress/todays-focus/complete").send({});
-  assert.equal(response.status, 401, "POST /api/progress/todays-focus/complete should require auth.");
+  assert.equal(
+    response.status,
+    401,
+    "POST /api/progress/todays-focus/complete should require auth."
+  );
 });
 
 test("health endpoint is public", async () => {

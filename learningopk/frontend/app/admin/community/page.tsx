@@ -14,13 +14,13 @@ export default async function AdminCommunityPage() {
     solved: "all",
     pinned: "all",
     flagState: "all",
-    cookieHeader
+    cookieHeader,
   }).catch(() => ({
     entries: [],
     total: 0,
     page: 1,
     pageSize: 20,
-    hasMore: false
+    hasMore: false,
   }));
 
   return (
@@ -30,7 +30,10 @@ export default async function AdminCommunityPage() {
         title="Community Forum"
         subtitle="Track thread health and moderation pressure across the forum."
         actions={
-          <Link href="/admin" className="text-sm font-medium text-text-primary underline underline-offset-4">
+          <Link
+            href="/admin"
+            className="text-sm font-medium text-text-primary underline underline-offset-4"
+          >
             Back to admin
           </Link>
         }

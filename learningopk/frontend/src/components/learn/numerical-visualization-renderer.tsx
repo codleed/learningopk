@@ -76,7 +76,8 @@ function EmptyState() {
         No visualization available for this problem
       </p>
       <p className="max-w-xs text-xs text-text-muted">
-        Visualizations are generated for numerical and graphical problems to help you understand concepts better.
+        Visualizations are generated for numerical and graphical problems to help you understand
+        concepts better.
       </p>
     </div>
   );
@@ -185,10 +186,7 @@ function VisualizationFrame({ srcdoc, height, fillHeight }: VisualizationFramePr
           srcdoc={srcdoc}
           height={height}
           onLoad={handleIframeLoad}
-          className={cn(
-            "transition-opacity duration-300",
-            isLoaded ? "opacity-100" : "opacity-0"
-          )}
+          className={cn("transition-opacity duration-300", isLoaded ? "opacity-100" : "opacity-0")}
         />
       </motion.div>
     </div>
@@ -400,11 +398,7 @@ export function NumericalVisualizationRenderer({
       {/* Fullscreen overlay */}
       <AnimatePresence>
         {isFullscreen && hasVisualization && (
-          <FullscreenModal
-            srcdoc={visualizationHtml}
-            title={title}
-            onClose={closeFullscreen}
-          />
+          <FullscreenModal srcdoc={visualizationHtml} title={title} onClose={closeFullscreen} />
         )}
       </AnimatePresence>
     </>

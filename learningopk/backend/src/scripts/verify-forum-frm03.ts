@@ -9,28 +9,34 @@ const threadListSchema = z.object({
   threads: z.array(
     z.object({
       id: z.string().uuid(),
-      title: z.string()
+      title: z.string(),
     })
-  )
+  ),
 });
 
 const signUp = async (agent: ReturnType<typeof request.agent>, label: string) => {
   const email = `${label}_${Date.now()}_${Math.floor(Math.random() * 100000)}@example.com`;
   const password = "StrongPass123";
 
-  const signUpResponse = await agent.post("/api/auth/sign-up/email").set("origin", "http://localhost:3000").send({
-    name: `${label} user`,
-    email,
-    password,
-    class: "9th",
-    board: "fbise"
-  });
+  const signUpResponse = await agent
+    .post("/api/auth/sign-up/email")
+    .set("origin", "http://localhost:3000")
+    .send({
+      name: `${label} user`,
+      email,
+      password,
+      class: "9th",
+      board: "fbise",
+    });
   if (signUpResponse.status >= 400) {
     throw new Error(`Sign-up failed for ${label}: ${signUpResponse.status}`);
   }
 };
 
-const createThread = async (agent: ReturnType<typeof request.agent>, payload: { title: string; body: string }) => {
+const createThread = async (
+  agent: ReturnType<typeof request.agent>,
+  payload: { title: string; body: string }
+) => {
   const response = await agent.post("/api/forum/threads").send(payload);
   if (response.status !== 201) {
     throw new Error(`Thread creation failed (${response.status}) for title "${payload.title}"`);
@@ -39,8 +45,8 @@ const createThread = async (agent: ReturnType<typeof request.agent>, payload: { 
   return z
     .object({
       thread: z.object({
-        id: z.string().uuid()
-      })
+        id: z.string().uuid(),
+      }),
     })
     .parse(response.body).thread.id;
 };
@@ -54,24 +60,26 @@ const run = async (): Promise<void> => {
 
   const highRelevanceThreadId = await createThread(authorAgent, {
     title: "Acceleration acceleration acceleration strategy",
-    body: "I keep missing acceleration steps. Need acceleration formulas and acceleration examples."
+    body: "I keep missing acceleration steps. Need acceleration formulas and acceleration examples.",
   });
 
   const mediumRelevanceThreadId = await createThread(authorAgent, {
     title: "Velocity problem in chapter 3",
-    body: "I have one acceleration value but I am unsure how to continue."
+    body: "I have one acceleration value but I am unsure how to continue.",
   });
 
   const unrelatedThreadId = await createThread(authorAgent, {
     title: "How to remember trigonometry identities",
-    body: "Sharing memorization tips for sine, cosine, and tangent."
+    body: "Sharing memorization tips for sine, cosine, and tangent.",
   });
 
   const accelerationSearchResponse = await searchAgent
     .get("/api/forum/threads")
     .query({ q: "acceleration", limit: 10, solved: "unsolved" });
   if (accelerationSearchResponse.status !== 200) {
-    throw new Error(`Expected acceleration search status 200, got ${accelerationSearchResponse.status}`);
+    throw new Error(
+      `Expected acceleration search status 200, got ${accelerationSearchResponse.status}`
+    );
   }
 
   const accelerationThreads = threadListSchema.parse(accelerationSearchResponse.body).threads;
@@ -81,20 +89,28 @@ const run = async (): Promise<void> => {
 
   const firstAccelerationResult = accelerationThreads[0];
   if (!firstAccelerationResult || firstAccelerationResult.id !== highRelevanceThreadId) {
-    throw new Error("Expected highest relevance thread to be ranked first for acceleration search.");
+    throw new Error(
+      "Expected highest relevance thread to be ranked first for acceleration search."
+    );
   }
 
-  const hasMediumRelevanceThread = accelerationThreads.some((thread) => thread.id === mediumRelevanceThreadId);
+  const hasMediumRelevanceThread = accelerationThreads.some(
+    (thread) => thread.id === mediumRelevanceThreadId
+  );
   if (!hasMediumRelevanceThread) {
     throw new Error("Expected medium relevance thread to appear in acceleration search results.");
   }
 
-  const includesUnrelatedThread = accelerationThreads.some((thread) => thread.id === unrelatedThreadId);
+  const includesUnrelatedThread = accelerationThreads.some(
+    (thread) => thread.id === unrelatedThreadId
+  );
   if (includesUnrelatedThread) {
     throw new Error("Unrelated thread should not appear in acceleration search results.");
   }
 
-  const velocitySearchResponse = await searchAgent.get("/api/forum/threads").query({ q: "velocity", limit: 10 });
+  const velocitySearchResponse = await searchAgent
+    .get("/api/forum/threads")
+    .query({ q: "velocity", limit: 10 });
   if (velocitySearchResponse.status !== 200) {
     throw new Error(`Expected velocity search status 200, got ${velocitySearchResponse.status}`);
   }
@@ -123,4 +139,3 @@ run()
       await redis.quit().catch(() => undefined);
     }
   });
-

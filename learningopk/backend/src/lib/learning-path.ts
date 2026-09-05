@@ -34,7 +34,9 @@ const buildReason = (signal: LearningPathSignal): string => {
   if (signal.totalExercises > 0) {
     const remainingExercises = Math.max(signal.totalExercises - signal.exercisesViewed, 0);
     if (remainingExercises > 0) {
-      reasons.push(`${remainingExercises} exercise${remainingExercises === 1 ? "" : "s"} still need practice`);
+      reasons.push(
+        `${remainingExercises} exercise${remainingExercises === 1 ? "" : "s"} still need practice`
+      );
     }
   }
 
@@ -46,7 +48,9 @@ const buildReason = (signal: LearningPathSignal): string => {
     );
   }
 
-  return reasons.length > 0 ? reasons.join("; ") : "Needs more reinforcement from recent learning activity";
+  return reasons.length > 0
+    ? reasons.join("; ")
+    : "Needs more reinforcement from recent learning activity";
 };
 
 const buildEstimatedTime = (signal: LearningPathSignal): string => {
@@ -80,7 +84,10 @@ export const matchesWeakTopic = (chapterTitle: string, weakTopics: string[]): bo
 
   return weakTopics.some((topic) => {
     const normalizedTopic = topic.trim().toLowerCase();
-    return normalizedTopic.length > 0 && (normalizedTitle.includes(normalizedTopic) || normalizedTopic.includes(normalizedTitle));
+    return (
+      normalizedTopic.length > 0 &&
+      (normalizedTitle.includes(normalizedTopic) || normalizedTopic.includes(normalizedTitle))
+    );
   });
 };
 
@@ -90,16 +97,21 @@ export const buildLearningPathRecommendations = (params: {
 }): LearningPathResult => {
   const scored = params.signals
     .map((signal) => {
-      const quizWeakness = signal.quizScorePercent === null
-        ? (signal.hasProgressSignal ? 0.2 : 0)
-        : clamp((100 - signal.quizScorePercent) / 100, 0, 1);
+      const quizWeakness =
+        signal.quizScorePercent === null
+          ? signal.hasProgressSignal
+            ? 0.2
+            : 0
+          : clamp((100 - signal.quizScorePercent) / 100, 0, 1);
 
-      const exerciseCoverage = signal.totalExercises > 0
-        ? clamp(signal.exercisesViewed / signal.totalExercises, 0, 1)
-        : 0;
-      const exerciseWeakness = signal.totalExercises > 0
-        ? 1 - exerciseCoverage
-        : (signal.hasProgressSignal && signal.exercisesViewed === 0 ? 0.4 : 0);
+      const exerciseCoverage =
+        signal.totalExercises > 0 ? clamp(signal.exercisesViewed / signal.totalExercises, 0, 1) : 0;
+      const exerciseWeakness =
+        signal.totalExercises > 0
+          ? 1 - exerciseCoverage
+          : signal.hasProgressSignal && signal.exercisesViewed === 0
+            ? 0.4
+            : 0;
 
       const aiEngagementWeakness = clamp(
         (signal.aiSessionCount + (signal.weakTopicMatch ? 1 : 0)) / 3,
@@ -108,17 +120,16 @@ export const buildLearningPathRecommendations = (params: {
       );
 
       const weightedScore =
-        quizWeakness * 0.5 +
-        exerciseWeakness * 0.3 +
-        aiEngagementWeakness * 0.2;
+        quizWeakness * 0.5 + exerciseWeakness * 0.3 + aiEngagementWeakness * 0.2;
 
       return {
         signal,
-        weightedScore
+        weightedScore,
       };
     })
     .filter(({ signal, weightedScore }) => {
-      const hasStoredSignal = signal.hasProgressSignal || signal.aiSessionCount > 0 || signal.weakTopicMatch;
+      const hasStoredSignal =
+        signal.hasProgressSignal || signal.aiSessionCount > 0 || signal.weakTopicMatch;
       return hasStoredSignal && weightedScore > 0;
     })
     .sort((left, right) => {
@@ -135,11 +146,11 @@ export const buildLearningPathRecommendations = (params: {
     chapterId: signal.chapterId,
     priority: index + 1,
     reason: buildReason(signal),
-    estimatedTime: buildEstimatedTime(signal)
+    estimatedTime: buildEstimatedTime(signal),
   }));
 
   return {
     recommendedChapters,
-    studentWeakAreas: scored.map(({ signal }) => signal.chapterTitle)
+    studentWeakAreas: scored.map(({ signal }) => signal.chapterTitle),
   };
 };

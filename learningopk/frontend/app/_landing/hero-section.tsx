@@ -2,25 +2,11 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import {
-  motion,
-  useScroll,
-  useTransform,
-} from "framer-motion";
-import {
-  ArrowRight,
-  BookOpen,
-  BrainCircuit,
-  Flame,
-  TrendingUp,
-  Zap,
-} from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { ArrowRight, BookOpen, BrainCircuit, Flame, TrendingUp, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui";
-import {
-  Card,
-  CardBody,
-} from "@/components/ui";
+import { Card, CardBody } from "@/components/ui";
 import { Badge } from "@/components/ui";
 
 /* ─── Shared easing curve ─── */
@@ -165,21 +151,13 @@ export function HeroSection() {
             variants={fadeSlideUp}
             className="mt-6 max-w-lg text-lg leading-relaxed text-text-secondary md:text-xl"
           >
-            Pakistan&apos;s smartest study platform. Board-specific chapters, AI
-            tutoring, quizzes, and mock exams &mdash; all in one place.
+            Pakistan&apos;s smartest study platform. Board-specific chapters, AI tutoring, quizzes,
+            and mock exams &mdash; all in one place.
           </motion.p>
 
-          <motion.div
-            variants={fadeSlideUp}
-            className="mt-8 flex flex-wrap items-center gap-4"
-          >
+          <motion.div variants={fadeSlideUp} className="mt-8 flex flex-wrap items-center gap-4">
             <Link href="/register">
-              <Button
-                variant="primary"
-                size="lg"
-                iconRight={<ArrowRight />}
-                disableAnimation
-              >
+              <Button variant="primary" size="lg" iconRight={<ArrowRight />} disableAnimation>
                 Start Learning Free
               </Button>
             </Link>
@@ -191,10 +169,7 @@ export function HeroSection() {
           </motion.div>
 
           {/* Trust indicators */}
-          <motion.div
-            variants={fadeSlideUp}
-            className="mt-10 flex items-center gap-6"
-          >
+          <motion.div variants={fadeSlideUp} className="mt-10 flex items-center gap-6">
             <div className="flex -space-x-2">
               {[
                 "bg-accent-primary",
@@ -211,10 +186,8 @@ export function HeroSection() {
               ))}
             </div>
             <p className="text-sm text-text-muted">
-              <span className="font-semibold text-text-secondary">
-                10,000+
-              </span>{" "}
-              students already learning
+              <span className="font-semibold text-text-secondary">10,000+</span> students already
+              learning
             </p>
           </motion.div>
         </motion.div>
@@ -235,17 +208,12 @@ export function HeroSection() {
               aria-hidden="true"
             />
 
-            <Card
-              variant="elevated"
-              className="relative overflow-hidden"
-            >
+            <Card variant="elevated" className="relative overflow-hidden">
               <CardBody className="space-y-5 p-6">
                 {/* Mockup Header */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-medium text-text-muted">
-                      Welcome back
-                    </p>
+                    <p className="text-xs font-medium text-text-muted">Welcome back</p>
                     <p className="font-[family-name:var(--font-display)] text-lg font-bold text-text-primary">
                       Your Dashboard
                     </p>
@@ -292,9 +260,7 @@ export function HeroSection() {
                         className={`mt-1 font-[family-name:var(--font-display)] text-xl font-bold ${stat.color}`}
                       >
                         {stat.value}
-                        <span className="text-sm font-medium text-text-muted">
-                          {stat.suffix}
-                        </span>
+                        <span className="text-sm font-medium text-text-muted">{stat.suffix}</span>
                       </p>
                     </motion.div>
                   ))}
@@ -377,9 +343,7 @@ export function HeroSection() {
                     <Zap className="h-4 w-4" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-text-primary">
-                      AI Tutor Available
-                    </p>
+                    <p className="text-xs font-semibold text-text-primary">AI Tutor Available</p>
                     <p className="text-[10px] text-text-secondary">
                       Ask any question about your syllabus
                     </p>
@@ -402,12 +366,8 @@ export function HeroSection() {
                   <TrendingUp className="h-4 w-4 text-accent-success" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-text-primary">
-                    Quiz Passed!
-                  </p>
-                  <p className="text-[10px] text-text-muted">
-                    Physics Ch. 3 &mdash; 92%
-                  </p>
+                  <p className="text-xs font-semibold text-text-primary">Quiz Passed!</p>
+                  <p className="text-[10px] text-text-muted">Physics Ch. 3 &mdash; 92%</p>
                 </div>
               </div>
             </motion.div>
@@ -425,9 +385,7 @@ export function HeroSection() {
                   <Flame className="h-3.5 w-3.5 text-accent-warning" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold text-accent-warning">
-                    +250 XP
-                  </p>
+                  <p className="text-[10px] font-semibold text-accent-warning">+250 XP</p>
                 </div>
               </div>
             </motion.div>
@@ -439,8 +397,7 @@ export function HeroSection() {
       <div
         className="pointer-events-none absolute bottom-0 left-0 right-0 h-32"
         style={{
-          background:
-            "linear-gradient(to top, var(--bg-surface), transparent)",
+          background: "linear-gradient(to top, var(--bg-surface), transparent)",
         }}
         aria-hidden="true"
       />

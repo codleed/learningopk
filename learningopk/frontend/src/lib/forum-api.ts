@@ -5,14 +5,14 @@ const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001
 const boardSchema = z.object({
   id: z.number().int().positive(),
   name: z.string(),
-  slug: z.string()
+  slug: z.string(),
 });
 
 const boardClassSchema = z.object({
   id: z.number().int().positive(),
   boardId: z.number().int().positive(),
   name: z.string(),
-  slug: z.string()
+  slug: z.string(),
 });
 
 const subjectSchema = z.object({
@@ -23,7 +23,7 @@ const subjectSchema = z.object({
   className: z.string().nullable(),
   classSlug: z.string().nullable(),
   boardClassId: z.number().int().positive().nullable(),
-  boardId: z.number().int().positive()
+  boardId: z.number().int().positive(),
 });
 
 const chapterSchema = z.object({
@@ -31,14 +31,14 @@ const chapterSchema = z.object({
   title: z.string(),
   slug: z.string(),
   chapterNumber: z.number().int().positive(),
-  subjectId: z.number().int().positive()
+  subjectId: z.number().int().positive(),
 });
 
 const forumFiltersResponseSchema = z.object({
   boards: z.array(boardSchema),
   classes: z.array(boardClassSchema),
   subjects: z.array(subjectSchema),
-  chapters: z.array(chapterSchema)
+  chapters: z.array(chapterSchema),
 });
 
 const threadSummarySchema = z.object({
@@ -60,11 +60,11 @@ const threadSummarySchema = z.object({
   className: z.string().nullable(),
   subjectName: z.string().nullable(),
   relevance: z.number().optional().default(0),
-  replyCount: z.number().int().nonnegative()
+  replyCount: z.number().int().nonnegative(),
 });
 
 const forumFeedResponseSchema = z.object({
-  threads: z.array(threadSummarySchema)
+  threads: z.array(threadSummarySchema),
 });
 
 const nestedReplySchema = z.object({
@@ -78,7 +78,7 @@ const nestedReplySchema = z.object({
   upvotes: z.number().int(),
   viewerVoteType: z.enum(["upvote", "downvote"]).nullable(),
   createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime()
+  updatedAt: z.string().datetime(),
 });
 
 const topLevelReplySchema = z.object({
@@ -93,13 +93,13 @@ const topLevelReplySchema = z.object({
   viewerVoteType: z.enum(["upvote", "downvote"]).nullable(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
-  replies: z.array(nestedReplySchema)
+  replies: z.array(nestedReplySchema),
 });
 
 const forumThreadDetailResponseSchema = z.object({
   thread: threadSummarySchema.extend({
-    replies: z.array(topLevelReplySchema)
-  })
+    replies: z.array(topLevelReplySchema),
+  }),
 });
 
 export type ForumFiltersResponse = z.infer<typeof forumFiltersResponseSchema>;
@@ -117,11 +117,30 @@ export type ForumFeedQuery = {
   offset?: number;
 };
 
+/** Filter-only view of the query (no pagination params); used in cache keys. */
+export type ForumFeedFilters = Omit<ForumFeedQuery, "limit" | "offset">;
+
+/**
+ * Central TanStack Query cache keys for the forum domain.
+ * Mutations invalidate via `forumKeys.all`; queries subscribe to narrower keys.
+ */
+export const forumKeys = {
+  all: ["forum"] as const,
+  threads: (filters: ForumFeedFilters) => ["forum", "threads", filters] as const,
+};
+
+/** Thrown by forum mutations on non-2xx API responses (vs. network failures). */
+export class ForumApiError extends Error {}
+
 type FetchForumOptions = {
   cookieHeader?: string;
 };
 
-const fetchForumJson = async <T>(url: string, schema: z.ZodType<T>, options?: FetchForumOptions): Promise<T> => {
+const fetchForumJson = async <T>(
+  url: string,
+  schema: z.ZodType<T>,
+  options?: FetchForumOptions
+): Promise<T> => {
   const headers: Record<string, string> = {};
   if (options?.cookieHeader) {
     headers.cookie = options.cookieHeader;
@@ -130,7 +149,7 @@ const fetchForumJson = async <T>(url: string, schema: z.ZodType<T>, options?: Fe
   const response = await fetch(url, {
     method: "GET",
     headers,
-    cache: "no-store"
+    cache: "no-store",
   });
 
   if (!response.ok) {
@@ -172,7 +191,10 @@ export const getForumThreads = async (query: ForumFeedQuery): Promise<ForumFeedR
   }
 
   const queryString = params.toString();
-  const url = queryString.length > 0 ? `${backendUrl}/api/forum/threads?${queryString}` : `${backendUrl}/api/forum/threads`;
+  const url =
+    queryString.length > 0
+      ? `${backendUrl}/api/forum/threads?${queryString}`
+      : `${backendUrl}/api/forum/threads`;
   return fetchForumJson(url, forumFeedResponseSchema);
 };
 
@@ -188,7 +210,7 @@ export const getForumThreadById = async (
   const response = await fetch(`${backendUrl}/api/forum/threads/${threadId}`, {
     method: "GET",
     headers,
-    cache: "no-store"
+    cache: "no-store",
   });
 
   if (response.status === 404) {

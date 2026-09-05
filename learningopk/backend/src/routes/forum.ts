@@ -3,7 +3,11 @@ import { Router, type Response } from "express";
 import { z } from "zod";
 
 import { consumeForumMutationRateLimit, moderateForumInput } from "../lib/ai-guardrails.js";
-import { getSessionFromRequest, requireSession, type AuthenticatedRequest } from "../lib/session.js";
+import {
+  getSessionFromRequest,
+  requireSession,
+  type AuthenticatedRequest,
+} from "../lib/session.js";
 import { errorResponse, successResponse } from "../lib/response.js";
 import { forumRepository } from "../repositories/forum.repository.js";
 import { forumService } from "../services/forum.service.js";
@@ -13,35 +17,43 @@ const createThreadSchema = z.object({
   title: z.string().trim().min(5).max(160),
   body: z.string().trim().min(10).max(50000),
   subjectId: z.number().int().positive().optional(),
-  chapterId: z.number().int().positive().optional()
+  chapterId: z.number().int().positive().optional(),
 });
 
 const threadParamsSchema = z.object({
-  threadId: z.string().uuid()
+  threadId: z.string().uuid(),
 });
 
 const replyParamsSchema = z.object({
-  replyId: z.string().uuid()
+  replyId: z.string().uuid(),
 });
 
 const replySchema = z.object({
   body: z.string().trim().min(2),
-  parentReplyId: z.string().uuid().optional()
+  parentReplyId: z.string().uuid().optional(),
 });
 
 const replyVoteSchema = z.object({
-  voteType: z.enum(["upvote", "downvote"])
+  voteType: z.enum(["upvote", "downvote"]),
 });
 
 const threadFeedQuerySchema = z.object({
-  board: z.string().trim().regex(/^[a-z0-9-]+$/).optional(),
-  grade: z.string().trim().regex(/^[a-z0-9-]+$/).optional(),
+  board: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
+  grade: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
   subjectId: z.coerce.number().int().positive().optional(),
   chapterId: z.coerce.number().int().positive().optional(),
   q: z.string().trim().min(1).max(160).optional(),
   solved: z.enum(["all", "solved", "unsolved"]).optional().default("all"),
   limit: z.coerce.number().int().min(1).max(100).optional().default(20),
-  offset: z.coerce.number().int().min(0).optional().default(0)
+  offset: z.coerce.number().int().min(0).optional().default(0),
 });
 
 type ThreadFeedFilters = z.infer<typeof threadFeedQuerySchema>;
@@ -59,7 +71,9 @@ const applyForumMutationRateLimit = async (res: Response, userId: string): Promi
     if (isHttpError(error)) {
       res.status(error.status).json(error.toResponse());
     } else {
-      res.status(503).json(errorResponse("Rate limit service unavailable.", "RATE_LIMIT_SERVICE_UNAVAILABLE"));
+      res
+        .status(503)
+        .json(errorResponse("Rate limit service unavailable.", "RATE_LIMIT_SERVICE_UNAVAILABLE"));
     }
     return false;
   }
@@ -72,7 +86,7 @@ forumRouter.get("/filters", async (_req, res) => {
     boards: filtersData.boards,
     classes: filtersData.classes,
     subjects: filtersData.subjects,
-    chapters: filtersData.chapters
+    chapters: filtersData.chapters,
   });
 });
 
@@ -81,7 +95,7 @@ forumRouter.get("/threads", async (req, res) => {
   if (!parsed.success) {
     res.status(400).json({
       error: "Invalid forum feed query parameters",
-      details: parsed.error.flatten()
+      details: parsed.error.flatten(),
     });
     return;
   }
@@ -89,17 +103,26 @@ forumRouter.get("/threads", async (req, res) => {
   const filters = parsed.data;
   const whereClause = forumService.buildFilters(filters);
 
-  const threadRows = await forumRepository.findThreads(whereClause, filters.limit, filters.offset, filters.q);
+  const threadRows = await forumRepository.findThreads(
+    whereClause,
+    filters.limit,
+    filters.offset,
+    filters.q
+  );
 
   res.status(200).json({
-    threads: threadRows
+    threads: threadRows,
   });
 });
 
 forumRouter.get("/threads/:threadId", async (req, res) => {
   const parsedParams = threadParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
-    res.status(400).json(errorResponse("Invalid thread identifier", "VALIDATION_ERROR", parsedParams.error.flatten()));
+    res
+      .status(400)
+      .json(
+        errorResponse("Invalid thread identifier", "VALIDATION_ERROR", parsedParams.error.flatten())
+      );
     return;
   }
 
@@ -113,7 +136,10 @@ forumRouter.get("/threads/:threadId", async (req, res) => {
     // If auth service is unavailable, we can still show the thread (public content) but without personalized info
     // However, per trust boundaries, we should indicate service degradation but not fail the request entirely for public endpoint.
     // We could choose to return 503 if session is required for this endpoint, but it's not. So we continue without viewerUserId.
-    console.warn("Auth service unavailable for thread view, proceeding without personalized data:", error);
+    console.warn(
+      "Auth service unavailable for thread view, proceeding without personalized data:",
+      error
+    );
   }
 
   // View counting is handled by the dedicated POST /threads/:threadId/view
@@ -144,15 +170,15 @@ forumRouter.get("/threads/:threadId", async (req, res) => {
 
   const replyRowsWithVotes = replyRows.map((row) => ({
     ...row,
-    viewerVoteType: voteByReplyId.get(row.id) ?? null
+    viewerVoteType: voteByReplyId.get(row.id) ?? null,
   }));
 
   res.status(200).json({
     thread: {
       ...thread,
       replies: forumService.shapeThreadReplies(replyRowsWithVotes),
-      replyCount: replyRowsWithVotes.length
-    }
+      replyCount: replyRowsWithVotes.length,
+    },
   });
 });
 
@@ -166,7 +192,11 @@ forumRouter.get("/threads/:threadId", async (req, res) => {
 forumRouter.post("/threads/:threadId/view", async (req, res) => {
   const parsedParams = threadParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
-    res.status(400).json(errorResponse("Invalid thread identifier", "VALIDATION_ERROR", parsedParams.error.flatten()));
+    res
+      .status(400)
+      .json(
+        errorResponse("Invalid thread identifier", "VALIDATION_ERROR", parsedParams.error.flatten())
+      );
     return;
   }
 
@@ -183,7 +213,11 @@ forumRouter.post("/threads/:threadId/view", async (req, res) => {
 forumRouter.post("/threads", requireSession, async (req, res) => {
   const parsed = createThreadSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json(errorResponse("Invalid forum thread payload", "VALIDATION_ERROR", parsed.error.flatten()));
+    res
+      .status(400)
+      .json(
+        errorResponse("Invalid forum thread payload", "VALIDATION_ERROR", parsed.error.flatten())
+      );
     return;
   }
 
@@ -201,15 +235,17 @@ forumRouter.post("/threads", requireSession, async (req, res) => {
       body: parsed.data.body,
       userId,
       chapterId: parsed.data.chapterId,
-      subjectId: parsed.data.subjectId
+      subjectId: parsed.data.subjectId,
     });
 
-    res.status(201).json(successResponse({
-      thread: {
-        ...result.thread,
-        userName: authedReq.session.user.name
-      }
-    }));
+    res.status(201).json(
+      successResponse({
+        thread: {
+          ...result.thread,
+          userName: authedReq.session.user.name,
+        },
+      })
+    );
   } catch (error) {
     if (isHttpError(error)) {
       res.status(error.status).json(error.toResponse());
@@ -223,13 +259,21 @@ forumRouter.post("/threads", requireSession, async (req, res) => {
 forumRouter.post("/threads/:threadId/replies", requireSession, async (req, res) => {
   const parsedParams = threadParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
-    res.status(400).json(errorResponse("Invalid thread identifier", "VALIDATION_ERROR", parsedParams.error.flatten()));
+    res
+      .status(400)
+      .json(
+        errorResponse("Invalid thread identifier", "VALIDATION_ERROR", parsedParams.error.flatten())
+      );
     return;
   }
 
   const parsed = replySchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json(errorResponse("Invalid forum reply payload", "VALIDATION_ERROR", parsed.error.flatten()));
+    res
+      .status(400)
+      .json(
+        errorResponse("Invalid forum reply payload", "VALIDATION_ERROR", parsed.error.flatten())
+      );
     return;
   }
 
@@ -242,12 +286,15 @@ forumRouter.post("/threads/:threadId/replies", requireSession, async (req, res) 
   }
 
   try {
-    const result = await forumService.createReply({
-      body: parsed.data.body,
-      parentReplyId: parsed.data.parentReplyId,
-      threadId,
-      userId
-    }, authedReq.session.user.name);
+    const result = await forumService.createReply(
+      {
+        body: parsed.data.body,
+        parentReplyId: parsed.data.parentReplyId,
+        threadId,
+        userId,
+      },
+      authedReq.session.user.name
+    );
 
     res.status(201).json(successResponse(result));
   } catch (error) {
@@ -263,13 +310,19 @@ forumRouter.post("/threads/:threadId/replies", requireSession, async (req, res) 
 forumRouter.post("/replies/:replyId/vote", requireSession, async (req, res) => {
   const parsedParams = replyParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
-    res.status(400).json(errorResponse("Invalid reply identifier", "VALIDATION_ERROR", parsedParams.error.flatten()));
+    res
+      .status(400)
+      .json(
+        errorResponse("Invalid reply identifier", "VALIDATION_ERROR", parsedParams.error.flatten())
+      );
     return;
   }
 
   const parsedBody = replyVoteSchema.safeParse(req.body);
   if (!parsedBody.success) {
-    res.status(400).json(errorResponse("Invalid vote payload", "VALIDATION_ERROR", parsedBody.error.flatten()));
+    res
+      .status(400)
+      .json(errorResponse("Invalid vote payload", "VALIDATION_ERROR", parsedBody.error.flatten()));
     return;
   }
 
@@ -298,7 +351,11 @@ forumRouter.post("/replies/:replyId/vote", requireSession, async (req, res) => {
 forumRouter.post("/replies/:replyId/accept", requireSession, async (req, res) => {
   const parsedParams = replyParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
-    res.status(400).json(errorResponse("Invalid reply identifier", "VALIDATION_ERROR", parsedParams.error.flatten()));
+    res
+      .status(400)
+      .json(
+        errorResponse("Invalid reply identifier", "VALIDATION_ERROR", parsedParams.error.flatten())
+      );
     return;
   }
 

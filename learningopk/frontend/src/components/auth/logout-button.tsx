@@ -25,7 +25,7 @@ export const LogoutButton = ({
   icon,
   hideLabel = false,
   className,
-  labelClassName
+  labelClassName,
 }: LogoutButtonProps = {}) => {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
@@ -52,7 +52,9 @@ export const LogoutButton = ({
         className
       )}
     >
-      {icon ? <span className="inline-flex items-center justify-center text-current">{icon}</span> : null}
+      {icon ? (
+        <span className="inline-flex items-center justify-center text-current">{icon}</span>
+      ) : null}
       {hideLabel ? (
         <span className="sr-only">{isPending ? pendingLabel : label}</span>
       ) : (

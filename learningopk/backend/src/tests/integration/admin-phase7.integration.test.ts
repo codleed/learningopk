@@ -37,7 +37,7 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
     email,
     password: TEST_PASSWORD,
     class: "9th",
-    board: "fbise"
+    board: "fbise",
   });
 
   assert.ok(
@@ -67,7 +67,7 @@ const assignAdminRole = async (userId: string): Promise<void> => {
 const suspendUser = async ({
   userId,
   suspendedBy,
-  reason
+  reason,
 }: {
   userId: string;
   suspendedBy: string;
@@ -79,7 +79,7 @@ const suspendUser = async ({
       status: "suspended",
       suspendedAt: new Date(),
       suspendedReason: reason,
-      suspendedBy
+      suspendedBy,
     })
     .where(eq(users.id, userId));
 };
@@ -87,7 +87,7 @@ const suspendUser = async ({
 const seedModerationFlag = async ({
   status,
   targetSuffix,
-  resolvedBy
+  resolvedBy,
 }: {
   status: "open" | "resolved";
   targetSuffix: string;
@@ -117,9 +117,9 @@ const seedModerationFlag = async ({
       `Phase7 thread ${targetSuffix}`,
       `Phase 7 moderation reason ${targetSuffix}`,
       status,
-      status === "resolved" ? resolvedBy ?? null : null,
+      status === "resolved" ? (resolvedBy ?? null) : null,
       status === "resolved" ? now.toISOString() : null,
-      status === "resolved" ? "Resolved in test fixture" : null
+      status === "resolved" ? "Resolved in test fixture" : null,
     ]
   );
 };
@@ -148,7 +148,7 @@ const seedAuditLog = async (input: SeedAuditLogInput): Promise<void> => {
       input.message,
       input.actorId,
       input.actorName,
-      input.createdAt.toISOString()
+      input.createdAt.toISOString(),
     ]
   );
 };
@@ -158,7 +158,7 @@ const seedNotification = async ({
   message,
   createdBy,
   createdAt,
-  audience = "students"
+  audience = "students",
 }: {
   title: string;
   message: string;
@@ -208,7 +208,7 @@ test("admin overview enforces auth/role and validates query", async () => {
   assert.equal(forbidden.status, 403);
 
   const invalidQuery = await adminAgent.get("/api/admin/overview").query({
-    windowDays: 11
+    windowDays: 11,
   });
   assert.equal(invalidQuery.status, 400);
 });
@@ -220,8 +220,16 @@ test("admin overview returns KPIs, alerts, and recent activity", async () => {
   const suspendedTwoAgent = request.agent(app);
 
   await signUp(adminAgent, "Phase7 Ops Admin", `tst_phase7_ops_admin_${Date.now()}@example.com`);
-  await signUp(suspendedOneAgent, "Phase7 Suspended One", `tst_phase7_suspend1_${Date.now()}@example.com`);
-  await signUp(suspendedTwoAgent, "Phase7 Suspended Two", `tst_phase7_suspend2_${Date.now()}@example.com`);
+  await signUp(
+    suspendedOneAgent,
+    "Phase7 Suspended One",
+    `tst_phase7_suspend1_${Date.now()}@example.com`
+  );
+  await signUp(
+    suspendedTwoAgent,
+    "Phase7 Suspended Two",
+    `tst_phase7_suspend2_${Date.now()}@example.com`
+  );
 
   const adminUser = await getSessionUser(adminAgent);
   const suspendedOneUser = await getSessionUser(suspendedOneAgent);
@@ -230,25 +238,25 @@ test("admin overview returns KPIs, alerts, and recent activity", async () => {
   await suspendUser({
     userId: suspendedOneUser.id,
     suspendedBy: adminUser.id,
-    reason: "Suspended for Phase 7 threshold fixture one"
+    reason: "Suspended for Phase 7 threshold fixture one",
   });
   await suspendUser({
     userId: suspendedTwoUser.id,
     suspendedBy: adminUser.id,
-    reason: "Suspended for Phase 7 threshold fixture two"
+    reason: "Suspended for Phase 7 threshold fixture two",
   });
 
   for (let index = 0; index < 10; index += 1) {
     await seedModerationFlag({
       status: "open",
-      targetSuffix: `open-${Date.now()}-${index}`
+      targetSuffix: `open-${Date.now()}-${index}`,
     });
   }
 
   await seedModerationFlag({
     status: "resolved",
     targetSuffix: `resolved-${Date.now()}`,
-    resolvedBy: adminUser.id
+    resolvedBy: adminUser.id,
   });
 
   const now = Date.now();
@@ -262,7 +270,7 @@ test("admin overview returns KPIs, alerts, and recent activity", async () => {
       message: `Phase7 failed admin action in last 24h ${index + 1}`,
       actorId: adminUser.id,
       actorName: adminUser.name,
-      createdAt: new Date(now - (index + 1) * 60_000)
+      createdAt: new Date(now - (index + 1) * 60_000),
     });
   }
 
@@ -275,7 +283,7 @@ test("admin overview returns KPIs, alerts, and recent activity", async () => {
     message: "Old failed action should not count toward 24h KPI",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: new Date(now - 72 * 60 * 60 * 1000)
+    createdAt: new Date(now - 72 * 60 * 60 * 1000),
   });
 
   await seedAuditLog({
@@ -287,7 +295,7 @@ test("admin overview returns KPIs, alerts, and recent activity", async () => {
     message: "Success action for mixed fixture",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: new Date(now - 30_000)
+    createdAt: new Date(now - 30_000),
   });
 
   const activityNewest = new Date(now + 2 * 60_000);
@@ -303,7 +311,7 @@ test("admin overview returns KPIs, alerts, and recent activity", async () => {
     message: "Phase7 activity ordering oldest",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: activityOldest
+    createdAt: activityOldest,
   });
 
   await seedAuditLog({
@@ -315,7 +323,7 @@ test("admin overview returns KPIs, alerts, and recent activity", async () => {
     message: "Phase7 activity ordering middle",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: activityMiddle
+    createdAt: activityMiddle,
   });
 
   await seedAuditLog({
@@ -327,30 +335,30 @@ test("admin overview returns KPIs, alerts, and recent activity", async () => {
     message: "Phase7 activity ordering newest",
     actorId: adminUser.id,
     actorName: adminUser.name,
-    createdAt: activityNewest
+    createdAt: activityNewest,
   });
 
   await seedNotification({
     title: "Phase7 recent notification one",
     message: "Phase7 notification inside 30 day window one",
     createdBy: adminUser.id,
-    createdAt: new Date(now - 2 * 24 * 60 * 60 * 1000)
+    createdAt: new Date(now - 2 * 24 * 60 * 60 * 1000),
   });
   await seedNotification({
     title: "Phase7 recent notification two",
     message: "Phase7 notification inside 30 day window two",
     createdBy: adminUser.id,
-    createdAt: new Date(now - 5 * 24 * 60 * 60 * 1000)
+    createdAt: new Date(now - 5 * 24 * 60 * 60 * 1000),
   });
   await seedNotification({
     title: "Phase7 recent notification three",
     message: "Phase7 notification inside 30 day window three",
     createdBy: adminUser.id,
-    createdAt: new Date(now - 10 * 24 * 60 * 60 * 1000)
+    createdAt: new Date(now - 10 * 24 * 60 * 60 * 1000),
   });
 
   const response = await adminAgent.get("/api/admin/overview").query({
-    windowDays: 30
+    windowDays: 30,
   });
 
   assert.equal(response.status, 200);
@@ -359,8 +367,14 @@ test("admin overview returns KPIs, alerts, and recent activity", async () => {
   assert.ok(response.body?.alerts, "Expected alerts payload.");
   assert.ok(Array.isArray(response.body?.recentActivity), "Expected recent activity array.");
 
-  assert.ok(response.body.kpis.openModerationFlags >= 10, "Expected open moderation KPI to include seeded fixtures.");
-  assert.ok(response.body.kpis.suspendedUsers >= 2, "Expected suspended users KPI to include seeded fixtures.");
+  assert.ok(
+    response.body.kpis.openModerationFlags >= 10,
+    "Expected open moderation KPI to include seeded fixtures."
+  );
+  assert.ok(
+    response.body.kpis.suspendedUsers >= 2,
+    "Expected suspended users KPI to include seeded fixtures."
+  );
   assert.ok(
     response.body.kpis.failedAdminActionsLast24h >= 5,
     "Expected failed-actions-24h KPI to include seeded fixtures."
@@ -372,9 +386,15 @@ test("admin overview returns KPIs, alerts, and recent activity", async () => {
 
   assert.equal(response.body.alerts.showHighPriorityBanner, true);
   assert.ok(Array.isArray(response.body.alerts.reasons), "Expected alert reasons array.");
-  assert.ok(response.body.alerts.reasons.length >= 1, "Expected at least one alert reason when threshold is exceeded.");
+  assert.ok(
+    response.body.alerts.reasons.length >= 1,
+    "Expected at least one alert reason when threshold is exceeded."
+  );
 
-  assert.ok(response.body.recentActivity.length >= 3, "Expected at least three recent activity rows.");
+  assert.ok(
+    response.body.recentActivity.length >= 3,
+    "Expected at least three recent activity rows."
+  );
 
   const newestIndex = response.body.recentActivity.findIndex(
     (row: { action: string }) => row.action === "Phase7 activity newest"
@@ -397,7 +417,11 @@ test("admin overview applies windowDays to notifications KPI", async () => {
   const app = createApp();
   const adminAgent = request.agent(app);
 
-  await signUp(adminAgent, "Phase7 Window Admin", `tst_phase7_window_admin_${Date.now()}@example.com`);
+  await signUp(
+    adminAgent,
+    "Phase7 Window Admin",
+    `tst_phase7_window_admin_${Date.now()}@example.com`
+  );
 
   const adminUser = await getSessionUser(adminAgent);
   await assignAdminRole(adminUser.id);
@@ -407,20 +431,20 @@ test("admin overview applies windowDays to notifications KPI", async () => {
     title: "Phase7 7day fixture",
     message: "Inside both 7 and 30 windows",
     createdBy: adminUser.id,
-    createdAt: new Date(now - 2 * 24 * 60 * 60 * 1000)
+    createdAt: new Date(now - 2 * 24 * 60 * 60 * 1000),
   });
   await seedNotification({
     title: "Phase7 30day-only fixture",
     message: "Inside 30 window but outside 7 window",
     createdBy: adminUser.id,
-    createdAt: new Date(now - 20 * 24 * 60 * 60 * 1000)
+    createdAt: new Date(now - 20 * 24 * 60 * 60 * 1000),
   });
 
   const windowSeven = await adminAgent.get("/api/admin/overview").query({
-    windowDays: 7
+    windowDays: 7,
   });
   const windowThirty = await adminAgent.get("/api/admin/overview").query({
-    windowDays: 30
+    windowDays: 30,
   });
 
   assert.equal(windowSeven.status, 200);
@@ -432,7 +456,8 @@ test("admin overview applies windowDays to notifications KPI", async () => {
   const countThirty = windowThirty.body.kpis.notificationsSentInWindow as number;
 
   assert.ok(countThirty >= countSeven, "Expected 30-day notification count to be >= 7-day count.");
-  assert.ok(countThirty - countSeven >= 1, "Expected 30-day count to include at least one additional seeded notification.");
+  assert.ok(
+    countThirty - countSeven >= 1,
+    "Expected 30-day count to include at least one additional seeded notification."
+  );
 });
-
-

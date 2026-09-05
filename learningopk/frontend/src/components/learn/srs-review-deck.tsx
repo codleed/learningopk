@@ -8,12 +8,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { LoadingSkeleton, ErrorState } from "@/components/ui/states";
-import {
-  fetchDueCards,
-  submitReview,
-  type DueCard,
-  type RecallRating,
-} from "@/lib/srs-api";
+import { fetchDueCards, submitReview, type DueCard, type RecallRating } from "@/lib/srs-api";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -123,10 +118,8 @@ function CompletionScreen({
           All caught up!
         </h2>
         <p className="max-w-sm text-sm text-text-secondary">
-          You reviewed{" "}
-          <span className="font-semibold text-text-primary">{reviewedCount}</span>{" "}
-          card{reviewedCount !== 1 ? "s" : ""} this session. Great job keeping your
-          knowledge fresh!
+          You reviewed <span className="font-semibold text-text-primary">{reviewedCount}</span> card
+          {reviewedCount !== 1 ? "s" : ""} this session. Great job keeping your knowledge fresh!
         </p>
         <Button
           type="button"
@@ -208,9 +201,7 @@ export function SrsReviewDeck() {
 
   /* ---- Loading ---- */
   if (phase === "loading") {
-    return (
-      <LoadingSkeleton title="Loading flashcards" rows={4} variant="card" />
-    );
+    return <LoadingSkeleton title="Loading flashcards" rows={4} variant="card" />;
   }
 
   /* ---- Error ---- */
@@ -249,9 +240,7 @@ export function SrsReviewDeck() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-accent-primary" aria-hidden />
-              <p className="text-sm font-semibold text-text-primary">
-                Review Session
-              </p>
+              <p className="text-sm font-semibold text-text-primary">Review Session</p>
             </div>
             <div className="flex items-center gap-3">
               <Badge variant="primary" size="sm">
@@ -287,22 +276,14 @@ export function SrsReviewDeck() {
           <p className="text-center text-xs font-medium text-text-secondary">
             How well did you remember?
           </p>
-          <RatingButtons
-            onRate={(rating) => void handleRate(rating)}
-            isSubmitting={isSubmitting}
-          />
+          <RatingButtons onRate={(rating) => void handleRate(rating)} isSubmitting={isSubmitting} />
         </div>
       )}
 
       {/* Flip hint when not flipped */}
       {!isFlipped && (
         <div className="text-center">
-          <Button
-            type="button"
-            variant="secondary"
-            size="md"
-            onClick={() => setIsFlipped(true)}
-          >
+          <Button type="button" variant="secondary" size="md" onClick={() => setIsFlipped(true)}>
             Show Answer
           </Button>
         </div>

@@ -8,11 +8,8 @@ import { cn } from "@/lib/utils";
 
 /* ─── Lazy-load ContentRenderer (heavy markdown deps) ─── */
 const ContentRenderer = dynamic(
-  () =>
-    import("@/components/common/content-renderer").then(
-      (mod) => mod.ContentRenderer,
-    ),
-  { ssr: false },
+  () => import("@/components/common/content-renderer").then((mod) => mod.ContentRenderer),
+  { ssr: false }
 );
 
 /**
@@ -108,7 +105,7 @@ export function StreamingText({
   /* ─── Displayed text during streaming ─── */
   const displayedText = useMemo(
     () => content.slice(0, displayedLength),
-    [content, displayedLength],
+    [content, displayedLength]
   );
 
   /* ─── Streaming: plain text + cursor ─── */
@@ -137,13 +134,7 @@ export function StreamingText({
 
   /* ─── Done streaming: full markdown render ─── */
   if (enableMarkdown) {
-    return (
-      <ContentRenderer
-        content={content}
-        variant="ai-message"
-        className={className}
-      />
-    );
+    return <ContentRenderer content={content} variant="ai-message" className={className} />;
   }
 
   return (

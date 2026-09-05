@@ -9,15 +9,15 @@ import { createApp } from "../server.js";
 
 const createThreadResponseSchema = z.object({
   thread: z.object({
-    id: z.string().uuid()
-  })
+    id: z.string().uuid(),
+  }),
 });
 
 const createReplyResponseSchema = z.object({
   reply: z.object({
     id: z.string().uuid(),
-    parentReplyId: z.string().uuid().nullable()
-  })
+    parentReplyId: z.string().uuid().nullable(),
+  }),
 });
 
 const threadDetailResponseSchema = z.object({
@@ -31,12 +31,12 @@ const threadDetailResponseSchema = z.object({
         replies: z.array(
           z.object({
             id: z.string().uuid(),
-            parentReplyId: z.string().uuid()
+            parentReplyId: z.string().uuid(),
           })
-        )
+        ),
       })
-    )
-  })
+    ),
+  }),
 });
 
 const run = async (): Promise<void> => {
@@ -48,38 +48,49 @@ const run = async (): Promise<void> => {
 
   const unauthCreateThread = await anonAgent.post("/api/forum/threads").send({
     title: "How can I solve this algebra equation?",
-    body: "I tried isolating x but got stuck at the factoring step."
+    body: "I tried isolating x but got stuck at the factoring step.",
   });
   if (unauthCreateThread.status !== 401) {
-    throw new Error(`Expected 401 for unauthenticated thread create, got ${unauthCreateThread.status}`);
+    throw new Error(
+      `Expected 401 for unauthenticated thread create, got ${unauthCreateThread.status}`
+    );
   }
 
-  const signUpResponse = await agent.post("/api/auth/sign-up/email").set("origin", "http://localhost:3000").send({
-    name: "Forum FRM-01 User",
-    email,
-    password,
-    class: "9th",
-    board: "fbise"
-  });
+  const signUpResponse = await agent
+    .post("/api/auth/sign-up/email")
+    .set("origin", "http://localhost:3000")
+    .send({
+      name: "Forum FRM-01 User",
+      email,
+      password,
+      class: "9th",
+      board: "fbise",
+    });
   if (signUpResponse.status >= 400) {
-    throw new Error(`Sign-up failed: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`);
+    throw new Error(
+      `Sign-up failed: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`
+    );
   }
 
-  const sessionResponse = await agent.get("/api/auth/get-session").set("origin", "http://localhost:3000");
+  const sessionResponse = await agent
+    .get("/api/auth/get-session")
+    .set("origin", "http://localhost:3000");
   const userId = z
     .object({
       user: z.object({
-        id: z.string().min(1)
-      })
+        id: z.string().min(1),
+      }),
     })
     .safeParse(sessionResponse.body).data?.user.id;
   if (!userId) {
-    throw new Error(`Session fetch failed: ${sessionResponse.status} ${JSON.stringify(sessionResponse.body)}`);
+    throw new Error(
+      `Session fetch failed: ${sessionResponse.status} ${JSON.stringify(sessionResponse.body)}`
+    );
   }
 
   const createThreadResponse = await agent.post("/api/forum/threads").send({
     title: "How can I solve this algebra equation?",
-    body: "I tried isolating x but got stuck at the factoring step. Can someone explain a clean method?"
+    body: "I tried isolating x but got stuck at the factoring step. Can someone explain a clean method?",
   });
   if (createThreadResponse.status !== 201) {
     throw new Error(`Expected thread create 201, got ${createThreadResponse.status}`);
@@ -89,7 +100,7 @@ const run = async (): Promise<void> => {
 
   const persistedThreads = await db
     .select({
-      id: forumThreads.id
+      id: forumThreads.id,
     })
     .from(forumThreads)
     .where(and(eq(forumThreads.id, createdThread.id), eq(forumThreads.userId, userId)))
@@ -98,16 +109,22 @@ const run = async (): Promise<void> => {
     throw new Error("Thread persistence verification failed.");
   }
 
-  const unauthReplyResponse = await anonAgent.post(`/api/forum/threads/${createdThread.id}/replies`).send({
-    body: "This should fail because no session."
-  });
+  const unauthReplyResponse = await anonAgent
+    .post(`/api/forum/threads/${createdThread.id}/replies`)
+    .send({
+      body: "This should fail because no session.",
+    });
   if (unauthReplyResponse.status !== 401) {
-    throw new Error(`Expected 401 for unauthenticated reply create, got ${unauthReplyResponse.status}`);
+    throw new Error(
+      `Expected 401 for unauthenticated reply create, got ${unauthReplyResponse.status}`
+    );
   }
 
-  const topLevelReplyResponse = await agent.post(`/api/forum/threads/${createdThread.id}/replies`).send({
-    body: "A good start is moving all terms to one side, then use factoring."
-  });
+  const topLevelReplyResponse = await agent
+    .post(`/api/forum/threads/${createdThread.id}/replies`)
+    .send({
+      body: "A good start is moving all terms to one side, then use factoring.",
+    });
   if (topLevelReplyResponse.status !== 201) {
     throw new Error(`Expected top-level reply create 201, got ${topLevelReplyResponse.status}`);
   }
@@ -116,10 +133,12 @@ const run = async (): Promise<void> => {
     throw new Error("Top-level reply should have parentReplyId=null.");
   }
 
-  const nestedReplyResponse = await agent.post(`/api/forum/threads/${createdThread.id}/replies`).send({
-    body: "Thanks! I retried and that worked.",
-    parentReplyId: topLevelReply.id
-  });
+  const nestedReplyResponse = await agent
+    .post(`/api/forum/threads/${createdThread.id}/replies`)
+    .send({
+      body: "Thanks! I retried and that worked.",
+      parentReplyId: topLevelReply.id,
+    });
   if (nestedReplyResponse.status !== 201) {
     throw new Error(`Expected nested reply create 201, got ${nestedReplyResponse.status}`);
   }
@@ -128,18 +147,22 @@ const run = async (): Promise<void> => {
     throw new Error("Nested reply parentReplyId mismatch.");
   }
 
-  const tooDeepReplyResponse = await agent.post(`/api/forum/threads/${createdThread.id}/replies`).send({
-    body: "Attempting a second nested level.",
-    parentReplyId: nestedReply.id
-  });
+  const tooDeepReplyResponse = await agent
+    .post(`/api/forum/threads/${createdThread.id}/replies`)
+    .send({
+      body: "Attempting a second nested level.",
+      parentReplyId: nestedReply.id,
+    });
   if (tooDeepReplyResponse.status !== 400) {
-    throw new Error(`Expected 400 when nesting exceeds one level, got ${tooDeepReplyResponse.status}`);
+    throw new Error(
+      `Expected 400 when nesting exceeds one level, got ${tooDeepReplyResponse.status}`
+    );
   }
 
   const replyRows = await db
     .select({
       id: forumReplies.id,
-      parentReplyId: forumReplies.parentReplyId
+      parentReplyId: forumReplies.parentReplyId,
     })
     .from(forumReplies)
     .where(eq(forumReplies.threadId, createdThread.id));
@@ -155,12 +178,16 @@ const run = async (): Promise<void> => {
 
   const secondDetailResponse = await agent.get(`/api/forum/threads/${createdThread.id}`);
   if (secondDetailResponse.status !== 200) {
-    throw new Error(`Expected second thread detail response 200, got ${secondDetailResponse.status}`);
+    throw new Error(
+      `Expected second thread detail response 200, got ${secondDetailResponse.status}`
+    );
   }
   const secondDetail = threadDetailResponseSchema.parse(secondDetailResponse.body).thread;
 
   if (secondDetail.views !== firstDetail.views + 1) {
-    throw new Error(`Expected views to increment by 1 on open (${firstDetail.views} -> ${secondDetail.views}).`);
+    throw new Error(
+      `Expected views to increment by 1 on open (${firstDetail.views} -> ${secondDetail.views}).`
+    );
   }
 
   if (secondDetail.replyCount !== 2) {
@@ -184,9 +211,9 @@ const run = async (): Promise<void> => {
     .object({
       threads: z.array(
         z.object({
-          id: z.string().uuid()
+          id: z.string().uuid(),
         })
-      )
+      ),
     })
     .parse(feedResponse.body).threads;
   const threadPresentInFeed = feedRows.some((thread) => thread.id === createdThread.id);
@@ -217,4 +244,3 @@ run()
       await redis.quit().catch(() => undefined);
     }
   });
-

@@ -4,7 +4,10 @@ const loginAsSeededAdmin = async (page: Page) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("admin@example.com");
   await page.getByLabel("Password").fill("password");
-  await Promise.all([page.waitForURL(/\/dashboard$/), page.getByRole("button", { name: "Sign in" }).click()]);
+  await Promise.all([
+    page.waitForURL(/\/dashboard$/),
+    page.getByRole("button", { name: "Sign in" }).click(),
+  ]);
 };
 
 test("admin sidebar includes audit trail route and audit page renders", async ({ page }) => {
@@ -21,7 +24,10 @@ test("admin audit center applies scope/status/search filters and paginates", asy
   await loginAsSeededAdmin(page);
 
   await page.goto("/admin/users");
-  const row = page.getByTestId("admin-user-row").filter({ hasText: "ali.hassan@example.com" }).first();
+  const row = page
+    .getByTestId("admin-user-row")
+    .filter({ hasText: "ali.hassan@example.com" })
+    .first();
   await row.getByRole("button", { name: "Promote to admin" }).click();
 
   await page.goto("/admin/audit");

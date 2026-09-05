@@ -60,9 +60,7 @@ export function XPBar({
         <span className={cn("text-[10px] font-semibold uppercase tracking-wider", tier.text)}>
           {levelDef.name}
         </span>
-        <span className="text-xs font-bold tabular-nums text-text-primary">
-          Lv.{level}
-        </span>
+        <span className="text-xs font-bold tabular-nums text-text-primary">Lv.{level}</span>
       </div>
 
       {/* Progress bar */}

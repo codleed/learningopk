@@ -14,7 +14,12 @@ type StateProps = {
 
 export function EmptyState({ title, description, action, className, icon }: StateProps) {
   return (
-    <section className={cn("surface-soft rounded-2xl border border-dashed border-border p-8 text-center", className)}>
+    <section
+      className={cn(
+        "surface-soft rounded-2xl border border-dashed border-border p-8 text-center",
+        className
+      )}
+    >
       <div className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
         {icon ?? <Inbox className="h-5 w-5" aria-hidden />}
       </div>
@@ -37,7 +42,7 @@ export function ErrorState({
   className,
   icon,
   onRetry,
-  retryLabel = "Try again"
+  retryLabel = "Try again",
 }: ErrorStateProps) {
   return (
     <section
@@ -78,7 +83,7 @@ export function LoadingSkeleton({
   className,
   rows = 3,
   title = "Loading content",
-  variant = "default"
+  variant = "default",
 }: LoadingSkeletonProps) {
   const containerClasses = {
     default: "surface-soft rounded-2xl border border-border p-6",
@@ -116,7 +121,12 @@ type SuccessStateProps = StateProps;
 
 export function SuccessState({ title, description, action, className, icon }: SuccessStateProps) {
   return (
-    <section className={cn("rounded-2xl border border-success/30 bg-success/10 p-8 text-center", className)}>
+    <section
+      className={cn(
+        "rounded-2xl border border-success/30 bg-success/10 p-8 text-center",
+        className
+      )}
+    >
       <div className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-success/20 text-success">
         {icon ?? <CheckCircle className="h-5 w-5" aria-hidden />}
       </div>
@@ -136,10 +146,7 @@ export function CardSkeleton({ count = 1, className }: CardSkeletonProps) {
   return (
     <div className={cn("grid gap-4", className)}>
       {Array.from({ length: count }).map((_, index) => (
-        <div
-          key={index}
-          className="rounded-2xl border border-border p-5"
-        >
+        <div key={index} className="rounded-2xl border border-border p-5">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
               <div className="h-9 w-9 animate-pulse rounded-xl bg-muted" />
@@ -189,10 +196,7 @@ export function ThreadSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn("space-y-3", className)}>
       {Array.from({ length: 3 }).map((_, index) => (
-        <div
-          key={index}
-          className="rounded-xl border border-border p-5"
-        >
+        <div key={index} className="rounded-xl border border-border p-5">
           <div className="flex flex-wrap items-center gap-2">
             <div className="h-5 w-16 animate-pulse rounded bg-muted" />
             <div className="h-5 w-20 animate-pulse rounded bg-muted" />

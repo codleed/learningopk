@@ -1,6 +1,7 @@
 # Friends System - UX Architecture
 
 ## Document Info
+
 - **Architect**: UX Architect
 - **Date**: 2026-03-25
 - **Project**: LearningoPK Friends System Redesign
@@ -68,6 +69,7 @@ User enters Find Tab
 ```
 
 **Edge Cases Addressed:**
+
 - Rate limiting: Show "Too many searches, try again later" with cooldown timer
 - Self-search: API filters out current user, no UI handling needed
 - Empty query: Disable search, show hint text "Enter a name to search"
@@ -95,7 +97,7 @@ Request received (via polling/websocket)
 │    │                                                          Friends list    │
 │    │ error ──────────────────────────────────────────► Error toast          │
 │    │                                                          + retry option  │
-│    │                                                                          
+│    │
 │  [Decline] ─────────────────────────────────────────► Confirmation dialog    │
 │    │                                                           (optional)     │
 │    │                                                           │              │
@@ -135,14 +137,15 @@ When user accepts a pending_received request from search context:
 ```
 
 **State Machine States:**
-| State | Button Text | Button State | Actions Available |
-|-------|-------------|--------------|-------------------|
-| idle | Add Friend | enabled | click to send |
-| sending | Sending... | disabled + spinner | none |
-| pending | Cancel | enabled | click to cancel |
-| canceling | Canceling... | disabled + spinner | none |
-| accepted | Friends | disabled | none (after acceptance) |
-| error | Failed, tap to retry | enabled | click to retry |
+
+| State     | Button Text          | Button State       | Actions Available       |
+| --------- | -------------------- | ------------------ | ----------------------- |
+| idle      | Add Friend           | enabled            | click to send           |
+| sending   | Sending...           | disabled + spinner | none                    |
+| pending   | Cancel               | enabled            | click to cancel         |
+| canceling | Canceling...         | disabled + spinner | none                    |
+| accepted  | Friends              | disabled           | none (after acceptance) |
+| error     | Failed, tap to retry | enabled            | click to retry          |
 
 ---
 
@@ -330,61 +333,61 @@ User navigates to Settings → Privacy → Blocked Users
 
 ### 2.1 Find Friends / Search Tab
 
-| State | Trigger | UI Display | Actions Available |
-|-------|---------|------------|-------------------|
-| **Initial** | Tab opened, no input | Empty search hint | Type in search |
-| **Typing** | User entering text | Clear button appears | Continue typing, clear |
-| **Loading** | 300ms after typing stops | 3-5 skeleton cards | Wait, cancel (clear) |
-| **Results** | API returns users | UserCard list | Click Add/Cancel, scroll |
-| **Empty Results** | Query returned 0 users | "No users found" + illustration | Modify query, clear |
-| **Error** | API failure | "Search failed" + retry | Retry, modify query |
-| **Rate Limited** | 429 response | "Too many requests" + cooldown | Wait, retry after timer |
+| State             | Trigger                  | UI Display                      | Actions Available        |
+| ----------------- | ------------------------ | ------------------------------- | ------------------------ |
+| **Initial**       | Tab opened, no input     | Empty search hint               | Type in search           |
+| **Typing**        | User entering text       | Clear button appears            | Continue typing, clear   |
+| **Loading**       | 300ms after typing stops | 3-5 skeleton cards              | Wait, cancel (clear)     |
+| **Results**       | API returns users        | UserCard list                   | Click Add/Cancel, scroll |
+| **Empty Results** | Query returned 0 users   | "No users found" + illustration | Modify query, clear      |
+| **Error**         | API failure              | "Search failed" + retry         | Retry, modify query      |
+| **Rate Limited**  | 429 response             | "Too many requests" + cooldown  | Wait, retry after timer  |
 
 ### 2.2 Friend Requests Tab
 
-| State | Trigger | UI Display | Actions Available |
-|-------|---------|------------|-------------------|
-| **Initial** | Tab opened | Load requests | Wait for data |
-| **Loading** | Fetching requests | Skeleton cards (2-3) | Wait |
-| **Has Incoming** | Incoming requests exist | Incoming section expanded | Accept, Decline |
-| **Has Outgoing** | Outgoing requests exist | Outgoing section | Cancel |
-| **Empty** | No requests of either type | "No friend requests" | Send friend requests (nav to Find) |
-| **Incoming Empty, Outgoing Exists** | Only sent requests | Show outgoing only | Cancel sent |
-| **Error** | API failure | "Failed to load" + retry | Retry |
+| State                               | Trigger                    | UI Display                | Actions Available                  |
+| ----------------------------------- | -------------------------- | ------------------------- | ---------------------------------- |
+| **Initial**                         | Tab opened                 | Load requests             | Wait for data                      |
+| **Loading**                         | Fetching requests          | Skeleton cards (2-3)      | Wait                               |
+| **Has Incoming**                    | Incoming requests exist    | Incoming section expanded | Accept, Decline                    |
+| **Has Outgoing**                    | Outgoing requests exist    | Outgoing section          | Cancel                             |
+| **Empty**                           | No requests of either type | "No friend requests"      | Send friend requests (nav to Find) |
+| **Incoming Empty, Outgoing Exists** | Only sent requests         | Show outgoing only        | Cancel sent                        |
+| **Error**                           | API failure                | "Failed to load" + retry  | Retry                              |
 
 ### 2.3 Friends Tab
 
-| State | Trigger | UI Display | Actions Available |
-|-------|---------|------------|-------------------|
-| **Initial** | Tab opened | Load friends | Wait for data |
-| **Loading** | Fetching friends | Skeleton cards (3-5) | Wait |
-| **Has Friends** | Friends exist | FriendCard list | Message, Remove/Block |
-| **Empty** | No friends | "No friends yet" + illustration | Find friends (nav link) |
-| **Error** | API failure | "Failed to load" + retry | Retry |
+| State           | Trigger          | UI Display                      | Actions Available       |
+| --------------- | ---------------- | ------------------------------- | ----------------------- |
+| **Initial**     | Tab opened       | Load friends                    | Wait for data           |
+| **Loading**     | Fetching friends | Skeleton cards (3-5)            | Wait                    |
+| **Has Friends** | Friends exist    | FriendCard list                 | Message, Remove/Block   |
+| **Empty**       | No friends       | "No friends yet" + illustration | Find friends (nav link) |
+| **Error**       | API failure      | "Failed to load" + retry        | Retry                   |
 
 ### 2.4 Chat View
 
-| State | Trigger | UI Display | Actions Available |
-|-------|---------|------------|-------------------|
-| **Initial** | Chat opened | Load messages | Wait |
-| **Loading** | Fetching messages | Message skeletons | Wait |
-| **Has Messages** | Messages exist | MessageBubble list | Scroll, send message |
-| **Empty** | 0 messages | "Say hello!" + illustration | Send first message |
-| **Loading More** | User scrolls up | Skeleton bubbles at top | Wait |
-| **Sending** | Message submitted | Optimistic message | None (wait) |
-| **Error (send)** | Send API fails | Retry indicator on message | Retry, delete |
-| **Connection Lost** | Network failure | Red banner "Reconnecting..." | Auto-retry, wait |
-| **Blocked** | Other user blocked you | "Cannot message" message | None, unblock flow |
-| **Offline** | Friend is offline | "Friend offline" indicator | Send (queued) |
+| State               | Trigger                | UI Display                   | Actions Available    |
+| ------------------- | ---------------------- | ---------------------------- | -------------------- |
+| **Initial**         | Chat opened            | Load messages                | Wait                 |
+| **Loading**         | Fetching messages      | Message skeletons            | Wait                 |
+| **Has Messages**    | Messages exist         | MessageBubble list           | Scroll, send message |
+| **Empty**           | 0 messages             | "Say hello!" + illustration  | Send first message   |
+| **Loading More**    | User scrolls up        | Skeleton bubbles at top      | Wait                 |
+| **Sending**         | Message submitted      | Optimistic message           | None (wait)          |
+| **Error (send)**    | Send API fails         | Retry indicator on message   | Retry, delete        |
+| **Connection Lost** | Network failure        | Red banner "Reconnecting..." | Auto-retry, wait     |
+| **Blocked**         | Other user blocked you | "Cannot message" message     | None, unblock flow   |
+| **Offline**         | Friend is offline      | "Friend offline" indicator   | Send (queued)        |
 
 ### 2.5 Block Modal
 
-| State | Trigger | UI Display | Actions Available |
-|-------|---------|------------|-------------------|
-| **Closed** | Default | Not rendered | None |
-| **Open** | User clicks Block | Modal with user info | Cancel, Confirm |
-| **Loading** | Confirm clicked | Spinner on button | Cancel only |
-| **Error** | Block API fails | Error toast | Retry, Cancel |
+| State       | Trigger           | UI Display           | Actions Available |
+| ----------- | ----------------- | -------------------- | ----------------- |
+| **Closed**  | Default           | Not rendered         | None              |
+| **Open**    | User clicks Block | Modal with user info | Cancel, Confirm   |
+| **Loading** | Confirm clicked   | Spinner on button    | Cancel only       |
+| **Error**   | Block API fails   | Error toast          | Retry, Cancel     |
 
 ---
 
@@ -550,20 +553,20 @@ BlockFriendModal (portal)
 
 ### 3.3 Key Gaps Identified
 
-| Component | Missing | Impact | Priority |
-|-----------|---------|--------|----------|
-| FriendSearch | Institute filter dropdown | Cannot filter by institute | High |
-| FriendSearch | Rate limit handling UI | Poor UX when rate limited | High |
-| FriendRequestCard | Decline confirmation dialog | Too quick to decline | Medium |
-| FriendRequestCard | pending_received → Respond action | Should navigate to Requests tab | High |
-| ChatWindow | Real-time status updates (WebSocket/polling) | Status always shows "sent" | High |
-| ChatWindow | Message pagination UI | Cannot load older messages | High |
-| ChatWindow | Block from chat context | BlockFriendModal not integrated | High |
-| UserSearchCard | Block action | Should show block option | Medium |
-| BlockFriendModal | Not implemented | Block feature incomplete | High |
-| Page | Context providers | State scattered, prop drilling | High |
-| Page | Notification bell integration | Requests not surfaced | Medium |
-| Page | Privacy settings link | Cannot manage privacy | Low |
+| Component         | Missing                                      | Impact                          | Priority |
+| ----------------- | -------------------------------------------- | ------------------------------- | -------- |
+| FriendSearch      | Institute filter dropdown                    | Cannot filter by institute      | High     |
+| FriendSearch      | Rate limit handling UI                       | Poor UX when rate limited       | High     |
+| FriendRequestCard | Decline confirmation dialog                  | Too quick to decline            | Medium   |
+| FriendRequestCard | pending_received → Respond action            | Should navigate to Requests tab | High     |
+| ChatWindow        | Real-time status updates (WebSocket/polling) | Status always shows "sent"      | High     |
+| ChatWindow        | Message pagination UI                        | Cannot load older messages      | High     |
+| ChatWindow        | Block from chat context                      | BlockFriendModal not integrated | High     |
+| UserSearchCard    | Block action                                 | Should show block option        | Medium   |
+| BlockFriendModal  | Not implemented                              | Block feature incomplete        | High     |
+| Page              | Context providers                            | State scattered, prop drilling  | High     |
+| Page              | Notification bell integration                | Requests not surfaced           | Medium   |
+| Page              | Privacy settings link                        | Cannot manage privacy           | Low      |
 
 ---
 
@@ -762,34 +765,36 @@ BELL ICON IN HEADER:
 
 ### 6.1 Type Misalignments
 
-| Component | Component Props | API Types | Gap |
-|-----------|-----------------|-----------|-----|
-| ChatWindow | `friendId: string` | `getMessages` takes `conversationId` | Need conversation ID lookup or pass conversationId |
-| ChatWindow | `isOnline?: boolean` | `Friend.isOnline` | OK |
-| ChatWindow | `messages: Message[]` | `Message` type has `mediaType`, `mediaUrl` | Not displayed in current component |
-| UserSearchCard | `onBlock?: (userId) => void` | `blockUser(userId)` exists | Button not implemented in current component |
-| FriendCard | `onRemove?: (friendId) => void` | `removeFriend(userId)` exists | OK |
+| Component      | Component Props                 | API Types                                  | Gap                                                |
+| -------------- | ------------------------------- | ------------------------------------------ | -------------------------------------------------- |
+| ChatWindow     | `friendId: string`              | `getMessages` takes `conversationId`       | Need conversation ID lookup or pass conversationId |
+| ChatWindow     | `isOnline?: boolean`            | `Friend.isOnline`                          | OK                                                 |
+| ChatWindow     | `messages: Message[]`           | `Message` type has `mediaType`, `mediaUrl` | Not displayed in current component                 |
+| UserSearchCard | `onBlock?: (userId) => void`    | `blockUser(userId)` exists                 | Button not implemented in current component        |
+| FriendCard     | `onRemove?: (friendId) => void` | `removeFriend(userId)` exists              | OK                                                 |
 
 ### 6.2 Missing API Calls in Components
 
-| Component | Needed API | Status |
-|-----------|-----------|--------|
-| FriendSearch | `getInstitutes()` | Not used |
-| FriendRequestCard | None missing | OK |
-| ChatWindow | `deleteMessage()` | Not exposed |
-| ChatWindow | `markMessageAsRead()` | Not called on scroll |
-| BlockFriendModal | `unblockUser()` | Not used (for unblock flow) |
+| Component         | Needed API            | Status                      |
+| ----------------- | --------------------- | --------------------------- |
+| FriendSearch      | `getInstitutes()`     | Not used                    |
+| FriendRequestCard | None missing          | OK                          |
+| ChatWindow        | `deleteMessage()`     | Not exposed                 |
+| ChatWindow        | `markMessageAsRead()` | Not called on scroll        |
+| BlockFriendModal  | `unblockUser()`       | Not used (for unblock flow) |
 
 ---
 
 ## 7. Recommended Implementation Priorities
 
 ### Phase 1: Foundation (Must Have)
+
 1. **FriendRequestButton state machine** - Already partially defined
 2. **ChatWindow** - Core chat experience
 3. **BlockFriendModal** - Block functionality
 
 ### Phase 2: Completeness (Should Have)
+
 4. **FriendSearch institute filter** - Missing filter dropdown
 5. **ChatWindow pagination** - Load older messages
 6. **ChatWindow message status** - sent/delivered/read indicators
@@ -797,6 +802,7 @@ BELL ICON IN HEADER:
 8. **Pending_received Respond action** - Navigate to requests
 
 ### Phase 3: Polish (Nice to Have)
+
 9. **Real-time updates** - WebSocket integration
 10. **Typing indicators** - Show when friend is typing
 11. **Privacy settings UI** - Full settings form
@@ -806,17 +812,17 @@ BELL ICON IN HEADER:
 
 ## 8. Accessibility Requirements
 
-| Element | ARIA Attribute | Purpose |
-|---------|----------------|---------|
-| Search input | `role="searchbox"`, `aria-label` | Identify search functionality |
-| Loading skeletons | `aria-busy="true"` | Announce loading state |
-| Buttons with spinners | `aria-busy="true"` | Announce button loading |
-| Status changes | `aria-live="polite"` | Announce status updates |
-| Modal | `role="dialog"`, `aria-modal="true"` | Modal identification |
-| Modal close | `aria-label="Close"` | Close button purpose |
-| Tab list | `role="tablist"`, `role="tab"` | Tab navigation |
-| Message list | `aria-label="Messages"` | Message container purpose |
-| Toast notifications | `role="status"` | Non-intrusive announcements |
+| Element               | ARIA Attribute                       | Purpose                       |
+| --------------------- | ------------------------------------ | ----------------------------- |
+| Search input          | `role="searchbox"`, `aria-label`     | Identify search functionality |
+| Loading skeletons     | `aria-busy="true"`                   | Announce loading state        |
+| Buttons with spinners | `aria-busy="true"`                   | Announce button loading       |
+| Status changes        | `aria-live="polite"`                 | Announce status updates       |
+| Modal                 | `role="dialog"`, `aria-modal="true"` | Modal identification          |
+| Modal close           | `aria-label="Close"`                 | Close button purpose          |
+| Tab list              | `role="tablist"`, `role="tab"`       | Tab navigation                |
+| Message list          | `aria-label="Messages"`              | Message container purpose     |
+| Toast notifications   | `role="status"`                      | Non-intrusive announcements   |
 
 ---
 
@@ -832,6 +838,7 @@ This UX architecture document provides:
 6. **Gap Analysis**: Identified disconnects between API types and component implementations
 
 **Next Steps**: Developer should use this document to:
+
 - Implement missing components (BlockFriendModal, institute filter)
 - Add missing interactions (pending_received respond, decline confirmation)
 - Fix type misalignments (ChatWindow needs conversationId)
@@ -840,6 +847,6 @@ This UX architecture document provides:
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: 2026-03-25*
-*Architect: UX Architect Agent*
+_Document Version: 1.0_
+_Last Updated: 2026-03-25_
+_Architect: UX Architect Agent_

@@ -1,7 +1,16 @@
 import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
-import { boardClasses, boards, chapters, forumReplies, forumReplyVotes, forumThreads, subjects, users } from "../lib/db/schema.js";
+import {
+  boardClasses,
+  boards,
+  chapters,
+  forumReplies,
+  forumReplyVotes,
+  forumThreads,
+  subjects,
+  users,
+} from "../lib/db/schema.js";
 import { CacheKeys, cacheService } from "../lib/cache/cache.service.js";
 import { HttpError, ServiceUnavailableError } from "../lib/errors/index.js";
 
@@ -11,7 +20,7 @@ export class ForumRepository {
       .select({
         id: boards.id,
         name: boards.name,
-        slug: boards.slug
+        slug: boards.slug,
       })
       .from(boards)
       .orderBy(asc(boards.name));
@@ -22,14 +31,20 @@ export class ForumRepository {
         name: subjects.name,
         slug: subjects.slug,
         grade: subjects.grade,
-        className: sql<string | null>`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
+        className: sql<
+          string | null
+        >`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
         classSlug: sql<string | null>`coalesce(${boardClasses.slug}, ${subjects.grade}::text)`,
         boardClassId: subjects.boardClassId,
-        boardId: subjects.boardId
+        boardId: subjects.boardId,
       })
       .from(subjects)
       .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
-      .orderBy(asc(subjects.boardId), asc(sql`coalesce(${boardClasses.name}, ${subjects.grade}::text)`), asc(subjects.name));
+      .orderBy(
+        asc(subjects.boardId),
+        asc(sql`coalesce(${boardClasses.name}, ${subjects.grade}::text)`),
+        asc(subjects.name)
+      );
 
     const chapterRows = await db
       .select({
@@ -37,7 +52,7 @@ export class ForumRepository {
         title: chapters.title,
         slug: chapters.slug,
         chapterNumber: chapters.chapterNumber,
-        subjectId: chapters.subjectId
+        subjectId: chapters.subjectId,
       })
       .from(chapters)
       .where(eq(chapters.isPublished, true))
@@ -48,7 +63,7 @@ export class ForumRepository {
         id: boardClasses.id,
         boardId: boardClasses.boardId,
         name: boardClasses.name,
-        slug: boardClasses.slug
+        slug: boardClasses.slug,
       })
       .from(boardClasses)
       .orderBy(asc(boardClasses.boardId), asc(boardClasses.name));
@@ -85,7 +100,9 @@ export class ForumRepository {
         boardSlug: boards.slug,
         boardName: boards.name,
         grade: sql<string | null>`coalesce(${boardClasses.slug}, ${subjects.grade}::text)`,
-        className: sql<string | null>`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
+        className: sql<
+          string | null
+        >`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
         subjectName: subjects.name,
         relevance: relevanceScoreSql,
         replyCount: sql<number>`(
@@ -93,14 +110,18 @@ export class ForumRepository {
           from forum_replies
           where forum_replies.thread_id = ${forumThreads.id}
             and forum_replies.is_deleted = false
-        )`
+        )`,
       })
       .from(forumThreads)
       .innerJoin(users, eq(forumThreads.userId, users.id))
       .leftJoin(subjects, eq(forumThreads.subjectId, subjects.id))
       .leftJoin(boards, eq(subjects.boardId, boards.id))
       .leftJoin(boardClasses, eq(subjects.boardClassId, boardClasses.id))
-      .where(filters ? and(eq(forumThreads.isDeleted, false), filters) : eq(forumThreads.isDeleted, false))
+      .where(
+        filters
+          ? and(eq(forumThreads.isDeleted, false), filters)
+          : eq(forumThreads.isDeleted, false)
+      )
       .orderBy(...orderByClauses)
       .limit(limit)
       .offset(offset);
@@ -110,11 +131,11 @@ export class ForumRepository {
     return db
       .update(forumThreads)
       .set({
-        views: sql`${forumThreads.views} + 1`
+        views: sql`${forumThreads.views} + 1`,
       })
       .where(eq(forumThreads.id, threadId))
       .returning({
-        id: forumThreads.id
+        id: forumThreads.id,
       });
   }
 
@@ -136,8 +157,10 @@ export class ForumRepository {
         boardSlug: boards.slug,
         boardName: boards.name,
         grade: sql<string | null>`coalesce(${boardClasses.slug}, ${subjects.grade}::text)`,
-        className: sql<string | null>`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
-        subjectName: subjects.name
+        className: sql<
+          string | null
+        >`coalesce(${boardClasses.name}, case when ${subjects.grade} is not null then concat(${subjects.grade}::text, 'th') else null end)`,
+        subjectName: subjects.name,
       })
       .from(forumThreads)
       .innerJoin(users, eq(forumThreads.userId, users.id))
@@ -161,7 +184,7 @@ export class ForumRepository {
         upvotes: forumReplies.upvotes,
         viewerVoteType: sql<"upvote" | "downvote" | null>`null`,
         createdAt: forumReplies.createdAt,
-        updatedAt: forumReplies.updatedAt
+        updatedAt: forumReplies.updatedAt,
       })
       .from(forumReplies)
       .innerJoin(users, eq(forumReplies.userId, users.id))
@@ -174,7 +197,7 @@ export class ForumRepository {
     return db
       .select({
         replyId: forumReplyVotes.replyId,
-        voteType: forumReplyVotes.voteType
+        voteType: forumReplyVotes.voteType,
       })
       .from(forumReplyVotes)
       .where(and(eq(forumReplyVotes.userId, userId), inArray(forumReplyVotes.replyId, replyIds)));
@@ -184,7 +207,7 @@ export class ForumRepository {
     return db
       .select({
         id: forumReplies.id,
-        threadId: forumReplies.threadId
+        threadId: forumReplies.threadId,
       })
       .from(forumReplies)
       .where(and(eq(forumReplies.id, replyId), eq(forumReplies.isDeleted, false)))
@@ -208,10 +231,15 @@ export class ForumRepository {
       const existingVotes = await tx
         .select({
           id: forumReplyVotes.id,
-          voteType: forumReplyVotes.voteType
+          voteType: forumReplyVotes.voteType,
         })
         .from(forumReplyVotes)
-        .where(and(eq(forumReplyVotes.userId, params.userId), eq(forumReplyVotes.replyId, params.replyId)))
+        .where(
+          and(
+            eq(forumReplyVotes.userId, params.userId),
+            eq(forumReplyVotes.replyId, params.replyId)
+          )
+        )
         .limit(1);
       const existingVote = existingVotes[0];
 
@@ -220,11 +248,14 @@ export class ForumRepository {
         await tx.insert(forumReplyVotes).values({
           userId: params.userId,
           replyId: params.replyId,
-          voteType: params.voteType
+          voteType: params.voteType,
         });
         delta = params.voteType === "upvote" ? 1 : -1;
       } else if (existingVote.voteType !== params.voteType) {
-        await tx.update(forumReplyVotes).set({ voteType: params.voteType }).where(eq(forumReplyVotes.id, existingVote.id));
+        await tx
+          .update(forumReplyVotes)
+          .set({ voteType: params.voteType })
+          .where(eq(forumReplyVotes.id, existingVote.id));
         delta = params.voteType === "upvote" ? 2 : -2;
       }
 
@@ -232,18 +263,18 @@ export class ForumRepository {
         const updatedReplyRows = await tx
           .update(forumReplies)
           .set({
-            upvotes: sql`${forumReplies.upvotes} + ${delta}`
+            upvotes: sql`${forumReplies.upvotes} + ${delta}`,
           })
           .where(eq(forumReplies.id, params.replyId))
           .returning({
-            upvotes: forumReplies.upvotes
+            upvotes: forumReplies.upvotes,
           });
         return updatedReplyRows[0]?.upvotes ?? null;
       }
 
       const sameVoteReplyRows = await tx
         .select({
-          upvotes: forumReplies.upvotes
+          upvotes: forumReplies.upvotes,
         })
         .from(forumReplies)
         .where(eq(forumReplies.id, params.replyId))
@@ -270,7 +301,7 @@ export class ForumRepository {
         replyAuthorId: forumReplies.userId,
         threadId: forumReplies.threadId,
         threadAuthorId: forumThreads.userId,
-        isAcceptedAnswer: forumReplies.isAcceptedAnswer
+        isAcceptedAnswer: forumReplies.isAcceptedAnswer,
       })
       .from(forumReplies)
       .innerJoin(forumThreads, eq(forumReplies.threadId, forumThreads.id))
@@ -293,21 +324,21 @@ export class ForumRepository {
       await tx
         .update(forumReplies)
         .set({
-          isAcceptedAnswer: false
+          isAcceptedAnswer: false,
         })
         .where(eq(forumReplies.threadId, reply.threadId));
 
       await tx
         .update(forumReplies)
         .set({
-          isAcceptedAnswer: true
+          isAcceptedAnswer: true,
         })
         .where(eq(forumReplies.id, params.replyId));
 
       await tx
         .update(forumThreads)
         .set({
-          isSolved: true
+          isSolved: true,
         })
         .where(eq(forumThreads.id, reply.threadId));
     });
@@ -321,11 +352,17 @@ export class ForumRepository {
       isAcceptedAnswer: true,
       isSolved: true,
       replyAuthorId: reply.replyAuthorId,
-      xpAwarded: !wasAlreadyAccepted // Only award XP if this is a new acceptance
+      xpAwarded: !wasAlreadyAccepted, // Only award XP if this is a new acceptance
     };
   }
 
-  async createThread(data: { userId: string; title: string; body: string; subjectId: number | null; chapterId: number | null }) {
+  async createThread(data: {
+    userId: string;
+    title: string;
+    body: string;
+    subjectId: number | null;
+    chapterId: number | null;
+  }) {
     const insertedRows = await db
       .insert(forumThreads)
       .values({
@@ -333,7 +370,7 @@ export class ForumRepository {
         title: data.title,
         body: data.body,
         subjectId: data.subjectId,
-        chapterId: data.chapterId
+        chapterId: data.chapterId,
       })
       .returning({
         id: forumThreads.id,
@@ -346,7 +383,7 @@ export class ForumRepository {
         isSolved: forumThreads.isSolved,
         views: forumThreads.views,
         createdAt: forumThreads.createdAt,
-        updatedAt: forumThreads.updatedAt
+        updatedAt: forumThreads.updatedAt,
       });
 
     const insertedThread = insertedRows[0];
@@ -366,19 +403,24 @@ export class ForumRepository {
         grade: null,
         className: null,
         subjectName: null,
-        replyCount: 0
-      }
+        replyCount: 0,
+      },
     };
   }
 
-  async createReply(data: { userId: string; body: string; parentReplyId: string | null; threadId: string }) {
+  async createReply(data: {
+    userId: string;
+    body: string;
+    parentReplyId: string | null;
+    threadId: string;
+  }) {
     const insertedRows = await db
       .insert(forumReplies)
       .values({
         threadId: data.threadId,
         userId: data.userId,
         parentReplyId: data.parentReplyId,
-        body: data.body
+        body: data.body,
       })
       .returning({
         id: forumReplies.id,
@@ -389,7 +431,7 @@ export class ForumRepository {
         isAcceptedAnswer: forumReplies.isAcceptedAnswer,
         upvotes: forumReplies.upvotes,
         createdAt: forumReplies.createdAt,
-        updatedAt: forumReplies.updatedAt
+        updatedAt: forumReplies.updatedAt,
       });
 
     const insertedReply = insertedRows[0];
@@ -416,7 +458,7 @@ export class ForumRepository {
       .select({
         id: forumReplies.id,
         threadId: forumReplies.threadId,
-        parentReplyId: forumReplies.parentReplyId
+        parentReplyId: forumReplies.parentReplyId,
       })
       .from(forumReplies)
       .where(eq(forumReplies.id, replyId))
@@ -428,7 +470,7 @@ export class ForumRepository {
       .select({
         id: chapters.id,
         subjectId: chapters.subjectId,
-        isPublished: chapters.isPublished
+        isPublished: chapters.isPublished,
       })
       .from(chapters)
       .where(eq(chapters.id, chapterId))
@@ -438,7 +480,7 @@ export class ForumRepository {
   async findSubjectById(subjectId: number) {
     return db
       .select({
-        id: subjects.id
+        id: subjects.id,
       })
       .from(subjects)
       .where(eq(subjects.id, subjectId))

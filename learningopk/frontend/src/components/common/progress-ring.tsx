@@ -59,12 +59,7 @@ export function ProgressRing({
       aria-valuemax={100}
       aria-label={label ?? `${clamped}% progress`}
     >
-      <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
-        className="-rotate-90"
-      >
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
         {/* Background track */}
         <circle
           cx={size / 2}

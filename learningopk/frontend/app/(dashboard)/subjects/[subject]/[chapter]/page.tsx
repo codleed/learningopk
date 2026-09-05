@@ -5,8 +5,14 @@ import { getSubjectsList, getChapterDetail } from "@/lib/learn-api";
 import { getServerSession } from "@/lib/session";
 
 const routeParamsSchema = z.object({
-  subject: z.string().trim().regex(/^[a-z0-9-]+$/),
-  chapter: z.string().trim().regex(/^[a-z0-9-]+$/),
+  subject: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/),
+  chapter: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/),
 });
 
 const legacyTabSchema = z
@@ -19,7 +25,7 @@ type LegacyChapterPageProps = {
 };
 
 const mapLegacyTabToLearnTab = (
-  tab: z.infer<typeof legacyTabSchema>,
+  tab: z.infer<typeof legacyTabSchema>
 ): "summary" | "exercises" | "flashcards" | "quiz" => {
   if (tab === "exercise") {
     return "exercises";
@@ -33,19 +39,14 @@ const mapLegacyTabToLearnTab = (
   return tab;
 };
 
-const getSingleQueryValue = (
-  value: string | string[] | undefined,
-): string | undefined => {
+const getSingleQueryValue = (value: string | string[] | undefined): string | undefined => {
   if (Array.isArray(value)) {
     return value[0];
   }
   return value;
 };
 
-export default async function LegacyChapterPage({
-  params,
-  searchParams,
-}: LegacyChapterPageProps) {
+export default async function LegacyChapterPage({ params, searchParams }: LegacyChapterPageProps) {
   const session = await getServerSession();
   if (!session) {
     redirect("/login");
@@ -57,9 +58,7 @@ export default async function LegacyChapterPage({
   }
 
   const rawSearchParams = await searchParams;
-  const selectedLegacyTab = legacyTabSchema.parse(
-    getSingleQueryValue(rawSearchParams.tab),
-  );
+  const selectedLegacyTab = legacyTabSchema.parse(getSingleQueryValue(rawSearchParams.tab));
   const mappedTab = mapLegacyTabToLearnTab(selectedLegacyTab);
 
   const subjectsList = await getSubjectsList().catch(() => null);
@@ -67,23 +66,21 @@ export default async function LegacyChapterPage({
     notFound();
   }
 
-  const candidateSubjects = subjectsList.subjects.filter(
-    (subject) => {
-      if (subject.slug !== parsedParams.data.subject || !subject.classSlug) {
-        return false;
-      }
+  const candidateSubjects = subjectsList.subjects.filter((subject) => {
+    if (subject.slug !== parsedParams.data.subject || !subject.classSlug) {
+      return false;
+    }
 
-      if (session.user.board && subject.boardSlug !== session.user.board) {
-        return false;
-      }
+    if (session.user.board && subject.boardSlug !== session.user.board) {
+      return false;
+    }
 
-      if (session.user.class && subject.classSlug !== session.user.class) {
-        return false;
-      }
+    if (session.user.class && subject.classSlug !== session.user.class) {
+      return false;
+    }
 
-      return true;
-    },
-  );
+    return true;
+  });
 
   for (const candidate of candidateSubjects) {
     if (!candidate.classSlug) {
@@ -99,7 +96,7 @@ export default async function LegacyChapterPage({
 
     if (chapterDetail) {
       redirect(
-        `/${chapterDetail.board.slug}/${chapterDetail.class.slug}/${chapterDetail.subject.slug}/${chapterDetail.chapter.slug}?tab=${mappedTab}`,
+        `/${chapterDetail.board.slug}/${chapterDetail.class.slug}/${chapterDetail.subject.slug}/${chapterDetail.chapter.slug}?tab=${mappedTab}`
       );
     }
   }

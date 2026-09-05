@@ -15,4 +15,3 @@ export function AskAiButton({ onClick, label = "Ask AI About This" }: AskAiButto
     </Button>
   );
 }
-

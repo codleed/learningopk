@@ -83,7 +83,9 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
   const [question, setQuestion] = useState<string>(exercise.question);
   const [solution, setSolution] = useState<string>(exercise.solution);
   const [statements, setStatements] = useState<BlankStatement[]>(exercise.statements ?? []);
-  const [visualizationHtml, setVisualizationHtml] = useState<string>(exercise.visualizationHtml ?? "");
+  const [visualizationHtml, setVisualizationHtml] = useState<string>(
+    exercise.visualizationHtml ?? ""
+  );
 
   /* ── Errors ── */
   const [chapterError, setChapterError] = useState<string>("");
@@ -251,12 +253,7 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
     }
 
     return (
-      <AdminFormField
-        id="exercise-question"
-        label="Question"
-        required
-        error={questionError}
-      >
+      <AdminFormField id="exercise-question" label="Question" required error={questionError}>
         <GithubMarkdownEditor
           value={question}
           onChange={(value) => {
@@ -275,12 +272,7 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
     if (activeSection === "blanks") return null;
 
     return (
-      <AdminFormField
-        id="exercise-solution"
-        label="Solution"
-        required
-        error={solutionError}
-      >
+      <AdminFormField id="exercise-solution" label="Solution" required error={solutionError}>
         <GithubMarkdownEditor
           value={solution}
           onChange={(value) => {
@@ -299,14 +291,8 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
     if (activeSection !== "physics") return null;
 
     return (
-      <AdminFormField
-        id="exercise-visualization"
-        label="Illustration (HTML/CSS/JS)"
-      >
-        <NumericalVisualizationEditor
-          value={visualizationHtml}
-          onChange={setVisualizationHtml}
-        />
+      <AdminFormField id="exercise-visualization" label="Illustration (HTML/CSS/JS)">
+        <NumericalVisualizationEditor value={visualizationHtml} onChange={setVisualizationHtml} />
       </AdminFormField>
     );
   };
@@ -342,12 +328,7 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
       {/* ── Metadata Card ── */}
       <AdminFormCard>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <AdminFormField
-            id="exercise-chapter"
-            label="Chapter"
-            required
-            error={chapterError}
-          >
+          <AdminFormField id="exercise-chapter" label="Chapter" required error={chapterError}>
             <Select
               id="exercise-chapter"
               value={chapterId}
@@ -402,15 +383,8 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
 
           {/* ── Exercise Type Tabs ── */}
           <div className="space-y-4">
-            <AdminFormField
-              id="exercise-type"
-              label="Exercise Type"
-              required
-            >
-              <ExerciseTypeTabs
-                value={activeSection}
-                onValueChange={handleSectionChange}
-              />
+            <AdminFormField id="exercise-type" label="Exercise Type" required>
+              <ExerciseTypeTabs value={activeSection} onValueChange={handleSectionChange} />
             </AdminFormField>
 
             <AnimatePresence mode="wait">
@@ -459,11 +433,7 @@ export function EditExerciseForm({ exercise, boards }: EditExerciseFormProps) {
               </AdminActionButton>
             </Link>
             <div className="ml-auto">
-              <AdminActionButton
-                variant="danger"
-                type="button"
-                onClick={handleDelete}
-              >
+              <AdminActionButton variant="danger" type="button" onClick={handleDelete}>
                 Delete Exercise
               </AdminActionButton>
             </div>

@@ -11,8 +11,18 @@ import { cn } from "@/lib/utils";
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 export default async function CalendarPage() {
@@ -20,8 +30,7 @@ export default async function CalendarPage() {
   if (!session) redirect("/login");
 
   const cookieStore = await cookies();
-  const summary = await getDashboardSummary(cookieStore.toString())
-    .catch(() => null);
+  const summary = await getDashboardSummary(cookieStore.toString()).catch(() => null);
 
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -41,24 +50,23 @@ export default async function CalendarPage() {
       }) ?? []
   );
 
-  const events = summary?.recentActivity.slice(0, 5).map((activity, index) => ({
-    id: `${activity.occurredAt}-${index}`,
-    title: activity.type === "chapter_visit"
-      ? `Studied: ${activity.chapterTitle}`
-      : `Quiz: ${activity.chapterTitle}`,
-    date: activity.occurredAt,
-    type: activity.type,
-  })) ?? [];
+  const events =
+    summary?.recentActivity.slice(0, 5).map((activity, index) => ({
+      id: `${activity.occurredAt}-${index}`,
+      title:
+        activity.type === "chapter_visit"
+          ? `Studied: ${activity.chapterTitle}`
+          : `Quiz: ${activity.chapterTitle}`,
+      date: activity.occurredAt,
+      type: activity.type,
+    })) ?? [];
 
   return (
     <AppShell session={session} currentPath="/calendar">
       <div className="max-w-7xl animate-fade-in">
         <StickyBreadcrumbWrapper className="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
           <Breadcrumbs
-            items={[
-              { label: "Dashboard", href: "/dashboard" },
-              { label: "Calendar" },
-            ]}
+            items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Calendar" }]}
             className="mb-6"
           />
         </StickyBreadcrumbWrapper>
@@ -112,7 +120,10 @@ export default async function CalendarPage() {
                       isToday && "bg-[var(--primary)] text-primary-foreground",
                       !isToday && hasActivity && "bg-[var(--primary)]/10 text-[var(--primary)]",
                       !isToday && !hasActivity && isPast && "text-text-secondary/50",
-                      !isToday && !hasActivity && !isPast && "text-text-primary hover:bg-bg-subtle/50"
+                      !isToday &&
+                        !hasActivity &&
+                        !isPast &&
+                        "text-text-primary hover:bg-bg-subtle/50"
                     )}
                   >
                     <span className="text-sm font-medium">{day}</span>
@@ -138,9 +149,7 @@ export default async function CalendarPage() {
                       key={event.id}
                       className="rounded-lg border border-border-default/50 bg-bg-subtle/30 p-3"
                     >
-                      <p className="text-sm font-medium text-text-primary">
-                        {event.title}
-                      </p>
+                      <p className="text-sm font-medium text-text-primary">{event.title}</p>
                       <p className="mt-0.5 text-xs text-text-secondary">
                         {new Date(event.date).toLocaleTimeString("en-US", {
                           hour: "numeric",
@@ -150,9 +159,7 @@ export default async function CalendarPage() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-text-secondary">
-                    No activities scheduled for today
-                  </p>
+                  <p className="text-sm text-text-secondary">No activities scheduled for today</p>
                 )}
               </div>
             </section>
@@ -164,8 +171,10 @@ export default async function CalendarPage() {
                   <span className="text-sm text-text-secondary">Study hours</span>
                   <span className="text-sm font-semibold text-text-primary">
                     {Math.round(
-                      (summary?.weeklyActivity.reduce((acc, a) => acc + a.activityCount, 0) ?? 0) * 0.5
-                    )}h
+                      (summary?.weeklyActivity.reduce((acc, a) => acc + a.activityCount, 0) ?? 0) *
+                        0.5
+                    )}
+                    h
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

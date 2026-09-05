@@ -125,12 +125,7 @@ function TreeItem({
   );
 }
 
-export function AdminEntityTree({
-  boards,
-  selectedId,
-  selectedType,
-  onSelect,
-}: EntityTreeProps) {
+export function AdminEntityTree({ boards, selectedId, selectedType, onSelect }: EntityTreeProps) {
   const [expandedBoards, setExpandedBoards] = useState<Set<number>>(new Set());
   const [expandedClasses, setExpandedClasses] = useState<Set<number>>(new Set());
   const [expandedSubjects, setExpandedSubjects] = useState<Set<number>>(new Set());
@@ -200,9 +195,7 @@ export function AdminEntityTree({
             isSelected={isSelected(board.id, "board")}
             hasChildren={hasClasses}
             onToggle={() => toggleBoard(board.id)}
-            onSelect={() =>
-              onSelect({ id: board.id, type: "board", name: board.name })
-            }
+            onSelect={() => onSelect({ id: board.id, type: "board", name: board.name })}
           >
             {board.classes.map((boardClass) => {
               const isClassExpanded = expandedClasses.has(boardClass.id);

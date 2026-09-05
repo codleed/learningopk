@@ -20,8 +20,8 @@ export type AIContext = {
   subjectName: string;
   boardName: string;
   className: string;
-  
-  currentTab: 'summary' | 'quick-revision' | 'exercises' | 'flashcards' | 'quiz' | 'illustration';
+
+  currentTab: "summary" | "quick-revision" | "exercises" | "flashcards" | "quiz" | "illustration";
   currentExerciseId?: number;
   currentFlashcardIndex?: number;
   quizQuestionId?: number;
@@ -39,20 +39,20 @@ export type AIChatState = {
     message: string;
     reasons: string[];
   } | null;
-  
+
   rateLimitRemaining: number | null;
   rateLimitTotal: number | null;
-  
+
   context: AIContext | null;
-  
+
   isVisible: boolean;
   isExpanded: boolean;
   isHistoryOpen: boolean;
   isFirstVisit: boolean;
-  
+
   /** Whether the crisis-resources banner is visible (triggered by keyword detection). */
   showCrisisBanner: boolean;
-  
+
   sessions: ChatSession[];
   activeSessionId: string | null;
   isLoadingSessions: boolean;

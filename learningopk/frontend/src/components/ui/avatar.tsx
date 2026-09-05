@@ -50,7 +50,8 @@ function getInitials(name: string): string {
 
 /** Props for the Avatar component. */
 export interface AvatarProps
-  extends Omit<HTMLAttributes<HTMLSpanElement>, "children">,
+  extends
+    Omit<HTMLAttributes<HTMLSpanElement>, "children">,
     VariantProps<typeof avatarSizeVariants> {
   /** Image URL for the avatar. */
   src?: string | null;
@@ -148,12 +149,7 @@ export function AvatarGroup({
   const visible = childArray.slice(0, max);
   const overflow = childArray.length - max;
 
-  const overlapClass =
-    size === "xs" || size === "sm"
-      ? "-ml-2"
-      : size === "xl"
-        ? "-ml-4"
-        : "-ml-3";
+  const overlapClass = size === "xs" || size === "sm" ? "-ml-2" : size === "xl" ? "-ml-4" : "-ml-3";
 
   return (
     <div
@@ -163,13 +159,7 @@ export function AvatarGroup({
       {...props}
     >
       {visible.map((child, idx) => (
-        <span
-          key={idx}
-          className={cn(
-            "ring-2 ring-bg-base rounded-full",
-            idx > 0 && overlapClass
-          )}
-        >
+        <span key={idx} className={cn("ring-2 ring-bg-base rounded-full", idx > 0 && overlapClass)}>
           {child}
         </span>
       ))}

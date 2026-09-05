@@ -15,7 +15,7 @@ import {
   chapterTitleAliases,
   chapters,
   revisionNotes,
-  subjects
+  subjects,
 } from "../../../lib/db/schema.js";
 import { requireSession, type AuthenticatedRequest } from "../../../lib/session.js";
 import { extractWikiLinks, normalizeWikiLinkTarget } from "../../../lib/wiki-links.js";
@@ -25,61 +25,61 @@ import { persistAuditLog } from "../shared.js";
 export const chaptersAdminRouter = Router();
 
 const chapterParamsSchema = z.object({
-  id: z.coerce.number().int().positive()
+  id: z.coerce.number().int().positive(),
 });
 
 const curriculumEntityParamsSchema = z.object({
-  id: z.coerce.number().int().positive()
+  id: z.coerce.number().int().positive(),
 });
 
 const chapterPublishBodySchema = z.object({
-  isPublished: z.boolean()
+  isPublished: z.boolean(),
 });
 
 const chapterSubpartCreateBodySchema = z.object({
   heading: z.string().trim().min(1),
   content: z.string().trim().min(1),
-  orderIndex: z.coerce.number().int().positive().optional()
+  orderIndex: z.coerce.number().int().positive().optional(),
 });
 
 const chapterSubpartUpdateBodySchema = z.object({
   heading: z.string().trim().min(1),
-  content: z.string().trim().min(1)
+  content: z.string().trim().min(1),
 });
 
 const chapterSubpartReorderBodySchema = z.object({
-  subpartIds: z.array(z.coerce.number().int().positive()).min(1)
+  subpartIds: z.array(z.coerce.number().int().positive()).min(1),
 });
 
 const chapterSubpartParamsSchema = z.object({
   id: z.coerce.number().int().positive(),
-  subpartId: z.coerce.number().int().positive()
+  subpartId: z.coerce.number().int().positive(),
 });
 
 const revisionDefinitionSchema = z.object({
   term: z.string().trim().min(1),
-  definition: z.string().trim().min(1)
+  definition: z.string().trim().min(1),
 });
 
 const chapterRevisionNotesBodySchema = z.object({
   keyFormulas: z.array(z.string().trim().min(1)).default([]),
   keyDefinitions: z.array(revisionDefinitionSchema).default([]),
   commonMistakes: z.string().default(""),
-  examTips: z.string().default("")
+  examTips: z.string().default(""),
 });
 
 const chapterRenameBodySchema = z.object({
   title: z.string().trim().min(1),
-  slug: z.string().trim().min(1)
+  slug: z.string().trim().min(1),
 });
 
 const chapterLinkSuggestionQuerySchema = z.object({
   q: z.string().trim().optional().default(""),
-  limit: z.coerce.number().int().min(1).max(50).optional().default(20)
+  limit: z.coerce.number().int().min(1).max(50).optional().default(20),
 });
 
 const chapterGraphQuerySchema = z.object({
-  q: z.string().trim().optional().default("")
+  q: z.string().trim().optional().default(""),
 });
 
 const curriculumChapterCreateBodySchema = z.object({
@@ -88,14 +88,14 @@ const curriculumChapterCreateBodySchema = z.object({
   title: z.string().trim().min(1),
   slug: z.string().trim().min(1),
   isPublished: z.boolean().optional().default(false),
-  coverImageUrl: z.string().trim().url().nullish()
+  coverImageUrl: z.string().trim().url().nullish(),
 });
 
 const curriculumChapterUpdateBodySchema = z.object({
   chapterNumber: z.coerce.number().int().positive(),
   title: z.string().trim().min(1),
   slug: z.string().trim().min(1),
-  coverImageUrl: z.string().trim().url().nullish()
+  coverImageUrl: z.string().trim().url().nullish(),
 });
 
 type ResolvedWikiLink = {
@@ -112,7 +112,7 @@ type LinkResolutionCandidate = {
 
 const ensureChapterTitleAlias = async ({
   chapterId,
-  aliasTitle
+  aliasTitle,
 }: {
   chapterId: number;
   aliasTitle: string;
@@ -126,16 +126,16 @@ const ensureChapterTitleAlias = async ({
     .values({
       chapterId,
       aliasTitle: aliasTitle.trim(),
-      normalizedAlias
+      normalizedAlias,
     })
     .onConflictDoNothing({
-      target: [chapterTitleAliases.chapterId, chapterTitleAliases.normalizedAlias]
+      target: [chapterTitleAliases.chapterId, chapterTitleAliases.normalizedAlias],
     });
 };
 
 const resolveWikiLinks = async ({
   sourceSubjectId,
-  summary
+  summary,
 }: {
   sourceSubjectId: number;
   summary: string;
@@ -156,7 +156,7 @@ const resolveWikiLinks = async ({
     .select({
       id: chapters.id,
       title: chapters.title,
-      subjectId: chapters.subjectId
+      subjectId: chapters.subjectId,
     })
     .from(chapters);
 
@@ -165,16 +165,20 @@ const resolveWikiLinks = async ({
       subpartId: chapterSubparts.id,
       chapterId: chapterSubparts.chapterId,
       heading: chapterSubparts.heading,
-      subjectId: chapters.subjectId
+      subjectId: chapters.subjectId,
     })
     .from(chapterSubparts)
     .innerJoin(chapters, eq(chapterSubparts.chapterId, chapters.id))
-    .orderBy(asc(chapterSubparts.chapterId), asc(chapterSubparts.orderIndex), asc(chapterSubparts.id));
+    .orderBy(
+      asc(chapterSubparts.chapterId),
+      asc(chapterSubparts.orderIndex),
+      asc(chapterSubparts.id)
+    );
 
   const aliasRows = await db
     .select({
       chapterId: chapterTitleAliases.chapterId,
-      normalizedAlias: chapterTitleAliases.normalizedAlias
+      normalizedAlias: chapterTitleAliases.normalizedAlias,
     })
     .from(chapterTitleAliases);
 
@@ -198,7 +202,7 @@ const resolveWikiLinks = async ({
     if (!canonicalSubpartByChapter.has(subpart.chapterId)) {
       canonicalSubpartByChapter.set(subpart.chapterId, {
         subpartId: subpart.subpartId,
-        subjectId: subpart.subjectId
+        subjectId: subpart.subjectId,
       });
     }
 
@@ -206,7 +210,7 @@ const resolveWikiLinks = async ({
     if (normalizedHeading.length > 0) {
       pushCandidate(normalizedHeading, {
         subpartId: subpart.subpartId,
-        subjectId: subpart.subjectId
+        subjectId: subpart.subjectId,
       });
     }
   }
@@ -233,7 +237,7 @@ const resolveWikiLinks = async ({
     if (alias.normalizedAlias.length > 0) {
       pushCandidate(alias.normalizedAlias, {
         subpartId: canonicalSubpart.subpartId,
-        subjectId: chapter.subjectId
+        subjectId: chapter.subjectId,
       });
     }
   }
@@ -241,12 +245,13 @@ const resolveWikiLinks = async ({
   const resolvedLinks: ResolvedWikiLink[] = [];
   for (const [normalizedTarget, targetTitle] of uniqueTargets.entries()) {
     const candidates = candidateMap.get(normalizedTarget) ?? [];
-    const preferredCandidate = candidates.find((candidate) => candidate.subjectId === sourceSubjectId) ?? candidates[0];
+    const preferredCandidate =
+      candidates.find((candidate) => candidate.subjectId === sourceSubjectId) ?? candidates[0];
     resolvedLinks.push({
       targetTitle,
       normalizedTarget,
       targetSubpartId: preferredCandidate?.subpartId ?? null,
-      isResolved: Boolean(preferredCandidate)
+      isResolved: Boolean(preferredCandidate),
     });
   }
   return resolvedLinks;
@@ -254,7 +259,7 @@ const resolveWikiLinks = async ({
 
 const rebuildChapterSummaryLinks = async ({
   sourceChapterId,
-  sourceSubjectId
+  sourceSubjectId,
 }: {
   sourceChapterId: number;
   sourceSubjectId: number;
@@ -262,7 +267,7 @@ const rebuildChapterSummaryLinks = async ({
   const sourceSubpartRows = await db
     .select({
       id: chapterSubparts.id,
-      content: chapterSubparts.content
+      content: chapterSubparts.content,
     })
     .from(chapterSubparts)
     .where(eq(chapterSubparts.chapterId, sourceChapterId))
@@ -273,7 +278,9 @@ const rebuildChapterSummaryLinks = async ({
     return;
   }
 
-  await db.delete(chapterSummaryLinks).where(inArray(chapterSummaryLinks.sourceSubpartId, sourceSubpartIds));
+  await db
+    .delete(chapterSummaryLinks)
+    .where(inArray(chapterSummaryLinks.sourceSubpartId, sourceSubpartIds));
 
   const insertRows: Array<{
     sourceSubpartId: number;
@@ -287,7 +294,7 @@ const rebuildChapterSummaryLinks = async ({
   for (const subpart of sourceSubpartRows) {
     const resolvedLinks = await resolveWikiLinks({
       sourceSubjectId,
-      summary: subpart.content
+      summary: subpart.content,
     });
 
     for (const link of resolvedLinks) {
@@ -297,7 +304,7 @@ const rebuildChapterSummaryLinks = async ({
         targetTitle: link.targetTitle,
         normalizedTarget: link.normalizedTarget,
         isResolved: link.isResolved,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
     }
   }
@@ -310,14 +317,14 @@ const rebuildChapterSummaryLinks = async ({
 };
 
 const rebuildInboundChapterLinks = async ({
-  targetChapterId
+  targetChapterId,
 }: {
   targetChapterId: number;
 }): Promise<void> => {
   // Find all subparts that belong to the target chapter
   const targetSubpartRows = await db
     .select({
-      id: chapterSubparts.id
+      id: chapterSubparts.id,
     })
     .from(chapterSubparts)
     .where(eq(chapterSubparts.chapterId, targetChapterId));
@@ -329,7 +336,7 @@ const rebuildInboundChapterLinks = async ({
 
   const aliasRows = await db
     .select({
-      normalizedAlias: chapterTitleAliases.normalizedAlias
+      normalizedAlias: chapterTitleAliases.normalizedAlias,
     })
     .from(chapterTitleAliases)
     .where(eq(chapterTitleAliases.chapterId, targetChapterId));
@@ -339,14 +346,17 @@ const rebuildInboundChapterLinks = async ({
     normalizedAliases.length > 0
       ? or(
           inArray(chapterSummaryLinks.targetSubpartId, targetSubpartIds),
-          and(isNull(chapterSummaryLinks.targetSubpartId), inArray(chapterSummaryLinks.normalizedTarget, normalizedAliases))
+          and(
+            isNull(chapterSummaryLinks.targetSubpartId),
+            inArray(chapterSummaryLinks.normalizedTarget, normalizedAliases)
+          )
         )
       : inArray(chapterSummaryLinks.targetSubpartId, targetSubpartIds);
 
   // Find all chapters that have links pointing to any of the target subparts
   const inboundLinkRows = await db
     .select({
-      sourceSubpartId: chapterSummaryLinks.sourceSubpartId
+      sourceSubpartId: chapterSummaryLinks.sourceSubpartId,
     })
     .from(chapterSummaryLinks)
     .where(inboundLinksPredicate);
@@ -361,7 +371,7 @@ const rebuildInboundChapterLinks = async ({
   const sourceChapterRows = await db
     .select({
       chapterId: chapterSubparts.chapterId,
-      subjectId: chapters.subjectId
+      subjectId: chapters.subjectId,
     })
     .from(chapterSubparts)
     .innerJoin(chapters, eq(chapterSubparts.chapterId, chapters.id))
@@ -370,7 +380,10 @@ const rebuildInboundChapterLinks = async ({
   // Get unique chapters
   const uniqueSourceChapters = Array.from(
     new Map(
-      sourceChapterRows.map((row) => [row.chapterId, { chapterId: row.chapterId, subjectId: row.subjectId }])
+      sourceChapterRows.map((row) => [
+        row.chapterId,
+        { chapterId: row.chapterId, subjectId: row.subjectId },
+      ])
     ).values()
   );
 
@@ -378,7 +391,7 @@ const rebuildInboundChapterLinks = async ({
   for (const { chapterId, subjectId } of uniqueSourceChapters) {
     await rebuildChapterSummaryLinks({
       sourceChapterId: chapterId,
-      sourceSubjectId: subjectId
+      sourceSubjectId: subjectId,
     });
 
     // Invalidate cache for inbound chapters
@@ -387,13 +400,13 @@ const rebuildInboundChapterLinks = async ({
 };
 
 const refreshLinksForChapterAliases = async ({
-  chapterId
+  chapterId,
 }: {
   chapterId: number;
 }): Promise<void> => {
   const chapterSubpartRows = await db
     .select({
-      id: chapterSubparts.id
+      id: chapterSubparts.id,
     })
     .from(chapterSubparts)
     .where(eq(chapterSubparts.chapterId, chapterId))
@@ -408,7 +421,7 @@ const refreshLinksForChapterAliases = async ({
 
   const aliasRows = await db
     .select({
-      normalizedAlias: chapterTitleAliases.normalizedAlias
+      normalizedAlias: chapterTitleAliases.normalizedAlias,
     })
     .from(chapterTitleAliases)
     .where(eq(chapterTitleAliases.chapterId, chapterId));
@@ -422,7 +435,7 @@ const refreshLinksForChapterAliases = async ({
     .set({
       targetSubpartId: canonicalSubpartId,
       isResolved: true,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     })
     .where(
       and(
@@ -445,7 +458,7 @@ chaptersAdminRouter.post("/content/chapters", requireSession, async (req, res) =
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid chapter payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -458,7 +471,7 @@ chaptersAdminRouter.post("/content/chapters", requireSession, async (req, res) =
   const subjectRows = await db
     .select({
       id: subjects.id,
-      name: subjects.name
+      name: subjects.name,
     })
     .from(subjects)
     .where(eq(subjects.id, parsedBody.data.subjectId))
@@ -473,10 +486,10 @@ chaptersAdminRouter.post("/content/chapters", requireSession, async (req, res) =
       status: "failed",
       message: "Subject not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Subject not found"
+      error: "Subject not found",
     });
     return;
   }
@@ -490,7 +503,7 @@ chaptersAdminRouter.post("/content/chapters", requireSession, async (req, res) =
         title,
         slug,
         isPublished: parsedBody.data.isPublished,
-        coverImageUrl: parsedBody.data.coverImageUrl ?? null
+        coverImageUrl: parsedBody.data.coverImageUrl ?? null,
       })
       .returning({
         id: chapters.id,
@@ -498,24 +511,24 @@ chaptersAdminRouter.post("/content/chapters", requireSession, async (req, res) =
         chapterNumber: chapters.chapterNumber,
         title: chapters.title,
         slug: chapters.slug,
-        isPublished: chapters.isPublished
+        isPublished: chapters.isPublished,
       });
 
     const chapter = insertedRows[0];
     if (!chapter) {
       res.status(500).json({
-        error: "Failed to create chapter"
+        error: "Failed to create chapter",
       });
       return;
     }
 
     await ensureChapterTitleAlias({
       chapterId: chapter.id,
-      aliasTitle: chapter.title
+      aliasTitle: chapter.title,
     });
     await rebuildChapterSummaryLinks({
       sourceChapterId: chapter.id,
-      sourceSubjectId: subject.id
+      sourceSubjectId: subject.id,
     });
 
     await persistAuditLog({
@@ -525,14 +538,14 @@ chaptersAdminRouter.post("/content/chapters", requireSession, async (req, res) =
       status: "success",
       message: `Created chapter ${chapter.slug}`,
       actorId,
-      actorName
+      actorName,
     });
 
     // Purge cached chapter lists for this subject
     void cacheService.delete(CacheKeys.chapterList(subject.id));
 
     res.status(201).json({
-      chapter
+      chapter,
     });
   } catch {
     await persistAuditLog({
@@ -542,10 +555,10 @@ chaptersAdminRouter.post("/content/chapters", requireSession, async (req, res) =
       status: "failed",
       message: "Chapter create failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(409).json({
-      error: "Chapter already exists for subject"
+      error: "Chapter already exists for subject",
     });
   }
 });
@@ -555,7 +568,7 @@ chaptersAdminRouter.post("/content/chapters/:id/update", requireSession, async (
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid chapter identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -564,7 +577,7 @@ chaptersAdminRouter.post("/content/chapters/:id/update", requireSession, async (
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid chapter payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -587,7 +600,7 @@ chaptersAdminRouter.post("/content/chapters/:id/update", requireSession, async (
       title: chapters.title,
       slug: chapters.slug,
       isPublished: chapters.isPublished,
-      subjectName: subjects.name
+      subjectName: subjects.name,
     })
     .from(chapters)
     .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
@@ -602,10 +615,10 @@ chaptersAdminRouter.post("/content/chapters/:id/update", requireSession, async (
       status: "failed",
       message: "Chapter not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Chapter not found"
+      error: "Chapter not found",
     });
     return;
   }
@@ -617,7 +630,9 @@ chaptersAdminRouter.post("/content/chapters/:id/update", requireSession, async (
         chapterNumber: parsedBody.data.chapterNumber,
         title: parsedBody.data.title.trim(),
         slug: parsedBody.data.slug.trim().toLowerCase(),
-        ...(parsedBody.data.coverImageUrl !== undefined ? { coverImageUrl: parsedBody.data.coverImageUrl ?? null } : {})
+        ...(parsedBody.data.coverImageUrl !== undefined
+          ? { coverImageUrl: parsedBody.data.coverImageUrl ?? null }
+          : {}),
       })
       .where(eq(chapters.id, chapter.id))
       .returning({
@@ -626,7 +641,7 @@ chaptersAdminRouter.post("/content/chapters/:id/update", requireSession, async (
         chapterNumber: chapters.chapterNumber,
         title: chapters.title,
         slug: chapters.slug,
-        isPublished: chapters.isPublished
+        isPublished: chapters.isPublished,
       });
     const updatedChapter = updatedRows[0];
     if (!updatedChapter) {
@@ -637,24 +652,24 @@ chaptersAdminRouter.post("/content/chapters/:id/update", requireSession, async (
         status: "failed",
         message: "Chapter not found",
         actorId,
-        actorName
+        actorName,
       });
       res.status(404).json({
-        error: "Chapter not found"
+        error: "Chapter not found",
       });
       return;
     }
 
     await ensureChapterTitleAlias({
       chapterId: chapter.id,
-      aliasTitle: chapter.title
+      aliasTitle: chapter.title,
     });
     await ensureChapterTitleAlias({
       chapterId: chapter.id,
-      aliasTitle: updatedChapter.title
+      aliasTitle: updatedChapter.title,
     });
     await refreshLinksForChapterAliases({
-      chapterId: chapter.id
+      chapterId: chapter.id,
     });
 
     await persistAuditLog({
@@ -664,7 +679,7 @@ chaptersAdminRouter.post("/content/chapters/:id/update", requireSession, async (
       status: "success",
       message: `Updated chapter to ${updatedChapter.slug}`,
       actorId,
-      actorName
+      actorName,
     });
 
     // Purge cached chapter data
@@ -673,7 +688,7 @@ chaptersAdminRouter.post("/content/chapters/:id/update", requireSession, async (
 
     res.status(200).json({
       chapter: updatedChapter,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch {
     await persistAuditLog({
@@ -683,10 +698,10 @@ chaptersAdminRouter.post("/content/chapters/:id/update", requireSession, async (
       status: "failed",
       message: "Chapter update failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(409).json({
-      error: "Chapter already exists for subject"
+      error: "Chapter already exists for subject",
     });
   }
 });
@@ -696,7 +711,7 @@ chaptersAdminRouter.post("/content/chapters/:id/delete", requireSession, async (
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid chapter identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -719,7 +734,7 @@ chaptersAdminRouter.post("/content/chapters/:id/delete", requireSession, async (
       title: chapters.title,
       slug: chapters.slug,
       isPublished: chapters.isPublished,
-      subjectName: subjects.name
+      subjectName: subjects.name,
     })
     .from(chapters)
     .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
@@ -734,10 +749,10 @@ chaptersAdminRouter.post("/content/chapters/:id/delete", requireSession, async (
       status: "failed",
       message: "Chapter not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Chapter not found"
+      error: "Chapter not found",
     });
     return;
   }
@@ -751,7 +766,7 @@ chaptersAdminRouter.post("/content/chapters/:id/delete", requireSession, async (
     status: "success",
     message: `Deleted chapter ${chapter.slug}`,
     actorId,
-    actorName
+    actorName,
   });
 
   // Purge cached chapter data
@@ -765,9 +780,9 @@ chaptersAdminRouter.post("/content/chapters/:id/delete", requireSession, async (
       chapterNumber: chapter.chapterNumber,
       title: chapter.title,
       slug: chapter.slug,
-      isPublished: chapter.isPublished
+      isPublished: chapter.isPublished,
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -785,7 +800,7 @@ chaptersAdminRouter.get("/content/chapters", requireSession, async (req, res) =>
       subjectName: subjects.name,
       className: sql<string>`coalesce(${boardClasses.name}, concat(${subjects.grade}::text, 'th'), 'Unknown')`,
       boardName: boards.name,
-      isPublished: chapters.isPublished
+      isPublished: chapters.isPublished,
     })
     .from(chapters)
     .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
@@ -794,7 +809,7 @@ chaptersAdminRouter.get("/content/chapters", requireSession, async (req, res) =>
     .orderBy(asc(subjects.name), asc(chapters.chapterNumber));
 
   res.status(200).json({
-    chapters: chapterRows
+    chapters: chapterRows,
   });
 });
 
@@ -808,21 +823,21 @@ chaptersAdminRouter.get("/content/chapters/graph", requireSession, async (req, r
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid chapter graph query",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
 
   const graph = await listAdminChapterGraph({
-    query: parsedQuery.data.q
+    query: parsedQuery.data.q,
   });
 
   res.status(200).json({
     graph: {
       nodes: graph.nodes,
       edges: graph.edges,
-      unresolvedEdgeCount: graph.unresolvedEdgeCount
-    }
+      unresolvedEdgeCount: graph.unresolvedEdgeCount,
+    },
   });
 });
 
@@ -836,7 +851,7 @@ chaptersAdminRouter.get("/content/chapters/link-suggestions", requireSession, as
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid chapter link suggestion query",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
@@ -847,15 +862,19 @@ chaptersAdminRouter.get("/content/chapters/link-suggestions", requireSession, as
       id: chapters.id,
       title: chapters.title,
       slug: chapters.slug,
-      chapterNumber: chapters.chapterNumber
+      chapterNumber: chapters.chapterNumber,
     })
     .from(chapters)
-    .where(searchTerm.length > 0 ? ilike(chapters.title, `%${escapeLikePattern(searchTerm)}%`) : undefined)
+    .where(
+      searchTerm.length > 0
+        ? ilike(chapters.title, `%${escapeLikePattern(searchTerm)}%`)
+        : undefined
+    )
     .orderBy(asc(chapters.title), asc(chapters.chapterNumber))
     .limit(parsedQuery.data.limit);
 
   res.status(200).json({
-    suggestions
+    suggestions,
   });
 });
 
@@ -864,7 +883,7 @@ chaptersAdminRouter.get("/content/chapters/:id/links", requireSession, async (re
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid chapter identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -876,14 +895,14 @@ chaptersAdminRouter.get("/content/chapters/:id/links", requireSession, async (re
 
   const chapterRows = await db
     .select({
-      id: chapters.id
+      id: chapters.id,
     })
     .from(chapters)
     .where(eq(chapters.id, parsedParams.data.id))
     .limit(1);
   if (!chapterRows[0]) {
     res.status(404).json({
-      error: "Chapter not found"
+      error: "Chapter not found",
     });
     return;
   }
@@ -900,7 +919,7 @@ chaptersAdminRouter.get("/content/chapters/:id/links", requireSession, async (re
       targetTitle: chapterSummaryLinks.targetTitle,
       normalizedTarget: chapterSummaryLinks.normalizedTarget,
       isResolved: chapterSummaryLinks.isResolved,
-      targetChapterTitle: targetChapters.title
+      targetChapterTitle: targetChapters.title,
     })
     .from(chapterSummaryLinks)
     .innerJoin(sourceSubparts, eq(chapterSummaryLinks.sourceSubpartId, sourceSubparts.id))
@@ -931,7 +950,7 @@ chaptersAdminRouter.get("/content/chapters/:id/links", requireSession, async (re
     .select({
       sourceChapterId: sourceSubparts.chapterId,
       sourceChapterTitle: sourceChapters.title,
-      normalizedTarget: chapterSummaryLinks.normalizedTarget
+      normalizedTarget: chapterSummaryLinks.normalizedTarget,
     })
     .from(chapterSummaryLinks)
     .innerJoin(sourceSubparts, eq(chapterSummaryLinks.sourceSubpartId, sourceSubparts.id))
@@ -958,8 +977,8 @@ chaptersAdminRouter.get("/content/chapters/:id/links", requireSession, async (re
   res.status(200).json({
     links: {
       outgoing: outgoingRows,
-      backlinks: backlinkRows
-    }
+      backlinks: backlinkRows,
+    },
   });
 });
 
@@ -968,7 +987,7 @@ chaptersAdminRouter.get("/content/chapters/:id/summary", requireSession, async (
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid chapter identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -982,7 +1001,7 @@ chaptersAdminRouter.get("/content/chapters/:id/summary", requireSession, async (
     .select({
       id: chapters.id,
       title: chapters.title,
-      summary: chapters.summary
+      summary: chapters.summary,
     })
     .from(chapters)
     .where(eq(chapters.id, parsedParams.data.id))
@@ -991,13 +1010,13 @@ chaptersAdminRouter.get("/content/chapters/:id/summary", requireSession, async (
   const chapter = chapterRows[0];
   if (!chapter) {
     res.status(404).json({
-      error: "Chapter not found"
+      error: "Chapter not found",
     });
     return;
   }
 
   res.status(200).json({
-    chapter
+    chapter,
   });
 });
 
@@ -1006,7 +1025,7 @@ chaptersAdminRouter.get("/content/chapters/:id/subparts", requireSession, async 
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid chapter identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -1020,7 +1039,7 @@ chaptersAdminRouter.get("/content/chapters/:id/subparts", requireSession, async 
     .select({
       id: chapters.id,
       chapterNumber: chapters.chapterNumber,
-      title: chapters.title
+      title: chapters.title,
     })
     .from(chapters)
     .where(eq(chapters.id, parsedParams.data.id))
@@ -1029,7 +1048,7 @@ chaptersAdminRouter.get("/content/chapters/:id/subparts", requireSession, async 
   const chapter = chapterRows[0];
   if (!chapter) {
     res.status(404).json({
-      error: "Chapter not found"
+      error: "Chapter not found",
     });
     return;
   }
@@ -1042,7 +1061,7 @@ chaptersAdminRouter.get("/content/chapters/:id/subparts", requireSession, async 
       heading: chapterSubparts.heading,
       content: chapterSubparts.content,
       createdAt: chapterSubparts.createdAt,
-      updatedAt: chapterSubparts.updatedAt
+      updatedAt: chapterSubparts.updatedAt,
     })
     .from(chapterSubparts)
     .where(eq(chapterSubparts.chapterId, chapter.id))
@@ -1050,7 +1069,7 @@ chaptersAdminRouter.get("/content/chapters/:id/subparts", requireSession, async 
 
   res.status(200).json({
     chapter,
-    subparts
+    subparts,
   });
 });
 
@@ -1059,7 +1078,7 @@ chaptersAdminRouter.post("/content/chapters/:id/subparts", requireSession, async
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid chapter identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -1068,7 +1087,7 @@ chaptersAdminRouter.post("/content/chapters/:id/subparts", requireSession, async
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid chapter subpart payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -1088,7 +1107,7 @@ chaptersAdminRouter.post("/content/chapters/:id/subparts", requireSession, async
       id: chapters.id,
       title: chapters.title,
       subjectId: chapters.subjectId,
-      subjectName: subjects.name
+      subjectName: subjects.name,
     })
     .from(chapters)
     .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
@@ -1104,32 +1123,30 @@ chaptersAdminRouter.post("/content/chapters/:id/subparts", requireSession, async
       status: "failed",
       message: "Chapter not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Chapter not found"
+      error: "Chapter not found",
     });
     return;
   }
 
-  let createdSubpart:
-    | {
-        id: number;
-        chapterId: number;
-        orderIndex: number;
-        heading: string;
-        content: string;
-        createdAt: Date;
-        updatedAt: Date;
-      }
-    | null = null;
+  let createdSubpart: {
+    id: number;
+    chapterId: number;
+    orderIndex: number;
+    heading: string;
+    content: string;
+    createdAt: Date;
+    updatedAt: Date;
+  } | null = null;
 
   try {
     createdSubpart = await db.transaction(async (tx) => {
       const existingRows = await tx
         .select({
           id: chapterSubparts.id,
-          orderIndex: chapterSubparts.orderIndex
+          orderIndex: chapterSubparts.orderIndex,
         })
         .from(chapterSubparts)
         .where(eq(chapterSubparts.chapterId, chapter.id))
@@ -1155,7 +1172,7 @@ chaptersAdminRouter.post("/content/chapters/:id/subparts", requireSession, async
             .update(chapterSubparts)
             .set({
               orderIndex: row.orderIndex + 1,
-              updatedAt: new Date()
+              updatedAt: new Date(),
             })
             .where(eq(chapterSubparts.id, row.id));
         }
@@ -1167,7 +1184,7 @@ chaptersAdminRouter.post("/content/chapters/:id/subparts", requireSession, async
           chapterId: chapter.id,
           orderIndex: nextOrderIndex,
           heading: parsedBody.data.heading.trim(),
-          content: parsedBody.data.content.trim()
+          content: parsedBody.data.content.trim(),
         })
         .returning({
           id: chapterSubparts.id,
@@ -1176,7 +1193,7 @@ chaptersAdminRouter.post("/content/chapters/:id/subparts", requireSession, async
           heading: chapterSubparts.heading,
           content: chapterSubparts.content,
           createdAt: chapterSubparts.createdAt,
-          updatedAt: chapterSubparts.updatedAt
+          updatedAt: chapterSubparts.updatedAt,
         });
 
       const inserted = insertedRows[0];
@@ -1194,36 +1211,36 @@ chaptersAdminRouter.post("/content/chapters/:id/subparts", requireSession, async
       status: "failed",
       message: error instanceof Error ? error.message : "Chapter subpart create failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(500).json({
-      error: "Failed to create chapter subpart"
+      error: "Failed to create chapter subpart",
     });
     return;
   }
 
   if (!createdSubpart) {
     res.status(500).json({
-      error: "Failed to create chapter subpart"
+      error: "Failed to create chapter subpart",
     });
     return;
   }
 
   res.status(201).json({
     subpart: createdSubpart,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 
   try {
     await rebuildChapterSummaryLinks({
       sourceChapterId: chapter.id,
-      sourceSubjectId: chapter.subjectId
+      sourceSubjectId: chapter.subjectId,
     });
 
     await cacheService.delete(CacheKeys.chapterContent(chapter.id));
 
     await rebuildInboundChapterLinks({
-      targetChapterId: chapter.id
+      targetChapterId: chapter.id,
     });
   } catch (error) {
     console.error("Post-commit chapter subpart create hooks failed:", error);
@@ -1237,502 +1254,522 @@ chaptersAdminRouter.post("/content/chapters/:id/subparts", requireSession, async
       status: "success",
       message: `Created subpart ${createdSubpart.id} (${createdSubpart.heading})`,
       actorId,
-      actorName
+      actorName,
     });
   } catch (error) {
     console.error("Failed to write chapter subpart create audit log:", error);
   }
 });
 
-chaptersAdminRouter.post("/content/chapters/:id/subparts/reorder", requireSession, async (req, res) => {
-  const parsedParams = chapterParamsSchema.safeParse(req.params);
-  if (!parsedParams.success) {
-    res.status(400).json({
-      error: "Invalid chapter identifier",
-      details: parsedParams.error.flatten()
-    });
-    return;
-  }
+chaptersAdminRouter.post(
+  "/content/chapters/:id/subparts/reorder",
+  requireSession,
+  async (req, res) => {
+    const parsedParams = chapterParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+      res.status(400).json({
+        error: "Invalid chapter identifier",
+        details: parsedParams.error.flatten(),
+      });
+      return;
+    }
 
-  const parsedBody = chapterSubpartReorderBodySchema.safeParse(req.body);
-  if (!parsedBody.success) {
-    res.status(400).json({
-      error: "Invalid chapter subpart reorder payload",
-      details: parsedBody.error.flatten()
-    });
-    return;
-  }
+    const parsedBody = chapterSubpartReorderBodySchema.safeParse(req.body);
+    if (!parsedBody.success) {
+      res.status(400).json({
+        error: "Invalid chapter subpart reorder payload",
+        details: parsedBody.error.flatten(),
+      });
+      return;
+    }
 
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
-    return;
-  }
+    const authedReq = req as AuthenticatedRequest;
+    if (!(await requireAdminRole(authedReq, res))) {
+      return;
+    }
 
-  const actorId = authedReq.session.user.id;
-  const actorName = authedReq.session.user.name;
-  const action = "Reorder chapter subparts";
-  const fallbackTarget = `Chapter #${parsedParams.data.id}`;
+    const actorId = authedReq.session.user.id;
+    const actorName = authedReq.session.user.name;
+    const action = "Reorder chapter subparts";
+    const fallbackTarget = `Chapter #${parsedParams.data.id}`;
 
-  const chapterRows = await db
-    .select({
-      id: chapters.id,
-      title: chapters.title,
-      subjectId: chapters.subjectId,
-      subjectName: subjects.name
-    })
-    .from(chapters)
-    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
-    .where(eq(chapters.id, parsedParams.data.id))
-    .limit(1);
+    const chapterRows = await db
+      .select({
+        id: chapters.id,
+        title: chapters.title,
+        subjectId: chapters.subjectId,
+        subjectName: subjects.name,
+      })
+      .from(chapters)
+      .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+      .where(eq(chapters.id, parsedParams.data.id))
+      .limit(1);
 
-  const chapter = chapterRows[0];
-  if (!chapter) {
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: fallbackTarget,
-      status: "failed",
-      message: "Chapter not found",
-      actorId,
-      actorName
-    });
-    res.status(404).json({
-      error: "Chapter not found"
-    });
-    return;
-  }
+    const chapter = chapterRows[0];
+    if (!chapter) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: fallbackTarget,
+        status: "failed",
+        message: "Chapter not found",
+        actorId,
+        actorName,
+      });
+      res.status(404).json({
+        error: "Chapter not found",
+      });
+      return;
+    }
 
-  const existingRows = await db
-    .select({
-      id: chapterSubparts.id
-    })
-    .from(chapterSubparts)
-    .where(eq(chapterSubparts.chapterId, chapter.id));
+    const existingRows = await db
+      .select({
+        id: chapterSubparts.id,
+      })
+      .from(chapterSubparts)
+      .where(eq(chapterSubparts.chapterId, chapter.id));
 
-  const existingIds = existingRows.map((row) => row.id);
-  const proposedIds = parsedBody.data.subpartIds;
+    const existingIds = existingRows.map((row) => row.id);
+    const proposedIds = parsedBody.data.subpartIds;
 
-  if (existingIds.length !== proposedIds.length) {
-    res.status(400).json({
-      error: "Reorder payload must contain all chapter subpart IDs exactly once"
-    });
-    return;
-  }
+    if (existingIds.length !== proposedIds.length) {
+      res.status(400).json({
+        error: "Reorder payload must contain all chapter subpart IDs exactly once",
+      });
+      return;
+    }
 
-  const proposedIdSet = new Set(proposedIds);
-  if (proposedIdSet.size !== proposedIds.length) {
-    res.status(400).json({
-      error: "Reorder payload contains duplicate subpart IDs"
-    });
-    return;
-  }
+    const proposedIdSet = new Set(proposedIds);
+    if (proposedIdSet.size !== proposedIds.length) {
+      res.status(400).json({
+        error: "Reorder payload contains duplicate subpart IDs",
+      });
+      return;
+    }
 
-  if (!existingIds.every((id) => proposedIdSet.has(id))) {
-    res.status(400).json({
-      error: "Reorder payload contains invalid subpart IDs for this chapter"
-    });
-    return;
-  }
+    if (!existingIds.every((id) => proposedIdSet.has(id))) {
+      res.status(400).json({
+        error: "Reorder payload contains invalid subpart IDs for this chapter",
+      });
+      return;
+    }
 
-  let reorderedRows:
-    | Array<{
-        id: number;
-        chapterId: number;
-        orderIndex: number;
-        heading: string;
-        content: string;
-        createdAt: Date;
-        updatedAt: Date;
-      }>
-    | null = null;
+    let reorderedRows: Array<{
+      id: number;
+      chapterId: number;
+      orderIndex: number;
+      heading: string;
+      content: string;
+      createdAt: Date;
+      updatedAt: Date;
+    }> | null = null;
 
-  try {
-    reorderedRows = await db.transaction(async (tx) => {
-      const reorderOffset = proposedIds.length + 1;
-      const reorderedAt = new Date();
+    try {
+      reorderedRows = await db.transaction(async (tx) => {
+        const reorderOffset = proposedIds.length + 1;
+        const reorderedAt = new Date();
 
-      await tx
-        .update(chapterSubparts)
-        .set({
-          orderIndex: sql`${chapterSubparts.orderIndex} + ${reorderOffset}`,
-          updatedAt: reorderedAt
-        })
-        .where(eq(chapterSubparts.chapterId, chapter.id));
-
-      for (const [index, subpartId] of proposedIds.entries()) {
         await tx
           .update(chapterSubparts)
           .set({
-            orderIndex: index + 1,
-            updatedAt: reorderedAt
+            orderIndex: sql`${chapterSubparts.orderIndex} + ${reorderOffset}`,
+            updatedAt: reorderedAt,
           })
-          .where(and(eq(chapterSubparts.chapterId, chapter.id), eq(chapterSubparts.id, subpartId)));
-      }
+          .where(eq(chapterSubparts.chapterId, chapter.id));
 
-      return tx
-        .select({
+        for (const [index, subpartId] of proposedIds.entries()) {
+          await tx
+            .update(chapterSubparts)
+            .set({
+              orderIndex: index + 1,
+              updatedAt: reorderedAt,
+            })
+            .where(
+              and(eq(chapterSubparts.chapterId, chapter.id), eq(chapterSubparts.id, subpartId))
+            );
+        }
+
+        return tx
+          .select({
+            id: chapterSubparts.id,
+            chapterId: chapterSubparts.chapterId,
+            orderIndex: chapterSubparts.orderIndex,
+            heading: chapterSubparts.heading,
+            content: chapterSubparts.content,
+            createdAt: chapterSubparts.createdAt,
+            updatedAt: chapterSubparts.updatedAt,
+          })
+          .from(chapterSubparts)
+          .where(eq(chapterSubparts.chapterId, chapter.id))
+          .orderBy(asc(chapterSubparts.orderIndex), asc(chapterSubparts.id));
+      });
+    } catch (error) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: `${chapter.subjectName} / ${chapter.title}`,
+        status: "failed",
+        message: error instanceof Error ? error.message : "Chapter subpart reorder failed",
+        actorId,
+        actorName,
+      });
+      res.status(500).json({
+        error: "Failed to reorder chapter subparts",
+      });
+      return;
+    }
+
+    if (!reorderedRows) {
+      res.status(500).json({
+        error: "Failed to reorder chapter subparts",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      subparts: reorderedRows,
+      timestamp: new Date().toISOString(),
+    });
+
+    try {
+      await rebuildChapterSummaryLinks({
+        sourceChapterId: chapter.id,
+        sourceSubjectId: chapter.subjectId,
+      });
+
+      await cacheService.delete(CacheKeys.chapterContent(chapter.id));
+
+      await rebuildInboundChapterLinks({
+        targetChapterId: chapter.id,
+      });
+    } catch (error) {
+      console.error("Post-commit chapter subpart reorder hooks failed:", error);
+    }
+
+    try {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: `${chapter.subjectName} / ${chapter.title}`,
+        status: "success",
+        message: `Reordered ${proposedIds.length} subparts`,
+        actorId,
+        actorName,
+      });
+    } catch (error) {
+      console.error("Failed to write chapter subpart reorder audit log:", error);
+    }
+  }
+);
+
+chaptersAdminRouter.post(
+  "/content/chapters/:id/subparts/:subpartId",
+  requireSession,
+  async (req, res) => {
+    const parsedParams = chapterSubpartParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+      res.status(400).json({
+        error: "Invalid chapter or subpart identifier",
+        details: parsedParams.error.flatten(),
+      });
+      return;
+    }
+
+    const parsedBody = chapterSubpartUpdateBodySchema.safeParse(req.body);
+    if (!parsedBody.success) {
+      res.status(400).json({
+        error: "Invalid chapter subpart update payload",
+        details: parsedBody.error.flatten(),
+      });
+      return;
+    }
+
+    const authedReq = req as AuthenticatedRequest;
+    if (!(await requireAdminRole(authedReq, res))) {
+      return;
+    }
+
+    const actorId = authedReq.session.user.id;
+    const actorName = authedReq.session.user.name;
+    const action = "Update chapter subpart";
+    const fallbackTarget = `Chapter #${parsedParams.data.id} / Subpart #${parsedParams.data.subpartId}`;
+
+    const subpartRows = await db
+      .select({
+        id: chapterSubparts.id,
+        chapterId: chapterSubparts.chapterId,
+        orderIndex: chapterSubparts.orderIndex,
+        heading: chapterSubparts.heading,
+        content: chapterSubparts.content,
+        chapterTitle: chapters.title,
+        subjectId: chapters.subjectId,
+        subjectName: subjects.name,
+      })
+      .from(chapterSubparts)
+      .innerJoin(chapters, eq(chapterSubparts.chapterId, chapters.id))
+      .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+      .where(
+        and(
+          eq(chapterSubparts.id, parsedParams.data.subpartId),
+          eq(chapterSubparts.chapterId, parsedParams.data.id)
+        )
+      )
+      .limit(1);
+
+    const subpart = subpartRows[0];
+    if (!subpart) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: fallbackTarget,
+        status: "failed",
+        message: "Chapter subpart not found",
+        actorId,
+        actorName,
+      });
+      res.status(404).json({
+        error: "Chapter subpart not found",
+      });
+      return;
+    }
+
+    let updatedSubpart: {
+      id: number;
+      chapterId: number;
+      orderIndex: number;
+      heading: string;
+      content: string;
+      createdAt: Date;
+      updatedAt: Date;
+    } | null = null;
+
+    try {
+      const updatedRows = await db
+        .update(chapterSubparts)
+        .set({
+          heading: parsedBody.data.heading.trim(),
+          content: parsedBody.data.content.trim(),
+          updatedAt: new Date(),
+        })
+        .where(eq(chapterSubparts.id, subpart.id))
+        .returning({
           id: chapterSubparts.id,
           chapterId: chapterSubparts.chapterId,
           orderIndex: chapterSubparts.orderIndex,
           heading: chapterSubparts.heading,
           content: chapterSubparts.content,
           createdAt: chapterSubparts.createdAt,
-          updatedAt: chapterSubparts.updatedAt
-        })
-        .from(chapterSubparts)
-        .where(eq(chapterSubparts.chapterId, chapter.id))
-        .orderBy(asc(chapterSubparts.orderIndex), asc(chapterSubparts.id));
-    });
-  } catch (error) {
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: `${chapter.subjectName} / ${chapter.title}`,
-      status: "failed",
-      message: error instanceof Error ? error.message : "Chapter subpart reorder failed",
-      actorId,
-      actorName
-    });
-    res.status(500).json({
-      error: "Failed to reorder chapter subparts"
-    });
-    return;
-  }
+          updatedAt: chapterSubparts.updatedAt,
+        });
 
-  if (!reorderedRows) {
-    res.status(500).json({
-      error: "Failed to reorder chapter subparts"
-    });
-    return;
-  }
-
-  res.status(200).json({
-    subparts: reorderedRows,
-    timestamp: new Date().toISOString()
-  });
-
-  try {
-    await rebuildChapterSummaryLinks({
-      sourceChapterId: chapter.id,
-      sourceSubjectId: chapter.subjectId
-    });
-
-    await cacheService.delete(CacheKeys.chapterContent(chapter.id));
-
-    await rebuildInboundChapterLinks({
-      targetChapterId: chapter.id
-    });
-  } catch (error) {
-    console.error("Post-commit chapter subpart reorder hooks failed:", error);
-  }
-
-  try {
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: `${chapter.subjectName} / ${chapter.title}`,
-      status: "success",
-      message: `Reordered ${proposedIds.length} subparts`,
-      actorId,
-      actorName
-    });
-  } catch (error) {
-    console.error("Failed to write chapter subpart reorder audit log:", error);
-  }
-});
-
-chaptersAdminRouter.post("/content/chapters/:id/subparts/:subpartId", requireSession, async (req, res) => {
-  const parsedParams = chapterSubpartParamsSchema.safeParse(req.params);
-  if (!parsedParams.success) {
-    res.status(400).json({
-      error: "Invalid chapter or subpart identifier",
-      details: parsedParams.error.flatten()
-    });
-    return;
-  }
-
-  const parsedBody = chapterSubpartUpdateBodySchema.safeParse(req.body);
-  if (!parsedBody.success) {
-    res.status(400).json({
-      error: "Invalid chapter subpart update payload",
-      details: parsedBody.error.flatten()
-    });
-    return;
-  }
-
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
-    return;
-  }
-
-  const actorId = authedReq.session.user.id;
-  const actorName = authedReq.session.user.name;
-  const action = "Update chapter subpart";
-  const fallbackTarget = `Chapter #${parsedParams.data.id} / Subpart #${parsedParams.data.subpartId}`;
-
-  const subpartRows = await db
-    .select({
-      id: chapterSubparts.id,
-      chapterId: chapterSubparts.chapterId,
-      orderIndex: chapterSubparts.orderIndex,
-      heading: chapterSubparts.heading,
-      content: chapterSubparts.content,
-      chapterTitle: chapters.title,
-      subjectId: chapters.subjectId,
-      subjectName: subjects.name
-    })
-    .from(chapterSubparts)
-    .innerJoin(chapters, eq(chapterSubparts.chapterId, chapters.id))
-    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
-    .where(and(eq(chapterSubparts.id, parsedParams.data.subpartId), eq(chapterSubparts.chapterId, parsedParams.data.id)))
-    .limit(1);
-
-  const subpart = subpartRows[0];
-  if (!subpart) {
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: fallbackTarget,
-      status: "failed",
-      message: "Chapter subpart not found",
-      actorId,
-      actorName
-    });
-    res.status(404).json({
-      error: "Chapter subpart not found"
-    });
-    return;
-  }
-
-  let updatedSubpart:
-    | {
-        id: number;
-        chapterId: number;
-        orderIndex: number;
-        heading: string;
-        content: string;
-        createdAt: Date;
-        updatedAt: Date;
+      updatedSubpart = updatedRows[0] ?? null;
+      if (!updatedSubpart) {
+        res.status(500).json({
+          error: "Failed to update chapter subpart",
+        });
+        return;
       }
-    | null = null;
+    } catch (error) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: `${subpart.subjectName} / ${subpart.chapterTitle}`,
+        status: "failed",
+        message: error instanceof Error ? error.message : "Chapter subpart update failed",
+        actorId,
+        actorName,
+      });
+      res.status(500).json({
+        error: "Failed to update chapter subpart",
+      });
+      return;
+    }
 
-  try {
-    const updatedRows = await db
-      .update(chapterSubparts)
-      .set({
-        heading: parsedBody.data.heading.trim(),
-        content: parsedBody.data.content.trim(),
-        updatedAt: new Date()
-      })
-      .where(eq(chapterSubparts.id, subpart.id))
-      .returning({
+    if (!updatedSubpart) {
+      res.status(500).json({
+        error: "Failed to update chapter subpart",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      subpart: updatedSubpart,
+      timestamp: new Date().toISOString(),
+    });
+
+    try {
+      await rebuildChapterSummaryLinks({
+        sourceChapterId: subpart.chapterId,
+        sourceSubjectId: subpart.subjectId,
+      });
+
+      await cacheService.delete(CacheKeys.chapterContent(subpart.chapterId));
+
+      await rebuildInboundChapterLinks({
+        targetChapterId: subpart.chapterId,
+      });
+    } catch (error) {
+      console.error("Post-commit chapter subpart update hooks failed:", error);
+    }
+
+    try {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: `${subpart.subjectName} / ${subpart.chapterTitle}`,
+        status: "success",
+        message: `Updated subpart ${updatedSubpart.id} (${updatedSubpart.heading})`,
+        actorId,
+        actorName,
+      });
+    } catch (error) {
+      console.error("Failed to write chapter subpart update audit log:", error);
+    }
+  }
+);
+
+chaptersAdminRouter.post(
+  "/content/chapters/:id/subparts/:subpartId/delete",
+  requireSession,
+  async (req, res) => {
+    const parsedParams = chapterSubpartParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+      res.status(400).json({
+        error: "Invalid chapter or subpart identifier",
+        details: parsedParams.error.flatten(),
+      });
+      return;
+    }
+
+    const authedReq = req as AuthenticatedRequest;
+    if (!(await requireAdminRole(authedReq, res))) {
+      return;
+    }
+
+    const actorId = authedReq.session.user.id;
+    const actorName = authedReq.session.user.name;
+    const action = "Delete chapter subpart";
+    const fallbackTarget = `Chapter #${parsedParams.data.id} / Subpart #${parsedParams.data.subpartId}`;
+
+    const subpartRows = await db
+      .select({
         id: chapterSubparts.id,
         chapterId: chapterSubparts.chapterId,
         orderIndex: chapterSubparts.orderIndex,
         heading: chapterSubparts.heading,
-        content: chapterSubparts.content,
-        createdAt: chapterSubparts.createdAt,
-        updatedAt: chapterSubparts.updatedAt
-      });
+        chapterTitle: chapters.title,
+        subjectId: chapters.subjectId,
+        subjectName: subjects.name,
+      })
+      .from(chapterSubparts)
+      .innerJoin(chapters, eq(chapterSubparts.chapterId, chapters.id))
+      .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+      .where(
+        and(
+          eq(chapterSubparts.id, parsedParams.data.subpartId),
+          eq(chapterSubparts.chapterId, parsedParams.data.id)
+        )
+      )
+      .limit(1);
 
-    updatedSubpart = updatedRows[0] ?? null;
-    if (!updatedSubpart) {
-      res.status(500).json({
-        error: "Failed to update chapter subpart"
+    const subpart = subpartRows[0];
+    if (!subpart) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: fallbackTarget,
+        status: "failed",
+        message: "Chapter subpart not found",
+        actorId,
+        actorName,
+      });
+      res.status(404).json({
+        error: "Chapter subpart not found",
       });
       return;
     }
-  } catch (error) {
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: `${subpart.subjectName} / ${subpart.chapterTitle}`,
-      status: "failed",
-      message: error instanceof Error ? error.message : "Chapter subpart update failed",
-      actorId,
-      actorName
-    });
-    res.status(500).json({
-      error: "Failed to update chapter subpart"
-    });
-    return;
-  }
 
-  if (!updatedSubpart) {
-    res.status(500).json({
-      error: "Failed to update chapter subpart"
-    });
-    return;
-  }
+    try {
+      await db.transaction(async (tx) => {
+        await tx.delete(chapterSubparts).where(eq(chapterSubparts.id, subpart.id));
 
-  res.status(200).json({
-    subpart: updatedSubpart,
-    timestamp: new Date().toISOString()
-  });
-
-  try {
-    await rebuildChapterSummaryLinks({
-      sourceChapterId: subpart.chapterId,
-      sourceSubjectId: subpart.subjectId
-    });
-
-    await cacheService.delete(CacheKeys.chapterContent(subpart.chapterId));
-
-    await rebuildInboundChapterLinks({
-      targetChapterId: subpart.chapterId
-    });
-  } catch (error) {
-    console.error("Post-commit chapter subpart update hooks failed:", error);
-  }
-
-  try {
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: `${subpart.subjectName} / ${subpart.chapterTitle}`,
-      status: "success",
-      message: `Updated subpart ${updatedSubpart.id} (${updatedSubpart.heading})`,
-      actorId,
-      actorName
-    });
-  } catch (error) {
-    console.error("Failed to write chapter subpart update audit log:", error);
-  }
-});
-
-chaptersAdminRouter.post("/content/chapters/:id/subparts/:subpartId/delete", requireSession, async (req, res) => {
-  const parsedParams = chapterSubpartParamsSchema.safeParse(req.params);
-  if (!parsedParams.success) {
-    res.status(400).json({
-      error: "Invalid chapter or subpart identifier",
-      details: parsedParams.error.flatten()
-    });
-    return;
-  }
-
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
-    return;
-  }
-
-  const actorId = authedReq.session.user.id;
-  const actorName = authedReq.session.user.name;
-  const action = "Delete chapter subpart";
-  const fallbackTarget = `Chapter #${parsedParams.data.id} / Subpart #${parsedParams.data.subpartId}`;
-
-  const subpartRows = await db
-    .select({
-      id: chapterSubparts.id,
-      chapterId: chapterSubparts.chapterId,
-      orderIndex: chapterSubparts.orderIndex,
-      heading: chapterSubparts.heading,
-      chapterTitle: chapters.title,
-      subjectId: chapters.subjectId,
-      subjectName: subjects.name
-    })
-    .from(chapterSubparts)
-    .innerJoin(chapters, eq(chapterSubparts.chapterId, chapters.id))
-    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
-    .where(and(eq(chapterSubparts.id, parsedParams.data.subpartId), eq(chapterSubparts.chapterId, parsedParams.data.id)))
-    .limit(1);
-
-  const subpart = subpartRows[0];
-  if (!subpart) {
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: fallbackTarget,
-      status: "failed",
-      message: "Chapter subpart not found",
-      actorId,
-      actorName
-    });
-    res.status(404).json({
-      error: "Chapter subpart not found"
-    });
-    return;
-  }
-
-  try {
-    await db.transaction(async (tx) => {
-      await tx.delete(chapterSubparts).where(eq(chapterSubparts.id, subpart.id));
-
-      const remainingRows = await tx
-        .select({
-          id: chapterSubparts.id
-        })
-        .from(chapterSubparts)
-        .where(eq(chapterSubparts.chapterId, subpart.chapterId))
-        .orderBy(asc(chapterSubparts.orderIndex), asc(chapterSubparts.id));
-
-      for (const [index, row] of remainingRows.entries()) {
-        await tx
-          .update(chapterSubparts)
-          .set({
-            orderIndex: index + 1,
-            updatedAt: new Date()
+        const remainingRows = await tx
+          .select({
+            id: chapterSubparts.id,
           })
-          .where(eq(chapterSubparts.id, row.id));
-      }
+          .from(chapterSubparts)
+          .where(eq(chapterSubparts.chapterId, subpart.chapterId))
+          .orderBy(asc(chapterSubparts.orderIndex), asc(chapterSubparts.id));
+
+        for (const [index, row] of remainingRows.entries()) {
+          await tx
+            .update(chapterSubparts)
+            .set({
+              orderIndex: index + 1,
+              updatedAt: new Date(),
+            })
+            .where(eq(chapterSubparts.id, row.id));
+        }
+      });
+    } catch (error) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: `${subpart.subjectName} / ${subpart.chapterTitle}`,
+        status: "failed",
+        message: error instanceof Error ? error.message : "Chapter subpart delete failed",
+        actorId,
+        actorName,
+      });
+      res.status(500).json({
+        error: "Failed to delete chapter subpart",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      deletedId: subpart.id,
+      timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: `${subpart.subjectName} / ${subpart.chapterTitle}`,
-      status: "failed",
-      message: error instanceof Error ? error.message : "Chapter subpart delete failed",
-      actorId,
-      actorName
-    });
-    res.status(500).json({
-      error: "Failed to delete chapter subpart"
-    });
-    return;
+
+    try {
+      await rebuildChapterSummaryLinks({
+        sourceChapterId: subpart.chapterId,
+        sourceSubjectId: subpart.subjectId,
+      });
+
+      await cacheService.delete(CacheKeys.chapterContent(subpart.chapterId));
+
+      await rebuildInboundChapterLinks({
+        targetChapterId: subpart.chapterId,
+      });
+    } catch (error) {
+      console.error("Post-commit chapter subpart delete hooks failed:", error);
+    }
+
+    try {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: `${subpart.subjectName} / ${subpart.chapterTitle}`,
+        status: "success",
+        message: `Deleted subpart ${subpart.id} (${subpart.heading})`,
+        actorId,
+        actorName,
+      });
+    } catch (error) {
+      console.error("Failed to write chapter subpart delete audit log:", error);
+    }
   }
-
-  res.status(200).json({
-    success: true,
-    deletedId: subpart.id,
-    timestamp: new Date().toISOString()
-  });
-
-  try {
-    await rebuildChapterSummaryLinks({
-      sourceChapterId: subpart.chapterId,
-      sourceSubjectId: subpart.subjectId
-    });
-
-    await cacheService.delete(CacheKeys.chapterContent(subpart.chapterId));
-
-    await rebuildInboundChapterLinks({
-      targetChapterId: subpart.chapterId
-    });
-  } catch (error) {
-    console.error("Post-commit chapter subpart delete hooks failed:", error);
-  }
-
-  try {
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: `${subpart.subjectName} / ${subpart.chapterTitle}`,
-      status: "success",
-      message: `Deleted subpart ${subpart.id} (${subpart.heading})`,
-      actorId,
-      actorName
-    });
-  } catch (error) {
-    console.error("Failed to write chapter subpart delete audit log:", error);
-  }
-});
+);
 
 chaptersAdminRouter.post("/content/chapters/:id/summary", requireSession, async (req, res) => {
   const parsedParams = chapterParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid chapter identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -1743,193 +1780,202 @@ chaptersAdminRouter.post("/content/chapters/:id/summary", requireSession, async 
   }
 
   res.status(410).json({
-    error: "Chapter summary markdown endpoint is deprecated. Use chapter subparts endpoints instead."
+    error:
+      "Chapter summary markdown endpoint is deprecated. Use chapter subparts endpoints instead.",
   });
 });
 
-chaptersAdminRouter.get("/content/chapters/:id/revision-notes", requireSession, async (req, res) => {
-  const parsedParams = chapterParamsSchema.safeParse(req.params);
-  if (!parsedParams.success) {
-    res.status(400).json({
-      error: "Invalid chapter identifier",
-      details: parsedParams.error.flatten()
-    });
-    return;
-  }
-
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
-    return;
-  }
-
-  const chapterRows = await db
-    .select({
-      id: chapters.id,
-      title: chapters.title,
-      keyFormulas: revisionNotes.keyFormulas,
-      keyDefinitions: revisionNotes.keyDefinitions,
-      commonMistakes: revisionNotes.commonMistakes,
-      examTips: revisionNotes.examTips
-    })
-    .from(chapters)
-    .leftJoin(revisionNotes, eq(revisionNotes.chapterId, chapters.id))
-    .where(eq(chapters.id, parsedParams.data.id))
-    .limit(1);
-
-  const chapter = chapterRows[0];
-  if (!chapter) {
-    res.status(404).json({
-      error: "Chapter not found"
-    });
-    return;
-  }
-
-  res.status(200).json({
-    chapter: {
-      id: chapter.id,
-      title: chapter.title
-    },
-    revisionNotes: {
-      keyFormulas: chapter.keyFormulas ?? [],
-      keyDefinitions: chapter.keyDefinitions ?? [],
-      commonMistakes: chapter.commonMistakes ?? "",
-      examTips: chapter.examTips ?? ""
+chaptersAdminRouter.get(
+  "/content/chapters/:id/revision-notes",
+  requireSession,
+  async (req, res) => {
+    const parsedParams = chapterParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+      res.status(400).json({
+        error: "Invalid chapter identifier",
+        details: parsedParams.error.flatten(),
+      });
+      return;
     }
-  });
-});
 
-chaptersAdminRouter.post("/content/chapters/:id/revision-notes", requireSession, async (req, res) => {
-  const parsedParams = chapterParamsSchema.safeParse(req.params);
-  if (!parsedParams.success) {
-    res.status(400).json({
-      error: "Invalid chapter identifier",
-      details: parsedParams.error.flatten()
+    const authedReq = req as AuthenticatedRequest;
+    if (!(await requireAdminRole(authedReq, res))) {
+      return;
+    }
+
+    const chapterRows = await db
+      .select({
+        id: chapters.id,
+        title: chapters.title,
+        keyFormulas: revisionNotes.keyFormulas,
+        keyDefinitions: revisionNotes.keyDefinitions,
+        commonMistakes: revisionNotes.commonMistakes,
+        examTips: revisionNotes.examTips,
+      })
+      .from(chapters)
+      .leftJoin(revisionNotes, eq(revisionNotes.chapterId, chapters.id))
+      .where(eq(chapters.id, parsedParams.data.id))
+      .limit(1);
+
+    const chapter = chapterRows[0];
+    if (!chapter) {
+      res.status(404).json({
+        error: "Chapter not found",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      chapter: {
+        id: chapter.id,
+        title: chapter.title,
+      },
+      revisionNotes: {
+        keyFormulas: chapter.keyFormulas ?? [],
+        keyDefinitions: chapter.keyDefinitions ?? [],
+        commonMistakes: chapter.commonMistakes ?? "",
+        examTips: chapter.examTips ?? "",
+      },
     });
-    return;
   }
+);
 
-  const parsedBody = chapterRevisionNotesBodySchema.safeParse(req.body);
-  if (!parsedBody.success) {
-    res.status(400).json({
-      error: "Invalid revision notes payload",
-      details: parsedBody.error.flatten()
-    });
-    return;
-  }
+chaptersAdminRouter.post(
+  "/content/chapters/:id/revision-notes",
+  requireSession,
+  async (req, res) => {
+    const parsedParams = chapterParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+      res.status(400).json({
+        error: "Invalid chapter identifier",
+        details: parsedParams.error.flatten(),
+      });
+      return;
+    }
 
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
-    return;
-  }
+    const parsedBody = chapterRevisionNotesBodySchema.safeParse(req.body);
+    if (!parsedBody.success) {
+      res.status(400).json({
+        error: "Invalid revision notes payload",
+        details: parsedBody.error.flatten(),
+      });
+      return;
+    }
 
-  const actorId = authedReq.session.user.id;
-  const actorName = authedReq.session.user.name;
-  const action = "Update chapter revision notes";
-  const fallbackTarget = `Chapter #${parsedParams.data.id}`;
+    const authedReq = req as AuthenticatedRequest;
+    if (!(await requireAdminRole(authedReq, res))) {
+      return;
+    }
 
-  const chapterRows = await db
-    .select({
-      id: chapters.id,
-      title: chapters.title,
-      subjectId: chapters.subjectId,
-      subjectName: subjects.name
-    })
-    .from(chapters)
-    .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
-    .where(eq(chapters.id, parsedParams.data.id))
-    .limit(1);
+    const actorId = authedReq.session.user.id;
+    const actorName = authedReq.session.user.name;
+    const action = "Update chapter revision notes";
+    const fallbackTarget = `Chapter #${parsedParams.data.id}`;
 
-  const chapter = chapterRows[0];
-  if (!chapter) {
-    await persistAuditLog({
-      scope: "content",
-      action,
-      target: fallbackTarget,
-      status: "failed",
-      message: "Chapter not found",
-      actorId,
-      actorName
-    });
-    res.status(404).json({
-      error: "Chapter not found"
-    });
-    return;
-  }
+    const chapterRows = await db
+      .select({
+        id: chapters.id,
+        title: chapters.title,
+        subjectId: chapters.subjectId,
+        subjectName: subjects.name,
+      })
+      .from(chapters)
+      .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
+      .where(eq(chapters.id, parsedParams.data.id))
+      .limit(1);
 
-  const payload = {
-    keyFormulas: parsedBody.data.keyFormulas,
-    keyDefinitions: parsedBody.data.keyDefinitions,
-    commonMistakes: parsedBody.data.commonMistakes.trim() || null,
-    examTips: parsedBody.data.examTips.trim() || null
-  };
+    const chapter = chapterRows[0];
+    if (!chapter) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: fallbackTarget,
+        status: "failed",
+        message: "Chapter not found",
+        actorId,
+        actorName,
+      });
+      res.status(404).json({
+        error: "Chapter not found",
+      });
+      return;
+    }
 
-  const upsertedRows = await db
-    .insert(revisionNotes)
-    .values({
-      chapterId: chapter.id,
-      ...payload
-    })
-    .onConflictDoUpdate({
-      target: revisionNotes.chapterId,
-      set: payload
-    })
-    .returning({
-      keyFormulas: revisionNotes.keyFormulas,
-      keyDefinitions: revisionNotes.keyDefinitions,
-      commonMistakes: revisionNotes.commonMistakes,
-      examTips: revisionNotes.examTips
-    });
+    const payload = {
+      keyFormulas: parsedBody.data.keyFormulas,
+      keyDefinitions: parsedBody.data.keyDefinitions,
+      commonMistakes: parsedBody.data.commonMistakes.trim() || null,
+      examTips: parsedBody.data.examTips.trim() || null,
+    };
 
-  const updatedRevisionNotes = upsertedRows[0];
-  if (!updatedRevisionNotes) {
+    const upsertedRows = await db
+      .insert(revisionNotes)
+      .values({
+        chapterId: chapter.id,
+        ...payload,
+      })
+      .onConflictDoUpdate({
+        target: revisionNotes.chapterId,
+        set: payload,
+      })
+      .returning({
+        keyFormulas: revisionNotes.keyFormulas,
+        keyDefinitions: revisionNotes.keyDefinitions,
+        commonMistakes: revisionNotes.commonMistakes,
+        examTips: revisionNotes.examTips,
+      });
+
+    const updatedRevisionNotes = upsertedRows[0];
+    if (!updatedRevisionNotes) {
+      await persistAuditLog({
+        scope: "content",
+        action,
+        target: `${chapter.subjectName} / ${chapter.title}`,
+        status: "failed",
+        message: "Revision notes update failed",
+        actorId,
+        actorName,
+      });
+      res.status(500).json({
+        error: "Failed to update revision notes",
+      });
+      return;
+    }
+
+    await cacheService.delete(CacheKeys.chapterContent(chapter.id));
+
     await persistAuditLog({
       scope: "content",
       action,
       target: `${chapter.subjectName} / ${chapter.title}`,
-      status: "failed",
-      message: "Revision notes update failed",
+      status: "success",
+      message: "Updated chapter revision notes",
       actorId,
-      actorName
+      actorName,
     });
-    res.status(500).json({
-      error: "Failed to update revision notes"
+
+    res.status(200).json({
+      chapter: {
+        id: chapter.id,
+        title: chapter.title,
+      },
+      revisionNotes: {
+        keyFormulas: updatedRevisionNotes.keyFormulas ?? [],
+        keyDefinitions: updatedRevisionNotes.keyDefinitions ?? [],
+        commonMistakes: updatedRevisionNotes.commonMistakes ?? "",
+        examTips: updatedRevisionNotes.examTips ?? "",
+      },
+      timestamp: new Date().toISOString(),
     });
-    return;
   }
-
-  await cacheService.delete(CacheKeys.chapterContent(chapter.id));
-
-  await persistAuditLog({
-    scope: "content",
-    action,
-    target: `${chapter.subjectName} / ${chapter.title}`,
-    status: "success",
-    message: "Updated chapter revision notes",
-    actorId,
-    actorName
-  });
-
-  res.status(200).json({
-    chapter: {
-      id: chapter.id,
-      title: chapter.title
-    },
-    revisionNotes: {
-      keyFormulas: updatedRevisionNotes.keyFormulas ?? [],
-      keyDefinitions: updatedRevisionNotes.keyDefinitions ?? [],
-      commonMistakes: updatedRevisionNotes.commonMistakes ?? "",
-      examTips: updatedRevisionNotes.examTips ?? ""
-    },
-    timestamp: new Date().toISOString()
-  });
-});
+);
 
 chaptersAdminRouter.post("/content/chapters/:id/rename", requireSession, async (req, res) => {
   const parsedParams = chapterParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid chapter identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -1938,7 +1984,7 @@ chaptersAdminRouter.post("/content/chapters/:id/rename", requireSession, async (
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid chapter rename payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -1958,7 +2004,7 @@ chaptersAdminRouter.post("/content/chapters/:id/rename", requireSession, async (
       id: chapters.id,
       title: chapters.title,
       subjectId: chapters.subjectId,
-      subjectName: subjects.name
+      subjectName: subjects.name,
     })
     .from(chapters)
     .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
@@ -1973,10 +2019,10 @@ chaptersAdminRouter.post("/content/chapters/:id/rename", requireSession, async (
       status: "failed",
       message: "Chapter not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Chapter not found"
+      error: "Chapter not found",
     });
     return;
   }
@@ -1987,13 +2033,13 @@ chaptersAdminRouter.post("/content/chapters/:id/rename", requireSession, async (
     .update(chapters)
     .set({
       title: nextTitle,
-      slug: nextSlug
+      slug: nextSlug,
     })
     .where(eq(chapters.id, chapter.id))
     .returning({
       id: chapters.id,
       title: chapters.title,
-      slug: chapters.slug
+      slug: chapters.slug,
     });
   const updatedChapter = updatedRows[0];
   if (!updatedChapter) {
@@ -2004,24 +2050,24 @@ chaptersAdminRouter.post("/content/chapters/:id/rename", requireSession, async (
       status: "failed",
       message: "Chapter rename failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(500).json({
-      error: "Failed to rename chapter"
+      error: "Failed to rename chapter",
     });
     return;
   }
 
   await ensureChapterTitleAlias({
     chapterId: chapter.id,
-    aliasTitle: chapter.title
+    aliasTitle: chapter.title,
   });
   await ensureChapterTitleAlias({
     chapterId: chapter.id,
-    aliasTitle: updatedChapter.title
+    aliasTitle: updatedChapter.title,
   });
   await refreshLinksForChapterAliases({
-    chapterId: chapter.id
+    chapterId: chapter.id,
   });
 
   // Invalidate chapter content cache + chapter list for subject
@@ -2035,12 +2081,12 @@ chaptersAdminRouter.post("/content/chapters/:id/rename", requireSession, async (
     status: "success",
     message: `Renamed chapter to ${updatedChapter.title}`,
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
     chapter: updatedChapter,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -2049,7 +2095,7 @@ chaptersAdminRouter.post("/content/chapters/:id/publish", requireSession, async 
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid chapter identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -2058,7 +2104,7 @@ chaptersAdminRouter.post("/content/chapters/:id/publish", requireSession, async 
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid chapter publish payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -2078,7 +2124,7 @@ chaptersAdminRouter.post("/content/chapters/:id/publish", requireSession, async 
       id: chapters.id,
       title: chapters.title,
       subjectId: chapters.subjectId,
-      subjectName: subjects.name
+      subjectName: subjects.name,
     })
     .from(chapters)
     .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
@@ -2095,10 +2141,10 @@ chaptersAdminRouter.post("/content/chapters/:id/publish", requireSession, async 
       status: "failed",
       message,
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: message
+      error: message,
     });
     return;
   }
@@ -2106,12 +2152,12 @@ chaptersAdminRouter.post("/content/chapters/:id/publish", requireSession, async 
   const updatedRows = await db
     .update(chapters)
     .set({
-      isPublished: parsedBody.data.isPublished
+      isPublished: parsedBody.data.isPublished,
     })
     .where(eq(chapters.id, parsedParams.data.id))
     .returning({
       id: chapters.id,
-      isPublished: chapters.isPublished
+      isPublished: chapters.isPublished,
     });
 
   const updatedChapter = updatedRows[0];
@@ -2124,10 +2170,10 @@ chaptersAdminRouter.post("/content/chapters/:id/publish", requireSession, async 
       status: "failed",
       message,
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: message
+      error: message,
     });
     return;
   }
@@ -2142,13 +2188,15 @@ chaptersAdminRouter.post("/content/chapters/:id/publish", requireSession, async 
     action,
     target: `${chapterRow.subjectName} - ${chapterRow.title}`,
     status: "success",
-    message: parsedBody.data.isPublished ? "Chapter published successfully." : "Chapter unpublished successfully.",
+    message: parsedBody.data.isPublished
+      ? "Chapter published successfully."
+      : "Chapter unpublished successfully.",
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
     chapter: updatedChapter,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });

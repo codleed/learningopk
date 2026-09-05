@@ -27,7 +27,7 @@ const formatRelativeTime = (value: string): string => {
     return new Date(value).toLocaleString("en-US", {
       month: "short",
       day: "numeric",
-      year: "numeric"
+      year: "numeric",
     });
   }
   if (days > 0) {
@@ -49,7 +49,12 @@ type ForumReplyListProps = {
   isAuthenticated: boolean;
 };
 
-export function ForumReplyList({ threadId, replies, canMarkAccepted, isAuthenticated }: ForumReplyListProps) {
+export function ForumReplyList({
+  threadId,
+  replies,
+  canMarkAccepted,
+  isAuthenticated,
+}: ForumReplyListProps) {
   if (replies.length === 0) {
     return (
       <EmptyState
@@ -72,7 +77,7 @@ export function ForumReplyList({ threadId, replies, canMarkAccepted, isAuthentic
             "rounded-xl border bg-bg-surface overflow-hidden transition-colors",
             reply.isAcceptedAnswer
               ? "border-accent-success/40 ring-1 ring-accent-success/20"
-              : "border-border-default"
+              : "border-border-default",
           ].join(" ")}
         >
           {/* Accepted answer banner */}
@@ -124,21 +129,25 @@ export function ForumReplyList({ threadId, replies, canMarkAccepted, isAuthentic
                       "rounded-lg border p-4 transition-colors",
                       nestedReply.isAcceptedAnswer
                         ? "border-accent-success/30 bg-accent-success-light/50"
-                        : "border-border-default bg-bg-subtle/40"
+                        : "border-border-default bg-bg-subtle/40",
                     ].join(" ")}
                   >
                     {/* Nested accepted banner */}
                     {nestedReply.isAcceptedAnswer ? (
                       <div className="mb-2 flex items-center gap-1.5">
                         <CheckCircle className="h-3 w-3 text-accent-success" aria-hidden="true" />
-                        <span className="text-[10px] font-bold text-accent-success">Accepted Answer</span>
+                        <span className="text-[10px] font-bold text-accent-success">
+                          Accepted Answer
+                        </span>
                       </div>
                     ) : null}
 
                     {/* Author */}
                     <div className="flex items-center gap-2">
                       <Avatar name={nestedReply.userName} size="xs" />
-                      <span className="text-xs font-semibold text-text-primary">{nestedReply.userName}</span>
+                      <span className="text-xs font-semibold text-text-primary">
+                        {nestedReply.userName}
+                      </span>
                       <span className="inline-flex items-center gap-0.5 text-[10px] text-text-muted">
                         <Clock className="h-2.5 w-2.5" aria-hidden="true" />
                         {formatRelativeTime(nestedReply.createdAt)}

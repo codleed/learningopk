@@ -11,7 +11,7 @@ import {
   createAdminBackup,
   restoreAdminBackup,
   deleteAdminBackup,
-  type AdminBackupEntry
+  type AdminBackupEntry,
 } from "@/lib/admin-api";
 
 type AdminBackupPanelProps = {
@@ -37,7 +37,7 @@ function formatDate(iso: string): string {
     month: "short",
     day: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   });
 }
 
@@ -73,7 +73,7 @@ export function AdminBackupPanel({ initialBackups }: AdminBackupPanelProps) {
       pushToast({
         tone: "success",
         title: "Backup created",
-        description: `${result.backup.name} (${formatBytes(result.backup.sizeBytes)})`
+        description: `${result.backup.name} (${formatBytes(result.backup.sizeBytes)})`,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create backup.";
@@ -91,7 +91,7 @@ export function AdminBackupPanel({ initialBackups }: AdminBackupPanelProps) {
       pushToast({
         tone: "success",
         title: "Database restored",
-        description: `Successfully restored from "${name}".`
+        description: `Successfully restored from "${name}".`,
       });
       await refresh();
     } catch (error) {
@@ -110,7 +110,7 @@ export function AdminBackupPanel({ initialBackups }: AdminBackupPanelProps) {
       pushToast({
         tone: "success",
         title: "Backup deleted",
-        description: `"${name}" has been removed.`
+        description: `"${name}" has been removed.`,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to delete backup.";
@@ -128,7 +128,10 @@ export function AdminBackupPanel({ initialBackups }: AdminBackupPanelProps) {
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex-1">
-            <label htmlFor="backup-label" className="mb-1 block text-xs font-medium text-text-secondary">
+            <label
+              htmlFor="backup-label"
+              className="mb-1 block text-xs font-medium text-text-secondary"
+            >
               Label (optional)
             </label>
             <input
@@ -189,7 +192,9 @@ export function AdminBackupPanel({ initialBackups }: AdminBackupPanelProps) {
                       {backup.name}
                     </td>
                     <td className="py-2.5 pr-3">
-                      <Badge size="sm" variant="default">{formatBytes(backup.sizeBytes)}</Badge>
+                      <Badge size="sm" variant="default">
+                        {formatBytes(backup.sizeBytes)}
+                      </Badge>
                     </td>
                     <td className="py-2.5 pr-3 text-text-secondary whitespace-nowrap">
                       {formatDate(backup.createdAt)}
@@ -255,9 +260,16 @@ export function AdminBackupPanel({ initialBackups }: AdminBackupPanelProps) {
         description="Backups are stored as SQL dump files in the project's backups/ directory using PostgreSQL's pg_dump."
       >
         <ul className="list-inside list-disc space-y-1 text-sm text-text-secondary">
-          <li><strong>Backup</strong> creates a full SQL dump of all tables and data via Docker.</li>
-          <li><strong>Restore</strong> clears the database and replays the backup file. This is destructive — make sure you have a backup before restoring.</li>
-          <li><strong>Delete</strong> removes a backup file permanently from disk.</li>
+          <li>
+            <strong>Backup</strong> creates a full SQL dump of all tables and data via Docker.
+          </li>
+          <li>
+            <strong>Restore</strong> clears the database and replays the backup file. This is
+            destructive — make sure you have a backup before restoring.
+          </li>
+          <li>
+            <strong>Delete</strong> removes a backup file permanently from disk.
+          </li>
           <li>All operations are logged to the admin audit trail.</li>
         </ul>
       </SectionCard>

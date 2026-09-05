@@ -13,6 +13,7 @@
 ### Task 1: Add the failing add-form import workflow test
 
 **Files:**
+
 - Modify: `frontend/tests/e2e/admin-phase8-curriculum-builder.spec.ts`
 - Test: `frontend/tests/e2e/admin-phase8-curriculum-builder.spec.ts`
 
@@ -35,7 +36,7 @@ Use Playwright file upload with an in-memory file:
 await page.getByTestId("curriculum-chapter-markdown-input").setInputFiles({
   name: "chapter-add-summary.md",
   mimeType: "text/markdown",
-  buffer: Buffer.from("# Imported heading\n\nImported body.")
+  buffer: Buffer.from("# Imported heading\n\nImported body."),
 });
 ```
 
@@ -68,6 +69,7 @@ git commit -m "test: cover add chapter markdown import workflow"
 ### Task 2: Implement client-side Markdown import in the add form
 
 **Files:**
+
 - Modify: `frontend/components/admin/admin-curriculum-builder.tsx`
 
 **Step 1: Add minimal add-form state and refs for import tracking**
@@ -124,7 +126,12 @@ const importChapterMarkdown = async () => {
   }
 
   const hasTypedDraft = chapterSummary.trim().length > 0;
-  if (hasTypedDraft && !window.confirm("Importing a Markdown file will replace the current chapter summary draft. Continue?")) {
+  if (
+    hasTypedDraft &&
+    !window.confirm(
+      "Importing a Markdown file will replace the current chapter summary draft. Continue?"
+    )
+  ) {
     chapterMarkdownInputRef.current.value = "";
     return;
   }
@@ -154,6 +161,7 @@ git commit -m "feat: add add-form markdown import option"
 ### Task 3: Keep edit-mode import coverage green
 
 **Files:**
+
 - Verify: `frontend/tests/e2e/admin-phase8-curriculum-builder.spec.ts`
 - Verify: `frontend/components/admin/admin-curriculum-builder.tsx`
 
@@ -177,6 +185,7 @@ git commit -m "test: keep summary editor markdown import green"
 ### Task 4: Run regression verification
 
 **Files:**
+
 - Modify: `frontend/tests/e2e/admin-phase8-curriculum-builder.spec.ts` if any selector cleanup is needed
 - Verify: `frontend/components/admin/admin-curriculum-builder.tsx`
 

@@ -22,7 +22,9 @@ function generateInviteCode(): string {
 }
 
 function isUniqueViolation(err: unknown): boolean {
-  return typeof err === "object" && err !== null && (err as Record<string, unknown>).code === "23505";
+  return (
+    typeof err === "object" && err !== null && (err as Record<string, unknown>).code === "23505"
+  );
 }
 
 export class ClassroomRepository {
@@ -69,11 +71,7 @@ export class ClassroomRepository {
   }
 
   async getClassroomById(classroomId: number) {
-    const rows = await db
-      .select()
-      .from(classrooms)
-      .where(eq(classrooms.id, classroomId))
-      .limit(1);
+    const rows = await db.select().from(classrooms).where(eq(classrooms.id, classroomId)).limit(1);
     return rows[0] ?? null;
   }
 
@@ -126,7 +124,12 @@ export class ClassroomRepository {
   async removeStudent(classroomId: number, studentId: string) {
     await db
       .delete(classroomStudents)
-      .where(and(eq(classroomStudents.classroomId, classroomId), eq(classroomStudents.studentId, studentId)));
+      .where(
+        and(
+          eq(classroomStudents.classroomId, classroomId),
+          eq(classroomStudents.studentId, studentId)
+        )
+      );
   }
 
   async getStudents(classroomId: number) {
@@ -157,7 +160,12 @@ export class ClassroomRepository {
     const rows = await db
       .select({ id: classroomStudents.id })
       .from(classroomStudents)
-      .where(and(eq(classroomStudents.classroomId, classroomId), eq(classroomStudents.studentId, studentId)))
+      .where(
+        and(
+          eq(classroomStudents.classroomId, classroomId),
+          eq(classroomStudents.studentId, studentId)
+        )
+      )
       .limit(1);
     return rows.length > 0;
   }
@@ -170,12 +178,7 @@ export class ClassroomRepository {
       })
       .from(classroomStudents)
       .innerJoin(classrooms, eq(classroomStudents.classroomId, classrooms.id))
-      .where(
-        and(
-          eq(classroomStudents.studentId, studentId),
-          eq(classrooms.isActive, true)
-        )
-      )
+      .where(and(eq(classroomStudents.studentId, studentId), eq(classrooms.isActive, true)))
       .limit(1);
     return rows[0] ?? null;
   }
@@ -332,7 +335,12 @@ export class ClassroomRepository {
 
   // --- Announcements ---
 
-  async createAnnouncement(classroomId: number, teacherId: string, content: string, pinned = false) {
+  async createAnnouncement(
+    classroomId: number,
+    teacherId: string,
+    content: string,
+    pinned = false
+  ) {
     const inserted = await db
       .insert(classroomAnnouncements)
       .values({ classroomId, teacherId, content, pinned })
@@ -349,7 +357,11 @@ export class ClassroomRepository {
       .limit(limit);
   }
 
-  async deleteAnnouncement(announcementId: number, classroomId: number, teacherId: string): Promise<boolean> {
+  async deleteAnnouncement(
+    announcementId: number,
+    classroomId: number,
+    teacherId: string
+  ): Promise<boolean> {
     const result = await db
       .delete(classroomAnnouncements)
       .where(
@@ -384,7 +396,9 @@ export class ClassroomRepository {
         )
       )
       .groupBy(users.id)
-      .having(sql`coalesce(avg(${assignmentSubmissions.score} * 100.0 / nullif(${assignments.points}, 0)), 0) < 50`);
+      .having(
+        sql`coalesce(avg(${assignmentSubmissions.score} * 100.0 / nullif(${assignments.points}, 0)), 0) < 50`
+      );
 
     return lowScores;
   }

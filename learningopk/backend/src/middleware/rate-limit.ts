@@ -4,7 +4,7 @@ import { env } from "../lib/env.js";
 import { errorResponse } from "../lib/response.js";
 
 const redisClient = createClient({
-  url: env.REDIS_URL
+  url: env.REDIS_URL,
 });
 
 redisClient.on("error", (error) => {
@@ -71,7 +71,7 @@ export function createRateLimitMiddleware(config: RateLimitConfig) {
       if (current > maxRequests) {
         res.status(429).json(
           errorResponse("Too many requests. Please try again later.", "RATE_LIMIT_EXCEEDED", {
-            retryAfterSeconds: resetSeconds
+            retryAfterSeconds: resetSeconds,
           })
         );
         return;

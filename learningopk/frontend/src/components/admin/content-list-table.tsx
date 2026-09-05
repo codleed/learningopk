@@ -46,7 +46,7 @@ export function ContentListTable<T>({
   publishLabel,
   renderCustomAction,
   addHref,
-  addLabel = `Add ${title.replace(/s$/, '')}`,
+  addLabel = `Add ${title.replace(/s$/, "")}`,
   emptyMessage = `No ${title.toLowerCase()} found.`,
   loading = false,
   pagination,
@@ -54,15 +54,15 @@ export function ContentListTable<T>({
 }: ContentListTableProps<T>) {
   const totalPages = pagination ? Math.ceil(pagination.total / pagination.pageSize) : 1;
   const startItem = pagination ? (pagination.page - 1) * pagination.pageSize + 1 : 1;
-  const endItem = pagination ? Math.min(pagination.page * pagination.pageSize, pagination.total) : items.length;
+  const endItem = pagination
+    ? Math.min(pagination.page * pagination.pageSize, pagination.total)
+    : items.length;
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
-          {title}
-        </h2>
+        <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">{title}</h2>
         <Link
           href={addHref}
           className="inline-flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-light)]"
@@ -112,16 +112,18 @@ export function ContentListTable<T>({
               {items.map((item) => {
                 const itemId = getItemId(item);
                 return (
-                  <tr
-                    key={itemId}
-                    className="transition-colors hover:bg-[var(--bg-subtle)]"
-                  >
+                  <tr key={itemId} className="transition-colors hover:bg-[var(--bg-subtle)]">
                     {columns.map((col) => (
                       <td key={col.key} className={`px-4 py-3 text-sm ${col.className || ""}`}>
                         {col.render(item)}
                       </td>
                     ))}
-                    {(onEdit || editHref || onDelete || deleteHref || onPublish || renderCustomAction) && (
+                    {(onEdit ||
+                      editHref ||
+                      onDelete ||
+                      deleteHref ||
+                      onPublish ||
+                      renderCustomAction) && (
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {renderCustomAction ? (

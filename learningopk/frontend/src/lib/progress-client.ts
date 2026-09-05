@@ -45,9 +45,9 @@ export const trackProgressEvent = async (event: ProgressClientEvent): Promise<bo
       method: "POST",
       credentials: "include",
       headers: {
-        "content-type": "application/json"
+        "content-type": "application/json",
       },
-      body: JSON.stringify(event)
+      body: JSON.stringify(event),
     });
 
     if (!response.ok) {

@@ -4,7 +4,10 @@ const loginAsSeededAdmin = async (page: Page) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("admin@example.com");
   await page.getByLabel("Password").fill("password");
-  await Promise.all([page.waitForURL(/\/dashboard$/), page.getByRole("button", { name: "Sign in" }).click()]);
+  await Promise.all([
+    page.waitForURL(/\/dashboard$/),
+    page.getByRole("button", { name: "Sign in" }).click(),
+  ]);
 };
 
 test("admin command center renders live KPIs and recent activity", async ({ page }) => {
@@ -35,14 +38,17 @@ test("admin command center shows high-priority alerts and deep links", async ({ 
   await loginAsSeededAdmin(page);
 
   const api = await playwrightRequest.newContext({
-    storageState: await page.context().storageState()
+    storageState: await page.context().storageState(),
   });
   for (let index = 0; index < 5; index += 1) {
-    const response = await api.post("http://localhost:3001/api/admin/content/chapters/999999/publish", {
-      data: {
-        isPublished: true
+    const response = await api.post(
+      "http://localhost:3001/api/admin/content/chapters/999999/publish",
+      {
+        data: {
+          isPublished: true,
+        },
       }
-    });
+    );
     expect(response.status()).toBe(404);
   }
   await api.dispose();
@@ -57,6 +63,7 @@ test("admin command center shows high-priority alerts and deep links", async ({ 
 
   await page.goto("/admin");
   await page.getByTestId("admin-overview-activity-link").first().click();
-  await expect(page).toHaveURL(/\/admin\/(content|community|moderation|users|notifications|settings)/);
+  await expect(page).toHaveURL(
+    /\/admin\/(content|community|moderation|users|notifications|settings)/
+  );
 });
-

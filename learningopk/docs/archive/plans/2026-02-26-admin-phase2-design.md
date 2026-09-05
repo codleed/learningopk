@@ -1,6 +1,7 @@
 # Admin Phase 2 Design
 
 ## Context
+
 - Phase 1 shipped the admin shell, navigation, placeholder routes, and baseline admin e2e coverage.
 - Existing working admin workflows must be preserved:
   - `/admin/content` chapter publish flow
@@ -10,12 +11,14 @@
   - `/admin/users` as a read-only searchable directory
 
 ## Approved Direction
+
 - Approach: **Hybrid server prefetch + client panel controls**
 - Add backend APIs and persistence for moderation flags.
 - Use server component pages for initial data hydration (`cookies()` + admin API helpers).
 - Use client components for interactive filtering, pagination, and resolve actions.
 
 ## Goals
+
 - Deliver a working moderation lifecycle on `/admin/moderation`:
   - list paginated queue
   - filter by status (`open`, `resolved`)
@@ -33,6 +36,7 @@
   - topbar logout
 
 ## Non-goals
+
 - No analytics dashboard implementation.
 - No notification dispatch system.
 - No user mutation actions (role change, suspend/disable, bulk actions).
@@ -40,6 +44,7 @@
 - No behavior changes to `/admin/content` or `/admin/forum` beyond regression-safe integration.
 
 ## Data Model
+
 - Add enum `moderation_target_type`: `thread | reply | chapter`.
 - Add enum `moderation_status`: `open | resolved`.
 - Add table `moderation_flags`:
@@ -58,6 +63,7 @@
 - Seed deterministic fixture rows across target types and statuses for e2e stability.
 
 ## Admin Audit Logging
+
 - Extend `admin_audit_scope` to include `moderation` for explicit queue action attribution.
 - On successful resolve action, persist an `admin_audit_logs` row with:
   - `scope: moderation`
@@ -70,6 +76,7 @@
 ## Backend API Contracts
 
 ### GET `/api/admin/moderation/flags`
+
 - Query params:
   - `page` (default 1)
   - `pageSize` (default 20, bounded max)
@@ -85,6 +92,7 @@
   - `total`, `page`, `pageSize`, `hasMore`
 
 ### POST `/api/admin/moderation/flags/:id/resolve`
+
 - Body:
   - `note: string` (trimmed minimum 10 chars)
 - Auth requirements:
@@ -99,6 +107,7 @@
   - Persist audit log entry for successful resolve.
 
 ### GET `/api/admin/users`
+
 - Query params:
   - `page` (default 1)
   - `pageSize` (default 20, bounded max)
@@ -112,6 +121,7 @@
   - `total`, `page`, `pageSize`, `hasMore`
 
 ## Frontend Architecture
+
 - `frontend/lib/admin-api.ts`
   - add Zod schemas and typed helpers for:
     - moderation list fetch
@@ -132,6 +142,7 @@
 ## UI Behavior
 
 ### Moderation Queue
+
 - Controls:
   - status filter (`Open`, `Resolved`)
   - target type filter (`All`, `Thread`, `Reply`, `Chapter`)
@@ -149,6 +160,7 @@
   - keep row unchanged
 
 ### Users Directory
+
 - Controls:
   - text search (name/email)
   - role filter (all/admin/student)
@@ -159,11 +171,13 @@
   - no mutating controls in Phase 2
 
 ## Error and Empty States
+
 - Invalid request params show backend `400` responses and client-side error toast.
 - Empty filter/search results show explicit empty state copy (not blank table).
 - Data refresh failures preserve last known list data when possible.
 
 ## Testing Strategy (Test-First)
+
 - Backend integration tests (red first):
   - moderation list auth/role/status/target filters/pagination
   - moderation resolve auth/role/validation/not-found/already-resolved/success
@@ -181,6 +195,7 @@
   - keep smoke and existing student flows green
 
 ## Verification Targets
+
 - `pnpm --filter frontend typecheck`
 - `pnpm --filter frontend lint`
 - `pnpm --filter frontend test:e2e:smoke`
@@ -189,6 +204,7 @@
 - `pnpm --filter backend typecheck`
 
 ## Risks and Mitigations
+
 - Risk: moderation queue UI drift from existing admin panel interaction patterns.
   - Mitigation: reuse current panel patterns (refresh/load-more/toasts) and shared foundation components.
 - Risk: introducing new audit scope enum causes migration mismatch.

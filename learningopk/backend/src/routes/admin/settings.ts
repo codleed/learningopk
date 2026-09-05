@@ -9,30 +9,24 @@ import { persistAuditLog, type AdminAuditScope } from "./shared.js";
 
 const adminSettingsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).optional().default(20)
+  pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
 });
 
 const adminSettingsParamsSchema = z.object({
-  key: z.string().trim().min(1)
+  key: z.string().trim().min(1),
 });
 
 const adminSettingsUpdateBodySchema = z.object({
-  value: z.string().trim().min(1).max(2000)
+  value: z.string().trim().min(1).max(2000),
 });
 
 const updatableAdminSettingKeys = new Set([
   "forum_auto_lock_hours",
   "quiz_pass_threshold_percent",
-  "maintenance_banner_enabled"
+  "maintenance_banner_enabled",
 ]);
 
-const listAdminSettings = async ({
-  page,
-  pageSize
-}: {
-  page: number;
-  pageSize: number;
-}) => {
+const listAdminSettings = async ({ page, pageSize }: { page: number; pageSize: number }) => {
   const offset = (page - 1) * pageSize;
   const rows = await db
     .select({
@@ -41,7 +35,7 @@ const listAdminSettings = async ({
       description: adminSettings.description,
       updatedAt: adminSettings.updatedAt,
       updatedById: adminSettings.updatedBy,
-      updatedByName: users.name
+      updatedByName: users.name,
     })
     .from(adminSettings)
     .leftJoin(users, eq(adminSettings.updatedBy, users.id))
@@ -51,7 +45,7 @@ const listAdminSettings = async ({
 
   const totalRows = await db
     .select({
-      count: sql<number>`count(*)::int`
+      count: sql<number>`count(*)::int`,
     })
     .from(adminSettings);
   const total = totalRows[0]?.count ?? 0;
@@ -64,13 +58,13 @@ const listAdminSettings = async ({
       updatedBy: row.updatedById
         ? {
             id: row.updatedById,
-            name: row.updatedByName ?? "Unknown"
+            name: row.updatedByName ?? "Unknown",
           }
         : null,
-      updatedAt: row.updatedAt.toISOString()
+      updatedAt: row.updatedAt.toISOString(),
     })),
     total,
-    hasMore: offset + rows.length < total
+    hasMore: offset + rows.length < total,
   };
 };
 
@@ -86,7 +80,7 @@ settingsAdminRouter.get("/settings", requireSession, async (req, res) => {
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid settings query parameters",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
@@ -99,7 +93,7 @@ settingsAdminRouter.get("/settings", requireSession, async (req, res) => {
     total: payload.total,
     page,
     pageSize,
-    hasMore: payload.hasMore
+    hasMore: payload.hasMore,
   });
 });
 
@@ -113,7 +107,7 @@ settingsAdminRouter.post("/settings/:key", requireSession, async (req, res) => {
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid setting key",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -122,7 +116,7 @@ settingsAdminRouter.post("/settings/:key", requireSession, async (req, res) => {
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid setting update payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -130,7 +124,7 @@ settingsAdminRouter.post("/settings/:key", requireSession, async (req, res) => {
   const key = parsedParams.data.key.trim();
   if (!updatableAdminSettingKeys.has(key)) {
     res.status(404).json({
-      error: "Setting key not found"
+      error: "Setting key not found",
     });
     return;
   }
@@ -143,7 +137,7 @@ settingsAdminRouter.post("/settings/:key", requireSession, async (req, res) => {
     .set({
       value: parsedBody.data.value.trim(),
       updatedBy: actorId,
-      updatedAt: now
+      updatedAt: now,
     })
     .where(eq(adminSettings.key, key))
     .returning({
@@ -151,13 +145,13 @@ settingsAdminRouter.post("/settings/:key", requireSession, async (req, res) => {
       value: adminSettings.value,
       description: adminSettings.description,
       updatedBy: adminSettings.updatedBy,
-      updatedAt: adminSettings.updatedAt
+      updatedAt: adminSettings.updatedAt,
     });
 
   const updated = updatedRows[0];
   if (!updated) {
     res.status(404).json({
-      error: "Setting key not found"
+      error: "Setting key not found",
     });
     return;
   }
@@ -169,7 +163,7 @@ settingsAdminRouter.post("/settings/:key", requireSession, async (req, res) => {
     status: "success",
     message: `Updated ${key} to ${updated.value}`,
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
@@ -179,9 +173,9 @@ settingsAdminRouter.post("/settings/:key", requireSession, async (req, res) => {
       description: updated.description,
       updatedBy: {
         id: updated.updatedBy,
-        name: actorName
+        name: actorName,
       },
-      updatedAt: updated.updatedAt.toISOString()
-    }
+      updatedAt: updated.updatedAt.toISOString(),
+    },
   });
 });

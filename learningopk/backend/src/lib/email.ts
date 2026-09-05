@@ -3,9 +3,7 @@ import { Resend } from "resend";
 import { env } from "./env.js";
 import { logger } from "./logger.js";
 
-const resend = env.RESEND_API_KEY !== "not-configured"
-  ? new Resend(env.RESEND_API_KEY)
-  : null;
+const resend = env.RESEND_API_KEY !== "not-configured" ? new Resend(env.RESEND_API_KEY) : null;
 
 interface SendEmailParams {
   to: string;
@@ -16,7 +14,10 @@ interface SendEmailParams {
 
 export async function sendEmail(params: SendEmailParams): Promise<void> {
   if (!resend) {
-    logger.warn({ to: params.to, subject: params.subject }, "Email not sent — RESEND_API_KEY not configured");
+    logger.warn(
+      { to: params.to, subject: params.subject },
+      "Email not sent — RESEND_API_KEY not configured"
+    );
     return;
   }
 

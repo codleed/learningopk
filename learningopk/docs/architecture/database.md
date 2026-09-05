@@ -76,8 +76,7 @@ design the AI coder must implement.
 - question (text), option_a/b/c/d (text), correct_option (enum:
   a\|b\|c\|d)
 
-- explanation (text --- shown after answer), marks (integer, default
-  1)
+- explanation (text --- shown after answer), marks (integer, default 1)
 
 ### quiz_attempts
 
@@ -143,4 +142,3 @@ design the AI coder must implement.
   duration_minutes (integer), total_marks (integer)
 
 - Reuses quiz_questions table via quiz_id link
-

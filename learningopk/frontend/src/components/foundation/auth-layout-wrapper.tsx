@@ -75,16 +75,14 @@ export function AuthLayoutWrapper({
         id="main-content"
         className={cn(
           "min-h-screen min-w-0 pt-14 md:pt-0",
-          "transition-[margin-left,width] duration-300 ease-in-out",
+          "transition-[margin-left,width] duration-300 ease-in-out"
         )}
         style={{
           marginLeft: `var(--left-rail-width, ${LEFT_RAIL_COLLAPSED_WIDTH}px)`,
           width: `calc(100% - var(--left-rail-width, ${LEFT_RAIL_COLLAPSED_WIDTH}px))`,
         }}
       >
-        <div className={cn("pb-16 md:pb-4", className)}>
-          {children}
-        </div>
+        <div className={cn("pb-16 md:pb-4", className)}>{children}</div>
       </main>
     </div>
   );

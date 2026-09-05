@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 
-import { AdminPageHeader, ContentTabs, ContentStatsStrip, ContentListTable } from "@/components/admin";
+import {
+  AdminPageHeader,
+  ContentTabs,
+  ContentStatsStrip,
+  ContentListTable,
+} from "@/components/admin";
 import { deleteAdminCurriculumSubject } from "@/lib/admin-api";
 import type { AdminCurriculumBoard } from "@/lib/admin-api";
 

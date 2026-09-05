@@ -21,35 +21,46 @@ export default function AddFlashCardsPage() {
         />
       </StickyBreadcrumbWrapper>
 
-      <AdminPageHeader
-        title="Add Flash Cards"
-        subtitle="Coming Soon"
-      />
+      <AdminPageHeader title="Add Flash Cards" subtitle="Coming Soon" />
 
       <AdminFormCard>
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <div className="rounded-full bg-amber-100 p-4 mb-4">
             <AlertCircle className="h-8 w-8 text-amber-600" aria-hidden />
           </div>
-          
+
           <h3 className="font-heading text-lg font-semibold text-[var(--text-primary)] mb-2">
             Flash Card Management Not Available
           </h3>
-          
+
           <p className="text-sm text-[var(--text-secondary)] max-w-md mb-6">
-            The Flash Card API is not yet available. Backend API support is needed to enable flash card creation.
+            The Flash Card API is not yet available. Backend API support is needed to enable flash
+            card creation.
           </p>
 
           <div className="w-full max-w-md rounded-lg border border-amber-200 bg-amber-50 p-4 mb-6 text-left">
-            <h4 className="text-sm font-medium text-amber-800 mb-2">
-              Required API Endpoints
-            </h4>
+            <h4 className="text-sm font-medium text-amber-800 mb-2">Required API Endpoints</h4>
             <ul className="space-y-1 text-xs text-amber-700">
-              <li><code className="bg-amber-100 px-1 rounded">POST /api/flashcards</code> - Create flash card deck</li>
-              <li><code className="bg-amber-100 px-1 rounded">GET /api/flashcards</code> - List flash card decks</li>
-              <li><code className="bg-amber-100 px-1 rounded">GET /api/flashcards/:id</code> - Get flash card deck</li>
-              <li><code className="bg-amber-100 px-1 rounded">PUT /api/flashcards/:id</code> - Update flash card deck</li>
-              <li><code className="bg-amber-100 px-1 rounded">DELETE /api/flashcards/:id</code> - Delete flash card deck</li>
+              <li>
+                <code className="bg-amber-100 px-1 rounded">POST /api/flashcards</code> - Create
+                flash card deck
+              </li>
+              <li>
+                <code className="bg-amber-100 px-1 rounded">GET /api/flashcards</code> - List flash
+                card decks
+              </li>
+              <li>
+                <code className="bg-amber-100 px-1 rounded">GET /api/flashcards/:id</code> - Get
+                flash card deck
+              </li>
+              <li>
+                <code className="bg-amber-100 px-1 rounded">PUT /api/flashcards/:id</code> - Update
+                flash card deck
+              </li>
+              <li>
+                <code className="bg-amber-100 px-1 rounded">DELETE /api/flashcards/:id</code> -
+                Delete flash card deck
+              </li>
             </ul>
           </div>
 

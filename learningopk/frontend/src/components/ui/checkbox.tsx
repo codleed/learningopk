@@ -25,13 +25,14 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
         )}
         {...props}
       />
-      {(label || hint) ? (
+      {label || hint ? (
         <span>
-          {label ? <span className="block text-sm font-medium text-foreground">{label}</span> : null}
+          {label ? (
+            <span className="block text-sm font-medium text-foreground">{label}</span>
+          ) : null}
           {hint ? <span className="block text-xs text-muted-foreground">{hint}</span> : null}
         </span>
       ) : null}
     </label>
   );
 });
-

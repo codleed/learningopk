@@ -1,7 +1,12 @@
 import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "./db/index.js";
-import { chapterSubparts, userActivityLog, userProgress, userProgressSubparts } from "./db/schema.js";
+import {
+  chapterSubparts,
+  userActivityLog,
+  userProgress,
+  userProgressSubparts,
+} from "./db/schema.js";
 import { isMissingOptionalDbFeatureError } from "./db-schema-compat.js";
 import { studyGroupsService } from "../services/study-groups.service.js";
 
@@ -82,7 +87,7 @@ const selectProgressById = async (id: number): Promise<ProgressSnapshot | null> 
       exercisesViewed: userProgress.exercisesViewed,
       flashcardsCompleted: userProgress.flashcardsCompleted,
       quizBestScore: userProgress.quizBestScore,
-      quizAttemptsCount: userProgress.quizAttemptsCount
+      quizAttemptsCount: userProgress.quizAttemptsCount,
     })
     .from(userProgress)
     .where(eq(userProgress.id, id))
@@ -91,11 +96,14 @@ const selectProgressById = async (id: number): Promise<ProgressSnapshot | null> 
   return rows[0] ?? null;
 };
 
-const logActivityEvent = async (userId: string, eventType: ProgressEventInput["eventType"], chapterId: number, occurredAt: Date): Promise<void> => {
+const logActivityEvent = async (
+  userId: string,
+  eventType: ProgressEventInput["eventType"],
+  chapterId: number,
+  occurredAt: Date
+): Promise<void> => {
   try {
-    await db
-      .insert(userActivityLog)
-      .values({ userId, eventType, chapterId, occurredAt });
+    await db.insert(userActivityLog).values({ userId, eventType, chapterId, occurredAt });
   } catch (error) {
     if (!isMissingOptionalDbFeatureError(error)) {
       throw error;
@@ -112,7 +120,7 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
       quizBestScore: userProgress.quizBestScore,
       quizAttemptsCount: userProgress.quizAttemptsCount,
       exercisesViewed: userProgress.exercisesViewed,
-      subpartsReadCount: userProgress.subpartsReadCount
+      subpartsReadCount: userProgress.subpartsReadCount,
     })
     .from(userProgress)
     .where(and(eq(userProgress.userId, input.userId), eq(userProgress.chapterId, input.chapterId)))
@@ -123,7 +131,7 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
   const computeSummaryRead = async ({
     chapterId,
     userId,
-    tx
+    tx,
   }: {
     chapterId: number;
     userId: string;
@@ -131,7 +139,7 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
   }): Promise<{ summaryRead: boolean; subpartsReadCount: number }> => {
     const totalSubpartsRows = await tx
       .select({
-        count: chapterSubparts.id
+        count: chapterSubparts.id,
       })
       .from(chapterSubparts)
       .where(eq(chapterSubparts.chapterId, chapterId));
@@ -139,15 +147,17 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
 
     const readSubpartsRows = await tx
       .select({
-        subpartId: userProgressSubparts.subpartId
+        subpartId: userProgressSubparts.subpartId,
       })
       .from(userProgressSubparts)
-      .where(and(eq(userProgressSubparts.userId, userId), eq(userProgressSubparts.chapterId, chapterId)));
+      .where(
+        and(eq(userProgressSubparts.userId, userId), eq(userProgressSubparts.chapterId, chapterId))
+      );
     const subpartsReadCount = readSubpartsRows.length;
 
     return {
       summaryRead: totalSubparts > 0 && subpartsReadCount >= totalSubparts,
-      subpartsReadCount
+      subpartsReadCount,
     };
   };
 
@@ -156,7 +166,7 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
       const chapterSubpartRows = await tx
         .select({
           id: chapterSubparts.id,
-          chapterId: chapterSubparts.chapterId
+          chapterId: chapterSubparts.chapterId,
         })
         .from(chapterSubparts)
         .where(eq(chapterSubparts.id, input.subpartId))
@@ -177,10 +187,10 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
           exercisesViewed: 0,
           flashcardsCompleted: false,
           quizBestScore: 0,
-          quizAttemptsCount: 0
+          quizAttemptsCount: 0,
         })
         .onConflictDoNothing({
-          target: [userProgress.userId, userProgress.chapterId]
+          target: [userProgress.userId, userProgress.chapterId],
         });
 
       const lockedProgressRows = await tx.execute<{
@@ -205,13 +215,13 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
           userId: input.userId,
           chapterId: input.chapterId,
           subpartId: input.subpartId,
-          readAt: occurredAt
+          readAt: occurredAt,
         })
         .onConflictDoNothing({
-          target: [userProgressSubparts.userId, userProgressSubparts.subpartId]
+          target: [userProgressSubparts.userId, userProgressSubparts.subpartId],
         })
         .returning({
-          subpartId: userProgressSubparts.subpartId
+          subpartId: userProgressSubparts.subpartId,
         });
 
       const isNewRead = insertedSubpartRows.length > 0;
@@ -220,11 +230,11 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
         ? await computeSummaryRead({
             chapterId: input.chapterId,
             userId: input.userId,
-            tx
+            tx,
           })
         : {
             summaryRead: lockedProgress.summary_read,
-            subpartsReadCount: lockedProgress.subparts_read_count
+            subpartsReadCount: lockedProgress.subparts_read_count,
           };
 
       const updatedRows = await tx
@@ -232,11 +242,11 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
         .set({
           visitedAt: occurredAt,
           summaryRead,
-          subpartsReadCount
+          subpartsReadCount,
         })
         .where(eq(userProgress.id, lockedProgress.id))
         .returning({
-          id: userProgress.id
+          id: userProgress.id,
         });
 
       const updated = updatedRows[0];
@@ -272,7 +282,7 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
       exercisesViewed: 0,
       flashcardsCompleted: false,
       quizBestScore: input.score,
-      quizAttemptsCount: 1
+      quizAttemptsCount: 1,
     };
   }
 
@@ -288,10 +298,10 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
         exercisesViewed: input.eventType === "exercise_view" ? 1 : 0,
         flashcardsCompleted: input.eventType === "flashcard_complete",
         quizBestScore: input.eventType === "quiz_submit" ? input.score : 0,
-        quizAttemptsCount: input.eventType === "quiz_submit" ? 1 : 0
+        quizAttemptsCount: input.eventType === "quiz_submit" ? 1 : 0,
       })
       .returning({
-        id: userProgress.id
+        id: userProgress.id,
       });
 
     const inserted = insertedRows[0];
@@ -313,7 +323,7 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
     await db
       .update(userProgress)
       .set({
-        visitedAt: occurredAt
+        visitedAt: occurredAt,
       })
       .where(eq(userProgress.id, existing.id));
   } else if (input.eventType === "summary_read") {
@@ -321,7 +331,7 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
       .update(userProgress)
       .set({
         visitedAt: occurredAt,
-        summaryRead: true
+        summaryRead: true,
       })
       .where(eq(userProgress.id, existing.id));
   } else if (input.eventType === "exercise_view") {
@@ -329,7 +339,7 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
       .update(userProgress)
       .set({
         visitedAt: occurredAt,
-        exercisesViewed: existing.exercisesViewed + 1
+        exercisesViewed: existing.exercisesViewed + 1,
       })
       .where(eq(userProgress.id, existing.id));
   } else if (input.eventType === "flashcard_complete") {
@@ -337,7 +347,7 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
       .update(userProgress)
       .set({
         visitedAt: occurredAt,
-        flashcardsCompleted: true
+        flashcardsCompleted: true,
       })
       .where(eq(userProgress.id, existing.id));
   } else {
@@ -346,7 +356,7 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
       .set({
         visitedAt: occurredAt,
         quizBestScore: Math.max(existing.quizBestScore, input.score),
-        quizAttemptsCount: existing.quizAttemptsCount + 1
+        quizAttemptsCount: existing.quizAttemptsCount + 1,
       })
       .where(eq(userProgress.id, existing.id));
   }
@@ -361,7 +371,7 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
   if (input.eventType === "quiz_submit") {
     await studyGroupsService.recordQuizScore({
       userId: input.userId,
-      chapterId: input.chapterId
+      chapterId: input.chapterId,
     });
   }
 

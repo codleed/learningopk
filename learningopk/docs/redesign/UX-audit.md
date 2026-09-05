@@ -1,9 +1,11 @@
 # LearningoPK UX Audit & Redesign
 
 ## Date
+
 2026-03-25
 
 ## Auditor
+
 UX Architecture Review
 
 ---
@@ -28,6 +30,7 @@ UX Architecture Review
 ```
 
 **Issues Found:**
+
 - No clear "getting started" flow for new users
 - Dashboard shows empty state without guidance
 - Subject selection is a separate route instead of nested navigation
@@ -51,6 +54,7 @@ UX Architecture Review
 ```
 
 **Issues Found:**
+
 - Multiple ways to reach same content (dashboard/subjects AND learn routes)
 - AI chat is hidden inside exercise accordion
 - Quiz flow doesn't save progress on exit
@@ -70,6 +74,7 @@ UX Architecture Review
 ```
 
 **Issues Found:**
+
 - AI Tutor is a separate page AND inline panel - inconsistent
 - No way to tell if AI is available
 - Conversation history not persisted across sessions
@@ -89,6 +94,7 @@ UX Architecture Review
 ```
 
 **Issues Found:**
+
 - Forum has no connection to learning content (can't reference a chapter)
 - Create thread is a modal, not a dedicated page
 - No search within forum
@@ -110,6 +116,7 @@ UX Architecture Review
 ```
 
 **Issues Found:**
+
 - Friend search results show minimal info
 - Chat is disconnected from forum (different contexts)
 - No online/offline indicators
@@ -118,16 +125,16 @@ UX Architecture Review
 
 ## Screen State Matrix
 
-| View | Empty State | Loading State | Error State | Success State | Edge Cases |
-|------|-------------|--------------|-------------|---------------|------------|
-| Dashboard | "Start by selecting a subject" with CTA | Skeleton cards | "Failed to load" + retry | Weekly progress shown | Zero activity, streak at 0 |
-| Subjects List | "No subjects available" | Skeleton list | "Couldn't load subjects" | Subject grid with progress | Subjects without chapters |
-| Chapter | "No exercises yet" | Skeleton exercises | "Failed to load chapter" | Exercise list with AI | Exercises without solutions |
-| Quiz Runner | N/A | "Preparing quiz..." | "Quiz unavailable" | Score + review | Time expired, partial complete |
-| AI Tutor | "Ask a question to begin" | Streaming dots animation | "AI unavailable, try again" | Response displayed | Rate limited, long response |
-| Forum | "Be the first to start a discussion" | Skeleton threads | "Couldn't load forum" | Thread list | Locked threads, deleted content |
-| Friends | "Find friends to study with" | Skeleton cards | "Couldn't load friends" | Friend list | Blocked users, pending requests |
-| Messages | "No conversations yet" | Skeleton list | "Couldn't load messages" | Conversation list | Blocked sender, archived chat |
+| View          | Empty State                             | Loading State            | Error State                 | Success State              | Edge Cases                      |
+| ------------- | --------------------------------------- | ------------------------ | --------------------------- | -------------------------- | ------------------------------- |
+| Dashboard     | "Start by selecting a subject" with CTA | Skeleton cards           | "Failed to load" + retry    | Weekly progress shown      | Zero activity, streak at 0      |
+| Subjects List | "No subjects available"                 | Skeleton list            | "Couldn't load subjects"    | Subject grid with progress | Subjects without chapters       |
+| Chapter       | "No exercises yet"                      | Skeleton exercises       | "Failed to load chapter"    | Exercise list with AI      | Exercises without solutions     |
+| Quiz Runner   | N/A                                     | "Preparing quiz..."      | "Quiz unavailable"          | Score + review             | Time expired, partial complete  |
+| AI Tutor      | "Ask a question to begin"               | Streaming dots animation | "AI unavailable, try again" | Response displayed         | Rate limited, long response     |
+| Forum         | "Be the first to start a discussion"    | Skeleton threads         | "Couldn't load forum"       | Thread list                | Locked threads, deleted content |
+| Friends       | "Find friends to study with"            | Skeleton cards           | "Couldn't load friends"     | Friend list                | Blocked users, pending requests |
+| Messages      | "No conversations yet"                  | Skeleton list            | "Couldn't load messages"    | Conversation list          | Blocked sender, archived chat   |
 
 ---
 
@@ -259,22 +266,27 @@ Root Layout
 ## Recommended Improvements
 
 ### 1. Unified Shell Pattern
+
 All authenticated routes should use the same shell pattern with:
+
 - Consistent sidebar navigation
 - Same header structure
 - Unified breadcrumb system
 
 ### 2. Consistent Route Grouping
+
 - Merge `/dashboard/subjects` and `/subjects` into single `/learn`
 - Move settings under main app shell
 - Integrate AI tutor as slide-over panel OR dedicated page (not both)
 
 ### 3. State Recovery
+
 - Quiz progress: auto-save to localStorage + server
 - Form drafts: preserve across navigation
 - Search queries: persist in URL
 
 ### 4. Progressive Disclosure
+
 - Dashboard: Show 3-4 key actions, hide advanced features
 - Chapter view: Exercise accordion collapsed by default
 - Forum: Simple thread list, expand for full view
@@ -284,25 +296,28 @@ All authenticated routes should use the same shell pattern with:
 ## Component-Specific Recommendations
 
 ### Dashboard Components
-| Component | Issue | Recommendation |
-|-----------|-------|----------------|
-| `DashboardClient.tsx` | Complex stagger animation | Simplify, use CSS |
-| `welcome-card.tsx` | Static content | Add quick actions |
-| `streak-card.tsx` | No explanation | Add streak tips |
-| `weekly-activity-heatmap.tsx` | Unclear data | Add hover explanations |
+
+| Component                     | Issue                     | Recommendation         |
+| ----------------------------- | ------------------------- | ---------------------- |
+| `DashboardClient.tsx`         | Complex stagger animation | Simplify, use CSS      |
+| `welcome-card.tsx`            | Static content            | Add quick actions      |
+| `streak-card.tsx`             | No explanation            | Add streak tips        |
+| `weekly-activity-heatmap.tsx` | Unclear data              | Add hover explanations |
 
 ### Learn Components
-| Component | Issue | Recommendation |
-|-----------|-------|----------------|
-| `chapter-exercises-with-ai.tsx` | AI hidden | Make AI more prominent |
-| `exercise-accordion.tsx` | Many clicks | Default expand first |
-| `quiz-runner.tsx` | No progress save | Add auto-save |
+
+| Component                       | Issue            | Recommendation         |
+| ------------------------------- | ---------------- | ---------------------- |
+| `chapter-exercises-with-ai.tsx` | AI hidden        | Make AI more prominent |
+| `exercise-accordion.tsx`        | Many clicks      | Default expand first   |
+| `quiz-runner.tsx`               | No progress save | Add auto-save          |
 
 ### Forum Components
-| Component | Issue | Recommendation |
-|-----------|-------|----------------|
-| `forum/page.tsx` | No search | Add search bar |
-| Thread creation | Modal vs page | Use dedicated page |
+
+| Component        | Issue         | Recommendation     |
+| ---------------- | ------------- | ------------------ |
+| `forum/page.tsx` | No search     | Add search bar     |
+| Thread creation  | Modal vs page | Use dedicated page |
 
 ---
 

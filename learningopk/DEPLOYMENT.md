@@ -60,19 +60,19 @@ Go to **AWS Console → EC2 → Security Groups** (left sidebar under "Network &
 
 Click **Create security group**.
 
-| Field | Value |
-|---|---|
-| Security group name | `learningopk-ec2` |
-| Description | `Allow SSH, HTTP, HTTPS to EC2 instance` |
-| VPC | (use default VPC) |
+| Field               | Value                                    |
+| ------------------- | ---------------------------------------- |
+| Security group name | `learningopk-ec2`                        |
+| Description         | `Allow SSH, HTTP, HTTPS to EC2 instance` |
+| VPC                 | (use default VPC)                        |
 
 Add **inbound rules**:
 
-| Type | Protocol | Port range | Source | Description |
-|---|---|---|---|---|
-| SSH | TCP | 22 | 0.0.0.0/0 | Remote SSH access |
-| HTTP | TCP | 80 | 0.0.0.0/0 | Nginx HTTP |
-| HTTPS | TCP | 443 | 0.0.0.0/0 | Nginx HTTPS |
+| Type  | Protocol | Port range | Source    | Description       |
+| ----- | -------- | ---------- | --------- | ----------------- |
+| SSH   | TCP      | 22         | 0.0.0.0/0 | Remote SSH access |
+| HTTP  | TCP      | 80         | 0.0.0.0/0 | Nginx HTTP        |
+| HTTPS | TCP      | 443        | 0.0.0.0/0 | Nginx HTTPS       |
 
 Click **Create security group**.
 
@@ -80,17 +80,17 @@ Click **Create security group**.
 
 Click **Create security group**.
 
-| Field | Value |
-|---|---|
-| Security group name | `learningopk-rds` |
-| Description | `Allow PostgreSQL from EC2` |
-| VPC | (use default VPC) |
+| Field               | Value                       |
+| ------------------- | --------------------------- |
+| Security group name | `learningopk-rds`           |
+| Description         | `Allow PostgreSQL from EC2` |
+| VPC                 | (use default VPC)           |
 
 Add **inbound rules**:
 
-| Type | Protocol | Port range | Source | Description |
-|---|---|---|---|---|
-| PostgreSQL | TCP | 5432 | `learningopk-ec2` (select from dropdown) | EC2 to RDS |
+| Type       | Protocol | Port range | Source                                   | Description |
+| ---------- | -------- | ---------- | ---------------------------------------- | ----------- |
+| PostgreSQL | TCP      | 5432       | `learningopk-ec2` (select from dropdown) | EC2 to RDS  |
 
 Click **Create security group**.
 
@@ -98,18 +98,18 @@ Click **Create security group**.
 
 Click **Create security group**.
 
-| Field | Value |
-|---|---|
-| Security group name | `learningopk-redis` |
-| Description | `Allow Redis from EC2` |
-| VPC | (use default VPC) |
+| Field               | Value                  |
+| ------------------- | ---------------------- |
+| Security group name | `learningopk-redis`    |
+| Description         | `Allow Redis from EC2` |
+| VPC                 | (use default VPC)      |
 
 Add **inbound rules**:
 
-| Type | Protocol | Port range | Source | Description |
-|---|---|---|---|---|
-| Custom TCP | TCP | 6379 | `learningopk-redis` (security group itself) | Redis cluster communication |
-| Custom TCP | TCP | 6379 | `learningopk-ec2` (select from dropdown) | EC2 to Redis |
+| Type       | Protocol | Port range | Source                                      | Description                 |
+| ---------- | -------- | ---------- | ------------------------------------------- | --------------------------- |
+| Custom TCP | TCP      | 6379       | `learningopk-redis` (security group itself) | Redis cluster communication |
+| Custom TCP | TCP      | 6379       | `learningopk-ec2` (select from dropdown)    | EC2 to Redis                |
 
 Click **Create security group**.
 
@@ -119,41 +119,41 @@ Go to **AWS Console → RDS → Databases → Create database**.
 
 #### 1.2.1 Configuration
 
-| Setting | Value |
-|---|---|
-| Engine type | PostgreSQL |
-| Engine version | PostgreSQL 16.x (latest available) |
-| Templates | Free tier |
-| DB instance identifier | `learningopk-db` |
-| Master username | `postgres` |
-| Master password | Choose a strong password (save it somewhere secure) |
-| Confirm password | Re-enter the password |
-| DB instance class | `db.t3.micro` |
-| Storage type | General Purpose SSD (gp2) |
-| Allocated storage | 20 GiB |
-| Enable storage autoscaling | Uncheck (or leave off for free tier) |
+| Setting                    | Value                                               |
+| -------------------------- | --------------------------------------------------- |
+| Engine type                | PostgreSQL                                          |
+| Engine version             | PostgreSQL 16.x (latest available)                  |
+| Templates                  | Free tier                                           |
+| DB instance identifier     | `learningopk-db`                                    |
+| Master username            | `postgres`                                          |
+| Master password            | Choose a strong password (save it somewhere secure) |
+| Confirm password           | Re-enter the password                               |
+| DB instance class          | `db.t3.micro`                                       |
+| Storage type               | General Purpose SSD (gp2)                           |
+| Allocated storage          | 20 GiB                                              |
+| Enable storage autoscaling | Uncheck (or leave off for free tier)                |
 
 #### 1.2.2 Connectivity
 
-| Setting | Value |
-|---|---|
-| Compute resource | Don't connect to an EC2 compute resource |
-| VPC | (default VPC) |
-| Public access | **No** (the database should only be reachable from EC2) |
-| VPC security group | Select **`learningopk-rds`** (uncheck the default one) |
-| Availability Zone | No preference |
-| Database port | 5432 (default) |
+| Setting            | Value                                                   |
+| ------------------ | ------------------------------------------------------- |
+| Compute resource   | Don't connect to an EC2 compute resource                |
+| VPC                | (default VPC)                                           |
+| Public access      | **No** (the database should only be reachable from EC2) |
+| VPC security group | Select **`learningopk-rds`** (uncheck the default one)  |
+| Availability Zone  | No preference                                           |
+| Database port      | 5432 (default)                                          |
 
 #### 1.2.3 Database Options
 
-| Setting | Value |
-|---|---|
-| Initial database name | `learningo` |
-| DB parameter group | (default) |
-| Enable automated backups | Uncheck (free tier; you can enable for ~$0) |
-| Enable encryption | Uncheck (free tier) |
-| Enable deletion protection | Uncheck (you can enable later) |
-| Maintenance | (keep defaults) |
+| Setting                    | Value                                       |
+| -------------------------- | ------------------------------------------- |
+| Initial database name      | `learningo`                                 |
+| DB parameter group         | (default)                                   |
+| Enable automated backups   | Uncheck (free tier; you can enable for ~$0) |
+| Enable encryption          | Uncheck (free tier)                         |
+| Enable deletion protection | Uncheck (you can enable later)              |
+| Maintenance                | (keep defaults)                             |
 
 Click **Create database**. Creation takes 5-10 minutes.
 
@@ -177,36 +177,36 @@ Go to **AWS Console → ElastiCache → Redis caches → Create**.
 
 #### 1.3.1 Configuration
 
-| Setting | Value |
-|---|---|
-| Creation method | Design your own cache |
-| Cluster mode | Disabled |
-| Location | AWS Cloud |
-| Name | `learningopk-redis` |
-| Description | `LearningoPK session cache` |
-| Engine version | 7.x (latest available) |
-| Port | 6379 |
-| Node type | `cache.t3.micro` |
+| Setting            | Value                         |
+| ------------------ | ----------------------------- |
+| Creation method    | Design your own cache         |
+| Cluster mode       | Disabled                      |
+| Location           | AWS Cloud                     |
+| Name               | `learningopk-redis`           |
+| Description        | `LearningoPK session cache`   |
+| Engine version     | 7.x (latest available)        |
+| Port               | 6379                          |
+| Node type          | `cache.t3.micro`              |
 | Number of replicas | 0 (no replicas for free tier) |
 
 #### 1.3.2 Connectivity
 
-| Setting | Value |
-|---|---|
-| Network type | IPv4 |
-| Advanced VPC settings | (keep defaults) |
-| Subnet group | Create new or use existing default |
-| Selected security groups | Select **`learningopk-redis`** |
+| Setting                  | Value                              |
+| ------------------------ | ---------------------------------- |
+| Network type             | IPv4                               |
+| Advanced VPC settings    | (keep defaults)                    |
+| Subnet group             | Create new or use existing default |
+| Selected security groups | Select **`learningopk-redis`**     |
 
 #### 1.3.3 Advanced Settings
 
-| Setting | Value |
-|---|---|
-| Encryption at rest | Uncheck (free tier) |
+| Setting               | Value                                            |
+| --------------------- | ------------------------------------------------ |
+| Encryption at rest    | Uncheck (free tier)                              |
 | Encryption in transit | Uncheck (free tier; our VPC traffic is internal) |
-| Automatic backups | Uncheck |
-| Maintenance window | No preference |
-| Logs | (keep defaults) |
+| Automatic backups     | Uncheck                                          |
+| Maintenance window    | No preference                                    |
+| Logs                  | (keep defaults)                                  |
 
 Click **Create**. Creation takes 5-10 minutes.
 
@@ -227,18 +227,18 @@ Go to **AWS Console → S3 → Create bucket**.
 
 #### 1.4.1 Bucket Configuration
 
-| Setting | Value |
-|---|---|
-| Bucket name | Choose a globally unique name, e.g. `learningopk-media-<random>` |
-| AWS Region | Same region as EC2/RDS/ElastiCache |
-| Object Ownership | ACLs disabled (recommended) |
+| Setting          | Value                                                            |
+| ---------------- | ---------------------------------------------------------------- |
+| Bucket name      | Choose a globally unique name, e.g. `learningopk-media-<random>` |
+| AWS Region       | Same region as EC2/RDS/ElastiCache                               |
+| Object Ownership | ACLs disabled (recommended)                                      |
 
 #### 1.4.2 Public Access Settings
 
-| Setting | Value |
-|---|---|
+| Setting                 | Value                                                       |
+| ----------------------- | ----------------------------------------------------------- |
 | Block all public access | **Uncheck** (we need public read access for uploaded media) |
-| I acknowledge... | Check the box |
+| I acknowledge...        | Check the box                                               |
 
 Click **Create bucket**.
 
@@ -269,10 +269,10 @@ Click **Save changes**.
 
 Go to **AWS Console → IAM → Users → Create user**.
 
-| Setting | Value |
-|---|---|
-| User name | `learningopk-s3-access` |
-| Provide user access to AWS Console | Uncheck |
+| Setting                            | Value                   |
+| ---------------------------------- | ----------------------- |
+| User name                          | `learningopk-s3-access` |
+| Provide user access to AWS Console | Uncheck                 |
 
 Click **Next**.
 
@@ -284,18 +284,20 @@ Click **Next**, then **Create user**.
 
 Click on the user `learningopk-s3-access` → **Security credentials** tab → **Create access key**.
 
-| Setting | Value |
-|---|---|
-| Use case | Application running outside AWS |
-| Description tag | `LearningoPK S3 Access` |
+| Setting         | Value                           |
+| --------------- | ------------------------------- |
+| Use case        | Application running outside AWS |
+| Description tag | `LearningoPK S3 Access`         |
 
 Click **Create access key**.
 
 Save these values immediately (you cannot see the secret key again):
+
 - **Access Key ID**: e.g., `AKIAIOSFODNN7EXAMPLE`
 - **Secret Access Key**: e.g., `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY`
 
 Enter the above in your `.env` as:
+
 ```
 MINIO_ACCESS_KEY=<access-key-id>
 MINIO_SECRET_KEY=<secret-access-key>
@@ -304,6 +306,7 @@ MINIO_SECRET_KEY=<secret-access-key>
 ---
 
 **S3 Summary** — Save these values for the `.env` file:
+
 - **S3 Bucket Name**: e.g., `learningopk-media-abc123`
 - **S3 Region**: e.g., `us-east-1`
 - **S3 Access Key ID**: `AKIAIOSFODNN7EXAMPLE`
@@ -315,20 +318,20 @@ Go to **AWS Console → EC2 → Instances → Launch an instance**.
 
 #### 1.5.1 Instance Configuration
 
-| Setting | Value |
-|---|---|
-| Name | `learningopk-backend` |
+| Setting              | Value                                          |
+| -------------------- | ---------------------------------------------- |
+| Name                 | `learningopk-backend`                          |
 | Application/OS Image | Ubuntu Server 24.04 LTS (HVM), SSD Volume Type |
-| Architecture | 64-bit (x86) |
-| Instance type | `t2.micro` (free tier eligible) |
-| Key pair (login) | Click **Create new key pair** |
+| Architecture         | 64-bit (x86)                                   |
+| Instance type        | `t2.micro` (free tier eligible)                |
+| Key pair (login)     | Click **Create new key pair**                  |
 
 Key pair creation dialog:
 
-| Setting | Value |
-|---|---|
-| Key pair name | `learningopk` |
-| Key pair type | RSA |
+| Setting                 | Value                          |
+| ----------------------- | ------------------------------ |
+| Key pair name           | `learningopk`                  |
+| Key pair type           | RSA                            |
 | Private key file format | `.pem` (for OpenSSH/Linux/Mac) |
 
 The `.pem` file will download automatically. Save it to a secure location on your local machine (e.g., `~/.ssh/learningopk.pem` or `C:\Users\<you>\.ssh\learningopk.pem`).
@@ -337,21 +340,21 @@ The `.pem` file will download automatically. Save it to a secure location on you
 
 Click **Edit** on the Network settings.
 
-| Setting | Value |
-|---|---|
-| VPC | (default VPC) |
-| Subnet | (no preference) |
-| Auto-assign public IP | **Enable** |
+| Setting                    | Value                              |
+| -------------------------- | ---------------------------------- |
+| VPC                        | (default VPC)                      |
+| Subnet                     | (no preference)                    |
+| Auto-assign public IP      | **Enable**                         |
 | Firewall (security groups) | **Select existing security group** |
-| Common security groups | Select **`learningopk-ec2`** |
+| Common security groups     | Select **`learningopk-ec2`**       |
 
 #### 1.5.3 Configure Storage
 
-| Setting | Value |
-|---|---|
-| Size (GiB) | 20 |
-| Volume type | gp3 (General Purpose SSD) |
-| Delete on termination | Yes (checked) |
+| Setting               | Value                     |
+| --------------------- | ------------------------- |
+| Size (GiB)            | 20                        |
+| Volume type           | gp3 (General Purpose SSD) |
+| Delete on termination | Yes (checked)             |
 
 #### 1.5.4 Advanced Details (leave defaults)
 
@@ -385,6 +388,7 @@ icacls ~/.ssh/learningopk.pem /inheritance:r /grant "%USERNAME%:R"
 ---
 
 **EC2 Summary** — Save these values:
+
 - **EC2 Public IP (Elastic IP)**: `54.123.45.67`
 - **SSH Key Path**: `~/.ssh/learningopk.pem`
 
@@ -491,7 +495,7 @@ DATABASE_URL=postgresql://postgres:MySecurePass123!@learningopk-db.abcdefg12345.
 REDIS_URL=redis://learningopk-redis.xxxxxx.ng.0001.use1.cache.amazonaws.com:6379
 
 # ===== AUTH (Better Auth) =====
-BETTER_AUTH_SECRET=K8mP2xR9vL5nQ7wT3yA6bC1dE4fG0hI2jK4lM6nO8pQ0rS2tU4vW6xY8z=
+BETTER_AUTH_SECRET=<your-generated-64-char-base64-secret>
 BETTER_AUTH_URL=https://api.learningopk.com
 
 # ===== FRONTEND =====
@@ -683,6 +687,7 @@ sudo docker run --rm \
 ```
 
 Replace:
+
 - `api.learningopk.com` with your actual API domain
 - `your-email@gmail.com` with your actual email address
 
@@ -714,6 +719,7 @@ sudo docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 This command:
+
 1. Builds the backend Docker image (Node.js 22 Alpine, npm install, compile TypeScript, prune dev deps)
 2. Starts the backend container on port 3001 (internal only, not exposed to the internet)
 3. Starts nginx on ports 80 and 443 (exposed to the internet)
@@ -748,6 +754,7 @@ Listening on port 3001
 ```
 
 If the backend fails to start, check the logs for the specific error. Common issues:
+
 - **DATABASE_URL is incorrect**: Verify the RDS endpoint, username, password, and that the RDS security group allows EC2
 - **REDIS_URL is incorrect**: Verify the ElastiCache endpoint and security group
 - **MISTRAL_API_KEY is missing**: Get a free key from console.mistral.ai
@@ -769,7 +776,7 @@ curl http://localhost/api/health
 Expected response:
 
 ```json
-{"status":"ok"}
+{ "status": "ok" }
 ```
 
 From your local machine (after DNS is configured), test the HTTPS endpoint:
@@ -861,12 +868,12 @@ The API domain points to your EC2 instance's public IP.
 
 Go to your DNS provider (e.g., Namecheap, Cloudflare, Route53, GoDaddy) and add an A record:
 
-| Field | Value |
-|---|---|
-| Type | A |
-| Name/Host | `api` |
+| Field           | Value                                    |
+| --------------- | ---------------------------------------- |
+| Type            | A                                        |
+| Name/Host       | `api`                                    |
 | Value/Points to | `<ec2-public-ip>` (e.g., `54.123.45.67`) |
-| TTL | 300 (5 minutes) |
+| TTL             | 300 (5 minutes)                          |
 
 If your DNS provider uses a full domain notation (Cloudflare), the name would be `api.yourdomain.com`. If using relative notation (Namecheap), the name would be just `api`.
 
@@ -897,23 +904,23 @@ If you want to verify the DNS works before deploying to Vercel, you can add a te
 
 On the "Configure Project" screen:
 
-| Setting | Value |
-|---|---|
-| Framework Preset | Next.js (auto-detected) |
-| Root Directory | `learningopk/frontend` |
-| Build Command | `next build` (auto-detected, leave as is) |
-| Output Directory | `.next` (auto-detected, leave as is) |
-| Install Command | `npm ci` (auto-detected) |
+| Setting          | Value                                     |
+| ---------------- | ----------------------------------------- |
+| Framework Preset | Next.js (auto-detected)                   |
+| Root Directory   | `learningopk/frontend`                    |
+| Build Command    | `next build` (auto-detected, leave as is) |
+| Output Directory | `.next` (auto-detected, leave as is)      |
+| Install Command  | `npm ci` (auto-detected)                  |
 
 If Vercel doesn't auto-detect the settings, scroll to **Build and Output Settings**, toggle the override, and set:
 
-| Setting | Value |
-|---|---|
-| Framework Preset | Next.js |
-| Root Directory | `learningopk/frontend` |
-| Build Command | `cd ../.. && npm ci && npm run build --workspace=@learningopk/shared && npm run build --workspace=frontend` |
-| Output Directory | `learningopk/frontend/.next` |
-| Install Command | (leave empty, handled by build command) |
+| Setting          | Value                                                                                                       |
+| ---------------- | ----------------------------------------------------------------------------------------------------------- |
+| Framework Preset | Next.js                                                                                                     |
+| Root Directory   | `learningopk/frontend`                                                                                      |
+| Build Command    | `cd ../.. && npm ci && npm run build --workspace=@learningopk/shared && npm run build --workspace=frontend` |
+| Output Directory | `learningopk/frontend/.next`                                                                                |
+| Install Command  | (leave empty, handled by build command)                                                                     |
 
 **Explanation**: Since LearningoPK is an npm monorepo, the frontend depends on the `@learningopk/shared` workspace package. The build command navigates to the monorepo root, installs all dependencies, then builds the frontend.
 
@@ -921,17 +928,17 @@ If Vercel doesn't auto-detect the settings, scroll to **Build and Output Setting
 
 On the same "Configure Project" screen, scroll to **Environment Variables** and add:
 
-| Name | Value |
-|---|---|
-| `NEXT_PUBLIC_APP_URL` | `https://yourdomain.com` |
+| Name                      | Value                        |
+| ------------------------- | ---------------------------- |
+| `NEXT_PUBLIC_APP_URL`     | `https://yourdomain.com`     |
 | `NEXT_PUBLIC_BACKEND_URL` | `https://api.yourdomain.com` |
-| `NODE_ENV` | `production` |
+| `NODE_ENV`                | `production`                 |
 
 If you are using Sentry for the frontend (the project has Sentry configured in `next.config.ts`), also add:
 
-| Name | Value |
-|---|---|
-| `SENTRY_AUTH_TOKEN` | Your Sentry auth token |
+| Name                     | Value                                    |
+| ------------------------ | ---------------------------------------- |
+| `SENTRY_AUTH_TOKEN`      | Your Sentry auth token                   |
 | `NEXT_PUBLIC_SENTRY_DSN` | Your Sentry DSN for the frontend project |
 
 Click **Deploy**.
@@ -978,7 +985,7 @@ curl https://api.yourdomain.com/api/health
 Expected response:
 
 ```json
-{"status":"ok"}
+{ "status": "ok" }
 ```
 
 Replace `api.yourdomain.com` with your actual API domain.
@@ -1004,6 +1011,7 @@ The homepage should load. Check the browser's DevTools Console (F12) for any err
    - `better-auth.session_data`
 
 If registration fails:
+
 - Check the backend logs: `sudo docker compose -f docker-compose.prod.yml logs backend` on EC2
 - Verify that `FRONTEND_ORIGIN` in `.env` matches your frontend URL exactly (including `https://`)
 - Verify that `BETTER_AUTH_URL` in `.env` matches your API URL exactly
@@ -1017,6 +1025,7 @@ If registration fails:
 5. The message should be saved to the chat history
 
 If the AI chat fails:
+
 - Check that `MISTRAL_API_KEY` is set in the `.env` file on EC2
 - Verify you have credits/quota from Mistral AI (check console.mistral.ai)
 - Check backend logs for Mistral API errors
@@ -1031,6 +1040,7 @@ If the AI chat fails:
 6. Right-click the image → **Open image in new tab** — the URL should be an S3 URL like `https://learningopk-media-abc123.s3.amazonaws.com/...`
 
 If uploads fail:
+
 - Verify the S3 bucket policy has public `GetObject` access
 - Verify the IAM user credentials (`MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`) are correct
 - Verify `MINIO_ENDPOINT` is `s3.amazonaws.com` (not `localhost` or `minio`)
@@ -1046,6 +1056,7 @@ If uploads fail:
 6. You should see a score/results page
 
 If quiz submission fails:
+
 - Check that the backend can connect to RDS (quizzes require database queries)
 - Check backend logs
 
@@ -1220,33 +1231,33 @@ sudo docker compose -f ~/Learningo/learningopk/docker-compose.prod.yml up -d --b
 
 ### Backend `.env` (on EC2 at `learningopk/.env`)
 
-| Variable | Required | Description | Example (Dev) | Example (Production) |
-|---|---|---|---|---|
-| `DATABASE_URL` | Yes | PostgreSQL connection string | `postgresql://postgres:password@localhost:6432/learningo` | `postgresql://postgres:pass@rds.xxx.us-east-1.rds.amazonaws.com:5432/learningo` |
-| `REDIS_URL` | Yes | Redis connection string | `redis://localhost:6379` | `redis://redis.xxx.cache.amazonaws.com:6379` |
-| `BETTER_AUTH_SECRET` | Yes | Server-side auth secret (base64) | `yOocWXqo7cx5Zde53GtGcCn4Q6qoNszeoQ8aLGLze1k=` | Generate: `openssl rand -base64 32` |
-| `BETTER_AUTH_URL` | Yes | Public URL of the backend API | `http://localhost:3001` | `https://api.learningopk.com` |
-| `FRONTEND_ORIGIN` | Yes | Frontend URL for CORS | `http://localhost:3000` | `https://learningopk.com` |
-| `MINIO_ENDPOINT` | Yes | S3-compatible storage endpoint | `localhost` | `s3.amazonaws.com` |
-| `MINIO_PORT` | Yes | Storage port | `9000` | `443` |
-| `MINIO_USE_SSL` | Yes | Use SSL for storage | `false` | `true` |
-| `MINIO_ACCESS_KEY` | Yes | S3 access key (MinIO root user for dev) | `minioadmin` | `AKIAIOSFODNN7EXAMPLE` |
-| `MINIO_SECRET_KEY` | Yes | S3 secret key (MinIO root password for dev) | `minioadmin123` | `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY` |
-| `MINIO_BUCKET` | Yes | S3 bucket name | `learningo-media` | `learningopk-media-abc123` |
-| `MINIO_PUBLIC_URL` | Yes | Public URL for stored media | `http://localhost:9000` | `https://learningopk-media-abc123.s3.amazonaws.com` |
-| `MISTRAL_API_KEY` | Yes | Mistral AI API key | (free from console.mistral.ai) | (same key) |
-| `PORT` | Yes | Backend listen port | `3001` | `3001` |
-| `SENTRY_DSN` | No | Sentry backend monitoring DSN | (leave empty if not using Sentry) | `https://xxx@sentry.io/0` |
+| Variable             | Required | Description                                 | Example (Dev)                                             | Example (Production)                                                            |
+| -------------------- | -------- | ------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `DATABASE_URL`       | Yes      | PostgreSQL connection string                | `postgresql://postgres:password@localhost:6432/learningo` | `postgresql://postgres:pass@rds.xxx.us-east-1.rds.amazonaws.com:5432/learningo` |
+| `REDIS_URL`          | Yes      | Redis connection string                     | `redis://localhost:6379`                                  | `redis://redis.xxx.cache.amazonaws.com:6379`                                    |
+| `BETTER_AUTH_SECRET` | Yes      | Server-side auth secret (base64)            | (generate locally)                                        | Generate: `openssl rand -base64 32`                                             |
+| `BETTER_AUTH_URL`    | Yes      | Public URL of the backend API               | `http://localhost:3001`                                   | `https://api.learningopk.com`                                                   |
+| `FRONTEND_ORIGIN`    | Yes      | Frontend URL for CORS                       | `http://localhost:3000`                                   | `https://learningopk.com`                                                       |
+| `MINIO_ENDPOINT`     | Yes      | S3-compatible storage endpoint              | `localhost`                                               | `s3.amazonaws.com`                                                              |
+| `MINIO_PORT`         | Yes      | Storage port                                | `9000`                                                    | `443`                                                                           |
+| `MINIO_USE_SSL`      | Yes      | Use SSL for storage                         | `false`                                                   | `true`                                                                          |
+| `MINIO_ACCESS_KEY`   | Yes      | S3 access key (MinIO root user for dev)     | `minioadmin`                                              | `AKIAIOSFODNN7EXAMPLE`                                                          |
+| `MINIO_SECRET_KEY`   | Yes      | S3 secret key (MinIO root password for dev) | `minioadmin123`                                           | `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY`                                      |
+| `MINIO_BUCKET`       | Yes      | S3 bucket name                              | `learningo-media`                                         | `learningopk-media-abc123`                                                      |
+| `MINIO_PUBLIC_URL`   | Yes      | Public URL for stored media                 | `http://localhost:9000`                                   | `https://learningopk-media-abc123.s3.amazonaws.com`                             |
+| `MISTRAL_API_KEY`    | Yes      | Mistral AI API key                          | (free from console.mistral.ai)                            | (same key)                                                                      |
+| `PORT`               | Yes      | Backend listen port                         | `3001`                                                    | `3001`                                                                          |
+| `SENTRY_DSN`         | No       | Sentry backend monitoring DSN               | (leave empty if not using Sentry)                         | `https://xxx@sentry.io/0`                                                       |
 
 ### Frontend Environment Variables (Vercel)
 
-| Variable | Required | Description | Example |
-|---|---|---|---|
-| `NEXT_PUBLIC_APP_URL` | Yes | Public URL of the frontend | `https://learningopk.com` |
-| `NEXT_PUBLIC_BACKEND_URL` | Yes | Public URL of the backend API | `https://api.learningopk.com` |
-| `NODE_ENV` | Yes | Environment mode | `production` |
-| `NEXT_PUBLIC_SENTRY_DSN` | No | Sentry DSN for frontend monitoring | `https://xxx@sentry.io/0` |
-| `SENTRY_AUTH_TOKEN` | No | Sentry auth token for source maps | (from Sentry project settings) |
+| Variable                  | Required | Description                        | Example                        |
+| ------------------------- | -------- | ---------------------------------- | ------------------------------ |
+| `NEXT_PUBLIC_APP_URL`     | Yes      | Public URL of the frontend         | `https://learningopk.com`      |
+| `NEXT_PUBLIC_BACKEND_URL` | Yes      | Public URL of the backend API      | `https://api.learningopk.com`  |
+| `NODE_ENV`                | Yes      | Environment mode                   | `production`                   |
+| `NEXT_PUBLIC_SENTRY_DSN`  | No       | Sentry DSN for frontend monitoring | `https://xxx@sentry.io/0`      |
+| `SENTRY_AUTH_TOKEN`       | No       | Sentry auth token for source maps  | (from Sentry project settings) |
 
 ## Appendix B: Troubleshooting
 
@@ -1259,6 +1270,7 @@ sudo docker compose -f ~/Learningo/learningopk/docker-compose.prod.yml logs back
 Common issues:
 
 1. **Wrong DATABASE_URL**: Verify the RDS endpoint, username, password, and port. Test connectivity:
+
    ```bash
    sudo docker exec learningopk_backend wget -qO- http://localhost:3001/api/health
    ```
@@ -1276,11 +1288,13 @@ Common issues:
 This means nginx cannot reach the backend. Check:
 
 1. Backend is running and healthy:
+
    ```bash
    sudo docker compose -f ~/Learningo/learningopk/docker-compose.prod.yml ps
    ```
 
 2. Backend is listening on the correct port:
+
    ```bash
    sudo docker exec learningopk_backend wget -qO- http://localhost:3001/api/health
    ```
@@ -1307,6 +1321,7 @@ sudo docker exec learningopk_certbot certbot renew --dry-run
 ```
 
 If the dry run fails, check:
+
 - The domain DNS still points to the EC2 IP
 - The `.well-known/acme-challenge/` location block in `infra/nginx.prod.conf` is correctly configured
 - The certificates directory is correctly mounted:
@@ -1323,6 +1338,7 @@ If the dry run fails, check:
 3. **Verify endpoint**: `MINIO_ENDPOINT` must be `s3.amazonaws.com` in production. If it's set to `localhost` or `minio`, the backend will try to connect to a local MinIO instance instead of S3.
 
 4. **Check backend logs**:
+
    ```bash
    sudo docker compose -f ~/Learningo/learningopk/docker-compose.prod.yml logs backend | grep -i "s3\|minio\|upload\|access denied"
    ```
@@ -1373,6 +1389,7 @@ If you need to run migrations from your local machine but cannot reach RDS:
    - Save
 
 3. Run migrations from local:
+
    ```bash
     export DATABASE_URL="postgresql://postgres:<password>@<rds-public-endpoint>:5432/learningo"
     cd learningopk
@@ -1388,6 +1405,7 @@ If you need to run migrations from your local machine but cannot reach RDS:
 The Docker build context is the `learningopk/` root directory. The `backend/Dockerfile` references files relative to this root. If build fails:
 
 1. Make sure you are running docker compose from the correct directory:
+
    ```bash
    cd ~/Learningo/learningopk
    sudo docker compose -f docker-compose.prod.yml build --no-cache
@@ -1493,6 +1511,7 @@ ECS (Fargate) or EKS would add complexity and cost. AWS Lambda would require sig
 ### Why Vercel for the frontend?
 
 Vercel is the native deployment platform for Next.js. It provides:
+
 - Automatic SSL certificates
 - Global CDN with edge caching
 - Automatic deployments from git pushes
@@ -1508,6 +1527,7 @@ Vercel is the native deployment platform for Next.js. It provides:
 ### Why Nginx in Docker instead of a managed load balancer?
 
 An Application Load Balancer (ALB) would add ~$20/month to the bill. Nginx running alongside the backend on the same EC2 instance handles:
+
 - SSL termination
 - Rate limiting (1000 req/min per IP, 100 req/min per user)
 - Static file caching headers
@@ -1520,22 +1540,24 @@ The production Nginx config (`infra/nginx.prod.conf`) also adds security headers
 
 If you stay within free tier limits, the total cost should be **$0/month** for at least 12 months.
 
-| Service | Free Tier Limit | Our Usage | Cost |
-|---|---|---|---|
-| EC2 t2.micro | 750 hours/month | ~730 hours | $0 |
-| RDS db.t3.micro | 750 hours/month | ~730 hours | $0 |
-| ElastiCache cache.t3.micro | 750 hours/month | ~730 hours | $0 |
-| S3 | 5 GB storage, 20k GET, 2k PUT | < 1 GB typical | $0 |
-| Vercel | 100 GB bandwidth, 6000 build minutes | < 10 GB typical | $0 |
-| Mistral AI | Free tier (rate-limited) | Normal usage | $0 |
+| Service                    | Free Tier Limit                      | Our Usage       | Cost |
+| -------------------------- | ------------------------------------ | --------------- | ---- |
+| EC2 t2.micro               | 750 hours/month                      | ~730 hours      | $0   |
+| RDS db.t3.micro            | 750 hours/month                      | ~730 hours      | $0   |
+| ElastiCache cache.t3.micro | 750 hours/month                      | ~730 hours      | $0   |
+| S3                         | 5 GB storage, 20k GET, 2k PUT        | < 1 GB typical  | $0   |
+| Vercel                     | 100 GB bandwidth, 6000 build minutes | < 10 GB typical | $0   |
+| Mistral AI                 | Free tier (rate-limited)             | Normal usage    | $0   |
 
 **After 12 months**, if you exceed free tier limits:
+
 - EC2 t2.micro: ~$8.50/month (on-demand)
 - RDS db.t3.micro: ~$12.50/month
 - ElastiCache cache.t3.micro: ~$12.50/month
 - S3 + Vercel: likely still free for small-scale usage
 
 **Important**: Set up **AWS Budget Alerts** to avoid unexpected charges:
+
 1. Go to AWS Console → Billing → Budgets
 2. Create a budget with a $1 threshold (alert if monthly cost exceeds $1)
 3. Add your email for notifications

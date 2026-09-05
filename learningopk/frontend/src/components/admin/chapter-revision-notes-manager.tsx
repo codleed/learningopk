@@ -6,7 +6,7 @@ import { Loader2, Plus, Save, Trash2 } from "lucide-react";
 import {
   getAdminChapterRevisionNotes,
   updateAdminChapterRevisionNotes,
-  type AdminChapterRevisionNotes
+  type AdminChapterRevisionNotes,
 } from "@/lib/admin-api";
 import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ const EMPTY_NOTES: AdminChapterRevisionNotes = {
   keyFormulas: [],
   keyDefinitions: [],
   commonMistakes: "",
-  examTips: ""
+  examTips: "",
 };
 
 export function ChapterRevisionNotesManager({ chapterId }: Props) {
@@ -53,7 +53,10 @@ export function ChapterRevisionNotesManager({ chapterId }: Props) {
     void fetchNotes();
   }, [chapterId, pushToast]);
 
-  const hasUnsavedChanges = useMemo(() => JSON.stringify(notes) !== JSON.stringify(originalNotes), [notes, originalNotes]);
+  const hasUnsavedChanges = useMemo(
+    () => JSON.stringify(notes) !== JSON.stringify(originalNotes),
+    [notes, originalNotes]
+  );
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
@@ -64,7 +67,7 @@ export function ChapterRevisionNotesManager({ chapterId }: Props) {
           .map((item) => ({ term: item.term.trim(), definition: item.definition.trim() }))
           .filter((item) => item.term && item.definition),
         commonMistakes: notes.commonMistakes,
-        examTips: notes.examTips
+        examTips: notes.examTips,
       } satisfies AdminChapterRevisionNotes;
 
       const response = await updateAdminChapterRevisionNotes({ chapterId, revisionNotes: payload });
@@ -94,7 +97,10 @@ export function ChapterRevisionNotesManager({ chapterId }: Props) {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Revision Notes</h2>
-          <p className="text-sm text-text-secondary">Author short formulas, definitions, pitfalls, and exam tips for the student quick revision tab.</p>
+          <p className="text-sm text-text-secondary">
+            Author short formulas, definitions, pitfalls, and exam tips for the student quick
+            revision tab.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {hasUnsavedChanges ? <Badge variant="warning">Unsaved changes</Badge> : null}
@@ -109,7 +115,10 @@ export function ChapterRevisionNotesManager({ chapterId }: Props) {
         <CardHeader>
           <div>
             <h3 className="text-lg font-semibold">Key formulas</h3>
-            <p className="text-sm text-text-secondary">One formula per line or row. KaTeX syntax like \`\\frac{'{'}a{'}'}{'{'}b{'}'}\` is supported.</p>
+            <p className="text-sm text-text-secondary">
+              One formula per line or row. KaTeX syntax like \`\\frac{"{"}a{"}"}
+              {"{"}b{"}"}\` is supported.
+            </p>
           </div>
         </CardHeader>
         <CardBody className="space-y-3">
@@ -129,13 +138,25 @@ export function ChapterRevisionNotesManager({ chapterId }: Props) {
                 variant="ghost"
                 size="sm"
                 shape="square"
-                onClick={() => setNotes((current) => ({ ...current, keyFormulas: current.keyFormulas.filter((_, itemIndex) => itemIndex !== index) }))}
+                onClick={() =>
+                  setNotes((current) => ({
+                    ...current,
+                    keyFormulas: current.keyFormulas.filter((_, itemIndex) => itemIndex !== index),
+                  }))
+                }
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           ))}
-          <Button type="button" variant="secondary" className="gap-2" onClick={() => setNotes((current) => ({ ...current, keyFormulas: [...current.keyFormulas, ""] }))}>
+          <Button
+            type="button"
+            variant="secondary"
+            className="gap-2"
+            onClick={() =>
+              setNotes((current) => ({ ...current, keyFormulas: [...current.keyFormulas, ""] }))
+            }
+          >
             <Plus className="h-4 w-4" />
             Add formula
           </Button>
@@ -146,12 +167,17 @@ export function ChapterRevisionNotesManager({ chapterId }: Props) {
         <CardHeader>
           <div>
             <h3 className="text-lg font-semibold">Key definitions</h3>
-            <p className="text-sm text-text-secondary">Keep each definition concise enough for a cheat-sheet card.</p>
+            <p className="text-sm text-text-secondary">
+              Keep each definition concise enough for a cheat-sheet card.
+            </p>
           </div>
         </CardHeader>
         <CardBody className="space-y-4">
           {notes.keyDefinitions.map((item, index) => (
-            <div key={`definition-${index}`} className="grid gap-3 rounded-xl border border-border-default p-4 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto]">
+            <div
+              key={`definition-${index}`}
+              className="grid gap-3 rounded-xl border border-border-default p-4 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto]"
+            >
               <Input
                 value={item.term}
                 onChange={(event) => {
@@ -175,13 +201,30 @@ export function ChapterRevisionNotesManager({ chapterId }: Props) {
                 variant="ghost"
                 size="sm"
                 shape="square"
-                onClick={() => setNotes((current) => ({ ...current, keyDefinitions: current.keyDefinitions.filter((_, itemIndex) => itemIndex !== index) }))}
+                onClick={() =>
+                  setNotes((current) => ({
+                    ...current,
+                    keyDefinitions: current.keyDefinitions.filter(
+                      (_, itemIndex) => itemIndex !== index
+                    ),
+                  }))
+                }
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           ))}
-          <Button type="button" variant="secondary" className="gap-2" onClick={() => setNotes((current) => ({ ...current, keyDefinitions: [...current.keyDefinitions, { term: "", definition: "" }] }))}>
+          <Button
+            type="button"
+            variant="secondary"
+            className="gap-2"
+            onClick={() =>
+              setNotes((current) => ({
+                ...current,
+                keyDefinitions: [...current.keyDefinitions, { term: "", definition: "" }],
+              }))
+            }
+          >
             <Plus className="h-4 w-4" />
             Add definition
           </Button>
@@ -197,7 +240,13 @@ export function ChapterRevisionNotesManager({ chapterId }: Props) {
             </div>
           </CardHeader>
           <CardBody>
-            <Textarea value={notes.commonMistakes} onChange={(event) => setNotes((current) => ({ ...current, commonMistakes: event.target.value }))} rows={8} />
+            <Textarea
+              value={notes.commonMistakes}
+              onChange={(event) =>
+                setNotes((current) => ({ ...current, commonMistakes: event.target.value }))
+              }
+              rows={8}
+            />
           </CardBody>
         </Card>
 
@@ -209,7 +258,13 @@ export function ChapterRevisionNotesManager({ chapterId }: Props) {
             </div>
           </CardHeader>
           <CardBody>
-            <Textarea value={notes.examTips} onChange={(event) => setNotes((current) => ({ ...current, examTips: event.target.value }))} rows={8} />
+            <Textarea
+              value={notes.examTips}
+              onChange={(event) =>
+                setNotes((current) => ({ ...current, examTips: event.target.value }))
+              }
+              rows={8}
+            />
           </CardBody>
         </Card>
       </div>

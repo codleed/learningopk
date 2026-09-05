@@ -1,7 +1,14 @@
 import { db } from "../../lib/db/index.js";
 import { adminAuditLogs } from "../../lib/db/schema.js";
 
-const adminAuditScopeValues = ["content", "forum", "moderation", "notifications", "settings", "users"] as const;
+const adminAuditScopeValues = [
+  "content",
+  "forum",
+  "moderation",
+  "notifications",
+  "settings",
+  "users",
+] as const;
 const adminAuditStatusValues = ["success", "failed"] as const;
 
 export type AdminAuditScope = (typeof adminAuditScopeValues)[number];
@@ -27,6 +34,6 @@ export const persistAuditLog = async (input: PersistAuditLogInput): Promise<void
     status: input.status,
     message: input.message,
     actorId: input.actorId,
-    actorName: input.actorName
+    actorName: input.actorName,
   });
 };

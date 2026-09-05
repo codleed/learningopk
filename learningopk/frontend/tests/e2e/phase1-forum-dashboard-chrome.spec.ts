@@ -19,7 +19,8 @@ const registerAndOpenForum = async (baseEmail: string, page: Page) => {
   await expect(page).toHaveURL(/\/forum$/);
 };
 
-const getShellWrapper = (page: Page) => page.locator("main#main-content > div.rounded-\\[1\\.6rem\\]");
+const getShellWrapper = (page: Page) =>
+  page.locator("main#main-content > div.rounded-\\[1\\.6rem\\]");
 
 const assertNoHorizontalOverflow = async (page: Page) => {
   await page.waitForLoadState("domcontentloaded");
@@ -34,7 +35,9 @@ const assertNoHorizontalOverflow = async (page: Page) => {
   expect(hasOverflow).toBeFalsy();
 };
 
-test("forum keeps dashboard shell styling while showing authenticated left rail", async ({ page }) => {
+test("forum keeps dashboard shell styling while showing authenticated left rail", async ({
+  page,
+}) => {
   await registerAndOpenForum("phase1_forum_chrome", page);
 
   await expect(page.getByTestId("dashboard-chrome-shell")).toBeVisible();
@@ -73,7 +76,7 @@ test("forum shell background is theme-aware in dark mode", async ({ page }) => {
 
 test.describe("forum mobile layout", () => {
   test.use({
-    viewport: { width: 390, height: 844 }
+    viewport: { width: 390, height: 844 },
   });
 
   test("forum dashboard shell avoids horizontal overflow on mobile", async ({ page }) => {
@@ -91,4 +94,3 @@ test.describe("forum mobile layout", () => {
     await assertNoHorizontalOverflow(page);
   });
 });
-

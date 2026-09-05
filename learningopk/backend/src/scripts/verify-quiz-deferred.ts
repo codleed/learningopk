@@ -19,11 +19,11 @@ const learnChapterResponseSchema = z.object({
           optionB: z.string(),
           optionC: z.string(),
           optionD: z.string(),
-          marks: z.number().int().positive()
+          marks: z.number().int().positive(),
         })
-      )
+      ),
     })
-    .nullable()
+    .nullable(),
 });
 
 const run = async (): Promise<void> => {
@@ -32,7 +32,7 @@ const run = async (): Promise<void> => {
       boardSlug: boards.slug,
       grade: subjects.grade,
       subjectSlug: subjects.slug,
-      chapterSlug: chapters.slug
+      chapterSlug: chapters.slug,
     })
     .from(chapters)
     .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
@@ -71,7 +71,9 @@ const run = async (): Promise<void> => {
   );
 
   if (leakedFields.length > 0) {
-    throw new Error("Deferred-feedback leak detected: correctOption/explanation present before submission.");
+    throw new Error(
+      "Deferred-feedback leak detected: correctOption/explanation present before submission."
+    );
   }
 
   console.log(`LEARN_QUIZ_TYPE=${quiz.type}`);

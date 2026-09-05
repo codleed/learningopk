@@ -68,7 +68,9 @@ export function AuthLayout({
         )}
 
         {/* Form Panel */}
-        <div className={`flex flex-1 items-center justify-center px-4 py-12 sm:px-6 lg:px-8 ${showHero ? '' : 'lg:w-full'}`}>
+        <div
+          className={`flex flex-1 items-center justify-center px-4 py-12 sm:px-6 lg:px-8 ${showHero ? "" : "lg:w-full"}`}
+        >
           <div className="w-full max-w-[440px]">
             {/* Mobile Hero (when hero hidden) */}
             {showHero && (
@@ -83,9 +85,7 @@ export function AuthLayout({
                 <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
                   {title}
                 </h1>
-                <p className="mt-2 text-sm sm:text-base text-muted-foreground">
-                  {subtitle}
-                </p>
+                <p className="mt-2 text-sm sm:text-base text-muted-foreground">{subtitle}</p>
               </div>
               {children}
             </div>

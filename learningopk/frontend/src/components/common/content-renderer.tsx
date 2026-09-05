@@ -40,8 +40,7 @@ const contentVariants = cva("md-root leading-relaxed", {
       default: "text-base [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
       compact:
         "text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:my-1.5 [&_ul]:my-1.5 [&_ol]:my-1.5",
-      "ai-message":
-        "text-[0.9375rem] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:my-2",
+      "ai-message": "text-[0.9375rem] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:my-2",
     },
   },
   defaultVariants: {
@@ -72,15 +71,11 @@ function CopyButton({ code }: { code: string }) {
         "text-xs font-medium transition",
         "text-white/60 hover:text-white hover:bg-white/10",
         "opacity-0 group-hover:opacity-100 focus:opacity-100",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40"
       )}
       aria-label={copied ? "Copied to clipboard" : "Copy code to clipboard"}
     >
-      {copied ? (
-        <Check className="h-3.5 w-3.5" />
-      ) : (
-        <Copy className="h-3.5 w-3.5" />
-      )}
+      {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
       <span>{copied ? "Copied" : "Copy"}</span>
     </button>
   );
@@ -117,7 +112,7 @@ export function ContentRenderer({
     // event handlers, and javascript: URLs stripped before rendering.
     const plugins: UnifiedPlugin[] = [
       rehypeRaw as UnifiedPlugin,
-      [rehypeSanitize, markdownSanitizeSchema] as unknown as UnifiedPlugin
+      [rehypeSanitize, markdownSanitizeSchema] as unknown as UnifiedPlugin,
     ];
     if (enableMath) plugins.push(rehypeKatex as UnifiedPlugin);
     if (enableCode) plugins.push(rehypeHighlight as UnifiedPlugin);
@@ -186,22 +181,17 @@ export function ContentRenderer({
 
       /* ── Links ── */
       a: ({ href, children, ...props }) => {
-        const isExternal =
-          href?.startsWith("http://") || href?.startsWith("https://");
+        const isExternal = href?.startsWith("http://") || href?.startsWith("https://");
 
         return (
           <a
             href={href}
             className="md-a inline-flex items-center gap-0.5 text-accent-primary underline underline-offset-2 decoration-accent-primary/40 hover:decoration-accent-primary transition-colors"
-            {...(isExternal
-              ? { target: "_blank", rel: "noopener noreferrer" }
-              : {})}
+            {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
             {...props}
           >
             {children}
-            {isExternal ? (
-              <ExternalLink className="inline h-3 w-3 shrink-0" />
-            ) : null}
+            {isExternal ? <ExternalLink className="inline h-3 w-3 shrink-0" /> : null}
           </a>
         );
       },
@@ -243,10 +233,7 @@ export function ContentRenderer({
               </div>
               {/* Code body */}
               <pre className="!m-0 !rounded-none overflow-x-auto bg-[#1e1e2e] p-4">
-                <code
-                  className={cn(codeClassName, "font-mono text-sm leading-relaxed")}
-                  {...props}
-                >
+                <code className={cn(codeClassName, "font-mono text-sm leading-relaxed")} {...props}>
                   {children}
                 </code>
               </pre>
@@ -294,7 +281,7 @@ export function ContentRenderer({
             className={cn(
               "md-ul my-3 space-y-1",
               isTaskList ? "list-none pl-0" : "list-disc pl-6",
-              ulClassName,
+              ulClassName
             )}
             {...props}
           >
@@ -314,7 +301,7 @@ export function ContentRenderer({
             className={cn(
               "md-li text-text-primary",
               isTask && "md-task-list-item flex items-start gap-2",
-              liClassName,
+              liClassName
             )}
             {...props}
           >
@@ -332,7 +319,7 @@ export function ContentRenderer({
                 "mt-1 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 transition",
                 checked
                   ? "border-accent-primary bg-accent-primary"
-                  : "border-border-strong bg-transparent",
+                  : "border-border-strong bg-transparent"
               )}
               role="checkbox"
               aria-checked={checked}
@@ -358,12 +345,7 @@ export function ContentRenderer({
       },
 
       /* ── Horizontal rule ── */
-      hr: (props) => (
-        <hr
-          className="md-hr my-8 border-t border-border-default"
-          {...props}
-        />
-      ),
+      hr: (props) => <hr className="md-hr my-8 border-t border-border-default" {...props} />,
 
       /* ── Table (responsive wrapper with alternating rows) ── */
       table: ({ children, ...props }) => (
@@ -386,9 +368,7 @@ export function ContentRenderer({
           {children}
         </th>
       ),
-      tbody: ({ children, ...props }) => (
-        <tbody {...props}>{children}</tbody>
-      ),
+      tbody: ({ children, ...props }) => <tbody {...props}>{children}</tbody>,
       tr: ({ children, ...props }) => (
         <tr className="md-tr even:bg-bg-subtle/40" {...props}>
           {children}
@@ -415,7 +395,7 @@ export function ContentRenderer({
         />
       ),
     }),
-    [],
+    []
   );
 
   return (

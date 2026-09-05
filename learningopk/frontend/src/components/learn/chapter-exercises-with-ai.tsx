@@ -27,7 +27,7 @@ export function ChapterExercisesWithAi({
   onMarkComplete,
   initialAiOpen = false,
   showSidebar = true,
-  onPromptChange
+  onPromptChange,
 }: ChapterExercisesWithAiProps) {
   const [prompt, setPrompt] = useState<string | null>(
     initialAiOpen ? "Guide me through solving the first exercise using hints first." : null
@@ -36,7 +36,7 @@ export function ChapterExercisesWithAi({
   const onExerciseExpanded = (nextChapterId: number) => {
     void trackProgressEvent({
       eventType: "exercise_view",
-      chapterId: nextChapterId
+      chapterId: nextChapterId,
     });
   };
 
@@ -70,7 +70,12 @@ export function ChapterExercisesWithAi({
       {exercisesContent}
 
       <div className="xl:sticky xl:top-4 xl:self-start">
-        <AIChatPanel chapterId={chapterId} chapterTitle={chapterTitle} initialPrompt={emptyAwarePrompt} layout="sidebar" />
+        <AIChatPanel
+          chapterId={chapterId}
+          chapterTitle={chapterTitle}
+          initialPrompt={emptyAwarePrompt}
+          layout="sidebar"
+        />
       </div>
     </div>
   );

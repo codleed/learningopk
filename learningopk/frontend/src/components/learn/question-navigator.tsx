@@ -25,7 +25,7 @@ export function QuestionNavigator({
   currentIndex,
   answers,
   onSelectQuestion,
-  isLocked
+  isLocked,
 }: QuestionNavigatorProps) {
   const reduced = useReducedMotion();
   const totalQuestions = questions.length;
@@ -87,14 +87,20 @@ export function QuestionNavigator({
                 key={index}
                 type="button"
                 whileTap={reduced ? undefined : { scale: 0.92 }}
-                transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 400, damping: 25 }}
+                transition={
+                  reduced ? { duration: 0 } : { type: "spring", stiffness: 400, damping: 25 }
+                }
                 className={cn(
                   "relative flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold transition-all duration-150",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40 focus-visible:ring-offset-1",
                   "disabled:pointer-events-none disabled:opacity-50",
                   isCurrent && "bg-accent-primary text-white shadow-[var(--shadow-sm)]",
-                  isAnswered && !isCurrent && "bg-accent-success-light text-accent-success border border-accent-success/20",
-                  !isCurrent && !isAnswered && "bg-bg-subtle text-text-secondary border border-border-default hover:border-border-strong hover:bg-bg-elevated"
+                  isAnswered &&
+                    !isCurrent &&
+                    "bg-accent-success-light text-accent-success border border-accent-success/20",
+                  !isCurrent &&
+                    !isAnswered &&
+                    "bg-bg-subtle text-text-secondary border border-border-default hover:border-border-strong hover:bg-bg-elevated"
                 )}
                 onClick={() => onSelectQuestion(index)}
                 disabled={isLocked}

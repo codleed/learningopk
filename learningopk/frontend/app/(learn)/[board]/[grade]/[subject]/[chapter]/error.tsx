@@ -18,4 +18,3 @@ export default function ChapterError({ error: _error, reset }: ChapterErrorProps
     </div>
   );
 }
-

@@ -41,7 +41,9 @@ export function SubjectWeakAreasCard({ subjects }: { subjects: SubjectSummary[] 
             <div className="flex items-start justify-between gap-3 pb-3">
               <div>
                 <p className="text-sm font-semibold text-text-primary">{subject.subjectName}</p>
-                <p className="mt-1 text-xs text-text-secondary">Practice the repeated mistake patterns first.</p>
+                <p className="mt-1 text-xs text-text-secondary">
+                  Practice the repeated mistake patterns first.
+                </p>
               </div>
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-warning/10 text-accent-warning">
                 <BrainCircuit className="h-4 w-4" aria-hidden />
@@ -50,12 +52,21 @@ export function SubjectWeakAreasCard({ subjects }: { subjects: SubjectSummary[] 
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {subject.weakAreas.map((area) => (
-                <div key={`${subject.subjectId}-${area.chapterId}-${area.exerciseId ?? area.label}`} className="rounded-xl border border-border-default bg-bg-surface p-3">
+                <div
+                  key={`${subject.subjectId}-${area.chapterId}-${area.exerciseId ?? area.label}`}
+                  className="rounded-xl border border-border-default bg-bg-surface p-3"
+                >
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="warning" size="sm">{area.wrongAnswerCount} wrong</Badge>
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">{area.quizAttemptsCount} attempts</span>
+                    <Badge variant="warning" size="sm">
+                      {area.wrongAnswerCount} wrong
+                    </Badge>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+                      {area.quizAttemptsCount} attempts
+                    </span>
                   </div>
-                  <h4 className="mt-2 text-sm font-semibold leading-snug text-text-primary">{area.label}</h4>
+                  <h4 className="mt-2 text-sm font-semibold leading-snug text-text-primary">
+                    {area.label}
+                  </h4>
                   <p className="mt-1 text-xs leading-relaxed text-text-secondary">
                     {area.exerciseNumber ? `Exercise ${area.exerciseNumber}` : area.chapterTitle}
                     {area.exerciseQuestion ? ` · ${area.exerciseQuestion}` : ""}

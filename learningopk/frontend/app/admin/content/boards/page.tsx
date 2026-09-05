@@ -35,7 +35,7 @@ export default async function BoardsPage() {
         subjects: subjectCount,
         chapters: chapterCount,
         exercises: 0, // TODO: Fetch from API
-        quizzes: 0,   // TODO: Fetch from API
+        quizzes: 0, // TODO: Fetch from API
         flashcardDecks: 0, // TODO: Fetch from API
       }}
     />

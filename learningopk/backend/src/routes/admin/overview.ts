@@ -17,7 +17,7 @@ import {
   quizAttempts,
   subjects,
   userProgress,
-  users
+  users,
 } from "../../lib/db/schema.js";
 import { requireSession, type AuthenticatedRequest } from "../../lib/session.js";
 
@@ -28,8 +28,8 @@ const adminAnalyticsOverviewQuerySchema = z.object({
     .optional()
     .default(30)
     .refine((value) => [7, 30, 90].includes(value), {
-      message: "windowDays must be one of: 7, 30, 90"
-    })
+      message: "windowDays must be one of: 7, 30, 90",
+    }),
 });
 
 const adminOverviewQuerySchema = z.object({
@@ -39,48 +39,44 @@ const adminOverviewQuerySchema = z.object({
     .optional()
     .default(30)
     .refine((value) => [7, 30, 90].includes(value), {
-      message: "windowDays must be one of: 7, 30, 90"
-    })
+      message: "windowDays must be one of: 7, 30, 90",
+    }),
 });
 
-const listAdminAnalyticsOverview = async ({
-  windowDays
-}: {
-  windowDays: number;
-}) => {
+const listAdminAnalyticsOverview = async ({ windowDays }: { windowDays: number }) => {
   const windowStart = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000);
 
   const [activeStudentsRow] = await db
     .select({
-      count: sql<number>`count(distinct ${userProgress.userId})::int`
+      count: sql<number>`count(distinct ${userProgress.userId})::int`,
     })
     .from(userProgress)
     .where(sql`${userProgress.visitedAt} >= ${windowStart}`);
 
   const [quizAttemptsRow] = await db
     .select({
-      count: sql<number>`count(*)::int`
+      count: sql<number>`count(*)::int`,
     })
     .from(quizAttempts)
     .where(sql`${quizAttempts.completedAt} >= ${windowStart}`);
 
   const [averageQuizScoreRow] = await db
     .select({
-      value: sql<number>`coalesce(avg(case when ${quizAttempts.totalMarks} > 0 then (${quizAttempts.score}::numeric * 100.0) / ${quizAttempts.totalMarks} else 0 end), 0)::float`
+      value: sql<number>`coalesce(avg(case when ${quizAttempts.totalMarks} > 0 then (${quizAttempts.score}::numeric * 100.0) / ${quizAttempts.totalMarks} else 0 end), 0)::float`,
     })
     .from(quizAttempts)
     .where(sql`${quizAttempts.completedAt} >= ${windowStart}`);
 
   const [threadsCreatedRow] = await db
     .select({
-      count: sql<number>`count(*)::int`
+      count: sql<number>`count(*)::int`,
     })
     .from(forumThreads)
     .where(sql`${forumThreads.createdAt} >= ${windowStart}`);
 
   const [openModerationFlagsRow] = await db
     .select({
-      count: sql<number>`count(*)::int`
+      count: sql<number>`count(*)::int`,
     })
     .from(moderationFlags)
     .where(eq(moderationFlags.status, "open"));
@@ -93,7 +89,7 @@ const listAdminAnalyticsOverview = async ({
       boardName: boards.name,
       attempts: sql<number>`count(${quizAttempts.id})::int`,
       averageScorePercent: sql<number>`coalesce(avg(case when ${quizAttempts.totalMarks} > 0 then (${quizAttempts.score}::numeric * 100.0) / ${quizAttempts.totalMarks} else 0 end), 0)::float`,
-      activeStudents: sql<number>`count(distinct ${quizAttempts.userId})::int`
+      activeStudents: sql<number>`count(distinct ${quizAttempts.userId})::int`,
     })
     .from(quizAttempts)
     .innerJoin(quizzes, eq(quizAttempts.quizId, quizzes.id))
@@ -109,13 +105,18 @@ const listAdminAnalyticsOverview = async ({
       chapterId: chapters.id,
       chapterTitle: chapters.title,
       subjectName: subjects.name,
-      count: sql<number>`count(${aiConversationEvents.id})::int`
+      count: sql<number>`count(${aiConversationEvents.id})::int`,
     })
     .from(aiConversationEvents)
     .innerJoin(aiChatSessions, eq(aiConversationEvents.sessionId, aiChatSessions.id))
     .innerJoin(chapters, eq(aiChatSessions.chapterId, chapters.id))
     .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
-    .where(and(eq(aiConversationEvents.eventType, "confusion_detected"), sql`${aiConversationEvents.createdAt} >= ${windowStart}`))
+    .where(
+      and(
+        eq(aiConversationEvents.eventType, "confusion_detected"),
+        sql`${aiConversationEvents.createdAt} >= ${windowStart}`
+      )
+    )
     .groupBy(chapters.id, chapters.title, subjects.name)
     .orderBy(desc(sql`count(${aiConversationEvents.id})`), asc(chapters.title))
     .limit(10);
@@ -128,7 +129,7 @@ const listAdminAnalyticsOverview = async ({
       averageQuizScorePercent: Number(averageQuizScoreRow?.value ?? 0),
       threadsCreated: threadsCreatedRow?.count ?? 0,
       openModerationFlags: openModerationFlagsRow?.count ?? 0,
-      confusionEvents: confusionRows.reduce((total, row) => total + row.count, 0)
+      confusionEvents: confusionRows.reduce((total, row) => total + row.count, 0),
     },
     subjectPerformance: subjectPerformanceRows.map((row) => ({
       subjectId: row.subjectId,
@@ -137,50 +138,51 @@ const listAdminAnalyticsOverview = async ({
       boardName: row.boardName,
       attempts: row.attempts,
       averageScorePercent: Number(row.averageScorePercent),
-      activeStudents: row.activeStudents
+      activeStudents: row.activeStudents,
     })),
     confusionByChapter: confusionRows.map((row) => ({
       chapterId: row.chapterId,
       chapterTitle: row.chapterTitle,
       subjectName: row.subjectName,
-      count: row.count
-    }))
+      count: row.count,
+    })),
   };
 };
 
-const listAdminOverview = async ({
-  windowDays
-}: {
-  windowDays: number;
-}) => {
+const listAdminOverview = async ({ windowDays }: { windowDays: number }) => {
   const now = Date.now();
   const windowStart = new Date(now - windowDays * 24 * 60 * 60 * 1000);
   const failedActionsWindowStart = new Date(now - 24 * 60 * 60 * 1000);
 
   const [openModerationFlagsRow] = await db
     .select({
-      count: sql<number>`count(*)::int`
+      count: sql<number>`count(*)::int`,
     })
     .from(moderationFlags)
     .where(eq(moderationFlags.status, "open"));
 
   const [suspendedUsersRow] = await db
     .select({
-      count: sql<number>`count(*)::int`
+      count: sql<number>`count(*)::int`,
     })
     .from(users)
     .where(eq(users.status, "suspended"));
 
   const [failedActionsRow] = await db
     .select({
-      count: sql<number>`count(*)::int`
+      count: sql<number>`count(*)::int`,
     })
     .from(adminAuditLogs)
-    .where(and(eq(adminAuditLogs.status, "failed"), sql`${adminAuditLogs.createdAt} >= ${failedActionsWindowStart}`));
+    .where(
+      and(
+        eq(adminAuditLogs.status, "failed"),
+        sql`${adminAuditLogs.createdAt} >= ${failedActionsWindowStart}`
+      )
+    );
 
   const [notificationsSentRow] = await db
     .select({
-      count: sql<number>`count(*)::int`
+      count: sql<number>`count(*)::int`,
     })
     .from(adminNotifications)
     .where(sql`${adminNotifications.createdAt} >= ${windowStart}`);
@@ -195,7 +197,7 @@ const listAdminOverview = async ({
       message: adminAuditLogs.message,
       actorId: adminAuditLogs.actorId,
       actorName: adminAuditLogs.actorName,
-      occurredAt: adminAuditLogs.createdAt
+      occurredAt: adminAuditLogs.createdAt,
     })
     .from(adminAuditLogs)
     .orderBy(desc(adminAuditLogs.createdAt), desc(adminAuditLogs.id))
@@ -205,7 +207,7 @@ const listAdminOverview = async ({
     openModerationFlags: openModerationFlagsRow?.count ?? 0,
     suspendedUsers: suspendedUsersRow?.count ?? 0,
     failedAdminActionsLast24h: failedActionsRow?.count ?? 0,
-    notificationsSentInWindow: notificationsSentRow?.count ?? 0
+    notificationsSentInWindow: notificationsSentRow?.count ?? 0,
   };
 
   const reasons: string[] = [];
@@ -213,7 +215,9 @@ const listAdminOverview = async ({
     reasons.push(`Open moderation flags threshold exceeded (${kpis.openModerationFlags}/10).`);
   }
   if (kpis.failedAdminActionsLast24h >= 5) {
-    reasons.push(`Failed admin actions in last 24h threshold exceeded (${kpis.failedAdminActionsLast24h}/5).`);
+    reasons.push(
+      `Failed admin actions in last 24h threshold exceeded (${kpis.failedAdminActionsLast24h}/5).`
+    );
   }
 
   return {
@@ -221,7 +225,7 @@ const listAdminOverview = async ({
     kpis,
     alerts: {
       showHighPriorityBanner: reasons.length > 0,
-      reasons
+      reasons,
     },
     recentActivity: recentActivityRows.map((row) => ({
       id: row.id,
@@ -232,10 +236,10 @@ const listAdminOverview = async ({
       message: row.message,
       actor: {
         id: row.actorId,
-        name: row.actorName
+        name: row.actorName,
       },
-      occurredAt: row.occurredAt.toISOString()
-    }))
+      occurredAt: row.occurredAt.toISOString(),
+    })),
   };
 };
 
@@ -251,13 +255,13 @@ overviewAdminRouter.get("/overview", requireSession, async (req, res) => {
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid admin overview query parameters",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
 
   const payload = await listAdminOverview({
-    windowDays: parsedQuery.data.windowDays
+    windowDays: parsedQuery.data.windowDays,
   });
 
   res.status(200).json(payload);
@@ -282,12 +286,12 @@ overviewAdminRouter.get("/moderator/overview", requireSession, async (req, res) 
         targetLabel: moderationFlags.targetLabel,
         reason: moderationFlags.reason,
         resolvedAt: moderationFlags.resolvedAt,
-        resolutionNote: moderationFlags.resolutionNote
+        resolutionNote: moderationFlags.resolutionNote,
       })
       .from(moderationFlags)
       .where(eq(moderationFlags.status, "resolved"))
       .orderBy(desc(moderationFlags.resolvedAt))
-      .limit(10)
+      .limit(10),
   ]);
 
   res.status(200).json({
@@ -298,8 +302,8 @@ overviewAdminRouter.get("/moderator/overview", requireSession, async (req, res) 
       targetLabel: f.targetLabel,
       reason: f.reason,
       resolvedAt: f.resolvedAt?.toISOString() ?? null,
-      resolutionNote: f.resolutionNote
-    }))
+      resolutionNote: f.resolutionNote,
+    })),
   });
 });
 
@@ -313,13 +317,13 @@ overviewAdminRouter.get("/analytics/overview", requireSession, async (req, res) 
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid analytics overview query parameters",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
 
   const payload = await listAdminAnalyticsOverview({
-    windowDays: parsedQuery.data.windowDays
+    windowDays: parsedQuery.data.windowDays,
   });
 
   res.status(200).json(payload);

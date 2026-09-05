@@ -19,7 +19,7 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<st
     email,
     password: TEST_PASSWORD,
     class: "9th",
-    board: "fbise"
+    board: "fbise",
   });
 
   assert.ok(
@@ -59,7 +59,7 @@ const createDuplicateSlugFixture = async () => {
       boardId: boardA.id,
       grade: sharedGrade,
       name: `Physics Board A ${suffix}`,
-      slug: sharedSubjectSlug
+      slug: sharedSubjectSlug,
     })
     .returning({ id: subjects.id, name: subjects.name });
   const subjectA = subjectARows[0];
@@ -73,7 +73,7 @@ const createDuplicateSlugFixture = async () => {
       title: `Chapter A1 ${suffix}`,
       slug: `chapter-a1-${suffix}`,
       summary: "Board A chapter summary.",
-      isPublished: true
+      isPublished: true,
     })
     .returning({ id: chapters.id });
   const chapterA = chapterARows[0];
@@ -93,7 +93,7 @@ const createDuplicateSlugFixture = async () => {
       boardId: boardB.id,
       grade: sharedGrade,
       name: `Physics Board B ${suffix}`,
-      slug: sharedSubjectSlug
+      slug: sharedSubjectSlug,
     })
     .returning({ id: subjects.id, name: subjects.name });
   const subjectB = subjectBRows[0];
@@ -107,7 +107,7 @@ const createDuplicateSlugFixture = async () => {
       title: `Chapter B1 ${suffix}`,
       slug: `chapter-b1-${suffix}`,
       summary: "Board B chapter summary.",
-      isPublished: true
+      isPublished: true,
     })
     .returning({ id: chapters.id });
   const chapterB = chapterBRows[0];
@@ -121,7 +121,7 @@ const createDuplicateSlugFixture = async () => {
     chapterA: { id: chapterA.id },
     chapterB: { id: chapterB.id },
     sharedSubjectSlug,
-    sharedGrade
+    sharedGrade,
   };
 };
 
@@ -180,7 +180,9 @@ test("subject progress route returns 404 for non-existent board+grade+slug combi
 
   await signUp(studentAgent, "Slug 404 Student", `tst_slug_404_${Date.now()}@example.com`);
 
-  const response = await studentAgent.get("/api/progress/dashboard/nonexistent-board/9/nonexistent-subject");
+  const response = await studentAgent.get(
+    "/api/progress/dashboard/nonexistent-board/9/nonexistent-subject"
+  );
   assert.equal(response.status, 404, "Expected 404 for non-existent board+grade+slug tuple.");
 });
 
@@ -188,7 +190,11 @@ test("subject progress route returns correct chapter list scoped to the specific
   const app = createApp();
   const studentAgent = request.agent(app);
 
-  await signUp(studentAgent, "Chapter Scope Student", `tst_chapter_scope_${Date.now()}@example.com`);
+  await signUp(
+    studentAgent,
+    "Chapter Scope Student",
+    `tst_chapter_scope_${Date.now()}@example.com`
+  );
 
   const fixture = await createDuplicateSlugFixture();
 
@@ -258,10 +264,17 @@ test("dashboard summary returns a today's focus card and completing it awards XP
   const app = createApp();
   const studentAgent = request.agent(app);
 
-  const userId = await signUp(studentAgent, "Momentum Student", `tst_momentum_${Date.now()}@example.com`);
+  const userId = await signUp(
+    studentAgent,
+    "Momentum Student",
+    `tst_momentum_${Date.now()}@example.com`
+  );
 
   const suffix = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-  const boardRows = await db.insert(boards).values({ name: `Momentum Board ${suffix}`, slug: `momentum-board-${suffix}` }).returning({ id: boards.id, slug: boards.slug });
+  const boardRows = await db
+    .insert(boards)
+    .values({ name: `Momentum Board ${suffix}`, slug: `momentum-board-${suffix}` })
+    .returning({ id: boards.id, slug: boards.slug });
   const board = boardRows[0];
   assert.ok(board, "Expected board fixture insert.");
 
@@ -272,7 +285,7 @@ test("dashboard summary returns a today's focus card and completing it awards XP
       grade: "9",
       name: `Momentum Subject ${suffix}`,
       slug: `momentum-subject-${suffix}`,
-      examDate: new Date("2026-04-01T00:00:00.000Z")
+      examDate: new Date("2026-04-01T00:00:00.000Z"),
     })
     .returning({ id: subjects.id, slug: subjects.slug });
   const subject = subjectRows[0];
@@ -286,7 +299,7 @@ test("dashboard summary returns a today's focus card and completing it awards XP
       title: `Momentum Chapter ${suffix}`,
       slug: `momentum-chapter-${suffix}`,
       summary: "Momentum chapter summary.",
-      isPublished: true
+      isPublished: true,
     })
     .returning({ id: chapters.id, slug: chapters.slug });
   const chapter = chapterRows[0];
@@ -295,9 +308,16 @@ test("dashboard summary returns a today's focus card and completing it awards XP
   const dashboardResponse = await studentAgent.get("/api/progress/dashboard");
   assert.equal(dashboardResponse.status, 200);
   assert.equal(dashboardResponse.body?.todaysFocus?.type, "streak_at_risk");
-  assert.match(dashboardResponse.body?.todaysFocus?.href ?? "", new RegExp(`${chapter.slug}\\?tab=summary$`));
+  assert.match(
+    dashboardResponse.body?.todaysFocus?.href ?? "",
+    new RegExp(`${chapter.slug}\\?tab=summary$`)
+  );
 
-  const beforeUserRows = await db.select({ xp: users.xp }).from(users).where(eq(users.id, userId)).limit(1);
+  const beforeUserRows = await db
+    .select({ xp: users.xp })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
   const beforeXp = beforeUserRows[0]?.xp ?? 0;
 
   const completeResponse = await studentAgent.post("/api/progress/todays-focus/complete").send({});
@@ -305,11 +325,18 @@ test("dashboard summary returns a today's focus card and completing it awards XP
   assert.equal(completeResponse.body?.xpAwarded, 5);
   assert.equal(completeResponse.body?.alreadyCompleted, false);
 
-  const afterUserRows = await db.select({ xp: users.xp }).from(users).where(eq(users.id, userId)).limit(1);
+  const afterUserRows = await db
+    .select({ xp: users.xp })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
   assert.equal(afterUserRows[0]?.xp, beforeXp + 5, "Expected momentum XP to be added once.");
 
   const completionRows = await db
-    .select({ dateKey: userDailyMomentumGoals.dateKey, xpAwarded: userDailyMomentumGoals.xpAwarded })
+    .select({
+      dateKey: userDailyMomentumGoals.dateKey,
+      xpAwarded: userDailyMomentumGoals.xpAwarded,
+    })
     .from(userDailyMomentumGoals)
     .where(eq(userDailyMomentumGoals.userId, userId));
   assert.equal(completionRows.length, 1, "Expected a single completion row.");
@@ -319,6 +346,14 @@ test("dashboard summary returns a today's focus card and completing it awards XP
   assert.equal(repeatResponse.status, 200);
   assert.equal(repeatResponse.body?.alreadyCompleted, true);
 
-  const finalUserRows = await db.select({ xp: users.xp }).from(users).where(eq(users.id, userId)).limit(1);
-  assert.equal(finalUserRows[0]?.xp, beforeXp + 5, "Expected repeated completion to avoid double XP.");
+  const finalUserRows = await db
+    .select({ xp: users.xp })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  assert.equal(
+    finalUserRows[0]?.xp,
+    beforeXp + 5,
+    "Expected repeated completion to avoid double XP."
+  );
 });

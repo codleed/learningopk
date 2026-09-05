@@ -22,10 +22,7 @@ type BreadcrumbsProps = {
 };
 
 const defaultSeparator = (
-  <ChevronRight
-    className="h-4 w-4 shrink-0 text-muted-foreground/60"
-    aria-hidden="true"
-  />
+  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden="true" />
 );
 
 export function Breadcrumbs({
@@ -62,19 +59,11 @@ export function Breadcrumbs({
 
     switch (truncatePosition) {
       case "start":
-        return [
-          processedItems[0],
-          ellipsisItem,
-          ...processedItems.slice(-(maxVisible - 1)),
-        ];
+        return [processedItems[0], ellipsisItem, ...processedItems.slice(-(maxVisible - 1))];
       case "middle":
         const start = Math.floor(maxVisible / 2);
         const end = processedItems.length - Math.ceil(maxVisible / 2) + 1;
-        return [
-          ...processedItems.slice(0, start),
-          ellipsisItem,
-          ...processedItems.slice(end),
-        ];
+        return [...processedItems.slice(0, start), ellipsisItem, ...processedItems.slice(end)];
       case "end":
       default:
         return [
@@ -86,10 +75,7 @@ export function Breadcrumbs({
   }, [processedItems, needsTruncation, maxVisible, truncatePosition]);
 
   return (
-    <nav
-      aria-label="Breadcrumb"
-      className={cn("w-full", className)}
-    >
+    <nav aria-label="Breadcrumb" className={cn("w-full", className)}>
       <ol className="flex flex-wrap items-center gap-1 text-sm">
         {visibleItems.map((item, index) => {
           const isLast = index === visibleItems.length - 1;
@@ -98,11 +84,7 @@ export function Breadcrumbs({
 
           const itemContent = (
             <>
-              {item.icon && (
-                <span className="mr-1 inline-flex items-center">
-                  {item.icon}
-                </span>
-              )}
+              {item.icon && <span className="mr-1 inline-flex items-center">{item.icon}</span>}
               <span
                 className={cn(
                   "truncate transition-colors duration-200",
@@ -168,10 +150,7 @@ type BreadcrumbsCompactProps = {
   className?: string;
 };
 
-export function BreadcrumbsCompact({
-  items,
-  className,
-}: BreadcrumbsCompactProps) {
+export function BreadcrumbsCompact({ items, className }: BreadcrumbsCompactProps) {
   return (
     <nav
       aria-label="Breadcrumb"
@@ -197,9 +176,7 @@ export function BreadcrumbsCompact({
 
         return (
           <span key={`compact-${index}`} className="flex items-center">
-            {index > 0 && (
-              <ChevronRight className="mx-1 h-3 w-3 shrink-0" aria-hidden="true" />
-            )}
+            {index > 0 && <ChevronRight className="mx-1 h-3 w-3 shrink-0" aria-hidden="true" />}
             {isClickable ? (
               <Link href={item.href!} className="flex items-center transition-colors">
                 {content}

@@ -38,8 +38,16 @@ const splitLines = (value: string) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
-export function QuickRevisionView({ chapterId, chapterTitle, chapterNumber, revisionNotes }: Props) {
-  const mistakeList = useMemo(() => splitLines(revisionNotes.commonMistakes), [revisionNotes.commonMistakes]);
+export function QuickRevisionView({
+  chapterId,
+  chapterTitle,
+  chapterNumber,
+  revisionNotes,
+}: Props) {
+  const mistakeList = useMemo(
+    () => splitLines(revisionNotes.commonMistakes),
+    [revisionNotes.commonMistakes]
+  );
   const tipList = useMemo(() => splitLines(revisionNotes.examTips), [revisionNotes.examTips]);
 
   // ── Personalized revision state ───────────────────────────────────────────
@@ -62,15 +70,15 @@ export function QuickRevisionView({ chapterId, chapterTitle, chapterNumber, revi
       const response = await fetch(`${BACKEND_URL}/api/learn/revision/${chapterId}/personalize`, {
         method: "POST",
         credentials: "include",
-        headers: { "content-type": "application/json" }
+        headers: { "content-type": "application/json" },
       });
 
       if (!response.ok) {
-        const body = await response.json().catch(() => null) as { error?: string } | null;
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
         throw new Error(body?.error ?? `Request failed (${response.status})`);
       }
 
-      const json = await response.json() as { data?: PersonalizedRevision };
+      const json = (await response.json()) as { data?: PersonalizedRevision };
       if (json.data) {
         setPersonalized(json.data);
         // Scroll to results after render
@@ -107,33 +115,45 @@ export function QuickRevisionView({ chapterId, chapterTitle, chapterNumber, revi
 
     const chapterLabel = chapterNumber ? `Chapter ${chapterNumber}: ` : "";
 
-    const formulasHtml = revisionNotes.keyFormulas.length > 0 ? `
+    const formulasHtml =
+      revisionNotes.keyFormulas.length > 0
+        ? `
       <section class="content-section">
         <h2><span class="section-icon">&#x1D453;</span> Key Formulas</h2>
         <div class="formula-grid">
           ${revisionNotes.keyFormulas.map((formula) => `<div class="formula-card">${formula}</div>`).join("")}
         </div>
-      </section>` : "";
+      </section>`
+        : "";
 
-    const definitionsHtml = revisionNotes.keyDefinitions.length > 0 ? `
+    const definitionsHtml =
+      revisionNotes.keyDefinitions.length > 0
+        ? `
       <section class="content-section">
         <h2><span class="section-icon">&#x1F4D6;</span> Key Definitions</h2>
         <dl class="definitions-list">
           ${revisionNotes.keyDefinitions.map((item) => `<div class="def-item"><dt>${item.term}</dt><dd>${item.definition}</dd></div>`).join("")}
         </dl>
-      </section>` : "";
+      </section>`
+        : "";
 
-    const mistakesHtml = mistakeList.length > 0 ? `
+    const mistakesHtml =
+      mistakeList.length > 0
+        ? `
       <section class="content-section mistakes-section">
         <h2><span class="section-icon">&#x26A0;</span> Common Mistakes</h2>
         <ul>${mistakeList.map((item) => `<li>${item}</li>`).join("")}</ul>
-      </section>` : "";
+      </section>`
+        : "";
 
-    const tipsHtml = tipList.length > 0 ? `
+    const tipsHtml =
+      tipList.length > 0
+        ? `
       <section class="content-section tips-section">
         <h2><span class="section-icon">&#x1F4A1;</span> Exam Tips</h2>
         <ul>${tipList.map((item) => `<li>${item}</li>`).join("")}</ul>
-      </section>` : "";
+      </section>`
+        : "";
 
     const htmlContent = `<!DOCTYPE html>
 <html lang="en">
@@ -440,9 +460,14 @@ export function QuickRevisionView({ chapterId, chapterTitle, chapterNumber, revi
         <CardHeader className="border-b border-border-default/60 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.14),transparent_55%)]">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="space-y-2">
-              <Badge variant="info" className="w-fit">90% shorter quick recap</Badge>
+              <Badge variant="info" className="w-fit">
+                90% shorter quick recap
+              </Badge>
               <h3 className="text-2xl font-semibold">Quick Revision</h3>
-              <p className="max-w-2xl text-sm text-text-secondary">Condensed formulas, definitions, pitfalls, and exam tactics for the fastest last-minute pass.</p>
+              <p className="max-w-2xl text-sm text-text-secondary">
+                Condensed formulas, definitions, pitfalls, and exam tactics for the fastest
+                last-minute pass.
+              </p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row print:hidden">
               <Button
@@ -451,11 +476,7 @@ export function QuickRevisionView({ chapterId, chapterTitle, chapterNumber, revi
                 onClick={handlePersonalize}
                 disabled={personalizeLoading}
               >
-                {personalizeLoading ? (
-                  <Spinner size="sm" />
-                ) : (
-                  <Sparkles className="h-4 w-4" />
-                )}
+                {personalizeLoading ? <Spinner size="sm" /> : <Sparkles className="h-4 w-4" />}
                 {personalized ? "View personalized" : "Personalize for me"}
               </Button>
               <Button className="gap-2" onClick={handleDownloadPdf}>
@@ -478,8 +499,15 @@ export function QuickRevisionView({ chapterId, chapterTitle, chapterNumber, revi
                 <p className="text-sm text-text-secondary">No formulas added yet.</p>
               ) : (
                 revisionNotes.keyFormulas.map((formula, index) => (
-                  <div key={`${formula}-${index}`} className="rounded-xl border border-border-default bg-bg-subtle p-3 shadow-[var(--shadow-sm)]">
-                    <ContentRenderer content={`$$${formula}$$`} variant="compact" className="[&_p]:my-0 [&_.katex]:text-accent-primary" />
+                  <div
+                    key={`${formula}-${index}`}
+                    className="rounded-xl border border-border-default bg-bg-subtle p-3 shadow-[var(--shadow-sm)]"
+                  >
+                    <ContentRenderer
+                      content={`$$${formula}$$`}
+                      variant="compact"
+                      className="[&_p]:my-0 [&_.katex]:text-accent-primary"
+                    />
                   </div>
                 ))
               )}
@@ -495,9 +523,16 @@ export function QuickRevisionView({ chapterId, chapterTitle, chapterNumber, revi
                 <p className="text-sm text-text-secondary">No definitions added yet.</p>
               ) : (
                 revisionNotes.keyDefinitions.map((item, index) => (
-                  <div key={`${item.term}-${index}`} className="rounded-xl border border-border-default p-3">
+                  <div
+                    key={`${item.term}-${index}`}
+                    className="rounded-xl border border-border-default p-3"
+                  >
                     <p className="text-sm font-semibold text-text-primary">{item.term}</p>
-                    <ContentRenderer content={item.definition} variant="compact" className="mt-1 text-sm" />
+                    <ContentRenderer
+                      content={item.definition}
+                      variant="compact"
+                      className="mt-1 text-sm"
+                    />
                   </div>
                 ))
               )}
@@ -516,7 +551,11 @@ export function QuickRevisionView({ chapterId, chapterTitle, chapterNumber, revi
                 <p className="text-sm text-text-secondary">No warning notes added yet.</p>
               ) : (
                 mistakeList.map((mistake, index) => (
-                  <Badge key={`${mistake}-${index}`} variant="warning" className="px-3 py-1 text-xs leading-relaxed">
+                  <Badge
+                    key={`${mistake}-${index}`}
+                    variant="warning"
+                    className="px-3 py-1 text-xs leading-relaxed"
+                  >
                     {mistake}
                   </Badge>
                 ))
@@ -534,7 +573,10 @@ export function QuickRevisionView({ chapterId, chapterTitle, chapterNumber, revi
               ) : (
                 <ul className="grid gap-2 text-sm text-text-primary sm:grid-cols-2">
                   {tipList.map((tip, index) => (
-                    <li key={`${tip}-${index}`} className="rounded-xl border border-border-default bg-bg-subtle px-3 py-2">
+                    <li
+                      key={`${tip}-${index}`}
+                      className="rounded-xl border border-border-default bg-bg-subtle px-3 py-2"
+                    >
                       {tip}
                     </li>
                   ))}
@@ -551,7 +593,9 @@ export function QuickRevisionView({ chapterId, chapterTitle, chapterNumber, revi
           <CardBody className="flex items-center gap-3 p-4">
             <AlertTriangle className="h-5 w-5 shrink-0 text-red-500" />
             <div>
-              <p className="text-sm font-medium text-red-800 dark:text-red-300">Could not personalize revision notes</p>
+              <p className="text-sm font-medium text-red-800 dark:text-red-300">
+                Could not personalize revision notes
+              </p>
               <p className="text-xs text-red-600 dark:text-red-400">{personalizeError}</p>
             </div>
             <Button size="sm" variant="ghost" className="ml-auto" onClick={handlePersonalize}>
@@ -568,14 +612,21 @@ export function QuickRevisionView({ chapterId, chapterTitle, chapterNumber, revi
             <div className="flex items-center gap-3">
               <Spinner size="sm" />
               <div>
-                <h3 className="text-lg font-semibold text-text-primary">Personalizing your revision...</h3>
-                <p className="text-sm text-text-secondary">Analyzing your quiz history and learning patterns</p>
+                <h3 className="text-lg font-semibold text-text-primary">
+                  Personalizing your revision...
+                </h3>
+                <p className="text-sm text-text-secondary">
+                  Analyzing your quiz history and learning patterns
+                </p>
               </div>
             </div>
           </CardHeader>
           <CardBody className="grid gap-4 p-5 lg:grid-cols-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className={`space-y-3 rounded-xl border border-border-default p-4 ${i === 3 ? "lg:col-span-2" : ""}`}>
+              <div
+                key={i}
+                className={`space-y-3 rounded-xl border border-border-default p-4 ${i === 3 ? "lg:col-span-2" : ""}`}
+              >
                 <div className="h-4 w-1/3 rounded bg-bg-subtle" />
                 <div className="h-3 w-full rounded bg-bg-subtle" />
                 <div className="h-3 w-2/3 rounded bg-bg-subtle" />
@@ -597,7 +648,8 @@ export function QuickRevisionView({ chapterId, chapterTitle, chapterNumber, revi
                 </Badge>
                 <h3 className="text-xl font-semibold">Your Personalized Revision</h3>
                 <p className="max-w-2xl text-sm text-text-secondary">
-                  Tailored tips and focus areas based on your quiz history, weak areas, and learning progress.
+                  Tailored tips and focus areas based on your quiz history, weak areas, and learning
+                  progress.
                 </p>
               </div>
             </CardHeader>
@@ -607,7 +659,9 @@ export function QuickRevisionView({ chapterId, chapterTitle, chapterNumber, revi
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                    <h4 className="text-base font-semibold text-amber-900 dark:text-amber-200">Your Focus Areas</h4>
+                    <h4 className="text-base font-semibold text-amber-900 dark:text-amber-200">
+                      Your Focus Areas
+                    </h4>
                   </div>
                 </CardHeader>
                 <CardBody className="grid gap-2 pt-0">
@@ -627,7 +681,9 @@ export function QuickRevisionView({ chapterId, chapterTitle, chapterNumber, revi
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    <h4 className="text-base font-semibold text-emerald-900 dark:text-emerald-200">Your Strengths</h4>
+                    <h4 className="text-base font-semibold text-emerald-900 dark:text-emerald-200">
+                      Your Strengths
+                    </h4>
                   </div>
                 </CardHeader>
                 <CardBody className="grid gap-2 pt-0">

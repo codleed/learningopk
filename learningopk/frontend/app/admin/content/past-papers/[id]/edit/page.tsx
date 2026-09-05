@@ -21,7 +21,7 @@ export default async function EditPastPaperPage({ params }: EditPastPaperPagePro
 
   const [boards, allPapers] = await Promise.all([
     getAdminCurriculumTree(cookieHeader).catch(() => []),
-    getAdminPastPapers({ cookieHeader }).catch(() => [])
+    getAdminPastPapers({ cookieHeader }).catch(() => []),
   ]);
 
   const paper = allPapers.find((p) => p.id === paperId);

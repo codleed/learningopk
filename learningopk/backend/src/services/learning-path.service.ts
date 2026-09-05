@@ -1,5 +1,9 @@
 import { scoreToPercent } from "../lib/progress-metrics.js";
-import { buildLearningPathRecommendations, matchesWeakTopic, type LearningPathResult } from "../lib/learning-path.js";
+import {
+  buildLearningPathRecommendations,
+  matchesWeakTopic,
+  type LearningPathResult,
+} from "../lib/learning-path.js";
 import { aiContextRepository } from "../repositories/ai-context.repository.js";
 import { learningPathRepository } from "../repositories/learning-path.repository.js";
 
@@ -14,7 +18,7 @@ export class LearningPathService {
       learningPathRepository.findChapterSignals(userId, scope),
       learningPathRepository.findChapterQuizScores(userId, scope),
       learningPathRepository.findAiSessionCounts(userId, scope),
-      aiContextRepository.findByUserId(userId)
+      aiContextRepository.findByUserId(userId),
     ]);
 
     const averageQuizPercentByChapter = new Map<number, number>();
@@ -28,7 +32,8 @@ export class LearningPathService {
     }
 
     for (const [chapterId, percentages] of quizBuckets) {
-      const average = percentages.reduce((total, value) => total + value, 0) / Math.max(percentages.length, 1);
+      const average =
+        percentages.reduce((total, value) => total + value, 0) / Math.max(percentages.length, 1);
       averageQuizPercentByChapter.set(chapterId, Math.round(average));
     }
 
@@ -45,14 +50,17 @@ export class LearningPathService {
       signals: chapterRows.map((row) => ({
         chapterId: row.chapterId,
         chapterTitle: row.chapterTitle,
-        hasProgressSignal: Boolean(row.visitedAt) || (row.exercisesViewed ?? 0) > 0 || (row.quizAttemptsCount ?? 0) > 0,
+        hasProgressSignal:
+          Boolean(row.visitedAt) ||
+          (row.exercisesViewed ?? 0) > 0 ||
+          (row.quizAttemptsCount ?? 0) > 0,
         quizScorePercent: averageQuizPercentByChapter.get(row.chapterId) ?? null,
         exercisesViewed: row.exercisesViewed ?? 0,
         totalExercises: row.totalExercises,
         aiSessionCount: aiSessionCountByChapter.get(row.chapterId) ?? 0,
-        weakTopicMatch: matchesWeakTopic(row.chapterTitle, weakTopics)
+        weakTopicMatch: matchesWeakTopic(row.chapterTitle, weakTopics),
       })),
-      limit: 10
+      limit: 10,
     });
   }
 }

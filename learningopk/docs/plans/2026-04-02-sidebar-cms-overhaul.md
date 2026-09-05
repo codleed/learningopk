@@ -15,6 +15,7 @@
 ### Task 1: Fix Sidebar Content Overlap in AuthLayoutWrapper
 
 **Files:**
+
 - Modify: `frontend/src/components/foundation/auth-layout-wrapper.tsx`
 - Modify: `frontend/src/components/foundation/left-rail.tsx`
 
@@ -26,12 +27,14 @@ In `auth-layout-wrapper.tsx`, add a spacer `<div>` before the main content that 
 
 ```tsx
 // auth-layout-wrapper.tsx - inside the flex container, before <main>
-{/* Sidebar spacer - reserves space for the fixed LeftRail */}
+{
+  /* Sidebar spacer - reserves space for the fixed LeftRail */
+}
 <div
   className="hidden md:block shrink-0 transition-[width] duration-300 ease-in-out"
   style={{ width: 72 }}
   aria-hidden="true"
-/>
+/>;
 ```
 
 **Step 2: Verify no content overlap on desktop and mobile**
@@ -39,6 +42,7 @@ In `auth-layout-wrapper.tsx`, add a spacer `<div>` before the main content that 
 ### Task 2: Ensure Header Doesn't Overlap Sidebar
 
 **Files:**
+
 - Verify: `frontend/src/components/foundation/left-rail.tsx` (z-index 40)
 - Verify: All pages using `AppShell` have proper content margins
 
@@ -47,6 +51,7 @@ In `auth-layout-wrapper.tsx`, add a spacer `<div>` before the main content that 
 ### Task 3: Remove Dead Layout System
 
 **Files:**
+
 - Delete: `frontend/src/components/layout/app-sidebar.tsx`
 - Delete: `frontend/src/components/layout/app-layout.tsx`
 - Delete: `frontend/src/components/layout/app-header.tsx`
@@ -59,6 +64,7 @@ In `auth-layout-wrapper.tsx`, add a spacer `<div>` before the main content that 
 ### Task 4: Improve Mobile Sidebar Behavior
 
 **Files:**
+
 - Modify: `frontend/src/components/foundation/left-rail.tsx`
 
 **Step 1:** Ensure mobile hamburger button doesn't overlap page content. Currently fixed at `top-4 left-4 z-50` which may conflict with breadcrumbs.
@@ -71,6 +77,7 @@ In `auth-layout-wrapper.tsx`, add a spacer `<div>` before the main content that 
 ### Task 5: Install Tiptap Dependencies
 
 **Step 1:** Install tiptap packages in frontend:
+
 ```bash
 pnpm add @tiptap/react @tiptap/starter-kit @tiptap/extension-image @tiptap/extension-placeholder @tiptap/extension-code-block-lowlight @tiptap/extension-link @tiptap/extension-underline @tiptap/extension-text-align @tiptap/extension-highlight @tiptap/extension-table @tiptap/extension-table-row @tiptap/extension-table-cell @tiptap/extension-table-header @tiptap/extension-youtube @tiptap/pm lowlight
 ```
@@ -78,6 +85,7 @@ pnpm add @tiptap/react @tiptap/starter-kit @tiptap/extension-image @tiptap/exten
 ### Task 6: Build Tiptap Rich Text Editor Component
 
 **Files:**
+
 - Create: `frontend/src/components/admin/rich-text-editor.tsx`
 - Create: `frontend/src/components/admin/editor-toolbar.tsx`
 
@@ -89,6 +97,7 @@ pnpm add @tiptap/react @tiptap/starter-kit @tiptap/extension-image @tiptap/exten
 ### Task 7: Build Media Upload Component
 
 **Files:**
+
 - Create: `frontend/src/components/admin/media-upload.tsx`
 - Create: `frontend/src/components/admin/media-library.tsx`
 
@@ -101,10 +110,12 @@ pnpm add @tiptap/react @tiptap/starter-kit @tiptap/extension-image @tiptap/exten
 ### Task 8: Backend - Presigned URL Upload Endpoint
 
 **Files:**
+
 - Modify: `backend/src/routes/chapter-media.ts`
 - Modify: `backend/src/lib/minio.ts`
 
 **Step 1:** Add presigned URL generation endpoint:
+
 ```
 POST /api/admin/content/chapters/:chapterId/presigned-upload
 Body: { fileName, mimeType, fileSize }
@@ -112,16 +123,19 @@ Response: { uploadUrl, objectKey, publicUrl }
 ```
 
 **Step 2:** Add image optimization endpoint (post-upload webhook or on-demand):
+
 - Use sharp for WebP conversion
 - Generate responsive sizes (thumbnail, medium, full)
 
 **Step 3:** Add media listing endpoint:
+
 ```
 GET /api/admin/content/chapters/:chapterId/media
 Response: { media: [...] }
 ```
 
 **Step 4:** Add media deletion endpoint:
+
 ```
 DELETE /api/admin/content/chapters/:chapterId/media/:mediaId
 ```
@@ -129,6 +143,7 @@ DELETE /api/admin/content/chapters/:chapterId/media/:mediaId
 ### Task 9: Integrate Rich Editor into Chapter Management
 
 **Files:**
+
 - Modify: `frontend/app/admin/content/chapters/[id]/manage/chapter-manage-client.tsx`
 
 **Step 1:** Replace `CodeMirrorMarkdownEditor` with new Tiptap `RichTextEditor`.
@@ -143,9 +158,11 @@ DELETE /api/admin/content/chapters/:chapterId/media/:mediaId
 ### Task 10: Produce Architecture Decision Record (ADR)
 
 **Files:**
+
 - Create: `docs/architectural-decisions/ADR-sidebar-cms-overhaul.md`
 
 **Review Areas:**
+
 1. Database: Schema design audit, missing indexes, query patterns
 2. Authentication: Better-Auth config, session handling, rate limiting
 3. API Design: Route organization (admin.ts monolith), response standardization

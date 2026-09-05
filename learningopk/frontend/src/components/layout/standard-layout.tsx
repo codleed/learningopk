@@ -13,11 +13,7 @@ const maxWidthClasses = {
   full: "",
 };
 
-export function StandardLayout({
-  children,
-  className,
-  maxWidth = "default",
-}: StandardLayoutProps) {
+export function StandardLayout({ children, className, maxWidth = "default" }: StandardLayoutProps) {
   return (
     <div
       className={cn(

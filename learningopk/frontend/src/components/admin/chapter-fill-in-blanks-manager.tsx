@@ -2,16 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Loader2,
-  TextCursorInput,
-  X,
-  CheckCircle,
-  Eye,
-} from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, TextCursorInput, X, CheckCircle, Eye } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,9 +50,7 @@ function countBlanks(text: string): number {
   return matches ? matches.length : 0;
 }
 
-type PreviewSegment =
-  | { type: "text"; value: string }
-  | { type: "blank"; index: number };
+type PreviewSegment = { type: "text"; value: string } | { type: "blank"; index: number };
 
 function parseSegments(question: string): PreviewSegment[] {
   const parts = question.split(BLANK_PATTERN);
@@ -84,18 +73,15 @@ function parseSegments(question: string): PreviewSegment[] {
 
 /* ─── Component ─── */
 
-export function ChapterFillInBlanksManager({
-  chapterId,
-}: ChapterFillInBlanksManagerProps) {
+export function ChapterFillInBlanksManager({ chapterId }: ChapterFillInBlanksManagerProps) {
   const { pushToast } = useToast();
-  const [statements, setStatements] = useState<AdminCurriculumExerciseRead[]>(
-    []
-  );
+  const [statements, setStatements] = useState<AdminCurriculumExerciseRead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [editingStatement, setEditingStatement] =
-    useState<AdminCurriculumExerciseRead | null>(null);
+  const [editingStatement, setEditingStatement] = useState<AdminCurriculumExerciseRead | null>(
+    null
+  );
   const [formData, setFormData] = useState<StatementFormData>(initialFormData);
   const [deleteConfirm, setDeleteConfirm] = useState<{
     show: boolean;
@@ -109,9 +95,7 @@ export function ChapterFillInBlanksManager({
     try {
       const data = await getAdminCurriculumExercises({ chapterId });
       // Filter to only fill_in_blanks type
-      setStatements(
-        data.exercises.filter((e) => e.type === "fill_in_blanks")
-      );
+      setStatements(data.exercises.filter((e) => e.type === "fill_in_blanks"));
     } catch (error) {
       console.error("Failed to fetch fill-in-the-blank statements:", error);
       pushToast({
@@ -130,15 +114,9 @@ export function ChapterFillInBlanksManager({
 
   /* ── Derived state ── */
 
-  const blankCount = useMemo(
-    () => countBlanks(formData.question),
-    [formData.question]
-  );
+  const blankCount = useMemo(() => countBlanks(formData.question), [formData.question]);
 
-  const previewSegments = useMemo(
-    () => parseSegments(formData.question),
-    [formData.question]
-  );
+  const previewSegments = useMemo(() => parseSegments(formData.question), [formData.question]);
 
   const nextExerciseNumber = useMemo(() => {
     if (statements.length === 0) return "1";
@@ -153,24 +131,19 @@ export function ChapterFillInBlanksManager({
 
   /* ── Handlers ── */
 
-  const handleQuestionChange = useCallback(
-    (value: string) => {
-      setFormData((prev) => {
-        const nextCount = countBlanks(value);
-        const synced: string[] = Array.from({ length: nextCount }, (_, i) =>
-          i < prev.blanksAnswer.length ? (prev.blanksAnswer[i] ?? "") : ""
-        );
-        return { ...prev, question: value, blanksAnswer: synced };
-      });
-    },
-    []
-  );
+  const handleQuestionChange = useCallback((value: string) => {
+    setFormData((prev) => {
+      const nextCount = countBlanks(value);
+      const synced: string[] = Array.from({ length: nextCount }, (_, i) =>
+        i < prev.blanksAnswer.length ? (prev.blanksAnswer[i] ?? "") : ""
+      );
+      return { ...prev, question: value, blanksAnswer: synced };
+    });
+  }, []);
 
   const handleAnswerChange = useCallback((index: number, value: string) => {
     setFormData((prev) => {
-      const updated = prev.blanksAnswer.map((v, i) =>
-        i === index ? value : v
-      );
+      const updated = prev.blanksAnswer.map((v, i) => (i === index ? value : v));
       return { ...prev, blanksAnswer: updated };
     });
   }, []);
@@ -187,8 +160,7 @@ export function ChapterFillInBlanksManager({
     if (blankCount === 0) {
       pushToast({
         title: "Validation Error",
-        description:
-          'No blanks detected. Use {{blank}} to mark fill-in positions.',
+        description: "No blanks detected. Use {{blank}} to mark fill-in positions.",
         tone: "error",
       });
       return;
@@ -204,8 +176,7 @@ export function ChapterFillInBlanksManager({
 
     setIsSaving(true);
     try {
-      const exerciseNumber =
-        formData.exerciseNumber.trim() || nextExerciseNumber;
+      const exerciseNumber = formData.exerciseNumber.trim() || nextExerciseNumber;
 
       if (editingStatement) {
         const updated = await updateAdminCurriculumExercise({
@@ -218,11 +189,7 @@ export function ChapterFillInBlanksManager({
           blanksAnswer: formData.blanksAnswer,
         });
         setStatements((prev) =>
-          prev.map((s) =>
-            s.id === editingStatement.id
-              ? { ...s, ...updated.exercise }
-              : s
-          )
+          prev.map((s) => (s.id === editingStatement.id ? { ...s, ...updated.exercise } : s))
         );
         pushToast({ title: "Statement updated", tone: "success" });
       } else {
@@ -248,8 +215,7 @@ export function ChapterFillInBlanksManager({
       if (err?.response?.status === 409) {
         pushToast({
           title: "Statement already exists",
-          description:
-            "A statement with this number already exists for this chapter.",
+          description: "A statement with this number already exists for this chapter.",
           tone: "error",
         });
       } else {
@@ -334,12 +300,9 @@ export function ChapterFillInBlanksManager({
         <div className="flex items-center gap-3">
           <div className="w-1 h-8 bg-gradient-to-b from-violet-500 to-violet-600 rounded-full" />
           <div>
-            <h2 className="text-xl font-semibold tracking-tight">
-              Fill in the Blanks
-            </h2>
+            <h2 className="text-xl font-semibold tracking-tight">Fill in the Blanks</h2>
             <p className="text-sm text-text-secondary">
-              {statements.length}{" "}
-              {statements.length === 1 ? "statement" : "statements"}
+              {statements.length} {statements.length === 1 ? "statement" : "statements"}
             </p>
           </div>
         </div>
@@ -379,9 +342,7 @@ export function ChapterFillInBlanksManager({
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium flex items-center gap-2">
                     <TextCursorInput className="h-4 w-4 text-violet-500" />
-                    {editingStatement
-                      ? "Edit Statement"
-                      : "Add New Statement"}
+                    {editingStatement ? "Edit Statement" : "Add New Statement"}
                   </h4>
                   <Button
                     variant="ghost"
@@ -396,9 +357,7 @@ export function ChapterFillInBlanksManager({
                 {/* Metadata row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      Statement Number
-                    </label>
+                    <label className="text-sm font-medium">Statement Number</label>
                     <Input
                       value={formData.exerciseNumber}
                       onChange={(e) =>
@@ -417,10 +376,7 @@ export function ChapterFillInBlanksManager({
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          difficulty: e.target.value as
-                            | "easy"
-                            | "medium"
-                            | "hard",
+                          difficulty: e.target.value as "easy" | "medium" | "hard",
                         }))
                       }
                     >
@@ -434,8 +390,7 @@ export function ChapterFillInBlanksManager({
                 {/* Statement text */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium flex items-center gap-2">
-                    Statement{" "}
-                    <span className="text-accent-danger">*</span>
+                    Statement <span className="text-accent-danger">*</span>
                     {blankCount > 0 && (
                       <Badge variant="primary" size="sm">
                         {blankCount} {blankCount === 1 ? "blank" : "blanks"}
@@ -445,14 +400,19 @@ export function ChapterFillInBlanksManager({
                   <Textarea
                     value={formData.question}
                     onChange={(e) => handleQuestionChange(e.target.value)}
-                    placeholder='Type the statement using {{blank}} to mark blanks. Example: The force of gravity is {{blank}} m/s².'
+                    placeholder="Type the statement using {{blank}} to mark blanks. Example: The force of gravity is {{blank}} m/s²."
                     rows={3}
                     className="min-h-[80px]"
                   />
                   <p className="text-xs text-text-muted">
-                    Use <code className="px-1 py-0.5 rounded bg-bg-subtle text-xs font-mono">{"{{blank}}"}</code> to
-                    mark fill-in positions. Supports LaTeX: wrap math in{" "}
-                    <code className="px-1 py-0.5 rounded bg-bg-subtle text-xs font-mono">$...$</code>
+                    Use{" "}
+                    <code className="px-1 py-0.5 rounded bg-bg-subtle text-xs font-mono">
+                      {"{{blank}}"}
+                    </code>{" "}
+                    to mark fill-in positions. Supports LaTeX: wrap math in{" "}
+                    <code className="px-1 py-0.5 rounded bg-bg-subtle text-xs font-mono">
+                      $...$
+                    </code>
                   </p>
                 </div>
 
@@ -466,14 +426,10 @@ export function ChapterFillInBlanksManager({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {Array.from({ length: blankCount }, (_, i) => (
                         <div key={`answer-${i}`} className="space-y-1">
-                          <label className="text-xs text-text-muted">
-                            Blank {i + 1}
-                          </label>
+                          <label className="text-xs text-text-muted">Blank {i + 1}</label>
                           <Input
                             value={formData.blanksAnswer[i] ?? ""}
-                            onChange={(e) =>
-                              handleAnswerChange(i, e.target.value)
-                            }
+                            onChange={(e) => handleAnswerChange(i, e.target.value)}
                             placeholder={`Answer for blank ${i + 1}`}
                           />
                         </div>
@@ -487,22 +443,15 @@ export function ChapterFillInBlanksManager({
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Eye className="h-4 w-4 text-text-muted" />
-                      <span className="text-sm font-medium text-text-primary">
-                        Student Preview
-                      </span>
+                      <span className="text-sm font-medium text-text-primary">Student Preview</span>
                     </div>
                     <div className="rounded-lg border border-border-default bg-bg-subtle/30 p-4 text-sm leading-relaxed">
                       <p className="flex flex-wrap items-baseline gap-y-2">
                         {previewSegments.map((segment, segIdx) => {
                           if (segment.type === "text") {
-                            return (
-                              <span key={`seg-${segIdx}`}>
-                                {segment.value}
-                              </span>
-                            );
+                            return <span key={`seg-${segIdx}`}>{segment.value}</span>;
                           }
-                          const answer =
-                            formData.blanksAnswer[segment.index] ?? "";
+                          const answer = formData.blanksAnswer[segment.index] ?? "";
                           const hasAnswer = answer.trim().length > 0;
                           return (
                             <span
@@ -513,9 +462,7 @@ export function ChapterFillInBlanksManager({
                                 className={cn(
                                   "inline-block border-b-2 border-violet-500 min-w-[80px] text-center",
                                   "px-2 py-0.5 text-sm font-medium",
-                                  hasAnswer
-                                    ? "text-text-primary"
-                                    : "text-text-muted"
+                                  hasAnswer ? "text-text-primary" : "text-text-muted"
                                 )}
                               >
                                 {hasAnswer ? answer : "_______"}
@@ -529,13 +476,11 @@ export function ChapterFillInBlanksManager({
                           );
                         })}
                       </p>
-                      {blankCount === 0 &&
-                        formData.question.trim().length > 0 && (
-                          <p className="text-xs text-text-muted italic mt-2">
-                            No blanks detected. Add {"{{blank}}"} to create
-                            fill-in positions.
-                          </p>
-                        )}
+                      {blankCount === 0 && formData.question.trim().length > 0 && (
+                        <p className="text-xs text-text-muted italic mt-2">
+                          No blanks detected. Add {"{{blank}}"} to create fill-in positions.
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -582,12 +527,10 @@ export function ChapterFillInBlanksManager({
             <div className="rounded-full bg-violet-500/10 p-4 mb-4">
               <TextCursorInput className="h-10 w-10 text-violet-500/60" />
             </div>
-            <h3 className="text-lg font-medium mb-1">
-              No statements yet
-            </h3>
+            <h3 className="text-lg font-medium mb-1">No statements yet</h3>
             <p className="text-sm text-text-secondary max-w-xs mb-6">
-              Create fill-in-the-blank statements to help students practice
-              recall and understanding.
+              Create fill-in-the-blank statements to help students practice recall and
+              understanding.
             </p>
             <Button
               variant="primary"
@@ -649,8 +592,7 @@ export function ChapterFillInBlanksManager({
                             </span>
                           </div>
                           <Badge variant="info" size="sm">
-                            {answers.length}{" "}
-                            {answers.length === 1 ? "blank" : "blanks"}
+                            {answers.length} {answers.length === 1 ? "blank" : "blanks"}
                           </Badge>
                         </div>
 
@@ -659,14 +601,9 @@ export function ChapterFillInBlanksManager({
                           <p className="flex flex-wrap items-baseline gap-y-1">
                             {segments.map((segment, segIdx) => {
                               if (segment.type === "text") {
-                                return (
-                                  <span key={`seg-${segIdx}`}>
-                                    {segment.value}
-                                  </span>
-                                );
+                                return <span key={`seg-${segIdx}`}>{segment.value}</span>;
                               }
-                              const answer =
-                                answers[segment.index] ?? "";
+                              const answer = answers[segment.index] ?? "";
                               return (
                                 <span
                                   key={`blank-${segment.index}`}
@@ -684,11 +621,7 @@ export function ChapterFillInBlanksManager({
 
                       {/* Actions */}
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(statement)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(statement)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button

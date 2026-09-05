@@ -10,18 +10,26 @@ type SubjectProgressTableProps = {
 const statusLabel: Record<SubjectProgressResponse["chapters"][number]["status"], string> = {
   green: "Passed > 70%",
   yellow: "Attempted < 70%",
-  grey: "Not started"
+  grey: "Not started",
 };
 
-const statusTone: Record<SubjectProgressResponse["chapters"][number]["status"], "success" | "warning" | "neutral"> = {
+const statusTone: Record<
+  SubjectProgressResponse["chapters"][number]["status"],
+  "success" | "warning" | "neutral"
+> = {
   green: "success",
   yellow: "warning",
-  grey: "neutral"
+  grey: "neutral",
 };
 
 export function SubjectProgressTable({ chapters }: SubjectProgressTableProps) {
   if (chapters.length === 0) {
-    return <EmptyState title="No published chapters" description="No chapter progress is available for this subject yet." />;
+    return (
+      <EmptyState
+        title="No published chapters"
+        description="No chapter progress is available for this subject yet."
+      />
+    );
   }
 
   return (
@@ -31,7 +39,9 @@ export function SubjectProgressTable({ chapters }: SubjectProgressTableProps) {
           <tr>
             <th className="px-3 py-2 text-left font-semibold text-text-primary">Chapter</th>
             <th className="px-3 py-2 text-left font-semibold text-text-primary">Visited</th>
-            <th className="px-3 py-2 text-left font-semibold text-text-primary">Exercises Viewed</th>
+            <th className="px-3 py-2 text-left font-semibold text-text-primary">
+              Exercises Viewed
+            </th>
             <th className="px-3 py-2 text-left font-semibold text-text-primary">Quiz Attempted</th>
             <th className="px-3 py-2 text-left font-semibold text-text-primary">Best Score</th>
             <th className="px-3 py-2 text-left font-semibold text-text-primary">Status</th>
@@ -47,7 +57,9 @@ export function SubjectProgressTable({ chapters }: SubjectProgressTableProps) {
               </td>
               <td className="px-3 py-2 text-text-primary/90">{chapter.visited ? "Yes" : "No"}</td>
               <td className="px-3 py-2 text-text-primary/90">{chapter.exercisesViewed}</td>
-              <td className="px-3 py-2 text-text-primary/90">{chapter.quizAttempted ? "Yes" : "No"}</td>
+              <td className="px-3 py-2 text-text-primary/90">
+                {chapter.quizAttempted ? "Yes" : "No"}
+              </td>
               <td className="px-3 py-2 text-text-primary/90">{chapter.bestScorePercent}%</td>
               <td className="px-3 py-2">
                 <StatusPill tone={statusTone[chapter.status]} label={statusLabel[chapter.status]} />
@@ -59,4 +71,3 @@ export function SubjectProgressTable({ chapters }: SubjectProgressTableProps) {
     </div>
   );
 }
-

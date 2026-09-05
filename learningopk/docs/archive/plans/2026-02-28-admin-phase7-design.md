@@ -1,6 +1,7 @@
 ﻿# Admin Phase 7 Design
 
 ## Context
+
 - Admin Phases 1-6 are live on `main` with shell navigation, moderation, users lifecycle, community, analytics, notifications/settings, and unified audit center.
 - Current `/admin` command center is static cards and does not reflect operational health in real time.
 - Existing backend tables already contain the required operational signals:
@@ -13,27 +14,32 @@
 ## Approach Options
 
 ### Option A (Recommended): Dedicated command-center read API + focused dashboard panel
+
 - Add `GET /api/admin/overview` for all command-center metrics and activity.
 - Replace static `/admin` cards with a live panel that consumes this API.
 - Pros: clean boundary, lowest regression risk to existing pages, best runtime validation and testability.
 - Cons: introduces one additional read endpoint.
 
 ### Option B: Compose `/admin` from multiple existing endpoints
+
 - Keep backend unchanged and fetch users/moderation/notifications/audit separately from frontend.
 - Pros: no new endpoint.
 - Cons: fragmented loading, duplicated query logic, inconsistent windows, weaker contract.
 
 ### Option C: Extend analytics overview endpoint for command center
+
 - Add command-center fields into `/api/admin/analytics/overview`.
 - Pros: fewer endpoints.
 - Cons: mixed concerns and higher risk for analytics regressions.
 
 ## Approved Direction
+
 - Use **Option A** with backend-first TDD.
 - Add one aggregated read endpoint for command center intelligence.
 - Keep schema unchanged and mutation workflows unchanged.
 
 ## Goals
+
 - Replace static `/admin` overview with live command center data.
 - Ship KPI cards for:
   - open moderation flags
@@ -47,12 +53,14 @@
 - Add links from KPIs and activity rows to relevant admin pages.
 
 ## Non-goals
+
 - No schema migrations unless unavoidable (none expected).
 - No new admin mutation workflows.
 - No redesign outside admin routes.
 - No speculative abstractions not needed for Phase 7.
 
 ## Data and Computation Model
+
 - KPI source mapping:
   - `openModerationFlags`: count rows in `moderation_flags` where `status = 'open'`
   - `suspendedUsers`: count rows in `user` where `status = 'suspended'`
@@ -69,6 +77,7 @@
 ## Backend API Contract
 
 ### GET `/api/admin/overview`
+
 - Auth and role:
   - `401` unauthenticated
   - `403` authenticated non-admin
@@ -108,6 +117,7 @@
 ```
 
 ## Frontend Architecture
+
 - Keep `/admin` route path unchanged.
 - Add server prefetch on `/admin` using `getAdminOverview({ windowDays: 30, cookieHeader })` with safe fallback payload.
 - Add command center panel component:
@@ -128,6 +138,7 @@
     - `settings` -> `/admin/settings`
 
 ## UI Behavior
+
 - Initial render shows prefetched snapshot.
 - Changing window triggers refresh and updates KPI + alerts + activity.
 - Refresh button re-fetches current window state.
@@ -137,6 +148,7 @@
 - Empty activity state displays explicit helper text.
 
 ## Error Handling and Guardrails
+
 - Reuse existing admin auth and role guards.
 - Reuse existing admin request helper and zod schema parsing in frontend.
 - Keep query bounds and window enum strict to avoid expensive unbounded reads.
@@ -145,6 +157,7 @@
 ## Testing Strategy (Strict Runtime TDD)
 
 ### Backend integration
+
 - Add `admin-phase7.integration.test.ts` coverage for:
   - auth/role enforcement (`401/403`)
   - query validation (`400` on invalid window)
@@ -155,6 +168,7 @@
   - alert threshold activation/deactivation behavior
 
 ### Frontend e2e
+
 - Add `admin-phase7-command-center.spec.ts` coverage for:
   - `/admin` shows live KPI panel and activity stream
   - window switching (`7/30/90`) updates dashboard state
@@ -163,9 +177,11 @@
   - KPI and activity links route to intended admin pages
 
 ### Regression safety
+
 - Keep prior admin phase e2e specs passing (Phases 1-6).
 
 ## Verification Targets
+
 - `pnpm.cmd --filter backend exec tsx --test src/tests/integration/admin-phase7.integration.test.ts`
 - `pnpm.cmd --filter frontend exec playwright test tests/e2e/admin-phase7-command-center.spec.ts`
 - `pnpm.cmd --filter backend exec tsx --test src/tests/integration/admin-phase6.integration.test.ts`
@@ -181,6 +197,7 @@
 - `pnpm.cmd --filter frontend exec playwright test tests/e2e/admin-phase6-audit-center.spec.ts`
 
 ## Verification Run Rules
+
 - Before each Playwright command, run exactly:
   - `pnpm.cmd --filter backend db:clear`
 - Set env vars in PowerShell when running backend/frontend verification:
@@ -191,6 +208,7 @@
   - `$env:FRONTEND_ORIGIN='http://localhost:3000'`
 
 ## Risks and Mitigations
+
 - Risk: dashboard query cost grows with audit volume.
   - Mitigation: bounded activity result size, filtered aggregates, existing indexes.
 - Risk: `/admin` replacement regresses shell expectations.

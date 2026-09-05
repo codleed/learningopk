@@ -16,9 +16,10 @@ export function AuthGuardMessage({
   variant = "auth",
   title,
   description,
-  backHref = "/"
+  backHref = "/",
 }: AuthGuardMessageProps) {
-  const resolvedTitle = title ?? (variant === "auth" ? "Sign in required" : "You do not have permission");
+  const resolvedTitle =
+    title ?? (variant === "auth" ? "Sign in required" : "You do not have permission");
   const resolvedDescription =
     description ??
     (variant === "auth"
@@ -45,4 +46,3 @@ export function AuthGuardMessage({
     </section>
   );
 }
-

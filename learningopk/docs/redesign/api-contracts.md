@@ -1,9 +1,11 @@
 # LearningoPK API Contract Document
 
 ## Date
+
 2026-04-05 (Updated for TASK-57 auth drift repair)
 
 ## Auditor
+
 Software Architecture Review - TASK-57
 
 ---
@@ -20,12 +22,12 @@ Software Architecture Review - TASK-57
 
 Better Auth provides a comprehensive authentication system. The following endpoints are available:
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/auth/sign-up/email` | No | Register new user with email/password |
-| POST | `/auth/sign-in/email` | No | Login with email/password |
-| POST | `/auth/sign-out` | Yes | Logout current session |
-| GET | `/auth/get-session` | Yes | Get current session |
+| Method | Path                  | Auth | Description                           |
+| ------ | --------------------- | ---- | ------------------------------------- |
+| POST   | `/auth/sign-up/email` | No   | Register new user with email/password |
+| POST   | `/auth/sign-in/email` | No   | Login with email/password             |
+| POST   | `/auth/sign-out`      | Yes  | Logout current session                |
+| GET    | `/auth/get-session`   | Yes  | Get current session                   |
 
 **Note**: Password reset functionality (`/auth/request-password-reset`, `/auth/reset-password`) is **not currently enabled** — no `sendResetPassword` handler is configured in Better Auth. The login UI does not show a "Forgot password?" link. Users who forget passwords must contact support.
 
@@ -33,7 +35,7 @@ Better Auth provides a comprehensive authentication system. The following endpoi
 
 ```ts
 // POST /auth/sign-up/email
-Request: { 
+Request: {
   name: string,
   email: string,
   password: string (min 8 chars),
@@ -41,7 +43,7 @@ Request: {
   board: string,
   degree?: string
 }
-Success 200/201: { 
+Success 200/201: {
   user: { id, name, email, class, board, degree, role?, createdAt, updatedAt },
   session: {...}
 }
@@ -59,11 +61,13 @@ Success 200: { session: {...} | null }
 ```
 
 **Supported Features:**
+
 - Email/password authentication (with `autoSignIn` on signup)
 - Session-based auth with secure cookies
 - User additional fields: `class`, `board`, `degree`, `role` (role is server-set only, not user-input)
 
 **Not Yet Implemented:**
+
 - Remember me / extended session duration (not configured in Better Auth)
 - Password reset via email (no `sendResetPassword` handler configured)
 - Email verification (not required for current product stage)
@@ -72,22 +76,22 @@ Success 200: { session: {...} | null }
 
 ---
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/friends/` | Yes | List friends with pagination |
-| POST | `/friends/requests` | Yes | Send friend request |
-| GET | `/friends/requests` | Yes | List friend requests |
-| POST | `/friends/requests/:requestId/accept` | Yes | Accept request |
-| POST | `/friends/requests/:requestId/decline` | Yes | Decline request |
-| DELETE | `/friends/requests/:requestId` | Yes | Cancel outgoing request |
-| DELETE | `/friends/:friendId` | Yes | Remove friend |
+| Method | Path                                   | Auth | Description                  |
+| ------ | -------------------------------------- | ---- | ---------------------------- |
+| GET    | `/friends/`                            | Yes  | List friends with pagination |
+| POST   | `/friends/requests`                    | Yes  | Send friend request          |
+| GET    | `/friends/requests`                    | Yes  | List friend requests         |
+| POST   | `/friends/requests/:requestId/accept`  | Yes  | Accept request               |
+| POST   | `/friends/requests/:requestId/decline` | Yes  | Decline request              |
+| DELETE | `/friends/requests/:requestId`         | Yes  | Cancel outgoing request      |
+| DELETE | `/friends/:friendId`                   | Yes  | Remove friend                |
 
 **Request/Response Contracts:**
 
 ```ts
 // GET /friends/
 Query: { page?: number, limit?: number, search?: string }
-Success 200: { 
+Success 200: {
   friends: Array<{ id, name, email, createdAt }>,
   pagination: { page, limit, total, totalPages }
 }
@@ -112,23 +116,23 @@ Error 400: { error: "Request not found or not incoming" }
 
 ### Forum Routes (`/api/forum`)
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/forum/filters` | No | Get boards/classes/subjects/chapters |
-| GET | `/forum/threads` | No | List threads with filters |
-| GET | `/forum/threads/:threadId` | No | Get thread with replies |
-| POST | `/forum/threads` | Yes | Create new thread |
-| POST | `/forum/threads/:threadId/replies` | Yes | Add reply to thread |
-| POST | `/forum/replies/:replyId/vote` | Yes | Vote on reply |
-| POST | `/forum/replies/:replyId/accept` | Yes | Accept reply as answer |
+| Method | Path                               | Auth | Description                          |
+| ------ | ---------------------------------- | ---- | ------------------------------------ |
+| GET    | `/forum/filters`                   | No   | Get boards/classes/subjects/chapters |
+| GET    | `/forum/threads`                   | No   | List threads with filters            |
+| GET    | `/forum/threads/:threadId`         | No   | Get thread with replies              |
+| POST   | `/forum/threads`                   | Yes  | Create new thread                    |
+| POST   | `/forum/threads/:threadId/replies` | Yes  | Add reply to thread                  |
+| POST   | `/forum/replies/:replyId/vote`     | Yes  | Vote on reply                        |
+| POST   | `/forum/replies/:replyId/accept`   | Yes  | Accept reply as answer               |
 
 **Request/Response Contracts:**
 
 ```ts
 // GET /forum/threads
-Query: { 
-  board?: string, 
-  grade?: string, 
+Query: {
+  board?: string,
+  grade?: string,
   subjectId?: number,
   chapterId?: number,
   q?: string,
@@ -136,7 +140,7 @@ Query: {
   limit?: number,
   offset?: number
 }
-Success 200: { 
+Success 200: {
   threads: Array<{
     id, title, body, userId, userName,
     subjectId, chapterId, isPinned, isSolved, views,
@@ -146,7 +150,7 @@ Success 200: {
 }
 
 // GET /forum/threads/:threadId
-Success 200: { 
+Success 200: {
   thread: {
     id, title, body, userId, userName,
     subjectId, chapterId, isPinned, isSolved, views,
@@ -158,7 +162,7 @@ Success 200: {
 }
 
 // POST /forum/threads
-Request: { 
+Request: {
   title: string (5-160 chars),
   body: string (min 10 chars),
   subjectId?: number,
@@ -176,11 +180,11 @@ Success 201: { id, threadId, userId, userName, body, parentReplyId, ... }
 
 ### Learn Routes (`/api/learn`)
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/learn/:board/:grade/:subject` | No | Get subject with chapters |
-| GET | `/learn/:board/:grade/:subject/graph` | Yes | Get chapter progress graph |
-| GET | `/learn/:board/:grade/:subject/:chapter` | No | Get chapter detail |
+| Method | Path                                     | Auth | Description                |
+| ------ | ---------------------------------------- | ---- | -------------------------- |
+| GET    | `/learn/:board/:grade/:subject`          | No   | Get subject with chapters  |
+| GET    | `/learn/:board/:grade/:subject/graph`    | Yes  | Get chapter progress graph |
+| GET    | `/learn/:board/:grade/:subject/:chapter` | No   | Get chapter detail         |
 
 **Request/Response Contracts:**
 
@@ -215,38 +219,39 @@ Success 200: {
 
 ### Progress Routes (`/api/progress`)
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/progress/dashboard` | Yes | Get dashboard stats |
-| GET | `/progress/subjects` | Yes | Get subject progress |
-| GET | `/progress/subjects/:subjectId` | Yes | Get specific subject progress |
-| POST | `/progress/chapter/:chapterId` | Yes | Update chapter progress |
+| Method | Path                            | Auth | Description                   |
+| ------ | ------------------------------- | ---- | ----------------------------- |
+| GET    | `/progress/dashboard`           | Yes  | Get dashboard stats           |
+| GET    | `/progress/subjects`            | Yes  | Get subject progress          |
+| GET    | `/progress/subjects/:subjectId` | Yes  | Get specific subject progress |
+| POST   | `/progress/chapter/:chapterId`  | Yes  | Update chapter progress       |
 
 ---
 
 ### Chat Routes (`/api/chat`)
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/chat/conversations` | Yes | List conversations |
-| GET | `/chat/conversations/:id` | Yes | Get messages in conversation |
-| POST | `/chat/conversations` | Yes | Create/start conversation |
-| POST | `/chat/messages` | Yes | Send message (also WebSocket) |
+| Method | Path                      | Auth | Description                   |
+| ------ | ------------------------- | ---- | ----------------------------- |
+| GET    | `/chat/conversations`     | Yes  | List conversations            |
+| GET    | `/chat/conversations/:id` | Yes  | Get messages in conversation  |
+| POST   | `/chat/conversations`     | Yes  | Create/start conversation     |
+| POST   | `/chat/messages`          | Yes  | Send message (also WebSocket) |
 
 ---
 
 ### Notifications Routes (`/api/notifications`)
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/notifications` | Yes | List notifications |
-| POST | `/notifications/read` | Yes | Mark as read |
+| Method | Path                  | Auth | Description        |
+| ------ | --------------------- | ---- | ------------------ |
+| GET    | `/notifications`      | Yes  | List notifications |
+| POST   | `/notifications/read` | Yes  | Mark as read       |
 
 ---
 
 ## Data Models
 
 ### User
+
 ```ts
 {
   id: string (uuid),
@@ -262,6 +267,7 @@ Success 200: {
 ```
 
 ### Thread
+
 ```ts
 {
   id: string (uuid),
@@ -281,6 +287,7 @@ Success 200: {
 ```
 
 ### Reply
+
 ```ts
 {
   id: string (uuid),
@@ -301,13 +308,13 @@ Success 200: {
 
 ## Issues Summary
 
-| Priority | Issue | Location |
-|----------|-------|----------|
-| High | Inconsistent response shapes | All routes |
-| High | N+1 query in thread replies | `GET /forum/threads/:threadId` |
-| Medium | No reply pagination | `GET /forum/threads/:threadId` |
-| Medium | Missing rate limit headers | All routes |
-| Low | No cursor-based pagination | Forum list endpoints |
+| Priority | Issue                        | Location                       |
+| -------- | ---------------------------- | ------------------------------ |
+| High     | Inconsistent response shapes | All routes                     |
+| High     | N+1 query in thread replies  | `GET /forum/threads/:threadId` |
+| Medium   | No reply pagination          | `GET /forum/threads/:threadId` |
+| Medium   | Missing rate limit headers   | All routes                     |
+| Low      | No cursor-based pagination   | Forum list endpoints           |
 
 ---
 

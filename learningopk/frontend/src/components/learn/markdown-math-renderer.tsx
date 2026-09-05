@@ -8,10 +8,7 @@ type MarkdownMathRendererProps = {
   forceWrap?: boolean;
 };
 
-export function MarkdownMathRenderer({
-  content,
-  className,
-}: MarkdownMathRendererProps) {
+export function MarkdownMathRenderer({ content, className }: MarkdownMathRendererProps) {
   return (
     <ContentRenderer
       content={content}

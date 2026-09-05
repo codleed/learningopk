@@ -58,8 +58,7 @@ export function StatCard({
   loading = false,
 }: StatCardProps) {
   /* ─── Animated numeric display ─── */
-  const numericValue =
-    typeof value === "number" ? value : parseFloat(value);
+  const numericValue = typeof value === "number" ? value : parseFloat(value);
   const isNumeric = !Number.isNaN(numericValue);
 
   const motionVal = useMotionValue(0);
@@ -129,9 +128,7 @@ export function StatCard({
         <div
           className="flex h-9 w-9 items-center justify-center rounded-lg"
           style={{
-            backgroundColor: accentColor
-              ? `${accentColor}1A`
-              : "var(--accent-primary-light)",
+            backgroundColor: accentColor ? `${accentColor}1A` : "var(--accent-primary-light)",
             color: accentColor ?? "var(--accent-primary)",
           }}
         >
@@ -144,9 +141,7 @@ export function StatCard({
         <span className="text-2xl font-bold text-text-primary font-display tabular-nums">
           {isNumeric ? (
             <motion.span ref={displayRef}>
-              {typeof value === "number"
-                ? Math.round(value).toLocaleString()
-                : value}
+              {typeof value === "number" ? Math.round(value).toLocaleString() : value}
             </motion.span>
           ) : (
             value

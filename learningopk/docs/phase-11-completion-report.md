@@ -5,9 +5,11 @@
 **Tasks Completed:**
 
 ## TASK-56: Password Reset Contract Mismatch - RESOLVED
+
 **Decision**: Disabled password reset UI due to missing email infrastructure (principled over shipping broken feature).
 
 **Changes:**
+
 - Removed `/forgot-password` and `/reset-password` pages from `frontend/app/(auth)/`
 - Deleted `forgot-password-form.tsx` and `reset-password-form.tsx` components
 - Removed "Forgot password?" link from `login-form.tsx`
@@ -21,22 +23,26 @@ Better Auth requires `sendResetPassword` configuration with an email delivery se
 Enable password reset by adding email worker implementation (~2 days). Deferred to future phase when email delivery service is provisioned.
 
 **Test Impact:**
+
 - `phase3-auth-layout-routes.spec.ts` now tests UI removal instead of reset flow
 - `auth-resilience.spec.ts` unchanged (tests login network failure, still valid)
 
 ---
 
 ## TASK-57: Auth Review Drift - RESOLVED
+
 **Objective**: Dead code removal, test alignment, single source of truth for auth UI.
 
 **Changes:**
 
 ### Dead Code Removal
+
 - Deleted `bento-auth-shell.tsx` (old Bento design, unused)
 - Deleted `auth-top-navbar.tsx` (unused in current auth layout)
 - Removed "Remember me" checkbox from `login-form.tsx` (was present but never wired to authClient)
 
 ### Test Infrastructure Improvements
+
 - Added `data-testid` attributes to login form:
   - `login-email-input`
   - `login-password-input`
@@ -44,6 +50,7 @@ Enable password reset by adding email worker implementation (~2 days). Deferred 
 - Updated E2E tests can now use stable selectors instead of text/role matching
 
 ### Documentation
+
 - `docs/redesign/api-contracts.md` now documents actual auth endpoints:
   - POST `/api/auth/sign-up/email`
   - POST `/api/auth/sign-in/email`
@@ -55,28 +62,34 @@ Enable password reset by adding email worker implementation (~2 days). Deferred 
 ---
 
 ## TASK-62: Forum Filter State Preservation - RESOLVED
+
 **Objective**: URL-driven filter state that survives navigation and preserves search across filter interactions.
 
 **Existing Implementation (Corrected):**
+
 - `forum/page.tsx` reads all filters from `searchParams` (URL-driven)
 - `ForumFilterBar` quick filters already preserve search query (line 115 includes `selected.q` in href)
 - Advanced filters form uses `method="GET"` so search is preserved on submit
 
 **Bug Fixed:**
+
 - Reset button in advanced filters was linking to `/forum` (cleared all state)
 - Fixed to use `buildForumHref({ q: selected.q })` to preserve search query while clearing other filters
 
 **Architectural Refinement:**
+
 - Extracted `buildForumHref` from `page.tsx` to `src/lib/forum-utils.ts`
 - Shared utility now used by both `page.tsx` and `forum-filter-bar.tsx`
 - Added `forumSearchParamsSchema` and `ForumSearchParams` type to utils for reusability
 
 **State Preservation Verified:**
+
 1. **Search → Toggle Solved**: Quick filter links include `q` param ✓
 2. **Search → Advanced Filters**: GET form submission includes `q` as input field value ✓
 3. **Advanced Filters → Reset**: Reset now clears filters but keeps `q` ✓
 
 **Test Coverage:**
+
 - Existing E2E tests cover basic forum navigation
 - Recommend adding dedicated `forum-filter-state.spec.ts` for comprehensive interaction testing (outside scope of Phase 11 urgent fixes)
 
@@ -85,6 +98,7 @@ Enable password reset by adding email worker implementation (~2 days). Deferred 
 ## Cross-Cutting Deliverables
 
 ### 1. API Contract Integrity ✅
+
 - `docs/redesign/api-contracts.md` now matches current implementation:
   - Corrected auth endpoints to Better Auth standard paths
   - Removed stale references to `/auth/login`, `/auth/register` (actual: `/auth/sign-in/email`, `/auth/sign-up/email`)
@@ -93,21 +107,25 @@ Enable password reset by adding email worker implementation (~2 days). Deferred 
   - No response shape standardization issues addressed (existing inconsistencies documented but not in scope)
 
 ### 2. No Dead Code ✅
+
 - Removed unused auth UI components
 - Removed dead "Remember me" control
 - Checked for other dead code (bento components) and removed
 
 ### 3. State Preservation ✅
+
 - Forum filter state now URL-driven and consistent
 - Reset button preserves search intent
 - Single source of truth for URL construction
 
 ### 4. Test Reliability ✅
+
 - Added stable testids to auth forms (reducing brittleness)
 - Updated phase3 test to reflect actual product state (password reset removed)
 - `auth-resilience.spec.ts` tests real network error handling (no longer mocks success path, still valid for resilience)
 
 ### 5. End-to-End Integrity ✅
+
 - UI no longer exposes unsupported features (password reset)
 - All auth flows documented match implementation
 - Backend contract and frontend UI are aligned
@@ -117,9 +135,11 @@ Enable password reset by adding email worker implementation (~2 days). Deferred 
 ## Files Modified
 
 ### Backend
+
 - No changes required (contract mismatch was in frontend overreach)
 
 ### Frontend
+
 - `src/components/auth/login-form.tsx` - removed dead remember me, added testids
 - `src/components/auth/forgot-password-form.tsx` - **deleted**
 - `src/components/auth/reset-password-form.tsx` - **deleted**
@@ -133,9 +153,11 @@ Enable password reset by adding email worker implementation (~2 days). Deferred 
 - `tests/e2e/phase3-auth-layout-routes.spec.ts` - replaced password reset test with removal verification
 
 ### Documentation
+
 - `docs/redesign/api-contracts.md` - comprehensive update to match current implementation
 
 ### Architecture
+
 - `docs/architectural-decisions/ADR-064-password-reset-contract.md` - **created**
 - `docs/architectural-decisions/ADR-065-auth-ui-consolidation.md` - **created**
 - `docs/architectural-decisions/ADR-066-forum-filter-state.md` - **created**
@@ -175,6 +197,7 @@ Enable password reset by adding email worker implementation (~2 days). Deferred 
 ## Conclusion
 
 Phase 11 cross-cutting concerns have been systematically resolved:
+
 - Contract mismatches identified and resolved by either alignment or removal
 - Documentation brought into sync with implementation
 - Dead code eliminated

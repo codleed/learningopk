@@ -9,22 +9,16 @@ import { persistAuditLog, type AdminAuditScope } from "./shared.js";
 
 const adminNotificationsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).optional().default(20)
+  pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
 });
 
 const adminNotificationCreateBodySchema = z.object({
   title: z.string().trim().min(5),
   message: z.string().trim().min(10),
-  audience: z.enum(["all", "students", "admins"])
+  audience: z.enum(["all", "students", "admins"]),
 });
 
-const listAdminNotifications = async ({
-  page,
-  pageSize
-}: {
-  page: number;
-  pageSize: number;
-}) => {
+const listAdminNotifications = async ({ page, pageSize }: { page: number; pageSize: number }) => {
   const offset = (page - 1) * pageSize;
   const rows = await db
     .select({
@@ -35,7 +29,7 @@ const listAdminNotifications = async ({
       status: adminNotifications.status,
       createdById: adminNotifications.createdBy,
       createdByName: users.name,
-      createdAt: adminNotifications.createdAt
+      createdAt: adminNotifications.createdAt,
     })
     .from(adminNotifications)
     .innerJoin(users, eq(adminNotifications.createdBy, users.id))
@@ -45,7 +39,7 @@ const listAdminNotifications = async ({
 
   const totalRows = await db
     .select({
-      count: sql<number>`count(*)::int`
+      count: sql<number>`count(*)::int`,
     })
     .from(adminNotifications);
   const total = totalRows[0]?.count ?? 0;
@@ -59,12 +53,12 @@ const listAdminNotifications = async ({
       status: row.status,
       createdBy: {
         id: row.createdById,
-        name: row.createdByName
+        name: row.createdByName,
       },
-      createdAt: row.createdAt.toISOString()
+      createdAt: row.createdAt.toISOString(),
     })),
     total,
-    hasMore: offset + rows.length < total
+    hasMore: offset + rows.length < total,
   };
 };
 
@@ -80,7 +74,7 @@ notificationsAdminRouter.get("/notifications", requireSession, async (req, res) 
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid notifications query parameters",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
@@ -93,7 +87,7 @@ notificationsAdminRouter.get("/notifications", requireSession, async (req, res) 
     total: payload.total,
     page,
     pageSize,
-    hasMore: payload.hasMore
+    hasMore: payload.hasMore,
   });
 });
 
@@ -107,7 +101,7 @@ notificationsAdminRouter.post("/notifications", requireSession, async (req, res)
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid notification payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -120,7 +114,7 @@ notificationsAdminRouter.post("/notifications", requireSession, async (req, res)
       title: parsedBody.data.title.trim(),
       message: parsedBody.data.message.trim(),
       audience: parsedBody.data.audience,
-      createdBy: actorId
+      createdBy: actorId,
     })
     .returning({
       id: adminNotifications.id,
@@ -129,13 +123,13 @@ notificationsAdminRouter.post("/notifications", requireSession, async (req, res)
       audience: adminNotifications.audience,
       status: adminNotifications.status,
       createdBy: adminNotifications.createdBy,
-      createdAt: adminNotifications.createdAt
+      createdAt: adminNotifications.createdAt,
     });
 
   const created = createdRows[0];
   if (!created) {
     res.status(500).json({
-      error: "Failed to create notification"
+      error: "Failed to create notification",
     });
     return;
   }
@@ -147,7 +141,7 @@ notificationsAdminRouter.post("/notifications", requireSession, async (req, res)
     status: "success",
     message: `${created.title}: ${created.message}`,
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(201).json({
@@ -159,9 +153,9 @@ notificationsAdminRouter.post("/notifications", requireSession, async (req, res)
       status: created.status,
       createdBy: {
         id: created.createdBy,
-        name: actorName
+        name: actorName,
       },
-      createdAt: created.createdAt.toISOString()
-    }
+      createdAt: created.createdAt.toISOString(),
+    },
   });
 });

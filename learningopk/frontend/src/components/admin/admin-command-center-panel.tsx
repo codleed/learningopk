@@ -8,7 +8,11 @@ import { SectionCard } from "@/components/foundation/section-card";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
-import { getAdminOverview, type AdminOverviewResponse, type AdminOverviewActivityScope } from "@/lib/admin-api";
+import {
+  getAdminOverview,
+  type AdminOverviewResponse,
+  type AdminOverviewActivityScope,
+} from "@/lib/admin-api";
 
 type WindowDays = 7 | 30 | 90;
 
@@ -44,7 +48,7 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
     setIsRefreshing(true);
     try {
       const nextPayload = await getAdminOverview({
-        windowDays: nextWindowDays
+        windowDays: nextWindowDays,
       });
       setPayload(nextPayload);
     } catch (error) {
@@ -52,7 +56,7 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
       pushToast({
         tone: "error",
         title: "Command center unavailable",
-        description: message
+        description: message,
       });
     } finally {
       setIsRefreshing(false);
@@ -65,7 +69,13 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
         title="Operational Intelligence"
         description="Live operational metrics and alerting for admin workflows."
         actions={
-          <Button type="button" size="sm" variant="secondary" onClick={() => void refreshOverview(payload.windowDays)} disabled={isRefreshing}>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => void refreshOverview(payload.windowDays)}
+            disabled={isRefreshing}
+          >
             {isRefreshing ? "Refreshing..." : "Refresh"}
           </Button>
         }
@@ -73,7 +83,10 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
         <div className="space-y-4">
           <div className="grid gap-3 md:grid-cols-[220px_1fr] md:items-end">
             <div className="space-y-1.5">
-              <label htmlFor="admin-overview-window" className="text-xs font-semibold uppercase tracking-wide text-foreground">
+              <label
+                htmlFor="admin-overview-window"
+                className="text-xs font-semibold uppercase tracking-wide text-foreground"
+              >
                 Time window
               </label>
               <Select
@@ -108,24 +121,42 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <DashboardCard data-testid="admin-overview-kpi-open-flags" className="p-3.5">
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Open moderation flags</p>
-              <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">{payload.kpis.openModerationFlags}</p>
-              <Link href="/admin/moderation" className="mt-2 inline-block text-sm font-semibold text-[var(--primary)] underline underline-offset-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                Open moderation flags
+              </p>
+              <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">
+                {payload.kpis.openModerationFlags}
+              </p>
+              <Link
+                href="/admin/moderation"
+                className="mt-2 inline-block text-sm font-semibold text-[var(--primary)] underline underline-offset-4"
+              >
                 View moderation queue
               </Link>
             </DashboardCard>
 
             <DashboardCard data-testid="admin-overview-kpi-suspended-users" className="p-3.5">
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Suspended users</p>
-              <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">{payload.kpis.suspendedUsers}</p>
-              <Link href="/admin/users" className="mt-2 inline-block text-sm font-semibold text-[var(--primary)] underline underline-offset-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                Suspended users
+              </p>
+              <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">
+                {payload.kpis.suspendedUsers}
+              </p>
+              <Link
+                href="/admin/users"
+                className="mt-2 inline-block text-sm font-semibold text-[var(--primary)] underline underline-offset-4"
+              >
                 View user lifecycle
               </Link>
             </DashboardCard>
 
             <DashboardCard data-testid="admin-overview-kpi-failed-actions" className="p-3.5">
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Failed admin actions (24h)</p>
-              <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">{payload.kpis.failedAdminActionsLast24h}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                Failed admin actions (24h)
+              </p>
+              <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">
+                {payload.kpis.failedAdminActionsLast24h}
+              </p>
               <Link
                 href="/admin/audit?status=failed"
                 data-testid="admin-overview-kpi-failed-actions-link"
@@ -136,9 +167,16 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
             </DashboardCard>
 
             <DashboardCard data-testid="admin-overview-kpi-notifications" className="p-3.5">
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Notifications sent</p>
-              <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">{payload.kpis.notificationsSentInWindow}</p>
-              <Link href="/admin/notifications" className="mt-2 inline-block text-sm font-semibold text-[var(--primary)] underline underline-offset-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                Notifications sent
+              </p>
+              <p className="mt-1 text-2xl font-semibold tracking-[-0.01em] text-foreground">
+                {payload.kpis.notificationsSentInWindow}
+              </p>
+              <Link
+                href="/admin/notifications"
+                className="mt-2 inline-block text-sm font-semibold text-[var(--primary)] underline underline-offset-4"
+              >
                 View notifications log
               </Link>
             </DashboardCard>
@@ -146,12 +184,20 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
         </div>
       </SectionCard>
 
-      <SectionCard title="Recent admin activity" description="Latest cross-scope audit events for operational review.">
+      <SectionCard
+        title="Recent admin activity"
+        description="Latest cross-scope audit events for operational review."
+      >
         {payload.recentActivity.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No recent admin activity available for this environment.</p>
+          <p className="text-sm text-muted-foreground">
+            No recent admin activity available for this environment.
+          </p>
         ) : (
           <DashboardSurface as="div" tone="card" className="overflow-x-auto p-0">
-            <table className="min-w-full divide-y divide-border text-sm" aria-label="Recent admin activity">
+            <table
+              className="min-w-full divide-y divide-border text-sm"
+              aria-label="Recent admin activity"
+            >
               <thead className="bg-muted/60">
                 <tr>
                   <th className="px-3 py-2 text-left font-semibold text-foreground">Occurred at</th>
@@ -166,7 +212,9 @@ export function AdminCommandCenterPanel({ initialPayload }: AdminCommandCenterPa
               <tbody className="divide-y divide-border">
                 {payload.recentActivity.map((entry) => (
                   <tr key={entry.id}>
-                    <td className="px-3 py-2 text-foreground/90">{new Date(entry.occurredAt).toLocaleString()}</td>
+                    <td className="px-3 py-2 text-foreground/90">
+                      {new Date(entry.occurredAt).toLocaleString()}
+                    </td>
                     <td className="px-3 py-2 text-foreground/90">{entry.scope}</td>
                     <td className="px-3 py-2 text-foreground">{entry.action}</td>
                     <td className="px-3 py-2 text-foreground/90">{entry.status}</td>

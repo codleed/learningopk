@@ -11,7 +11,8 @@ import { getAdminAuditLogs, type AdminAuditLogResponseEntry } from "@/lib/admin-
 
 import { AdminAuditTable } from "./admin-audit-table";
 
-type AuditScopeFilter = "all" | "content" | "forum" | "moderation" | "notifications" | "settings" | "users";
+type AuditScopeFilter =
+  "all" | "content" | "forum" | "moderation" | "notifications" | "settings" | "users";
 type AuditStatusFilter = "all" | "success" | "failed";
 
 type AdminAuditPanelProps = {
@@ -34,20 +35,14 @@ export function AdminAuditPanel({ initialEntries, initialTotal }: AdminAuditPane
   const { pushToast } = useToast();
   const hasMore = entries.length < total;
 
-  const runFetch = async ({
-    nextPage,
-    append
-  }: {
-    nextPage: number;
-    append: boolean;
-  }) => {
+  const runFetch = async ({ nextPage, append }: { nextPage: number; append: boolean }) => {
     try {
       const payload = await getAdminAuditLogs({
         scope,
         status,
         q: query,
         page: nextPage,
-        pageSize: auditPageSize
+        pageSize: auditPageSize,
       });
 
       setEntries((previous) => (append ? [...previous, ...payload.entries] : payload.entries));
@@ -58,7 +53,7 @@ export function AdminAuditPanel({ initialEntries, initialTotal }: AdminAuditPane
       pushToast({
         tone: "error",
         title: "Audit logs unavailable",
-        description: message
+        description: message,
       });
     }
   };
@@ -68,7 +63,7 @@ export function AdminAuditPanel({ initialEntries, initialTotal }: AdminAuditPane
     try {
       await runFetch({
         nextPage: 1,
-        append: false
+        append: false,
       });
     } finally {
       setIsApplying(false);
@@ -80,7 +75,7 @@ export function AdminAuditPanel({ initialEntries, initialTotal }: AdminAuditPane
     try {
       await runFetch({
         nextPage: 1,
-        append: false
+        append: false,
       });
     } finally {
       setIsRefreshing(false);
@@ -96,7 +91,7 @@ export function AdminAuditPanel({ initialEntries, initialTotal }: AdminAuditPane
     try {
       await runFetch({
         nextPage: page + 1,
-        append: true
+        append: true,
       });
     } finally {
       setIsLoadingMore(false);
@@ -109,11 +104,23 @@ export function AdminAuditPanel({ initialEntries, initialTotal }: AdminAuditPane
       description="Review admin actions across scopes and investigate status outcomes."
       actions={
         <div className="flex items-center gap-2">
-          <Button type="button" size="sm" variant="secondary" onClick={() => void refresh()} disabled={isRefreshing}>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => void refresh()}
+            disabled={isRefreshing}
+          >
             {isRefreshing ? "Refreshing..." : "Refresh"}
           </Button>
           {hasMore ? (
-            <Button type="button" size="sm" variant="secondary" onClick={() => void loadMore()} disabled={isLoadingMore}>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => void loadMore()}
+              disabled={isLoadingMore}
+            >
               {isLoadingMore ? "Loading..." : "Load more"}
             </Button>
           ) : null}
@@ -123,10 +130,18 @@ export function AdminAuditPanel({ initialEntries, initialTotal }: AdminAuditPane
       <div className="space-y-4">
         <div className="grid gap-3 md:grid-cols-[220px_220px_1fr_auto] md:items-end">
           <div className="space-y-1.5">
-            <label htmlFor="audit-scope" className="text-xs font-semibold uppercase tracking-wide text-foreground">
+            <label
+              htmlFor="audit-scope"
+              className="text-xs font-semibold uppercase tracking-wide text-foreground"
+            >
               Scope
             </label>
-            <Select id="audit-scope" value={scope} onChange={(event) => setScope(event.target.value as AuditScopeFilter)} disabled={isApplying}>
+            <Select
+              id="audit-scope"
+              value={scope}
+              onChange={(event) => setScope(event.target.value as AuditScopeFilter)}
+              disabled={isApplying}
+            >
               <option value="all">All scopes</option>
               <option value="content">Content</option>
               <option value="forum">Forum</option>
@@ -137,7 +152,10 @@ export function AdminAuditPanel({ initialEntries, initialTotal }: AdminAuditPane
             </Select>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="audit-status" className="text-xs font-semibold uppercase tracking-wide text-foreground">
+            <label
+              htmlFor="audit-status"
+              className="text-xs font-semibold uppercase tracking-wide text-foreground"
+            >
               Status
             </label>
             <Select
@@ -152,7 +170,10 @@ export function AdminAuditPanel({ initialEntries, initialTotal }: AdminAuditPane
             </Select>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="audit-search" className="text-xs font-semibold uppercase tracking-wide text-foreground">
+            <label
+              htmlFor="audit-search"
+              className="text-xs font-semibold uppercase tracking-wide text-foreground"
+            >
               Search logs
             </label>
             <Input
@@ -163,7 +184,12 @@ export function AdminAuditPanel({ initialEntries, initialTotal }: AdminAuditPane
               disabled={isApplying}
             />
           </div>
-          <Button type="button" variant="secondary" onClick={() => void applyFilters()} disabled={isApplying}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => void applyFilters()}
+            disabled={isApplying}
+          >
             {isApplying ? "Applying..." : "Apply filters"}
           </Button>
         </div>

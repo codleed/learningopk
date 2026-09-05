@@ -44,7 +44,7 @@ export async function getNotes(query?: NotesQuery): Promise<StudentNote[]> {
   const url = `${backendUrl}/api/notes${params.size > 0 ? `?${params.toString()}` : ""}`;
   const response = await fetch(url, {
     method: "GET",
-    credentials: "include"
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -55,7 +55,10 @@ export async function getNotes(query?: NotesQuery): Promise<StudentNote[]> {
   return json.data;
 }
 
-export async function getNotesServer(cookieHeader: string, query?: NotesQuery): Promise<StudentNote[]> {
+export async function getNotesServer(
+  cookieHeader: string,
+  query?: NotesQuery
+): Promise<StudentNote[]> {
   const params = new URLSearchParams();
   if (query?.subjectId) params.set("subjectId", String(query.subjectId));
   if (query?.chapterId) params.set("chapterId", String(query.chapterId));
@@ -65,7 +68,7 @@ export async function getNotesServer(cookieHeader: string, query?: NotesQuery): 
   const response = await fetch(url, {
     method: "GET",
     cache: "no-store",
-    headers: { cookie: cookieHeader }
+    headers: { cookie: cookieHeader },
   });
 
   if (!response.ok) {
@@ -81,7 +84,7 @@ export async function createNote(input: CreateNoteInput): Promise<StudentNote> {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 
   if (!response.ok) {
@@ -97,7 +100,7 @@ export async function updateNote(id: number, input: UpdateNoteInput): Promise<St
     method: "PUT",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 
   if (!response.ok) {
@@ -111,7 +114,7 @@ export async function updateNote(id: number, input: UpdateNoteInput): Promise<St
 export async function deleteNote(id: number): Promise<void> {
   const response = await fetch(`${backendUrl}/api/notes/${id}`, {
     method: "DELETE",
-    credentials: "include"
+    credentials: "include",
   });
 
   if (!response.ok) {

@@ -10,6 +10,8 @@ test("login handles auth network failures without runtime crash", async ({ page 
   await page.getByLabel("Password").fill("StrongPass123");
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page.getByText("Unable to reach authentication server. Ensure backend is running on port 3001.")).toBeVisible();
+  await expect(
+    page.getByText("Unable to reach authentication server. Ensure backend is running on port 3001.")
+  ).toBeVisible();
   await expect(page).toHaveURL(/\/login$/);
 });

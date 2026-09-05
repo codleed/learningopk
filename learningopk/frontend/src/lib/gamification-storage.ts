@@ -17,7 +17,7 @@ const DEFAULT_STATE: GamificationState = {
 
 export function getGamificationState(): GamificationState {
   if (typeof window === "undefined") return DEFAULT_STATE;
-  
+
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return DEFAULT_STATE;
@@ -36,7 +36,7 @@ export function addXp(amount: number): GamificationState {
   const state = getGamificationState();
   const newTotalXp = state.totalXp + amount;
   const levelDef = computeLevelFromXp(newTotalXp);
-  
+
   const newState: GamificationState = {
     ...state,
     xp: state.xp + amount,
@@ -44,7 +44,7 @@ export function addXp(amount: number): GamificationState {
     level: levelDef.level,
     lastActivityDate: new Date().toISOString().split("T")[0],
   };
-  
+
   saveGamificationState(newState);
   return newState;
 }
@@ -53,17 +53,17 @@ export function updateStreak(): GamificationState {
   const state = getGamificationState();
   const today = new Date().toISOString().split("T")[0];
   const lastDate = state.lastActivityDate;
-  
+
   if (!lastDate) {
     const newState = { ...state, currentStreak: 1, longestStreak: 1, lastActivityDate: today };
     saveGamificationState(newState);
     return newState;
   }
-  
+
   const last = new Date(lastDate);
   const now = new Date(today);
   const diffDays = Math.floor((now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays === 0) {
     return state;
   } else if (diffDays === 1) {
@@ -77,7 +77,12 @@ export function updateStreak(): GamificationState {
     saveGamificationState(newState);
     return newState;
   } else {
-    const newState = { ...state, currentStreak: 1, longestStreak: state.longestStreak, lastActivityDate: today };
+    const newState = {
+      ...state,
+      currentStreak: 1,
+      longestStreak: state.longestStreak,
+      lastActivityDate: today,
+    };
     saveGamificationState(newState);
     return newState;
   }
@@ -86,7 +91,7 @@ export function updateStreak(): GamificationState {
 export function unlockBadge(badgeId: BadgeId): boolean {
   const state = getGamificationState();
   if (state.unlockedBadges.includes(badgeId)) return false;
-  
+
   const newState = { ...state, unlockedBadges: [...state.unlockedBadges, badgeId] };
   saveGamificationState(newState);
   return true;
@@ -103,7 +108,7 @@ export function getChapterProgress(chapterId: string): ChapterProgress {
       quizAttempts: [],
       xpEarned: 0,
     },
-    state.chapterProgress[chapterId],
+    state.chapterProgress[chapterId]
   );
 }
 
@@ -118,7 +123,7 @@ export function updateChapterProgress(chapterId: string, updates: Partial<Chapte
       quizAttempts: [],
       xpEarned: 0,
     },
-    state.chapterProgress[chapterId],
+    state.chapterProgress[chapterId]
   );
 
   saveGamificationState({

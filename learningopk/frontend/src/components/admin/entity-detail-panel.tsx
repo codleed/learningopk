@@ -1,7 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Book, GraduationCap, FileText, Pencil, Plus, Trash2, Folder } from "lucide-react";
+import {
+  BookOpen,
+  Book,
+  GraduationCap,
+  FileText,
+  Pencil,
+  Plus,
+  Trash2,
+  Folder,
+} from "lucide-react";
 import { AdminActionButton } from "./action-button";
 import { AdminBreadcrumb } from "./breadcrumb";
 import { StickyBreadcrumbWrapper } from "@/components/common/sticky-breadcrumb-wrapper";
@@ -30,7 +39,12 @@ type EntityDetailPanelProps = {
 
 const entityTypeConfig: Record<
   EntityType,
-  { label: string; editPath: (id: number) => string; addChildPath?: (id: number) => string; icon: typeof BookOpen }
+  {
+    label: string;
+    editPath: (id: number) => string;
+    addChildPath?: (id: number) => string;
+    icon: typeof BookOpen;
+  }
 > = {
   board: {
     label: "Board",
@@ -85,10 +99,15 @@ export function AdminEntityDetailPanel({
   const config = entityTypeConfig[entity.type];
   const Icon = config.icon;
   const canAddChild = entity.type !== "chapter";
-  const childType = entity.type === "board" ? "class" : entity.type === "class" ? "subject" : "chapter";
+  const childType =
+    entity.type === "board" ? "class" : entity.type === "class" ? "subject" : "chapter";
 
   const handleDelete = () => {
-    if (window.confirm(`Are you sure you want to delete "${entity.name}"? This action cannot be undone.`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete "${entity.name}"? This action cannot be undone.`
+      )
+    ) {
       onDelete({ id: entity.id, type: entity.type, name: entity.name });
     }
   };

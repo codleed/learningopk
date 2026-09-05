@@ -1,8 +1,5 @@
 export const normalizeWikiLinkTarget = (value: string): string =>
-  value
-    .trim()
-    .replace(/\s+/g, " ")
-    .toLowerCase();
+  value.trim().replace(/\s+/g, " ").toLowerCase();
 
 export type ParsedWikiLink = {
   targetTitle: string;
@@ -19,7 +16,7 @@ export const extractWikiLinks = (content: string): ParsedWikiLink[] => {
     if (targetTitle.length > 0) {
       links.push({
         targetTitle,
-        normalizedTarget: normalizeWikiLinkTarget(targetTitle)
+        normalizedTarget: normalizeWikiLinkTarget(targetTitle),
       });
     }
     match = WIKI_LINK_PATTERN.exec(content);

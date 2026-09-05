@@ -1,9 +1,17 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { 
-  Plus, Pencil, Trash2, Loader2, ArrowUp, ArrowDown, 
-  Layers, X, CheckCircle, FlipHorizontal
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Loader2,
+  ArrowUp,
+  ArrowDown,
+  Layers,
+  X,
+  CheckCircle,
+  FlipHorizontal,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -11,7 +19,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { getAdminFlashcards, createAdminFlashcard, updateAdminFlashcard, deleteAdminFlashcard, reorderAdminFlashcards } from "@/lib/admin-api";
+import {
+  getAdminFlashcards,
+  createAdminFlashcard,
+  updateAdminFlashcard,
+  deleteAdminFlashcard,
+  reorderAdminFlashcards,
+} from "@/lib/admin-api";
 import type { FlashcardResponse } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 
@@ -37,8 +51,12 @@ export function ChapterFlashcardManager({ chapterId }: ChapterFlashcardManagerPr
   const [showForm, setShowForm] = useState(false);
   const [editingFlashcard, setEditingFlashcard] = useState<FlashcardResponse | null>(null);
   const [formData, setFormData] = useState<FlashcardFormData>(initialFormData);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id?: number }>({ show: false });
-  const [reordering, setReordering] = useState<{ id: number; direction: "up" | "down" } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id?: number }>({
+    show: false,
+  });
+  const [reordering, setReordering] = useState<{ id: number; direction: "up" | "down" } | null>(
+    null
+  );
 
   const fetchFlashcards = useCallback(async () => {
     setIsLoading(true);
@@ -79,9 +97,7 @@ export function ChapterFlashcardManager({ chapterId }: ChapterFlashcardManagerPr
           id: editingFlashcard.id,
           input: { front: formData.front, back: formData.back },
         });
-        setFlashcards((prev) =>
-          prev.map((f) => (f.id === editingFlashcard.id ? updated.data : f))
-        );
+        setFlashcards((prev) => prev.map((f) => (f.id === editingFlashcard.id ? updated.data : f)));
         pushToast({
           title: "Flashcard updated",
           tone: "success",
@@ -140,7 +156,10 @@ export function ChapterFlashcardManager({ chapterId }: ChapterFlashcardManagerPr
   const handleMoveUp = async (index: number) => {
     if (index === 0) return;
     const newFlashcards = [...flashcards];
-    [newFlashcards[index - 1], newFlashcards[index]] = [newFlashcards[index], newFlashcards[index - 1]];
+    [newFlashcards[index - 1], newFlashcards[index]] = [
+      newFlashcards[index],
+      newFlashcards[index - 1],
+    ];
     setReordering({ id: flashcards[index].id, direction: "up" });
     setFlashcards(newFlashcards);
 
@@ -165,7 +184,10 @@ export function ChapterFlashcardManager({ chapterId }: ChapterFlashcardManagerPr
   const handleMoveDown = async (index: number) => {
     if (index === flashcards.length - 1) return;
     const newFlashcards = [...flashcards];
-    [newFlashcards[index], newFlashcards[index + 1]] = [newFlashcards[index + 1], newFlashcards[index]];
+    [newFlashcards[index], newFlashcards[index + 1]] = [
+      newFlashcards[index + 1],
+      newFlashcards[index],
+    ];
     setReordering({ id: flashcards[index].id, direction: "down" });
     setFlashcards(newFlashcards);
 
@@ -250,9 +272,9 @@ export function ChapterFlashcardManager({ chapterId }: ChapterFlashcardManagerPr
               <h4 className="font-medium">
                 {editingFlashcard ? "Edit Flashcard" : "Add New Flashcard"}
               </h4>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={resetForm}
                 className="text-muted-foreground"
               >
@@ -268,14 +290,12 @@ export function ChapterFlashcardManager({ chapterId }: ChapterFlashcardManagerPr
                 </label>
                 <Textarea
                   value={formData.front}
-                  onChange={(e) => setFormData(prev => ({ ...prev, front: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, front: e.target.value }))}
                   placeholder="Enter the front of the flashcard..."
                   rows={3}
                   className="resize-none"
                 />
-                <p className="text-xs text-muted-foreground">
-                  What the student sees first
-                </p>
+                <p className="text-xs text-muted-foreground">What the student sees first</p>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-2">
@@ -283,14 +303,12 @@ export function ChapterFlashcardManager({ chapterId }: ChapterFlashcardManagerPr
                 </label>
                 <Textarea
                   value={formData.back}
-                  onChange={(e) => setFormData(prev => ({ ...prev, back: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, back: e.target.value }))}
                   placeholder="Enter the back of the flashcard..."
                   rows={3}
                   className="resize-none"
                 />
-                <p className="text-xs text-muted-foreground">
-                  The answer or explanation
-                </p>
+                <p className="text-xs text-muted-foreground">The answer or explanation</p>
               </div>
             </div>
 
@@ -314,12 +332,7 @@ export function ChapterFlashcardManager({ chapterId }: ChapterFlashcardManagerPr
             <Button variant="secondary" onClick={resetForm}>
               Cancel
             </Button>
-            <Button 
-              variant="primary" 
-              onClick={handleSave} 
-              disabled={isSaving}
-              className="gap-2"
-            >
+            <Button variant="primary" onClick={handleSave} disabled={isSaving} className="gap-2">
               {isSaving ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -369,7 +382,7 @@ export function ChapterFlashcardManager({ chapterId }: ChapterFlashcardManagerPr
       ) : (
         <div className="space-y-3">
           {flashcards.map((flashcard, index) => (
-            <div 
+            <div
               key={flashcard.id}
               className={cn(
                 "group rounded-xl border bg-card shadow-sm overflow-hidden transition-all duration-200",
@@ -389,9 +402,7 @@ export function ChapterFlashcardManager({ chapterId }: ChapterFlashcardManagerPr
                     <ArrowUp className="h-3 w-3 text-muted-foreground" />
                   </button>
                   <div className="px-2 py-1 flex items-center justify-center border-t border-b border-border bg-muted/20">
-                    <span className="text-xs font-semibold text-muted-foreground">
-                      {index + 1}
-                    </span>
+                    <span className="text-xs font-semibold text-muted-foreground">{index + 1}</span>
                   </div>
                   <button
                     onClick={() => handleMoveDown(index)}
@@ -409,16 +420,20 @@ export function ChapterFlashcardManager({ chapterId }: ChapterFlashcardManagerPr
                   <div className="p-4 bg-muted/20">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Front</p>
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Front
+                      </p>
                     </div>
                     <p className="text-sm leading-relaxed">{flashcard.front}</p>
                   </div>
-                  
+
                   {/* Back */}
                   <div className="p-4 bg-[var(--primary)]/5">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-[var(--primary)]" />
-                      <p className="text-xs font-medium text-[var(--primary)] uppercase tracking-wider">Back</p>
+                      <p className="text-xs font-medium text-[var(--primary)] uppercase tracking-wider">
+                        Back
+                      </p>
                     </div>
                     <p className="text-sm leading-relaxed">{flashcard.back}</p>
                   </div>
@@ -426,17 +441,17 @@ export function ChapterFlashcardManager({ chapterId }: ChapterFlashcardManagerPr
 
                 {/* Actions */}
                 <div className="flex items-center gap-1 p-2 border-l border-border bg-muted/5">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => handleEdit(flashcard)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setDeleteConfirm({ show: true, id: flashcard.id })}
                     className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
                   >

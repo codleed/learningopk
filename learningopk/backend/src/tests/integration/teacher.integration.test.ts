@@ -5,7 +5,13 @@ import { eq } from "drizzle-orm";
 import request from "supertest";
 
 import { db, pool } from "../../lib/db/index.js";
-import { classrooms, classroomStudents, users, assignments, assignmentSubmissions } from "../../lib/db/schema.js";
+import {
+  classrooms,
+  classroomStudents,
+  users,
+  assignments,
+  assignmentSubmissions,
+} from "../../lib/db/schema.js";
 import { redis } from "../../lib/redis.js";
 import { createApp } from "../../server.js";
 
@@ -19,7 +25,7 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
     email,
     password: TEST_PASSWORD,
     class: "9th",
-    board: "fbise"
+    board: "fbise",
   });
   assert.ok(
     response.status < 400,
@@ -67,17 +73,18 @@ test("Teacher creates classroom, student joins, and teacher views roster", async
   const classroomId = createRes.body.data.id;
 
   // Student joins with invite code
-  const joinRes = await studentAgent
-    .post("/api/classrooms/join")
-    .send({ inviteCode });
+  const joinRes = await studentAgent.post("/api/classrooms/join").send({ inviteCode });
   assert.equal(joinRes.status, 200, `Join classroom: ${JSON.stringify(joinRes.body)}`);
   assert.equal(joinRes.body.data.name, "Test Class 9A");
 
   // Teacher views roster
-  const rosterRes = await teacherAgent
-    .get(`/api/teacher/classrooms/${classroomId}/students`);
+  const rosterRes = await teacherAgent.get(`/api/teacher/classrooms/${classroomId}/students`);
   assert.equal(rosterRes.status, 200);
-  assert.equal(rosterRes.body.data.length, 1, `Expected 1 student, got ${rosterRes.body.data.length}`);
+  assert.equal(
+    rosterRes.body.data.length,
+    1,
+    `Expected 1 student, got ${rosterRes.body.data.length}`
+  );
 
   // Cleanup
   await db.delete(classroomStudents).where(eq(classroomStudents.classroomId, classroomId));
@@ -117,8 +124,7 @@ test("Teacher creates assignment and views submissions", async () => {
   assert.equal(assignRes.status, 201, `Create assignment: ${JSON.stringify(assignRes.body)}`);
 
   // List assignments
-  const listRes = await teacherAgent
-    .get(`/api/teacher/classrooms/${classroomId}/assignments`);
+  const listRes = await teacherAgent.get(`/api/teacher/classrooms/${classroomId}/assignments`);
   assert.equal(listRes.status, 200);
   assert.equal(listRes.body.data.length, 1);
 
@@ -203,8 +209,7 @@ test("Teacher posts and views announcements", async () => {
   assert.equal(postRes.status, 201, `Post announcement: ${JSON.stringify(postRes.body)}`);
 
   // View announcements
-  const viewRes = await teacherAgent
-    .get(`/api/teacher/classrooms/${classroomId}/announcements`);
+  const viewRes = await teacherAgent.get(`/api/teacher/classrooms/${classroomId}/announcements`);
   assert.equal(viewRes.status, 200);
   assert.equal(viewRes.body.data.length, 1);
   assert.equal(viewRes.body.data[0].content, "Welcome to the class!");
@@ -236,7 +241,11 @@ test("Student cannot join the same classroom twice", async () => {
 
   // Second join should be rejected (409)
   const join2 = await studentAgent.post("/api/classrooms/join").send({ inviteCode });
-  assert.equal(join2.status, 409, `Expected 409 for duplicate join, got ${join2.status}: ${JSON.stringify(join2.body)}`);
+  assert.equal(
+    join2.status,
+    409,
+    `Expected 409 for duplicate join, got ${join2.status}: ${JSON.stringify(join2.body)}`
+  );
 
   // Cleanup
   await db.delete(classroomStudents).where(eq(classroomStudents.classroomId, classroomId));
@@ -271,14 +280,24 @@ test("Teacher cannot delete another teacher's announcement", async () => {
   const announcementId = announceRes.body.data.id;
 
   // T2 tries to delete T1's announcement (should fail with 403 because T2 doesn't own the classroom)
-  const deleteRes = await teacher2Agent
-    .delete(`/api/teacher/classrooms/${classroomId}/announcements/${announcementId}`);
-  assert.equal(deleteRes.status, 403, `Expected 403 for cross-teacher delete, got ${deleteRes.status}: ${JSON.stringify(deleteRes.body)}`);
+  const deleteRes = await teacher2Agent.delete(
+    `/api/teacher/classrooms/${classroomId}/announcements/${announcementId}`
+  );
+  assert.equal(
+    deleteRes.status,
+    403,
+    `Expected 403 for cross-teacher delete, got ${deleteRes.status}: ${JSON.stringify(deleteRes.body)}`
+  );
 
   // T1 CAN delete their own announcement
-  const selfDeleteRes = await teacher1Agent
-    .delete(`/api/teacher/classrooms/${classroomId}/announcements/${announcementId}`);
-  assert.equal(selfDeleteRes.status, 200, `Expected 200 for own delete, got ${selfDeleteRes.status}: ${JSON.stringify(selfDeleteRes.body)}`);
+  const selfDeleteRes = await teacher1Agent.delete(
+    `/api/teacher/classrooms/${classroomId}/announcements/${announcementId}`
+  );
+  assert.equal(
+    selfDeleteRes.status,
+    200,
+    `Expected 200 for own delete, got ${selfDeleteRes.status}: ${JSON.stringify(selfDeleteRes.body)}`
+  );
 
   // Cleanup
   await db.delete(classrooms).where(eq(classrooms.id, classroomId));
@@ -311,39 +330,69 @@ test("Struggling-student alerts return students with avg quiz below 50%", async 
   await studentAgents[1]!.post("/api/classrooms/join").send({ inviteCode });
 
   // Create quiz assignments
-  const assignment1 = await db.insert(assignments).values({
-    classroomId, type: "quiz", targetId: 1, title: "Quiz 1", points: 20,
-  }).returning().then((r) => r[0]!);
-  const assignment2 = await db.insert(assignments).values({
-    classroomId, type: "quiz", targetId: 2, title: "Quiz 2", points: 25,
-  }).returning().then((r) => r[0]!);
+  const assignment1 = await db
+    .insert(assignments)
+    .values({
+      classroomId,
+      type: "quiz",
+      targetId: 1,
+      title: "Quiz 1",
+      points: 20,
+    })
+    .returning()
+    .then((r) => r[0]!);
+  const assignment2 = await db
+    .insert(assignments)
+    .values({
+      classroomId,
+      type: "quiz",
+      targetId: 2,
+      title: "Quiz 2",
+      points: 25,
+    })
+    .returning()
+    .then((r) => r[0]!);
 
   // Strong student: 90% avg
-  await db.insert(assignmentSubmissions).values([
-    { assignmentId: assignment1.id, studentId: strongUser.id, status: "submitted", score: 18 },
-    { assignmentId: assignment2.id, studentId: strongUser.id, status: "submitted", score: 23 },
-  ]).onConflictDoNothing();
+  await db
+    .insert(assignmentSubmissions)
+    .values([
+      { assignmentId: assignment1.id, studentId: strongUser.id, status: "submitted", score: 18 },
+      { assignmentId: assignment2.id, studentId: strongUser.id, status: "submitted", score: 23 },
+    ])
+    .onConflictDoNothing();
 
   // Weak student: 40% avg
-  await db.insert(assignmentSubmissions).values([
-    { assignmentId: assignment1.id, studentId: weakUser.id, status: "submitted", score: 8 },
-    { assignmentId: assignment2.id, studentId: weakUser.id, status: "submitted", score: 10 },
-  ]).onConflictDoNothing();
+  await db
+    .insert(assignmentSubmissions)
+    .values([
+      { assignmentId: assignment1.id, studentId: weakUser.id, status: "submitted", score: 8 },
+      { assignmentId: assignment2.id, studentId: weakUser.id, status: "submitted", score: 10 },
+    ])
+    .onConflictDoNothing();
 
   // Fetch alerts
   const alertsRes = await teacherAgent.get(`/api/teacher/classrooms/${classroomId}/alerts`);
   assert.equal(alertsRes.status, 200, `Alerts: ${JSON.stringify(alertsRes.body)}`);
 
   // Only weak student should be flagged
-  const weakStudentAlert = alertsRes.body.data.find((a: { studentId: string }) => a.studentId === weakUser.id);
-  const strongStudentAlert = alertsRes.body.data.find((a: { studentId: string }) => a.studentId === strongUser.id);
+  const weakStudentAlert = alertsRes.body.data.find(
+    (a: { studentId: string }) => a.studentId === weakUser.id
+  );
+  const strongStudentAlert = alertsRes.body.data.find(
+    (a: { studentId: string }) => a.studentId === strongUser.id
+  );
   assert.ok(weakStudentAlert, "Weak student should appear in alerts");
   assert.ok(!strongStudentAlert, "Strong student should NOT appear in alerts");
 
   // Cleanup
   await db.delete(classroomStudents).where(eq(classroomStudents.classroomId, classroomId));
-  await db.delete(assignmentSubmissions).where(eq(assignmentSubmissions.assignmentId, assignment1.id));
-  await db.delete(assignmentSubmissions).where(eq(assignmentSubmissions.assignmentId, assignment2.id));
+  await db
+    .delete(assignmentSubmissions)
+    .where(eq(assignmentSubmissions.assignmentId, assignment1.id));
+  await db
+    .delete(assignmentSubmissions)
+    .where(eq(assignmentSubmissions.assignmentId, assignment2.id));
   await db.delete(assignments).where(eq(assignments.id, assignment1.id));
   await db.delete(assignments).where(eq(assignments.id, assignment2.id));
   await db.delete(classrooms).where(eq(classrooms.id, classroomId));

@@ -12,12 +12,14 @@ import { persistAuditLog, type AdminAuditScope } from "../shared.js";
 export const exercisesAdminRouter = Router();
 
 const curriculumEntityParamsSchema = z.object({
-  id: z.coerce.number().int().positive()
+  id: z.coerce.number().int().positive(),
 });
 
 const blankStatementSchema = z.object({
   text: z.string().trim().min(1, "Statement text is required"),
-  blanksAnswer: z.array(z.string().trim().min(1)).min(1, "At least one answer per statement is required")
+  blanksAnswer: z
+    .array(z.string().trim().min(1))
+    .min(1, "At least one answer per statement is required"),
 });
 
 export const curriculumExerciseCreateBodySchema = z
@@ -27,12 +29,15 @@ export const curriculumExerciseCreateBodySchema = z
     question: z.string().trim().optional(),
     solution: z.string().trim().optional(),
     difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
-    type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]).optional().default("short"),
+    type: z
+      .enum(["mcq", "short", "long", "numerical", "fill_in_blanks"])
+      .optional()
+      .default("short"),
     problemMarkdown: z.string().trim().optional(),
     solutionCode: z.string().trim().optional(),
     visualizationHtml: z.string().trim().optional(),
     blanksAnswer: z.array(z.string()).optional(),
-    statements: z.array(blankStatementSchema).optional()
+    statements: z.array(blankStatementSchema).optional(),
   })
   .refine(
     (data) => {
@@ -43,7 +48,7 @@ export const curriculumExerciseCreateBodySchema = z
     },
     {
       message: "Question is required",
-      path: ["question"]
+      path: ["question"],
     }
   )
   .refine(
@@ -55,21 +60,19 @@ export const curriculumExerciseCreateBodySchema = z
     },
     {
       message: "Solution is required",
-      path: ["solution"]
+      path: ["solution"],
     }
   )
   .refine(
     (data) => {
       if (data.type === "numerical") {
-        return (
-          data.problemMarkdown !== undefined && data.problemMarkdown.trim().length > 0
-        );
+        return data.problemMarkdown !== undefined && data.problemMarkdown.trim().length > 0;
       }
       return true;
     },
     {
       message: "problemMarkdown is required when type is 'numerical'",
-      path: ["problemMarkdown"]
+      path: ["problemMarkdown"],
     }
   )
   .refine(
@@ -81,7 +84,7 @@ export const curriculumExerciseCreateBodySchema = z
     },
     {
       message: "solutionCode is required when type is 'numerical'",
-      path: ["solutionCode"]
+      path: ["solutionCode"],
     }
   )
   .refine(
@@ -95,7 +98,7 @@ export const curriculumExerciseCreateBodySchema = z
     },
     {
       message: "statements or blanksAnswer is required when type is 'fill_in_blanks'",
-      path: ["statements"]
+      path: ["statements"],
     }
   );
 
@@ -105,12 +108,15 @@ export const curriculumExerciseUpdateBodySchema = z
     question: z.string().trim().optional(),
     solution: z.string().trim().optional(),
     difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
-    type: z.enum(["mcq", "short", "long", "numerical", "fill_in_blanks"]).optional().default("short"),
+    type: z
+      .enum(["mcq", "short", "long", "numerical", "fill_in_blanks"])
+      .optional()
+      .default("short"),
     problemMarkdown: z.string().trim().optional(),
     solutionCode: z.string().trim().optional(),
     visualizationHtml: z.string().trim().optional(),
     blanksAnswer: z.array(z.string()).optional(),
-    statements: z.array(blankStatementSchema).optional()
+    statements: z.array(blankStatementSchema).optional(),
   })
   .refine(
     (data) => {
@@ -121,7 +127,7 @@ export const curriculumExerciseUpdateBodySchema = z
     },
     {
       message: "Question is required",
-      path: ["question"]
+      path: ["question"],
     }
   )
   .refine(
@@ -133,21 +139,19 @@ export const curriculumExerciseUpdateBodySchema = z
     },
     {
       message: "Solution is required",
-      path: ["solution"]
+      path: ["solution"],
     }
   )
   .refine(
     (data) => {
       if (data.type === "numerical") {
-        return (
-          data.problemMarkdown !== undefined && data.problemMarkdown.trim().length > 0
-        );
+        return data.problemMarkdown !== undefined && data.problemMarkdown.trim().length > 0;
       }
       return true;
     },
     {
       message: "problemMarkdown is required when type is 'numerical'",
-      path: ["problemMarkdown"]
+      path: ["problemMarkdown"],
     }
   )
   .refine(
@@ -159,7 +163,7 @@ export const curriculumExerciseUpdateBodySchema = z
     },
     {
       message: "solutionCode is required when type is 'numerical'",
-      path: ["solutionCode"]
+      path: ["solutionCode"],
     }
   )
   .refine(
@@ -173,12 +177,12 @@ export const curriculumExerciseUpdateBodySchema = z
     },
     {
       message: "statements or blanksAnswer is required when type is 'fill_in_blanks'",
-      path: ["statements"]
+      path: ["statements"],
     }
   );
 
 const curriculumExerciseListQuerySchema = z.object({
-  chapterId: z.coerce.number().int().positive().optional()
+  chapterId: z.coerce.number().int().positive().optional(),
 });
 
 exercisesAdminRouter.post("/content/exercises", requireSession, async (req, res) => {
@@ -191,7 +195,7 @@ exercisesAdminRouter.post("/content/exercises", requireSession, async (req, res)
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid exercise payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -205,7 +209,7 @@ exercisesAdminRouter.post("/content/exercises", requireSession, async (req, res)
       id: chapters.id,
       title: chapters.title,
       subjectId: chapters.subjectId,
-      subjectName: subjects.name
+      subjectName: subjects.name,
     })
     .from(chapters)
     .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
@@ -221,10 +225,10 @@ exercisesAdminRouter.post("/content/exercises", requireSession, async (req, res)
       status: "failed",
       message: "Chapter not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Chapter not found"
+      error: "Chapter not found",
     });
     return;
   }
@@ -238,10 +242,10 @@ exercisesAdminRouter.post("/content/exercises", requireSession, async (req, res)
       status: "failed",
       message: "Numerical exercises are only allowed for Physics chapters",
       actorId,
-      actorName
+      actorName,
     });
     res.status(400).json({
-      error: "Numerical problems are only allowed for Physics chapters"
+      error: "Numerical problems are only allowed for Physics chapters",
     });
     return;
   }
@@ -258,15 +262,14 @@ exercisesAdminRouter.post("/content/exercises", requireSession, async (req, res)
         type: parsedBody.data.type,
         problemMarkdown: parsedBody.data.problemMarkdown?.trim() || null,
         solutionCode: parsedBody.data.solutionCode?.trim() || null,
-        visualizationHtml: parsedBody.data.type === "numerical"
-          ? (parsedBody.data.visualizationHtml?.trim() || null)
-          : null,
-        blanksAnswer: parsedBody.data.type === "fill_in_blanks"
-          ? (parsedBody.data.blanksAnswer ?? null)
-          : null,
-        statements: parsedBody.data.type === "fill_in_blanks"
-          ? (parsedBody.data.statements ?? null)
-          : null
+        visualizationHtml:
+          parsedBody.data.type === "numerical"
+            ? parsedBody.data.visualizationHtml?.trim() || null
+            : null,
+        blanksAnswer:
+          parsedBody.data.type === "fill_in_blanks" ? (parsedBody.data.blanksAnswer ?? null) : null,
+        statements:
+          parsedBody.data.type === "fill_in_blanks" ? (parsedBody.data.statements ?? null) : null,
       })
       .returning({
         id: exercises.id,
@@ -280,13 +283,13 @@ exercisesAdminRouter.post("/content/exercises", requireSession, async (req, res)
         solutionCode: exercises.solutionCode,
         visualizationHtml: exercises.visualizationHtml,
         blanksAnswer: exercises.blanksAnswer,
-        statements: exercises.statements
+        statements: exercises.statements,
       });
 
     const exercise = insertedRows[0];
     if (!exercise) {
       res.status(500).json({
-        error: "Failed to create exercise"
+        error: "Failed to create exercise",
       });
       return;
     }
@@ -301,11 +304,11 @@ exercisesAdminRouter.post("/content/exercises", requireSession, async (req, res)
       status: "success",
       message: `Created ${exercise.type} exercise`,
       actorId,
-      actorName
+      actorName,
     });
 
     res.status(201).json({
-      exercise
+      exercise,
     });
   } catch {
     await persistAuditLog({
@@ -315,10 +318,10 @@ exercisesAdminRouter.post("/content/exercises", requireSession, async (req, res)
       status: "failed",
       message: "Exercise create failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(409).json({
-      error: "Exercise already exists for chapter"
+      error: "Exercise already exists for chapter",
     });
   }
 });
@@ -328,7 +331,7 @@ exercisesAdminRouter.get("/content/exercises", requireSession, async (req, res) 
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid exercise query",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
@@ -353,16 +356,18 @@ exercisesAdminRouter.get("/content/exercises", requireSession, async (req, res) 
       solutionCode: exercises.solutionCode,
       visualizationHtml: exercises.visualizationHtml,
       blanksAnswer: exercises.blanksAnswer,
-      statements: exercises.statements
+      statements: exercises.statements,
     })
     .from(exercises)
     .innerJoin(chapters, eq(exercises.chapterId, chapters.id))
     .innerJoin(subjects, eq(chapters.subjectId, subjects.id))
-    .where(parsedQuery.data.chapterId ? eq(exercises.chapterId, parsedQuery.data.chapterId) : undefined)
+    .where(
+      parsedQuery.data.chapterId ? eq(exercises.chapterId, parsedQuery.data.chapterId) : undefined
+    )
     .orderBy(asc(exercises.chapterId), asc(exercises.exerciseNumber));
 
   res.status(200).json({
-    exercises: exerciseRows
+    exercises: exerciseRows,
   });
 });
 
@@ -371,7 +376,7 @@ exercisesAdminRouter.post("/content/exercises/:id/update", requireSession, async
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid exercise identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -380,7 +385,7 @@ exercisesAdminRouter.post("/content/exercises/:id/update", requireSession, async
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid exercise payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -410,7 +415,7 @@ exercisesAdminRouter.post("/content/exercises/:id/update", requireSession, async
       blanksAnswer: exercises.blanksAnswer,
       statements: exercises.statements,
       chapterTitle: chapters.title,
-      subjectName: subjects.name
+      subjectName: subjects.name,
     })
     .from(exercises)
     .innerJoin(chapters, eq(exercises.chapterId, chapters.id))
@@ -426,10 +431,10 @@ exercisesAdminRouter.post("/content/exercises/:id/update", requireSession, async
       status: "failed",
       message: "Exercise not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Exercise not found"
+      error: "Exercise not found",
     });
     return;
   }
@@ -443,10 +448,10 @@ exercisesAdminRouter.post("/content/exercises/:id/update", requireSession, async
       status: "failed",
       message: "Numerical exercises are only allowed for Physics chapters",
       actorId,
-      actorName
+      actorName,
     });
     res.status(400).json({
-      error: "Numerical problems are only allowed for Physics chapters"
+      error: "Numerical problems are only allowed for Physics chapters",
     });
     return;
   }
@@ -471,14 +476,12 @@ exercisesAdminRouter.post("/content/exercises/:id/update", requireSession, async
         // Clear if changing away from numerical, otherwise set to new values
         problemMarkdown: isChangingFromNumerical
           ? null
-          : (parsedBody.data.problemMarkdown?.trim() || null),
-        solutionCode: isChangingFromNumerical
-          ? null
-          : (parsedBody.data.solutionCode?.trim() || null),
+          : parsedBody.data.problemMarkdown?.trim() || null,
+        solutionCode: isChangingFromNumerical ? null : parsedBody.data.solutionCode?.trim() || null,
         visualizationHtml: isChangingFromNumerical
           ? null
           : parsedBody.data.type === "numerical"
-            ? (parsedBody.data.visualizationHtml?.trim() || null)
+            ? parsedBody.data.visualizationHtml?.trim() || null
             : null,
         blanksAnswer: isChangingFromBlanks
           ? null
@@ -489,7 +492,7 @@ exercisesAdminRouter.post("/content/exercises/:id/update", requireSession, async
           ? null
           : parsedBody.data.type === "fill_in_blanks"
             ? (parsedBody.data.statements ?? null)
-            : null
+            : null,
       })
       .where(eq(exercises.id, exercise.id))
       .returning({
@@ -504,7 +507,7 @@ exercisesAdminRouter.post("/content/exercises/:id/update", requireSession, async
         solutionCode: exercises.solutionCode,
         visualizationHtml: exercises.visualizationHtml,
         blanksAnswer: exercises.blanksAnswer,
-        statements: exercises.statements
+        statements: exercises.statements,
       });
     const updatedExercise = updatedRows[0];
     if (!updatedExercise) {
@@ -515,10 +518,10 @@ exercisesAdminRouter.post("/content/exercises/:id/update", requireSession, async
         status: "failed",
         message: "Exercise not found",
         actorId,
-        actorName
+        actorName,
       });
       res.status(404).json({
-        error: "Exercise not found"
+        error: "Exercise not found",
       });
       return;
     }
@@ -533,11 +536,11 @@ exercisesAdminRouter.post("/content/exercises/:id/update", requireSession, async
       status: "success",
       message: `Updated exercise to ${updatedExercise.exerciseNumber}`,
       actorId,
-      actorName
+      actorName,
     });
     res.status(200).json({
       exercise: updatedExercise,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch {
     await persistAuditLog({
@@ -547,10 +550,10 @@ exercisesAdminRouter.post("/content/exercises/:id/update", requireSession, async
       status: "failed",
       message: "Exercise update failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(409).json({
-      error: "Exercise already exists for chapter"
+      error: "Exercise already exists for chapter",
     });
   }
 });
@@ -560,7 +563,7 @@ exercisesAdminRouter.post("/content/exercises/:id/delete", requireSession, async
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid exercise identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -585,7 +588,7 @@ exercisesAdminRouter.post("/content/exercises/:id/delete", requireSession, async
       difficulty: exercises.difficulty,
       type: exercises.type,
       chapterTitle: chapters.title,
-      subjectName: subjects.name
+      subjectName: subjects.name,
     })
     .from(exercises)
     .innerJoin(chapters, eq(exercises.chapterId, chapters.id))
@@ -601,10 +604,10 @@ exercisesAdminRouter.post("/content/exercises/:id/delete", requireSession, async
       status: "failed",
       message: "Exercise not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({
-      error: "Exercise not found"
+      error: "Exercise not found",
     });
     return;
   }
@@ -621,7 +624,7 @@ exercisesAdminRouter.post("/content/exercises/:id/delete", requireSession, async
     status: "success",
     message: `Deleted exercise ${exercise.exerciseNumber}`,
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
@@ -632,8 +635,8 @@ exercisesAdminRouter.post("/content/exercises/:id/delete", requireSession, async
       question: exercise.question,
       solution: exercise.solution,
       difficulty: exercise.difficulty,
-      type: exercise.type
+      type: exercise.type,
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });

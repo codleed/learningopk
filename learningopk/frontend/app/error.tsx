@@ -18,4 +18,3 @@ export default function RootError({ error: _error, reset }: RootErrorProps) {
     </div>
   );
 }
-

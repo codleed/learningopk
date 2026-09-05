@@ -7,8 +7,4 @@ export {
   fadeUpReduced,
 } from "./stagger";
 
-export type {
-  StaggerContainerProps,
-  MotionSectionProps,
-  MotionCardProps,
-} from "./stagger";
+export type { StaggerContainerProps, MotionSectionProps, MotionCardProps } from "./stagger";

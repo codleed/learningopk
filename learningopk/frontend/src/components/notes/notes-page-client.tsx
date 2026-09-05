@@ -27,12 +27,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { cn } from "@/lib/utils";
-import {
-  createNote,
-  updateNote,
-  deleteNote,
-  type StudentNote,
-} from "@/lib/notes-api";
+import { createNote, updateNote, deleteNote, type StudentNote } from "@/lib/notes-api";
 
 /* ═══════════════════════════════════════════
    Types
@@ -93,11 +88,23 @@ function MarkdownToolbar({
     { icon: Italic, label: "Italic", before: "_", after: "_", placeholder: "italic text" },
     { icon: Heading2, label: "Heading", before: "## ", after: "", placeholder: "Heading" },
     { icon: List, label: "Bullet List", before: "- ", after: "", placeholder: "list item" },
-    { icon: ListOrdered, label: "Numbered List", before: "1. ", after: "", placeholder: "list item" },
+    {
+      icon: ListOrdered,
+      label: "Numbered List",
+      before: "1. ",
+      after: "",
+      placeholder: "list item",
+    },
     { icon: Code, label: "Code", before: "`", after: "`", placeholder: "code" },
     { icon: Quote, label: "Quote", before: "> ", after: "", placeholder: "quote" },
     { icon: ImageIcon, label: "Image", before: "![alt](", after: ")", placeholder: "url" },
-    { icon: Sigma, label: "Math (inline)", before: "$", after: "$", placeholder: "x^2 + y^2 = z^2" },
+    {
+      icon: Sigma,
+      label: "Math (inline)",
+      before: "$",
+      after: "$",
+      placeholder: "x^2 + y^2 = z^2",
+    },
   ];
 
   return (
@@ -228,9 +235,7 @@ function NoteEditor({
           onClick={() => setMode("edit")}
           className={cn(
             "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-            mode === "edit"
-              ? "bg-bg-surface text-text-primary shadow-sm"
-              : "text-text-muted"
+            mode === "edit" ? "bg-bg-surface text-text-primary shadow-sm" : "text-text-muted"
           )}
         >
           Edit
@@ -240,9 +245,7 @@ function NoteEditor({
           onClick={() => setMode("preview")}
           className={cn(
             "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-            mode === "preview"
-              ? "bg-bg-surface text-text-primary shadow-sm"
-              : "text-text-muted"
+            mode === "preview" ? "bg-bg-surface text-text-primary shadow-sm" : "text-text-muted"
           )}
         >
           Preview
@@ -325,9 +328,7 @@ function NoteListItem({
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <h3 className="line-clamp-1 text-sm font-semibold text-text-primary">
-          {note.title}
-        </h3>
+        <h3 className="line-clamp-1 text-sm font-semibold text-text-primary">{note.title}</h3>
         <button
           type="button"
           onClick={(e) => {
@@ -428,9 +429,7 @@ export function NotesPageClient({ initialNotes }: NotesPageClientProps) {
           content: form.content,
           tags: form.tags,
         });
-        setNotes((prev) =>
-          prev.map((n) => (n.id === selectedNoteId ? updated : n))
-        );
+        setNotes((prev) => prev.map((n) => (n.id === selectedNoteId ? updated : n)));
         pushToast({ title: "Note saved", tone: "success" });
       } catch {
         pushToast({ title: "Failed to save note", tone: "error" });

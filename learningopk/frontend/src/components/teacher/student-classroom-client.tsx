@@ -95,9 +95,7 @@ export function StudentClassroomClient({
           </Button>
         </div>
         {joined && (
-          <p className="text-center text-sm text-green-500">
-            Successfully joined! Refreshing...
-          </p>
+          <p className="text-center text-sm text-green-500">Successfully joined! Refreshing...</p>
         )}
       </div>
     );
@@ -160,7 +158,11 @@ function AnnouncementsList({ announcements }: { announcements: Announcement[] })
               <p className="text-sm">{a.content}</p>
               <div className="mt-1 text-xs text-[var(--muted-foreground)]">
                 {new Date(a.createdAt).toLocaleString()}
-                {a.pinned && <Badge variant="primary" className="ml-2">Pinned</Badge>}
+                {a.pinned && (
+                  <Badge variant="primary" className="ml-2">
+                    Pinned
+                  </Badge>
+                )}
               </div>
             </Card>
           ))}
@@ -211,9 +213,7 @@ function AssignmentsList({ assignments }: { assignments: Assignment[] }) {
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                {getStatusBadge(a.status)}
-              </div>
+              <div className="flex items-center gap-2">{getStatusBadge(a.status)}</div>
             </Card>
           ))}
         </div>

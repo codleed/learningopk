@@ -18,7 +18,10 @@ export interface GradedQuestion {
   aiFeedback?: string;
 }
 
-export function gradeMcq(exercise: GradableExercise, userAnswer: unknown): { score: number; isCorrect: boolean } {
+export function gradeMcq(
+  exercise: GradableExercise,
+  userAnswer: unknown
+): { score: number; isCorrect: boolean } {
   const maxMarks = exercise.marks ?? 1;
   if (exercise.correctOption && typeof userAnswer === "string") {
     const isCorrect = userAnswer.toLowerCase() === exercise.correctOption.toLowerCase();
@@ -43,9 +46,12 @@ export function gradeFillInBlanks(
     }
   }
 
-  if (allBlanks.length === 0) return { score: 0, isCorrect: false, totalBlanks: 0, correctBlanks: 0 };
+  if (allBlanks.length === 0)
+    return { score: 0, isCorrect: false, totalBlanks: 0, correctBlanks: 0 };
 
-  const userAnswers = Array.isArray(userAnswer) ? userAnswer.map(a => String(a).trim().toLowerCase()) : [];
+  const userAnswers = Array.isArray(userAnswer)
+    ? userAnswer.map((a) => String(a).trim().toLowerCase())
+    : [];
   let correctBlanks = 0;
   for (let i = 0; i < allBlanks.length; i++) {
     const expected = allBlanks[i]!.trim().toLowerCase();
@@ -64,10 +70,11 @@ export function autoGradeExercises(
   exercises: GradableExercise[],
   answers: Record<number, unknown>
 ): GradedQuestion[] {
-  return exercises.map(exercise => {
+  return exercises.map((exercise) => {
     const userAnswer = answers[exercise.id];
     const maxMarks = exercise.marks ?? 1;
-    const needsAiGrading = exercise.type === "short" || exercise.type === "long" || exercise.type === "numerical";
+    const needsAiGrading =
+      exercise.type === "short" || exercise.type === "long" || exercise.type === "numerical";
 
     if (exercise.type === "mcq") {
       const { score, isCorrect } = gradeMcq(exercise, userAnswer);
@@ -84,12 +91,16 @@ export function autoGradeExercises(
       score: 0,
       maxMarks,
       isCorrect: false,
-      needsAiGrading
+      needsAiGrading,
     };
   });
 }
 
-export function calculateTotalScore(gradedQuestions: GradedQuestion[]): { totalScore: number; totalMarks: number; percentage: number } {
+export function calculateTotalScore(gradedQuestions: GradedQuestion[]): {
+  totalScore: number;
+  totalMarks: number;
+  percentage: number;
+} {
   const totalScore = gradedQuestions.reduce((sum, q) => sum + q.score, 0);
   const totalMarks = gradedQuestions.reduce((sum, q) => sum + q.maxMarks, 0);
   const percentage = totalMarks > 0 ? Math.round((totalScore / totalMarks) * 10000) / 100 : 0;

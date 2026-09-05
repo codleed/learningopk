@@ -13,6 +13,7 @@
 ## Analysis Summary
 
 ### Service Methods with DB (to move to repository):
+
 - `resolveThreadSubjectId` - queries chapters + subjects
 - `createThread` - inserts forumThreads
 - `createReply` - validates + inserts forumReplies
@@ -20,11 +21,13 @@
 - `acceptReply` - transaction with replies + thread updates
 
 ### Pure Functions to KEEP in service:
+
 - `buildFilters` - SQL building (no DB)
 - `shapeThreadReplies` - data transformation (no DB)
 - `checkMutationRateLimit` - rate limiting logic
 
 ### Missing Repository Methods (need to add):
+
 - `findChapterById` / `findSubjectById` - for subject resolution
 - `createThread` / `createReply` - for inserts
 - `findThreadByIdSimple` / `findReplyByIdWithThread` - for validation
@@ -35,6 +38,7 @@
 ## Task 1: Add missing repository methods
 
 **Files:**
+
 - Modify: `learningopk/backend/src/repositories/forum.repository.ts`
 
 **Step 1: Add new methods to repository**
@@ -238,11 +242,13 @@ Expected: No errors
 ## Task 2: Refactor service to use repository
 
 **Files:**
+
 - Modify: `learningopk/backend/src/services/forum.service.ts`
 
 **Step 1: Add repository import at top**
 
 After existing imports, add:
+
 ```typescript
 import { forumRepository } from "../repositories/forum.repository.js";
 ```
@@ -250,6 +256,7 @@ import { forumRepository } from "../repositories/forum.repository.js";
 **Step 2: Update resolveThreadSubjectId to use repository**
 
 Replace the method body (lines 171-226):
+
 ```typescript
 async resolveThreadSubjectId(input: { subjectId?: number; chapterId?: number }): Promise<{ subjectId: number | null } | { error: { status: number; body: { error: string } } }> {
   let resolvedSubjectId = input.subjectId ?? null;
@@ -299,6 +306,7 @@ async resolveThreadSubjectId(input: { subjectId?: number; chapterId?: number }):
 **Step 3: Update createThread to use repository**
 
 Replace method body (lines 256-313):
+
 ```typescript
 async createThread(input: CreateThreadInput): Promise<{ thread: Record<string, unknown> }> {
   const { title, body, userId, chapterId } = input;
@@ -347,6 +355,7 @@ async createThread(input: CreateThreadInput): Promise<{ thread: Record<string, u
 **Step 4: Update createReply to use repository**
 
 Replace method body (lines 315-390):
+
 ```typescript
 async createReply(input: CreateReplyInput, userName: string): Promise<{ reply: Record<string, unknown> }> {
   const { body, parentReplyId, threadId, userId } = input;
@@ -403,6 +412,7 @@ async createReply(input: CreateReplyInput, userName: string): Promise<{ reply: R
 **Step 5: Update voteReply to use repository**
 
 Replace method body (lines 392-457):
+
 ```typescript
 async voteReply(input: VoteInput): Promise<{ replyId: string; voteType: string; upvotes: number }> {
   const { replyId, voteType, userId } = input;
@@ -426,6 +436,7 @@ async voteReply(input: VoteInput): Promise<{ replyId: string; voteType: string; 
 **Step 6: Update acceptReply to use repository**
 
 Replace method body (lines 459-509):
+
 ```typescript
 async acceptReply(replyId: string, userId: string): Promise<{ replyId: string; threadId: string; isAcceptedAnswer: boolean; isSolved: boolean }> {
   const replyRows = await forumRepository.findReplyWithThread(replyId);
@@ -453,9 +464,11 @@ async acceptReply(replyId: string, userId: string): Promise<{ replyId: string; t
 **Step 7: Remove unused imports from service**
 
 Remove `db` import since service no longer calls it directly:
+
 - Remove: `import { db } from "../lib/db/index.js";`
 
 Remove unused schema imports (if any remain unused):
+
 - Keep: `import { boardClasses, boards, chapters, forumReplies, forumReplyVotes, forumThreads, subjects, users } from "../lib/db/schema.js";`
 - Actually these are still needed for types in some places. Let's verify after changes.
 
@@ -476,6 +489,7 @@ Expected: Server starts without errors
 **Step 2: Test with curl or verify service works**
 
 Test that the forum service still works:
+
 ```bash
 curl http://localhost:3001/api/forum/filters
 ```
@@ -486,10 +500,10 @@ Expected: Returns boards, subjects, chapters
 
 ## Summary of Changes
 
-| File | Change |
-|------|--------|
-| `forum.repository.ts` | Added 10 new methods: findChapterById, findSubjectById, createThread, findThreadByIdSimple, findReplyByIdWithParent, createReply, findReplyByIdSimple, findReplyWithThread, voteReplyTransaction, acceptReplyTransaction |
-| `forum.service.ts` | Updated 5 methods (resolveThreadSubjectId, createThread, createReply, voteReply, acceptReply) to use repository instead of direct db calls. Removed db import. Kept 3 pure functions (buildFilters, shapeThreadReplies, checkMutationRateLimit) |
-| `forum.ts` | No changes needed - already imports from forumService |
+| File                  | Change                                                                                                                                                                                                                                          |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `forum.repository.ts` | Added 10 new methods: findChapterById, findSubjectById, createThread, findThreadByIdSimple, findReplyByIdWithParent, createReply, findReplyByIdSimple, findReplyWithThread, voteReplyTransaction, acceptReplyTransaction                        |
+| `forum.service.ts`    | Updated 5 methods (resolveThreadSubjectId, createThread, createReply, voteReply, acceptReply) to use repository instead of direct db calls. Removed db import. Kept 3 pure functions (buildFilters, shapeThreadReplies, checkMutationRateLimit) |
+| `forum.ts`            | No changes needed - already imports from forumService                                                                                                                                                                                           |
 
 **Result:** Service now delegates all DB operations to repository while keeping pure functions for useful abstraction.

@@ -18,4 +18,3 @@ export default function AdminError({ error: _error, reset }: AdminErrorProps) {
     </div>
   );
 }
-

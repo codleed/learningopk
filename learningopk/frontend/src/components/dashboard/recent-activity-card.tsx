@@ -117,9 +117,7 @@ function ActivityItem({ entry }: { entry: ActivityEntry }) {
             <p className="text-xs font-medium leading-snug text-text-primary">
               {toActivityLabel(entry)}
             </p>
-            {entry.type === "quiz_submit" && (
-              <QuizScoreBadge percentage={entry.percentage} />
-            )}
+            {entry.type === "quiz_submit" && <QuizScoreBadge percentage={entry.percentage} />}
           </div>
           <p className="mt-0.5 text-[10px] text-text-muted">
             {formatActivityTimestamp(entry.occurredAt)}
@@ -135,19 +133,14 @@ function EmptyState() {
     <div className="flex flex-1 flex-col items-center justify-center py-10">
       <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-bg-subtle">
         <div className="relative">
-          <Clock
-            className="h-7 w-7 text-text-muted"
-            aria-hidden
-          />
+          <Clock className="h-7 w-7 text-text-muted" aria-hidden />
           <Sparkles
             className="absolute -right-2 -top-2 h-3.5 w-3.5 text-accent-primary"
             aria-hidden
           />
         </div>
       </div>
-      <p className="mt-3 text-sm font-medium text-text-secondary">
-        No activity yet
-      </p>
+      <p className="mt-3 text-sm font-medium text-text-secondary">No activity yet</p>
       <p className="mt-1 text-xs text-text-muted">
         Start a chapter and your progress will appear here
       </p>
@@ -174,10 +167,7 @@ export function RecentActivityCard({ activity }: RecentActivityCardProps) {
         {entries.length > 0 ? (
           <ul>
             {entries.map((entry, index) => (
-              <ActivityItem
-                key={`${entry.type}-${entry.occurredAt}-${index}`}
-                entry={entry}
-              />
+              <ActivityItem key={`${entry.type}-${entry.occurredAt}-${index}`} entry={entry} />
             ))}
           </ul>
         ) : (

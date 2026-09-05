@@ -34,6 +34,7 @@ import { Button, Card, CardBody, Badge, Input, Skeleton } from "@/components/ui"
 ```
 
 Available primitives:
+
 - `Button` — primary, secondary, ghost, destructive, success variants; sm/md/lg sizes; loading state
 - `Card` / `CardBody` / `CardHeader` / `CardFooter` — default, bordered, elevated variants
 - `Badge` — primary, secondary, success, warning, destructive, info, outline variants
@@ -56,6 +57,7 @@ Available primitives:
 ## Common Components (`common/`)
 
 Higher-level reusable components:
+
 - `ContentRenderer` — dynamic import wrapper for markdown content
 - `VirtualList` / `VirtualGrid` — virtualized scrolling for 20+ item lists
 - `StreamingText` — animated text streaming (AI responses)

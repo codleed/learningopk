@@ -11,7 +11,7 @@ import {
   getPktDayBounds,
   shouldShowStreakAtRiskWarning,
   STREAK_WAGER_MAX_XP,
-  STREAK_WAGER_MIN_XP
+  STREAK_WAGER_MIN_XP,
 } from "../lib/streak-wager.js";
 import { progressRepository } from "../repositories/progress.repository.js";
 import { xpService } from "./xp.service.js";
@@ -49,7 +49,7 @@ export class StreakWagerService {
         id: streakWagers.id,
         amount: streakWagers.amount,
         protectedDate: streakWagers.protectedDate,
-        expiresAt: streakWagers.expiresAt
+        expiresAt: streakWagers.expiresAt,
       })
       .from(streakWagers)
       .where(and(eq(streakWagers.userId, userId), eq(streakWagers.status, "active")))
@@ -64,11 +64,15 @@ export class StreakWagerService {
           .set({
             status: "won",
             completedGoal: true,
-            settledAt: now
+            settledAt: now,
           })
           .where(eq(streakWagers.id, wager.id));
 
-        await xpService.awardXp(userId, wager.amount + calculateStreakWagerBonus(wager.amount), "streak_wager_win");
+        await xpService.awardXp(
+          userId,
+          wager.amount + calculateStreakWagerBonus(wager.amount),
+          "streak_wager_win"
+        );
         continue;
       }
 
@@ -78,7 +82,7 @@ export class StreakWagerService {
           .set({
             status: "lost",
             completedGoal: false,
-            settledAt: now
+            settledAt: now,
           })
           .where(eq(streakWagers.id, wager.id));
       }
@@ -91,17 +95,29 @@ export class StreakWagerService {
     const chapterRows = await db
       .select({ chapterId: userProgress.chapterId })
       .from(userProgress)
-      .where(and(eq(userProgress.userId, userId), gte(userProgress.visitedAt, startUtc), lt(userProgress.visitedAt, endUtc)));
+      .where(
+        and(
+          eq(userProgress.userId, userId),
+          gte(userProgress.visitedAt, startUtc),
+          lt(userProgress.visitedAt, endUtc)
+        )
+      );
 
     const quizRows = await db
       .select({ id: quizAttempts.id })
       .from(quizAttempts)
-      .where(and(eq(quizAttempts.userId, userId), gte(quizAttempts.completedAt, startUtc), lt(quizAttempts.completedAt, endUtc)));
+      .where(
+        and(
+          eq(quizAttempts.userId, userId),
+          gte(quizAttempts.completedAt, startUtc),
+          lt(quizAttempts.completedAt, endUtc)
+        )
+      );
 
     return buildDailyGoalProgress({
       dateKey,
       chaptersCompleted: chapterRows.length,
-      quizzesCompleted: quizRows.length
+      quizzesCompleted: quizRows.length,
     });
   }
 
@@ -118,7 +134,13 @@ export class StreakWagerService {
     const rows = await db
       .select({ protectedDate: streakWagers.protectedDate })
       .from(streakWagers)
-      .where(and(eq(streakWagers.userId, userId), eq(streakWagers.status, "lost"), isNull(streakWagers.recoveredAt)));
+      .where(
+        and(
+          eq(streakWagers.userId, userId),
+          eq(streakWagers.status, "lost"),
+          isNull(streakWagers.recoveredAt)
+        )
+      );
 
     return rows.map((row) => row.protectedDate);
   }
@@ -128,14 +150,12 @@ export class StreakWagerService {
     const recoveredProtectedDateKeys = await this.getRecoveredProtectedDateKeys(userId);
     const lostProtectedDateKeys = new Set(await this.getLostProtectedDateKeys(userId));
     const currentPktDate = getCurrentPktContext().todayKey;
-    const activityDateKeys = new Set(
-      activityLogRows.map((row) => getPktDateKey(row.occurredAt))
-    );
+    const activityDateKeys = new Set(activityLogRows.map((row) => getPktDateKey(row.occurredAt)));
     const activityDates = [
       ...[...activityDateKeys]
         .filter((value) => !lostProtectedDateKeys.has(value))
         .map((value) => new Date(`${value}T00:00:00.000Z`)),
-      ...recoveredProtectedDateKeys.map((dateKey) => new Date(`${dateKey}T00:00:00.000Z`))
+      ...recoveredProtectedDateKeys.map((dateKey) => new Date(`${dateKey}T00:00:00.000Z`)),
     ];
 
     return calculateStreakDays(activityDates, new Date(`${currentPktDate}T00:00:00.000Z`));
@@ -172,7 +192,7 @@ export class StreakWagerService {
       bonusXp: calculateStreakWagerBonus(amount),
       protectedDate: pkt.todayKey,
       expiresAt: pkt.nextDayStartUtc,
-      status: "active"
+      status: "active",
     });
   }
 
@@ -182,10 +202,16 @@ export class StreakWagerService {
     const brokenRows = await db
       .select({
         id: streakWagers.id,
-        protectedDate: streakWagers.protectedDate
+        protectedDate: streakWagers.protectedDate,
       })
       .from(streakWagers)
-      .where(and(eq(streakWagers.userId, userId), eq(streakWagers.status, "lost"), isNull(streakWagers.recoveredAt)))
+      .where(
+        and(
+          eq(streakWagers.userId, userId),
+          eq(streakWagers.status, "lost"),
+          isNull(streakWagers.recoveredAt)
+        )
+      )
       .orderBy(desc(streakWagers.settledAt), desc(streakWagers.placedAt))
       .limit(1);
 
@@ -202,12 +228,16 @@ export class StreakWagerService {
     await db
       .update(streakWagers)
       .set({
-        recoveredAt: now
+        recoveredAt: now,
       })
       .where(eq(streakWagers.id, broken.id));
   }
 
-  async buildDashboardState(userId: string, streakDays: number, now: Date = new Date()): Promise<StreakWagerDashboardState> {
+  async buildDashboardState(
+    userId: string,
+    streakDays: number,
+    now: Date = new Date()
+  ): Promise<StreakWagerDashboardState> {
     await this.settleOutstandingWagers(userId, now);
 
     const pkt = getCurrentPktContext(now);
@@ -221,7 +251,7 @@ export class StreakWagerService {
         protectedDate: streakWagers.protectedDate,
         placedAt: streakWagers.placedAt,
         expiresAt: streakWagers.expiresAt,
-        status: streakWagers.status
+        status: streakWagers.status,
       })
       .from(streakWagers)
       .where(and(eq(streakWagers.userId, userId), eq(streakWagers.protectedDate, pkt.todayKey)))
@@ -232,10 +262,16 @@ export class StreakWagerService {
         id: streakWagers.id,
         amount: streakWagers.amount,
         protectedDate: streakWagers.protectedDate,
-        settledAt: streakWagers.settledAt
+        settledAt: streakWagers.settledAt,
       })
       .from(streakWagers)
-      .where(and(eq(streakWagers.userId, userId), eq(streakWagers.status, "lost"), isNull(streakWagers.recoveredAt)))
+      .where(
+        and(
+          eq(streakWagers.userId, userId),
+          eq(streakWagers.status, "lost"),
+          isNull(streakWagers.recoveredAt)
+        )
+      )
       .orderBy(desc(streakWagers.settledAt), desc(streakWagers.placedAt))
       .limit(1);
 
@@ -253,7 +289,7 @@ export class StreakWagerService {
       warningAtRisk: shouldShowStreakAtRiskWarning({
         streakDays,
         hasWagerForToday,
-        pktHour: pkt.pktHour
+        pktHour: pkt.pktHour,
       }),
       activeWager:
         todayWager && todayWager.status === "active"
@@ -263,7 +299,7 @@ export class StreakWagerService {
               bonusXp: todayWager.bonusXp,
               protectedDate: todayWager.protectedDate,
               placedAt: todayWager.placedAt.toISOString(),
-              expiresAt: todayWager.expiresAt.toISOString()
+              expiresAt: todayWager.expiresAt.toISOString(),
             }
           : null,
       brokenWager: brokenRows[0]
@@ -272,9 +308,9 @@ export class StreakWagerService {
             amount: brokenRows[0].amount,
             protectedDate: brokenRows[0].protectedDate,
             lostAt: brokenRows[0].settledAt?.toISOString() ?? now.toISOString(),
-            canRecoverWithFreeze: freezeStatus.canUseStreakFreeze
+            canRecoverWithFreeze: freezeStatus.canUseStreakFreeze,
           }
-        : null
+        : null,
     };
   }
 }

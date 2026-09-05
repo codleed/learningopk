@@ -2,14 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import {
-  type ChangeEvent,
-  type FormEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { type ChangeEvent, type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Bell,
@@ -78,12 +71,8 @@ const profileSchema = z.object({
 
 const passwordSchema = z
   .object({
-    currentPassword: z
-      .string()
-      .min(1, "Please enter your current password."),
-    newPassword: z
-      .string()
-      .min(8, "New password must be at least 8 characters."),
+    currentPassword: z.string().min(1, "Please enter your current password."),
+    newPassword: z.string().min(8, "New password must be at least 8 characters."),
     confirmPassword: z.string().min(1, "Please confirm your new password."),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
@@ -167,8 +156,14 @@ export function SettingsPageClient({ initialProfile }: SettingsPageClientProps) 
 
   const tabPanels = [
     { value: "profile" as const, render: () => <ProfileTab initialProfile={initialProfile} /> },
-    { value: "preferences" as const, render: () => <PreferencesTab initialBoard={initialProfile.board} /> },
-    { value: "notifications" as const, render: () => <NotificationsTab initialLeaderboard={initialProfile.leaderboard} /> },
+    {
+      value: "preferences" as const,
+      render: () => <PreferencesTab initialBoard={initialProfile.board} />,
+    },
+    {
+      value: "notifications" as const,
+      render: () => <NotificationsTab initialLeaderboard={initialProfile.leaderboard} />,
+    },
     { value: "account" as const, render: () => <AccountTab email={initialProfile.email} /> },
   ];
 
@@ -179,10 +174,7 @@ export function SettingsPageClient({ initialProfile }: SettingsPageClientProps) 
         stickyClassName="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
         title="Settings"
         subtitle="Manage your profile, preferences, and account settings."
-        breadcrumbs={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Settings" },
-        ]}
+        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Settings" }]}
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -261,16 +253,9 @@ function ProfileTab({ initialProfile }: { initialProfile: SettingsProfile }) {
       const file = event.currentTarget.files?.[0];
       if (!file) return;
 
-      const allowedMimeTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-        "image/gif",
-      ];
+      const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
       if (!allowedMimeTypes.includes(file.type)) {
-        setProfileImageError(
-          "Only JPEG, PNG, WEBP, and GIF files are allowed."
-        );
+        setProfileImageError("Only JPEG, PNG, WEBP, and GIF files are allowed.");
         event.currentTarget.value = "";
         return;
       }
@@ -316,10 +301,7 @@ function ProfileTab({ initialProfile }: { initialProfile: SettingsProfile }) {
       });
       router.refresh();
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Unable to upload profile picture.";
+      const message = error instanceof Error ? error.message : "Unable to upload profile picture.";
       setProfileImageError(message);
     } finally {
       setIsUploadingImage(false);
@@ -334,9 +316,7 @@ function ProfileTab({ initialProfile }: { initialProfile: SettingsProfile }) {
 
       const parsed = profileSchema.safeParse({ name, bio });
       if (!parsed.success) {
-        setProfileError(
-          parsed.error.issues[0]?.message ?? "Invalid profile input."
-        );
+        setProfileError(parsed.error.issues[0]?.message ?? "Invalid profile input.");
         return;
       }
 
@@ -349,9 +329,7 @@ function ProfileTab({ initialProfile }: { initialProfile: SettingsProfile }) {
       setIsSavingProfile(false);
 
       if (result.error) {
-        setProfileError(
-          result.error.message ?? "Unable to update profile."
-        );
+        setProfileError(result.error.message ?? "Unable to update profile.");
         return;
       }
 
@@ -409,9 +387,7 @@ function ProfileTab({ initialProfile }: { initialProfile: SettingsProfile }) {
             <p className="font-display text-lg font-bold text-text-primary">
               {initialProfile.name}
             </p>
-            <p className="text-sm text-text-secondary">
-              {initialProfile.email}
-            </p>
+            <p className="text-sm text-text-secondary">{initialProfile.email}</p>
           </div>
 
           {selectedFile ? (
@@ -433,9 +409,7 @@ function ProfileTab({ initialProfile }: { initialProfile: SettingsProfile }) {
             </p>
           ) : null}
 
-          <p className="text-center text-xs text-text-muted">
-            JPG, PNG, WEBP, or GIF. Max 2MB.
-          </p>
+          <p className="text-center text-xs text-text-muted">JPG, PNG, WEBP, or GIF. Max 2MB.</p>
         </CardBody>
       </Card>
 
@@ -504,8 +478,7 @@ function ProfileTab({ initialProfile }: { initialProfile: SettingsProfile }) {
               />
             </div>
             <p className="text-xs text-text-muted">
-              Academic details are managed from your registration. Contact
-              support to update.
+              Academic details are managed from your registration. Contact support to update.
             </p>
 
             {profileError ? (
@@ -515,12 +488,7 @@ function ProfileTab({ initialProfile }: { initialProfile: SettingsProfile }) {
             ) : null}
 
             <div className="flex justify-end pt-2">
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                loading={isSavingProfile}
-              >
+              <Button type="submit" variant="primary" size="lg" loading={isSavingProfile}>
                 Save Changes
               </Button>
             </div>
@@ -537,9 +505,7 @@ function ProfileTab({ initialProfile }: { initialProfile: SettingsProfile }) {
 
 function PreferencesTab({ initialBoard }: { initialBoard: string }) {
   const { pushToast } = useToast();
-  const [selectedBoard, setSelectedBoard] = useState(
-    initialBoard || "federal"
-  );
+  const [selectedBoard, setSelectedBoard] = useState(initialBoard || "federal");
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
   const onBoardChange = useCallback(
@@ -556,9 +522,7 @@ function PreferencesTab({ initialBoard }: { initialBoard: string }) {
 
   const toggleSubject = useCallback((subject: string) => {
     setSelectedSubjects((prev) =>
-      prev.includes(subject)
-        ? prev.filter((s) => s !== subject)
-        : [...prev, subject]
+      prev.includes(subject) ? prev.filter((s) => s !== subject) : [...prev, subject]
     );
   }, []);
 
@@ -604,12 +568,8 @@ function PreferencesTab({ initialBoard }: { initialBoard: string }) {
         </CardHeader>
         <CardBody className="flex items-center justify-between gap-4">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-text-primary">
-              Interface theme
-            </p>
-            <p className="text-xs text-text-muted">
-              System option follows your OS preference.
-            </p>
+            <p className="text-sm font-medium text-text-primary">Interface theme</p>
+            <p className="text-xs text-text-muted">System option follows your OS preference.</p>
           </div>
           <ThemeToggle />
         </CardBody>
@@ -617,13 +577,13 @@ function PreferencesTab({ initialBoard }: { initialBoard: string }) {
 
       {/* ── Subject interests ── */}
       <Card variant="default" className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Subjects of Interest</CardTitle>
-            <p className="text-sm text-text-secondary">
-            Select the subjects you&apos;re studying. This helps personalize your
-            dashboard and recommendations.
-            </p>
-          </CardHeader>
+        <CardHeader>
+          <CardTitle>Subjects of Interest</CardTitle>
+          <p className="text-sm text-text-secondary">
+            Select the subjects you&apos;re studying. This helps personalize your dashboard and
+            recommendations.
+          </p>
+        </CardHeader>
         <CardBody>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {SUBJECTS.map((subject) => (
@@ -641,9 +601,7 @@ function PreferencesTab({ initialBoard }: { initialBoard: string }) {
                   checked={selectedSubjects.includes(subject)}
                   onChange={() => toggleSubject(subject)}
                 />
-                <span className="text-sm font-medium text-text-primary">
-                  {subject}
-                </span>
+                <span className="text-sm font-medium text-text-primary">{subject}</span>
               </label>
             ))}
           </div>
@@ -704,23 +662,15 @@ function NotificationsTab({ initialLeaderboard }: { initialLeaderboard: Leaderbo
             <Bell className="h-5 w-5 text-accent-primary" aria-hidden />
             <CardTitle>Notification Preferences</CardTitle>
           </div>
-          <p className="text-sm text-text-secondary">
-            Control which notifications you receive.
-          </p>
+          <p className="text-sm text-text-secondary">Control which notifications you receive.</p>
         </CardHeader>
         <CardBody className="divide-y divide-border-default">
           {NOTIFICATION_SETTINGS.map((item) => {
             const IconComp = item.icon;
             return (
-              <div
-                key={item.id}
-                className="flex items-center gap-4 py-4 first:pt-0 last:pb-0"
-              >
+              <div key={item.id} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bg-subtle">
-                  <IconComp
-                    className="h-5 w-5 text-text-secondary"
-                    aria-hidden
-                  />
+                  <IconComp className="h-5 w-5 text-text-secondary" aria-hidden />
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -730,9 +680,7 @@ function NotificationsTab({ initialLeaderboard }: { initialLeaderboard: Leaderbo
                     label={item.label}
                     description={item.description}
                     checked={settings[item.id] ?? false}
-                    onCheckedChange={(checked) =>
-                      toggleSetting(item.id, checked as boolean)
-                    }
+                    onCheckedChange={(checked) => toggleSetting(item.id, checked as boolean)}
                   />
                 </div>
               </div>
@@ -766,18 +714,20 @@ function NotificationsTab({ initialLeaderboard }: { initialLeaderboard: Leaderbo
                 const result = await updateLeaderboardSettings(nextValue);
                 setLeaderboardPublic(result.leaderboardPublic);
                 pushToast({
-                  title: result.leaderboardPublic ? "Leaderboard enabled" : "Leaderboard privacy updated",
+                  title: result.leaderboardPublic
+                    ? "Leaderboard enabled"
+                    : "Leaderboard privacy updated",
                   description: result.leaderboardPublic
                     ? "Your profile can now appear in leaderboard rankings."
                     : "Your profile is now hidden from public leaderboard entries.",
-                  tone: "success"
+                  tone: "success",
                 });
               } catch (error) {
                 setLeaderboardPublic(previousValue);
                 pushToast({
                   title: "Unable to update leaderboard privacy",
                   description: error instanceof Error ? error.message : "Please try again.",
-                  tone: "error"
+                  tone: "error",
                 });
               } finally {
                 setIsSavingLeaderboard(false);
@@ -797,9 +747,12 @@ function NotificationsTab({ initialLeaderboard }: { initialLeaderboard: Leaderbo
                   variant="outline"
                   className={cn(
                     "border px-3 py-1 text-[11px] uppercase tracking-[0.16em]",
-                    initialLeaderboard.badge === "gold" && "border-amber-400/60 bg-amber-400/15 text-amber-700 dark:text-amber-300",
-                    initialLeaderboard.badge === "silver" && "border-slate-400/60 bg-slate-400/15 text-slate-700 dark:text-slate-200",
-                    initialLeaderboard.badge === "bronze" && "border-orange-500/50 bg-orange-500/15 text-orange-700 dark:text-orange-300"
+                    initialLeaderboard.badge === "gold" &&
+                      "border-amber-400/60 bg-amber-400/15 text-amber-700 dark:text-amber-300",
+                    initialLeaderboard.badge === "silver" &&
+                      "border-slate-400/60 bg-slate-400/15 text-slate-700 dark:text-slate-200",
+                    initialLeaderboard.badge === "bronze" &&
+                      "border-orange-500/50 bg-orange-500/15 text-orange-700 dark:text-orange-300"
                   )}
                 >
                   Top 100 {initialLeaderboard.badge}
@@ -811,7 +764,9 @@ function NotificationsTab({ initialLeaderboard }: { initialLeaderboard: Leaderbo
                 ? "You currently hold a top-100 leaderboard badge on your profile."
                 : "Reach the global top 100 in XP to unlock a bronze, silver, or gold profile badge."}
             </p>
-            {isSavingLeaderboard ? <p className="mt-2 text-xs text-text-muted">Saving preference…</p> : null}
+            {isSavingLeaderboard ? (
+              <p className="mt-2 text-xs text-text-muted">Saving preference…</p>
+            ) : null}
           </div>
         </CardBody>
       </Card>
@@ -831,9 +786,7 @@ function AccountTab({ email }: { email: string }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>(
-    {}
-  );
+  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   /* Delete account state */
@@ -874,8 +827,7 @@ function AccountTab({ email }: { email: string }) {
 
         if (result.error) {
           setPasswordErrors({
-            currentPassword:
-              result.error.message ?? "Failed to change password.",
+            currentPassword: result.error.message ?? "Failed to change password.",
           });
           return;
         }
@@ -890,10 +842,7 @@ function AccountTab({ email }: { email: string }) {
         });
       } catch (error) {
         setPasswordErrors({
-          currentPassword:
-            error instanceof Error
-              ? error.message
-              : "An unexpected error occurred.",
+          currentPassword: error instanceof Error ? error.message : "An unexpected error occurred.",
         });
       } finally {
         setIsChangingPassword(false);
@@ -914,8 +863,7 @@ function AccountTab({ email }: { email: string }) {
       if (result.error) {
         pushToast({
           title: "Unable to delete account",
-          description:
-            result.error.message ?? "Something went wrong. Try again.",
+          description: result.error.message ?? "Something went wrong. Try again.",
           tone: "error",
         });
         return;
@@ -930,10 +878,7 @@ function AccountTab({ email }: { email: string }) {
     } catch (error) {
       pushToast({
         title: "Delete failed",
-        description:
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred.",
+        description: error instanceof Error ? error.message : "An unexpected error occurred.",
         tone: "error",
       });
     } finally {
@@ -972,10 +917,7 @@ function AccountTab({ email }: { email: string }) {
       <Card variant="default">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <KeyRound
-              className="h-5 w-5 text-accent-primary"
-              aria-hidden
-            />
+            <KeyRound className="h-5 w-5 text-accent-primary" aria-hidden />
             <CardTitle>Change Password</CardTitle>
           </div>
           <p className="text-sm text-text-secondary">
@@ -983,11 +925,7 @@ function AccountTab({ email }: { email: string }) {
           </p>
         </CardHeader>
         <CardBody>
-          <form
-            onSubmit={onChangePassword}
-            noValidate
-            className="space-y-4"
-          >
+          <form onSubmit={onChangePassword} noValidate className="space-y-4">
             <PasswordInput
               label="Current password"
               id="current-password"
@@ -1025,11 +963,7 @@ function AccountTab({ email }: { email: string }) {
             />
 
             <div className="flex justify-end pt-2">
-              <Button
-                type="submit"
-                variant="primary"
-                loading={isChangingPassword}
-              >
+              <Button type="submit" variant="primary" loading={isChangingPassword}>
                 Update Password
               </Button>
             </div>
@@ -1038,19 +972,11 @@ function AccountTab({ email }: { email: string }) {
       </Card>
 
       {/* ── Danger Zone ── */}
-      <Card
-        variant="bordered"
-        className="!border-accent-danger/30"
-      >
+      <Card variant="bordered" className="!border-accent-danger/30">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Trash2
-              className="h-5 w-5 text-accent-danger"
-              aria-hidden
-            />
-            <CardTitle className="!text-accent-danger">
-              Danger Zone
-            </CardTitle>
+            <Trash2 className="h-5 w-5 text-accent-danger" aria-hidden />
+            <CardTitle className="!text-accent-danger">Danger Zone</CardTitle>
           </div>
           <p className="text-sm text-text-secondary">
             Irreversible actions that permanently affect your account.
@@ -1059,12 +985,10 @@ function AccountTab({ email }: { email: string }) {
         <CardBody>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-medium text-text-primary">
-                Delete your account
-              </p>
+              <p className="text-sm font-medium text-text-primary">Delete your account</p>
               <p className="text-xs text-text-muted">
-                Once deleted, all your data, progress, and achievements will
-                be permanently removed. This action cannot be undone.
+                Once deleted, all your data, progress, and achievements will be permanently removed.
+                This action cannot be undone.
               </p>
             </div>
 

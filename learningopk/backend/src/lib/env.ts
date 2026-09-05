@@ -10,10 +10,7 @@ const schema = z.object({
   BETTER_AUTH_URL: z.string().url(),
   FRONTEND_ORIGIN: z.string().url(),
   MINIO_ENDPOINT: z.string().min(1).default("localhost"),
-  MINIO_PORT: z
-    .string()
-    .regex(/^\d+$/)
-    .default("9000"),
+  MINIO_PORT: z.string().regex(/^\d+$/).default("9000"),
   MINIO_USE_SSL: z.enum(["true", "false"]).default("false"),
   MINIO_ACCESS_KEY: z.string().min(1),
   MINIO_SECRET_KEY: z.string().min(1),
@@ -23,10 +20,7 @@ const schema = z.object({
   MISTRAL_API_KEY: z.string().min(1).optional().default("not-configured"),
   RESEND_API_KEY: z.string().min(1).optional().default("not-configured"),
   EMAIL_FROM: z.string().email().default("noreply@learningo.site"),
-  PORT: z
-    .string()
-    .regex(/^\d+$/)
-    .default("3001")
+  PORT: z.string().regex(/^\d+$/).default("3001"),
 });
 
 export const env = schema.parse(process.env);

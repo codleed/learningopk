@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, GraduationCap, Book, FileText, Brain, ClipboardList, Layers } from "lucide-react";
+import {
+  BookOpen,
+  GraduationCap,
+  Book,
+  FileText,
+  Brain,
+  ClipboardList,
+  Layers,
+} from "lucide-react";
 
 export type ContentStat = {
   id: string;
@@ -91,9 +99,7 @@ export function ContentStatsStrip({ stats }: ContentStatsStripProps) {
             <p className="font-heading text-lg font-semibold text-[var(--text-primary)]">
               {stat.value}
             </p>
-            <p className="truncate text-xs text-[var(--text-secondary)]">
-              {stat.label}
-            </p>
+            <p className="truncate text-xs text-[var(--text-secondary)]">{stat.label}</p>
           </div>
         </Link>
       ))}

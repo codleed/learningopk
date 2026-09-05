@@ -3,7 +3,7 @@ import { z } from "zod";
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
 const profileImageUploadResponseSchema = z.object({
-  imageUrl: z.string().url()
+  imageUrl: z.string().url(),
 });
 
 export type ProfileImageUploadResponse = z.infer<typeof profileImageUploadResponseSchema>;
@@ -15,7 +15,7 @@ export const uploadProfileImage = async (file: File): Promise<ProfileImageUpload
   const response = await fetch(`${backendUrl}/api/users/me/profile-image`, {
     method: "PUT",
     body: formData,
-    credentials: "include"
+    credentials: "include",
   });
 
   if (!response.ok) {

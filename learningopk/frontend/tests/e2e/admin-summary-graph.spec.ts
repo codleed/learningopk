@@ -4,7 +4,10 @@ const loginAsSeededAdmin = async (page: Page) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("admin@example.com");
   await page.getByLabel("Password").fill("password");
-  await Promise.all([page.waitForURL(/\/dashboard$/), page.getByRole("button", { name: "Sign in" }).click()]);
+  await Promise.all([
+    page.waitForURL(/\/dashboard$/),
+    page.getByRole("button", { name: "Sign in" }).click(),
+  ]);
 };
 
 const setSummaryCodeMirrorContent = async (page: Page, content: string) => {
@@ -37,7 +40,9 @@ test("summary graph filters nodes and opens chapter from graph controls", async 
   await page.getByTestId("curriculum-class-submit").click();
 
   await page.getByTestId("curriculum-tab-subject").click();
-  await page.getByTestId("curriculum-subject-class-select").selectOption({ label: `${boardName} / ${className}` });
+  await page
+    .getByTestId("curriculum-subject-class-select")
+    .selectOption({ label: `${boardName} / ${className}` });
   await page.getByTestId("curriculum-subject-name-input").fill(subjectName);
   await page.getByTestId("curriculum-subject-submit").click();
 
@@ -58,7 +63,9 @@ test("summary graph filters nodes and opens chapter from graph controls", async 
   await page.getByTestId("curriculum-chapter-submit").click();
 
   const sourceLabel = `${subjectLabel} / Chapter 1: ${sourceChapterTitle}`;
-  await page.getByTestId("curriculum-summary-editor-chapter-select").selectOption({ label: sourceLabel });
+  await page
+    .getByTestId("curriculum-summary-editor-chapter-select")
+    .selectOption({ label: sourceLabel });
   await setSummaryCodeMirrorContent(page, `See [[${targetChapterTitle}]] from source.`);
   await page.getByTestId("curriculum-summary-editor-save-button").click();
   await expect(page.getByText("Chapter summary updated")).toBeVisible();

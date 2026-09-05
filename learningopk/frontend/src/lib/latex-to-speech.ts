@@ -109,7 +109,22 @@ const operators: Record<string, string> = {
   "\\oint": "contour integral",
 };
 
-const complexCommands = ["\\frac", "\\sqrt", "\\sum", "\\int", "\\prod", "\\lim", "\\log", "\\ln", "\\sin", "\\cos", "\\tan", "\\arcsin", "\\arccos", "\\arctan"];
+const complexCommands = [
+  "\\frac",
+  "\\sqrt",
+  "\\sum",
+  "\\int",
+  "\\prod",
+  "\\lim",
+  "\\log",
+  "\\ln",
+  "\\sin",
+  "\\cos",
+  "\\tan",
+  "\\arcsin",
+  "\\arccos",
+  "\\arctan",
+];
 
 function isComplexEquation(latex: string): boolean {
   return complexCommands.some((cmd) => latex.includes(cmd));
@@ -155,7 +170,10 @@ function parseLatexTokens(latex: string): string {
 
 export function latexToSpokenForm(latex: string): string {
   try {
-    const cleaned = latex.replace(/\\\((.*?)\\\)/, "$1").replace(/\\\[(.*?)\\\]/, "$1").trim();
+    const cleaned = latex
+      .replace(/\\\((.*?)\\\)/, "$1")
+      .replace(/\\\[(.*?)\\\]/, "$1")
+      .trim();
     if (!cleaned) return "";
     return parseLatexTokens(cleaned);
   } catch {

@@ -14,9 +14,23 @@ export default async function StudyGroupsPage() {
   const groupsResult = await getStudyGroups(cookieStore.toString()).catch(() => ({ groups: [] }));
 
   return (
-    <AppShell session={session} currentPath="/dashboard/groups" contentClassName="max-w-7xl mx-auto px-4 pb-10 pt-4 sm:px-6 lg:px-8">
+    <AppShell
+      session={session}
+      currentPath="/dashboard/groups"
+      contentClassName="max-w-7xl mx-auto px-4 pb-10 pt-4 sm:px-6 lg:px-8"
+    >
       <div className="space-y-6">
-        <PageHeader sticky stickyClassName="-mx-4 -mt-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8" title="Study groups" subtitle="Build a focused accountability circle with shared progress and async achievement alerts." breadcrumbs={[{ label: "Home", href: "/" }, { label: "Dashboard", href: "/dashboard" }, { label: "Study groups" }]} />
+        <PageHeader
+          sticky
+          stickyClassName="-mx-4 -mt-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
+          title="Study groups"
+          subtitle="Build a focused accountability circle with shared progress and async achievement alerts."
+          breadcrumbs={[
+            { label: "Home", href: "/" },
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Study groups" },
+          ]}
+        />
         <StudyGroupsPanel groups={groupsResult.groups} />
       </div>
     </AppShell>

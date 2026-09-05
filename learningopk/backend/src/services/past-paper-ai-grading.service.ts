@@ -43,30 +43,33 @@ ONLY return JSON, no other text.`;
 
     const result = await generateText({
       model,
-      messages: [{ role: "user", content: prompt }]
+      messages: [{ role: "user", content: prompt }],
     });
 
     const text = result.text;
     if (text) {
-      const trimmed = text.trim().replace(/```json|```/g, "").trim();
+      const trimmed = text
+        .trim()
+        .replace(/```json|```/g, "")
+        .trim();
       const parsed = JSON.parse(trimmed) as { score: number; feedback: string };
       return {
         exerciseId: req.exerciseId,
         score: Math.min(Math.max(0, Math.round(parsed.score)), req.maxMarks),
-        feedback: parsed.feedback
+        feedback: parsed.feedback,
       };
     }
     return {
       exerciseId: req.exerciseId,
       score: Math.round(req.maxMarks / 2),
-      feedback: "AI grading unavailable — awarded partial credit."
+      feedback: "AI grading unavailable — awarded partial credit.",
     };
   } catch (err) {
     console.error(`AI grading failed for exercise ${req.exerciseId}:`, err);
     return {
       exerciseId: req.exerciseId,
       score: 0,
-      feedback: "AI grading encountered an error."
+      feedback: "AI grading encountered an error.",
     };
   }
 };

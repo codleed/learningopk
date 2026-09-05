@@ -12,7 +12,7 @@ import {
   quizzes,
   quizQuestions,
   mockExams,
-  quizAttempts
+  quizAttempts,
 } from "../../lib/db/schema.js";
 import { createApp } from "../../server.js";
 
@@ -43,7 +43,7 @@ const createMockExamFixture = async () => {
       boardId: board.id,
       grade: "10",
       name: `Subject ${suffix}`,
-      slug: `subject-${suffix}`
+      slug: `subject-${suffix}`,
     })
     .returning({ id: subjects.id });
   assert.ok(subject, "subject created");
@@ -56,7 +56,7 @@ const createMockExamFixture = async () => {
       title: `Chapter ${suffix}`,
       slug: `chapter-${suffix}`,
       summary: "Test chapter",
-      isPublished: true
+      isPublished: true,
     })
     .returning({ id: chapters.id });
   assert.ok(chapter, "chapter created");
@@ -68,7 +68,7 @@ const createMockExamFixture = async () => {
       title: `Quiz ${suffix}`,
       durationMinutes: 60,
       totalMarks: 10,
-      type: "mock_exam"
+      type: "mock_exam",
     })
     .returning({ id: quizzes.id });
   assert.ok(quiz, "quiz created");
@@ -83,7 +83,7 @@ const createMockExamFixture = async () => {
     optionD: "4",
     correctOption: "b",
     explanation: "1 + 1 = 2",
-    marks: 10
+    marks: 10,
   });
 
   const [mockExam] = await db
@@ -96,7 +96,7 @@ const createMockExamFixture = async () => {
       grade: "10",
       title: `Mock Exam ${suffix}`,
       durationMinutes: 60,
-      totalMarks: 10
+      totalMarks: 10,
     })
     .returning({ id: mockExams.id, quizId: mockExams.quizId });
   assert.ok(mockExam, "mock exam created");
@@ -142,11 +142,7 @@ describe("GET /api/mock-exams/:id/questions – solution access control", () => 
       .set("origin", APP_ORIGIN);
 
     assert.equal(res.status, 403, "Expected 403 when exam not attempted");
-    assert.equal(
-      res.body.code,
-      "EXAM_NOT_COMPLETED",
-      "Expected EXAM_NOT_COMPLETED error code"
-    );
+    assert.equal(res.body.code, "EXAM_NOT_COMPLETED", "Expected EXAM_NOT_COMPLETED error code");
     assert.ok(
       typeof res.body.error === "string" && res.body.error.length > 0,
       "Expected a descriptive error message"
@@ -159,9 +155,7 @@ describe("GET /api/mock-exams/:id/questions – solution access control", () => 
     const { mockExamId, quizId } = await createMockExamFixture();
 
     // Retrieve authenticated user's ID from session
-    const sessionRes = await agent
-      .get("/api/auth/get-session")
-      .set("origin", APP_ORIGIN);
+    const sessionRes = await agent.get("/api/auth/get-session").set("origin", APP_ORIGIN);
     const userId: unknown = sessionRes.body?.user?.id;
     assert.ok(typeof userId === "string" && userId.length > 0, "Expected user ID from session");
 
@@ -173,7 +167,7 @@ describe("GET /api/mock-exams/:id/questions – solution access control", () => 
       answers: {},
       score: 10,
       totalMarks: 10,
-      completedAt: new Date()
+      completedAt: new Date(),
     });
 
     const res = await agent

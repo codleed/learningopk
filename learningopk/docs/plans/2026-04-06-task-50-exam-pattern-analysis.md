@@ -13,6 +13,7 @@
 ### Task 1: Add exam analysis persistence
 
 **Files:**
+
 - Modify: `backend/src/lib/db/schema.ts`
 - Create: `backend/drizzle/0020_exam_pattern_analysis.sql`
 - Modify: `backend/drizzle/meta/_journal.json`
@@ -24,6 +25,7 @@
 ### Task 2: Add backend analysis reads
 
 **Files:**
+
 - Create: `backend/src/repositories/exam-pattern.repository.ts`
 - Modify: `backend/src/routes/learn.ts`
 
@@ -34,6 +36,7 @@
 ### Task 3: Add frontend API support
 
 **Files:**
+
 - Modify: `frontend/src/lib/learn-api.ts`
 
 1. Extend subject/chapter schemas for weightage payloads.
@@ -42,6 +45,7 @@
 ### Task 4: Render chapter and subject weightage UI
 
 **Files:**
+
 - Create: `frontend/src/components/learn/chapter-weightage-badge.tsx`
 - Create: `frontend/src/components/learn/subject-weightage-list.tsx`
 - Modify: `frontend/app/(learn)/[board]/[grade]/[subject]/[chapter]/page.tsx`
@@ -54,6 +58,7 @@
 ### Task 5: Add patterns page
 
 **Files:**
+
 - Create: `frontend/src/components/learn/topic-trend-chart.tsx`
 - Create: `frontend/app/(learn)/patterns/[board]/[subject]/page.tsx`
 
@@ -63,6 +68,7 @@
 ### Task 6: Verify and commit
 
 **Files:**
+
 - None
 
 1. Run backend typecheck.

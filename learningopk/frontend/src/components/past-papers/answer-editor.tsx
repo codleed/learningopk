@@ -3,7 +3,7 @@
 export function AnswerEditor({
   value,
   onChange,
-  exerciseType
+  exerciseType,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -21,9 +21,7 @@ export function AnswerEditor({
         onChange={(e) => onChange(e.target.value)}
       />
       {isLong && value.length > 0 && (
-        <p className="text-xs text-text-secondary">
-          {value.length} characters
-        </p>
+        <p className="text-xs text-text-secondary">{value.length} characters</p>
       )}
     </div>
   );

@@ -24,9 +24,9 @@ const quizSubmitResponseSchema = z.object({
       isCorrect: z.boolean(),
       explanation: z.string(),
       marks: z.number().int().positive(),
-      awardedMarks: z.number().int().nonnegative()
+      awardedMarks: z.number().int().nonnegative(),
     })
-  )
+  ),
 });
 
 const run = async (): Promise<void> => {
@@ -35,35 +35,44 @@ const run = async (): Promise<void> => {
   const email = `quiz_phase_${Date.now()}@example.com`;
   const password = "StrongPass123";
 
-  const signUpResponse = await agent.post("/api/auth/sign-up/email").set("origin", "http://localhost:3000").send({
-    name: "Quiz Verification User",
-    email,
-    password,
-    class: "9th",
-    board: "fbise"
-  });
+  const signUpResponse = await agent
+    .post("/api/auth/sign-up/email")
+    .set("origin", "http://localhost:3000")
+    .send({
+      name: "Quiz Verification User",
+      email,
+      password,
+      class: "9th",
+      board: "fbise",
+    });
 
   if (signUpResponse.status >= 400) {
-    throw new Error(`Sign-up failed: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`);
+    throw new Error(
+      `Sign-up failed: ${signUpResponse.status} ${JSON.stringify(signUpResponse.body)}`
+    );
   }
 
-  const sessionResponse = await agent.get("/api/auth/get-session").set("origin", "http://localhost:3000");
+  const sessionResponse = await agent
+    .get("/api/auth/get-session")
+    .set("origin", "http://localhost:3000");
   const userId = z
     .object({
       user: z.object({
-        id: z.string().min(1)
-      })
+        id: z.string().min(1),
+      }),
     })
     .safeParse(sessionResponse.body).data?.user.id;
 
   if (!userId) {
-    throw new Error(`Session fetch failed: ${sessionResponse.status} ${JSON.stringify(sessionResponse.body)}`);
+    throw new Error(
+      `Session fetch failed: ${sessionResponse.status} ${JSON.stringify(sessionResponse.body)}`
+    );
   }
 
   const quizRows = await db
     .select({
       id: quizzes.id,
-      chapterId: quizzes.chapterId
+      chapterId: quizzes.chapterId,
     })
     .from(quizzes)
     .where(eq(quizzes.type, "chapter_quiz"))
@@ -76,7 +85,7 @@ const run = async (): Promise<void> => {
   const questionRows = await db
     .select({
       id: quizQuestions.id,
-      correctOption: quizQuestions.correctOption
+      correctOption: quizQuestions.correctOption,
     })
     .from(quizQuestions)
     .where(eq(quizQuestions.quizId, quizRow.id));
@@ -91,16 +100,18 @@ const run = async (): Promise<void> => {
   }
 
   const firstAttemptAnswers: Record<string, "a" | "b" | "c" | "d"> = {
-    [String(firstQuestion.id)]: firstQuestion.correctOption
+    [String(firstQuestion.id)]: firstQuestion.correctOption,
   };
 
   const firstSubmitResponse = await agent.post("/api/quiz/submit").send({
     quizId: quizRow.id,
-    answers: firstAttemptAnswers
+    answers: firstAttemptAnswers,
   });
 
   if (firstSubmitResponse.status !== 200) {
-    throw new Error(`Expected first quiz submission to return 200, got ${firstSubmitResponse.status}`);
+    throw new Error(
+      `Expected first quiz submission to return 200, got ${firstSubmitResponse.status}`
+    );
   }
 
   const firstResult = quizSubmitResponseSchema.parse(firstSubmitResponse.body);
@@ -111,11 +122,13 @@ const run = async (): Promise<void> => {
 
   const secondSubmitResponse = await agent.post("/api/quiz/submit").send({
     quizId: quizRow.id,
-    answers: allCorrectAnswers
+    answers: allCorrectAnswers,
   });
 
   if (secondSubmitResponse.status !== 200) {
-    throw new Error(`Expected second quiz submission to return 200, got ${secondSubmitResponse.status}`);
+    throw new Error(
+      `Expected second quiz submission to return 200, got ${secondSubmitResponse.status}`
+    );
   }
 
   const secondResult = quizSubmitResponseSchema.parse(secondSubmitResponse.body);
@@ -125,11 +138,13 @@ const run = async (): Promise<void> => {
 
   const thirdSubmitResponse = await agent.post("/api/quiz/submit").send({
     quizId: quizRow.id,
-    answers: {}
+    answers: {},
   });
 
   if (thirdSubmitResponse.status !== 200) {
-    throw new Error(`Expected third quiz submission to return 200, got ${thirdSubmitResponse.status}`);
+    throw new Error(
+      `Expected third quiz submission to return 200, got ${thirdSubmitResponse.status}`
+    );
   }
 
   const thirdResult = quizSubmitResponseSchema.parse(thirdSubmitResponse.body);
@@ -140,7 +155,7 @@ const run = async (): Promise<void> => {
   const attemptRows = await db
     .select({
       id: quizAttempts.id,
-      score: quizAttempts.score
+      score: quizAttempts.score,
     })
     .from(quizAttempts)
     .where(and(eq(quizAttempts.userId, userId), eq(quizAttempts.quizId, quizRow.id)));
@@ -152,7 +167,7 @@ const run = async (): Promise<void> => {
   const progressRows = await db
     .select({
       quizBestScore: userProgress.quizBestScore,
-      quizAttemptsCount: userProgress.quizAttemptsCount
+      quizAttemptsCount: userProgress.quizAttemptsCount,
     })
     .from(userProgress)
     .where(and(eq(userProgress.userId, userId), eq(userProgress.chapterId, quizRow.chapterId)))
@@ -189,4 +204,3 @@ run()
   .finally(async () => {
     await pool.end().catch(() => undefined);
   });
-

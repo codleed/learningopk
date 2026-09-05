@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { forumRepository, progressRepository, learnRepository, quizRepository } from "../../../repositories/index.js";
+import {
+  forumRepository,
+  progressRepository,
+  learnRepository,
+  quizRepository,
+} from "../../../repositories/index.js";
 
 test("All repositories are exported and initialized", () => {
   assert.ok(forumRepository);

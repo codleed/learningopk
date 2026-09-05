@@ -26,29 +26,16 @@ type DashboardLayoutProps = {
   className?: string;
 };
 
-export function DashboardLayout({
-  hero,
-  primary,
-  secondary,
-  className,
-}: DashboardLayoutProps) {
+export function DashboardLayout({ hero, primary, secondary, className }: DashboardLayoutProps) {
   return (
-    <div
-      className={cn("grid grid-cols-1 lg:grid-cols-3 gap-6", className)}
-    >
+    <div className={cn("grid grid-cols-1 lg:grid-cols-3 gap-6", className)}>
       {/* ── Zone 1: Hero — full width on all breakpoints ── */}
-      <section
-        className="lg:col-span-3"
-        aria-label="Key stats and daily goal"
-      >
+      <section className="lg:col-span-3" aria-label="Key stats and daily goal">
         {hero}
       </section>
 
       {/* ── Zone 2: Primary — full width mobile, 2/3 desktop ── */}
-      <section
-        className="lg:col-span-2 min-w-0"
-        aria-label="Main learning content"
-      >
+      <section className="lg:col-span-2 min-w-0" aria-label="Main learning content">
         {primary}
       </section>
 

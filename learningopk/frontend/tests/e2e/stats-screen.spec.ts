@@ -26,7 +26,8 @@ test("dedicated stats screen renders key sections for authenticated users", asyn
   await expect(page.getByRole("heading", { level: 2, name: "Daily Streak Heatmap" })).toBeVisible();
   await expect(page.getByTestId("daily-streak-heatmap")).toBeVisible();
   await expect(page.getByTestId("daily-streak-heatmap").locator("svg").first()).toBeVisible();
-  await expect(page.getByRole("heading", { level: 2, name: "Subject-wise Progress" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 2, name: "Subject-wise Progress" })
+  ).toBeVisible();
   await expect(page.getByRole("heading", { level: 2, name: "Goal Tracker" })).toBeVisible();
 });
-

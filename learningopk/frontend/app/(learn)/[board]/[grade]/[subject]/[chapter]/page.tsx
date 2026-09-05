@@ -11,13 +11,27 @@ import { getChapterDetail } from "@/lib/learn-api";
 import { getServerSession } from "@/lib/session";
 
 const routeParamsSchema = z.object({
-  board: z.string().trim().regex(/^[a-z0-9-]+$/),
-  grade: z.string().trim().regex(/^[a-z0-9-]+$/),
-  subject: z.string().trim().regex(/^[a-z0-9-]+$/),
-  chapter: z.string().trim().regex(/^[a-z0-9-]+$/)
+  board: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/),
+  grade: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/),
+  subject: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/),
+  chapter: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/),
 });
 
-const tabSchema = z.enum(["summary", "quick-revision", "exercises", "quiz", "illustration"]).catch("summary");
+const tabSchema = z
+  .enum(["summary", "quick-revision", "exercises", "quiz", "illustration"])
+  .catch("summary");
 
 type ChapterPageProps = {
   params: Promise<{
@@ -79,9 +93,9 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
       key: "quiz",
       label: payload.quiz?.type === "mock_exam" ? "Mock Exam" : "Quiz",
       href: `${basePath}?tab=quiz`,
-      disabled: payload.quiz === null
+      disabled: payload.quiz === null,
     },
-    { key: "illustration", label: "Illustration", href: `${basePath}?tab=illustration` }
+    { key: "illustration", label: "Illustration", href: `${basePath}?tab=illustration` },
   ];
 
   return (
@@ -105,33 +119,33 @@ export default async function ChapterPage({ params, searchParams }: ChapterPageP
         />
 
         <div className="space-y-3 pt-3 sm:space-y-4 sm:pt-4">
-        {/* Progress tracker (invisible, fires event) */}
-        <ChapterProgressTracker chapterId={payload.chapter.id} />
+          {/* Progress tracker (invisible, fires event) */}
+          <ChapterProgressTracker chapterId={payload.chapter.id} />
 
-        <ChapterWeightageBadge examWeightage={payload.chapter.examWeightage} />
+          <ChapterWeightageBadge examWeightage={payload.chapter.examWeightage} />
 
-        {/* Main workspace */}
-        <ChapterStudyWorkspace
-          boardName={payload.board.name}
-          className={payload.class.name}
-          subjectName={payload.subject.name}
-          boardSlug={payload.board.slug}
-          classSlug={payload.class.slug}
-          subjectSlug={payload.subject.slug}
-          chapterSlug={payload.chapter.slug}
-          activeTab={activeTab}
-          tabs={tabs}
-          chapterId={payload.chapter.id}
-          chapterNumber={payload.chapter.chapterNumber}
-          chapterTitle={payload.chapter.title}
-          chapterSummary={payload.chapter.summary}
-          chapterSubparts={payload.chapter.subparts}
-          chapterRevisionNotes={payload.chapter.revisionNotes}
-          exercises={payload.exercises}
-          quiz={payload.quiz}
-          autoOpenAi={autoOpenAi}
-          challengeId={challengeId}
-        />
+          {/* Main workspace */}
+          <ChapterStudyWorkspace
+            boardName={payload.board.name}
+            className={payload.class.name}
+            subjectName={payload.subject.name}
+            boardSlug={payload.board.slug}
+            classSlug={payload.class.slug}
+            subjectSlug={payload.subject.slug}
+            chapterSlug={payload.chapter.slug}
+            activeTab={activeTab}
+            tabs={tabs}
+            chapterId={payload.chapter.id}
+            chapterNumber={payload.chapter.chapterNumber}
+            chapterTitle={payload.chapter.title}
+            chapterSummary={payload.chapter.summary}
+            chapterSubparts={payload.chapter.subparts}
+            chapterRevisionNotes={payload.chapter.revisionNotes}
+            exercises={payload.exercises}
+            quiz={payload.quiz}
+            autoOpenAi={autoOpenAi}
+            challengeId={challengeId}
+          />
         </div>
       </div>
     </AppShell>

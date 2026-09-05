@@ -83,9 +83,7 @@ export function Dialog({
             {/* Content */}
             <DialogPrimitive.Content asChild forceMount>
               <motion.div
-                className={cn(
-                  "fixed inset-0 z-50 flex items-center justify-center p-4",
-                )}
+                className={cn("fixed inset-0 z-50 flex items-center justify-center p-4")}
                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -132,12 +130,7 @@ export type DialogHeaderProps = HTMLAttributes<HTMLDivElement>;
 
 /** Header section with title area and bottom padding. */
 export function DialogHeader({ className, ...props }: DialogHeaderProps) {
-  return (
-    <div
-      className={cn("px-6 pt-6 pb-2", className)}
-      {...props}
-    />
-  );
+  return <div className={cn("px-6 pt-6 pb-2", className)} {...props} />;
 }
 
 /** Props for DialogBody. */
@@ -145,12 +138,7 @@ export type DialogBodyProps = HTMLAttributes<HTMLDivElement>;
 
 /** Scrollable body content area. */
 export function DialogBody({ className, ...props }: DialogBodyProps) {
-  return (
-    <div
-      className={cn("flex-1 px-6 py-4", className)}
-      {...props}
-    />
-  );
+  return <div className={cn("flex-1 px-6 py-4", className)} {...props} />;
 }
 
 /** Props for DialogFooter. */

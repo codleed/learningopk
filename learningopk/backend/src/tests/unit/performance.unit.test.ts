@@ -26,7 +26,13 @@ test("performance: getPerformanceStats returns all categories", () => {
   resetPerformanceStats();
 
   const stats = getPerformanceStats();
-  const expectedCategories: SpanCategory[] = ["db.query", "ai.call", "cache.get", "cache.set", "http.request"];
+  const expectedCategories: SpanCategory[] = [
+    "db.query",
+    "ai.call",
+    "cache.get",
+    "cache.set",
+    "http.request",
+  ];
 
   for (const cat of expectedCategories) {
     assert.ok(cat in stats, `Missing category: ${cat}`);

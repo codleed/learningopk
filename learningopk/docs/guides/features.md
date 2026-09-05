@@ -283,4 +283,3 @@ progress indicators.
 
 - On quiz submit: update quiz_best_score if new score is higher,
   increment quiz_attempts_count
-

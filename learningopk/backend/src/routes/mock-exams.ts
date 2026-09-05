@@ -2,7 +2,15 @@ import { Router } from "express";
 import { z } from "zod";
 
 import { db } from "../lib/db/index.js";
-import { mockExams, quizzes, subjects, boards, quizAttempts, quizQuestions, chapters } from "../lib/db/schema.js";
+import {
+  mockExams,
+  quizzes,
+  subjects,
+  boards,
+  quizAttempts,
+  quizQuestions,
+  chapters,
+} from "../lib/db/schema.js";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { errorResponse, successResponse } from "../lib/response.js";
@@ -11,11 +19,11 @@ const mockExamFiltersSchema = z.object({
   boardId: z.number().int().positive().optional(),
   grade: z.enum(["9", "10"]).optional(),
   subjectId: z.number().int().positive().optional(),
-  year: z.number().int().min(2015).max(2024).optional()
+  year: z.number().int().min(2015).max(2024).optional(),
 });
 
 const mockExamParamsSchema = z.object({
-  id: z.string().transform((val) => parseInt(val, 10))
+  id: z.string().transform((val) => parseInt(val, 10)),
 });
 
 export const mockExamsRouter = Router();
@@ -29,7 +37,7 @@ mockExamsRouter.get("/filters/options", async (_req, res) => {
       .select({
         id: boards.id,
         name: boards.name,
-        slug: boards.slug
+        slug: boards.slug,
       })
       .from(boards)
       .innerJoin(mockExams, eq(boards.id, mockExams.boardId))
@@ -49,7 +57,7 @@ mockExamsRouter.get("/filters/options", async (_req, res) => {
       .select({
         id: subjects.id,
         name: subjects.name,
-        slug: subjects.slug
+        slug: subjects.slug,
       })
       .from(subjects)
       .innerJoin(mockExams, eq(subjects.id, mockExams.subjectId))
@@ -64,14 +72,16 @@ mockExamsRouter.get("/filters/options", async (_req, res) => {
       .where(eq(mockExams.published, true))
       .orderBy(desc(mockExams.year));
 
-    res.json(successResponse({
-      filters: {
-        boards: boardRows,
-        grades: gradeRows.map(r => r.grade),
-        subjects: subjectRows,
-        years: yearRows.map(r => r.year)
-      }
-    }));
+    res.json(
+      successResponse({
+        filters: {
+          boards: boardRows,
+          grades: gradeRows.map((r) => r.grade),
+          subjects: subjectRows,
+          years: yearRows.map((r) => r.year),
+        },
+      })
+    );
   } catch (error) {
     console.error("Get filter options error:", error);
     res.status(500).json(errorResponse("Failed to fetch filter options", "FETCH_ERROR"));
@@ -83,7 +93,11 @@ mockExamsRouter.get("/", async (req, res) => {
   try {
     const parsed = mockExamFiltersSchema.safeParse(req.query);
     if (!parsed.success) {
-      res.status(400).json(errorResponse("Invalid filter parameters", "VALIDATION_ERROR", parsed.error.flatten()));
+      res
+        .status(400)
+        .json(
+          errorResponse("Invalid filter parameters", "VALIDATION_ERROR", parsed.error.flatten())
+        );
       return;
     }
 
@@ -113,7 +127,7 @@ mockExamsRouter.get("/", async (req, res) => {
         paperContent: mockExams.paperContent,
         solutionContent: mockExams.solutionContent,
         published: mockExams.published,
-        description: mockExams.description
+        description: mockExams.description,
       })
       .from(mockExams)
       .innerJoin(boards, eq(mockExams.boardId, boards.id))
@@ -156,7 +170,7 @@ mockExamsRouter.get("/:id", async (req, res) => {
         quizType: quizzes.type,
         quizDurationMinutes: quizzes.durationMinutes,
         paperContent: mockExams.paperContent,
-        solutionContent: mockExams.solutionContent
+        solutionContent: mockExams.solutionContent,
       })
       .from(mockExams)
       .innerJoin(boards, eq(mockExams.boardId, boards.id))
@@ -215,13 +229,10 @@ mockExamsRouter.get("/:id/attempts", requireSession, async (req, res) => {
         id: quizAttempts.id,
         score: quizAttempts.score,
         totalMarks: quizAttempts.totalMarks,
-        completedAt: quizAttempts.completedAt
+        completedAt: quizAttempts.completedAt,
       })
       .from(quizAttempts)
-      .where(and(
-        eq(quizAttempts.userId, userId),
-        eq(quizAttempts.quizId, quizId)
-      ))
+      .where(and(eq(quizAttempts.userId, userId), eq(quizAttempts.quizId, quizId)))
       .orderBy(desc(quizAttempts.completedAt));
 
     res.json(successResponse({ attempts: attemptRows }));
@@ -247,7 +258,7 @@ mockExamsRouter.get("/:id/questions", requireSession, async (req, res) => {
     const examRows = await db
       .select({
         quizId: mockExams.quizId,
-        quizType: quizzes.type
+        quizType: quizzes.type,
       })
       .from(mockExams)
       .innerJoin(quizzes, eq(mockExams.quizId, quizzes.id))
@@ -287,7 +298,11 @@ mockExamsRouter.get("/:id/questions", requireSession, async (req, res) => {
 
     const hasCompletedAttempt = (attemptCount[0]?.count ?? 0) > 0;
     if (!hasCompletedAttempt) {
-      res.status(403).json(errorResponse("Solutions only available after completing the exam", "EXAM_NOT_COMPLETED"));
+      res
+        .status(403)
+        .json(
+          errorResponse("Solutions only available after completing the exam", "EXAM_NOT_COMPLETED")
+        );
       return;
     }
 
@@ -306,7 +321,7 @@ mockExamsRouter.get("/:id/questions", requireSession, async (req, res) => {
         explanation: quizQuestions.explanation,
         marks: quizQuestions.marks,
         chapterTitle: chapters.title,
-        chapterNumber: chapters.chapterNumber
+        chapterNumber: chapters.chapterNumber,
       })
       .from(quizQuestions)
       .leftJoin(chapters, eq(quizQuestions.chapterId, chapters.id))
@@ -318,5 +333,3 @@ mockExamsRouter.get("/:id/questions", requireSession, async (req, res) => {
     res.status(500).json(errorResponse("Failed to fetch quiz questions", "FETCH_ERROR"));
   }
 });
-
-

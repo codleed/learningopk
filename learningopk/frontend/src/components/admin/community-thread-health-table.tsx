@@ -10,7 +10,11 @@ type CommunityThreadHealthTableProps = {
 
 export function CommunityThreadHealthTable({ rows }: CommunityThreadHealthTableProps) {
   if (rows.length === 0) {
-    return <p className="text-sm text-muted-foreground">No community threads match the current filters.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        No community threads match the current filters.
+      </p>
+    );
   }
 
   return (
@@ -44,7 +48,9 @@ export function CommunityThreadHealthTable({ rows }: CommunityThreadHealthTableP
               </td>
               <td className="px-3 py-2 text-foreground/90">{row.replyCount}</td>
               <td className="px-3 py-2 text-foreground/90">{row.views}</td>
-              <td className="px-3 py-2 text-foreground/90">{new Date(row.createdAt).toLocaleDateString()}</td>
+              <td className="px-3 py-2 text-foreground/90">
+                {new Date(row.createdAt).toLocaleDateString()}
+              </td>
               <td className="px-3 py-2 text-foreground/90">Open flags: {row.openFlagCount}</td>
             </tr>
           ))}

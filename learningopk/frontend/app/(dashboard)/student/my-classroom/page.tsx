@@ -38,8 +38,8 @@ export default async function MyClassroomPage() {
       getMyAssignments(classroom.id, cookieHeader),
       getMyAnnouncements(classroom.id, cookieHeader),
     ]);
-    assignments = a.status === "fulfilled" ? a.value ?? [] : [];
-    announcements = an.status === "fulfilled" ? an.value ?? [] : [];
+    assignments = a.status === "fulfilled" ? (a.value ?? []) : [];
+    announcements = an.status === "fulfilled" ? (an.value ?? []) : [];
   }
 
   return (
@@ -53,11 +53,10 @@ export default async function MyClassroomPage() {
           sticky
           stickyClassName="-mx-5 -mt-4 sm:-mx-8 lg:-mx-10 px-5 sm:px-8 lg:px-10"
           title="My Classroom"
-          subtitle={classroom ? `Your class: ${classroom.name}` : "Join a classroom to get started."}
-          breadcrumbs={[
-            { label: "Home", href: "/" },
-            { label: "My Classroom" },
-          ]}
+          subtitle={
+            classroom ? `Your class: ${classroom.name}` : "Join a classroom to get started."
+          }
+          breadcrumbs={[{ label: "Home", href: "/" }, { label: "My Classroom" }]}
         />
       </div>
 

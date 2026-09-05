@@ -13,34 +13,16 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: [
-          "border-border-default bg-bg-subtle text-text-secondary",
-        ].join(" "),
-        primary: [
-          "border-accent-primary/20 bg-accent-primary-light text-accent-primary",
-        ].join(" "),
-        success: [
-          "border-accent-success/20 bg-accent-success-light text-accent-success",
-        ].join(" "),
-        warning: [
-          "border-accent-warning/20 bg-accent-warning-light text-accent-warning",
-        ].join(" "),
-        danger: [
-          "border-accent-danger/20 bg-accent-danger-light text-accent-danger",
-        ].join(" "),
-        outline: [
-          "border-border-strong bg-transparent text-text-primary",
-        ].join(" "),
+        default: ["border-border-default bg-bg-subtle text-text-secondary"].join(" "),
+        primary: ["border-accent-primary/20 bg-accent-primary-light text-accent-primary"].join(" "),
+        success: ["border-accent-success/20 bg-accent-success-light text-accent-success"].join(" "),
+        warning: ["border-accent-warning/20 bg-accent-warning-light text-accent-warning"].join(" "),
+        danger: ["border-accent-danger/20 bg-accent-danger-light text-accent-danger"].join(" "),
+        outline: ["border-border-strong bg-transparent text-text-primary"].join(" "),
         /* ── Backward-compatible aliases ── */
-        neutral: [
-          "border-border-default bg-bg-subtle text-text-secondary",
-        ].join(" "),
-        info: [
-          "border-accent-primary/20 bg-accent-primary-light text-accent-primary",
-        ].join(" "),
-        error: [
-          "border-accent-danger/20 bg-accent-danger-light text-accent-danger",
-        ].join(" "),
+        neutral: ["border-border-default bg-bg-subtle text-text-secondary"].join(" "),
+        info: ["border-accent-primary/20 bg-accent-primary-light text-accent-primary"].join(" "),
+        error: ["border-accent-danger/20 bg-accent-danger-light text-accent-danger"].join(" "),
       },
       size: {
         sm: "px-2 py-0.5 text-[10px] leading-tight",
@@ -57,8 +39,7 @@ const badgeVariants = cva(
 
 /** Props for the Badge component. */
 export interface BadgeProps
-  extends HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof badgeVariants> {}
+  extends HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {}
 
 /**
  * Inline badge for labelling, status indication, and categorisation.
@@ -66,17 +47,21 @@ export interface BadgeProps
  * Uses CSS-variable–based colors from the design token system.
  */
 export function Badge({ className, variant, size, ...props }: BadgeProps) {
-  return (
-    <span
-      className={cn(badgeVariants({ variant, size }), className)}
-      {...props}
-    />
-  );
+  return <span className={cn(badgeVariants({ variant, size }), className)} {...props} />;
 }
 
 /* ─── StatusPill convenience wrapper ─── */
 
-type StatusPillTone = "default" | "primary" | "success" | "warning" | "danger" | "outline" | "neutral" | "info" | "error";
+type StatusPillTone =
+  | "default"
+  | "primary"
+  | "success"
+  | "warning"
+  | "danger"
+  | "outline"
+  | "neutral"
+  | "info"
+  | "error";
 
 /** Props for the StatusPill component. */
 interface StatusPillProps {

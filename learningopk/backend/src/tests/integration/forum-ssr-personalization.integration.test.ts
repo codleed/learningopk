@@ -17,7 +17,7 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
     email,
     password: TEST_PASSWORD,
     class: "9th",
-    board: "fbise"
+    board: "fbise",
   });
 
   assert.ok(
@@ -43,7 +43,7 @@ test("GET /api/forum/threads/:threadId returns viewerVoteType for authenticated 
   // Create a thread
   const threadResponse = await authorAgent.post("/api/forum/threads").send({
     title: "SSR personalization test thread",
-    body: "This thread tests that viewerVoteType is returned correctly during SSR."
+    body: "This thread tests that viewerVoteType is returned correctly during SSR.",
   });
   assert.equal(threadResponse.status, 201);
   const threadId = threadResponse.body?.thread?.id as string | undefined;
@@ -51,7 +51,7 @@ test("GET /api/forum/threads/:threadId returns viewerVoteType for authenticated 
 
   // Create a reply
   const replyResponse = await voterAgent.post(`/api/forum/threads/${threadId}/replies`).send({
-    body: "A reply that we will vote on."
+    body: "A reply that we will vote on.",
   });
   assert.equal(replyResponse.status, 201);
   const replyId = replyResponse.body?.reply?.id as string | undefined;
@@ -59,7 +59,7 @@ test("GET /api/forum/threads/:threadId returns viewerVoteType for authenticated 
 
   // Vote on the reply as the author
   const voteResponse = await authorAgent.post(`/api/forum/replies/${replyId}/vote`).send({
-    voteType: "upvote"
+    voteType: "upvote",
   });
   assert.equal(voteResponse.status, 200);
 
@@ -69,31 +69,36 @@ test("GET /api/forum/threads/:threadId returns viewerVoteType for authenticated 
   const voterThread = voterThreadResponse.body?.thread;
   assert.ok(voterThread, "Expected thread payload.");
   assert.ok(Array.isArray(voterThread.replies), "Expected replies array.");
-  const voterReply = voterThread.replies.find(
-    (r: { id: string }) => r.id === replyId
-  ) as { viewerVoteType: string | null } | undefined;
+  const voterReply = voterThread.replies.find((r: { id: string }) => r.id === replyId) as
+    { viewerVoteType: string | null } | undefined;
   assert.ok(voterReply, "Expected reply in thread detail.");
-  assert.equal(voterReply.viewerVoteType, null, "Voter has not voted yet, viewerVoteType should be null.");
+  assert.equal(
+    voterReply.viewerVoteType,
+    null,
+    "Voter has not voted yet, viewerVoteType should be null."
+  );
 
   // Fetch thread detail as authenticated author (who HAS voted) — viewerVoteType should be "upvote"
   const authorThreadResponse = await authorAgent.get(`/api/forum/threads/${threadId}`);
   assert.equal(authorThreadResponse.status, 200);
   const authorThread = authorThreadResponse.body?.thread;
   assert.ok(authorThread, "Expected thread payload.");
-  const authorReply = authorThread.replies.find(
-    (r: { id: string }) => r.id === replyId
-  ) as { viewerVoteType: string | null } | undefined;
+  const authorReply = authorThread.replies.find((r: { id: string }) => r.id === replyId) as
+    { viewerVoteType: string | null } | undefined;
   assert.ok(authorReply, "Expected reply in thread detail.");
-  assert.equal(authorReply.viewerVoteType, "upvote", "Author voted upvote, viewerVoteType should reflect that.");
+  assert.equal(
+    authorReply.viewerVoteType,
+    "upvote",
+    "Author voted upvote, viewerVoteType should reflect that."
+  );
 
   // Fetch thread detail as anonymous user — viewerVoteType should be null for all replies
   const anonThreadResponse = await anonAgent.get(`/api/forum/threads/${threadId}`);
   assert.equal(anonThreadResponse.status, 200);
   const anonThread = anonThreadResponse.body?.thread;
   assert.ok(anonThread, "Expected thread payload for anon.");
-  const anonReply = anonThread.replies.find(
-    (r: { id: string }) => r.id === replyId
-  ) as { viewerVoteType: string | null } | undefined;
+  const anonReply = anonThread.replies.find((r: { id: string }) => r.id === replyId) as
+    { viewerVoteType: string | null } | undefined;
   assert.ok(anonReply, "Expected reply in thread detail for anon.");
   assert.equal(anonReply.viewerVoteType, null, "Anonymous user should see viewerVoteType as null.");
 });
@@ -109,29 +114,31 @@ test("GET /api/forum/threads/:threadId returns viewerVoteType for nested replies
   // Create thread
   const threadResponse = await authorAgent.post("/api/forum/threads").send({
     title: "Nested reply vote test",
-    body: "Testing viewerVoteType on nested replies."
+    body: "Testing viewerVoteType on nested replies.",
   });
   assert.equal(threadResponse.status, 201);
   const threadId = threadResponse.body?.thread?.id as string;
 
   // Create top-level reply
   const topReplyResponse = await replierAgent.post(`/api/forum/threads/${threadId}/replies`).send({
-    body: "Top-level reply."
+    body: "Top-level reply.",
   });
   assert.equal(topReplyResponse.status, 201);
   const topReplyId = topReplyResponse.body?.reply?.id as string;
 
   // Create nested reply
-  const nestedReplyResponse = await authorAgent.post(`/api/forum/threads/${threadId}/replies`).send({
-    body: "Nested reply under top-level.",
-    parentReplyId: topReplyId
-  });
+  const nestedReplyResponse = await authorAgent
+    .post(`/api/forum/threads/${threadId}/replies`)
+    .send({
+      body: "Nested reply under top-level.",
+      parentReplyId: topReplyId,
+    });
   assert.equal(nestedReplyResponse.status, 201);
   const nestedReplyId = nestedReplyResponse.body?.reply?.id as string;
 
   // Vote on nested reply as replier
   const voteResponse = await replierAgent.post(`/api/forum/replies/${nestedReplyId}/vote`).send({
-    voteType: "downvote"
+    voteType: "downvote",
   });
   assert.equal(voteResponse.status, 200);
 
@@ -159,7 +166,7 @@ test("forum thread detail endpoint is publicly accessible without authentication
 
   const threadResponse = await authorAgent.post("/api/forum/threads").send({
     title: "Public access test thread",
-    body: "This thread should be accessible without authentication."
+    body: "This thread should be accessible without authentication.",
   });
   assert.equal(threadResponse.status, 201);
   const threadId = threadResponse.body?.thread?.id as string;
@@ -186,17 +193,25 @@ test("forum mutation endpoints require authentication", async () => {
 
   const threadCreateResponse = await anonAgent.post("/api/forum/threads").send({
     title: "Unauthenticated thread attempt",
-    body: "This should fail because no session exists."
+    body: "This should fail because no session exists.",
   });
-  assert.equal(threadCreateResponse.status, 401, "Creating a thread without auth should return 401.");
+  assert.equal(
+    threadCreateResponse.status,
+    401,
+    "Creating a thread without auth should return 401."
+  );
 
-  const replyCreateResponse = await anonAgent.post("/api/forum/threads/00000000-0000-0000-0000-000000000000/replies").send({
-    body: "Unauthenticated reply attempt."
-  });
+  const replyCreateResponse = await anonAgent
+    .post("/api/forum/threads/00000000-0000-0000-0000-000000000000/replies")
+    .send({
+      body: "Unauthenticated reply attempt.",
+    });
   assert.equal(replyCreateResponse.status, 401, "Creating a reply without auth should return 401.");
 
-  const voteResponse = await anonAgent.post("/api/forum/replies/00000000-0000-0000-0000-000000000000/vote").send({
-    voteType: "upvote"
-  });
+  const voteResponse = await anonAgent
+    .post("/api/forum/replies/00000000-0000-0000-0000-000000000000/vote")
+    .send({
+      voteType: "upvote",
+    });
   assert.equal(voteResponse.status, 401, "Voting without auth should return 401.");
 });

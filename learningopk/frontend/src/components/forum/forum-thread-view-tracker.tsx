@@ -22,7 +22,7 @@ export function ForumThreadViewTracker({ threadId }: ForumThreadViewTrackerProps
 
     void fetch(`${backendUrl}/api/forum/threads/${threadId}/view`, {
       method: "POST",
-      credentials: "include"
+      credentials: "include",
     }).catch(() => {
       // View tracking is best-effort; swallow network errors silently.
     });

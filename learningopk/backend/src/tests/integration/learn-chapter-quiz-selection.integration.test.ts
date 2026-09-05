@@ -4,7 +4,14 @@ import { after, test } from "node:test";
 import request from "supertest";
 
 import { db, pool } from "../../lib/db/index.js";
-import { boardClasses, boards, chapters, quizzes, revisionNotes, subjects } from "../../lib/db/schema.js";
+import {
+  boardClasses,
+  boards,
+  chapters,
+  quizzes,
+  revisionNotes,
+  subjects,
+} from "../../lib/db/schema.js";
 import { redis } from "../../lib/redis.js";
 import { createApp } from "../../server.js";
 
@@ -15,11 +22,11 @@ const createLearnFixture = async () => {
     .insert(boards)
     .values({
       name: `Learn Quiz Board ${suffix}`,
-      slug: `learn-quiz-board-${suffix}`
+      slug: `learn-quiz-board-${suffix}`,
     })
     .returning({
       id: boards.id,
-      slug: boards.slug
+      slug: boards.slug,
     });
   assert.ok(board, "Expected board fixture insert.");
 
@@ -28,11 +35,11 @@ const createLearnFixture = async () => {
     .values({
       boardId: board.id,
       name: `Class ${suffix}`,
-      slug: `class-${suffix}`
+      slug: `class-${suffix}`,
     })
     .returning({
       id: boardClasses.id,
-      slug: boardClasses.slug
+      slug: boardClasses.slug,
     });
   assert.ok(boardClass, "Expected board class fixture insert.");
 
@@ -44,11 +51,11 @@ const createLearnFixture = async () => {
       grade: null,
       name: `Physics ${suffix}`,
       slug: `physics-${suffix}`,
-      description: "Learn chapter quiz selection fixture."
+      description: "Learn chapter quiz selection fixture.",
     })
     .returning({
       id: subjects.id,
-      slug: subjects.slug
+      slug: subjects.slug,
     });
   assert.ok(subject, "Expected subject fixture insert.");
 
@@ -60,11 +67,11 @@ const createLearnFixture = async () => {
       title: `Motion ${suffix}`,
       slug: `motion-${suffix}`,
       summary: "Published chapter for quiz selection test.",
-      isPublished: true
+      isPublished: true,
     })
     .returning({
       id: chapters.id,
-      slug: chapters.slug
+      slug: chapters.slug,
     });
   assert.ok(chapter, "Expected chapter fixture insert.");
 
@@ -88,15 +95,15 @@ test("learn chapter detail returns chapter_quiz when chapter has both quiz types
       title: `Mock Exam ${Date.now()}`,
       durationMinutes: 90,
       totalMarks: 20,
-      type: "mock_exam"
+      type: "mock_exam",
     },
     {
       chapterId: fixture.chapter.id,
       title: `Chapter Quiz ${Date.now()}`,
       durationMinutes: 30,
       totalMarks: 15,
-      type: "chapter_quiz"
-    }
+      type: "chapter_quiz",
+    },
   ]);
 
   const response = await request(app).get(
@@ -116,7 +123,7 @@ test("learn chapter detail includes revision notes payload", async () => {
     keyFormulas: ["s = ut + \\frac{1}{2}at^2"],
     keyDefinitions: [{ term: "Acceleration", definition: "Rate of change of velocity." }],
     commonMistakes: "Dropping the square on time",
-    examTips: "Highlight the target variable before substitution"
+    examTips: "Highlight the target variable before substitution",
   });
 
   const response = await request(app).get(
@@ -128,6 +135,6 @@ test("learn chapter detail includes revision notes payload", async () => {
     keyFormulas: ["s = ut + \\frac{1}{2}at^2"],
     keyDefinitions: [{ term: "Acceleration", definition: "Rate of change of velocity." }],
     commonMistakes: "Dropping the square on time",
-    examTips: "Highlight the target variable before substitution"
+    examTips: "Highlight the target variable before substitution",
   });
 });

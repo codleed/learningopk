@@ -17,7 +17,7 @@ import {
   objectExists,
   SUPPORTED_IMAGE_MIME_TYPES,
   type SupportedImageMimeType,
-  uploadImageBuffer
+  uploadImageBuffer,
 } from "../lib/minio.js";
 import { env } from "../lib/env.js";
 import { errorResponse } from "../lib/response.js";
@@ -25,24 +25,28 @@ import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
 import { createSingleImageUploadMiddleware } from "../middleware/image-upload.js";
 
 const chapterIdParamsSchema = z.object({
-  chapterId: z.coerce.number().int().positive()
+  chapterId: z.coerce.number().int().positive(),
 });
 
 const mediaIdParamsSchema = z.object({
   chapterId: z.coerce.number().int().positive(),
-  mediaId: z.string().uuid()
+  mediaId: z.string().uuid(),
 });
 
 const presignedUploadBodySchema = z.object({
   fileName: z.string().min(1),
   mimeType: z.enum(SUPPORTED_IMAGE_MIME_TYPES),
-  fileSize: z.number().int().positive().max(10 * 1024 * 1024)
+  fileSize: z
+    .number()
+    .int()
+    .positive()
+    .max(10 * 1024 * 1024),
 });
 
 const confirmUploadBodySchema = z.object({
   objectKey: z.string().min(1),
   mimeType: z.enum(SUPPORTED_IMAGE_MIME_TYPES),
-  fileSize: z.number().int().positive()
+  fileSize: z.number().int().positive(),
 });
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -51,142 +55,47 @@ export const chapterMediaRouter = Router();
 
 const uploadChapterSummaryMedia = createSingleImageUploadMiddleware({
   fieldName: "media",
-  maxFileSizeBytes: MAX_FILE_SIZE_BYTES
+  maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
 });
 
 // --------------------------------------------------------------------------
 // POST /chapters/:chapterId/summary-media  (existing buffer upload)
 // --------------------------------------------------------------------------
-chapterMediaRouter.post("/chapters/:chapterId/summary-media", requireSession, uploadChapterSummaryMedia, async (req, res) => {
-  const parsedParams = chapterIdParamsSchema.safeParse(req.params);
-  if (!parsedParams.success) {
-    res.status(400).json(errorResponse("Invalid chapter identifier.", "VALIDATION_ERROR", parsedParams.error.flatten()));
-    return;
-  }
-
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
-    return;
-  }
-
-  const file = authedReq.file;
-  if (!file) {
-    res.status(400).json(errorResponse("Missing media file.", "VALIDATION_ERROR"));
-    return;
-  }
-
-  const chapterId = parsedParams.data.chapterId;
-  const chapterRows = await db
-    .select({
-      id: chapters.id
-    })
-    .from(chapters)
-    .where(eq(chapters.id, chapterId))
-    .limit(1);
-
-  if (!chapterRows[0]) {
-    res.status(404).json(errorResponse("Chapter not found.", "NOT_FOUND"));
-    return;
-  }
-
-  const fileExtension = fileExtensionFromMimeType(file.mimetype);
-  if (!fileExtension) {
-    res.status(400).json(errorResponse("Unsupported image type.", "VALIDATION_ERROR"));
-    return;
-  }
-
-  const objectKey = buildChapterSummaryObjectKey({
-    chapterId,
-    userId: authedReq.session.user.id,
-    fileExtension
-  });
-  let shouldCleanupNewObject = false;
-
-  try {
-    const mimeType = file.mimetype as SupportedImageMimeType;
-    const { objectUrl } = await uploadImageBuffer({
-      objectKey,
-      buffer: file.buffer,
-      mimeType
-    });
-    shouldCleanupNewObject = true;
-
-    const insertedRows = await db
-      .insert(chapterSummaryMedia)
-      .values({
-        chapterId,
-        objectKey,
-        objectUrl,
-        mimeType: file.mimetype,
-        fileSize: file.size,
-        uploadedBy: authedReq.session.user.id
-      })
-      .returning({
-        id: chapterSummaryMedia.id,
-        chapterId: chapterSummaryMedia.chapterId,
-        objectUrl: chapterSummaryMedia.objectUrl,
-        mimeType: chapterSummaryMedia.mimeType,
-        fileSize: chapterSummaryMedia.fileSize,
-        createdAt: chapterSummaryMedia.createdAt
-      });
-
-    const asset = insertedRows[0];
-    if (!asset) {
-      res.status(500).json(errorResponse("Failed to persist chapter summary media.", "INTERNAL_ERROR"));
+chapterMediaRouter.post(
+  "/chapters/:chapterId/summary-media",
+  requireSession,
+  uploadChapterSummaryMedia,
+  async (req, res) => {
+    const parsedParams = chapterIdParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+      res
+        .status(400)
+        .json(
+          errorResponse(
+            "Invalid chapter identifier.",
+            "VALIDATION_ERROR",
+            parsedParams.error.flatten()
+          )
+        );
       return;
     }
 
-    res.status(201).json({
-      asset: {
-        id: asset.id,
-        chapterId: asset.chapterId,
-        objectUrl: asset.objectUrl,
-        mimeType: asset.mimeType,
-        fileSize: asset.fileSize,
-        createdAt: asset.createdAt.toISOString()
-      },
-      markdown: `![Chapter summary media](${asset.objectUrl})`
-    });
-    shouldCleanupNewObject = false;
-  } catch (error) {
-    if (shouldCleanupNewObject) {
-      await deleteObjectIfExists({
-        objectKey
-      });
+    const authedReq = req as AuthenticatedRequest;
+    if (!(await requireAdminRole(authedReq, res))) {
+      return;
     }
 
-    console.error("Failed to upload chapter summary media:", error);
-    res.status(500).json(errorResponse("Failed to upload chapter summary media.", "INTERNAL_ERROR"));
-  }
-});
+    const file = authedReq.file;
+    if (!file) {
+      res.status(400).json(errorResponse("Missing media file.", "VALIDATION_ERROR"));
+      return;
+    }
 
-// --------------------------------------------------------------------------
-// POST /chapters/:chapterId/presigned-upload  (presigned URL upload)
-// --------------------------------------------------------------------------
-chapterMediaRouter.post("/chapters/:chapterId/presigned-upload", requireSession, async (req, res) => {
-  const parsedParams = chapterIdParamsSchema.safeParse(req.params);
-  if (!parsedParams.success) {
-    res.status(400).json(errorResponse("Invalid chapter identifier.", "VALIDATION_ERROR", parsedParams.error.flatten()));
-    return;
-  }
-
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
-    return;
-  }
-
-  const parsedBody = presignedUploadBodySchema.safeParse(req.body);
-  if (!parsedBody.success) {
-    res.status(400).json(errorResponse("Invalid presigned upload payload.", "VALIDATION_ERROR", parsedBody.error.flatten()));
-    return;
-  }
-
-  const chapterId = parsedParams.data.chapterId;
-  const { mimeType } = parsedBody.data;
-
-  try {
+    const chapterId = parsedParams.data.chapterId;
     const chapterRows = await db
-      .select({ id: chapters.id })
+      .select({
+        id: chapters.id,
+      })
       .from(chapters)
       .where(eq(chapters.id, chapterId))
       .limit(1);
@@ -196,7 +105,7 @@ chapterMediaRouter.post("/chapters/:chapterId/presigned-upload", requireSession,
       return;
     }
 
-    const fileExtension = fileExtensionFromMimeType(mimeType);
+    const fileExtension = fileExtensionFromMimeType(file.mimetype);
     if (!fileExtension) {
       res.status(400).json(errorResponse("Unsupported image type.", "VALIDATION_ERROR"));
       return;
@@ -205,26 +114,160 @@ chapterMediaRouter.post("/chapters/:chapterId/presigned-upload", requireSession,
     const objectKey = buildChapterSummaryObjectKey({
       chapterId,
       userId: authedReq.session.user.id,
-      fileExtension
+      fileExtension,
     });
+    let shouldCleanupNewObject = false;
 
-    const presignedUrl = await generatePresignedPutUrl({
-      objectKey,
-      mimeType
-    });
+    try {
+      const mimeType = file.mimetype as SupportedImageMimeType;
+      const { objectUrl } = await uploadImageBuffer({
+        objectKey,
+        buffer: file.buffer,
+        mimeType,
+      });
+      shouldCleanupNewObject = true;
 
-    const publicUrl = buildPublicObjectUrl({ objectKey });
+      const insertedRows = await db
+        .insert(chapterSummaryMedia)
+        .values({
+          chapterId,
+          objectKey,
+          objectUrl,
+          mimeType: file.mimetype,
+          fileSize: file.size,
+          uploadedBy: authedReq.session.user.id,
+        })
+        .returning({
+          id: chapterSummaryMedia.id,
+          chapterId: chapterSummaryMedia.chapterId,
+          objectUrl: chapterSummaryMedia.objectUrl,
+          mimeType: chapterSummaryMedia.mimeType,
+          fileSize: chapterSummaryMedia.fileSize,
+          createdAt: chapterSummaryMedia.createdAt,
+        });
 
-    res.status(200).json({
-      presignedUrl,
-      objectKey,
-      publicUrl
-    });
-  } catch (error) {
-    console.error("Failed to generate presigned upload URL:", error);
-    res.status(500).json(errorResponse("Failed to generate presigned upload URL.", "INTERNAL_ERROR"));
+      const asset = insertedRows[0];
+      if (!asset) {
+        res
+          .status(500)
+          .json(errorResponse("Failed to persist chapter summary media.", "INTERNAL_ERROR"));
+        return;
+      }
+
+      res.status(201).json({
+        asset: {
+          id: asset.id,
+          chapterId: asset.chapterId,
+          objectUrl: asset.objectUrl,
+          mimeType: asset.mimeType,
+          fileSize: asset.fileSize,
+          createdAt: asset.createdAt.toISOString(),
+        },
+        markdown: `![Chapter summary media](${asset.objectUrl})`,
+      });
+      shouldCleanupNewObject = false;
+    } catch (error) {
+      if (shouldCleanupNewObject) {
+        await deleteObjectIfExists({
+          objectKey,
+        });
+      }
+
+      console.error("Failed to upload chapter summary media:", error);
+      res
+        .status(500)
+        .json(errorResponse("Failed to upload chapter summary media.", "INTERNAL_ERROR"));
+    }
   }
-});
+);
+
+// --------------------------------------------------------------------------
+// POST /chapters/:chapterId/presigned-upload  (presigned URL upload)
+// --------------------------------------------------------------------------
+chapterMediaRouter.post(
+  "/chapters/:chapterId/presigned-upload",
+  requireSession,
+  async (req, res) => {
+    const parsedParams = chapterIdParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+      res
+        .status(400)
+        .json(
+          errorResponse(
+            "Invalid chapter identifier.",
+            "VALIDATION_ERROR",
+            parsedParams.error.flatten()
+          )
+        );
+      return;
+    }
+
+    const authedReq = req as AuthenticatedRequest;
+    if (!(await requireAdminRole(authedReq, res))) {
+      return;
+    }
+
+    const parsedBody = presignedUploadBodySchema.safeParse(req.body);
+    if (!parsedBody.success) {
+      res
+        .status(400)
+        .json(
+          errorResponse(
+            "Invalid presigned upload payload.",
+            "VALIDATION_ERROR",
+            parsedBody.error.flatten()
+          )
+        );
+      return;
+    }
+
+    const chapterId = parsedParams.data.chapterId;
+    const { mimeType } = parsedBody.data;
+
+    try {
+      const chapterRows = await db
+        .select({ id: chapters.id })
+        .from(chapters)
+        .where(eq(chapters.id, chapterId))
+        .limit(1);
+
+      if (!chapterRows[0]) {
+        res.status(404).json(errorResponse("Chapter not found.", "NOT_FOUND"));
+        return;
+      }
+
+      const fileExtension = fileExtensionFromMimeType(mimeType);
+      if (!fileExtension) {
+        res.status(400).json(errorResponse("Unsupported image type.", "VALIDATION_ERROR"));
+        return;
+      }
+
+      const objectKey = buildChapterSummaryObjectKey({
+        chapterId,
+        userId: authedReq.session.user.id,
+        fileExtension,
+      });
+
+      const presignedUrl = await generatePresignedPutUrl({
+        objectKey,
+        mimeType,
+      });
+
+      const publicUrl = buildPublicObjectUrl({ objectKey });
+
+      res.status(200).json({
+        presignedUrl,
+        objectKey,
+        publicUrl,
+      });
+    } catch (error) {
+      console.error("Failed to generate presigned upload URL:", error);
+      res
+        .status(500)
+        .json(errorResponse("Failed to generate presigned upload URL.", "INTERNAL_ERROR"));
+    }
+  }
+);
 
 // --------------------------------------------------------------------------
 // POST /chapters/:chapterId/media/confirm  (confirm presigned upload)
@@ -232,7 +275,15 @@ chapterMediaRouter.post("/chapters/:chapterId/presigned-upload", requireSession,
 chapterMediaRouter.post("/chapters/:chapterId/media/confirm", requireSession, async (req, res) => {
   const parsedParams = chapterIdParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
-    res.status(400).json(errorResponse("Invalid chapter identifier.", "VALIDATION_ERROR", parsedParams.error.flatten()));
+    res
+      .status(400)
+      .json(
+        errorResponse(
+          "Invalid chapter identifier.",
+          "VALIDATION_ERROR",
+          parsedParams.error.flatten()
+        )
+      );
     return;
   }
 
@@ -243,7 +294,15 @@ chapterMediaRouter.post("/chapters/:chapterId/media/confirm", requireSession, as
 
   const parsedBody = confirmUploadBodySchema.safeParse(req.body);
   if (!parsedBody.success) {
-    res.status(400).json(errorResponse("Invalid confirm upload payload.", "VALIDATION_ERROR", parsedBody.error.flatten()));
+    res
+      .status(400)
+      .json(
+        errorResponse(
+          "Invalid confirm upload payload.",
+          "VALIDATION_ERROR",
+          parsedBody.error.flatten()
+        )
+      );
     return;
   }
 
@@ -255,7 +314,11 @@ chapterMediaRouter.post("/chapters/:chapterId/media/confirm", requireSession, as
   // the same `sanitizePathSegment` used by `buildChapterSummaryObjectKey` so
   // the comparison is canonical.
   const expectedPrefix = buildChapterSummaryObjectPrefix(chapterId, authedReq.session.user.id);
-  if (!objectKey.startsWith(expectedPrefix) || objectKey.includes("..") || objectKey.includes("\\")) {
+  if (
+    !objectKey.startsWith(expectedPrefix) ||
+    objectKey.includes("..") ||
+    objectKey.includes("\\")
+  ) {
     res.status(400).json(errorResponse("Invalid object key.", "VALIDATION_ERROR"));
     return;
   }
@@ -276,7 +339,14 @@ chapterMediaRouter.post("/chapters/:chapterId/media/confirm", requireSession, as
 
     const exists = await objectExists({ objectKey });
     if (!exists) {
-      res.status(400).json(errorResponse("Object not found in storage. Upload may have failed.", "UPLOAD_VALIDATION_FAILED"));
+      res
+        .status(400)
+        .json(
+          errorResponse(
+            "Object not found in storage. Upload may have failed.",
+            "UPLOAD_VALIDATION_FAILED"
+          )
+        );
       return;
     }
 
@@ -288,7 +358,7 @@ chapterMediaRouter.post("/chapters/:chapterId/media/confirm", requireSession, as
         objectUrl,
         mimeType,
         fileSize,
-        uploadedBy: authedReq.session.user.id
+        uploadedBy: authedReq.session.user.id,
       })
       .returning({
         id: chapterSummaryMedia.id,
@@ -296,12 +366,14 @@ chapterMediaRouter.post("/chapters/:chapterId/media/confirm", requireSession, as
         objectUrl: chapterSummaryMedia.objectUrl,
         mimeType: chapterSummaryMedia.mimeType,
         fileSize: chapterSummaryMedia.fileSize,
-        createdAt: chapterSummaryMedia.createdAt
+        createdAt: chapterSummaryMedia.createdAt,
       });
 
     const asset = insertedRows[0];
     if (!asset) {
-      res.status(500).json(errorResponse("Failed to persist chapter summary media.", "INTERNAL_ERROR"));
+      res
+        .status(500)
+        .json(errorResponse("Failed to persist chapter summary media.", "INTERNAL_ERROR"));
       return;
     }
 
@@ -312,13 +384,15 @@ chapterMediaRouter.post("/chapters/:chapterId/media/confirm", requireSession, as
         objectUrl: asset.objectUrl,
         mimeType: asset.mimeType,
         fileSize: asset.fileSize,
-        createdAt: asset.createdAt.toISOString()
+        createdAt: asset.createdAt.toISOString(),
       },
-      markdown: `![Chapter summary media](${asset.objectUrl})`
+      markdown: `![Chapter summary media](${asset.objectUrl})`,
     });
   } catch (error) {
     console.error("Failed to confirm chapter summary media upload:", error);
-    res.status(500).json(errorResponse("Failed to confirm chapter summary media upload.", "INTERNAL_ERROR"));
+    res
+      .status(500)
+      .json(errorResponse("Failed to confirm chapter summary media upload.", "INTERNAL_ERROR"));
   }
 });
 
@@ -328,7 +402,15 @@ chapterMediaRouter.post("/chapters/:chapterId/media/confirm", requireSession, as
 chapterMediaRouter.get("/chapters/:chapterId/media", requireSession, async (req, res) => {
   const parsedParams = chapterIdParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
-    res.status(400).json(errorResponse("Invalid chapter identifier.", "VALIDATION_ERROR", parsedParams.error.flatten()));
+    res
+      .status(400)
+      .json(
+        errorResponse(
+          "Invalid chapter identifier.",
+          "VALIDATION_ERROR",
+          parsedParams.error.flatten()
+        )
+      );
     return;
   }
 
@@ -358,7 +440,7 @@ chapterMediaRouter.get("/chapters/:chapterId/media", requireSession, async (req,
         objectUrl: chapterSummaryMedia.objectUrl,
         mimeType: chapterSummaryMedia.mimeType,
         fileSize: chapterSummaryMedia.fileSize,
-        createdAt: chapterSummaryMedia.createdAt
+        createdAt: chapterSummaryMedia.createdAt,
       })
       .from(chapterSummaryMedia)
       .where(eq(chapterSummaryMedia.chapterId, chapterId))
@@ -370,7 +452,7 @@ chapterMediaRouter.get("/chapters/:chapterId/media", requireSession, async (req,
       objectUrl: row.objectUrl,
       mimeType: row.mimeType,
       fileSize: row.fileSize,
-      createdAt: row.createdAt.toISOString()
+      createdAt: row.createdAt.toISOString(),
     }));
 
     res.status(200).json({ media });
@@ -383,141 +465,162 @@ chapterMediaRouter.get("/chapters/:chapterId/media", requireSession, async (req,
 // --------------------------------------------------------------------------
 // DELETE /chapters/:chapterId/media/:mediaId  (delete chapter media)
 // --------------------------------------------------------------------------
-chapterMediaRouter.delete("/chapters/:chapterId/media/:mediaId", requireSession, async (req, res) => {
-  const parsedParams = mediaIdParamsSchema.safeParse(req.params);
-  if (!parsedParams.success) {
-    res.status(400).json(errorResponse("Invalid chapter or media identifier.", "VALIDATION_ERROR", parsedParams.error.flatten()));
-    return;
-  }
-
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
-    return;
-  }
-
-  const { chapterId, mediaId } = parsedParams.data;
-
-  try {
-    const mediaRows = await db
-      .select({
-        id: chapterSummaryMedia.id,
-        objectKey: chapterSummaryMedia.objectKey
-      })
-      .from(chapterSummaryMedia)
-      .where(
-        and(
-          eq(chapterSummaryMedia.id, mediaId),
-          eq(chapterSummaryMedia.chapterId, chapterId)
-        )
-      )
-      .limit(1);
-
-    const mediaRecord = mediaRows[0];
-    if (!mediaRecord) {
-      res.status(404).json(errorResponse("Media not found.", "NOT_FOUND"));
+chapterMediaRouter.delete(
+  "/chapters/:chapterId/media/:mediaId",
+  requireSession,
+  async (req, res) => {
+    const parsedParams = mediaIdParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+      res
+        .status(400)
+        .json(
+          errorResponse(
+            "Invalid chapter or media identifier.",
+            "VALIDATION_ERROR",
+            parsedParams.error.flatten()
+          )
+        );
       return;
     }
 
-    await deleteObjectIfExists({ objectKey: mediaRecord.objectKey });
+    const authedReq = req as AuthenticatedRequest;
+    if (!(await requireAdminRole(authedReq, res))) {
+      return;
+    }
 
-    await db
-      .delete(chapterSummaryMedia)
-      .where(eq(chapterSummaryMedia.id, mediaId));
+    const { chapterId, mediaId } = parsedParams.data;
 
-    res.status(200).json({ success: true });
-  } catch (error) {
-    console.error("Failed to delete chapter summary media:", error);
-    res.status(500).json(errorResponse("Failed to delete chapter summary media.", "INTERNAL_ERROR"));
+    try {
+      const mediaRows = await db
+        .select({
+          id: chapterSummaryMedia.id,
+          objectKey: chapterSummaryMedia.objectKey,
+        })
+        .from(chapterSummaryMedia)
+        .where(
+          and(eq(chapterSummaryMedia.id, mediaId), eq(chapterSummaryMedia.chapterId, chapterId))
+        )
+        .limit(1);
+
+      const mediaRecord = mediaRows[0];
+      if (!mediaRecord) {
+        res.status(404).json(errorResponse("Media not found.", "NOT_FOUND"));
+        return;
+      }
+
+      await deleteObjectIfExists({ objectKey: mediaRecord.objectKey });
+
+      await db.delete(chapterSummaryMedia).where(eq(chapterSummaryMedia.id, mediaId));
+
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Failed to delete chapter summary media:", error);
+      res
+        .status(500)
+        .json(errorResponse("Failed to delete chapter summary media.", "INTERNAL_ERROR"));
+    }
   }
-});
+);
 
 // --------------------------------------------------------------------------
 // POST /chapters/:chapterId/cover-image  (upload cover image)
 // --------------------------------------------------------------------------
 const uploadChapterCoverImage = createSingleImageUploadMiddleware({
   fieldName: "cover",
-  maxFileSizeBytes: MAX_FILE_SIZE_BYTES
+  maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
 });
 
-chapterMediaRouter.post("/chapters/:chapterId/cover-image", requireSession, uploadChapterCoverImage, async (req, res) => {
-  const parsedParams = chapterIdParamsSchema.safeParse(req.params);
-  if (!parsedParams.success) {
-    res.status(400).json(errorResponse("Invalid chapter identifier.", "VALIDATION_ERROR", parsedParams.error.flatten()));
-    return;
-  }
-
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireAdminRole(authedReq, res))) {
-    return;
-  }
-
-  const file = authedReq.file;
-  if (!file) {
-    res.status(400).json(errorResponse("Missing cover image file.", "VALIDATION_ERROR"));
-    return;
-  }
-
-  const chapterId = parsedParams.data.chapterId;
-  const chapterRows = await db
-    .select({
-      id: chapters.id,
-      coverImageUrl: chapters.coverImageUrl
-    })
-    .from(chapters)
-    .where(eq(chapters.id, chapterId))
-    .limit(1);
-
-  const chapter = chapterRows[0];
-  if (!chapter) {
-    res.status(404).json(errorResponse("Chapter not found.", "NOT_FOUND"));
-    return;
-  }
-
-  const fileExtension = fileExtensionFromMimeType(file.mimetype);
-  if (!fileExtension) {
-    res.status(400).json(errorResponse("Unsupported image type.", "VALIDATION_ERROR"));
-    return;
-  }
-
-  const objectKey = buildChapterCoverObjectKey({
-    chapterId,
-    fileExtension
-  });
-
-  try {
-    const mimeType = file.mimetype as SupportedImageMimeType;
-    const { objectUrl } = await uploadImageBuffer({
-      objectKey,
-      buffer: file.buffer,
-      mimeType
-    });
-
-    // Update the chapter row with the new cover image URL
-    await db
-      .update(chapters)
-      .set({ coverImageUrl: objectUrl })
-      .where(eq(chapters.id, chapterId));
-
-    // Clean up old cover image if it existed and is different
-    if (chapter.coverImageUrl) {
-      const oldKey = extractManagedObjectKeyFromPublicUrl({
-        publicUrl: env.MINIO_PUBLIC_URL,
-        bucket: env.MINIO_BUCKET,
-        objectUrl: chapter.coverImageUrl
-      });
-      if (oldKey && oldKey !== objectKey) {
-        await deleteObjectIfExists({ objectKey: oldKey });
-      }
+chapterMediaRouter.post(
+  "/chapters/:chapterId/cover-image",
+  requireSession,
+  uploadChapterCoverImage,
+  async (req, res) => {
+    const parsedParams = chapterIdParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+      res
+        .status(400)
+        .json(
+          errorResponse(
+            "Invalid chapter identifier.",
+            "VALIDATION_ERROR",
+            parsedParams.error.flatten()
+          )
+        );
+      return;
     }
 
-    res.status(200).json({
-      coverImageUrl: objectUrl
+    const authedReq = req as AuthenticatedRequest;
+    if (!(await requireAdminRole(authedReq, res))) {
+      return;
+    }
+
+    const file = authedReq.file;
+    if (!file) {
+      res.status(400).json(errorResponse("Missing cover image file.", "VALIDATION_ERROR"));
+      return;
+    }
+
+    const chapterId = parsedParams.data.chapterId;
+    const chapterRows = await db
+      .select({
+        id: chapters.id,
+        coverImageUrl: chapters.coverImageUrl,
+      })
+      .from(chapters)
+      .where(eq(chapters.id, chapterId))
+      .limit(1);
+
+    const chapter = chapterRows[0];
+    if (!chapter) {
+      res.status(404).json(errorResponse("Chapter not found.", "NOT_FOUND"));
+      return;
+    }
+
+    const fileExtension = fileExtensionFromMimeType(file.mimetype);
+    if (!fileExtension) {
+      res.status(400).json(errorResponse("Unsupported image type.", "VALIDATION_ERROR"));
+      return;
+    }
+
+    const objectKey = buildChapterCoverObjectKey({
+      chapterId,
+      fileExtension,
     });
-  } catch (error) {
-    console.error("Failed to upload chapter cover image:", error);
-    res.status(500).json(errorResponse("Failed to upload chapter cover image.", "INTERNAL_ERROR"));
+
+    try {
+      const mimeType = file.mimetype as SupportedImageMimeType;
+      const { objectUrl } = await uploadImageBuffer({
+        objectKey,
+        buffer: file.buffer,
+        mimeType,
+      });
+
+      // Update the chapter row with the new cover image URL
+      await db.update(chapters).set({ coverImageUrl: objectUrl }).where(eq(chapters.id, chapterId));
+
+      // Clean up old cover image if it existed and is different
+      if (chapter.coverImageUrl) {
+        const oldKey = extractManagedObjectKeyFromPublicUrl({
+          publicUrl: env.MINIO_PUBLIC_URL,
+          bucket: env.MINIO_BUCKET,
+          objectUrl: chapter.coverImageUrl,
+        });
+        if (oldKey && oldKey !== objectKey) {
+          await deleteObjectIfExists({ objectKey: oldKey });
+        }
+      }
+
+      res.status(200).json({
+        coverImageUrl: objectUrl,
+      });
+    } catch (error) {
+      console.error("Failed to upload chapter cover image:", error);
+      res
+        .status(500)
+        .json(errorResponse("Failed to upload chapter cover image.", "INTERNAL_ERROR"));
+    }
   }
-});
+);
 
 // --------------------------------------------------------------------------
 // DELETE /chapters/:chapterId/cover-image  (remove cover image)
@@ -525,7 +628,15 @@ chapterMediaRouter.post("/chapters/:chapterId/cover-image", requireSession, uplo
 chapterMediaRouter.delete("/chapters/:chapterId/cover-image", requireSession, async (req, res) => {
   const parsedParams = chapterIdParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
-    res.status(400).json(errorResponse("Invalid chapter identifier.", "VALIDATION_ERROR", parsedParams.error.flatten()));
+    res
+      .status(400)
+      .json(
+        errorResponse(
+          "Invalid chapter identifier.",
+          "VALIDATION_ERROR",
+          parsedParams.error.flatten()
+        )
+      );
     return;
   }
 
@@ -538,7 +649,7 @@ chapterMediaRouter.delete("/chapters/:chapterId/cover-image", requireSession, as
   const chapterRows = await db
     .select({
       id: chapters.id,
-      coverImageUrl: chapters.coverImageUrl
+      coverImageUrl: chapters.coverImageUrl,
     })
     .from(chapters)
     .where(eq(chapters.id, chapterId))
@@ -559,16 +670,13 @@ chapterMediaRouter.delete("/chapters/:chapterId/cover-image", requireSession, as
     const oldKey = extractManagedObjectKeyFromPublicUrl({
       publicUrl: env.MINIO_PUBLIC_URL,
       bucket: env.MINIO_BUCKET,
-      objectUrl: chapter.coverImageUrl
+      objectUrl: chapter.coverImageUrl,
     });
     if (oldKey) {
       await deleteObjectIfExists({ objectKey: oldKey });
     }
 
-    await db
-      .update(chapters)
-      .set({ coverImageUrl: null })
-      .where(eq(chapters.id, chapterId));
+    await db.update(chapters).set({ coverImageUrl: null }).where(eq(chapters.id, chapterId));
 
     res.status(200).json({ success: true });
   } catch (error) {

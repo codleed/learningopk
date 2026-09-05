@@ -8,7 +8,7 @@ const baseAttributes: AttributeMap = defaultSchema.attributes ?? {};
 
 const extendAttr = (tag: string, extras: AttributeList): AttributeList => [
   ...((baseAttributes[tag] ?? []) as AttributeList),
-  ...extras
+  ...extras,
 ];
 
 /**
@@ -28,7 +28,7 @@ const attributes: AttributeMap = {
   code: extendAttr("code", ["className"]),
   span: extendAttr("span", ["className"]),
   div: extendAttr("div", ["className"]),
-  a: extendAttr("a", ["target", "rel", "className"])
+  a: extendAttr("a", ["target", "rel", "className"]),
 };
 
 const tagNames = Array.from(
@@ -56,7 +56,7 @@ const tagNames = Array.from(
     "mspace",
     "munder",
     "mover",
-    "munderover"
+    "munderover",
   ])
 );
 
@@ -67,6 +67,6 @@ export const markdownSanitizeSchema: Schema = {
   protocols: {
     ...(defaultSchema.protocols ?? {}),
     href: ["http", "https", "mailto", "tel"],
-    src: ["http", "https"]
-  }
+    src: ["http", "https"],
+  },
 };

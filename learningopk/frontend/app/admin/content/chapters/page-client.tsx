@@ -5,10 +5,19 @@ import { useRouter } from "next/navigation";
 import { RefreshCw, Settings } from "lucide-react";
 import Link from "next/link";
 
-import { AdminPageHeader, ContentTabs, ContentStatsStrip, ContentListTable } from "@/components/admin";
+import {
+  AdminPageHeader,
+  ContentTabs,
+  ContentStatsStrip,
+  ContentListTable,
+} from "@/components/admin";
 import { ChapterPublishToggle } from "@/components/admin/chapter-publish-toggle";
 import { Button } from "@/components/ui/button";
-import { getAdminCurriculumTree, deleteAdminCurriculumChapter, type AdminCurriculumBoard } from "@/lib/admin-api";
+import {
+  getAdminCurriculumTree,
+  deleteAdminCurriculumChapter,
+  type AdminCurriculumBoard,
+} from "@/lib/admin-api";
 
 type ChaptersPageClientProps = {
   initialBoards: AdminCurriculumBoard[];
@@ -148,9 +157,7 @@ export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientP
       render: (chapter: ChapterRow) => (
         <span
           className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-            chapter.isPublished
-              ? "bg-green-100 text-green-700"
-              : "bg-yellow-100 text-yellow-700"
+            chapter.isPublished ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
           }`}
         >
           {chapter.isPublished ? "Published" : "Draft"}
@@ -165,12 +172,7 @@ export function ChaptersPageClient({ initialBoards, stats }: ChaptersPageClientP
         title="Content Management"
         subtitle="Manage boards, classes, subjects, chapters, exercises, quizzes, and flash cards"
         actions={
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={refreshData}
-            disabled={isRefreshing}
-          >
+          <Button variant="secondary" size="sm" onClick={refreshData} disabled={isRefreshing}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
             {isRefreshing ? "Refreshing..." : "Refresh"}
           </Button>

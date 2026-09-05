@@ -35,7 +35,13 @@ export interface ChatNewMessageEvent {
   senderId: string;
   participantId: string;
   content: string;
-  attachment: { id: string; type: "image" | "file"; url: string; fileName: string; fileSize: number } | null;
+  attachment: {
+    id: string;
+    type: "image" | "file";
+    url: string;
+    fileName: string;
+    fileSize: number;
+  } | null;
   isRead: boolean;
   createdAt: string;
   deletedAt?: string | null;
@@ -47,7 +53,13 @@ export interface ChatMessageSentEvent {
     id: string;
     senderId: string;
     content: string;
-    attachment: { id: string; type: "image" | "file"; url: string; fileName: string; fileSize: number } | null;
+    attachment: {
+      id: string;
+      type: "image" | "file";
+      url: string;
+      fileName: string;
+      fileSize: number;
+    } | null;
     isRead: boolean;
     createdAt: string;
     deletedAt: string | null;

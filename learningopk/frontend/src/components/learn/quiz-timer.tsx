@@ -24,7 +24,8 @@ const formatTimeLeft = (seconds: number): string => {
 
 export function QuizTimer({ remainingSeconds, expired }: QuizTimerProps) {
   const reduced = useReducedMotion();
-  const isWarning = remainingSeconds <= TIMER_WARNING_SECONDS && remainingSeconds > TIMER_CRITICAL_SECONDS;
+  const isWarning =
+    remainingSeconds <= TIMER_WARNING_SECONDS && remainingSeconds > TIMER_CRITICAL_SECONDS;
   const isCritical = remainingSeconds <= TIMER_CRITICAL_SECONDS && remainingSeconds > 0;
 
   const announcement = useMemo(() => {
@@ -84,16 +85,13 @@ export function QuizTimer({ remainingSeconds, expired }: QuizTimerProps) {
 
 export function QuizTimerCompact({ remainingSeconds, expired }: QuizTimerProps) {
   const reduced = useReducedMotion();
-  const isWarning = remainingSeconds <= TIMER_WARNING_SECONDS && remainingSeconds > TIMER_CRITICAL_SECONDS;
+  const isWarning =
+    remainingSeconds <= TIMER_WARNING_SECONDS && remainingSeconds > TIMER_CRITICAL_SECONDS;
   const isCritical = remainingSeconds <= TIMER_CRITICAL_SECONDS && remainingSeconds > 0;
 
   return (
     <motion.div
-      animate={
-        isCritical && !expired && !reduced
-          ? { scale: [1, 1.04, 1] }
-          : { scale: 1 }
-      }
+      animate={isCritical && !expired && !reduced ? { scale: [1, 1.04, 1] } : { scale: 1 }}
       transition={
         isCritical && !expired && !reduced
           ? { repeat: Infinity, duration: 1, ease: "easeInOut" }

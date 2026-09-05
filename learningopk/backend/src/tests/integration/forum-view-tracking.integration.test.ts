@@ -17,7 +17,7 @@ const signUp = async (agent: AuthAgent, name: string, email: string): Promise<vo
     email,
     password: TEST_PASSWORD,
     class: "9th",
-    board: "fbise"
+    board: "fbise",
   });
 
   assert.ok(
@@ -40,7 +40,7 @@ describe("POST /api/forum/threads/:threadId/view — view tracking", () => {
     // Create a thread
     const createResponse = await agent.post("/api/forum/threads").send({
       title: "View count test thread",
-      body: "This thread tests that view counting works via the dedicated endpoint."
+      body: "This thread tests that view counting works via the dedicated endpoint.",
     });
     assert.equal(createResponse.status, 201);
     const threadId = createResponse.body?.data?.thread?.id ?? createResponse.body?.thread?.id;
@@ -99,7 +99,7 @@ describe("POST /api/forum/threads/:threadId/view — view tracking", () => {
     // Create thread
     const createResponse = await author.post("/api/forum/threads").send({
       title: "View inflation prevention test",
-      body: "Testing that router.refresh()-style GET calls do not inflate views."
+      body: "Testing that router.refresh()-style GET calls do not inflate views.",
     });
     assert.equal(createResponse.status, 201);
     const threadId = createResponse.body?.data?.thread?.id ?? createResponse.body?.thread?.id;
@@ -141,7 +141,7 @@ describe("forum mutation error handling", () => {
     // Title too short
     const response = await agent.post("/api/forum/threads").send({
       title: "Hi",
-      body: "A valid body that is long enough to pass the minimum length check."
+      body: "A valid body that is long enough to pass the minimum length check.",
     });
     assert.equal(response.status, 400, "Short title should return 400.");
   });

@@ -75,19 +75,11 @@ export function FormulaForm({ boards, existingFormula }: FormulaFormProps) {
   };
 
   // Form state
-  const [subjectId, setSubjectId] = useState<string>(
-    existingFormula?.subjectId?.toString() ?? ""
-  );
-  const [chapterId, setChapterId] = useState<string>(
-    existingFormula?.chapterId?.toString() ?? ""
-  );
+  const [subjectId, setSubjectId] = useState<string>(existingFormula?.subjectId?.toString() ?? "");
+  const [chapterId, setChapterId] = useState<string>(existingFormula?.chapterId?.toString() ?? "");
   const [name, setName] = useState(existingFormula?.name ?? "");
-  const [formulaLatex, setFormulaLatex] = useState(
-    existingFormula?.formulaLatex ?? ""
-  );
-  const [description, setDescription] = useState(
-    existingFormula?.description ?? ""
-  );
+  const [formulaLatex, setFormulaLatex] = useState(existingFormula?.formulaLatex ?? "");
+  const [description, setDescription] = useState(existingFormula?.description ?? "");
   const [variables, setVariables] = useState<VariableRow[]>(
     existingFormula?.variables?.length
       ? existingFormula.variables.map((v, i) => ({
@@ -97,9 +89,7 @@ export function FormulaForm({ boards, existingFormula }: FormulaFormProps) {
         }))
       : []
   );
-  const [tagsInput, setTagsInput] = useState(
-    existingFormula?.tags?.join(", ") ?? ""
-  );
+  const [tagsInput, setTagsInput] = useState(existingFormula?.tags?.join(", ") ?? "");
 
   // Errors
   const [subjectError, setSubjectError] = useState("");
@@ -110,29 +100,18 @@ export function FormulaForm({ boards, existingFormula }: FormulaFormProps) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const chapterOptions = subjectId
-    ? getChapterOptions(parseInt(subjectId, 10))
-    : [];
+  const chapterOptions = subjectId ? getChapterOptions(parseInt(subjectId, 10)) : [];
 
   const addVariable = () => {
-    setVariables([
-      ...variables,
-      { id: Date.now().toString(), symbol: "", meaning: "" },
-    ]);
+    setVariables([...variables, { id: Date.now().toString(), symbol: "", meaning: "" }]);
   };
 
   const removeVariable = (id: string) => {
     setVariables(variables.filter((v) => v.id !== id));
   };
 
-  const updateVariable = (
-    id: string,
-    field: "symbol" | "meaning",
-    value: string
-  ) => {
-    setVariables(
-      variables.map((v) => (v.id === id ? { ...v, [field]: value } : v))
-    );
+  const updateVariable = (id: string, field: "symbol" | "meaning", value: string) => {
+    setVariables(variables.map((v) => (v.id === id ? { ...v, [field]: value } : v)));
   };
 
   const validateForm = (): boolean => {
@@ -251,9 +230,7 @@ export function FormulaForm({ boards, existingFormula }: FormulaFormProps) {
             { label: "Content", href: "/admin/content" },
             { label: "Formulas", href: "/admin/content/formulas" },
             {
-              label: isEdit
-                ? `Edit "${existingFormula?.name}"`
-                : "Add Formula",
+              label: isEdit ? `Edit "${existingFormula?.name}"` : "Add Formula",
             },
           ]}
         />
@@ -271,12 +248,7 @@ export function FormulaForm({ boards, existingFormula }: FormulaFormProps) {
       <AdminFormCard>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Subject */}
-          <AdminFormField
-            id="formula-subject"
-            label="Subject"
-            required
-            error={subjectError}
-          >
+          <AdminFormField id="formula-subject" label="Subject" required error={subjectError}>
             <Select
               id="formula-subject"
               value={subjectId}
@@ -297,12 +269,7 @@ export function FormulaForm({ boards, existingFormula }: FormulaFormProps) {
           </AdminFormField>
 
           {/* Chapter */}
-          <AdminFormField
-            id="formula-chapter"
-            label="Chapter"
-            required
-            error={chapterError}
-          >
+          <AdminFormField id="formula-chapter" label="Chapter" required error={chapterError}>
             <Select
               id="formula-chapter"
               value={chapterId}
@@ -313,11 +280,7 @@ export function FormulaForm({ boards, existingFormula }: FormulaFormProps) {
               aria-invalid={!!chapterError}
               disabled={!subjectId}
             >
-              <option value="">
-                {subjectId
-                  ? "Select a chapter"
-                  : "Select a subject first"}
-              </option>
+              <option value="">{subjectId ? "Select a chapter" : "Select a subject first"}</option>
               {chapterOptions.map((opt) => (
                 <option key={opt.id} value={opt.id.toString()}>
                   {opt.label}
@@ -404,9 +367,7 @@ export function FormulaForm({ boards, existingFormula }: FormulaFormProps) {
           {/* Variables */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-[var(--text-primary)]">
-                Variables
-              </label>
+              <label className="text-sm font-semibold text-[var(--text-primary)]">Variables</label>
               <button
                 type="button"
                 onClick={addVariable}
@@ -439,9 +400,7 @@ export function FormulaForm({ boards, existingFormula }: FormulaFormProps) {
                     id={`var-symbol-${variable.id}`}
                     type="text"
                     value={variable.symbol}
-                    onChange={(e) =>
-                      updateVariable(variable.id, "symbol", e.target.value)
-                    }
+                    onChange={(e) => updateVariable(variable.id, "symbol", e.target.value)}
                     placeholder="e.g., a"
                     className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-1.5 font-mono text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
                   />
@@ -457,9 +416,7 @@ export function FormulaForm({ boards, existingFormula }: FormulaFormProps) {
                     id={`var-meaning-${variable.id}`}
                     type="text"
                     value={variable.meaning}
-                    onChange={(e) =>
-                      updateVariable(variable.id, "meaning", e.target.value)
-                    }
+                    onChange={(e) => updateVariable(variable.id, "meaning", e.target.value)}
                     placeholder="e.g., length of side a"
                     className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] px-3 py-1.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
                   />

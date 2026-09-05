@@ -75,7 +75,11 @@ const percentile = (arr: number[], p: number): number => {
 // Span management
 // ---------------------------------------------------------------------------
 
-export const startSpan = (name: string, category: SpanCategory, metadata?: Record<string, string>): SpanContext => {
+export const startSpan = (
+  name: string,
+  category: SpanCategory,
+  metadata?: Record<string, string>
+): SpanContext => {
   const span: SpanContext = {
     name,
     category,
@@ -115,7 +119,7 @@ export const endSpan = (span: SpanContext): number => {
       },
       () => {
         // span auto-finishes when callback returns
-      },
+      }
     );
   } else if (isSentryEnabled()) {
     Sentry.startSpan(
@@ -125,7 +129,7 @@ export const endSpan = (span: SpanContext): number => {
       },
       () => {
         // span auto-finishes when callback returns
-      },
+      }
     );
   }
 
@@ -136,7 +140,13 @@ export const endSpan = (span: SpanContext): number => {
 // Stats retrieval
 // ---------------------------------------------------------------------------
 
-const CATEGORIES: SpanCategory[] = ["db.query", "ai.call", "cache.get", "cache.set", "http.request"];
+const CATEGORIES: SpanCategory[] = [
+  "db.query",
+  "ai.call",
+  "cache.get",
+  "cache.set",
+  "http.request",
+];
 
 export const getPerformanceStats = (): PerformanceStats => {
   const stats = {} as PerformanceStats;
@@ -167,7 +177,7 @@ export const withSpan = async <T>(
   name: string,
   category: SpanCategory,
   fn: () => Promise<T>,
-  metadata?: Record<string, string>,
+  metadata?: Record<string, string>
 ): Promise<T> => {
   const span = startSpan(name, category, metadata);
   try {

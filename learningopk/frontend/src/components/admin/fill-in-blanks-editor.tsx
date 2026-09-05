@@ -36,9 +36,7 @@ function countBlanks(text: string): number {
   return matches ? matches.length : 0;
 }
 
-type PreviewSegment =
-  | { type: "text"; value: string }
-  | { type: "blank"; index: number };
+type PreviewSegment = { type: "text"; value: string } | { type: "blank"; index: number };
 
 function parseSegments(text: string): PreviewSegment[] {
   const parts = text.split(BLANK_PATTERN);
@@ -103,9 +101,7 @@ export function FillInBlanksEditor({
     (stmtIndex: number, blankIndex: number, value: string) => {
       const updated = statementsValue.map((stmt, i) => {
         if (i !== stmtIndex) return stmt;
-        const newAnswers = stmt.blanksAnswer.map((v, j) =>
-          j === blankIndex ? value : v
-        );
+        const newAnswers = stmt.blanksAnswer.map((v, j) => (j === blankIndex ? value : v));
         return { ...stmt, blanksAnswer: newAnswers };
       });
       onStatementsChange(updated);
@@ -135,10 +131,7 @@ export function FillInBlanksEditor({
 
   /* ── JSX ── */
 
-  const totalBlanks = statementsValue.reduce(
-    (sum, s) => sum + s.blanksAnswer.length,
-    0
-  );
+  const totalBlanks = statementsValue.reduce((sum, s) => sum + s.blanksAnswer.length, 0);
 
   return (
     <div className={cn("space-y-5", className)}>
@@ -146,13 +139,10 @@ export function FillInBlanksEditor({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <TextCursorInput className="h-4 w-4 text-text-muted" />
-          <span className="text-sm font-semibold text-text-primary">
-            Statements
-          </span>
+          <span className="text-sm font-semibold text-text-primary">Statements</span>
           {totalBlanks > 0 && (
             <Badge variant="primary" size="sm">
-              {totalBlanks} {totalBlanks === 1 ? "blank" : "blanks"} across{" "}
-              {statementsValue.length}{" "}
+              {totalBlanks} {totalBlanks === 1 ? "blank" : "blanks"} across {statementsValue.length}{" "}
               {statementsValue.length === 1 ? "statement" : "statements"}
             </Badge>
           )}
@@ -221,7 +211,7 @@ export function FillInBlanksEditor({
                   handleStatementTextChange(stmtIdx, e.target.value)
                 }
                 disabled={disabled}
-                placeholder='Enter statement with {{blank}} placeholders…'
+                placeholder="Enter statement with {{blank}} placeholders…"
                 rows={2}
                 className="min-h-[60px]"
                 aria-label={`Statement ${stmtIdx + 1} text`}
@@ -232,9 +222,7 @@ export function FillInBlanksEditor({
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-3.5 w-3.5 text-text-muted" />
-                    <span className="text-xs font-medium text-text-secondary">
-                      Answers
-                    </span>
+                    <span className="text-xs font-medium text-text-secondary">Answers</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {statement.blanksAnswer.map((answer, blankIdx) => (
@@ -244,11 +232,7 @@ export function FillInBlanksEditor({
                         label={`Blank ${blankIdx + 1}:`}
                         value={answer}
                         onChange={(e) =>
-                          handleStatementAnswerChange(
-                            stmtIdx,
-                            blankIdx,
-                            e.target.value
-                          )
+                          handleStatementAnswerChange(stmtIdx, blankIdx, e.target.value)
                         }
                         disabled={disabled}
                         placeholder={`Answer for blank ${blankIdx + 1}`}
@@ -275,22 +259,15 @@ export function FillInBlanksEditor({
                   >
                     {blankCount === 0 ? (
                       <p className="text-xs text-text-muted italic">
-                        No blanks detected. Add {"{{blank}}"} to create fill-in
-                        positions.
+                        No blanks detected. Add {"{{blank}}"} to create fill-in positions.
                       </p>
                     ) : (
                       <p className="flex flex-wrap items-baseline gap-y-2">
                         {segments.map((segment, segIdx) => {
                           if (segment.type === "text") {
-                            return (
-                              <span key={`seg-${segIdx}`}>
-                                {segment.value}
-                              </span>
-                            );
+                            return <span key={`seg-${segIdx}`}>{segment.value}</span>;
                           }
-                          return renderPreviewBlank(
-                            statement.blanksAnswer[segment.index] ?? ""
-                          );
+                          return renderPreviewBlank(statement.blanksAnswer[segment.index] ?? "");
                         })}
                       </p>
                     )}

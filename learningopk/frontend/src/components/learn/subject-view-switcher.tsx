@@ -21,7 +21,13 @@ type SubjectViewSwitcherProps = {
 
 type GraphLoadState = "idle" | "loading" | "ready" | "error";
 
-export function SubjectViewSwitcher({ boardSlug, classSlug, subjectSlug, chapters, showGraph }: SubjectViewSwitcherProps) {
+export function SubjectViewSwitcher({
+  boardSlug,
+  classSlug,
+  subjectSlug,
+  chapters,
+  showGraph,
+}: SubjectViewSwitcherProps) {
   const router = useRouter();
   const [activeView, setActiveView] = useState<"list" | "graph">("list");
   const [graphState, setGraphState] = useState<GraphLoadState>("idle");
@@ -64,7 +70,7 @@ export function SubjectViewSwitcher({ boardSlug, classSlug, subjectSlug, chapter
     void getSubjectGraph({
       board: boardSlug,
       grade: classSlug,
-      subject: subjectSlug
+      subject: subjectSlug,
     })
       .then((payload) => {
         if (cancelled) {
@@ -93,7 +99,10 @@ export function SubjectViewSwitcher({ boardSlug, classSlug, subjectSlug, chapter
     };
   }, [activeView, boardSlug, classSlug, graphState, showGraph, subjectSlug]);
 
-  const chapterById = useMemo(() => new Map(graphNodes.map((chapter) => [chapter.id, chapter])), [graphNodes]);
+  const chapterById = useMemo(
+    () => new Map(graphNodes.map((chapter) => [chapter.id, chapter])),
+    [graphNodes]
+  );
 
   const filteredGraphNodes = useMemo(() => {
     if (searchTerm.length === 0) {
@@ -150,7 +159,11 @@ export function SubjectViewSwitcher({ boardSlug, classSlug, subjectSlug, chapter
     return (
       <div className="grid gap-4 md:grid-cols-2">
         {chapters.map((chapter) => (
-          <ChapterCard key={chapter.id} chapter={chapter} href={`/${boardSlug}/${classSlug}/${subjectSlug}/${chapter.slug}`} />
+          <ChapterCard
+            key={chapter.id}
+            chapter={chapter}
+            href={`/${boardSlug}/${classSlug}/${subjectSlug}/${chapter.slug}`}
+          />
         ))}
       </div>
     );
@@ -188,15 +201,24 @@ export function SubjectViewSwitcher({ boardSlug, classSlug, subjectSlug, chapter
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {chapters.map((chapter) => (
-              <ChapterCard key={chapter.id} chapter={chapter} href={`/${boardSlug}/${classSlug}/${subjectSlug}/${chapter.slug}`} />
+              <ChapterCard
+                key={chapter.id}
+                chapter={chapter}
+                href={`/${boardSlug}/${classSlug}/${subjectSlug}/${chapter.slug}`}
+              />
             ))}
           </div>
         )
       ) : (
-        <div className="space-y-3 rounded-lg border border-border/60 bg-background/40 p-3" data-testid="subject-chapter-graph-panel">
+        <div
+          className="space-y-3 rounded-lg border border-border/60 bg-background/40 p-3"
+          data-testid="subject-chapter-graph-panel"
+        >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-semibold text-foreground">Chapter Graph</p>
-            <p className="text-xs text-muted-foreground">Pan, zoom, or click any node to open that chapter.</p>
+            <p className="text-xs text-muted-foreground">
+              Pan, zoom, or click any node to open that chapter.
+            </p>
           </div>
           <Input
             value={searchInput}
@@ -205,12 +227,18 @@ export function SubjectViewSwitcher({ boardSlug, classSlug, subjectSlug, chapter
             data-testid="subject-graph-search"
           />
 
-          {graphState === "loading" ? <LoadingSkeleton title="Loading chapter graph" rows={2} variant="list" /> : null}
+          {graphState === "loading" ? (
+            <LoadingSkeleton title="Loading chapter graph" rows={2} variant="list" />
+          ) : null}
           {graphState === "error" ? (
-            <p className="text-sm text-rose-700">Could not load chapter graph right now. Try again in a moment.</p>
+            <p className="text-sm text-rose-700">
+              Could not load chapter graph right now. Try again in a moment.
+            </p>
           ) : null}
           {graphState === "ready" && filteredGraphNodes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No chapter nodes match your current search.</p>
+            <p className="text-sm text-muted-foreground">
+              No chapter nodes match your current search.
+            </p>
           ) : null}
 
           {graphState === "ready" && filteredGraphNodes.length > 0 ? (
@@ -224,7 +252,10 @@ export function SubjectViewSwitcher({ boardSlug, classSlug, subjectSlug, chapter
           ) : null}
 
           {graphState === "ready" && filteredGraphNodes.length > 0 ? (
-            <div className="rounded-md border border-border/50 bg-background/70 p-2" data-testid="subject-graph-node-list">
+            <div
+              className="rounded-md border border-border/50 bg-background/70 p-2"
+              data-testid="subject-graph-node-list"
+            >
               <div className="flex flex-wrap gap-2">
                 {filteredGraphNodes.map((node) => (
                   <button

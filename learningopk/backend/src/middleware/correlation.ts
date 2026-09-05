@@ -31,9 +31,7 @@ declare global {
 export const correlationMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   const incoming = req.headers["x-correlation-id"];
   const correlationId =
-    typeof incoming === "string" && incoming.length > 0
-      ? incoming
-      : randomUUID();
+    typeof incoming === "string" && incoming.length > 0 ? incoming : randomUUID();
 
   req.correlationId = correlationId;
   res.setHeader("x-correlation-id", correlationId);

@@ -27,7 +27,7 @@ const answerOptionEntries: Array<{ key: AnswerOption; label: string }> = [
   { key: "a", label: "A" },
   { key: "b", label: "B" },
   { key: "c", label: "C" },
-  { key: "d", label: "D" }
+  { key: "d", label: "D" },
 ];
 
 const getOptionText = (question: QuizQuestion, option: AnswerOption): string => {
@@ -110,7 +110,11 @@ export function QuizQuestionCard({
                 key={option.key}
                 initial={reduced ? false : { opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={reduced ? { duration: 0 } : { delay: index * 0.04, duration: 0.2, ease: "easeOut" }}
+                transition={
+                  reduced
+                    ? { duration: 0 }
+                    : { delay: index * 0.04, duration: 0.2, ease: "easeOut" }
+                }
                 className={cn(
                   "group relative flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors duration-100",
                   /* Default state */
@@ -163,7 +167,10 @@ export function QuizQuestionCard({
 
                 {/* Option text */}
                 <span className="flex-1 text-text-primary text-sm leading-snug">
-                  <ContentRenderer content={getOptionText(question, option.key)} variant="compact" />
+                  <ContentRenderer
+                    content={getOptionText(question, option.key)}
+                    variant="compact"
+                  />
                 </span>
               </motion.label>
             );

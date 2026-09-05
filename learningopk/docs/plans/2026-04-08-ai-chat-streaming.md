@@ -13,6 +13,7 @@
 ## Task 1: Increase token limit
 
 **Files:**
+
 - Modify: `backend/src/lib/mistral.ts:42`
 
 **Step 1: Change the constant**
@@ -43,6 +44,7 @@ git commit -m "fix: increase AI max output tokens from 500 to 2048"
 The strategy currently calls `invokeModel()` which returns `{ text, model, modelTier, promptTokens, completionTokens }`. For streaming, `invokeModel` needs to return a `textStream` (AsyncIterable) alongside a `usage` promise that resolves when the stream completes. The `generate()` method needs a new `generateStream()` sibling that returns the stream to the caller.
 
 **Files:**
+
 - Modify: `backend/src/services/ai-model-strategy.ts`
 
 **Step 1: Add streaming types and a new `invokeModelStreaming` dependency**
@@ -78,6 +80,7 @@ Note: `invokeModelStreaming` is synchronous (returns immediately) because `strea
 **Step 2: Add `generateStream()` method**
 
 Add a `generateStream()` method alongside `generate()`. The stream method:
+
 1. Checks circuit breaker -- if open, checks cache, returns cached text as a single-item async iterable or throws
 2. Classifies query and picks the primary tier
 3. Calls `invokeModelStreaming` with the primary tier
@@ -138,7 +141,10 @@ const generateStream = (params: GenerateParams): AiStreamResult => {
       };
     },
     async (error) => {
-      const circuitState = recordFailure(await dependencies.readCircuitState({ key: circuitKey }), now());
+      const circuitState = recordFailure(
+        await dependencies.readCircuitState({ key: circuitKey }),
+        now()
+      );
       await dependencies.writeCircuitState({ key: circuitKey, state: circuitState });
       throw error;
     }
@@ -178,6 +184,7 @@ git commit -m "feat: add streaming support to AI model strategy"
 ## Task 3: Wire streamText in the AI chat route
 
 **Files:**
+
 - Modify: `backend/src/routes/ai-chat.ts`
 
 **Step 1: Change imports**
@@ -285,7 +292,10 @@ try {
     completionTokens: result.completionTokens,
   });
 
-  await db.update(aiChatSessions).set({ lastMessageAt: new Date() }).where(eq(aiChatSessions.id, sessionRow.id));
+  await db
+    .update(aiChatSessions)
+    .set({ lastMessageAt: new Date() })
+    .where(eq(aiChatSessions.id, sessionRow.id));
 
   if (assistantText.length > 0) {
     try {
@@ -350,7 +360,10 @@ try {
         completionTokens: fallbackResult.completionTokens,
       });
 
-      await db.update(aiChatSessions).set({ lastMessageAt: new Date() }).where(eq(aiChatSessions.id, sessionRow.id));
+      await db
+        .update(aiChatSessions)
+        .set({ lastMessageAt: new Date() })
+        .where(eq(aiChatSessions.id, sessionRow.id));
 
       res.status(200);
       res.setHeader("content-type", "text/plain; charset=utf-8");
@@ -363,7 +376,10 @@ try {
       res.end();
     } catch (fallbackError) {
       logger.error({ error: fallbackError }, "AI fallback generation also failed");
-      providerError = fallbackError instanceof Error ? fallbackError.message : "Unknown provider generation error.";
+      providerError =
+        fallbackError instanceof Error
+          ? fallbackError.message
+          : "Unknown provider generation error.";
       res.status(502).json({
         error: providerError ?? "Failed to generate AI response from the provider.",
         sessionId: sessionRow.id,
@@ -400,6 +416,7 @@ git commit -m "feat: stream AI responses token-by-token via streamText"
 Both chat components (`ai-chat-panel.tsx` and `ai-chat-messages.tsx`) currently show `StreamingIndicator` (bouncing dots) when `isStreaming && isEmpty`, then jump to `MarkdownRenderer` for the full text. With real streaming, we need to show the `StreamingText` component while content is arriving incrementally.
 
 **Files:**
+
 - Modify: `frontend/src/components/ai/ai-unified-chat/components/ai-chat-messages.tsx`
 - Modify: `frontend/src/components/learn/ai-chat-panel.tsx`
 
@@ -408,7 +425,7 @@ Both chat components (`ai-chat-panel.tsx` and `ai-chat-messages.tsx`) currently 
 **Step 1: Import StreamingText**
 
 ```typescript
-import { StreamingText } from '@/components/common/streaming-text';
+import { StreamingText } from "@/components/common/streaming-text";
 ```
 
 **Step 2: Change the MessageBubble rendering logic**
@@ -454,6 +471,7 @@ Replace lines 98-109 (the assistant message rendering):
 ```
 
 Three states:
+
 1. `isStreaming && isEmpty` -> bouncing dots (waiting for first chunk)
 2. `isStreaming && hasContent` -> `StreamingText` (character reveal + cursor)
 3. `!isStreaming` -> `MarkdownRenderer` (full markdown render)
@@ -525,6 +543,7 @@ git commit -m "feat: use StreamingText for character-by-character AI response re
 ## Task 5: Add nginx streaming support for AI chat route
 
 **Files:**
+
 - Modify: `infra/nginx.conf`
 
 **Step 1: Add a dedicated location block for /api/ai/chat**
@@ -589,11 +608,11 @@ Run: `powershell -ExecutionPolicy Bypass -Command "pnpm -C frontend build"` from
 
 ## Summary of all files changed
 
-| File | Change |
-|------|--------|
-| `backend/src/lib/mistral.ts` | Token limit 500 -> 2048 |
-| `backend/src/services/ai-model-strategy.ts` | Add `generateStream()` method, `invokeModelStreaming` dependency |
-| `backend/src/routes/ai-chat.ts` | Import `streamText`, add `invokeModelStreaming`, stream response with fallback |
-| `frontend/src/components/ai/ai-unified-chat/components/ai-chat-messages.tsx` | Use `StreamingText` during streaming |
-| `frontend/src/components/learn/ai-chat-panel.tsx` | Use `StreamingText` during streaming |
-| `infra/nginx.conf` | Add `/api/ai/chat` location with `proxy_buffering off` |
+| File                                                                         | Change                                                                         |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `backend/src/lib/mistral.ts`                                                 | Token limit 500 -> 2048                                                        |
+| `backend/src/services/ai-model-strategy.ts`                                  | Add `generateStream()` method, `invokeModelStreaming` dependency               |
+| `backend/src/routes/ai-chat.ts`                                              | Import `streamText`, add `invokeModelStreaming`, stream response with fallback |
+| `frontend/src/components/ai/ai-unified-chat/components/ai-chat-messages.tsx` | Use `StreamingText` during streaming                                           |
+| `frontend/src/components/learn/ai-chat-panel.tsx`                            | Use `StreamingText` during streaming                                           |
+| `infra/nginx.conf`                                                           | Add `/api/ai/chat` location with `proxy_buffering off`                         |

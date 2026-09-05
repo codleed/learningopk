@@ -55,9 +55,7 @@ export function QuestTabBar({ status }: QuestTabBarProps) {
     if (!el) return;
     const tolerance = 2; // account for sub-pixel rounding
     setCanScrollLeft(el.scrollLeft > tolerance);
-    setCanScrollRight(
-      el.scrollLeft + el.clientWidth < el.scrollWidth - tolerance
-    );
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - tolerance);
   }, []);
 
   // Track scroll position for gradient indicators
@@ -125,9 +123,7 @@ export function QuestTabBar({ status }: QuestTabBarProps) {
   const getTabProgress = (key: ChapterTab): string | null => {
     switch (key) {
       case "exercises":
-        return status.totalExercises > 0
-          ? `${status.exercises}/${status.totalExercises}`
-          : null;
+        return status.totalExercises > 0 ? `${status.exercises}/${status.totalExercises}` : null;
       case "illustration":
         return status.totalIllustrations > 0
           ? `${status.illustrations}/${status.totalIllustrations}`
@@ -195,8 +191,8 @@ export function QuestTabBar({ status }: QuestTabBarProps) {
               aria-current={isActive ? "page" : undefined}
             >
               {/* Active indicator background */}
-              {isActive && (
-                reduced ? (
+              {isActive &&
+                (reduced ? (
                   <span
                     className="absolute inset-0 rounded-lg bg-bg-surface shadow-[var(--shadow-sm)] border border-border-default"
                     style={{ zIndex: -1 }}
@@ -208,8 +204,7 @@ export function QuestTabBar({ status }: QuestTabBarProps) {
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     style={{ zIndex: -1 }}
                   />
-                )
-              )}
+                ))}
 
               {/* Icon with completion badge */}
               <span className="relative">

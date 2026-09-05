@@ -12,7 +12,13 @@ type AdminSettingsTableProps = {
   onSave: (key: string) => void;
 };
 
-export function AdminSettingsTable({ rows, draftValues, savingKeys, onValueChange, onSave }: AdminSettingsTableProps) {
+export function AdminSettingsTable({
+  rows,
+  draftValues,
+  savingKeys,
+  onValueChange,
+  onSave,
+}: AdminSettingsTableProps) {
   if (rows.length === 0) {
     return <p className="text-sm text-muted-foreground">No settings available.</p>;
   }
@@ -58,7 +64,13 @@ export function AdminSettingsTable({ rows, draftValues, savingKeys, onValueChang
                   <p className="text-xs text-muted-foreground">{row.updatedBy?.name ?? "System"}</p>
                 </td>
                 <td className="px-3 py-2">
-                  <Button type="button" size="sm" variant="secondary" disabled={isSaving} onClick={() => onSave(row.key)}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={isSaving}
+                    onClick={() => onSave(row.key)}
+                  >
                     {isSaving ? "Saving..." : "Save"}
                   </Button>
                 </td>

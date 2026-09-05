@@ -19,7 +19,12 @@ type AdminAuditLogListProps = {
 
 export function AdminAuditLogList({ entries }: AdminAuditLogListProps) {
   if (entries.length === 0) {
-    return <EmptyState title="No admin actions yet" description="Your moderation actions will appear here." />;
+    return (
+      <EmptyState
+        title="No admin actions yet"
+        description="Your moderation actions will appear here."
+      />
+    );
   }
 
   return (
@@ -33,7 +38,9 @@ export function AdminAuditLogList({ entries }: AdminAuditLogListProps) {
             <span
               className={[
                 "rounded-full px-2 py-1 text-xs font-semibold",
-                entry.status === "success" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
+                entry.status === "success"
+                  ? "bg-emerald-100 text-emerald-800"
+                  : "bg-rose-100 text-rose-800",
               ].join(" ")}
             >
               {entry.status}
@@ -41,7 +48,9 @@ export function AdminAuditLogList({ entries }: AdminAuditLogListProps) {
           </div>
           <p className="mt-1 text-sm text-muted-foreground">{entry.message}</p>
           <p className="mt-1 text-xs text-muted-foreground">Actor: {entry.actor.name}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{new Date(entry.occurredAt).toLocaleString()}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {new Date(entry.occurredAt).toLocaleString()}
+          </p>
         </li>
       ))}
     </ul>

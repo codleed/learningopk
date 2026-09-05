@@ -271,10 +271,7 @@ export function EditChapterForm({ chapter }: EditChapterFormProps) {
 
       <AdminFormCard>
         <form onSubmit={handleSaveMetadata} className="space-y-6">
-          <AdminFormField
-            id="chapter-subject"
-            label="Subject"
-          >
+          <AdminFormField id="chapter-subject" label="Subject">
             <input
               id="chapter-subject"
               type="text"
@@ -304,12 +301,7 @@ export function EditChapterForm({ chapter }: EditChapterFormProps) {
             />
           </AdminFormField>
 
-          <AdminFormField
-            id="chapter-title"
-            label="Chapter Title"
-            required
-            error={titleError}
-          >
+          <AdminFormField id="chapter-title" label="Chapter Title" required error={titleError}>
             <input
               id="chapter-title"
               type="text"

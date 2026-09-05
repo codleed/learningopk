@@ -8,7 +8,7 @@ const baseContext = {
   grade: "9" as const,
   subject: "Physics",
   chapterTitle: "Kinematics",
-  chapterSummary: "Motion in a straight line."
+  chapterSummary: "Motion in a straight line.",
 };
 
 test("buildTutorSystemPrompt mentions quiz-derived weak areas when available", () => {
@@ -21,8 +21,8 @@ test("buildTutorSystemPrompt mentions quiz-derived weak areas when available", (
       strongTopics: ["units"],
       studentWeakAreas: ["acceleration formula", "velocity-time graphs"],
       preferredExplanationStyle: "balanced",
-      lastConceptsDiscussed: ["displacement"]
-    }
+      lastConceptsDiscussed: ["displacement"],
+    },
   });
 
   assert.match(prompt, /quiz history/i);
@@ -34,7 +34,7 @@ test("buildTutorSystemPrompt explain mode requests direct markdown explanations 
   const prompt = buildTutorSystemPrompt({
     context: baseContext,
     failedAttempts: 0,
-    mode: "explain"
+    mode: "explain",
   });
 
   assert.match(prompt, /direct explanation first/i);
@@ -50,7 +50,7 @@ test("buildTutorSystemPrompt socratic mode requests a tiny hint followed by one 
   const prompt = buildTutorSystemPrompt({
     context: baseContext,
     failedAttempts: 0,
-    mode: "socratic"
+    mode: "socratic",
   });
 
   assert.match(prompt, /socratic/i);
@@ -65,7 +65,7 @@ test("buildTutorSystemPrompt core rules include dollar-sign delimiter instructio
   const prompt = buildTutorSystemPrompt({
     context: baseContext,
     failedAttempts: 0,
-    mode: "explain"
+    mode: "explain",
   });
 
   // Core rules section should mention dollar-sign math delimiters

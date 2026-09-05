@@ -12,7 +12,7 @@ export function ChapterProgressTracker({ chapterId }: ChapterProgressTrackerProp
   useEffect(() => {
     void trackProgressEvent({
       eventType: "chapter_visit",
-      chapterId
+      chapterId,
     });
   }, [chapterId]);
 

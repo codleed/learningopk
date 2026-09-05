@@ -13,6 +13,7 @@
 ### Task 1: Add failing coverage for the new auth page chrome
 
 **Files:**
+
 - Modify: `learningopk/frontend/tests/e2e/phase2-auth-dashboard.spec.ts`
 - Modify: `learningopk/frontend/app/(auth)/login/page.tsx`
 - Modify: `learningopk/frontend/app/(auth)/register/page.tsx`
@@ -49,6 +50,7 @@ git commit -m "test: cover bento auth shell chrome"
 ### Task 2: Build shared Bento auth shell components
 
 **Files:**
+
 - Create: `learningopk/frontend/components/auth/bento-auth-shell.tsx`
 - Create: `learningopk/frontend/components/auth/bento-auth-field.tsx`
 - Modify: `learningopk/frontend/app/(auth)/login/page.tsx`
@@ -93,6 +95,7 @@ git commit -m "feat: add bento auth shell"
 ### Task 3: Restyle the login form inside the new shell
 
 **Files:**
+
 - Modify: `learningopk/frontend/components/auth/login-form.tsx`
 - Modify: `learningopk/frontend/app/(auth)/login/page.tsx`
 
@@ -135,6 +138,7 @@ git commit -m "feat: redesign login form in bento auth shell"
 ### Task 4: Restyle the register form inside the new shell
 
 **Files:**
+
 - Modify: `learningopk/frontend/components/auth/register-form.tsx`
 - Modify: `learningopk/frontend/app/(auth)/register/page.tsx`
 
@@ -176,6 +180,7 @@ git commit -m "feat: redesign register form in bento auth shell"
 ### Task 5: Verify the frontend package stays healthy
 
 **Files:**
+
 - Modify: `learningopk/frontend/tests/e2e/phase2-auth-dashboard.spec.ts`
 - Modify: `learningopk/frontend/components/auth/login-form.tsx`
 - Modify: `learningopk/frontend/components/auth/register-form.tsx`

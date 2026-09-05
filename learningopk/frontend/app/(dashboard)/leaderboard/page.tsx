@@ -34,7 +34,7 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
   const result = await Promise.allSettled([
     getLeaderboard("global", metric, cookieHeader),
     getLeaderboard("board", metric, cookieHeader),
-    getLeaderboard("school", metric, cookieHeader)
+    getLeaderboard("school", metric, cookieHeader),
   ]);
 
   const error = result.find((entry) => entry.status === "rejected");
@@ -43,11 +43,17 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
     <LeaderboardPageClient
       session={session}
       metric={metric}
-      error={error?.status === "rejected" ? error.reason instanceof Error ? error.reason.message : "Unable to load leaderboard." : null}
+      error={
+        error?.status === "rejected"
+          ? error.reason instanceof Error
+            ? error.reason.message
+            : "Unable to load leaderboard."
+          : null
+      }
       leaderboards={{
         global: result[0].status === "fulfilled" ? result[0].value : null,
         board: result[1].status === "fulfilled" ? result[1].value : null,
-        school: result[2].status === "fulfilled" ? result[2].value : null
+        school: result[2].status === "fulfilled" ? result[2].value : null,
       }}
     />
   );

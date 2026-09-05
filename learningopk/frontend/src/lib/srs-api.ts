@@ -90,19 +90,13 @@ export async function fetchReviewStats(): Promise<ReviewStats> {
 /**
  * Submit a review rating for a flashcard (client-side).
  */
-export async function submitReview(
-  cardId: number,
-  rating: RecallRating
-): Promise<ReviewResponse> {
-  const response = await fetch(
-    `${backendUrl}/api/flashcard-reviews/${cardId}/review`,
-    {
-      method: "POST",
-      credentials: "include",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ rating }),
-    }
-  );
+export async function submitReview(cardId: number, rating: RecallRating): Promise<ReviewResponse> {
+  const response = await fetch(`${backendUrl}/api/flashcard-reviews/${cardId}/review`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ rating }),
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to submit review: ${response.status}`);
@@ -137,9 +131,7 @@ export async function seedFlashcardReviews(
 /**
  * Fetch review stats from the server side (with cookie header).
  */
-export async function getReviewStatsServer(
-  cookieHeader: string
-): Promise<ReviewStats | null> {
+export async function getReviewStatsServer(cookieHeader: string): Promise<ReviewStats | null> {
   try {
     const response = await fetch(`${backendUrl}/api/flashcard-reviews/stats`, {
       method: "GET",

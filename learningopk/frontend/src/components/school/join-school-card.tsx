@@ -33,7 +33,8 @@ export function JoinSchoolCard({ onJoin }: { onJoin?: () => void }) {
       <CardBody className="space-y-4">
         <CardTitle>Join Your School</CardTitle>
         <p className="text-sm text-text-secondary">
-          Enter your school&apos;s invite code to see your school leaderboard and compete with classmates.
+          Enter your school&apos;s invite code to see your school leaderboard and compete with
+          classmates.
         </p>
         <div className="flex gap-2">
           <Input

@@ -1,5 +1,5 @@
 // frontend/src/lib/gamification-types.ts
-export type BadgeId = 
+export type BadgeId =
   | "first_steps"
   | "scholar"
   | "problem_solver"
@@ -18,14 +18,62 @@ export interface BadgeDefinition {
 }
 
 export const BADGE_DEFINITIONS: Record<BadgeId, BadgeDefinition> = {
-  first_steps: { id: "first_steps", name: "First Steps", description: "Complete your first quest", icon: "🚀", criteria: "Complete first chapter" },
-  scholar: { id: "scholar", name: "Scholar", description: "Read all summaries in a subject", icon: "📚", criteria: "Read all chapter summaries" },
-  problem_solver: { id: "problem_solver", name: "Problem Solver", description: "Complete 50 exercises", icon: "🧩", criteria: "Solve 50 exercises" },
-  memory_master: { id: "memory_master", name: "Memory Master", description: "Know 100 flashcards", icon: "🧠", criteria: "Mark 100 flashcards as known" },
-  quiz_champion: { id: "quiz_champion", name: "Quiz Champion", description: "Score 100% on 5 quizzes", icon: "🏆", criteria: "Perfect score on 5 quizzes" },
-  streak_starter: { id: "streak_starter", name: "Streak Starter", description: "Maintain 7-day streak", icon: "🔥", criteria: "7 day study streak" },
-  streak_warrior: { id: "streak_warrior", name: "Streak Warrior", description: "Maintain 30-day streak", icon: "💪", criteria: "30 day study streak" },
-  subject_master: { id: "subject_master", name: "Subject Master", description: "Complete all chapters", icon: "⭐", criteria: "Complete all chapters in subject" },
+  first_steps: {
+    id: "first_steps",
+    name: "First Steps",
+    description: "Complete your first quest",
+    icon: "🚀",
+    criteria: "Complete first chapter",
+  },
+  scholar: {
+    id: "scholar",
+    name: "Scholar",
+    description: "Read all summaries in a subject",
+    icon: "📚",
+    criteria: "Read all chapter summaries",
+  },
+  problem_solver: {
+    id: "problem_solver",
+    name: "Problem Solver",
+    description: "Complete 50 exercises",
+    icon: "🧩",
+    criteria: "Solve 50 exercises",
+  },
+  memory_master: {
+    id: "memory_master",
+    name: "Memory Master",
+    description: "Know 100 flashcards",
+    icon: "🧠",
+    criteria: "Mark 100 flashcards as known",
+  },
+  quiz_champion: {
+    id: "quiz_champion",
+    name: "Quiz Champion",
+    description: "Score 100% on 5 quizzes",
+    icon: "🏆",
+    criteria: "Perfect score on 5 quizzes",
+  },
+  streak_starter: {
+    id: "streak_starter",
+    name: "Streak Starter",
+    description: "Maintain 7-day streak",
+    icon: "🔥",
+    criteria: "7 day study streak",
+  },
+  streak_warrior: {
+    id: "streak_warrior",
+    name: "Streak Warrior",
+    description: "Maintain 30-day streak",
+    icon: "💪",
+    criteria: "30 day study streak",
+  },
+  subject_master: {
+    id: "subject_master",
+    name: "Subject Master",
+    description: "Complete all chapters",
+    icon: "⭐",
+    criteria: "Complete all chapters in subject",
+  },
 };
 
 export type CardStatus = "new" | "learning" | "known" | "review";
@@ -112,12 +160,20 @@ export const LEVEL_DEFINITIONS: LevelDefinition[] = [
 
 /** Utility: look up a level definition by level number. */
 export function getLevelDefinition(level: number): LevelDefinition {
-  return LEVEL_DEFINITIONS[level] ?? LEVEL_DEFINITIONS[0] ?? { level: 0, name: "Newcomer", minXp: 0, tier: "bronze" as const };
+  return (
+    LEVEL_DEFINITIONS[level] ??
+    LEVEL_DEFINITIONS[0] ?? { level: 0, name: "Newcomer", minXp: 0, tier: "bronze" as const }
+  );
 }
 
 /** Utility: compute level from raw XP total. */
 export function computeLevelFromXp(xp: number): LevelDefinition {
-  let found: LevelDefinition = LEVEL_DEFINITIONS[0] ?? { level: 0, name: "Newcomer", minXp: 0, tier: "bronze" as const };
+  let found: LevelDefinition = LEVEL_DEFINITIONS[0] ?? {
+    level: 0,
+    name: "Newcomer",
+    minXp: 0,
+    tier: "bronze" as const,
+  };
   for (const def of LEVEL_DEFINITIONS) {
     if (xp >= def.minXp) found = def;
   }
@@ -125,13 +181,16 @@ export function computeLevelFromXp(xp: number): LevelDefinition {
 }
 
 /** Tier-based color CSS variables / Tailwind classes. */
-export const TIER_COLORS: Record<LevelTier, {
-  badge: string;
-  badgeBg: string;
-  text: string;
-  progress: string;
-  glow: string;
-}> = {
+export const TIER_COLORS: Record<
+  LevelTier,
+  {
+    badge: string;
+    badgeBg: string;
+    text: string;
+    progress: string;
+    glow: string;
+  }
+> = {
   bronze: {
     badge: "text-orange-700 dark:text-orange-300",
     badgeBg: "bg-orange-100 dark:bg-orange-900/30 border-orange-300/50 dark:border-orange-600/40",

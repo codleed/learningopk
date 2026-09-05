@@ -83,12 +83,7 @@ export function ConfettiCelebration({ show, onComplete }: ConfettiCelebrationPro
 
   return (
     <AnimatePresence>
-      {show && (
-        <canvas
-          ref={canvasRef}
-          className="pointer-events-none fixed inset-0 z-50"
-        />
-      )}
+      {show && <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-50" />}
     </AnimatePresence>
   );
 }

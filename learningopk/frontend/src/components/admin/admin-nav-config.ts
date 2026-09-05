@@ -9,7 +9,7 @@ import {
   MessagesSquare,
   ScrollText,
   Settings,
-  Users
+  Users,
 } from "lucide-react";
 
 export type AdminNavItem = {
@@ -29,12 +29,12 @@ export const adminNavItems = [
     href: "/admin/community",
     label: "Community Forum",
     icon: MessagesSquare,
-    matchers: ["/admin/forum"] as const
+    matchers: ["/admin/forum"] as const,
   },
   { href: "/admin/audit", label: "Audit Trail", icon: ScrollText },
   { href: "/admin/analytics", label: "Analytics & Reporting", icon: BarChart3 },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
-  { href: "/admin/settings", label: "System Settings", icon: Settings }
+  { href: "/admin/settings", label: "System Settings", icon: Settings },
 ] satisfies readonly AdminNavItem[];
 
 const pathMatches = (currentPath: string, targetPath: string): boolean =>

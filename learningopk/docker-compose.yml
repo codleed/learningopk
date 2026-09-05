@@ -110,10 +110,10 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:password@pgbouncer:6432/learningo
       REDIS_URL: redis://redis:6379
-      BETTER_AUTH_SECRET: yOocWXqo7cx5Zde53GtGcCn4Q6qoNszeoQ8aLGLze1k=
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set in learningopk/.env}
       BETTER_AUTH_URL: http://nginx:80
       FRONTEND_ORIGIN: http://localhost:3000
-      MISTRAL_API_KEY: 0MC0Dro56V7KOnEpeQMhanSXr1XK37l8
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:?set in learningopk/.env}
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_USE_SSL: false

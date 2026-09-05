@@ -28,10 +28,10 @@ export interface ExerciseSectionCardProps {
 
 /**
  * Accented card wrapper for exercise creation sections.
- * 
+ *
  * Uses CSS custom properties for theming — see `globals.css` for
  * `.exercise-section-card` styles and per-type accent rules.
- * 
+ *
  * Content children are staggered in with 50ms delays when the
  * `exercise-section-stagger` class is applied to any inner container.
  */
@@ -69,7 +69,7 @@ export interface ExerciseSectionHeaderProps {
 
 /**
  * Section header with accent-tinted background, icon, and title.
- * 
+ *
  * The icon inherits the section's accent color via inline style
  * using the CSS variable `--exercise-{type}`.
  */
@@ -89,7 +89,7 @@ export function ExerciseSectionHeader({
         "exercise-section-header",
         "flex items-center gap-3 px-5 py-3.5",
         "border-b border-border-default",
-        className,
+        className
       )}
     >
       {/* Icon container — accent-colored */}
@@ -100,9 +100,7 @@ export function ExerciseSectionHeader({
           color: iconColorVar,
         }}
       >
-        <span className="[&>svg]:h-[18px] [&>svg]:w-[18px]">
-          {icon}
-        </span>
+        <span className="[&>svg]:h-[18px] [&>svg]:w-[18px]">{icon}</span>
       </span>
 
       {/* Title */}
@@ -114,11 +112,7 @@ export function ExerciseSectionHeader({
       </h3>
 
       {/* Trailing slot (badges, actions, etc.) */}
-      {trailing ? (
-        <div className="ml-auto flex items-center gap-2">
-          {trailing}
-        </div>
-      ) : null}
+      {trailing ? <div className="ml-auto flex items-center gap-2">{trailing}</div> : null}
     </div>
   );
 }
@@ -136,7 +130,7 @@ export interface ExerciseSectionBodyProps {
 
 /**
  * Body content area for an exercise section.
- * 
+ *
  * When `stagger` is true (default), direct children animate in
  * sequentially with 50ms delays using the `.exercise-section-stagger`
  * utility class from globals.css.
@@ -147,13 +141,7 @@ export function ExerciseSectionBody({
   className,
 }: ExerciseSectionBodyProps) {
   return (
-    <div
-      className={cn(
-        "px-5 py-5 space-y-5",
-        stagger && "exercise-section-stagger",
-        className,
-      )}
-    >
+    <div className={cn("px-5 py-5 space-y-5", stagger && "exercise-section-stagger", className)}>
       {children}
     </div>
   );

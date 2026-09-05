@@ -2,7 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, GraduationCap, Book, FileText, Brain, ClipboardList, Layers, FunctionSquare, ScrollText } from "lucide-react";
+import {
+  BookOpen,
+  GraduationCap,
+  Book,
+  FileText,
+  Brain,
+  ClipboardList,
+  Layers,
+  FunctionSquare,
+  ScrollText,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type ContentTab = {
@@ -33,9 +43,10 @@ type ContentTabsProps = {
 
 export function ContentTabs({ tabs = defaultTabs, activeTab }: ContentTabsProps) {
   const pathname = usePathname();
-  
+
   // Determine active tab from URL if not provided
-  const currentActiveTab = activeTab || tabs.find(tab => pathname.startsWith(tab.href))?.id || "boards";
+  const currentActiveTab =
+    activeTab || tabs.find((tab) => pathname.startsWith(tab.href))?.id || "boards";
 
   return (
     <div className="border-b border-[var(--border-default)]">
@@ -47,7 +58,7 @@ export function ContentTabs({ tabs = defaultTabs, activeTab }: ContentTabsProps)
         {tabs.map((tab) => {
           const isActive = currentActiveTab === tab.id || pathname.startsWith(tab.href);
           const Icon = tab.icon;
-          
+
           return (
             <Link
               key={tab.id}
@@ -57,9 +68,10 @@ export function ContentTabs({ tabs = defaultTabs, activeTab }: ContentTabsProps)
               className={`
                 flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors
                 border-b-2 whitespace-nowrap
-                ${isActive
-                  ? "border-[var(--primary)] text-[var(--text-primary)] bg-[var(--bg-subtle)]"
-                  : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                ${
+                  isActive
+                    ? "border-[var(--primary)] text-[var(--text-primary)] bg-[var(--bg-subtle)]"
+                    : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
                 }
               `}
             >
@@ -69,9 +81,10 @@ export function ContentTabs({ tabs = defaultTabs, activeTab }: ContentTabsProps)
                 <span
                   className={`
                     ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs
-                    ${isActive
-                      ? "bg-[var(--primary)] text-[var(--text-primary)]"
-                      : "bg-[var(--text-secondary)] text-[var(--bg-base)]"
+                    ${
+                      isActive
+                        ? "bg-[var(--primary)] text-[var(--text-primary)]"
+                        : "bg-[var(--text-secondary)] text-[var(--bg-base)]"
                     }
                   `}
                 >

@@ -8,13 +8,13 @@ import { requireSession, type AuthenticatedRequest } from "../../../lib/session.
 import { persistAuditLog, type AdminAuditScope } from "../shared.js";
 
 const curriculumEntityParamsSchema = z.object({
-  id: z.coerce.number().int().positive()
+  id: z.coerce.number().int().positive(),
 });
 
 // Formula schemas
 const formulaVariableSchema = z.object({
   symbol: z.string().trim().min(1),
-  meaning: z.string().trim().min(1)
+  meaning: z.string().trim().min(1),
 });
 
 const formulaCreateBodySchema = z.object({
@@ -24,7 +24,7 @@ const formulaCreateBodySchema = z.object({
   formulaLatex: z.string().trim().min(1),
   description: z.string().trim().min(1),
   variables: z.array(formulaVariableSchema).default([]),
-  tags: z.array(z.string().trim().min(1)).default([])
+  tags: z.array(z.string().trim().min(1)).default([]),
 });
 
 const formulaUpdateBodySchema = z.object({
@@ -34,12 +34,12 @@ const formulaUpdateBodySchema = z.object({
   formulaLatex: z.string().trim().min(1).optional(),
   description: z.string().trim().min(1).optional(),
   variables: z.array(formulaVariableSchema).optional(),
-  tags: z.array(z.string().trim().min(1)).optional()
+  tags: z.array(z.string().trim().min(1)).optional(),
 });
 
 const formulaListQuerySchema = z.object({
   subjectId: z.coerce.number().int().positive().optional(),
-  chapterId: z.coerce.number().int().positive().optional()
+  chapterId: z.coerce.number().int().positive().optional(),
 });
 
 export const formulasAdminRouter = Router();
@@ -54,7 +54,7 @@ formulasAdminRouter.get("/content/formulas", requireSession, async (req, res) =>
   if (!parsedQuery.success) {
     res.status(400).json({
       error: "Invalid formula query",
-      details: parsedQuery.error.flatten()
+      details: parsedQuery.error.flatten(),
     });
     return;
   }
@@ -82,7 +82,7 @@ formulasAdminRouter.get("/content/formulas", requireSession, async (req, res) =>
       createdAt: formulas.createdAt,
       updatedAt: formulas.updatedAt,
       subjectName: subjects.name,
-      chapterTitle: chapters.title
+      chapterTitle: chapters.title,
     })
     .from(formulas)
     .leftJoin(subjects, eq(formulas.subjectId, subjects.id))
@@ -92,7 +92,7 @@ formulasAdminRouter.get("/content/formulas", requireSession, async (req, res) =>
 
   res.status(200).json({
     data: formulaRows,
-    total: formulaRows.length
+    total: formulaRows.length,
   });
 });
 
@@ -109,7 +109,7 @@ formulasAdminRouter.post("/content/formulas", requireSession, async (req, res) =
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid formula payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -126,7 +126,7 @@ formulasAdminRouter.post("/content/formulas", requireSession, async (req, res) =
       formulaLatex: parsedBody.data.formulaLatex.trim(),
       description: parsedBody.data.description.trim(),
       variables: parsedBody.data.variables,
-      tags: parsedBody.data.tags
+      tags: parsedBody.data.tags,
     })
     .returning({
       id: formulas.id,
@@ -138,7 +138,7 @@ formulasAdminRouter.post("/content/formulas", requireSession, async (req, res) =
       variables: formulas.variables,
       tags: formulas.tags,
       createdAt: formulas.createdAt,
-      updatedAt: formulas.updatedAt
+      updatedAt: formulas.updatedAt,
     });
 
   const newFormula = insertedRows[0];
@@ -150,7 +150,7 @@ formulasAdminRouter.post("/content/formulas", requireSession, async (req, res) =
       status: "failed",
       message: "Formula creation failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(500).json({ error: "Failed to create formula" });
     return;
@@ -163,11 +163,11 @@ formulasAdminRouter.post("/content/formulas", requireSession, async (req, res) =
     status: "success",
     message: `Created formula "${newFormula.name}" for subject ${newFormula.subjectId}`,
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(201).json({
-    data: newFormula
+    data: newFormula,
   });
 });
 
@@ -179,7 +179,7 @@ formulasAdminRouter.post("/content/formulas/:id/update", requireSession, async (
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid formula identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -193,7 +193,7 @@ formulasAdminRouter.post("/content/formulas/:id/update", requireSession, async (
   if (!parsedBody.success) {
     res.status(400).json({
       error: "Invalid formula payload",
-      details: parsedBody.error.flatten()
+      details: parsedBody.error.flatten(),
     });
     return;
   }
@@ -217,7 +217,7 @@ formulasAdminRouter.post("/content/formulas/:id/update", requireSession, async (
       status: "failed",
       message: "Formula not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({ error: "Formula not found" });
     return;
@@ -227,8 +227,10 @@ formulasAdminRouter.post("/content/formulas/:id/update", requireSession, async (
   if (parsedBody.data.subjectId !== undefined) updateData.subjectId = parsedBody.data.subjectId;
   if (parsedBody.data.chapterId !== undefined) updateData.chapterId = parsedBody.data.chapterId;
   if (parsedBody.data.name !== undefined) updateData.name = parsedBody.data.name.trim();
-  if (parsedBody.data.formulaLatex !== undefined) updateData.formulaLatex = parsedBody.data.formulaLatex.trim();
-  if (parsedBody.data.description !== undefined) updateData.description = parsedBody.data.description.trim();
+  if (parsedBody.data.formulaLatex !== undefined)
+    updateData.formulaLatex = parsedBody.data.formulaLatex.trim();
+  if (parsedBody.data.description !== undefined)
+    updateData.description = parsedBody.data.description.trim();
   if (parsedBody.data.variables !== undefined) updateData.variables = parsedBody.data.variables;
   if (parsedBody.data.tags !== undefined) updateData.tags = parsedBody.data.tags;
   updateData.updatedAt = new Date();
@@ -247,7 +249,7 @@ formulasAdminRouter.post("/content/formulas/:id/update", requireSession, async (
       variables: formulas.variables,
       tags: formulas.tags,
       createdAt: formulas.createdAt,
-      updatedAt: formulas.updatedAt
+      updatedAt: formulas.updatedAt,
     });
 
   const updatedFormula = updatedRows[0];
@@ -259,7 +261,7 @@ formulasAdminRouter.post("/content/formulas/:id/update", requireSession, async (
       status: "failed",
       message: "Formula update failed",
       actorId,
-      actorName
+      actorName,
     });
     res.status(500).json({ error: "Failed to update formula" });
     return;
@@ -272,11 +274,11 @@ formulasAdminRouter.post("/content/formulas/:id/update", requireSession, async (
     status: "success",
     message: `Updated formula "${updatedFormula.name}"`,
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
-    data: updatedFormula
+    data: updatedFormula,
   });
 });
 
@@ -288,7 +290,7 @@ formulasAdminRouter.post("/content/formulas/:id/delete", requireSession, async (
   if (!parsedParams.success) {
     res.status(400).json({
       error: "Invalid formula identifier",
-      details: parsedParams.error.flatten()
+      details: parsedParams.error.flatten(),
     });
     return;
   }
@@ -305,7 +307,7 @@ formulasAdminRouter.post("/content/formulas/:id/delete", requireSession, async (
     .select({
       id: formulas.id,
       name: formulas.name,
-      subjectId: formulas.subjectId
+      subjectId: formulas.subjectId,
     })
     .from(formulas)
     .where(eq(formulas.id, parsedParams.data.id))
@@ -320,7 +322,7 @@ formulasAdminRouter.post("/content/formulas/:id/delete", requireSession, async (
       status: "failed",
       message: "Formula not found",
       actorId,
-      actorName
+      actorName,
     });
     res.status(404).json({ error: "Formula not found" });
     return;
@@ -335,11 +337,11 @@ formulasAdminRouter.post("/content/formulas/:id/delete", requireSession, async (
     status: "success",
     message: `Deleted formula from subject ${formula.subjectId}`,
     actorId,
-    actorName
+    actorName,
   });
 
   res.status(200).json({
     success: true,
-    deletedId: formula.id
+    deletedId: formula.id,
   });
 });

@@ -34,7 +34,7 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
     subjectId: getFirstValue(rawSearchParams.subjectId),
     chapterId: getFirstValue(rawSearchParams.chapterId),
     solved: getFirstValue(rawSearchParams.solved),
-    compose: getFirstValue(rawSearchParams.compose)
+    compose: getFirstValue(rawSearchParams.compose),
   });
 
   const query = parsedSearchParams.success ? parsedSearchParams.data : { solved: "all" as const };
@@ -52,7 +52,7 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
     grade: selectedGrade,
     subjectId: selectedSubjectId,
     chapterId: selectedChapterId,
-    solved: selectedSolved
+    solved: selectedSolved,
   });
   const forumComposeHref = buildForumHref({
     q: searchQuery,
@@ -61,16 +61,16 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
     subjectId: selectedSubjectId,
     chapterId: selectedChapterId,
     solved: selectedSolved,
-    compose: "1"
+    compose: "1",
   });
   let forumFilters: Awaited<ReturnType<typeof getForumFilters>> = {
     boards: [],
     classes: [],
     subjects: [],
-    chapters: []
+    chapters: [],
   };
   let forumFeed: Awaited<ReturnType<typeof getForumThreads>> = {
-    threads: []
+    threads: [],
   };
   let forumError: string | null = null;
 
@@ -87,8 +87,8 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
           subjectId: selectedSubjectId,
           chapterId: selectedChapterId,
           solved: selectedSolved,
-          limit: initialThreadLimit
-        })
+          limit: initialThreadLimit,
+        }),
       ]);
     }
   } catch (error) {
@@ -104,10 +104,7 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
             stickyClassName="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
             title="Community Forum"
             subtitle="Ask questions, share hints, and help other students learn faster."
-            breadcrumbs={[
-              { label: "Dashboard", href: "/dashboard" },
-              { label: "Forum" },
-            ]}
+            breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Forum" }]}
           />
           <ErrorState
             title="Forum is temporarily unavailable"
@@ -155,7 +152,9 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
             boards: scopedBoards,
             classes: scopedClasses,
             subjects: scopedSubjects,
-            chapters: forumFilters.chapters.filter((chapter) => scopedSubjectIds.has(chapter.subjectId))
+            chapters: forumFilters.chapters.filter((chapter) =>
+              scopedSubjectIds.has(chapter.subjectId)
+            ),
           };
         })()
       : forumFilters;
@@ -169,10 +168,7 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
           stickyClassName="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
           title="Community Forum"
           subtitle="Ask questions, share hints, and help other students learn faster."
-          breadcrumbs={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Forum" },
-          ]}
+          breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Forum" }]}
         />
 
         {/* ── Three-Column Layout ── */}
@@ -187,7 +183,7 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
                 grade: selectedGrade,
                 subjectId: selectedSubjectId,
                 chapterId: selectedChapterId,
-                solved: selectedSolved
+                solved: selectedSolved,
               }}
             />
           </aside>
@@ -202,7 +198,10 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
               topContent={
                 session ? null : (
                   <p className="text-sm text-text-secondary">
-                    <Link href="/login" className="font-semibold text-accent-primary underline underline-offset-4 transition-colors hover:text-accent-primary-hover">
+                    <Link
+                      href="/login"
+                      className="font-semibold text-accent-primary underline underline-offset-4 transition-colors hover:text-accent-primary-hover"
+                    >
                       Sign in
                     </Link>{" "}
                     to create a thread. You can still browse all discussions below.
@@ -215,7 +214,7 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
                 grade: selectedGrade,
                 subjectId: selectedSubjectId,
                 chapterId: selectedChapterId,
-                solved: selectedSolved
+                solved: selectedSolved,
               }}
             />
 
@@ -230,14 +229,17 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
                   grade: selectedGrade,
                   subjectId: selectedSubjectId,
                   chapterId: selectedChapterId,
-                  solved: selectedSolved
+                  solved: selectedSolved,
                 }}
               />
             </div>
           </main>
 
           {/* ── Right Sidebar: Trending + Top Contributors ── */}
-          <aside className="hidden w-[200px] shrink-0 xl:block" aria-label="Trending and contributors">
+          <aside
+            className="hidden w-[200px] shrink-0 xl:block"
+            aria-label="Trending and contributors"
+          >
             <ForumTrendingSidebar threads={forumFeed.threads} />
           </aside>
         </div>
@@ -255,4 +257,3 @@ export default async function ForumFeedPage({ searchParams }: ForumFeedPageProps
     </AppShell>
   );
 }
-

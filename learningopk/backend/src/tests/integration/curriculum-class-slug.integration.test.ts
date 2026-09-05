@@ -18,12 +18,12 @@ const createCurriculumFixture = async () => {
     .insert(boards)
     .values({
       name: `Class Slug Board ${suffix}`,
-      slug: `class-slug-board-${suffix}`
+      slug: `class-slug-board-${suffix}`,
     })
     .returning({
       id: boards.id,
       name: boards.name,
-      slug: boards.slug
+      slug: boards.slug,
     });
   assert.ok(board, "Expected board fixture insert.");
 
@@ -32,13 +32,13 @@ const createCurriculumFixture = async () => {
     .values({
       boardId: board.id,
       name: "9th",
-      slug: `9th-${suffix}`
+      slug: `9th-${suffix}`,
     })
     .returning({
       id: boardClasses.id,
       boardId: boardClasses.boardId,
       name: boardClasses.name,
-      slug: boardClasses.slug
+      slug: boardClasses.slug,
     });
   assert.ok(boardClass, "Expected board class fixture insert.");
 
@@ -50,14 +50,14 @@ const createCurriculumFixture = async () => {
       grade: null,
       name: "Physics",
       slug: `physics-${suffix}`,
-      description: "Physics scoped by board class."
+      description: "Physics scoped by board class.",
     })
     .returning({
       id: subjects.id,
       boardId: subjects.boardId,
       boardClassId: subjects.boardClassId,
       name: subjects.name,
-      slug: subjects.slug
+      slug: subjects.slug,
     });
   assert.ok(subject, "Expected subject fixture insert.");
 
@@ -69,11 +69,11 @@ const createCurriculumFixture = async () => {
       title: "Motion",
       slug: `motion-${suffix}`,
       summary: "Published chapter for class slug route coverage.",
-      isPublished: true
+      isPublished: true,
     })
     .returning({
       id: chapters.id,
-      slug: chapters.slug
+      slug: chapters.slug,
     });
   assert.ok(chapter, "Expected chapter fixture insert.");
 
@@ -110,12 +110,14 @@ test("forum filters expose class metadata for subjects in board-class hierarchy"
   const response = await request(app).get("/api/forum/filters");
   assert.equal(response.status, 200);
 
-  const subject = (response.body?.subjects as Array<{
-    id: number;
-    slug: string;
-    classSlug?: string | null;
-    className?: string | null;
-  }>).find((entry) => entry.id === fixture.subject.id);
+  const subject = (
+    response.body?.subjects as Array<{
+      id: number;
+      slug: string;
+      classSlug?: string | null;
+      className?: string | null;
+    }>
+  ).find((entry) => entry.id === fixture.subject.id);
 
   assert.ok(subject, "Expected subject fixture in forum filters response.");
   assert.equal(subject?.classSlug, fixture.boardClass.slug);
@@ -130,7 +132,7 @@ test("sign-up rejects payloads missing required board and class", async () => {
   const response = await agent.post("/api/auth/sign-up/email").set("origin", APP_ORIGIN).send({
     name: "Missing Fields User",
     email,
-    password: TEST_PASSWORD
+    password: TEST_PASSWORD,
   });
 
   assert.ok(
@@ -138,5 +140,3 @@ test("sign-up rejects payloads missing required board and class", async () => {
     `Expected sign-up validation error for missing board/class, got ${response.status} ${JSON.stringify(response.body)}`
   );
 });
-
-

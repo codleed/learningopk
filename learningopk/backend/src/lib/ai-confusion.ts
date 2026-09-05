@@ -1,9 +1,7 @@
 import type { ChatMessage, TutorChapterContext } from "./mistral.js";
 
 export type ConfusionReason =
-  | "short_consecutive_messages"
-  | "identical_wrong_answers"
-  | "off_topic_keywords";
+  "short_consecutive_messages" | "identical_wrong_answers" | "off_topic_keywords";
 
 export type ConfusionDetectionResult = {
   triggered: boolean;
@@ -22,9 +20,15 @@ const OFF_TOPIC_PATTERNS = [
   /\bfootball\b/i,
   /\bmovie\b/i,
   /\bsong\b/i,
-  /\bgame\b/i
+  /\bgame\b/i,
 ];
-const WRONG_ANSWER_PATTERNS = [/not quite/i, /try again/i, /incorrect/i, /that's not correct/i, /wrong/i];
+const WRONG_ANSWER_PATTERNS = [
+  /not quite/i,
+  /try again/i,
+  /incorrect/i,
+  /that's not correct/i,
+  /wrong/i,
+];
 
 const normalize = (value: string): string => value.trim().replace(/\s+/g, " ").toLowerCase();
 
@@ -37,7 +41,10 @@ const getTrailingShortUserMessageCount = (messages: ChatMessage[]): number => {
       continue;
     }
 
-    if (message.content.trim().length >= 1 && message.content.trim().length <= SHORT_MESSAGE_MAX_LENGTH) {
+    if (
+      message.content.trim().length >= 1 &&
+      message.content.trim().length <= SHORT_MESSAGE_MAX_LENGTH
+    ) {
       count += 1;
       continue;
     }
@@ -63,7 +70,11 @@ const hasRepeatedWrongAnswer = (messages: ChatMessage[]): boolean => {
     ) {
       const first = normalize(firstUser.content);
       const second = normalize(secondUser.content);
-      if (first.length > 0 && first === second && WRONG_ANSWER_PATTERNS.some((pattern) => pattern.test(correction.content))) {
+      if (
+        first.length > 0 &&
+        first === second &&
+        WRONG_ANSWER_PATTERNS.some((pattern) => pattern.test(correction.content))
+      ) {
         return true;
       }
     }
@@ -81,7 +92,9 @@ const hasOffTopicKeyword = (messages: ChatMessage[]): boolean => {
   return OFF_TOPIC_PATTERNS.some((pattern) => pattern.test(latestUserMessage.content));
 };
 
-export const detectConfusionPattern = ({ messages }: DetectConfusionInput): ConfusionDetectionResult => {
+export const detectConfusionPattern = ({
+  messages,
+}: DetectConfusionInput): ConfusionDetectionResult => {
   const reasons: ConfusionReason[] = [];
 
   if (getTrailingShortUserMessageCount(messages) >= 3) {
@@ -98,11 +111,12 @@ export const detectConfusionPattern = ({ messages }: DetectConfusionInput): Conf
 
   return {
     triggered: reasons.length > 0,
-    reasons
+    reasons,
   };
 };
 
 export const buildProactiveHint = (topic: string): string =>
   `It looks like you're working through ${topic}. Would you like me to break this down differently?`;
 
-export const getConfusionTopicLabel = (context: TutorChapterContext): string => context.chapterTitle || context.subject || "this topic";
+export const getConfusionTopicLabel = (context: TutorChapterContext): string =>
+  context.chapterTitle || context.subject || "this topic";

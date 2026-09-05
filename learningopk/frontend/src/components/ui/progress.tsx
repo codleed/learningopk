@@ -41,7 +41,8 @@ const strokeColorMap: Record<string, string> = {
 
 /** Props for the LinearProgress component. */
 export interface LinearProgressProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children">,
+  extends
+    Omit<HTMLAttributes<HTMLDivElement>, "children">,
     VariantProps<typeof progressColorVariants> {
   /** Current value (0–100). */
   value: number;
@@ -76,29 +77,21 @@ export function LinearProgress({
   const percent = Math.min(100, Math.max(0, (value / max) * 100));
   const fill = fillColorMap[colorVariant ?? "primary"] ?? fillColorMap.primary;
 
-  const heightClass =
-    barSize === "sm" ? "h-1.5" : barSize === "lg" ? "h-4" : "h-2.5";
+  const heightClass = barSize === "sm" ? "h-1.5" : barSize === "lg" ? "h-4" : "h-2.5";
 
   return (
     <div className={cn("w-full", className)} {...props}>
-      {(label || showValue) ? (
+      {label || showValue ? (
         <div className="mb-1.5 flex items-center justify-between text-xs">
-          {label ? (
-            <span className="font-medium text-text-primary">{label}</span>
-          ) : <span />}
+          {label ? <span className="font-medium text-text-primary">{label}</span> : <span />}
           {showValue ? (
-            <span className="tabular-nums text-text-secondary">
-              {Math.round(percent)}%
-            </span>
+            <span className="tabular-nums text-text-secondary">{Math.round(percent)}%</span>
           ) : null}
         </div>
       ) : null}
 
       <div
-        className={cn(
-          "w-full overflow-hidden rounded-full bg-bg-subtle",
-          heightClass
-        )}
+        className={cn("w-full overflow-hidden rounded-full bg-bg-subtle", heightClass)}
         role="progressbar"
         aria-valuenow={value}
         aria-valuemin={0}
@@ -129,7 +122,8 @@ export function LinearProgress({
 
 /** Props for the CircularProgress component. */
 export interface CircularProgressProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children">,
+  extends
+    Omit<HTMLAttributes<HTMLDivElement>, "children">,
     VariantProps<typeof progressColorVariants> {
   /** Current value (0–100). */
   value: number;
@@ -209,7 +203,7 @@ export function CircularProgress({
         />
       </svg>
 
-      {(showValue || label) ? (
+      {showValue || label ? (
         <span className="absolute inset-0 flex items-center justify-center">
           <span className="text-sm font-semibold tabular-nums text-text-primary">
             {label ?? `${Math.round(percent)}%`}

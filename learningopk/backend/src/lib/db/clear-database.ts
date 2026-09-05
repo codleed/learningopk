@@ -47,7 +47,7 @@ export const CLEAR_TABLES = [
   "account",
   "session",
   "verification",
-  "user"
+  "user",
 ] as const;
 
 export function buildClearDatabaseSql(): string {

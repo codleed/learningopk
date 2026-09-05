@@ -34,7 +34,12 @@ const typeConfig = {
   fill_in_blanks: { label: "Fill in Blanks", variant: "info" as const },
 } as const;
 
-export function ExerciseItem({ exercise, isCompleted, onMarkComplete, onExpanded }: ExerciseItemProps) {
+export function ExerciseItem({
+  exercise,
+  isCompleted,
+  onMarkComplete,
+  onExpanded,
+}: ExerciseItemProps) {
   const difficulty = difficultyConfig[exercise.difficulty] ?? difficultyConfig.easy;
   const exerciseType = typeConfig[exercise.type] ?? typeConfig.short;
 
@@ -77,7 +82,10 @@ export function ExerciseItem({ exercise, isCompleted, onMarkComplete, onExpanded
           </div>
 
           {/* Question preview */}
-          <div className="text-sm leading-relaxed text-text-primary" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="text-sm leading-relaxed text-text-primary"
+            onClick={(e) => e.stopPropagation()}
+          >
             {exercise.type === "fill_in_blanks" ? (
               <FillInBlanksRenderer
                 question={exercise.question}

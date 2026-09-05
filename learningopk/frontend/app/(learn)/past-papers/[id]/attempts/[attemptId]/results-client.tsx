@@ -28,10 +28,16 @@ export function ResultsClient({ paperId, attemptId }: { paperId: string; attempt
     submittedAt: string | null;
   } | null>(null);
   const [exercises, setExercises] = useState<AttemptExercise[]>([]);
-  const [answerMap, setAnswerMap] = useState<Record<number, { answer: unknown; score: number | null; aiFeedback: string | null }>>({});
+  const [answerMap, setAnswerMap] = useState<
+    Record<number, { answer: unknown; score: number | null; aiFeedback: string | null }>
+  >({});
 
   useEffect(() => {
-    if (isNaN(paperIdNum)) { setError("Invalid paper ID"); setLoading(false); return; }
+    if (isNaN(paperIdNum)) {
+      setError("Invalid paper ID");
+      setLoading(false);
+      return;
+    }
 
     const load = async () => {
       try {
@@ -44,10 +50,13 @@ export function ResultsClient({ paperId, attemptId }: { paperId: string; attempt
           totalMarks: a.totalMarks,
           percentage: a.percentage,
           startedAt: a.startedAt,
-          submittedAt: a.submittedAt ?? null
+          submittedAt: a.submittedAt ?? null,
         });
         setExercises(data.exercises);
-        const map: Record<number, { answer: unknown; score: number | null; aiFeedback: string | null }> = {};
+        const map: Record<
+          number,
+          { answer: unknown; score: number | null; aiFeedback: string | null }
+        > = {};
         for (const a of data.answers) {
           map[a.exerciseId] = { answer: a.answer, score: a.score, aiFeedback: a.aiFeedback };
         }
@@ -90,7 +99,7 @@ export function ResultsClient({ paperId, attemptId }: { paperId: string; attempt
         breadcrumbs={[
           { label: "Learn", href: "/dashboard" },
           { label: "Past Papers", href: "/past-papers" },
-          { label: "Results" }
+          { label: "Results" },
         ]}
       />
 
@@ -100,10 +109,14 @@ export function ResultsClient({ paperId, attemptId }: { paperId: string; attempt
 
           <div className="text-center">
             <div className="flex items-center justify-center gap-2">
-              {passed
-                ? <Trophy className="h-5 w-5 text-accent-success" />
-                : <XCircle className="h-5 w-5 text-accent-danger" />}
-              <span className={`font-display text-xl font-bold ${passed ? "text-accent-success" : "text-accent-danger"}`}>
+              {passed ? (
+                <Trophy className="h-5 w-5 text-accent-success" />
+              ) : (
+                <XCircle className="h-5 w-5 text-accent-danger" />
+              )}
+              <span
+                className={`font-display text-xl font-bold ${passed ? "text-accent-success" : "text-accent-danger"}`}
+              >
                 {passed ? "Passed!" : "Keep practicing"}
               </span>
             </div>
@@ -114,10 +127,14 @@ export function ResultsClient({ paperId, attemptId }: { paperId: string; attempt
 
           <div className="flex gap-3">
             <Link href={`/past-papers/${paperId}/attempt`}>
-              <Button size="sm" iconLeft={<RefreshCw className="h-4 w-4" />}>Retry</Button>
+              <Button size="sm" iconLeft={<RefreshCw className="h-4 w-4" />}>
+                Retry
+              </Button>
             </Link>
             <Link href="/past-papers">
-              <Button variant="secondary" size="sm" iconLeft={<ArrowLeft className="h-4 w-4" />}>All Papers</Button>
+              <Button variant="secondary" size="sm" iconLeft={<ArrowLeft className="h-4 w-4" />}>
+                All Papers
+              </Button>
             </Link>
           </div>
         </div>
@@ -142,9 +159,15 @@ export function ResultsClient({ paperId, attemptId }: { paperId: string; attempt
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="primary" size="sm">Q{idx + 1}</Badge>
-                      <Badge variant="default" size="sm">{ex.type.replace(/_/g, " ")}</Badge>
-                      <span className={`text-sm font-semibold ${isCorrect ? "text-accent-success" : "text-accent-danger"}`}>
+                      <Badge variant="primary" size="sm">
+                        Q{idx + 1}
+                      </Badge>
+                      <Badge variant="default" size="sm">
+                        {ex.type.replace(/_/g, " ")}
+                      </Badge>
+                      <span
+                        className={`text-sm font-semibold ${isCorrect ? "text-accent-success" : "text-accent-danger"}`}
+                      >
                         {score}/{maxMarks}
                       </span>
                     </div>
@@ -167,9 +190,11 @@ export function ResultsClient({ paperId, attemptId }: { paperId: string; attempt
                     )}
                   </div>
                   <div>
-                    {isCorrect
-                      ? <Trophy className="h-5 w-5 text-accent-success" />
-                      : <XCircle className="h-5 w-5 text-accent-danger" />}
+                    {isCorrect ? (
+                      <Trophy className="h-5 w-5 text-accent-success" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-accent-danger" />
+                    )}
                   </div>
                 </div>
               </Card>

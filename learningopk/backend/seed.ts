@@ -42,20 +42,19 @@ import {
   userProgress,
   userProgressSubparts,
   users,
-  userStarredFormulas
+  userStarredFormulas,
 } from "./src/lib/db/schema.js";
 import {
   studyGroupActivities,
   studyGroupMembers,
-  studyGroups
+  studyGroups,
 } from "./src/lib/db/study-groups-schema.js";
 
 config();
 
 const pool = new Pool({
   connectionString:
-    process.env.DATABASE_URL ??
-    "postgresql://postgres:password@localhost:5433/learningo"
+    process.env.DATABASE_URL ?? "postgresql://postgres:password@localhost:5433/learningo",
 });
 
 const db = drizzle(pool, { schema });
@@ -78,7 +77,7 @@ async function seed() {
     .insert(boards)
     .values([
       { name: "Federal Board (FBISE)", slug: "fbise" },
-      { name: "BISE Lahore", slug: "bise-lahore" }
+      { name: "BISE Lahore", slug: "bise-lahore" },
     ])
     .returning();
 
@@ -87,7 +86,7 @@ async function seed() {
     .values([
       { boardId: fbiseBoard.id, name: "9th", slug: "9" },
       { boardId: fbiseBoard.id, name: "10th", slug: "10" },
-      { boardId: lahoreBoard.id, name: "9th", slug: "9" }
+      { boardId: lahoreBoard.id, name: "9th", slug: "9" },
     ])
     .returning();
 
@@ -102,7 +101,7 @@ async function seed() {
         slug: "physics",
         icon: "physics",
         description: "Conceptual physics with quizzes, quick revision, and exam pattern guidance.",
-        examDate: daysAhead(18)
+        examDate: daysAhead(18),
       },
       {
         boardId: fbiseBoard.id,
@@ -112,7 +111,7 @@ async function seed() {
         slug: "chemistry",
         icon: "chemistry",
         description: "Core chemistry concepts for grade 9 board prep.",
-        examDate: daysAhead(24)
+        examDate: daysAhead(24),
       },
       {
         boardId: fbiseBoard.id,
@@ -122,7 +121,7 @@ async function seed() {
         slug: "biology",
         icon: "biology",
         description: "Grade 10 biology content for dashboard and chapter routing coverage.",
-        examDate: daysAhead(30)
+        examDate: daysAhead(30),
       },
       {
         boardId: lahoreBoard.id,
@@ -132,8 +131,8 @@ async function seed() {
         slug: "mathematics",
         icon: "mathematics",
         description: "Lahore board mathematics content for board-scoped listings.",
-        examDate: daysAhead(27)
-      }
+        examDate: daysAhead(27),
+      },
     ])
     .returning();
 
@@ -146,7 +145,7 @@ async function seed() {
         subjectId: physics9.id,
         fileName: "fbise-9-physics-modern-seed.pdf",
         fileHash: "seed-physics-9-v2",
-        parserVersion: "seed-v2"
+        parserVersion: "seed-v2",
       },
       {
         boardId: fbiseBoard.id,
@@ -154,8 +153,8 @@ async function seed() {
         subjectId: chemistry9.id,
         fileName: "fbise-9-chemistry-modern-seed.pdf",
         fileHash: "seed-chemistry-9-v2",
-        parserVersion: "seed-v2"
-      }
+        parserVersion: "seed-v2",
+      },
     ])
     .returning();
 
@@ -169,7 +168,7 @@ async function seed() {
         slug: "physical-quantities-and-measurement",
         summary: "Units, significant figures, measuring tools, and precision fundamentals.",
         isPublished: true,
-        sourceId: physicsSource.id
+        sourceId: physicsSource.id,
       },
       {
         subjectId: physics9.id,
@@ -178,7 +177,7 @@ async function seed() {
         slug: "kinematics",
         summary: "Distance, displacement, speed, velocity, acceleration, and motion graphs.",
         isPublished: true,
-        sourceId: physicsSource.id
+        sourceId: physicsSource.id,
       },
       {
         subjectId: physics9.id,
@@ -187,7 +186,7 @@ async function seed() {
         slug: "dynamics",
         summary: "Force, inertia, momentum, and Newton's laws in everyday motion.",
         isPublished: true,
-        sourceId: physicsSource.id
+        sourceId: physicsSource.id,
       },
       {
         subjectId: chemistry9.id,
@@ -196,7 +195,7 @@ async function seed() {
         slug: "fundamentals-of-chemistry",
         summary: "Atoms, compounds, mixtures, and symbolic representation.",
         isPublished: true,
-        sourceId: chemistrySource.id
+        sourceId: chemistrySource.id,
       },
       {
         subjectId: biology10.id,
@@ -205,7 +204,7 @@ async function seed() {
         slug: "gaseous-exchange",
         summary: "Human and plant gas exchange systems with board-style examples.",
         isPublished: true,
-        sourceId: null
+        sourceId: null,
       },
       {
         subjectId: math9.id,
@@ -214,8 +213,8 @@ async function seed() {
         slug: "matrices-and-determinants",
         summary: "Introduction to matrices, determinants, and basic operations.",
         isPublished: true,
-        sourceId: null
-      }
+        sourceId: null,
+      },
     ])
     .returning();
 
@@ -227,90 +226,103 @@ async function seed() {
         chapterId: physicsCh1.id,
         orderIndex: 1,
         heading: "Physical quantities and SI units",
-        content: "Physical quantities are measurable properties. Use SI units consistently in numerical solutions."
+        content:
+          "Physical quantities are measurable properties. Use SI units consistently in numerical solutions.",
       },
       {
         chapterId: physicsCh1.id,
         orderIndex: 2,
         heading: "Accuracy, precision, and measurement error",
-        content: "Accuracy compares with the true value, while precision measures repeatability. Track absolute and percentage error."
+        content:
+          "Accuracy compares with the true value, while precision measures repeatability. Track absolute and percentage error.",
       },
       {
         chapterId: physicsCh1.id,
         orderIndex: 3,
         heading: "Significant figures and scientific notation",
-        content: "Keep the correct significant figures through calculations and present final answers in standard scientific notation."
+        content:
+          "Keep the correct significant figures through calculations and present final answers in standard scientific notation.",
       },
       {
         chapterId: physicsCh2.id,
         orderIndex: 1,
         heading: "Distance and displacement",
-        content: "Distance is scalar and displacement is vector. Always set direction before solving motion problems."
+        content:
+          "Distance is scalar and displacement is vector. Always set direction before solving motion problems.",
       },
       {
         chapterId: physicsCh2.id,
         orderIndex: 2,
         heading: "Velocity and acceleration",
-        content: "Use sign convention consistently for velocity and acceleration, especially in retardation cases."
+        content:
+          "Use sign convention consistently for velocity and acceleration, especially in retardation cases.",
       },
       {
         chapterId: physicsCh2.id,
         orderIndex: 3,
         heading: "Equations of motion and graph interpretation",
-        content: "Apply equations of motion only for constant acceleration and read slope/area correctly from motion graphs."
+        content:
+          "Apply equations of motion only for constant acceleration and read slope/area correctly from motion graphs.",
       },
       {
         chapterId: physicsCh3.id,
         orderIndex: 1,
         heading: "Force and Newton's laws",
-        content: "Newton's laws connect force, inertia, and acceleration. Start free-body analysis before equations."
+        content:
+          "Newton's laws connect force, inertia, and acceleration. Start free-body analysis before equations.",
       },
       {
         chapterId: physicsCh3.id,
         orderIndex: 2,
         heading: "Momentum and impulse",
-        content: "Momentum depends on mass and velocity. Impulse changes momentum over interaction time."
+        content:
+          "Momentum depends on mass and velocity. Impulse changes momentum over interaction time.",
       },
       {
         chapterId: chemistryCh1.id,
         orderIndex: 1,
         heading: "Atoms, molecules, elements, and compounds",
-        content: "Differentiate element vs compound clearly and support each definition with one textbook example."
+        content:
+          "Differentiate element vs compound clearly and support each definition with one textbook example.",
       },
       {
         chapterId: chemistryCh1.id,
         orderIndex: 2,
         heading: "Mixtures and separation",
-        content: "Identify mixture types and choose suitable separation methods based on physical properties."
+        content:
+          "Identify mixture types and choose suitable separation methods based on physical properties.",
       },
       {
         chapterId: biologyCh1.id,
         orderIndex: 1,
         heading: "Human respiratory system",
-        content: "Air pathway and gas exchange occur through alveoli with diffusion driven by concentration differences."
+        content:
+          "Air pathway and gas exchange occur through alveoli with diffusion driven by concentration differences.",
       },
       {
         chapterId: biologyCh1.id,
         orderIndex: 2,
         heading: "Plant gaseous exchange",
-        content: "Plants exchange gases through stomata, with rates changing between day and night conditions."
+        content:
+          "Plants exchange gases through stomata, with rates changing between day and night conditions.",
       },
       {
         chapterId: mathCh1.id,
         orderIndex: 1,
         heading: "Matrix basics",
-        content: "Represent data in rows and columns, then classify matrices by order and type."
+        content: "Represent data in rows and columns, then classify matrices by order and type.",
       },
       {
         chapterId: mathCh1.id,
         orderIndex: 2,
         heading: "Determinants and properties",
-        content: "Use determinant properties to simplify calculation and verify singular vs non-singular matrices."
-      }
+        content:
+          "Use determinant properties to simplify calculation and verify singular vs non-singular matrices.",
+      },
     ])
     .returning({
       id: chapterSubparts.id,
-      chapterId: chapterSubparts.chapterId
+      chapterId: chapterSubparts.chapterId,
     });
 
   for (const subpart of insertedChapterSubparts) {
@@ -327,33 +339,46 @@ async function seed() {
   await db.insert(revisionNotes).values([
     {
       chapterId: physicsCh1.id,
-      keyFormulas: ["Least\\ Count = \\frac{1\\ MSD}{\\text{number of vernier divisions}}", "Error\\% = \\frac{\\Delta x}{x} \\times 100"],
+      keyFormulas: [
+        "Least\\ Count = \\frac{1\\ MSD}{\\text{number of vernier divisions}}",
+        "Error\\% = \\frac{\\Delta x}{x} \\times 100",
+      ],
       keyDefinitions: [
         { term: "Accuracy", definition: "Closeness of a measured value to the true value." },
-        { term: "Precision", definition: "How consistently repeated measurements agree with each other." }
+        {
+          term: "Precision",
+          definition: "How consistently repeated measurements agree with each other.",
+        },
       ],
-      commonMistakes: "Confusing accuracy with precision\nDropping significant zeros in final answers",
-      examTips: "Always write the SI unit with the answer\nMention least count before instrument-based calculations"
+      commonMistakes:
+        "Confusing accuracy with precision\nDropping significant zeros in final answers",
+      examTips:
+        "Always write the SI unit with the answer\nMention least count before instrument-based calculations",
     },
     {
       chapterId: physicsCh2.id,
       keyFormulas: ["v = u + at", "s = ut + \\frac{1}{2}at^2", "v^2 = u^2 + 2as"],
       keyDefinitions: [
-        { term: "Displacement", definition: "Shortest directed distance between starting and ending point." },
-        { term: "Acceleration", definition: "Rate of change of velocity with time." }
+        {
+          term: "Displacement",
+          definition: "Shortest directed distance between starting and ending point.",
+        },
+        { term: "Acceleration", definition: "Rate of change of velocity with time." },
       ],
-      commonMistakes: "Using speed where velocity is required\nForgetting sign conventions in retardation problems",
-      examTips: "Pick a positive direction first\nRead graph axes carefully before taking slope or area"
+      commonMistakes:
+        "Using speed where velocity is required\nForgetting sign conventions in retardation problems",
+      examTips:
+        "Pick a positive direction first\nRead graph axes carefully before taking slope or area",
     },
     {
       chapterId: chemistryCh1.id,
       keyFormulas: [],
       keyDefinitions: [
-        { term: "Atom", definition: "Smallest particle of an element that retains its identity." }
+        { term: "Atom", definition: "Smallest particle of an element that retains its identity." },
       ],
       commonMistakes: "Mixing up atoms, molecules, and ions",
-      examTips: "State one example whenever you define an element or compound"
-    }
+      examTips: "State one example whenever you define an element or compound",
+    },
   ]);
 
   await db.insert(exercises).values([
@@ -363,7 +388,7 @@ async function seed() {
       question: "Define physical quantities and write two examples.",
       solution: "Physical quantities are measurable properties such as length and mass.",
       difficulty: "easy",
-      type: "short"
+      type: "short",
     },
     {
       chapterId: physicsCh1.id,
@@ -371,7 +396,7 @@ async function seed() {
       question: "A screw gauge has pitch 1 mm and 100 divisions. Find its least count.",
       solution: "Least count = 1 mm / 100 = 0.01 mm.",
       difficulty: "medium",
-      type: "numerical"
+      type: "numerical",
     },
     {
       chapterId: physicsCh2.id,
@@ -379,7 +404,7 @@ async function seed() {
       question: "Differentiate between distance and displacement.",
       solution: "Distance is scalar path length while displacement is the directed shortest path.",
       difficulty: "easy",
-      type: "short"
+      type: "short",
     },
     {
       chapterId: physicsCh2.id,
@@ -387,7 +412,7 @@ async function seed() {
       question: "A car starts from rest with acceleration 2 m/s^2. Find velocity after 5 s.",
       solution: "Using v = u + at, velocity = 0 + 2 x 5 = 10 m/s.",
       difficulty: "medium",
-      type: "numerical"
+      type: "numerical",
     },
     {
       chapterId: physicsCh3.id,
@@ -395,43 +420,121 @@ async function seed() {
       question: "State Newton's second law of motion.",
       solution: "Force equals rate of change of momentum and acts in that direction.",
       difficulty: "easy",
-      type: "short"
+      type: "short",
     },
     {
       chapterId: chemistryCh1.id,
       exerciseNumber: "1.1",
       question: "What is the difference between an element and a compound?",
-      solution: "An element has one type of atom; a compound has two or more elements chemically combined.",
+      solution:
+        "An element has one type of atom; a compound has two or more elements chemically combined.",
       difficulty: "easy",
-      type: "short"
-    }
+      type: "short",
+    },
   ]);
 
   const [p1f1, p1f2, p1f3, p2f1, p2f2, p3f1, c1f1, c1f2] = await db
     .insert(flashcards)
     .values([
-      { chapterId: physicsCh1.id, front: "What is a physical quantity?", back: "A measurable property of nature.", orderIndex: 1 },
-      { chapterId: physicsCh1.id, front: "Define least count.", back: "The smallest reading an instrument can reliably measure.", orderIndex: 2 },
-      { chapterId: physicsCh1.id, front: "What are significant figures?", back: "Digits that carry meaning in a measured value.", orderIndex: 3 },
-      { chapterId: physicsCh2.id, front: "Write the first equation of motion.", back: "v = u + at", orderIndex: 1 },
-      { chapterId: physicsCh2.id, front: "Displacement is scalar or vector?", back: "Vector quantity.", orderIndex: 2 },
-      { chapterId: physicsCh3.id, front: "State Newton's third law.", back: "For every action there is an equal and opposite reaction.", orderIndex: 1 },
-      { chapterId: chemistryCh1.id, front: "What is an atom?", back: "The smallest unit of an element.", orderIndex: 1 },
-      { chapterId: chemistryCh1.id, front: "What is a compound?", back: "A pure substance made from chemically combined elements.", orderIndex: 2 }
+      {
+        chapterId: physicsCh1.id,
+        front: "What is a physical quantity?",
+        back: "A measurable property of nature.",
+        orderIndex: 1,
+      },
+      {
+        chapterId: physicsCh1.id,
+        front: "Define least count.",
+        back: "The smallest reading an instrument can reliably measure.",
+        orderIndex: 2,
+      },
+      {
+        chapterId: physicsCh1.id,
+        front: "What are significant figures?",
+        back: "Digits that carry meaning in a measured value.",
+        orderIndex: 3,
+      },
+      {
+        chapterId: physicsCh2.id,
+        front: "Write the first equation of motion.",
+        back: "v = u + at",
+        orderIndex: 1,
+      },
+      {
+        chapterId: physicsCh2.id,
+        front: "Displacement is scalar or vector?",
+        back: "Vector quantity.",
+        orderIndex: 2,
+      },
+      {
+        chapterId: physicsCh3.id,
+        front: "State Newton's third law.",
+        back: "For every action there is an equal and opposite reaction.",
+        orderIndex: 1,
+      },
+      {
+        chapterId: chemistryCh1.id,
+        front: "What is an atom?",
+        back: "The smallest unit of an element.",
+        orderIndex: 1,
+      },
+      {
+        chapterId: chemistryCh1.id,
+        front: "What is a compound?",
+        back: "A pure substance made from chemically combined elements.",
+        orderIndex: 2,
+      },
     ])
     .returning();
 
-  const [physicsQuiz1, physicsQuiz2, physicsQuiz3, chemistryQuiz1, mockQuiz2023, mockQuiz2024] = await db
-    .insert(quizzes)
-    .values([
-      { chapterId: physicsCh1.id, title: "Chapter 1 Quiz - Measurement", durationMinutes: 20, totalMarks: 4, type: "chapter_quiz" },
-      { chapterId: physicsCh2.id, title: "Chapter 2 Quiz - Kinematics", durationMinutes: 20, totalMarks: 4, type: "chapter_quiz" },
-      { chapterId: physicsCh3.id, title: "Chapter 3 Quiz - Dynamics", durationMinutes: 20, totalMarks: 4, type: "chapter_quiz" },
-      { chapterId: chemistryCh1.id, title: "Chapter 1 Quiz - Fundamentals", durationMinutes: 15, totalMarks: 3, type: "chapter_quiz" },
-      { chapterId: physicsCh2.id, title: "Physics Grade 9 Mock Exam 2023", durationMinutes: 90, totalMarks: 6, type: "mock_exam" },
-      { chapterId: physicsCh3.id, title: "Physics Grade 9 Mock Exam 2024", durationMinutes: 90, totalMarks: 6, type: "mock_exam" }
-    ])
-    .returning();
+  const [physicsQuiz1, physicsQuiz2, physicsQuiz3, chemistryQuiz1, mockQuiz2023, mockQuiz2024] =
+    await db
+      .insert(quizzes)
+      .values([
+        {
+          chapterId: physicsCh1.id,
+          title: "Chapter 1 Quiz - Measurement",
+          durationMinutes: 20,
+          totalMarks: 4,
+          type: "chapter_quiz",
+        },
+        {
+          chapterId: physicsCh2.id,
+          title: "Chapter 2 Quiz - Kinematics",
+          durationMinutes: 20,
+          totalMarks: 4,
+          type: "chapter_quiz",
+        },
+        {
+          chapterId: physicsCh3.id,
+          title: "Chapter 3 Quiz - Dynamics",
+          durationMinutes: 20,
+          totalMarks: 4,
+          type: "chapter_quiz",
+        },
+        {
+          chapterId: chemistryCh1.id,
+          title: "Chapter 1 Quiz - Fundamentals",
+          durationMinutes: 15,
+          totalMarks: 3,
+          type: "chapter_quiz",
+        },
+        {
+          chapterId: physicsCh2.id,
+          title: "Physics Grade 9 Mock Exam 2023",
+          durationMinutes: 90,
+          totalMarks: 6,
+          type: "mock_exam",
+        },
+        {
+          chapterId: physicsCh3.id,
+          title: "Physics Grade 9 Mock Exam 2024",
+          durationMinutes: 90,
+          totalMarks: 6,
+          type: "mock_exam",
+        },
+      ])
+      .returning();
 
   const [q1a, q1b, q1c, q1d, q2a, q2b, q2c, q2d] = await db
     .insert(quizQuestions)
@@ -446,7 +549,7 @@ async function seed() {
         optionD: "Watt",
         correctOption: "b",
         explanation: "Kilogram is a base SI unit.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: physicsQuiz1.id,
@@ -458,7 +561,7 @@ async function seed() {
         optionD: "0.01 m",
         correctOption: "c",
         explanation: "Standard vernier caliper least count is 0.1 mm.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: physicsQuiz1.id,
@@ -470,7 +573,7 @@ async function seed() {
         optionD: "Reading in meters only",
         correctOption: "a",
         explanation: "Accuracy is closeness to the true value.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: physicsQuiz1.id,
@@ -482,7 +585,7 @@ async function seed() {
         optionD: "No error",
         correctOption: "b",
         explanation: "Zero error is systematic.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: physicsQuiz2.id,
@@ -494,7 +597,7 @@ async function seed() {
         optionD: "Graph",
         correctOption: "b",
         explanation: "Displacement has magnitude and direction.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: physicsQuiz2.id,
@@ -506,7 +609,7 @@ async function seed() {
         optionD: "12 m/s",
         correctOption: "c",
         explanation: "v = 0 + 2 x 5 = 10 m/s.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: physicsQuiz2.id,
@@ -518,7 +621,7 @@ async function seed() {
         optionD: "Mass",
         correctOption: "b",
         explanation: "Slope of a v-t graph gives acceleration.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: physicsQuiz2.id,
@@ -530,7 +633,7 @@ async function seed() {
         optionD: "a = uv/s",
         correctOption: "a",
         explanation: "v = u + at is the first equation of motion.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: physicsQuiz3.id,
@@ -542,7 +645,7 @@ async function seed() {
         optionD: "Watt",
         correctOption: "c",
         explanation: "Force is measured in newtons.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: physicsQuiz3.id,
@@ -554,7 +657,7 @@ async function seed() {
         optionD: "Energy",
         correctOption: "b",
         explanation: "Newton's first law is the law of inertia.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: physicsQuiz3.id,
@@ -566,7 +669,7 @@ async function seed() {
         optionD: "weight x distance",
         correctOption: "a",
         explanation: "Momentum is mass multiplied by velocity.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: physicsQuiz3.id,
@@ -578,7 +681,7 @@ async function seed() {
         optionD: "Law of gravitation",
         correctOption: "c",
         explanation: "That statement is Newton's third law.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: chemistryQuiz1.id,
@@ -590,7 +693,7 @@ async function seed() {
         optionD: "Only metals",
         correctOption: "b",
         explanation: "A compound contains chemically combined elements.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: chemistryQuiz1.id,
@@ -602,7 +705,7 @@ async function seed() {
         optionD: "Solution",
         correctOption: "c",
         explanation: "Atom is the smallest particle of an element.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: chemistryQuiz1.id,
@@ -614,7 +717,7 @@ async function seed() {
         optionD: "Molecule",
         correctOption: "b",
         explanation: "Air is a mixture of gases.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: mockQuiz2023.id,
@@ -626,7 +729,7 @@ async function seed() {
         optionD: "Spring balance",
         correctOption: "b",
         explanation: "A screw gauge measures small diameters accurately.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: mockQuiz2023.id,
@@ -638,7 +741,7 @@ async function seed() {
         optionD: "Density",
         correctOption: "a",
         explanation: "Area under v-t graph gives displacement.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: mockQuiz2023.id,
@@ -650,7 +753,7 @@ async function seed() {
         optionD: "Mass",
         correctOption: "c",
         explanation: "Velocity is vector.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: mockQuiz2023.id,
@@ -662,7 +765,7 @@ async function seed() {
         optionD: "m + a",
         correctOption: "b",
         explanation: "Force equals mass times acceleration.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: mockQuiz2023.id,
@@ -674,7 +777,7 @@ async function seed() {
         optionD: "m/s^2",
         correctOption: "a",
         explanation: "Momentum unit is kg m/s.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: mockQuiz2023.id,
@@ -686,7 +789,7 @@ async function seed() {
         optionD: "Seat number",
         correctOption: "a",
         explanation: "Precision depends strongly on least count.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: mockQuiz2024.id,
@@ -698,7 +801,7 @@ async function seed() {
         optionD: "0.45 x 10^-4",
         correctOption: "a",
         explanation: "Correct scientific notation is 4.5 x 10^-4.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: mockQuiz2024.id,
@@ -710,7 +813,7 @@ async function seed() {
         optionD: "p = mv",
         correctOption: "a",
         explanation: "The second equation of motion is s = ut + 1/2at^2.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: mockQuiz2024.id,
@@ -722,7 +825,7 @@ async function seed() {
         optionD: "Least count",
         correctOption: "b",
         explanation: "Direction changes continuously in circular motion.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: mockQuiz2024.id,
@@ -734,7 +837,7 @@ async function seed() {
         optionD: "Area",
         correctOption: "b",
         explanation: "Inertia depends on mass.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: mockQuiz2024.id,
@@ -746,7 +849,7 @@ async function seed() {
         optionD: "Current",
         correctOption: "b",
         explanation: "Force is proportional to acceleration for a given mass.",
-        marks: 1
+        marks: 1,
       },
       {
         quizId: mockQuiz2024.id,
@@ -758,8 +861,8 @@ async function seed() {
         optionD: "Force",
         correctOption: "a",
         explanation: "A measuring cylinder measures liquid volume.",
-        marks: 1
-      }
+        marks: 1,
+      },
     ])
     .returning();
 
@@ -772,7 +875,7 @@ async function seed() {
       title: "Physics Grade 9 Annual Mock Exam",
       year: 2023,
       durationMinutes: 90,
-      totalMarks: 6
+      totalMarks: 6,
     },
     {
       boardId: fbiseBoard.id,
@@ -782,8 +885,8 @@ async function seed() {
       title: "Physics Grade 9 Send-Up Mock Exam",
       year: 2024,
       durationMinutes: 90,
-      totalMarks: 6
-    }
+      totalMarks: 6,
+    },
   ]);
 
   await db.insert(examAnalysis).values([
@@ -793,7 +896,7 @@ async function seed() {
       chapterId: physicsCh1.id,
       occurrenceCount: 2,
       avgMarks: 2,
-      lastSeenYear: 2024
+      lastSeenYear: 2024,
     },
     {
       boardId: fbiseBoard.id,
@@ -801,7 +904,7 @@ async function seed() {
       chapterId: physicsCh2.id,
       occurrenceCount: 2,
       avgMarks: 2,
-      lastSeenYear: 2024
+      lastSeenYear: 2024,
     },
     {
       boardId: fbiseBoard.id,
@@ -809,90 +912,121 @@ async function seed() {
       chapterId: physicsCh3.id,
       occurrenceCount: 2,
       avgMarks: 2,
-      lastSeenYear: 2024
-    }
+      lastSeenYear: 2024,
+    },
   ]);
 
-  const [adminUser, moderatorUser, studentAyesha, studentBilal, studentHina, suspendedUser] = await db
-    .insert(users)
-    .values([
-      {
-        id: "user_admin_001",
-        name: "Admin User",
-        email: "admin@example.com",
-        emailVerified: true,
-        role: "admin",
-        degree: "M.Ed",
-        board: "fbise",
-        xp: 850,
-        level: 3
-      },
-      {
-        id: "user_mod_001",
-        name: "Moderator User",
-        email: "moderator@example.com",
-        emailVerified: true,
-        role: "moderator",
-        board: "fbise",
-        xp: 200,
-        level: 1
-      },
-      {
-        id: "user_student_001",
-        name: "Ayesha Khan",
-        email: "ayesha.khan@example.com",
-        emailVerified: true,
-        role: "student",
-        class: "9",
-        board: "fbise",
-        xp: 420,
-        level: 2
-      },
-      {
-        id: "user_student_002",
-        name: "Bilal Ahmed",
-        email: "bilal.ahmed@example.com",
-        emailVerified: true,
-        role: "student",
-        class: "9",
-        board: "fbise",
-        xp: 185,
-        level: 1,
-        streakFreezeUsedAt: daysAgo(9)
-      },
-      {
-        id: "user_student_003",
-        name: "Hina Tariq",
-        email: "hina.tariq@example.com",
-        emailVerified: true,
-        role: "student",
-        class: "10",
-        board: "fbise",
-        xp: 70,
-        level: 0
-      },
-      {
-        id: "user_student_004",
-        name: "Omar Saeed",
-        email: "omar.saeed@example.com",
-        emailVerified: true,
-        role: "student",
-        class: "10",
-        board: "fbise",
-        status: "suspended",
-        suspendedReason: "Seeded suspended account for admin lifecycle coverage.",
-        suspendedBy: "user_admin_001"
-      }
-    ])
-    .returning();
+  const [adminUser, moderatorUser, studentAyesha, studentBilal, studentHina, suspendedUser] =
+    await db
+      .insert(users)
+      .values([
+        {
+          id: "user_admin_001",
+          name: "Admin User",
+          email: "admin@example.com",
+          emailVerified: true,
+          role: "admin",
+          degree: "M.Ed",
+          board: "fbise",
+          xp: 850,
+          level: 3,
+        },
+        {
+          id: "user_mod_001",
+          name: "Moderator User",
+          email: "moderator@example.com",
+          emailVerified: true,
+          role: "moderator",
+          board: "fbise",
+          xp: 200,
+          level: 1,
+        },
+        {
+          id: "user_student_001",
+          name: "Ayesha Khan",
+          email: "ayesha.khan@example.com",
+          emailVerified: true,
+          role: "student",
+          class: "9",
+          board: "fbise",
+          xp: 420,
+          level: 2,
+        },
+        {
+          id: "user_student_002",
+          name: "Bilal Ahmed",
+          email: "bilal.ahmed@example.com",
+          emailVerified: true,
+          role: "student",
+          class: "9",
+          board: "fbise",
+          xp: 185,
+          level: 1,
+          streakFreezeUsedAt: daysAgo(9),
+        },
+        {
+          id: "user_student_003",
+          name: "Hina Tariq",
+          email: "hina.tariq@example.com",
+          emailVerified: true,
+          role: "student",
+          class: "10",
+          board: "fbise",
+          xp: 70,
+          level: 0,
+        },
+        {
+          id: "user_student_004",
+          name: "Omar Saeed",
+          email: "omar.saeed@example.com",
+          emailVerified: true,
+          role: "student",
+          class: "10",
+          board: "fbise",
+          status: "suspended",
+          suspendedReason: "Seeded suspended account for admin lifecycle coverage.",
+          suspendedBy: "user_admin_001",
+        },
+      ])
+      .returning();
 
   const passwordHash = await hashPassword("password");
   await db.insert(accounts).values([
-    { id: "account_admin_001", accountId: adminUser.id, providerId: "credential", userId: adminUser.id, password: passwordHash },
-    { id: "account_mod_001", accountId: moderatorUser.id, providerId: "credential", userId: moderatorUser.id, password: passwordHash },
-    { id: "account_student_001", accountId: studentAyesha.id, providerId: "credential", userId: studentAyesha.id, password: passwordHash },
-    { id: "account_student_002", accountId: studentBilal.id, providerId: "credential", userId: studentBilal.id, password: passwordHash },
-    { id: "account_student_003", accountId: studentHina.id, providerId: "credential", userId: studentHina.id, password: passwordHash }
+    {
+      id: "account_admin_001",
+      accountId: adminUser.id,
+      providerId: "credential",
+      userId: adminUser.id,
+      password: passwordHash,
+    },
+    {
+      id: "account_mod_001",
+      accountId: moderatorUser.id,
+      providerId: "credential",
+      userId: moderatorUser.id,
+      password: passwordHash,
+    },
+    {
+      id: "account_student_001",
+      accountId: studentAyesha.id,
+      providerId: "credential",
+      userId: studentAyesha.id,
+      password: passwordHash,
+    },
+    {
+      id: "account_student_002",
+      accountId: studentBilal.id,
+      providerId: "credential",
+      userId: studentBilal.id,
+      password: passwordHash,
+    },
+    {
+      id: "account_student_003",
+      accountId: studentHina.id,
+      providerId: "credential",
+      userId: studentHina.id,
+      password: passwordHash,
+    },
   ]);
 
   const [formulaVelocity, formulaAcceleration, formulaForce, formulaDensity] = await db
@@ -907,9 +1041,9 @@ async function seed() {
         variables: [
           { symbol: "v", meaning: "velocity" },
           { symbol: "s", meaning: "displacement" },
-          { symbol: "t", meaning: "time" }
+          { symbol: "t", meaning: "time" },
         ],
-        tags: ["motion", "average"]
+        tags: ["motion", "average"],
       },
       {
         subjectId: physics9.id,
@@ -920,9 +1054,9 @@ async function seed() {
         variables: [
           { symbol: "a", meaning: "acceleration" },
           { symbol: "u", meaning: "initial velocity" },
-          { symbol: "v", meaning: "final velocity" }
+          { symbol: "v", meaning: "final velocity" },
         ],
-        tags: ["motion", "graph"]
+        tags: ["motion", "graph"],
       },
       {
         subjectId: physics9.id,
@@ -933,9 +1067,9 @@ async function seed() {
         variables: [
           { symbol: "F", meaning: "force" },
           { symbol: "m", meaning: "mass" },
-          { symbol: "a", meaning: "acceleration" }
+          { symbol: "a", meaning: "acceleration" },
         ],
-        tags: ["newton", "dynamics"]
+        tags: ["newton", "dynamics"],
       },
       {
         subjectId: chemistry9.id,
@@ -946,27 +1080,35 @@ async function seed() {
         variables: [
           { symbol: "\\rho", meaning: "density" },
           { symbol: "m", meaning: "mass" },
-          { symbol: "V", meaning: "volume" }
+          { symbol: "V", meaning: "volume" },
         ],
-        tags: ["matter", "measurement"]
-      }
+        tags: ["matter", "measurement"],
+      },
     ])
     .returning();
 
   await db.insert(userStarredFormulas).values([
     { userId: studentAyesha.id, formulaId: formulaVelocity.id },
     { userId: studentAyesha.id, formulaId: formulaForce.id },
-    { userId: studentBilal.id, formulaId: formulaAcceleration.id }
+    { userId: studentBilal.id, formulaId: formulaAcceleration.id },
   ]);
 
   await db.insert(formulaAccessEvents).values([
     { userId: studentAyesha.id, formulaId: formulaVelocity.id, accessedAt: daysAgo(1, 6) },
     { userId: studentAyesha.id, formulaId: formulaVelocity.id, accessedAt: daysAgo(0, 7) },
     { userId: studentAyesha.id, formulaId: formulaForce.id, accessedAt: daysAgo(2, 8) },
-    { userId: studentBilal.id, formulaId: formulaAcceleration.id, accessedAt: daysAgo(0, 10) }
+    { userId: studentBilal.id, formulaId: formulaAcceleration.id, accessedAt: daysAgo(0, 10) },
   ]);
 
-  const [ayeshaQuiz1, ayeshaQuiz2Attempt1, ayeshaQuiz2Attempt2, ayeshaMock2023, bilalQuiz1, bilalQuiz2, bilalMock2024] = await db
+  const [
+    ayeshaQuiz1,
+    ayeshaQuiz2Attempt1,
+    ayeshaQuiz2Attempt2,
+    ayeshaMock2023,
+    bilalQuiz1,
+    bilalQuiz2,
+    bilalMock2024,
+  ] = await db
     .insert(quizAttempts)
     .values([
       {
@@ -977,12 +1119,12 @@ async function seed() {
           [String(q1a.id)]: "b",
           [String(q1b.id)]: "c",
           [String(q1c.id)]: "a",
-          [String(q1d.id)]: "b"
+          [String(q1d.id)]: "b",
         },
         score: 4,
         totalMarks: 4,
         startedAt: daysAgo(4, 9),
-        completedAt: daysAgo(4, 9)
+        completedAt: daysAgo(4, 9),
       },
       {
         userId: studentAyesha.id,
@@ -992,12 +1134,12 @@ async function seed() {
           [String(q2a.id)]: "a",
           [String(q2b.id)]: "a",
           [String(q2c.id)]: "c",
-          [String(q2d.id)]: "b"
+          [String(q2d.id)]: "b",
         },
         score: 1,
         totalMarks: 4,
         startedAt: daysAgo(3, 8),
-        completedAt: daysAgo(3, 8)
+        completedAt: daysAgo(3, 8),
       },
       {
         userId: studentAyesha.id,
@@ -1007,12 +1149,12 @@ async function seed() {
           [String(q2a.id)]: "b",
           [String(q2b.id)]: "c",
           [String(q2c.id)]: "b",
-          [String(q2d.id)]: "a"
+          [String(q2d.id)]: "a",
         },
         score: 4,
         totalMarks: 4,
         startedAt: daysAgo(1, 11),
-        completedAt: daysAgo(1, 11)
+        completedAt: daysAgo(1, 11),
       },
       {
         userId: studentAyesha.id,
@@ -1024,12 +1166,12 @@ async function seed() {
           "18": "c",
           "19": "b",
           "20": "a",
-          "21": "a"
+          "21": "a",
         },
         score: 6,
         totalMarks: 6,
         startedAt: daysAgo(2, 9),
-        completedAt: daysAgo(2, 10)
+        completedAt: daysAgo(2, 10),
       },
       {
         userId: studentBilal.id,
@@ -1039,12 +1181,12 @@ async function seed() {
           [String(q1a.id)]: "b",
           [String(q1b.id)]: "a",
           [String(q1c.id)]: "c",
-          [String(q1d.id)]: "b"
+          [String(q1d.id)]: "b",
         },
         score: 2,
         totalMarks: 4,
         startedAt: daysAgo(5, 7),
-        completedAt: daysAgo(5, 7)
+        completedAt: daysAgo(5, 7),
       },
       {
         userId: studentBilal.id,
@@ -1054,12 +1196,12 @@ async function seed() {
           [String(q2a.id)]: "a",
           [String(q2b.id)]: "a",
           [String(q2c.id)]: "a",
-          [String(q2d.id)]: "b"
+          [String(q2d.id)]: "b",
         },
         score: 0,
         totalMarks: 4,
         startedAt: daysAgo(1, 6),
-        completedAt: daysAgo(1, 6)
+        completedAt: daysAgo(1, 6),
       },
       {
         userId: studentBilal.id,
@@ -1071,13 +1213,13 @@ async function seed() {
           "24": "b",
           "25": "b",
           "26": "b",
-          "27": "a"
+          "27": "a",
         },
         score: 5,
         totalMarks: 6,
         startedAt: daysAgo(1, 14),
-        completedAt: daysAgo(1, 15)
-      }
+        completedAt: daysAgo(1, 15),
+      },
     ])
     .returning();
 
@@ -1088,8 +1230,8 @@ async function seed() {
       challengerAttemptId: ayeshaQuiz2Attempt2.id,
       recipientUserId: studentBilal.id,
       recipientAttemptId: bilalQuiz2.id,
-      expiresAt: daysAhead(2, 12)
-    }
+      expiresAt: daysAhead(2, 12),
+    },
   ]);
 
   await db.insert(userProgress).values([
@@ -1102,7 +1244,7 @@ async function seed() {
       exercisesViewed: 2,
       flashcardsCompleted: true,
       quizBestScore: 4,
-      quizAttemptsCount: 1
+      quizAttemptsCount: 1,
     },
     {
       userId: studentAyesha.id,
@@ -1113,7 +1255,7 @@ async function seed() {
       exercisesViewed: 2,
       flashcardsCompleted: false,
       quizBestScore: 4,
-      quizAttemptsCount: 2
+      quizAttemptsCount: 2,
     },
     {
       userId: studentAyesha.id,
@@ -1124,7 +1266,7 @@ async function seed() {
       exercisesViewed: 1,
       flashcardsCompleted: false,
       quizBestScore: 0,
-      quizAttemptsCount: 0
+      quizAttemptsCount: 0,
     },
     {
       userId: studentBilal.id,
@@ -1135,7 +1277,7 @@ async function seed() {
       exercisesViewed: 1,
       flashcardsCompleted: true,
       quizBestScore: 2,
-      quizAttemptsCount: 1
+      quizAttemptsCount: 1,
     },
     {
       userId: studentBilal.id,
@@ -1146,7 +1288,7 @@ async function seed() {
       exercisesViewed: 1,
       flashcardsCompleted: false,
       quizBestScore: 0,
-      quizAttemptsCount: 1
+      quizAttemptsCount: 1,
     },
     {
       userId: studentHina.id,
@@ -1157,8 +1299,8 @@ async function seed() {
       exercisesViewed: 1,
       flashcardsCompleted: false,
       quizBestScore: 0,
-      quizAttemptsCount: 0
-    }
+      quizAttemptsCount: 0,
+    },
   ]);
 
   const buildSubpartProgressRows = (
@@ -1171,17 +1313,49 @@ async function seed() {
       userId,
       chapterId,
       subpartId,
-      readAt
+      readAt,
     }));
 
-  await db.insert(userProgressSubparts).values([
-    ...buildSubpartProgressRows(studentAyesha.id, physicsCh1.id, daysAgo(4, 10), physicsCh1SubpartIds),
-    ...buildSubpartProgressRows(studentAyesha.id, physicsCh2.id, daysAgo(1, 12), physicsCh2SubpartIds),
-    ...buildSubpartProgressRows(studentAyesha.id, physicsCh3.id, daysAgo(0, 8), physicsCh3SubpartIds),
-    ...buildSubpartProgressRows(studentBilal.id, physicsCh1.id, daysAgo(5, 8), physicsCh1SubpartIds),
-    ...buildSubpartProgressRows(studentBilal.id, physicsCh2.id, daysAgo(1, 7), physicsCh2SubpartIds),
-    ...buildSubpartProgressRows(studentHina.id, biologyCh1.id, daysAgo(2, 9), biologyCh1SubpartIds)
-  ]);
+  await db
+    .insert(userProgressSubparts)
+    .values([
+      ...buildSubpartProgressRows(
+        studentAyesha.id,
+        physicsCh1.id,
+        daysAgo(4, 10),
+        physicsCh1SubpartIds
+      ),
+      ...buildSubpartProgressRows(
+        studentAyesha.id,
+        physicsCh2.id,
+        daysAgo(1, 12),
+        physicsCh2SubpartIds
+      ),
+      ...buildSubpartProgressRows(
+        studentAyesha.id,
+        physicsCh3.id,
+        daysAgo(0, 8),
+        physicsCh3SubpartIds
+      ),
+      ...buildSubpartProgressRows(
+        studentBilal.id,
+        physicsCh1.id,
+        daysAgo(5, 8),
+        physicsCh1SubpartIds
+      ),
+      ...buildSubpartProgressRows(
+        studentBilal.id,
+        physicsCh2.id,
+        daysAgo(1, 7),
+        physicsCh2SubpartIds
+      ),
+      ...buildSubpartProgressRows(
+        studentHina.id,
+        biologyCh1.id,
+        daysAgo(2, 9),
+        biologyCh1SubpartIds
+      ),
+    ]);
 
   await db.insert(flashcardReviews).values([
     {
@@ -1193,7 +1367,7 @@ async function seed() {
       nextReviewDate: daysAgo(0, 6),
       lastReviewedAt: daysAgo(1, 6),
       createdAt: daysAgo(3, 6),
-      updatedAt: daysAgo(1, 6)
+      updatedAt: daysAgo(1, 6),
     },
     {
       cardId: p2f1.id,
@@ -1204,7 +1378,7 @@ async function seed() {
       nextReviewDate: daysAhead(2, 7),
       lastReviewedAt: daysAgo(1, 7),
       createdAt: daysAgo(4, 7),
-      updatedAt: daysAgo(1, 7)
+      updatedAt: daysAgo(1, 7),
     },
     {
       cardId: p2f2.id,
@@ -1215,7 +1389,7 @@ async function seed() {
       nextReviewDate: daysAgo(0, 5),
       lastReviewedAt: daysAgo(1, 5),
       createdAt: daysAgo(2, 5),
-      updatedAt: daysAgo(1, 5)
+      updatedAt: daysAgo(1, 5),
     },
     {
       cardId: c1f1.id,
@@ -1226,8 +1400,8 @@ async function seed() {
       nextReviewDate: daysAhead(1, 9),
       lastReviewedAt: daysAgo(0, 9),
       createdAt: daysAgo(2, 9),
-      updatedAt: daysAgo(0, 9)
-    }
+      updatedAt: daysAgo(0, 9),
+    },
   ]);
 
   const [sessionAyesha] = await db
@@ -1238,8 +1412,8 @@ async function seed() {
         chapterId: physicsCh2.id,
         title: "Why does acceleration become negative?",
         createdAt: daysAgo(1, 13),
-        lastMessageAt: daysAgo(1, 13)
-      }
+        lastMessageAt: daysAgo(1, 13),
+      },
     ])
     .returning();
 
@@ -1248,14 +1422,15 @@ async function seed() {
       sessionId: sessionAyesha.id,
       role: "user",
       content: "Why is acceleration negative when velocity is decreasing?",
-      createdAt: daysAgo(1, 13)
+      createdAt: daysAgo(1, 13),
     },
     {
       sessionId: sessionAyesha.id,
       role: "assistant",
-      content: "It depends on your chosen positive direction. If acceleration acts opposite to positive motion, it becomes negative.",
-      createdAt: daysAgo(1, 13)
-    }
+      content:
+        "It depends on your chosen positive direction. If acceleration acts opposite to positive motion, it becomes negative.",
+      createdAt: daysAgo(1, 13),
+    },
   ]);
 
   await db.insert(aiUsageLogs).values([
@@ -1265,8 +1440,8 @@ async function seed() {
       model: "claude-sonnet-4-20250514",
       promptTokens: 52,
       completionTokens: 111,
-      createdAt: daysAgo(1, 13)
-    }
+      createdAt: daysAgo(1, 13),
+    },
   ]);
 
   await db.insert(aiContext).values([
@@ -1277,8 +1452,8 @@ async function seed() {
       preferredExplanationStyle: "visual",
       lastConceptsDiscussed: ["negative acceleration", "velocity-time graph"],
       updatedAt: daysAgo(0, 9),
-      createdAt: daysAgo(2, 9)
-    }
+      createdAt: daysAgo(2, 9),
+    },
   ]);
 
   await db.insert(aiConversationEvents).values([
@@ -1286,8 +1461,8 @@ async function seed() {
       sessionId: sessionAyesha.id,
       eventType: "quick-revision-opened",
       metadata: { chapterId: physicsCh2.id },
-      createdAt: daysAgo(1, 13)
-    }
+      createdAt: daysAgo(1, 13),
+    },
   ]);
 
   const [thread1, thread2] = await db
@@ -1303,7 +1478,7 @@ async function seed() {
         isSolved: true,
         views: 12,
         createdAt: daysAgo(2, 10),
-        updatedAt: daysAgo(2, 10)
+        updatedAt: daysAgo(2, 10),
       },
       {
         userId: studentBilal.id,
@@ -1315,8 +1490,8 @@ async function seed() {
         isSolved: false,
         views: 21,
         createdAt: daysAgo(3, 9),
-        updatedAt: daysAgo(3, 9)
-      }
+        updatedAt: daysAgo(3, 9),
+      },
     ])
     .returning();
 
@@ -1330,7 +1505,7 @@ async function seed() {
         isAcceptedAnswer: true,
         upvotes: 4,
         createdAt: daysAgo(2, 11),
-        updatedAt: daysAgo(2, 11)
+        updatedAt: daysAgo(2, 11),
       },
       {
         threadId: thread2.id,
@@ -1339,14 +1514,14 @@ async function seed() {
         isAcceptedAnswer: false,
         upvotes: 2,
         createdAt: daysAgo(3, 10),
-        updatedAt: daysAgo(3, 10)
-      }
+        updatedAt: daysAgo(3, 10),
+      },
     ])
     .returning();
 
   await db.insert(forumReplyVotes).values([
     { userId: studentAyesha.id, replyId: reply1.id, voteType: "upvote", createdAt: daysAgo(2, 11) },
-    { userId: studentBilal.id, replyId: reply2.id, voteType: "upvote", createdAt: daysAgo(3, 11) }
+    { userId: studentBilal.id, replyId: reply2.id, voteType: "upvote", createdAt: daysAgo(3, 11) },
   ]);
 
   await db.insert(moderationFlags).values([
@@ -1356,8 +1531,8 @@ async function seed() {
       targetLabel: thread2.title,
       reason: "Review seeded moderation queue",
       status: "open",
-      createdAt: daysAgo(1, 8)
-    }
+      createdAt: daysAgo(1, 8),
+    },
   ]);
 
   await db.insert(adminAuditLogs).values([
@@ -1369,8 +1544,8 @@ async function seed() {
       message: "Seeded modern chapter, formulas, and mock exam fixtures.",
       actorId: adminUser.id,
       actorName: adminUser.name,
-      createdAt: daysAgo(0, 7)
-    }
+      createdAt: daysAgo(0, 7),
+    },
   ]);
 
   await db.insert(adminSettings).values([
@@ -1379,33 +1554,34 @@ async function seed() {
       value: "false",
       description: "Controls Ramadan adjusted pacing.",
       updatedBy: adminUser.id,
-      updatedAt: daysAgo(0, 7)
+      updatedAt: daysAgo(0, 7),
     },
     {
       key: "ramadan_fasting_hours",
       value: "04:00-18:00",
       description: "Configured fasting hours for today's focus pacing.",
       updatedBy: adminUser.id,
-      updatedAt: daysAgo(0, 7)
+      updatedAt: daysAgo(0, 7),
     },
     {
       key: "forum_auto_lock_hours",
       value: "24",
       description: "Auto-lock inactive forum threads after N hours.",
       updatedBy: adminUser.id,
-      updatedAt: daysAgo(0, 7)
-    }
+      updatedAt: daysAgo(0, 7),
+    },
   ]);
 
   await db.insert(adminNotifications).values([
     {
       title: "Seed ready for manual QA",
-      message: "Current-feature fixtures loaded for dashboard, quick revision, formulas, and past papers.",
+      message:
+        "Current-feature fixtures loaded for dashboard, quick revision, formulas, and past papers.",
       audience: "admins",
       status: "sent",
       createdBy: adminUser.id,
-      createdAt: daysAgo(0, 7)
-    }
+      createdAt: daysAgo(0, 7),
+    },
   ]);
 
   await db.insert(streakWagers).values([
@@ -1418,7 +1594,7 @@ async function seed() {
       completedGoal: true,
       placedAt: daysAgo(1, 1),
       expiresAt: daysAgo(0, 1),
-      settledAt: daysAgo(0, 2)
+      settledAt: daysAgo(0, 2),
     },
     {
       userId: studentBilal.id,
@@ -1429,8 +1605,8 @@ async function seed() {
       completedGoal: false,
       placedAt: daysAgo(3, 1),
       expiresAt: daysAgo(2, 1),
-      settledAt: daysAgo(2, 2)
-    }
+      settledAt: daysAgo(2, 2),
+    },
   ]);
 
   await db.insert(userDailyMomentumGoals).values([
@@ -1440,8 +1616,8 @@ async function seed() {
       focusType: "weak_quiz",
       chapterId: physicsCh2.id,
       xpAwarded: 15,
-      completedAt: daysAgo(1, 18)
-    }
+      completedAt: daysAgo(1, 18),
+    },
   ]);
 
   const [studyGroup] = await db
@@ -1451,15 +1627,15 @@ async function seed() {
         name: "Physics Sprint Group",
         createdBy: studentAyesha.id,
         createdAt: daysAgo(4, 9),
-        updatedAt: daysAgo(0, 9)
-      }
+        updatedAt: daysAgo(0, 9),
+      },
     ])
     .returning();
 
   await db.insert(studyGroupMembers).values([
     { groupId: studyGroup.id, userId: studentAyesha.id, joinedAt: daysAgo(4, 9) },
     { groupId: studyGroup.id, userId: studentBilal.id, joinedAt: daysAgo(4, 9) },
-    { groupId: studyGroup.id, userId: studentHina.id, joinedAt: daysAgo(3, 8) }
+    { groupId: studyGroup.id, userId: studentHina.id, joinedAt: daysAgo(3, 8) },
   ]);
 
   await db.insert(studyGroupActivities).values([
@@ -1471,7 +1647,7 @@ async function seed() {
       chapterId: physicsCh2.id,
       quizAttemptId: ayeshaQuiz2Attempt2.id,
       metadata: { scorePercent: 100, previousBestPercent: 0 },
-      createdAt: daysAgo(1, 12)
+      createdAt: daysAgo(1, 12),
     },
     {
       groupId: studyGroup.id,
@@ -1479,8 +1655,8 @@ async function seed() {
       activityType: "chapter_completed",
       chapterId: physicsCh1.id,
       metadata: {},
-      createdAt: daysAgo(5, 8)
-    }
+      createdAt: daysAgo(5, 8),
+    },
   ]);
 
   console.log("Seed complete.");

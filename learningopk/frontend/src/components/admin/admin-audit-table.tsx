@@ -15,7 +15,9 @@ const scopeLabel = (scope: AdminAuditLogResponseEntry["scope"]) => {
 
 export function AdminAuditTable({ rows }: AdminAuditTableProps) {
   if (rows.length === 0) {
-    return <p className="text-sm text-muted-foreground">No audit logs match the current filters.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">No audit logs match the current filters.</p>
+    );
   }
 
   return (
@@ -35,7 +37,9 @@ export function AdminAuditTable({ rows }: AdminAuditTableProps) {
         <tbody className="divide-y divide-border">
           {rows.map((row) => (
             <tr key={row.id} data-testid="admin-audit-row">
-              <td className="px-3 py-2 text-foreground/90">{new Date(row.occurredAt).toLocaleString()}</td>
+              <td className="px-3 py-2 text-foreground/90">
+                {new Date(row.occurredAt).toLocaleString()}
+              </td>
               <td className="px-3 py-2 text-foreground/90">{scopeLabel(row.scope)}</td>
               <td className="px-3 py-2 text-foreground">{row.action}</td>
               <td className="px-3 py-2 text-foreground/90">{row.target}</td>
@@ -43,7 +47,9 @@ export function AdminAuditTable({ rows }: AdminAuditTableProps) {
                 <span
                   className={[
                     "rounded-full px-2 py-1 text-xs font-semibold",
-                    row.status === "success" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
+                    row.status === "success"
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-rose-100 text-rose-800",
                   ].join(" ")}
                 >
                   {row.status}
@@ -52,7 +58,9 @@ export function AdminAuditTable({ rows }: AdminAuditTableProps) {
               <td className="px-3 py-2 text-foreground/90">{row.actor.name}</td>
               <td className="px-3 py-2 text-foreground/90">
                 <details>
-                  <summary className="cursor-pointer select-none text-sm font-medium text-foreground">View message</summary>
+                  <summary className="cursor-pointer select-none text-sm font-medium text-foreground">
+                    View message
+                  </summary>
                   <p className="mt-1 text-sm text-muted-foreground">{row.message}</p>
                 </details>
               </td>

@@ -3,22 +3,26 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import {
-  AlertTriangle,
-  ChevronRight,
-  Shield,
-  ShieldAlert,
-  Sparkles,
-  Trophy,
-} from "lucide-react";
+import { AlertTriangle, ChevronRight, Shield, ShieldAlert, Sparkles, Trophy } from "lucide-react";
 
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogBody, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogBody,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
-import { placeStreakWager, recoverStreakWager, type DashboardSummaryResponse } from "@/lib/progress-api";
+import {
+  placeStreakWager,
+  recoverStreakWager,
+  type DashboardSummaryResponse,
+} from "@/lib/progress-api";
 import { getLevelDefinition, TIER_COLORS, LEVEL_DEFINITIONS } from "@/lib/gamification-types";
 import { cn } from "@/lib/utils";
 
@@ -72,8 +76,9 @@ function XpProgressSection({ xp }: { xp: XpInfo }) {
   const nextLevelDef = LEVEL_DEFINITIONS[xp.level + 1];
 
   // Calculate in-level progress
-  const xpInLevel = xp.xpInCurrentLevel ?? (xp.xp - levelDef.minXp);
-  const xpForLevel = xp.xpRequiredForLevel ?? (nextLevelDef ? nextLevelDef.minXp - levelDef.minXp : 1);
+  const xpInLevel = xp.xpInCurrentLevel ?? xp.xp - levelDef.minXp;
+  const xpForLevel =
+    xp.xpRequiredForLevel ?? (nextLevelDef ? nextLevelDef.minXp - levelDef.minXp : 1);
   const safeForLevel = Math.max(xpForLevel, 1);
   const percentage = Math.min((xpInLevel / safeForLevel) * 100, 100);
   const isMax = xp.isMaxLevel ?? !nextLevelDef;
@@ -91,15 +96,11 @@ function XpProgressSection({ xp }: { xp: XpInfo }) {
             <span className="text-xs font-medium text-text-muted">XP</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className={cn("text-xs font-semibold", tier.text)}>
-              {levelDef.name}
-            </span>
+            <span className={cn("text-xs font-semibold", tier.text)}>{levelDef.name}</span>
             {!isMax && nextLevelDef ? (
               <>
                 <ChevronRight className="h-3 w-3 text-text-muted" />
-                <span className="text-xs text-text-muted">
-                  {nextLevelDef.name}
-                </span>
+                <span className="text-xs text-text-muted">{nextLevelDef.name}</span>
               </>
             ) : (
               <span className="text-xs text-text-muted">Max Level</span>
@@ -120,8 +121,12 @@ function XpProgressSection({ xp }: { xp: XpInfo }) {
             />
           </div>
           <div className="flex items-center justify-between text-[11px] tabular-nums text-text-muted">
-            <span>{xpInLevel.toLocaleString()} / {safeForLevel.toLocaleString()} XP</span>
-            <span>{xp.xpToNextLevel.toLocaleString()} XP to Level {xp.level + 1}</span>
+            <span>
+              {xpInLevel.toLocaleString()} / {safeForLevel.toLocaleString()} XP
+            </span>
+            <span>
+              {xp.xpToNextLevel.toLocaleString()} XP to Level {xp.level + 1}
+            </span>
           </div>
         </div>
       ) : (
@@ -138,12 +143,7 @@ function XpProgressSection({ xp }: { xp: XpInfo }) {
 /*  Main Component                                                     */
 /* ------------------------------------------------------------------ */
 
-export function StreakXPCard({
-  streakDays,
-  longestStreakDays,
-  xp,
-  summary,
-}: StreakXPCardProps) {
+export function StreakXPCard({ streakDays, longestStreakDays, xp, summary }: StreakXPCardProps) {
   const router = useRouter();
   const { pushToast } = useToast();
   const [lockModalOpen, setLockModalOpen] = useState(summary.streakWager.showLockModal);
@@ -179,7 +179,7 @@ export function StreakXPCard({
       pushToast({
         title: "Streak locked",
         description: `Your ${parsedWagerAmount} XP wager now protects today's PKT streak window.`,
-        tone: "success"
+        tone: "success",
       });
       setLockModalOpen(false);
       router.refresh();
@@ -187,7 +187,7 @@ export function StreakXPCard({
       pushToast({
         title: "Couldn't lock streak",
         description: error instanceof Error ? error.message : "Please try again.",
-        tone: "error"
+        tone: "error",
       });
     } finally {
       setIsSubmitting(false);
@@ -201,14 +201,14 @@ export function StreakXPCard({
       pushToast({
         title: "Streak recovered",
         description: "Your streak freeze restored the broken wager day.",
-        tone: "success"
+        tone: "success",
       });
       router.refresh();
     } catch (error) {
       pushToast({
         title: "Recovery failed",
         description: error instanceof Error ? error.message : "Please try again.",
-        tone: "error"
+        tone: "error",
       });
     } finally {
       setIsRecovering(false);
@@ -232,9 +232,7 @@ export function StreakXPCard({
             <div>
               <p className="text-sm font-semibold text-text-primary">{streakDays}-day streak</p>
               {longestStreakDays > 0 && (
-                <p className="text-xs text-text-muted">
-                  Longest: {longestStreakDays} days
-                </p>
+                <p className="text-xs text-text-muted">Longest: {longestStreakDays} days</p>
               )}
             </div>
           </div>
@@ -260,7 +258,10 @@ export function StreakXPCard({
           {summary.streakWager.warningAtRisk ? (
             <div className="rounded-xl border border-accent-warning/30 bg-accent-warning-light p-3 text-xs text-text-secondary">
               <div className="flex items-start gap-2">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-accent-warning" aria-hidden />
+                <AlertTriangle
+                  className="mt-0.5 h-4 w-4 shrink-0 text-accent-warning"
+                  aria-hidden
+                />
                 <div>
                   <p className="font-semibold text-text-primary">Streak at Risk</p>
                   <p className="mt-1 text-text-secondary">
@@ -278,7 +279,9 @@ export function StreakXPCard({
                 <div>
                   <p className="font-semibold">Streak lock active</p>
                   <p className="mt-1 text-text-secondary">
-                    {summary.streakWager.activeWager.amount} XP locked. Complete today&apos;s goal before midnight PKT to get it back with +{summary.streakWager.activeWager.bonusXp} XP.
+                    {summary.streakWager.activeWager.amount} XP locked. Complete today&apos;s goal
+                    before midnight PKT to get it back with +
+                    {summary.streakWager.activeWager.bonusXp} XP.
                   </p>
                 </div>
               </div>
@@ -305,7 +308,9 @@ export function StreakXPCard({
                   <div>
                     <p className="font-semibold text-text-primary">Broken wager</p>
                     <p className="mt-1">
-                      {summary.streakWager.brokenWager.amount} XP was lost for {summary.streakWager.brokenWager.protectedDate}. You can use one streak freeze to recover the streak.
+                      {summary.streakWager.brokenWager.amount} XP was lost for{" "}
+                      {summary.streakWager.brokenWager.protectedDate}. You can use one streak freeze
+                      to recover the streak.
                     </p>
                   </div>
                   <Button
@@ -316,7 +321,9 @@ export function StreakXPCard({
                     disabled={!summary.streakWager.brokenWager.canRecoverWithFreeze}
                     onClick={() => void onRecover()}
                   >
-                    {summary.streakWager.brokenWager.canRecoverWithFreeze ? "Use streak freeze" : "Freeze unavailable"}
+                    {summary.streakWager.brokenWager.canRecoverWithFreeze
+                      ? "Use streak freeze"
+                      : "Freeze unavailable"}
                   </Button>
                 </div>
               </div>
@@ -339,10 +346,14 @@ export function StreakXPCard({
             </div>
           </div>
         </DialogHeader>
-        <form onSubmit={handleWagerSubmit} aria-describedby={wagerError ? "wager-amount-error" : undefined}>
+        <form
+          onSubmit={handleWagerSubmit}
+          aria-describedby={wagerError ? "wager-amount-error" : undefined}
+        >
           <DialogBody className="space-y-4">
             <div className="rounded-xl border border-border-default bg-bg-base p-4 text-sm text-text-secondary">
-              Complete today&apos;s goal before midnight PKT and your wager returns with a 50% XP bonus.
+              Complete today&apos;s goal before midnight PKT and your wager returns with a 50% XP
+              bonus.
             </div>
             <Input
               id="wager-amount"
@@ -356,12 +367,15 @@ export function StreakXPCard({
               onChange={(event) => setWagerAmount(event.target.value)}
               suffix={<span className="text-xs">XP</span>}
             />
-            {xp ? (
-              <p className="text-xs text-text-muted">Available balance: {xp.xp} XP</p>
-            ) : null}
+            {xp ? <p className="text-xs text-text-muted">Available balance: {xp.xp} XP</p> : null}
           </DialogBody>
           <DialogFooter>
-            <Button type="button" variant="secondary" onClick={() => setLockModalOpen(false)} disabled={isSubmitting}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setLockModalOpen(false)}
+              disabled={isSubmitting}
+            >
               Maybe later
             </Button>
             <Button type="submit" loading={isSubmitting} disabled={Boolean(wagerError)}>

@@ -56,34 +56,34 @@ export const moderateTextInput = (text: string): ModerationResult => {
   if (profanityPattern.test(text)) {
     return {
       blocked: true,
-      reason: "profanity"
+      reason: "profanity",
     };
   }
 
   if (harassmentPattern.test(text)) {
     return {
       blocked: true,
-      reason: "harassment"
+      reason: "harassment",
     };
   }
 
   if (selfHarmPattern.test(text)) {
     return {
       blocked: true,
-      reason: "self_harm"
+      reason: "self_harm",
     };
   }
 
   if (detectSpam(text)) {
     return {
       blocked: true,
-      reason: "spam"
+      reason: "spam",
     };
   }
 
   return {
     blocked: false,
-    reason: null
+    reason: null,
   };
 };
 
@@ -123,12 +123,17 @@ const consumeRateLimit = async (
     allowed: count <= maxRequests,
     limit: maxRequests,
     remaining,
-    resetSeconds: ttl
+    resetSeconds: ttl,
   };
 };
 
 export const consumeAiChatRateLimit = async (userId: string): Promise<RateLimitResult> => {
-  return consumeRateLimit("ratelimit:ai-chat", userId, AI_CHAT_RATE_LIMIT_MAX_REQUESTS, AI_CHAT_RATE_LIMIT_WINDOW_SECONDS);
+  return consumeRateLimit(
+    "ratelimit:ai-chat",
+    userId,
+    AI_CHAT_RATE_LIMIT_MAX_REQUESTS,
+    AI_CHAT_RATE_LIMIT_WINDOW_SECONDS
+  );
 };
 
 export const consumeForumMutationRateLimit = async (userId: string): Promise<RateLimitResult> => {

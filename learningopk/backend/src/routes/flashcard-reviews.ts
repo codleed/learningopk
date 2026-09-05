@@ -11,12 +11,14 @@ const reviewBodySchema = z.object({
 });
 
 const seedBodySchema = z.object({
-  cards: z.array(
-    z.object({
-      cardId: z.number().int().positive(),
-      status: z.enum(["known", "review"]),
-    })
-  ).min(1),
+  cards: z
+    .array(
+      z.object({
+        cardId: z.number().int().positive(),
+        status: z.enum(["known", "review"]),
+      })
+    )
+    .min(1),
 });
 
 export const flashcardReviewsRouter = Router();

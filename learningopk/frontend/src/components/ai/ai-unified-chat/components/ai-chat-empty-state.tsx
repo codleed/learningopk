@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
+import { useMemo } from "react";
 import {
   Calculator,
   CheckCircle2,
@@ -19,10 +19,10 @@ import {
   Sigma,
   Target,
   type LucideIcon,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useAIChatContext } from '../ai-chat-context';
-import type { AIContext } from '../types';
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useAIChatContext } from "../ai-chat-context";
+import type { AIContext } from "../types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -56,85 +56,97 @@ type AIChatEmptyStateProps = {
 
 const GENERAL_STARTER_CATEGORIES: StarterCategory[] = [
   {
-    label: 'Exam Prep',
+    label: "Exam Prep",
     icon: GraduationCap,
     starters: [
       {
-        label: 'Math past-paper help',
-        prompt: 'Show me how to solve a Matric or O Level mathematics question step by step, like in a board exam.',
+        label: "Math past-paper help",
+        prompt:
+          "Show me how to solve a Matric or O Level mathematics question step by step, like in a board exam.",
         icon: Calculator,
       },
       {
-        label: 'Physics important questions',
-        prompt: 'Give me the most important Physics questions students should revise for FBISE, Punjab, Sindh, KPK, or Balochistan board exams.',
+        label: "Physics important questions",
+        prompt:
+          "Give me the most important Physics questions students should revise for FBISE, Punjab, Sindh, KPK, or Balochistan board exams.",
         icon: FileQuestion,
       },
       {
-        label: 'Quick revision notes',
-        prompt: 'Make short revision notes for a Pakistani board or Cambridge exam so I can revise one chapter quickly.',
+        label: "Quick revision notes",
+        prompt:
+          "Make short revision notes for a Pakistani board or Cambridge exam so I can revise one chapter quickly.",
         icon: ScrollText,
       },
     ],
   },
   {
-    label: 'Concept Help',
+    label: "Concept Help",
     icon: Lightbulb,
     starters: [
       {
-        label: 'Physics in simple words',
-        prompt: 'Explain a difficult Physics concept in simple words with daily-life examples a Class 9-12 student in Pakistan can understand.',
+        label: "Physics in simple words",
+        prompt:
+          "Explain a difficult Physics concept in simple words with daily-life examples a Class 9-12 student in Pakistan can understand.",
         icon: Brain,
       },
       {
-        label: 'Chemistry step by step',
-        prompt: 'Break down a Chemistry topic step by step, especially reactions and formulas that usually confuse board students.',
+        label: "Chemistry step by step",
+        prompt:
+          "Break down a Chemistry topic step by step, especially reactions and formulas that usually confuse board students.",
         icon: FlaskConical,
       },
       {
-        label: 'English / Urdu meaning',
-        prompt: 'Help me understand an English, Urdu, Islamiat, or Pakistan Studies topic in easy language with key points.',
+        label: "English / Urdu meaning",
+        prompt:
+          "Help me understand an English, Urdu, Islamiat, or Pakistan Studies topic in easy language with key points.",
         icon: Languages,
       },
     ],
   },
   {
-    label: 'Study Tips',
+    label: "Study Tips",
     icon: ClipboardList,
     starters: [
       {
-        label: 'Revision plan',
-        prompt: 'Create a realistic revision timetable for a Pakistani board or Cambridge student preparing for exams in the next few weeks.',
+        label: "Revision plan",
+        prompt:
+          "Create a realistic revision timetable for a Pakistani board or Cambridge student preparing for exams in the next few weeks.",
         icon: NotebookPen,
       },
       {
-        label: 'Remember formulas',
-        prompt: 'Give me smart study tips to remember Mathematics and Physics formulas without just cramming.',
+        label: "Remember formulas",
+        prompt:
+          "Give me smart study tips to remember Mathematics and Physics formulas without just cramming.",
         icon: Sigma,
       },
       {
-        label: 'Paper-time strategy',
-        prompt: 'How should I manage time in a board paper so I can finish long answers, MCQs, and numericals calmly?',
+        label: "Paper-time strategy",
+        prompt:
+          "How should I manage time in a board paper so I can finish long answers, MCQs, and numericals calmly?",
         icon: Target,
       },
     ],
   },
   {
-    label: 'Practice',
+    label: "Practice",
     icon: Dumbbell,
     starters: [
       {
-        label: 'Math practice set',
-        prompt: 'Give me 5 practice questions for Mathematics, from easy to hard, like a Pakistani board or Cambridge paper.',
+        label: "Math practice set",
+        prompt:
+          "Give me 5 practice questions for Mathematics, from easy to hard, like a Pakistani board or Cambridge paper.",
         icon: Calculator,
       },
       {
-        label: 'Quiz me',
-        prompt: 'Quiz me on Biology, Pakistan Studies, Islamiat, or Computer Science and check my answers one by one.',
+        label: "Quiz me",
+        prompt:
+          "Quiz me on Biology, Pakistan Studies, Islamiat, or Computer Science and check my answers one by one.",
         icon: CheckCircle2,
       },
       {
-        label: 'Flashcards',
-        prompt: 'Make short flashcards for a chapter from Biology, Chemistry, English, or Urdu for quick practice.',
+        label: "Flashcards",
+        prompt:
+          "Make short flashcards for a chapter from Biology, Chemistry, English, or Urdu for quick practice.",
         icon: BookOpen,
       },
     ],
@@ -152,28 +164,28 @@ function buildContextStarters(ctx: AIContext): StarterCategory[] {
 
   return [
     {
-      label: 'Exam Prep',
+      label: "Exam Prep",
       icon: GraduationCap,
       starters: [
         {
-          label: 'Important questions',
+          label: "Important questions",
           prompt: `Act like a ${boardName} examiner and list the most important questions from "${chapterTitle}" for ${gradeName} ${subjectName}, with short answering tips.`,
           icon: FileQuestion,
         },
         {
-          label: 'Quick revision',
+          label: "Quick revision",
           prompt: `Make quick revision notes for "${chapterTitle}" for ${contextLine}, focusing on what is most likely to help in exam prep.`,
           icon: ScrollText,
         },
         {
-          label: 'Past-paper style',
+          label: "Past-paper style",
           prompt: `Give me 3 past-paper style questions from "${chapterTitle}" for ${contextLine}, and tell me what a strong answer should include.`,
           icon: GraduationCap,
         },
       ],
     },
     {
-      label: 'Concept Help',
+      label: "Concept Help",
       icon: Lightbulb,
       starters: [
         {
@@ -182,54 +194,54 @@ function buildContextStarters(ctx: AIContext): StarterCategory[] {
           icon: Brain,
         },
         {
-          label: 'Key concepts',
+          label: "Key concepts",
           prompt: `What are the key concepts, formulas, or definitions I must understand in "${chapterTitle}" for ${contextLine}?`,
           icon: Lightbulb,
         },
         {
-          label: 'Examples that make sense',
+          label: "Examples that make sense",
           prompt: `Teach me "${chapterTitle}" with easy examples and common student mistakes for ${contextLine}.`,
           icon: Landmark,
         },
       ],
     },
     {
-      label: 'Study Tips',
+      label: "Study Tips",
       icon: ClipboardList,
       starters: [
         {
-          label: 'Study plan for this chapter',
+          label: "Study plan for this chapter",
           prompt: `Make a short study plan to finish "${chapterTitle}" well for ${contextLine}, including revision and self-testing.`,
           icon: NotebookPen,
         },
         {
-          label: 'Remember better',
+          label: "Remember better",
           prompt: `Give me memory tricks, revision tips, and a smart way to remember the important points from "${chapterTitle}" in ${subjectName}.`,
           icon: Sigma,
         },
         {
-          label: 'Avoid common mistakes',
+          label: "Avoid common mistakes",
           prompt: `What common mistakes do students make in "${chapterTitle}" for ${boardName}, and how can I avoid them in exams?`,
           icon: ClipboardList,
         },
       ],
     },
     {
-      label: 'Practice',
+      label: "Practice",
       icon: Dumbbell,
       starters: [
         {
-          label: 'Chapter quiz',
+          label: "Chapter quiz",
           prompt: `Quiz me on "${chapterTitle}" for ${contextLine}. Ask one question at a time and wait for my answer.`,
           icon: CheckCircle2,
         },
         {
-          label: 'Practice questions',
+          label: "Practice questions",
           prompt: `Create 5 practice questions from "${chapterTitle}" for ${contextLine}, from easy to hard.`,
           icon: Calculator,
         },
         {
-          label: 'Exercise help',
+          label: "Exercise help",
           prompt: `Help me solve questions from "${chapterTitle}" step by step without skipping the reasoning.`,
           icon: Dumbbell,
         },
@@ -244,23 +256,27 @@ function buildContextStarters(ctx: AIContext): StarterCategory[] {
 
 const DEFAULT_SUGGESTIONS: Suggestion[] = [
   {
-    label: 'Math past-paper help',
-    prompt: 'Show me how to solve a Matric or O Level mathematics question step by step, like in a board exam.',
+    label: "Math past-paper help",
+    prompt:
+      "Show me how to solve a Matric or O Level mathematics question step by step, like in a board exam.",
     icon: Calculator,
   },
   {
-    label: 'Physics in simple words',
-    prompt: 'Explain a difficult Physics concept in simple words with daily-life examples a Class 9-12 student in Pakistan can understand.',
+    label: "Physics in simple words",
+    prompt:
+      "Explain a difficult Physics concept in simple words with daily-life examples a Class 9-12 student in Pakistan can understand.",
     icon: Brain,
   },
   {
-    label: 'Revision plan',
-    prompt: 'Create a realistic revision timetable for a Pakistani board or Cambridge student preparing for exams in the next few weeks.',
+    label: "Revision plan",
+    prompt:
+      "Create a realistic revision timetable for a Pakistani board or Cambridge student preparing for exams in the next few weeks.",
     icon: NotebookPen,
   },
   {
-    label: 'Math practice set',
-    prompt: 'Give me 5 practice questions for Mathematics, from easy to hard, like a Pakistani board or Cambridge paper.',
+    label: "Math practice set",
+    prompt:
+      "Give me 5 practice questions for Mathematics, from easy to hard, like a Pakistani board or Cambridge paper.",
     icon: Calculator,
   },
 ];
@@ -286,15 +302,15 @@ function StarterButton({
       type="button"
       onClick={() => onSuggestionClick(suggestion.prompt)}
       className={cn(
-        'group flex items-start gap-3',
-        'w-full px-4 py-3',
-        'rounded-lg',
-        'border border-border-default/60 bg-bg-subtle/30',
-        'text-left',
-        'transition-all duration-200',
-        'hover:border-accent-primary/40 hover:bg-accent-primary/[0.03]',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
-        'active:scale-[0.98]',
+        "group flex items-start gap-3",
+        "w-full px-4 py-3",
+        "rounded-lg",
+        "border border-border-default/60 bg-bg-subtle/30",
+        "text-left",
+        "transition-all duration-200",
+        "hover:border-accent-primary/40 hover:bg-accent-primary/[0.03]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+        "active:scale-[0.98]"
       )}
       style={{ animationDelay: `${index * 50}ms` }}
     >
@@ -378,10 +394,10 @@ export function AIChatEmptyState({
     return (
       <div
         className={cn(
-          'flex flex-col items-center',
-          'px-5 py-8',
-          'flex-1 min-h-0 overflow-y-auto',
-          className,
+          "flex flex-col items-center",
+          "px-5 py-8",
+          "flex-1 min-h-0 overflow-y-auto",
+          className
         )}
       >
         <div className="mb-6 flex items-center gap-2 shrink-0">
@@ -389,7 +405,7 @@ export function AIChatEmptyState({
           <h2 className="text-center font-medium text-lg text-text-primary">
             {resolvedContext
               ? `Ask about "${resolvedContext.chapterTitle}"`
-              : 'How can I help you study?'}
+              : "How can I help you study?"}
           </h2>
         </div>
 
@@ -415,10 +431,10 @@ export function AIChatEmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center',
-        'px-5 py-8',
-        'flex-1 min-h-0 overflow-y-auto',
-        className,
+        "flex flex-col items-center",
+        "px-5 py-8",
+        "flex-1 min-h-0 overflow-y-auto",
+        className
       )}
     >
       <h2 className="text-center font-medium text-lg text-text-primary mb-8">

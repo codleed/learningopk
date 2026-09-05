@@ -45,35 +45,27 @@ const toneStyles: Record<AccentTone, { circle: string; icon: string }> = {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function QuickActionsCard({
-  firstChapterBasePath,
-}: QuickActionsCardProps) {
+export function QuickActionsCard({ firstChapterBasePath }: QuickActionsCardProps) {
   const actions: ActionTile[] = [
     {
       label: "Random Quiz",
       description: "Test your knowledge",
       icon: Dices,
-      href: firstChapterBasePath
-        ? `${firstChapterBasePath}?tab=quiz`
-        : "/dashboard",
+      href: firstChapterBasePath ? `${firstChapterBasePath}?tab=quiz` : "/dashboard",
       tone: "primary",
     },
     {
       label: "AI Tutor",
       description: "Get personalized help",
       icon: Brain,
-      href: firstChapterBasePath
-        ? `${firstChapterBasePath}?tab=exercises&ai=1`
-        : "/dashboard",
+      href: firstChapterBasePath ? `${firstChapterBasePath}?tab=exercises&ai=1` : "/dashboard",
       tone: "info",
     },
     {
       label: "Past Papers",
       description: "Practice real exams",
       icon: FileText,
-      href: firstChapterBasePath
-        ? `${firstChapterBasePath}?tab=exercises`
-        : "/dashboard",
+      href: firstChapterBasePath ? `${firstChapterBasePath}?tab=exercises` : "/dashboard",
       tone: "success",
     },
   ];
