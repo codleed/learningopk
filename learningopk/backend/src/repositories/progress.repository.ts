@@ -459,6 +459,44 @@ export class ProgressRepository {
 
     return rows[0] ?? null;
   }
+
+  /**
+   * Persist the idempotency timestamps for a (userId, chapterId) XP award.
+   * Used by progress.service after a successful award to prevent replays.
+   */
+  async markXpAwarded(
+    userId: string,
+    chapterId: number,
+    timestamps: Partial<{
+      xpAwardedChapterVisitAt: Date;
+      xpAwardedSummaryReadAt: Date;
+      xpAwardedFlashcardCompleteAt: Date;
+      xpAwardedExerciseViewCount: number;
+      xpAwardedExerciseViewWindowStartedAt: Date;
+    }>
+  ): Promise<void> {
+    const set: Record<string, Date | number> = {};
+    if (timestamps.xpAwardedChapterVisitAt !== undefined) {
+      set.xpAwardedChapterVisitAt = timestamps.xpAwardedChapterVisitAt;
+    }
+    if (timestamps.xpAwardedSummaryReadAt !== undefined) {
+      set.xpAwardedSummaryReadAt = timestamps.xpAwardedSummaryReadAt;
+    }
+    if (timestamps.xpAwardedFlashcardCompleteAt !== undefined) {
+      set.xpAwardedFlashcardCompleteAt = timestamps.xpAwardedFlashcardCompleteAt;
+    }
+    if (timestamps.xpAwardedExerciseViewCount !== undefined) {
+      set.xpAwardedExerciseViewCount = timestamps.xpAwardedExerciseViewCount;
+    }
+    if (timestamps.xpAwardedExerciseViewWindowStartedAt !== undefined) {
+      set.xpAwardedExerciseViewWindowStartedAt = timestamps.xpAwardedExerciseViewWindowStartedAt;
+    }
+    if (Object.keys(set).length === 0) return;
+    await db
+      .update(userProgress)
+      .set(set)
+      .where(and(eq(userProgress.userId, userId), eq(userProgress.chapterId, chapterId)));
+  }
 }
 
 export const progressRepository = new ProgressRepository();

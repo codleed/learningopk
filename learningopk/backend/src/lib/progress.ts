@@ -72,6 +72,11 @@ export type ProgressSnapshot = {
   flashcardsCompleted: boolean;
   quizBestScore: number;
   quizAttemptsCount: number;
+  xpAwardedChapterVisitAt: Date | null;
+  xpAwardedSummaryReadAt: Date | null;
+  xpAwardedFlashcardCompleteAt: Date | null;
+  xpAwardedExerciseViewCount: number;
+  xpAwardedExerciseViewWindowStartedAt: Date | null;
   isNewRead?: boolean;
 };
 
@@ -88,6 +93,11 @@ const selectProgressById = async (id: number): Promise<ProgressSnapshot | null> 
       flashcardsCompleted: userProgress.flashcardsCompleted,
       quizBestScore: userProgress.quizBestScore,
       quizAttemptsCount: userProgress.quizAttemptsCount,
+      xpAwardedChapterVisitAt: userProgress.xpAwardedChapterVisitAt,
+      xpAwardedSummaryReadAt: userProgress.xpAwardedSummaryReadAt,
+      xpAwardedFlashcardCompleteAt: userProgress.xpAwardedFlashcardCompleteAt,
+      xpAwardedExerciseViewCount: userProgress.xpAwardedExerciseViewCount,
+      xpAwardedExerciseViewWindowStartedAt: userProgress.xpAwardedExerciseViewWindowStartedAt,
     })
     .from(userProgress)
     .where(eq(userProgress.id, id))
@@ -283,6 +293,11 @@ export const applyProgressEvent = async (input: ProgressEventInput): Promise<Pro
       flashcardsCompleted: false,
       quizBestScore: input.score,
       quizAttemptsCount: 1,
+      xpAwardedChapterVisitAt: null,
+      xpAwardedSummaryReadAt: null,
+      xpAwardedFlashcardCompleteAt: null,
+      xpAwardedExerciseViewCount: 0,
+      xpAwardedExerciseViewWindowStartedAt: null,
     };
   }
 
