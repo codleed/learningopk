@@ -52,6 +52,13 @@ jobs:
       BETTER_AUTH_SECRET: ci-only-secret-do-not-use-in-production
       BETTER_AUTH_URL: http://localhost:3001
       FRONTEND_ORIGIN: http://localhost:3000
+      MINIO_ENDPOINT: localhost
+      MINIO_PORT: "9000"
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: ci-only-minio
+      MINIO_SECRET_KEY: ci-only-minio-secret
+      MINIO_BUCKET: learningo-media
+      MINIO_PUBLIC_URL: http://localhost:9000
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
