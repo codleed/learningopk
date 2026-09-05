@@ -117,6 +117,21 @@ export type ForumFeedQuery = {
   offset?: number;
 };
 
+/** Filter-only view of the query (no pagination params); used in cache keys. */
+export type ForumFeedFilters = Omit<ForumFeedQuery, "limit" | "offset">;
+
+/**
+ * Central TanStack Query cache keys for the forum domain.
+ * Mutations invalidate via `forumKeys.all`; queries subscribe to narrower keys.
+ */
+export const forumKeys = {
+  all: ["forum"] as const,
+  threads: (filters: ForumFeedFilters) => ["forum", "threads", filters] as const,
+};
+
+/** Thrown by forum mutations on non-2xx API responses (vs. network failures). */
+export class ForumApiError extends Error {}
+
 type FetchForumOptions = {
   cookieHeader?: string;
 };

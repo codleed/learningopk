@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Syne, DM_Sans, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { ToastProvider } from "@/components/ui/toast";
+import { Providers } from "@/app/providers";
 import "./globals.css";
 
 const syne = Syne({
@@ -59,7 +60,9 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <ToastProvider>{children}</ToastProvider>
+          <Providers>
+            <ToastProvider>{children}</ToastProvider>
+          </Providers>
         </ThemeProvider>
       </body>
     </html>

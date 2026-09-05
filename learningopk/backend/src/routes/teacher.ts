@@ -1,49 +1,36 @@
 import { Router } from "express";
 import { z } from "zod";
-import { and, eq, count, inArray } from "drizzle-orm";
+import { count, inArray } from "drizzle-orm";
 
 import { db } from "../lib/db/index.js";
+import { classroomStudents } from "../lib/db/schema.js";
+import { requireSession, requireTeacherRole, type AuthenticatedRequest } from "../lib/session.js";
 import {
-  classrooms,
-  users,
-  assignments,
-  assignmentSubmissions,
-  classroomAnnouncements,
-  classroomStudents,
-} from "../lib/db/schema.js";
-import { requireSession, type AuthenticatedRequest } from "../lib/session.js";
-import { requireTeacherRole } from "../lib/session.js";
+  classroomIdParam,
+  requireAssignmentClassroomOwnership,
+  requireClassroomOwnership,
+  type AssignmentOwnedRequest,
+  type ClassroomOwnedRequest,
+} from "../middleware/classroom-ownership.js";
 import { classroomRepository } from "../repositories/classroom.repository.js";
 import { successResponse, errorResponse } from "../lib/response.js";
 import { teacherService } from "../services/teacher.service.js";
 
 export const teacherRouter = Router();
 
-function parseIdParam(value: unknown): number {
-  return typeof value === "string" ? parseInt(value, 10) : NaN;
-}
-
-// All teacher routes require session + teacher role
+// All teacher routes require session + teacher role; classroom-scoped routes
+// additionally enforce ownership via requireClassroomOwnership /
+// requireAssignmentClassroomOwnership.
 
 // GET /api/teacher/classrooms/:id — get single classroom
-teacherRouter.get("/classrooms/:id", requireSession, async (req, res) => {
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireTeacherRole(authedReq, res))) return;
-
-  const classroomId = parseIdParam(req.params.id);
-  if (isNaN(classroomId)) {
-    res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
-    return;
+teacherRouter.get(
+  "/classrooms/:id",
+  requireSession,
+  requireClassroomOwnership(classroomIdParam("id")),
+  async (req, res) => {
+    res.status(200).json(successResponse((req as ClassroomOwnedRequest).classroom));
   }
-
-  const classroom = await classroomRepository.getClassroomById(classroomId);
-  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
-    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
-    return;
-  }
-
-  res.status(200).json(successResponse(classroom));
-});
+);
 
 // GET /api/teacher/classrooms — list teacher's active classrooms
 teacherRouter.get("/classrooms", requireSession, async (req, res) => {
@@ -106,29 +93,30 @@ teacherRouter.post("/classrooms", requireSession, async (req, res) => {
 });
 
 // PATCH /api/teacher/classrooms/:id — update classroom
+const updateClassroomSchema = z.object({
+  name: z.string().min(1).max(120).optional(),
+  boardId: z.number().int().positive().optional(),
+  grade: z.string().min(1).max(10).optional(),
+  description: z.string().max(500).optional().nullable(),
+});
+
 teacherRouter.patch("/classrooms/:id", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const classroomId = parseIdParam(req.params.id);
+  const classroomId = classroomIdParam("id")(req);
   if (isNaN(classroomId)) {
     res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
     return;
   }
 
-  const updateSchema = z.object({
-    name: z.string().min(1).max(120).optional(),
-    boardId: z.number().int().positive().optional(),
-    grade: z.string().min(1).max(10).optional(),
-    description: z.string().max(500).optional().nullable(),
-  });
-
-  const parsed = updateSchema.safeParse(req.body);
+  const parsed = updateClassroomSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json(errorResponse("Invalid input", "VALIDATION_ERROR"));
     return;
   }
 
+  // Scoped by teacherId inside the repository — 404 when not the owner.
   const classroom = await classroomRepository.updateClassroom(
     classroomId,
     authedReq.session.user.id,
@@ -148,12 +136,13 @@ teacherRouter.delete("/classrooms/:id", requireSession, async (req, res) => {
   const authedReq = req as AuthenticatedRequest;
   if (!(await requireTeacherRole(authedReq, res))) return;
 
-  const classroomId = parseIdParam(req.params.id);
+  const classroomId = classroomIdParam("id")(req);
   if (isNaN(classroomId)) {
     res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
     return;
   }
 
+  // Scoped by teacherId inside the repository — 404 when not the owner.
   const classroom = await classroomRepository.deleteClassroom(
     classroomId,
     authedReq.session.user.id
@@ -167,78 +156,59 @@ teacherRouter.delete("/classrooms/:id", requireSession, async (req, res) => {
 });
 
 // GET /api/teacher/classrooms/:id/students — roster with progress
-teacherRouter.get("/classrooms/:id/students", requireSession, async (req, res) => {
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireTeacherRole(authedReq, res))) return;
+teacherRouter.get(
+  "/classrooms/:id/students",
+  requireSession,
+  requireClassroomOwnership(classroomIdParam("id")),
+  async (req, res) => {
+    const { classroom } = req as ClassroomOwnedRequest;
 
-  const classroomId = parseIdParam(req.params.id);
-  if (isNaN(classroomId)) {
-    res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
-    return;
+    const studentsWithProgress = await teacherService.getStudentProgressInClassroom(classroom.id);
+    res.status(200).json(successResponse(studentsWithProgress));
   }
-
-  // Verify ownership
-  const classroom = await classroomRepository.getClassroomById(classroomId);
-  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
-    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
-    return;
-  }
-
-  const studentsWithProgress = await teacherService.getStudentProgressInClassroom(classroomId);
-  res.status(200).json(successResponse(studentsWithProgress));
-});
+);
 
 // POST /api/teacher/classrooms/:id/students/:sid — remove student
-teacherRouter.post("/classrooms/:id/students/:sid/remove", requireSession, async (req, res) => {
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireTeacherRole(authedReq, res))) return;
+teacherRouter.post(
+  "/classrooms/:id/students/:sid/remove",
+  requireSession,
+  requireClassroomOwnership(classroomIdParam("id"), {
+    invalidIdMessage: "Invalid parameters",
+  }),
+  async (req, res) => {
+    const studentId = typeof req.params.sid === "string" ? req.params.sid : "";
 
-  const classroomId = parseIdParam(req.params.id);
-  const studentId = typeof req.params.sid === "string" ? req.params.sid : "";
+    if (!studentId) {
+      res.status(400).json(errorResponse("Invalid parameters", "VALIDATION_ERROR"));
+      return;
+    }
 
-  if (isNaN(classroomId) || !studentId) {
-    res.status(400).json(errorResponse("Invalid parameters", "VALIDATION_ERROR"));
-    return;
+    const { classroom } = req as ClassroomOwnedRequest;
+    await classroomRepository.removeStudent(classroom.id, studentId);
+    res.status(200).json(successResponse({ removed: true }));
   }
-
-  const classroom = await classroomRepository.getClassroomById(classroomId);
-  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
-    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
-    return;
-  }
-
-  await classroomRepository.removeStudent(classroomId, studentId);
-  res.status(200).json(successResponse({ removed: true }));
-});
+);
 
 // GET /api/teacher/classrooms/:id/assignments — list assignments
-teacherRouter.get("/classrooms/:id/assignments", requireSession, async (req, res) => {
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireTeacherRole(authedReq, res))) return;
+teacherRouter.get(
+  "/classrooms/:id/assignments",
+  requireSession,
+  requireClassroomOwnership(classroomIdParam("id")),
+  async (req, res) => {
+    const { classroom } = req as ClassroomOwnedRequest;
 
-  const classroomId = parseIdParam(req.params.id);
-  if (isNaN(classroomId)) {
-    res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
-    return;
+    const studentCount = await classroomRepository.getStudentCount(classroom.id);
+    const assignmentRows = await classroomRepository.getAssignments(classroom.id);
+
+    const result = assignmentRows.map((row) => ({
+      ...row.assignment,
+      submissionCount: Number(row.submissionCount),
+      studentCount,
+    }));
+
+    res.status(200).json(successResponse(result));
   }
-
-  const classroom = await classroomRepository.getClassroomById(classroomId);
-  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
-    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
-    return;
-  }
-
-  const studentCount = await classroomRepository.getStudentCount(classroomId);
-  const assignmentRows = await classroomRepository.getAssignments(classroomId);
-
-  const result = assignmentRows.map((row) => ({
-    ...row.assignment,
-    submissionCount: Number(row.submissionCount),
-    studentCount,
-  }));
-
-  res.status(200).json(successResponse(result));
-});
+);
 
 // POST /api/teacher/classrooms/:id/assignments — create assignment
 const createAssignmentSchema = z.object({
@@ -250,308 +220,206 @@ const createAssignmentSchema = z.object({
   points: z.number().int().min(0).max(1000).optional(),
 });
 
-teacherRouter.post("/classrooms/:id/assignments", requireSession, async (req, res) => {
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireTeacherRole(authedReq, res))) return;
+teacherRouter.post(
+  "/classrooms/:id/assignments",
+  requireSession,
+  requireClassroomOwnership(classroomIdParam("id")),
+  async (req, res) => {
+    const parsed = createAssignmentSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json(errorResponse("Invalid input", "VALIDATION_ERROR"));
+      return;
+    }
 
-  const classroomId = parseIdParam(req.params.id);
-  if (isNaN(classroomId)) {
-    res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
-    return;
+    const dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : undefined;
+    const { classroom } = req as ClassroomOwnedRequest;
+
+    const assignment = await classroomRepository.createAssignment(classroom.id, {
+      ...parsed.data,
+      dueDate,
+    });
+
+    if (!assignment) {
+      res.status(500).json(errorResponse("Failed to create assignment", "INTERNAL_ERROR"));
+      return;
+    }
+
+    res.status(201).json(successResponse(assignment));
   }
-
-  const classroom = await classroomRepository.getClassroomById(classroomId);
-  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
-    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
-    return;
-  }
-
-  const parsed = createAssignmentSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json(errorResponse("Invalid input", "VALIDATION_ERROR"));
-    return;
-  }
-
-  const dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : undefined;
-
-  const assignment = await classroomRepository.createAssignment(classroomId, {
-    ...parsed.data,
-    dueDate,
-  });
-
-  if (!assignment) {
-    res.status(500).json(errorResponse("Failed to create assignment", "INTERNAL_ERROR"));
-    return;
-  }
-
-  res.status(201).json(successResponse(assignment));
-});
+);
 
 // PATCH /api/teacher/assignments/:id — update assignment
-teacherRouter.patch("/assignments/:id", requireSession, async (req, res) => {
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireTeacherRole(authedReq, res))) return;
-
-  const assignmentId = parseIdParam(req.params.id);
-  if (isNaN(assignmentId)) {
-    res.status(400).json(errorResponse("Invalid assignment ID", "VALIDATION_ERROR"));
-    return;
-  }
-
-  const assignment = await classroomRepository.getAssignmentById(assignmentId);
-  if (!assignment) {
-    res.status(404).json(errorResponse("Assignment not found", "NOT_FOUND"));
-    return;
-  }
-
-  const classroom = await classroomRepository.getClassroomById(assignment.classroomId);
-  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
-    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
-    return;
-  }
-
-  const updateSchema = z.object({
-    title: z.string().min(1).max(200).optional(),
-    description: z.string().max(1000).optional().nullable(),
-    dueDate: z.string().datetime().optional().nullable(),
-    points: z.number().int().min(0).max(1000).optional(),
-  });
-
-  const parsed = updateSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json(errorResponse("Invalid input", "VALIDATION_ERROR"));
-    return;
-  }
-
-  const dueDate =
-    parsed.data.dueDate === null
-      ? null
-      : parsed.data.dueDate
-        ? new Date(parsed.data.dueDate)
-        : undefined;
-
-  const updated = await classroomRepository.updateAssignment(assignmentId, {
-    ...(parsed.data.title && { title: parsed.data.title }),
-    ...(parsed.data.description !== undefined && { description: parsed.data.description }),
-    ...(dueDate !== undefined && { dueDate }),
-    ...(parsed.data.points !== undefined && { points: parsed.data.points }),
-  });
-
-  res.status(200).json(successResponse(updated));
+const updateAssignmentSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(1000).optional().nullable(),
+  dueDate: z.string().datetime().optional().nullable(),
+  points: z.number().int().min(0).max(1000).optional(),
 });
+
+teacherRouter.patch(
+  "/assignments/:id",
+  requireSession,
+  requireAssignmentClassroomOwnership("id"),
+  async (req, res) => {
+    const parsed = updateAssignmentSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json(errorResponse("Invalid input", "VALIDATION_ERROR"));
+      return;
+    }
+
+    const dueDate =
+      parsed.data.dueDate === null
+        ? null
+        : parsed.data.dueDate
+          ? new Date(parsed.data.dueDate)
+          : undefined;
+
+    const updated = await classroomRepository.updateAssignment(
+      (req as AssignmentOwnedRequest).assignment.id,
+      {
+        ...(parsed.data.title && { title: parsed.data.title }),
+        ...(parsed.data.description !== undefined && { description: parsed.data.description }),
+        ...(dueDate !== undefined && { dueDate }),
+        ...(parsed.data.points !== undefined && { points: parsed.data.points }),
+      }
+    );
+
+    res.status(200).json(successResponse(updated));
+  }
+);
 
 // DELETE /api/teacher/assignments/:id — delete assignment
-teacherRouter.delete("/assignments/:id", requireSession, async (req, res) => {
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireTeacherRole(authedReq, res))) return;
-
-  const assignmentId = parseIdParam(req.params.id);
-  if (isNaN(assignmentId)) {
-    res.status(400).json(errorResponse("Invalid assignment ID", "VALIDATION_ERROR"));
-    return;
+teacherRouter.delete(
+  "/assignments/:id",
+  requireSession,
+  requireAssignmentClassroomOwnership("id"),
+  async (req, res) => {
+    await classroomRepository.deleteAssignment((req as AssignmentOwnedRequest).assignment.id);
+    res.status(200).json(successResponse({ deleted: true }));
   }
-
-  const assignment = await classroomRepository.getAssignmentById(assignmentId);
-  if (!assignment) {
-    res.status(404).json(errorResponse("Assignment not found", "NOT_FOUND"));
-    return;
-  }
-
-  const classroom = await classroomRepository.getClassroomById(assignment.classroomId);
-  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
-    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
-    return;
-  }
-
-  await classroomRepository.deleteAssignment(assignmentId);
-  res.status(200).json(successResponse({ deleted: true }));
-});
+);
 
 // GET /api/teacher/assignments/:id/submissions — all student submissions
-teacherRouter.get("/assignments/:id/submissions", requireSession, async (req, res) => {
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireTeacherRole(authedReq, res))) return;
-
-  const assignmentId = parseIdParam(req.params.id);
-  if (isNaN(assignmentId)) {
-    res.status(400).json(errorResponse("Invalid assignment ID", "VALIDATION_ERROR"));
-    return;
+teacherRouter.get(
+  "/assignments/:id/submissions",
+  requireSession,
+  requireAssignmentClassroomOwnership("id"),
+  async (req, res) => {
+    const submissions = await classroomRepository.getSubmissions(
+      (req as AssignmentOwnedRequest).assignment.id
+    );
+    res.status(200).json(successResponse(submissions));
   }
-
-  const assignment = await classroomRepository.getAssignmentById(assignmentId);
-  if (!assignment) {
-    res.status(404).json(errorResponse("Assignment not found", "NOT_FOUND"));
-    return;
-  }
-
-  const classroom = await classroomRepository.getClassroomById(assignment.classroomId);
-  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
-    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
-    return;
-  }
-
-  const submissions = await classroomRepository.getSubmissions(assignmentId);
-  res.status(200).json(successResponse(submissions));
-});
+);
 
 // GET /api/teacher/classrooms/:id/announcements — list recent
-teacherRouter.get("/classrooms/:id/announcements", requireSession, async (req, res) => {
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireTeacherRole(authedReq, res))) return;
+teacherRouter.get(
+  "/classrooms/:id/announcements",
+  requireSession,
+  requireClassroomOwnership(classroomIdParam("id")),
+  async (req, res) => {
+    const { classroom } = req as ClassroomOwnedRequest;
 
-  const classroomId = parseIdParam(req.params.id);
-  if (isNaN(classroomId)) {
-    res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
-    return;
+    const announcements = await classroomRepository.getAnnouncements(classroom.id);
+    res.status(200).json(successResponse(announcements));
   }
-
-  const classroom = await classroomRepository.getClassroomById(classroomId);
-  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
-    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
-    return;
-  }
-
-  const announcements = await classroomRepository.getAnnouncements(classroomId);
-  res.status(200).json(successResponse(announcements));
-});
+);
 
 // POST /api/teacher/classrooms/:id/announcements — create
-teacherRouter.post("/classrooms/:id/announcements", requireSession, async (req, res) => {
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireTeacherRole(authedReq, res))) return;
-
-  const classroomId = parseIdParam(req.params.id);
-  if (isNaN(classroomId)) {
-    res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
-    return;
-  }
-
-  const classroom = await classroomRepository.getClassroomById(classroomId);
-  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
-    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
-    return;
-  }
-
-  const announceSchema = z.object({
-    content: z.string().min(1).max(2000),
-    pinned: z.boolean().optional(),
-  });
-
-  const parsed = announceSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json(errorResponse("Invalid input", "VALIDATION_ERROR"));
-    return;
-  }
-
-  const announcement = await classroomRepository.createAnnouncement(
-    classroomId,
-    authedReq.session.user.id,
-    parsed.data.content,
-    parsed.data.pinned ?? false
-  );
-
-  res.status(201).json(successResponse(announcement));
+const announceSchema = z.object({
+  content: z.string().min(1).max(2000),
+  pinned: z.boolean().optional(),
 });
+
+teacherRouter.post(
+  "/classrooms/:id/announcements",
+  requireSession,
+  requireClassroomOwnership(classroomIdParam("id")),
+  async (req, res) => {
+    const parsed = announceSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json(errorResponse("Invalid input", "VALIDATION_ERROR"));
+      return;
+    }
+
+    const authedReq = req as ClassroomOwnedRequest;
+    const announcement = await classroomRepository.createAnnouncement(
+      authedReq.classroom.id,
+      authedReq.session.user.id,
+      parsed.data.content,
+      parsed.data.pinned ?? false
+    );
+
+    res.status(201).json(successResponse(announcement));
+  }
+);
 
 // DELETE /api/teacher/classrooms/:id/announcements/:aid — delete
-teacherRouter.delete("/classrooms/:id/announcements/:aid", requireSession, async (req, res) => {
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireTeacherRole(authedReq, res))) return;
+teacherRouter.delete(
+  "/classrooms/:id/announcements/:aid",
+  requireSession,
+  requireClassroomOwnership(classroomIdParam("id")),
+  async (req, res) => {
+    const announcementId = typeof req.params.aid === "string" ? parseInt(req.params.aid, 10) : NaN;
+    if (isNaN(announcementId)) {
+      res.status(400).json(errorResponse("Invalid announcement ID", "VALIDATION_ERROR"));
+      return;
+    }
 
-  const classroomId = parseIdParam(req.params.id);
-  if (isNaN(classroomId)) {
-    res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
-    return;
+    const authedReq = req as ClassroomOwnedRequest;
+    const deleted = await classroomRepository.deleteAnnouncement(
+      announcementId,
+      authedReq.classroom.id,
+      authedReq.session.user.id
+    );
+    if (!deleted) {
+      res.status(404).json(errorResponse("Announcement not found", "NOT_FOUND"));
+      return;
+    }
+    res.status(200).json(successResponse({ deleted: true }));
   }
-
-  const classroom = await classroomRepository.getClassroomById(classroomId);
-  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
-    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
-    return;
-  }
-
-  const announcementId = parseIdParam(req.params.aid);
-  if (isNaN(announcementId)) {
-    res.status(400).json(errorResponse("Invalid announcement ID", "VALIDATION_ERROR"));
-    return;
-  }
-
-  const deleted = await classroomRepository.deleteAnnouncement(
-    announcementId,
-    classroomId,
-    authedReq.session.user.id
-  );
-  if (!deleted) {
-    res.status(404).json(errorResponse("Announcement not found", "NOT_FOUND"));
-    return;
-  }
-  res.status(200).json(successResponse({ deleted: true }));
-});
+);
 
 // GET /api/teacher/classrooms/:id/alerts — struggling students
-teacherRouter.get("/classrooms/:id/alerts", requireSession, async (req, res) => {
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireTeacherRole(authedReq, res))) return;
+teacherRouter.get(
+  "/classrooms/:id/alerts",
+  requireSession,
+  requireClassroomOwnership(classroomIdParam("id")),
+  async (req, res) => {
+    const { classroom } = req as ClassroomOwnedRequest;
 
-  const classroomId = parseIdParam(req.params.id);
-  if (isNaN(classroomId)) {
-    res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
-    return;
+    const alerts = await classroomRepository.getStrugglingStudents(classroom.id);
+    res.status(200).json(successResponse(alerts));
   }
-
-  const classroom = await classroomRepository.getClassroomById(classroomId);
-  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
-    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
-    return;
-  }
-
-  const alerts = await classroomRepository.getStrugglingStudents(classroomId);
-  res.status(200).json(successResponse(alerts));
-});
+);
 
 // ─── AI Teacher Tools ───
 
 // GET /api/teacher/ai/differentiate/:classroomId — weak topics per student
-teacherRouter.get("/ai/differentiate/:classroomId", requireSession, async (req, res) => {
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireTeacherRole(authedReq, res))) return;
+teacherRouter.get(
+  "/ai/differentiate/:classroomId",
+  requireSession,
+  requireClassroomOwnership(classroomIdParam("classroomId")),
+  async (req, res) => {
+    const { classroom } = req as ClassroomOwnedRequest;
 
-  const classroomId = parseIdParam(req.params.classroomId);
-  if (isNaN(classroomId)) {
-    res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
-    return;
+    const suggestions = await teacherService.getDifferentiationSuggestions(classroom.id);
+    res.status(200).json(successResponse(suggestions));
   }
-
-  const classroom = await classroomRepository.getClassroomById(classroomId);
-  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
-    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
-    return;
-  }
-
-  const suggestions = await teacherService.getDifferentiationSuggestions(classroomId);
-  res.status(200).json(successResponse(suggestions));
-});
+);
 
 // GET /api/teacher/ai/readiness/:classroomId — class readiness heatmap
-teacherRouter.get("/ai/readiness/:classroomId", requireSession, async (req, res) => {
-  const authedReq = req as AuthenticatedRequest;
-  if (!(await requireTeacherRole(authedReq, res))) return;
+teacherRouter.get(
+  "/ai/readiness/:classroomId",
+  requireSession,
+  requireClassroomOwnership(classroomIdParam("classroomId")),
+  async (req, res) => {
+    const { classroom } = req as ClassroomOwnedRequest;
 
-  const classroomId = parseIdParam(req.params.classroomId);
-  if (isNaN(classroomId)) {
-    res.status(400).json(errorResponse("Invalid classroom ID", "VALIDATION_ERROR"));
-    return;
+    const readiness = await teacherService.getClassReadiness(classroom.id);
+    res.status(200).json(successResponse(readiness));
   }
-
-  const classroom = await classroomRepository.getClassroomById(classroomId);
-  if (!classroom || classroom.teacherId !== authedReq.session.user.id) {
-    res.status(403).json(errorResponse("Not your classroom", "FORBIDDEN"));
-    return;
-  }
-
-  const readiness = await teacherService.getClassReadiness(classroomId);
-  res.status(200).json(successResponse(readiness));
-});
+);
 
 // POST /api/teacher/ai/generate-quiz — AI quiz generation
 const generateQuizSchema = z.object({

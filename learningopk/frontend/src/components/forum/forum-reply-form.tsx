@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Pencil, Send, Bold, Italic, Code } from "lucide-react";
 import { z } from "zod";
@@ -11,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { ContentRenderer } from "@/components/common/content-renderer";
 import { Tabs, TabList, TabTrigger, TabContent } from "@/components/ui/tabs";
+import { ForumApiError, forumKeys } from "@/lib/forum-api";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
@@ -18,6 +20,12 @@ const createReplySchema = z.object({
   body: z.string().trim().min(2),
   parentReplyId: z.string().uuid().optional(),
 });
+
+const replyErrorSchema = z.object({
+  error: z.string(),
+});
+
+type CreateReplyInput = z.infer<typeof createReplySchema>;
 
 type ForumReplyFormProps = {
   threadId: string;
@@ -31,17 +39,58 @@ export const ForumReplyForm = ({
   compact = false,
 }: ForumReplyFormProps) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { pushToast } = useToast();
   const [body, setBody] = useState("");
   const [activeTab, setActiveTab] = useState("write");
-  const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const insertMarkdown = (prefix: string, suffix: string) => {
     setBody((current) => `${current}${prefix}text${suffix}`);
   };
 
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const submitMutation = useMutation({
+    mutationFn: async (input: CreateReplyInput) => {
+      const response = await fetch(`${backendUrl}/api/forum/threads/${threadId}/replies`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(input),
+      });
+      const responseBody = (await response.json().catch(() => null)) as unknown;
+
+      if (response.status === 401) {
+        throw new ForumApiError("You must sign in before replying.");
+      }
+
+      if (!response.ok) {
+        const parsedError = replyErrorSchema.safeParse(responseBody);
+        throw new ForumApiError(parsedError.success ? parsedError.data.error : "Reply failed.");
+      }
+    },
+    onSuccess: () => {
+      setBody("");
+      setActiveTab("write");
+      void queryClient.invalidateQueries({ queryKey: forumKeys.all });
+      router.refresh();
+    },
+    onError: (mutationError) => {
+      if (mutationError instanceof ForumApiError) {
+        setError(mutationError.message);
+        return;
+      }
+      setError("Network error. Check your connection and try again.");
+      pushToast({
+        title: "Failed to post reply",
+        description: "The server could not be reached. Please try again.",
+        tone: "error",
+      });
+    },
+  });
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
 
@@ -55,46 +104,7 @@ export const ForumReplyForm = ({
       return;
     }
 
-    setIsPending(true);
-    try {
-      const response = await fetch(`${backendUrl}/api/forum/threads/${threadId}/replies`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify(parsed.data),
-      });
-      const responseBody = (await response.json().catch(() => null)) as unknown;
-
-      if (response.status === 401) {
-        setError("You must sign in before replying.");
-        return;
-      }
-
-      if (!response.ok) {
-        const parsedError = z
-          .object({
-            error: z.string(),
-          })
-          .safeParse(responseBody);
-        setError(parsedError.success ? parsedError.data.error : "Reply failed.");
-        return;
-      }
-
-      setBody("");
-      setActiveTab("write");
-      router.refresh();
-    } catch {
-      setError("Network error. Check your connection and try again.");
-      pushToast({
-        title: "Failed to post reply",
-        description: "The server could not be reached. Please try again.",
-        tone: "error",
-      });
-    } finally {
-      setIsPending(false);
-    }
+    submitMutation.mutate(parsed.data);
   };
 
   return (
@@ -206,8 +216,14 @@ export const ForumReplyForm = ({
       </AnimatePresence>
 
       <div className="mt-3 flex items-center justify-end">
-        <Button type="submit" size="sm" variant="primary" loading={isPending} iconLeft={<Send />}>
-          {isPending ? "Posting..." : "Submit Reply"}
+        <Button
+          type="submit"
+          size="sm"
+          variant="primary"
+          loading={submitMutation.isPending}
+          iconLeft={<Send />}
+        >
+          {submitMutation.isPending ? "Posting..." : "Submit Reply"}
         </Button>
       </div>
     </form>

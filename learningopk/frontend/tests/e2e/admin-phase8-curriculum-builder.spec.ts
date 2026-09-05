@@ -697,11 +697,9 @@ test("admin can add exercise from exercise tab with physics numerical option", a
   await page.getByTestId("curriculum-chapter-submit").click();
 
   await page.getByTestId("curriculum-tab-exercise").click();
-  await page
-    .getByTestId("curriculum-exercise-chapter-select")
-    .selectOption({
-      label: `${boardName} / ${className} / ${subjectName} / Chapter 1: ${chapterTitle}`,
-    });
+  await page.getByTestId("curriculum-exercise-chapter-select").selectOption({
+    label: `${boardName} / ${className} / ${subjectName} / Chapter 1: ${chapterTitle}`,
+  });
 
   await expect(page.getByTestId("curriculum-exercise-type-select")).toContainText(
     "Comprehension Questions Short Questions"

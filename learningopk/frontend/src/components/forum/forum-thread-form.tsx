@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Pencil, X, Send, BookOpen, Layers } from "lucide-react";
 import { z } from "zod";
@@ -21,6 +22,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Tabs, TabList, TabTrigger, TabContent } from "@/components/ui/tabs";
+import { ForumApiError, forumKeys } from "@/lib/forum-api";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
 
@@ -36,6 +38,12 @@ const createThreadResponseSchema = z.object({
     id: z.string().uuid(),
   }),
 });
+
+const threadErrorSchema = z.object({
+  error: z.string(),
+});
+
+type CreateThreadInput = z.infer<typeof createThreadSchema>;
 
 type ForumSubjectOption = {
   id: number;
@@ -69,6 +77,7 @@ export const ForumThreadForm = ({
   closeHref,
 }: ForumThreadFormProps) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { pushToast } = useToast();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -76,7 +85,6 @@ export const ForumThreadForm = ({
   const [chapterId, setChapterId] = useState("");
   const [activeTab, setActiveTab] = useState("write");
   const [error, setError] = useState<string | null>(null);
-  const [isPending, setIsPending] = useState(false);
 
   const filteredChapterOptions = useMemo(() => {
     if (!subjectId) {
@@ -110,7 +118,60 @@ export const ForumThreadForm = ({
     router.push(closeHref);
   };
 
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const submitMutation = useMutation({
+    mutationFn: async (input: CreateThreadInput) => {
+      const response = await fetch(`${backendUrl}/api/forum/threads`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(input),
+      });
+      const responseBody = (await response.json().catch(() => null)) as unknown;
+
+      if (response.status === 401) {
+        throw new ForumApiError("You must sign in before creating a thread.");
+      }
+
+      if (!response.ok) {
+        const parsedError = threadErrorSchema.safeParse(responseBody);
+        throw new ForumApiError(
+          parsedError.success ? parsedError.data.error : "Thread creation failed."
+        );
+      }
+
+      const parsedResponse = createThreadResponseSchema.safeParse(responseBody);
+      if (!parsedResponse.success) {
+        throw new ForumApiError("Thread was created but the response payload was invalid.");
+      }
+
+      return parsedResponse.data;
+    },
+    onSuccess: (data) => {
+      setTitle("");
+      setBody("");
+      setSubjectId("");
+      setChapterId("");
+      void queryClient.invalidateQueries({ queryKey: forumKeys.all });
+      router.push(`/forum/${data.thread.id}`);
+      router.refresh();
+    },
+    onError: (mutationError) => {
+      if (mutationError instanceof ForumApiError) {
+        setError(mutationError.message);
+        return;
+      }
+      setError("Network error. Check your connection and try again.");
+      pushToast({
+        title: "Failed to create thread",
+        description: "The server could not be reached. Please try again.",
+        tone: "error",
+      });
+    },
+  });
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
 
@@ -129,55 +190,7 @@ export const ForumThreadForm = ({
       return;
     }
 
-    setIsPending(true);
-    try {
-      const response = await fetch(`${backendUrl}/api/forum/threads`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify(parsed.data),
-      });
-      const responseBody = (await response.json().catch(() => null)) as unknown;
-
-      if (response.status === 401) {
-        setError("You must sign in before creating a thread.");
-        return;
-      }
-
-      if (!response.ok) {
-        const parsedError = z
-          .object({
-            error: z.string(),
-          })
-          .safeParse(responseBody);
-        setError(parsedError.success ? parsedError.data.error : "Thread creation failed.");
-        return;
-      }
-
-      const parsedResponse = createThreadResponseSchema.safeParse(responseBody);
-      if (!parsedResponse.success) {
-        setError("Thread was created but the response payload was invalid.");
-        return;
-      }
-
-      setTitle("");
-      setBody("");
-      setSubjectId("");
-      setChapterId("");
-      router.push(`/forum/${parsedResponse.data.thread.id}`);
-      router.refresh();
-    } catch {
-      setError("Network error. Check your connection and try again.");
-      pushToast({
-        title: "Failed to create thread",
-        description: "The server could not be reached. Please try again.",
-        tone: "error",
-      });
-    } finally {
-      setIsPending(false);
-    }
+    submitMutation.mutate(parsed.data);
   };
 
   return (
@@ -321,10 +334,10 @@ export const ForumThreadForm = ({
           form="create-thread-form"
           variant="primary"
           size="sm"
-          loading={isPending}
+          loading={submitMutation.isPending}
           iconLeft={<Send />}
         >
-          {isPending ? "Posting..." : "Submit"}
+          {submitMutation.isPending ? "Posting..." : "Submit"}
         </Button>
       </SheetFooter>
     </Sheet>

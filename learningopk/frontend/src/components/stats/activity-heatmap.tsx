@@ -63,10 +63,7 @@ interface DayCell {
 export function ActivityHeatmap({ dailyActivity }: ActivityHeatmapProps) {
   const { cells, monthMarkers, totalWeeks } = useMemo(() => {
     const activityMap = new Map(
-      dailyActivity.map((entry) => [
-        entry.date,
-        { count: entry.count, level: entry.level },
-      ])
+      dailyActivity.map((entry) => [entry.date, { count: entry.count, level: entry.level }])
     );
 
     const today = new Date();
@@ -254,10 +251,9 @@ export function ActivityHeatmap({ dailyActivity }: ActivityHeatmapProps) {
     <div className="space-y-4">
       {/* Screen reader summary */}
       <p className="sr-only">
-        Study activity heatmap for the past year. {totalActiveDays} active days,{" "}
-        {totalActivities} total{" "}
-        {totalActivities === 1 ? "activity" : "activities"}. Use arrow keys to
-        navigate between days.
+        Study activity heatmap for the past year. {totalActiveDays} active days, {totalActivities}{" "}
+        total {totalActivities === 1 ? "activity" : "activities"}. Use arrow keys to navigate
+        between days.
       </p>
 
       {/* Summary badges */}
@@ -286,10 +282,7 @@ export function ActivityHeatmap({ dailyActivity }: ActivityHeatmapProps) {
           Use a CSS media-query-driven wrapper that overrides custom props
           at the md breakpoint via an inline <style> scoped with a data attr.
         */}
-        <div
-          data-heatmap-grid=""
-          className="w-fit"
-        >
+        <div data-heatmap-grid="" className="w-fit">
           {/* Inline responsive style overrides — avoids JS media query hooks */}
           <style
             dangerouslySetInnerHTML={{
@@ -387,8 +380,7 @@ export function ActivityHeatmap({ dailyActivity }: ActivityHeatmapProps) {
                       "rounded-[2px] transition-colors",
                       "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-primary",
                       INTENSITY_CLASSES[cell.level],
-                      cell.count > 0 &&
-                        "hover:ring-2 hover:ring-accent-primary/30"
+                      cell.count > 0 && "hover:ring-2 hover:ring-accent-primary/30"
                     )}
                     style={{
                       width: "var(--hm-cell)",
@@ -410,10 +402,7 @@ export function ActivityHeatmap({ dailyActivity }: ActivityHeatmapProps) {
             {[0, 1, 2, 3, 4].map((level) => (
               <div
                 key={level}
-                className={cn(
-                  "rounded-[2px]",
-                  INTENSITY_CLASSES[level]
-                )}
+                className={cn("rounded-[2px]", INTENSITY_CLASSES[level])}
                 style={{
                   width: "var(--hm-cell)",
                   height: "var(--hm-cell)",
@@ -424,8 +413,8 @@ export function ActivityHeatmap({ dailyActivity }: ActivityHeatmapProps) {
           </div>
           {/* Screen-reader-friendly legend description */}
           <p className="sr-only">
-            Legend: Level 0 is no activity, level 1 is light, level 2 is
-            moderate, level 3 is high, level 4 is very high activity.
+            Legend: Level 0 is no activity, level 1 is light, level 2 is moderate, level 3 is high,
+            level 4 is very high activity.
           </p>
         </div>
       </div>

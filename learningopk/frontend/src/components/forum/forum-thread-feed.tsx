@@ -1,18 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
-import { getForumThreads, type ForumFeedQuery, type ForumFeedResponse } from "@/lib/forum-api";
+import {
+  forumKeys,
+  getForumThreads,
+  type ForumFeedFilters,
+  type ForumFeedResponse,
+} from "@/lib/forum-api";
 
 import { ForumThreadList } from "./forum-thread-list";
 
-type FeedQuery = Omit<ForumFeedQuery, "limit" | "offset">;
-
 type ForumThreadFeedProps = {
   initialThreads: ForumFeedResponse["threads"];
-  query: FeedQuery;
+  query: ForumFeedFilters;
   initialBatchSize: number;
   pageSize?: number;
 };
@@ -23,58 +27,49 @@ export function ForumThreadFeed({
   initialBatchSize,
   pageSize = 10,
 }: ForumThreadFeedProps) {
-  const [threads, setThreads] = useState(initialThreads);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(initialThreads.length >= initialBatchSize);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    setThreads(initialThreads);
-    setHasMore(initialThreads.length >= initialBatchSize);
-    setIsLoading(false);
-    setLoadError(null);
-  }, [initialBatchSize, initialThreads]);
-
-  const loadMore = useCallback(async () => {
-    if (isLoading || !hasMore) {
-      return;
-    }
-
-    setIsLoading(true);
-    setLoadError(null);
-
-    try {
-      const response = await getForumThreads({
-        ...query,
-        limit: pageSize,
-        offset: threads.length,
-      });
-
-      if (response.threads.length === 0) {
-        setHasMore(false);
-        return;
+  const feedQuery = useInfiniteQuery({
+    queryKey: forumKeys.threads(query),
+    queryFn: ({ pageParam }) => getForumThreads({ ...query, limit: pageSize, offset: pageParam }),
+    initialPageParam: 0,
+    // First page is server-rendered with `initialBatchSize` items; keep loading
+    // more only while full pages come back (mirrors the original hasMore logic).
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.threads.length === 0) {
+        return undefined;
       }
-
-      setThreads((currentThreads) => {
-        const existingIds = new Set(currentThreads.map((thread) => thread.id));
-        const dedupedNext = response.threads.filter((thread) => !existingIds.has(thread.id));
-        return [...currentThreads, ...dedupedNext];
-      });
-
-      if (response.threads.length < pageSize) {
-        setHasMore(false);
+      const threshold = allPages.length === 1 ? initialBatchSize : pageSize;
+      if (lastPage.threads.length < threshold) {
+        return undefined;
       }
-    } catch {
-      setLoadError("Unable to load more threads right now.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [hasMore, isLoading, pageSize, query, threads.length]);
+      return allPages.reduce((total, page) => total + page.threads.length, 0);
+    },
+    // Hydrate with the server-rendered first paint so there is no client refetch
+    // on mount for the current filters.
+    initialData: { pages: [{ threads: initialThreads }], pageParams: [0] },
+    select: (data) => {
+      // Dedupe by id across pages, matching the original append logic.
+      const seen = new Set<string>();
+      const threads = data.pages
+        .flatMap((page) => page.threads)
+        .filter((thread) => {
+          if (seen.has(thread.id)) {
+            return false;
+          }
+          seen.add(thread.id);
+          return true;
+        });
+      return { ...data, pages: [{ threads }] };
+    },
+  });
+
+  const threads = feedQuery.data.pages[0].threads;
+  const { hasNextPage, isFetchingNextPage, fetchNextPage, isFetchNextPageError } = feedQuery;
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel || !hasMore) {
+    if (!sentinel || !hasNextPage || isFetchingNextPage) {
       return;
     }
 
@@ -82,7 +77,7 @@ export function ForumThreadFeed({
       (entries) => {
         const isVisible = entries.some((entry) => entry.isIntersecting);
         if (isVisible) {
-          void loadMore();
+          void fetchNextPage();
         }
       },
       {
@@ -92,20 +87,20 @@ export function ForumThreadFeed({
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMore, loadMore]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <section className="space-y-3" aria-label="Forum threads">
       <ForumThreadList threads={threads} />
 
       {/* Infinite scroll sentinel */}
-      {threads.length > 0 && hasMore ? (
+      {threads.length > 0 && hasNextPage ? (
         <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />
       ) : null}
 
       {/* Loading indicator */}
       <AnimatePresence>
-        {isLoading ? (
+        {isFetchingNextPage ? (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -119,9 +114,9 @@ export function ForumThreadFeed({
       </AnimatePresence>
 
       {/* Error state */}
-      {loadError ? (
+      {isFetchNextPageError ? (
         <div className="rounded-lg border border-accent-danger/20 bg-accent-danger-light px-4 py-3">
-          <p className="text-sm text-accent-danger">{loadError}</p>
+          <p className="text-sm text-accent-danger">Unable to load more threads right now.</p>
         </div>
       ) : null}
     </section>

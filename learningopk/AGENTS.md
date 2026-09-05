@@ -127,6 +127,40 @@ import { Button, Card, Badge } from "@/components/ui";
 import { Button } from "@/design-system/components/Button";
 ```
 
+#### Client-Side Data Fetching (TanStack Query)
+
+New client-side data fetching **MUST** use TanStack Query (`useQuery`, `useSuspenseQuery`, `useInfiniteQuery`, `useMutation`). Raw `fetch` + `useEffect` + `useState` is banned for server state. The provider lives in `frontend/app/providers.tsx` (staleTime 30s, retry 1, refetchOnWindowFocus false).
+
+Reference implementation: the forum feed (`src/components/forum/forum-thread-feed.tsx`, `forum-reply-actions.tsx`, `forum-reply-form.tsx`, `forum-thread-form.tsx`) with shared keys/errors in `src/lib/forum-api.ts`.
+
+```typescript
+// Queries: domain key factory from the api module; SSR data hydrates via initialData.
+const feedQuery = useInfiniteQuery({
+  queryKey: forumKeys.threads(filters),
+  queryFn: ({ pageParam }) => getForumThreads({ ...filters, offset: pageParam }),
+  initialPageParam: 0,
+  getNextPageParam: (lastPage) => /* undefined when no full page remains */,
+  initialData: { pages: [{ threads }], pageParams: [0] }, // server-rendered first paint
+});
+
+// Mutations: invalidate the domain root, then refresh RSC-rendered markup.
+const queryClient = useQueryClient();
+const voteMutation = useMutation({
+  mutationFn: postVote,
+  onSuccess: () => {
+    void queryClient.invalidateQueries({ queryKey: forumKeys.all });
+    router.refresh(); // needed when the page is server-rendered
+  },
+});
+```
+
+Rules of thumb:
+
+- Cache keys are hierarchical (`["forum"]` → `["forum", "threads", filters]`); mutations invalidate at the domain root.
+- Throw typed errors (e.g. `ForumApiError`) from `mutationFn` for non-2xx responses so UI can distinguish API errors from network errors.
+- Fire-and-forget side-effect pings (view tracking) may stay as raw `fetch` — they read no server state.
+- Server components keep fetching directly (RSC `fetch`/api modules); TanStack Query is for the client tree only.
+
 ---
 
 ### Shared Conventions
