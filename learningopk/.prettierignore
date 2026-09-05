@@ -4,10 +4,3 @@ dist
 playwright-report
 test-results
 pnpm-lock.yaml
-
-# TEMP: user WIP in flight — remove after stats refactor lands
-frontend/app/(dashboard)/stats/page.tsx
-frontend/src/components/stats/
-frontend/src/components/forum/forum-trending-sidebar.tsx
-frontend/src/lib/resolve-css-tokens.ts
-frontend/src/lib/stats-metrics.ts
