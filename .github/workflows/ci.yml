@@ -17,6 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -32,6 +34,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -43,9 +47,16 @@ jobs:
   test:
     name: Backend Tests
     runs-on: ubuntu-latest
+    env:
+      MISTRAL_API_KEY: ci-only-key-not-used
+      BETTER_AUTH_SECRET: ci-only-secret-do-not-use-in-production
+      BETTER_AUTH_URL: http://localhost:3001
+      FRONTEND_ORIGIN: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -53,10 +64,12 @@ jobs:
           cache-dependency-path: learningopk/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - name: Start Postgres + Redis
+        working-directory: ./learningopk
         run: docker compose up -d postgres redis
       - name: Wait for services
+        working-directory: ./learningopk
         run: |
-          for i in {1..15}; do
+          for i in {1..30}; do
             if docker compose exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
               exit 0
             fi
@@ -65,6 +78,7 @@ jobs:
           echo "Postgres failed to become ready"
           exit 1
       - name: Push database schema
+        working-directory: ./learningopk
         env:
           DATABASE_URL: postgresql://postgres:password@localhost:5433/learningo
         run: pnpm run db:push
@@ -73,10 +87,8 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:password@localhost:5433/learningo
           REDIS_URL: redis://localhost:6379
-          BETTER_AUTH_SECRET: ci-only-secret-do-not-use-in-production
-          BETTER_AUTH_URL: http://localhost:3001
-          FRONTEND_ORIGIN: http://localhost:3000
         run: pnpm test
       - name: Tear down services
         if: always()
+        working-directory: ./learningopk
         run: docker compose down --remove-orphans
