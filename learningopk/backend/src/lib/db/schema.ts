@@ -712,6 +712,24 @@ export const userProgress = pgTable(
     flashcardsCompleted: boolean("flashcards_completed").notNull().default(false),
     quizBestScore: integer("quiz_best_score").notNull().default(0),
     quizAttemptsCount: integer("quiz_attempts_count").notNull().default(0),
+    // Idempotency windows for XP-awarding progress events (see migration 0038).
+    xpAwardedChapterVisitAt: timestamp("xp_awarded_chapter_visit_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+    xpAwardedSummaryReadAt: timestamp("xp_awarded_summary_read_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+    xpAwardedExerciseViewCount: integer("xp_awarded_exercise_view_count").notNull().default(0),
+    xpAwardedExerciseViewWindowStartedAt: timestamp("xp_awarded_exercise_view_window_started_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+    xpAwardedFlashcardCompleteAt: timestamp("xp_awarded_flashcard_complete_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
   },
   (table) => [
     uniqueIndex("user_progress_user_chapter_idx").on(table.userId, table.chapterId),

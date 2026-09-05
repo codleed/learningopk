@@ -9,6 +9,26 @@ import {
 import { withOptionalDbFallback } from "../lib/db-schema-compat.js";
 import { logger } from "../lib/logger.js";
 import { applyProgressEvent } from "../lib/progress.js";
+import { hasRecentXpAward, nextXpAwardTimestamps } from "../lib/xp-idempotency.js";
+
+async function readUserXpInfo(userId: string) {
+  const info = await xpService.getUserXpInfo(userId);
+  return info
+    ? {
+        xpAwarded: 0,
+        newXp: info.xp,
+        level: info.level,
+        levelName: info.levelName,
+        leveledUp: false,
+      }
+    : {
+        xpAwarded: 0,
+        newXp: 0,
+        level: 1,
+        levelName: "Beginner",
+        leveledUp: false,
+      };
+}
 import { getCurrentPktContext, getPktDateKey } from "../lib/streak-wager.js";
 import {
   attachCompletionState,
@@ -141,14 +161,23 @@ export class ProgressService {
     let xpFailed = false;
     try {
       if (input.eventType === "chapter_visit") {
-        const result = await xpService.awardChapterVisitXp(input.userId);
-        xpResult = {
-          xpAwarded: result.xpAwarded,
-          newXp: result.newXp,
-          level: result.level,
-          levelName: result.levelName,
-          leveledUp: result.leveledUp,
-        };
+        if (!hasRecentXpAward(snapshot, "chapter_visit", occurredAt)) {
+          const result = await xpService.awardChapterVisitXp(input.userId);
+          xpResult = {
+            xpAwarded: result.xpAwarded,
+            newXp: result.newXp,
+            level: result.level,
+            levelName: result.levelName,
+            leveledUp: result.leveledUp,
+          };
+          await progressRepository.markXpAwarded(
+            input.userId,
+            input.chapterId!,
+            nextXpAwardTimestamps(snapshot, "chapter_visit", occurredAt)
+          );
+        } else {
+          xpResult = await readUserXpInfo(input.userId);
+        }
       } else if (input.eventType === "subpart_read") {
         // Only award XP if this was a new subpart read (not a duplicate submission)
         if ("isNewRead" in snapshot && snapshot.isNewRead) {
@@ -162,50 +191,62 @@ export class ProgressService {
           };
         } else {
           // No XP awarded for duplicate read
-          const userXpInfo = await xpService.getUserXpInfo(input.userId);
-          xpResult = userXpInfo
-            ? {
-                xpAwarded: 0,
-                newXp: userXpInfo.xp,
-                level: userXpInfo.level,
-                levelName: userXpInfo.levelName,
-                leveledUp: false,
-              }
-            : {
-                xpAwarded: 0,
-                newXp: 0,
-                level: 1,
-                levelName: "Beginner",
-                leveledUp: false,
-              };
+          xpResult = await readUserXpInfo(input.userId);
         }
       } else if (input.eventType === "summary_read") {
-        const result = await xpService.awardSummaryReadXp(input.userId);
-        xpResult = {
-          xpAwarded: result.xpAwarded,
-          newXp: result.newXp,
-          level: result.level,
-          levelName: result.levelName,
-          leveledUp: result.leveledUp,
-        };
+        if (!hasRecentXpAward(snapshot, "summary_read", occurredAt)) {
+          const result = await xpService.awardSummaryReadXp(input.userId);
+          xpResult = {
+            xpAwarded: result.xpAwarded,
+            newXp: result.newXp,
+            level: result.level,
+            levelName: result.levelName,
+            leveledUp: result.leveledUp,
+          };
+          await progressRepository.markXpAwarded(
+            input.userId,
+            input.chapterId!,
+            nextXpAwardTimestamps(snapshot, "summary_read", occurredAt)
+          );
+        } else {
+          xpResult = await readUserXpInfo(input.userId);
+        }
       } else if (input.eventType === "exercise_view") {
-        const result = await xpService.awardExerciseCompleteXp(input.userId);
-        xpResult = {
-          xpAwarded: result.xpAwarded,
-          newXp: result.newXp,
-          level: result.level,
-          levelName: result.levelName,
-          leveledUp: result.leveledUp,
-        };
+        if (!hasRecentXpAward(snapshot, "exercise_view", occurredAt)) {
+          const result = await xpService.awardExerciseCompleteXp(input.userId);
+          xpResult = {
+            xpAwarded: result.xpAwarded,
+            newXp: result.newXp,
+            level: result.level,
+            levelName: result.levelName,
+            leveledUp: result.leveledUp,
+          };
+          await progressRepository.markXpAwarded(
+            input.userId,
+            input.chapterId!,
+            nextXpAwardTimestamps(snapshot, "exercise_view", occurredAt)
+          );
+        } else {
+          xpResult = await readUserXpInfo(input.userId);
+        }
       } else if (input.eventType === "flashcard_complete") {
-        const result = await xpService.awardFlashcardCompleteXp(input.userId);
-        xpResult = {
-          xpAwarded: result.xpAwarded,
-          newXp: result.newXp,
-          level: result.level,
-          levelName: result.levelName,
-          leveledUp: result.leveledUp,
-        };
+        if (!hasRecentXpAward(snapshot, "flashcard_complete", occurredAt)) {
+          const result = await xpService.awardFlashcardCompleteXp(input.userId);
+          xpResult = {
+            xpAwarded: result.xpAwarded,
+            newXp: result.newXp,
+            level: result.level,
+            levelName: result.levelName,
+            leveledUp: result.leveledUp,
+          };
+          await progressRepository.markXpAwarded(
+            input.userId,
+            input.chapterId!,
+            nextXpAwardTimestamps(snapshot, "flashcard_complete", occurredAt)
+          );
+        } else {
+          xpResult = await readUserXpInfo(input.userId);
+        }
       }
       // Note: quiz_submit XP is awarded in quiz.service.ts to avoid double awards
     } catch (error) {
