@@ -142,14 +142,18 @@ mockExamsRouter.get("/", async (req, res) => {
   }
 });
 
-// Get mock exam with quiz questions (for view solutions)
-mockExamsRouter.get("/:id", async (req, res) => {
+// Get mock exam metadata. The solutionContent is gated behind a completed
+// attempt for the signed-in user, matching the rule on /:id/questions.
+mockExamsRouter.get("/:id", requireSession, async (req, res) => {
   try {
     const parsed = mockExamParamsSchema.safeParse(req.params);
     if (!parsed.success) {
       res.status(400).json(errorResponse("Invalid mock exam ID", "VALIDATION_ERROR"));
       return;
     }
+
+    const authedReq = req as AuthenticatedRequest;
+    const userId = authedReq.session.user.id;
 
     const examRows = await db
       .select({
@@ -183,6 +187,26 @@ mockExamsRouter.get("/:id", async (req, res) => {
     if (!examRow) {
       res.status(404).json(errorResponse("Mock exam not found", "NOT_FOUND"));
       return;
+    }
+
+    // Gate solutionContent behind a completed attempt. Use the same rule
+    // as /:id/questions so a user can never read solutions without having
+    // actually finished the exam.
+    const attemptCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(quizAttempts)
+      .where(
+        and(
+          eq(quizAttempts.userId, userId),
+          eq(quizAttempts.quizId, examRow.quizId),
+          eq(quizAttempts.type, "mock_exam"),
+          sql`${quizAttempts.completedAt} IS NOT NULL`
+        )
+      );
+
+    const hasCompletedAttempt = (attemptCount[0]?.count ?? 0) > 0;
+    if (!hasCompletedAttempt) {
+      examRow.solutionContent = null;
     }
 
     res.json(successResponse({ mockExam: examRow }));
