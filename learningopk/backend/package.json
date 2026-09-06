@@ -10,7 +10,7 @@
     "lint": "tsc -p tsconfig.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsx --test --test-force-exit src/tests/**/*.test.ts",
-    "test:unit": "tsx --test --test-force-exit src/tests/unit/**/*.test.ts",
+    "test:unit": "tsx --test --experimental-test-isolation=none --test-force-exit src/tests/unit/**/*.test.ts",
     "test:integration": "tsx --test --test-force-exit src/tests/integration/**/*.test.ts",
     "healthcheck": "tsx src/scripts/healthcheck.ts",
     "ai:verify": "tsx src/scripts/verify-ai.ts",
