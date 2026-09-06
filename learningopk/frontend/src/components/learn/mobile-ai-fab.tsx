@@ -105,7 +105,7 @@ export function MobileAiFab() {
               "fixed bottom-6 right-5 z-40 md:hidden",
               // Shape & size
               "flex h-14 w-14 items-center justify-center rounded-full",
-              // Color – design-system tokens
+              // Color – design tokens
               "bg-accent-primary text-white",
               // Shadow
               "shadow-[0_4px_16px_rgba(0,0,0,0.18)]",
