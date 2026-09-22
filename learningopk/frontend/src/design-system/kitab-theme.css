@@ -30,6 +30,14 @@
   --color-plum-tint: var(--plum-tint);
   --color-graphite: var(--graphite);
 
+  /* Legacy utility bridges (past-papers, admin panels) */
+  --color-surface-primary: var(--surface-primary);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-tertiary: var(--paper-dim);
+  --color-border-primary: var(--border-primary);
+  --color-border-secondary: var(--hairline-strong);
+  --color-text-tertiary: var(--text-tertiary);
+
   --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --font-ui: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-ui);
