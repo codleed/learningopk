@@ -112,7 +112,9 @@ export function MarginCompanion({ chapterTitle }: { chapterId: number; chapterTi
               <li key={card.reviewId} className="py-3">
                 <p className="text-body text-ink">{card.front}</p>
                 <details className="mt-1">
-                  <summary className="cursor-pointer text-caption text-brick">Show answer</summary>
+                  <summary className="cursor-pointer text-caption text-brick-deep">
+                    Show answer
+                  </summary>
                   <p className="mt-2 text-body text-ink-soft">{card.back}</p>
                 </details>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -152,7 +154,7 @@ function Chip({
 }) {
   const tones = {
     neutral: "bg-paper-dim text-ink-soft",
-    active: "bg-accent-tint text-accent",
+    active: "bg-accent-tint text-accent-bright",
     /* ponytail: ochre-tint/ochre are value-aliases of warning/warning-tint; --color-warning isn't in @theme */
     warning: "bg-ochre-tint text-ochre",
     danger: "bg-danger-tint text-danger",

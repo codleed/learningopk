@@ -10,7 +10,7 @@ export type TagTone = "neutral" | "brick" | "moss" | "ochre" | "plum";
 
 const tagTones: Record<TagTone, string> = {
   neutral: "bg-paper-dim text-ink-soft",
-  brick: "bg-accent-tint text-accent",
+  brick: "bg-accent-tint text-accent-bright",
   moss: "bg-moss-tint text-moss",
   ochre: "bg-ochre-tint text-ochre",
   plum: "bg-plum-tint text-plum",

@@ -9,7 +9,7 @@ import type { QuietBarLink } from "./quiet-bar";
 
 /* ═══════════════════════════════════════════════════════════════
    KitabShell — the chrome-less replacement for AppShell.
-   Desktop: 40px QuietBar only. Mobile: no bar at all.
+   Desktop: 44px QuietBar only. Mobile: no bar at all.
    The Index (⌘K) is the primary navigation on both.
    ═══════════════════════════════════════════════════════════════ */
 
@@ -54,7 +54,7 @@ export function KitabShell({
         <ul className="text-body">
           {indexEntries.map((e) => (
             <li key={e.href + e.label} className="border-b border-hairline py-2">
-              <Link href={e.href} className="text-ink hover:text-accent">
+              <Link href={e.href} className="text-ink hover:text-accent-bright">
                 {e.label}
               </Link>
             </li>

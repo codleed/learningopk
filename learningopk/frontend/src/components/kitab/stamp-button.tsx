@@ -29,9 +29,9 @@ const variantStyles: Record<StampVariant, string> = {
   primary:
     "bg-accent text-on-accent tracking-[0.08em] uppercase hover:bg-accent-bright active:scale-[0.98]",
   secondary:
-    "bg-transparent border border-hairline-strong text-ink tracking-[0.08em] uppercase hover:border-accent hover:text-accent active:scale-[0.98]",
+    "bg-transparent border border-hairline-strong text-ink tracking-[0.08em] uppercase hover:border-accent hover:text-accent-bright active:scale-[0.98]",
   tertiary:
-    "bg-transparent text-ink underline decoration-hairline-strong underline-offset-4 hover:decoration-accent hover:text-accent",
+    "bg-transparent text-ink underline decoration-hairline-strong underline-offset-4 hover:decoration-accent-bright hover:text-accent-bright",
   quiet: "bg-transparent text-ink-soft hover:text-ink hover:bg-accent-tint active:scale-[0.98]",
   destructive:
     "bg-transparent border border-danger text-danger tracking-[0.08em] uppercase hover:bg-danger-tint active:scale-[0.98]",

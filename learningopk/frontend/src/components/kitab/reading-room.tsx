@@ -17,7 +17,7 @@ export const ReadingRoom = forwardRef<
 >(function ReadingRoom({ kicker, title, lede, className, children, ...rest }, ref) {
   return (
     <article ref={ref} className={cn("mx-auto w-full max-w-[68ch]", className)} {...rest}>
-      <div className="overline text-brick">{kicker}</div>
+      <div className="overline text-brick-deep">{kicker}</div>
       <h1 className="mt-2 font-display text-display font-semibold text-ink">{title}</h1>
       <div className="mt-4 border-ink border-t-[3px] relative after:absolute after:left-0 after:right-0 after:top-[3px] after:border-ink after:border-t" />
       {lede ? <p className="mt-6 font-display text-heading font-medium text-ink">{lede}</p> : null}

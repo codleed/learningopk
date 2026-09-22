@@ -49,7 +49,7 @@ export function QuietBar({
               href={l.href}
               className={cn(
                 "px-2 py-1 text-xs font-semibold",
-                active ? "text-accent" : "text-ink-soft hover:text-ink"
+                active ? "text-accent-bright" : "text-ink-soft hover:text-ink"
               )}
             >
               {l.label}
@@ -61,7 +61,7 @@ export function QuietBar({
       <button
         type="button"
         onClick={onOpenIndex}
-        className="flex items-center gap-2 rounded-[6px] border border-hairline-strong px-2 py-1 text-caption text-ink-soft hover:border-accent hover:text-accent"
+        className="flex items-center gap-2 rounded-[6px] border border-hairline-strong px-2 py-1 text-caption text-ink-soft hover:border-accent hover:text-accent-bright"
       >
         <span>Index</span>
         <span className="tnum rounded-tag border border-hairline px-1 text-[0.625rem]">⌘K</span>

@@ -97,7 +97,7 @@
 
 /* QuietBar glass — ONLY place backdrop-filter is allowed (dark mode only). */
 .quietbar-glass {
-  background: var(--paper);
+  background: var(--paper-raised);
   border-bottom: 1px solid var(--hairline);
 }
 :root:not(.light) .quietbar-glass,

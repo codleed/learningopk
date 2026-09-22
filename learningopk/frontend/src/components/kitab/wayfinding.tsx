@@ -33,7 +33,7 @@ export function Wayfinding({
             </span>
           )}
           {c.href ? (
-            <Link href={c.href} className="text-ink-soft hover:text-accent">
+            <Link href={c.href} className="text-ink-soft hover:text-accent-bright">
               {c.label}
             </Link>
           ) : (
