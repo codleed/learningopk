@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
    StampButton — replaces the rounded, shadowed Button.
    Primary = solid brick + caps label ("stamped"); secondary =
    ink outline; tertiary = underlined ink link.
-   Press = 1px translateY, never scale/lift.
+   Press = scale 0.98.
    ═══════════════════════════════════════════════════════════════ */
 
 export type StampVariant = "primary" | "secondary" | "tertiary" | "quiet" | "destructive";

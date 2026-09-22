@@ -123,7 +123,7 @@ export function SuccessState({ title, description, action, className, icon }: Su
         className
       )}
     >
-      <div className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-[8px] bg-paper-dim text-accent">
+      <div className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-[8px] bg-paper-dim text-accent-bright">
         {icon ?? <CheckCircle className="h-5 w-5" aria-hidden />}
       </div>
       <h3 className="text-lg font-semibold text-ink">{title}</h3>

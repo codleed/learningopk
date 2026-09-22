@@ -200,7 +200,7 @@ export function SelectItem({
       )}
     >
       <SelectPrimitive.ItemIndicator className="absolute left-2 flex items-center justify-center">
-        <Check className="h-3.5 w-3.5 text-accent" />
+        <Check className="h-3.5 w-3.5 text-accent-bright" />
       </SelectPrimitive.ItemIndicator>
 
       <div className="flex items-center gap-2">

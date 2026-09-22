@@ -105,7 +105,7 @@ export function Sheet({
                   <DialogPrimitive.Close
                     className={cn(
                       "absolute right-4 top-4 z-10 rounded-md p-1",
-                      "text-text-muted hover:text-text-primary hover:bg-bg-subtle",
+                      "text-text-muted hover:text-accent-bright hover:bg-accent-tint",
                       "transition-colors duration-150",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40"
                     )}

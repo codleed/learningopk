@@ -22,8 +22,8 @@ const progressColorVariants = cva("", {
 });
 
 const fillColorMap: Record<string, string> = {
-  primary: "bg-accent",
-  success: "bg-accent",
+  primary: "bg-accent-bright",
+  success: "bg-accent-bright",
   warning: "bg-ochre",
   danger: "bg-danger",
 };

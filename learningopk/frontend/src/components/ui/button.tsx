@@ -160,7 +160,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       disabled={isDisabled}
       className={cn(
         buttonVariants({ variant, size, shape, width }),
-        !disableAnimation && !isDisabled && "active:scale-[0.98]",
+        disableAnimation && "active:scale-100",
         className
       )}
       aria-busy={loading || undefined}

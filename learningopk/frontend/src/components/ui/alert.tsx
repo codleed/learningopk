@@ -18,7 +18,6 @@ const variantIcons: Record<string, ReactNode> = {
 const alertVariants = cva(
   [
     "relative flex gap-3 rounded-[8px] border border-hairline border-l-4 bg-paper-raised px-4 py-3 text-sm",
-    "transition-all duration-200",
   ].join(" "),
   {
     variants: {

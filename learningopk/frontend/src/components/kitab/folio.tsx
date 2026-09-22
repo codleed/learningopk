@@ -3,8 +3,8 @@ import { cn } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
    Folio — the sheet of paper. Replaces Card.
-   No shadow, no lift: separation is achieved by tint, hairline,
-   or both — never elevation.
+   Separation is achieved by tint and hairline; the plain and
+   raised tones also carry a soft shadow (elevation allowed).
    ═══════════════════════════════════════════════════════════════ */
 
 export type FolioTone = "plain" | "raised" | "dim" | "brick" | "moss" | "ochre";

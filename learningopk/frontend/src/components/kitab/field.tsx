@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
    Field — form control that looks like a printed form entry.
-   Underline box: 1px hairline at the bottom, 2px ink on focus.
+   Boxed control: hairline-strong border, accent focus ring.
    Label always visible above (caps, small).
    ═══════════════════════════════════════════════════════════════ */
 

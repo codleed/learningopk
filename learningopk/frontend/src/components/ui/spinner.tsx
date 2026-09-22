@@ -70,7 +70,7 @@ export function Spinner({
       className={cn(
         "inline-block animate-spin rounded-full",
         "border-2 border-current border-t-transparent",
-        "text-accent",
+        "text-accent-bright",
         spinnerSizeVariants({ size }),
         className
       )}

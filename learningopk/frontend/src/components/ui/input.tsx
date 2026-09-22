@@ -17,7 +17,7 @@ const inputVariants = cva(
     variants: {
       variant: {
         default: [
-          "bg-paper-dim border border-hairline-strong rounded-[8px] text-ink placeholder:text-ink-faint",
+          "bg-paper-dim border border-hairline-strong rounded-[8px]",
           "focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40",
         ].join(" "),
         ghost: [

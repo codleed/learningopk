@@ -4,7 +4,7 @@ import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 /* ─── CVA Skeleton Variants ─── */
-const skeletonVariants = cva(["bg-bg-elevated rounded-[8px]"].join(" "), {
+const skeletonVariants = cva(["bg-paper-raised border border-hairline rounded-[8px]"].join(" "), {
   variants: {
     variant: {
       text: "h-4 w-full",
