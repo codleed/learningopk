@@ -3,13 +3,13 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from "react";
+import { useTheme } from "next-themes";
 import { z } from "zod";
 
 import { DashboardSection } from "@/components/foundation/dashboard-primitives";
 import { useToast } from "@/components/ui/toast";
 import { authClient } from "@/lib/auth-client";
 import { uploadProfileImage } from "@/lib/profile-api";
-import { applyTheme, type AppTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 type SettingsProfile = {
@@ -40,7 +40,8 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
   const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
   const [selectedProfileImage, setSelectedProfileImage] = useState<File | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(initialProfile.image);
-  const [activeTheme, setActiveTheme] = useState<AppTheme>("light");
+  const { resolvedTheme, setTheme } = useTheme();
+  const activeTheme: "light" | "dark" = resolvedTheme === "light" ? "light" : "dark";
   const avatarInitials = useMemo(
     () =>
       initialProfile.name
@@ -159,9 +160,8 @@ export function DashboardSettingsPanel({ initialProfile }: DashboardSettingsPane
     router.refresh();
   };
 
-  const onThemeChange = (nextTheme: AppTheme) => {
-    applyTheme(nextTheme);
-    setActiveTheme(nextTheme);
+  const onThemeChange = (nextTheme: "light" | "dark") => {
+    setTheme(nextTheme);
     pushToast({
       title: "Theme updated",
       description: `Switched to ${nextTheme} mode.`,
