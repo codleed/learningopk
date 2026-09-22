@@ -98,7 +98,7 @@ The 2026-09-21 Kitab redesign shipped 7 PRs: chrome-less UX, five hubs, ⌘K Ind
 | shadow-md | `0 24px 48px rgba(0,0,0,.55)` (dark) | none |
 | focus | 2px `accent-bright` ring, 2px offset | brick underline |
 
-- **Still banned:** glassmorphism / `backdrop-filter` blur (low-end Android budget), indigo/violet/periwinkle hues, conic-gradient card borders, gradient text, confetti, shimmer skeletons.
+- **Still banned:** glassmorphism / `backdrop-filter` blur **everywhere except the QuietBar in dark mode** (single-element exception, see §4.3), indigo/violet/periwinkle hues, conic-gradient card borders, gradient text, confetti, shimmer skeletons.
 - Hover: border → `border-strong` + shadow-sm deepen; links → `accent-bright` (dark) / `accent-text` (light).
 - Press: `scale(0.98)` (buttons) — replaces the 1px translate.
 - Motion tokens unchanged: `--press 120ms`, `--swap 180ms`, `--overlay 280ms`, `cubic-bezier(0.2, 0, 0, 1)`. `prefers-reduced-motion` still honored.
@@ -154,7 +154,9 @@ Files in `src/components/kitab/` keep names, props, and exports (`index.ts` barr
 
 ### 4.3 Chrome
 
-- **QuietBar**: 40px → **44px**, `surface` bg, 1px bottom border, Poppins 600 hub links, active = `accent-bright` (dark) / `accent-text` (light), Index trigger = bordered pill. Desktop-only stays.
+- **QuietBar**: 40px → **44px**, 1px bottom border, Poppins 600 hub links, active = `accent-bright` (dark) / `accent-text` (light), Index trigger = bordered pill. Desktop-only stays.
+  - **Dark mode = glassmorphism (the one allowed exception):** `background: rgba(28,26,23,0.72)` + `backdrop-filter: blur(12px)` + `border-bottom: 1px solid rgba(53,49,43,0.6)` — content scrolls under a frosted bar. Single element, static (no animated blur), so the low-end Android budget holds.
+  - **Light mode = solid** `surface` (glass reads poorly on white; not requested).
 - **KitabIndex**: raised surface, md shadow, Poppins rows, lime focus/selected row, same A–Z grouping + empty-state hubs.
 - **AppShell** (legacy wrapper): gains the same 44px QuietBar (wordmark · hub links · Index ⌘K · theme) so ~90 legacy screens stop being chrome-less. Props/signature unchanged; `KitabIndexClientBridge` reuse or a thin static variant — implementation choice, visual result identical.
 - **Hubs** (`app/kitab/*`): layouts and data wiring **untouched**; only component skin changes.
@@ -192,7 +194,7 @@ Fraunces/Inter font loading · brick `#B3412E` accent role · warm-paper `#FAF7F
 | 2 | Lint | `npx eslint src/components app` (at least kitab + ui + foundation trees) |
 | 3 | Build | `pnpm build` |
 | 4 | **Contrast CI script** | node script asserting every dark pair **and** every light pair ≥ 4.5:1 (≥ 3:1 for ≥24px/700 text); fails on regression; runnable via `pnpm run check:contrast` |
-| 5 | Banned-pattern sweep | no `indigo\|violet\|#6366F1` ; no `backdrop-blur\|backdrop-filter` ; no `Fraunces\|--font-fraunces` leftovers in layout ; no `#B3412E\|--brick` active as accent in kitab/ui trees ; no `hover-lift\|gradient-text` usage |
+| 5 | Banned-pattern sweep | no `indigo\|violet\|#6366F1` ; `backdrop-filter`/`backdrop-blur` **only** in QuietBar dark styles (anywhere else fails) ; no `Fraunces\|--font-fraunces` leftovers in layout ; no `#B3412E\|--brick` active as accent in kitab/ui trees ; no `hover-lift\|gradient-text` usage |
 | 6 | E2E | existing kitab specs + new `admin-erp-access.spec.ts` (requires `docker:up` + migrate + seed; **fallback:** build/typecheck/lint only, as the route-state matrix permits) |
 
 ---
