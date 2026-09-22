@@ -35,7 +35,7 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
       </label>
       <div
         className={cn(
-          "flex items-center gap-2 bg-paper-dim px-3 border rounded-[8px] h-10",
+          "flex items-center gap-2 bg-paper-dim px-3 border border-hairline-strong rounded-[8px] h-10",
           "transition-colors duration-[var(--press)]",
           "focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/40",
           error && "border-plum"
