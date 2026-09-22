@@ -1,0 +1,571 @@
+{
+  "functions": {
+    "listDepartments": {
+      "description": "List all departments for a school with pagination",
+      "permission": "EMPLOYEES_VIEW",
+      "arguments": {
+        "page": { "question": "Page number", "type": "number", "default": 1 },
+        "pageSize": { "question": "Items per page", "type": "number", "default": 20 }
+      }
+    },
+    "createDepartment": {
+      "description": "Create a new department",
+      "permission": "DEPARTMENTS_MANAGE",
+      "arguments": {
+        "name": { "question": "Department name", "type": "string" },
+        "description": {
+          "question": "Optional description",
+          "type": "string",
+          "stated": "Does the user provide a description?"
+        }
+      }
+    },
+    "deleteDepartment": {
+      "description": "Delete a department by ID",
+      "permission": "DEPARTMENTS_MANAGE",
+      "arguments": {
+        "id": { "question": "Department ID to delete", "type": "number" }
+      }
+    },
+    "listPositions": {
+      "description": "List all positions for a school, optionally filtered by department",
+      "permission": "EMPLOYEES_VIEW",
+      "arguments": {
+        "page": { "question": "Page number", "type": "number", "default": 1 },
+        "pageSize": { "question": "Items per page", "type": "number", "default": 20 },
+        "departmentId": {
+          "question": "Filter by department ID",
+          "type": "number",
+          "stated": "Does the user specify a department filter?"
+        }
+      }
+    },
+    "createPosition": {
+      "description": "Create a new position",
+      "permission": "DEPARTMENTS_MANAGE",
+      "arguments": {
+        "name": { "question": "Position name", "type": "string" },
+        "departmentId": {
+          "question": "Department ID (optional)",
+          "type": "number",
+          "stated": "Does the user specify a department?"
+        }
+      }
+    },
+    "deletePosition": {
+      "description": "Delete a position by ID",
+      "permission": "DEPARTMENTS_MANAGE",
+      "arguments": {
+        "id": { "question": "Position ID to delete", "type": "number" }
+      }
+    },
+    "listEmployees": {
+      "description": "List employees with pagination, search, and filters",
+      "permission": "EMPLOYEES_VIEW",
+      "arguments": {
+        "page": { "question": "Page number", "type": "number", "default": 1 },
+        "pageSize": { "question": "Items per page", "type": "number", "default": 20 },
+        "search": {
+          "question": "Search term for name or employee code",
+          "type": "string",
+          "stated": "Does the user provide a search term?"
+        },
+        "departmentId": {
+          "question": "Filter by department ID",
+          "type": "number",
+          "stated": "Does the user specify a department filter?"
+        },
+        "active": {
+          "question": "Filter by active status",
+          "type": "boolean",
+          "stated": "Does the user specify an active filter?"
+        }
+      }
+    },
+    "createEmployee": {
+      "description": "Create a new employee",
+      "permission": "EMPLOYEES_MANAGE",
+      "arguments": {
+        "userId": {
+          "question": "User ID to link (optional)",
+          "type": "string",
+          "stated": "Does the user provide a user ID?"
+        },
+        "employeeCode": {
+          "question": "Employee code (optional, auto-generated if omitted)",
+          "type": "string",
+          "stated": "Does the user provide an employee code?"
+        },
+        "firstName": { "question": "First name", "type": "string" },
+        "lastName": { "question": "Last name", "type": "string" },
+        "workEmail": {
+          "question": "Work email (optional)",
+          "type": "string",
+          "stated": "Does the user provide a work email?"
+        },
+        "phone": {
+          "question": "Phone number (optional)",
+          "type": "string",
+          "stated": "Does the user provide a phone number?"
+        },
+        "avatarUrl": {
+          "question": "Avatar URL (optional)",
+          "type": "string",
+          "stated": "Does the user provide an avatar URL?"
+        },
+        "departmentId": {
+          "question": "Department ID (optional)",
+          "type": "number",
+          "stated": "Does the user specify a department?"
+        },
+        "positionId": {
+          "question": "Position ID (optional)",
+          "type": "number",
+          "stated": "Does the user specify a position?"
+        },
+        "employmentType": {
+          "question": "Employment type",
+          "type": "enum",
+          "enumValues": ["full_time", "part_time", "contract", "intern"],
+          "default": "full_time"
+        },
+        "joinedAt": {
+          "question": "Join date (optional)",
+          "type": "date",
+          "stated": "Does the user provide a join date?"
+        },
+        "endedAt": {
+          "question": "End date (optional)",
+          "type": "date",
+          "stated": "Does the user provide an end date?"
+        },
+        "notes": {
+          "question": "Notes (optional)",
+          "type": "string",
+          "stated": "Does the user provide notes?"
+        }
+      }
+    },
+    "getEmployee": {
+      "description": "Get a single employee with relations",
+      "permission": "EMPLOYEES_VIEW",
+      "arguments": {
+        "id": { "question": "Employee ID", "type": "number" }
+      }
+    },
+    "updateEmployee": {
+      "description": "Update an employee",
+      "permission": "EMPLOYEES_MANAGE",
+      "arguments": {
+        "id": { "question": "Employee ID", "type": "number" },
+        "userId": {
+          "question": "User ID to link (optional)",
+          "type": "string",
+          "stated": "Does the user provide a user ID?"
+        },
+        "employeeCode": {
+          "question": "Employee code (optional)",
+          "type": "string",
+          "stated": "Does the user provide an employee code?"
+        },
+        "firstName": {
+          "question": "First name (optional)",
+          "type": "string",
+          "stated": "Does the user provide a first name?"
+        },
+        "lastName": {
+          "question": "Last name (optional)",
+          "type": "string",
+          "stated": "Does the user provide a last name?"
+        },
+        "workEmail": {
+          "question": "Work email (optional)",
+          "type": "string",
+          "stated": "Does the user provide a work email?"
+        },
+        "phone": {
+          "question": "Phone number (optional)",
+          "type": "string",
+          "stated": "Does the user provide a phone number?"
+        },
+        "avatarUrl": {
+          "question": "Avatar URL (optional)",
+          "type": "string",
+          "stated": "Does the user provide an avatar URL?"
+        },
+        "departmentId": {
+          "question": "Department ID (optional)",
+          "type": "number",
+          "stated": "Does the user specify a department?"
+        },
+        "positionId": {
+          "question": "Position ID (optional)",
+          "type": "number",
+          "stated": "Does the user specify a position?"
+        },
+        "employmentType": {
+          "question": "Employment type (optional)",
+          "type": "enum",
+          "enumValues": ["full_time", "part_time", "contract", "intern"],
+          "stated": "Does the user specify an employment type?"
+        },
+        "joinedAt": {
+          "question": "Join date (optional)",
+          "type": "date",
+          "stated": "Does the user provide a join date?"
+        },
+        "endedAt": {
+          "question": "End date (optional)",
+          "type": "date",
+          "stated": "Does the user provide an end date?"
+        },
+        "notes": {
+          "question": "Notes (optional)",
+          "type": "string",
+          "stated": "Does the user provide notes?"
+        }
+      }
+    },
+    "deleteEmployee": {
+      "description": "Deactivate an employee (soft delete)",
+      "permission": "EMPLOYEES_MANAGE",
+      "arguments": {
+        "id": { "question": "Employee ID to deactivate", "type": "number" }
+      }
+    },
+    "createSalaryStructure": {
+      "description": "Create a salary structure for an employee",
+      "permission": "PAYROLL_MANAGE",
+      "arguments": {
+        "employeeId": { "question": "Employee ID", "type": "number" },
+        "basicSalary": { "question": "Basic salary amount", "type": "number" },
+        "components": {
+          "question": "Salary components (allowances/deductions)",
+          "type": "object",
+          "stated": "Does the user provide salary components?"
+        },
+        "currency": { "question": "Currency code", "type": "string", "default": "PKR" },
+        "effectiveFrom": { "question": "Effective from date", "type": "date" }
+      }
+    },
+    "listTeams": {
+      "description": "List all teams with their members",
+      "permission": "EMPLOYEES_VIEW",
+      "arguments": {
+        "page": { "question": "Page number", "type": "number", "default": 1 },
+        "pageSize": { "question": "Items per page", "type": "number", "default": 20 }
+      }
+    },
+    "createTeam": {
+      "description": "Create a new team",
+      "permission": "TEAMS_MANAGE",
+      "arguments": {
+        "name": { "question": "Team name", "type": "string" },
+        "description": {
+          "question": "Optional description",
+          "type": "string",
+          "stated": "Does the user provide a description?"
+        },
+        "color": {
+          "question": "Team color (hex, optional)",
+          "type": "string",
+          "stated": "Does the user provide a color?"
+        }
+      }
+    },
+    "updateTeamMembers": {
+      "description": "Update team members (replaces all members)",
+      "permission": "TEAMS_MANAGE",
+      "arguments": {
+        "teamId": { "question": "Team ID", "type": "number" },
+        "members": {
+          "question": "Array of member objects with employeeId and isManager",
+          "type": "array"
+        }
+      }
+    },
+    "deleteTeam": {
+      "description": "Delete a team by ID",
+      "permission": "TEAMS_MANAGE",
+      "arguments": {
+        "id": { "question": "Team ID to delete", "type": "number" }
+      }
+    },
+    "listAttendance": {
+      "description": "List staff attendance records with filters",
+      "permission": "ATTENDANCE_VIEW",
+      "arguments": {
+        "page": { "question": "Page number", "type": "number", "default": 1 },
+        "pageSize": { "question": "Items per page", "type": "number", "default": 20 },
+        "employeeId": {
+          "question": "Filter by employee ID",
+          "type": "number",
+          "stated": "Does the user specify an employee filter?"
+        },
+        "from": {
+          "question": "Start date filter",
+          "type": "date",
+          "stated": "Does the user specify a start date?"
+        },
+        "to": {
+          "question": "End date filter",
+          "type": "date",
+          "stated": "Does the user specify an end date?"
+        }
+      }
+    },
+    "upsertAttendance": {
+      "description": "Create or update a single attendance record",
+      "permission": "ATTENDANCE_MANAGE",
+      "arguments": {
+        "employeeId": { "question": "Employee ID", "type": "number" },
+        "workDate": { "question": "Work date", "type": "date" },
+        "status": {
+          "question": "Attendance status",
+          "type": "enum",
+          "enumValues": ["present", "absent", "late", "leave", "half_day"]
+        },
+        "checkIn": {
+          "question": "Check-in time (optional)",
+          "type": "string",
+          "stated": "Does the user provide a check-in time?"
+        },
+        "checkOut": {
+          "question": "Check-out time (optional)",
+          "type": "string",
+          "stated": "Does the user provide a check-out time?"
+        },
+        "source": {
+          "question": "Source of record",
+          "type": "enum",
+          "enumValues": ["manual", "kiosk", "import"],
+          "default": "manual"
+        },
+        "notes": {
+          "question": "Notes (optional)",
+          "type": "string",
+          "stated": "Does the user provide notes?"
+        }
+      }
+    },
+    "bulkUpsertAttendance": {
+      "description": "Bulk create or update attendance records for a date",
+      "permission": "ATTENDANCE_MANAGE",
+      "arguments": {
+        "date": { "question": "Work date", "type": "date" },
+        "entries": {
+          "question": "Array of entries with employeeId and status",
+          "type": "array"
+        }
+      }
+    },
+    "listTimeOffPolicies": {
+      "description": "List all time off policies",
+      "permission": "TIME_OFF_VIEW",
+      "arguments": {
+        "page": { "question": "Page number", "type": "number", "default": 1 },
+        "pageSize": { "question": "Items per page", "type": "number", "default": 20 }
+      }
+    },
+    "createTimeOffPolicy": {
+      "description": "Create a new time off policy",
+      "permission": "TIME_OFF_APPROVE",
+      "arguments": {
+        "name": { "question": "Policy name", "type": "string" },
+        "description": {
+          "question": "Optional description",
+          "type": "string",
+          "stated": "Does the user provide a description?"
+        },
+        "paid": { "question": "Is this a paid policy?", "type": "boolean", "default": true },
+        "requiresApproval": {
+          "question": "Does this policy require approval?",
+          "type": "boolean",
+          "default": true
+        },
+        "annualDays": { "question": "Annual days allowance", "type": "number", "default": 0 }
+      }
+    },
+    "listTimeOffRequests": {
+      "description": "List time off requests with filters",
+      "permission": "TIME_OFF_VIEW",
+      "arguments": {
+        "page": { "question": "Page number", "type": "number", "default": 1 },
+        "pageSize": { "question": "Items per page", "type": "number", "default": 20 },
+        "status": {
+          "question": "Filter by status",
+          "type": "enum",
+          "enumValues": ["requested", "approved", "refused", "cancelled"],
+          "stated": "Does the user specify a status filter?"
+        },
+        "employeeId": {
+          "question": "Filter by employee ID",
+          "type": "number",
+          "stated": "Does the user specify an employee filter?"
+        }
+      }
+    },
+    "createTimeOffRequest": {
+      "description": "Create a new time off request",
+      "permission": "TIME_OFF_REQUEST",
+      "arguments": {
+        "employeeId": { "question": "Employee ID", "type": "number" },
+        "policyId": { "question": "Time off policy ID", "type": "number" },
+        "startDate": { "question": "Start date", "type": "date" },
+        "endDate": { "question": "End date", "type": "date" },
+        "reason": {
+          "question": "Reason (optional)",
+          "type": "string",
+          "stated": "Does the user provide a reason?"
+        }
+      }
+    },
+    "decideTimeOffRequest": {
+      "description": "Approve or refuse a time off request",
+      "permission": "TIME_OFF_APPROVE",
+      "arguments": {
+        "requestId": { "question": "Request ID", "type": "number" },
+        "decision": {
+          "question": "Decision",
+          "type": "enum",
+          "enumValues": ["approved", "refused"]
+        }
+      }
+    },
+    "listHolidays": {
+      "description": "List official holidays",
+      "permission": "TIME_OFF_VIEW",
+      "arguments": {
+        "page": { "question": "Page number", "type": "number", "default": 1 },
+        "pageSize": { "question": "Items per page", "type": "number", "default": 20 }
+      }
+    },
+    "createHoliday": {
+      "description": "Create an official holiday",
+      "permission": "TIME_OFF_APPROVE",
+      "arguments": {
+        "name": { "question": "Holiday name", "type": "string" },
+        "startDate": { "question": "Start date", "type": "date" },
+        "endDate": { "question": "End date", "type": "date" }
+      }
+    },
+    "deleteHoliday": {
+      "description": "Delete an official holiday by ID",
+      "permission": "TIME_OFF_APPROVE",
+      "arguments": {
+        "id": { "question": "Holiday ID to delete", "type": "number" }
+      }
+    },
+    "listPayrollRuns": {
+      "description": "List payroll runs with statistics",
+      "permission": "PAYROLL_VIEW",
+      "arguments": {
+        "page": { "question": "Page number", "type": "number", "default": 1 },
+        "pageSize": { "question": "Items per page", "type": "number", "default": 20 }
+      }
+    },
+    "createPayrollRun": {
+      "description": "Create a new payroll run and generate payslips",
+      "permission": "PAYROLL_MANAGE",
+      "arguments": {
+        "periodStart": { "question": "Payroll period start date", "type": "date" },
+        "periodEnd": { "question": "Payroll period end date", "type": "date" },
+        "notes": {
+          "question": "Optional notes",
+          "type": "string",
+          "stated": "Does the user provide notes?"
+        }
+      }
+    },
+    "getPayrollRun": {
+      "description": "Get a payroll run with its payslips",
+      "permission": "PAYROLL_VIEW",
+      "arguments": {
+        "id": { "question": "Payroll run ID", "type": "number" }
+      }
+    },
+    "listExpenses": {
+      "description": "List expenses with filters",
+      "permission": "EXPENSES_VIEW",
+      "arguments": {
+        "page": { "question": "Page number", "type": "number", "default": 1 },
+        "pageSize": { "question": "Items per page", "type": "number", "default": 20 },
+        "status": {
+          "question": "Filter by status",
+          "type": "enum",
+          "enumValues": ["submitted", "approved", "rejected", "reimbursed"],
+          "stated": "Does the user specify a status filter?"
+        },
+        "categoryId": {
+          "question": "Filter by category ID",
+          "type": "number",
+          "stated": "Does the user specify a category filter?"
+        }
+      }
+    },
+    "createExpense": {
+      "description": "Create a new expense",
+      "permission": "EXPENSES_MANAGE",
+      "arguments": {
+        "title": { "question": "Expense title", "type": "string" },
+        "amount": { "question": "Expense amount", "type": "number" },
+        "categoryId": {
+          "question": "Category ID (optional)",
+          "type": "number",
+          "stated": "Does the user specify a category?"
+        },
+        "employeeId": {
+          "question": "Employee ID (optional)",
+          "type": "number",
+          "stated": "Does the user specify an employee?"
+        },
+        "currency": { "question": "Currency code", "type": "string", "default": "PKR" },
+        "spentAt": { "question": "Date spent", "type": "date" },
+        "notes": {
+          "question": "Notes (optional)",
+          "type": "string",
+          "stated": "Does the user provide notes?"
+        }
+      }
+    },
+    "updateExpenseStatus": {
+      "description": "Update expense status",
+      "permission": "EXPENSES_MANAGE",
+      "arguments": {
+        "expenseId": { "question": "Expense ID", "type": "number" },
+        "status": {
+          "question": "New status",
+          "type": "enum",
+          "enumValues": ["submitted", "approved", "rejected", "reimbursed"]
+        }
+      }
+    },
+    "listExpenseCategories": {
+      "description": "List expense categories",
+      "permission": "EXPENSES_VIEW",
+      "arguments": {
+        "page": { "question": "Page number", "type": "number", "default": 1 },
+        "pageSize": { "question": "Items per page", "type": "number", "default": 20 }
+      }
+    },
+    "createExpenseCategory": {
+      "description": "Create a new expense category",
+      "permission": "EXPENSES_MANAGE",
+      "arguments": {
+        "name": { "question": "Category name", "type": "string" },
+        "description": {
+          "question": "Optional description",
+          "type": "string",
+          "stated": "Does the user provide a description?"
+        }
+      }
+    },
+    "deleteExpenseCategory": {
+      "description": "Delete an expense category by ID",
+      "permission": "EXPENSES_MANAGE",
+      "arguments": {
+        "id": { "question": "Category ID to delete", "type": "number" }
+      }
+    }
+  }
+}

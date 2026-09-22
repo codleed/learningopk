@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/components/kitab/**/*", "src/design-system/**/*"],
+  "compilerOptions": {
+    "noEmit": true
+  }
+}
