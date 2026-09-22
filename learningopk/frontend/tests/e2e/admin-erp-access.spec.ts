@@ -15,7 +15,8 @@ const loginAs = async (page: Page, email: string) => {
 const ensureSchool = async (page: Page) => {
   const list = await page.request.get(`${BACKEND}/api/schools`);
   const body = await list.json();
-  const schools = (body?.data ?? []) as unknown[];
+  const raw = body?.data?.schools ?? body?.data;
+  const schools = Array.isArray(raw) ? raw : [];
   if (schools.length > 0) return;
   const suffix = Date.now();
   await page.request.post(`${BACKEND}/api/schools`, {
