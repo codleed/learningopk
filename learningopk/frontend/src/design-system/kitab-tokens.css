@@ -79,6 +79,17 @@
   --swap: 180ms;
   --overlay: 280ms;
   --ease-kitab: cubic-bezier(0.2, 0, 0, 1);
+
+  /* legacy aliases dropped in the v3 rewrite — committed code still references these */
+  --bg-danger: var(--danger);
+  --bg-danger-hover: var(--danger); /* ponytail: no darker danger hex in palette — hover is a no-op */
+  --text-danger: var(--danger);
+  --primary-light: var(--accent-tint);
+  --surface-primary: var(--paper-raised);
+  --surface-secondary: var(--paper-dim);
+  --border-primary: var(--hairline);
+  --text-tertiary: var(--ink-faint);
+  --font-heading: var(--font-ui);
 }
 
 /* Light ("day reading") — spec §3.3 */
@@ -145,4 +156,15 @@
   --shadow-card: var(--shadow-sm);
   --shadow-elevated: 0 24px 48px rgba(17, 17, 19, 0.16);
   --shadow-md: var(--shadow-elevated);
+
+  /* legacy aliases dropped in the v3 rewrite — committed code still references these */
+  --bg-danger: var(--danger);
+  --bg-danger-hover: var(--danger); /* ponytail: no darker danger hex in palette — hover is a no-op */
+  --text-danger: var(--danger);
+  --primary-light: var(--accent-tint);
+  --surface-primary: var(--paper-raised);
+  --surface-secondary: var(--paper-dim);
+  --border-primary: var(--hairline);
+  --text-tertiary: var(--ink-faint);
+  --font-heading: var(--font-ui);
 }

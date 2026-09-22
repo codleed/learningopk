@@ -32,6 +32,7 @@
 
   --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --font-ui: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-ui);
   --font-body: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --font-data: var(--font-plex-mono), ui-monospace, monospace;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
