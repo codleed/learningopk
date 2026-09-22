@@ -104,7 +104,7 @@
   --brick-tint-strong: var(--accent-tint-strong);
   --brick-contrast: var(--on-accent);
 
-  --danger: #dc2626;
+  --danger: #dc1f1f;
   --danger-tint: rgba(220, 38, 38, 0.1);
   --warning: #b45309;
   --warning-tint: rgba(180, 83, 9, 0.1);
