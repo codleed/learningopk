@@ -12,15 +12,15 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: ["bg-accent-tint text-accent"].join(" "),
-        primary: ["bg-accent-tint text-accent"].join(" "),
-        success: ["bg-accent-tint text-accent"].join(" "),
+        default: ["bg-accent-tint text-accent-bright"].join(" "),
+        primary: ["bg-accent-tint text-accent-bright"].join(" "),
+        success: ["bg-accent-tint text-accent-bright"].join(" "),
         warning: ["bg-ochre-tint text-ochre"].join(" "),
         danger: ["bg-danger-tint text-danger"].join(" "),
         outline: ["bg-bg-elevated text-text-secondary"].join(" "),
         /* ── Backward-compatible aliases ── */
         neutral: ["bg-bg-elevated text-text-secondary"].join(" "),
-        info: ["bg-accent-tint text-accent"].join(" "),
+        info: ["bg-accent-tint text-accent-bright"].join(" "),
         error: ["bg-danger-tint text-danger"].join(" "),
       },
       size: {

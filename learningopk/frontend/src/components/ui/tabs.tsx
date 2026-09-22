@@ -125,17 +125,17 @@ export function TabTrigger({
     underline: cn(
       "rounded-none px-3 py-2 -mb-px border-b-2 border-transparent",
       "text-text-secondary",
-      "data-[state=active]:text-accent data-[state=active]:border-accent"
+      "data-[state=active]:text-accent-bright data-[state=active]:border-accent"
     ),
     pills: cn(
       "px-3 py-1.5 rounded-[6px]",
       "text-text-secondary",
-      "data-[state=active]:text-accent"
+      "data-[state=active]:text-accent-bright"
     ),
     boxed: cn(
       "flex-1 px-4 py-2.5",
       "text-text-secondary",
-      "data-[state=active]:text-accent",
+      "data-[state=active]:text-accent-bright",
       "first:rounded-l-[8px] last:rounded-r-[8px]"
     ),
   };

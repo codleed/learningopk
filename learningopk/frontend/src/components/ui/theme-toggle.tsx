@@ -99,7 +99,7 @@ export function ThemeToggle({ className, showLabels = true }: ThemeToggleProps) 
     return (
       <div
         className={cn(
-          "inline-flex h-10 items-center gap-1 rounded-[8px] border border-hairline-strong bg-paper-dim p-1",
+          "inline-flex h-10 items-center gap-1 rounded-[6px] border border-hairline-strong bg-paper-dim p-1",
           className
         )}
         aria-label="Theme toggle"
@@ -116,7 +116,7 @@ export function ThemeToggle({ className, showLabels = true }: ThemeToggleProps) 
       role="tablist"
       aria-label="Theme selection"
       className={cn(
-        "inline-flex h-10 items-center gap-1 rounded-[8px] border border-hairline-strong bg-paper-dim p-1",
+        "inline-flex h-10 items-center gap-1 rounded-[6px] border border-hairline-strong bg-paper-dim p-1",
         className
       )}
     >
@@ -138,7 +138,9 @@ export function ThemeToggle({ className, showLabels = true }: ThemeToggleProps) 
               "relative flex items-center gap-1.5 rounded-[6px] px-3 py-1.5 text-sm font-semibold",
               "transition-all duration-200 ease-out",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-paper-dim",
-              isActive ? "text-on-accent" : "text-ink-soft hover:text-accent hover:bg-paper-raised"
+              isActive
+                ? "text-on-accent"
+                : "text-ink-soft hover:text-accent-bright hover:bg-paper-raised"
             )}
           >
             {isActive ? (
@@ -217,7 +219,7 @@ export function ThemeToggleCompact({ className }: ThemeToggleCompactProps) {
       onClick={toggle}
       className={cn(
         "relative inline-flex h-10 w-10 items-center justify-center rounded-[6px]",
-        "text-ink-soft hover:text-accent hover:bg-paper-dim",
+        "text-ink-soft hover:text-accent-bright hover:bg-paper-dim",
         "transition-colors duration-150",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-paper-dim",
         className

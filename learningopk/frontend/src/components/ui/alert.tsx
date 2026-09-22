@@ -23,7 +23,7 @@ const alertVariants = cva(
   {
     variants: {
       variant: {
-        info: "border-l-accent text-ink",
+        info: "border-l-graphite text-ink",
         success: "border-l-accent text-ink",
         warning: "border-l-ochre text-ink",
         danger: "border-l-danger text-ink",

@@ -40,7 +40,7 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 const toneClassName: Record<ToastTone, string> = {
   info: "text-ink-soft",
-  success: "text-accent",
+  success: "text-accent-bright",
   warning: "text-ochre",
   error: "text-danger",
 };
@@ -123,18 +123,13 @@ function ToastView({ toast, onDismiss }: ToastViewProps) {
   }, [onDismiss, toast.durationMs, toast.id]);
 
   return (
-    <div
-      className={cn(
-        "pointer-events-auto rounded-[8px] border border-hairline-strong bg-paper-dim p-3 shadow-[var(--shadow-md)] text-ink",
-        toneClassName[toast.tone]
-      )}
-    >
+    <div className="pointer-events-auto rounded-[8px] border border-hairline-strong bg-paper-dim p-3 shadow-[var(--shadow-md)] text-ink">
       <div className="flex items-start gap-2">
-        <span className="mt-0.5">{toneIcon[toast.tone]}</span>
+        <span className={cn("mt-0.5", toneClassName[toast.tone])}>{toneIcon[toast.tone]}</span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">{toast.title}</p>
+          <p className="text-sm font-semibold text-ink">{toast.title}</p>
           {toast.description ? (
-            <p className="mt-1 text-xs opacity-90">{toast.description}</p>
+            <p className="mt-1 text-xs text-ink-soft">{toast.description}</p>
           ) : null}
           <p className="mt-1 font-mono text-[11px] text-ink-faint">
             {new Date(toast.createdAt).toLocaleTimeString([], {
