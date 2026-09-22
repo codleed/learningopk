@@ -16,16 +16,17 @@ const variantIcons: Record<string, ReactNode> = {
 
 /* ─── CVA Variants ─── */
 const alertVariants = cva(
-  ["relative flex gap-3 rounded-lg border px-4 py-3 text-sm", "transition-all duration-200"].join(
-    " "
-  ),
+  [
+    "relative flex gap-3 rounded-[8px] border border-hairline border-l-4 bg-paper-raised px-4 py-3 text-sm",
+    "transition-all duration-200",
+  ].join(" "),
   {
     variants: {
       variant: {
-        info: ["border-accent-info/30 bg-accent-info-light text-accent-info"].join(" "),
-        success: ["border-accent-success/30 bg-accent-success-light text-accent-success"].join(" "),
-        warning: ["border-accent-warning/30 bg-accent-warning-light text-accent-warning"].join(" "),
-        danger: ["border-accent-danger/30 bg-accent-danger-light text-accent-danger"].join(" "),
+        info: "border-l-accent text-ink",
+        success: "border-l-accent text-ink",
+        warning: "border-l-ochre text-ink",
+        danger: "border-l-danger text-ink",
       },
     },
     defaultVariants: {

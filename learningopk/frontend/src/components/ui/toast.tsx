@@ -28,6 +28,7 @@ type ToastRecord = {
   description?: string;
   tone: ToastTone;
   durationMs: number;
+  createdAt: number;
 };
 
 type ToastContextValue = {
@@ -38,10 +39,10 @@ type ToastContextValue = {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 const toneClassName: Record<ToastTone, string> = {
-  info: "border-blue-300 bg-blue-50 text-blue-900",
-  success: "border-emerald-300 bg-emerald-50 text-emerald-900",
-  warning: "border-amber-300 bg-amber-50 text-amber-900",
-  error: "border-rose-300 bg-rose-50 text-rose-900",
+  info: "text-ink-soft",
+  success: "text-accent",
+  warning: "text-ochre",
+  error: "text-danger",
 };
 
 const toneIcon: Record<ToastTone, ReactNode> = {
@@ -59,16 +60,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const pushToast = useCallback((toast: ToastInput) => {
-    setToasts((current) => [
-      ...current,
-      {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        title: toast.title,
-        description: toast.description,
-        tone: toast.tone ?? "info",
-        durationMs: toast.durationMs ?? 4200,
-      },
-    ]);
+    setToasts((current) =>
+      [
+        ...current,
+        {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          title: toast.title,
+          description: toast.description,
+          tone: toast.tone ?? "info",
+          durationMs: toast.durationMs ?? 4200,
+          createdAt: Date.now(),
+        },
+      ].slice(-3)
+    );
   }, []);
 
   const contextValue = useMemo(
@@ -83,7 +87,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={contextValue}>
       {children}
       <div
-        className="pointer-events-none fixed bottom-4 right-4 z-[150] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2"
+        className="pointer-events-none fixed bottom-6 left-1/2 -translate-x-1/2 z-[150] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2"
         aria-live="polite"
       >
         {toasts.map((toast) => (
@@ -121,7 +125,7 @@ function ToastView({ toast, onDismiss }: ToastViewProps) {
   return (
     <div
       className={cn(
-        "pointer-events-auto rounded-xl border p-3 shadow-[var(--elevation-strong)] backdrop-blur-sm",
+        "pointer-events-auto rounded-[8px] border border-hairline-strong bg-paper-dim p-3 shadow-[var(--shadow-md)] text-ink",
         toneClassName[toast.tone]
       )}
     >
@@ -132,6 +136,12 @@ function ToastView({ toast, onDismiss }: ToastViewProps) {
           {toast.description ? (
             <p className="mt-1 text-xs opacity-90">{toast.description}</p>
           ) : null}
+          <p className="mt-1 font-mono text-[11px] text-ink-faint">
+            {new Date(toast.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
         </div>
         <button
           type="button"

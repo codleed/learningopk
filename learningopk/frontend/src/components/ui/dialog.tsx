@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 /* ─── Size variants ─── */
 const dialogSizeVariants = cva(
   [
-    "relative rounded-xl bg-bg-surface text-text-primary",
-    "border border-border-default shadow-[var(--shadow-elevated)]",
+    "relative rounded-[12px] bg-paper-dim text-ink",
+    "border border-hairline-strong shadow-[var(--shadow-md)]",
     "flex flex-col",
     "focus:outline-none",
   ].join(" "),
@@ -72,7 +72,7 @@ export function Dialog({
             {/* Overlay */}
             <DialogPrimitive.Overlay asChild forceMount>
               <motion.div
-                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+                className="fixed inset-0 z-50 bg-black/55"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}

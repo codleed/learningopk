@@ -15,10 +15,9 @@ import { cn } from "@/lib/utils";
 /* ─── CVA Textarea Variants ─── */
 const textareaVariants = cva(
   [
-    "w-full text-text-primary placeholder:text-text-muted",
-    "transition-all duration-150 ease-out",
+    "w-full text-ink placeholder:text-ink-faint",
     "disabled:cursor-not-allowed disabled:opacity-50",
-    "focus:outline-none",
+    "focus-visible:outline-none",
     "font-[var(--font-body)]",
     "resize-none",
   ].join(" "),
@@ -26,13 +25,12 @@ const textareaVariants = cva(
     variants: {
       variant: {
         default: [
-          "bg-bg-surface border border-border-default rounded-lg",
-          "shadow-[var(--shadow-sm)]",
-          "focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20",
+          "bg-paper-dim border border-hairline-strong rounded-[8px] text-ink placeholder:text-ink-faint",
+          "focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40",
         ].join(" "),
         ghost: [
-          "bg-transparent border-none rounded-lg",
-          "focus:bg-bg-subtle focus:ring-2 focus:ring-accent-primary/20",
+          "bg-transparent border-none rounded-[8px]",
+          "focus-visible:ring-2 focus-visible:ring-accent/40",
         ].join(" "),
       },
     },

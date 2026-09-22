@@ -48,19 +48,19 @@ export function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 p-4"
       role="presentation"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
-        className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-[var(--elevation-strong)]"
+        className="w-full max-w-md rounded-[12px] border border-hairline-strong bg-paper-dim p-6 shadow-[var(--shadow-md)]"
       >
-        <h2 id="confirm-dialog-title" className="text-lg font-semibold text-foreground">
+        <h2 id="confirm-dialog-title" className="text-lg font-semibold text-ink">
           {title}
         </h2>
-        {description ? <p className="mt-2 text-sm text-muted-foreground">{description}</p> : null}
+        {description ? <p className="mt-2 text-sm text-ink-soft">{description}</p> : null}
         <div className="mt-6 flex flex-wrap justify-end gap-2">
           <Button variant="secondary" onClick={onCancel} disabled={isPending}>
             {cancelLabel}

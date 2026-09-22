@@ -43,9 +43,9 @@ export function Tooltip({
       align={align}
       sideOffset={6}
       className={cn(
-        "z-50 max-w-xs rounded-lg px-3 py-1.5",
-        "bg-bg-elevated text-text-primary text-xs font-medium",
-        "border border-border-default shadow-[var(--shadow-elevated)]",
+        "z-50 max-w-xs rounded-[6px] px-3 py-1.5",
+        "bg-paper-dim text-ink text-caption font-medium",
+        "border border-hairline-strong shadow-[var(--shadow-sm)]",
         "animate-in fade-in-0 zoom-in-95",
         "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
         "data-[side=top]:slide-in-from-bottom-2",
@@ -56,7 +56,7 @@ export function Tooltip({
       )}
     >
       {content}
-      <TooltipPrimitive.Arrow className="fill-bg-elevated" width={10} height={5} />
+      <TooltipPrimitive.Arrow className="fill-paper-dim" width={10} height={5} />
     </TooltipPrimitive.Content>
   );
 

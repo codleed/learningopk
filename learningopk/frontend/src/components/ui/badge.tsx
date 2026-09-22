@@ -6,28 +6,27 @@ import { cn } from "@/lib/utils";
 /* ─── CVA Badge Variants ─── */
 const badgeVariants = cva(
   [
-    "inline-flex items-center gap-1 font-semibold",
-    "rounded-full border",
-    "transition-colors duration-150",
+    "inline-flex items-center gap-1",
+    "rounded-[6px] border-0 px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.06em]",
   ].join(" "),
   {
     variants: {
       variant: {
-        default: ["border-border-default bg-bg-subtle text-text-secondary"].join(" "),
-        primary: ["border-accent-primary/20 bg-accent-primary-light text-accent-primary"].join(" "),
-        success: ["border-accent-success/20 bg-accent-success-light text-accent-success"].join(" "),
-        warning: ["border-accent-warning/20 bg-accent-warning-light text-accent-warning"].join(" "),
-        danger: ["border-accent-danger/20 bg-accent-danger-light text-accent-danger"].join(" "),
-        outline: ["border-border-strong bg-transparent text-text-primary"].join(" "),
+        default: ["bg-accent-tint text-accent"].join(" "),
+        primary: ["bg-accent-tint text-accent"].join(" "),
+        success: ["bg-accent-tint text-accent"].join(" "),
+        warning: ["bg-ochre-tint text-ochre"].join(" "),
+        danger: ["bg-danger-tint text-danger"].join(" "),
+        outline: ["bg-bg-elevated text-text-secondary"].join(" "),
         /* ── Backward-compatible aliases ── */
-        neutral: ["border-border-default bg-bg-subtle text-text-secondary"].join(" "),
-        info: ["border-accent-primary/20 bg-accent-primary-light text-accent-primary"].join(" "),
-        error: ["border-accent-danger/20 bg-accent-danger-light text-accent-danger"].join(" "),
+        neutral: ["bg-bg-elevated text-text-secondary"].join(" "),
+        info: ["bg-accent-tint text-accent"].join(" "),
+        error: ["bg-danger-tint text-danger"].join(" "),
       },
       size: {
-        sm: "px-2 py-0.5 text-[10px] leading-tight",
-        md: "px-2.5 py-0.5 text-xs leading-normal",
-        lg: "px-3 py-1 text-sm leading-normal",
+        sm: "px-1.5 py-px text-[9px] leading-tight",
+        md: "px-2 py-0.5 text-[10px] leading-normal",
+        lg: "px-2.5 py-1 text-[11px] leading-normal",
       },
     },
     defaultVariants: {

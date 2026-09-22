@@ -20,17 +20,17 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
         ref={ref}
         type="checkbox"
         className={cn(
-          "mt-0.5 h-4 w-4 rounded border border-input text-[var(--primary)] focus:ring-[var(--primary)]/35",
+          "mt-0.5 h-4 w-4 rounded border border-hairline-strong bg-paper-dim accent-accent",
+          "checked:bg-accent checked:border-accent checked:text-on-accent",
+          "focus-visible:ring-2 focus-visible:ring-accent/50",
           className
         )}
         {...props}
       />
       {label || hint ? (
         <span>
-          {label ? (
-            <span className="block text-sm font-medium text-foreground">{label}</span>
-          ) : null}
-          {hint ? <span className="block text-xs text-muted-foreground">{hint}</span> : null}
+          {label ? <span className="block text-sm font-medium text-ink">{label}</span> : null}
+          {hint ? <span className="block text-xs text-ink-faint">{hint}</span> : null}
         </span>
       ) : null}
     </label>

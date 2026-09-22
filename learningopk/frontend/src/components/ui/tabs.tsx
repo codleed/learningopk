@@ -11,9 +11,9 @@ import { cn } from "@/lib/utils";
 const tabListVariants = cva("flex", {
   variants: {
     variant: {
-      underline: "gap-0 border-b border-border-default",
-      pills: "gap-1 rounded-lg bg-bg-subtle p-1",
-      boxed: "gap-0 rounded-lg border border-border-default",
+      underline: "gap-0 border-b border-hairline",
+      pills: "gap-1 rounded-[8px] bg-paper-dim p-1",
+      boxed: "gap-0 rounded-[8px] border border-hairline",
     },
   },
   defaultVariants: {
@@ -23,9 +23,9 @@ const tabListVariants = cva("flex", {
 
 const tabTriggerBaseClasses = [
   "relative inline-flex items-center justify-center gap-2",
-  "text-sm font-medium whitespace-nowrap",
+  "text-sm font-semibold whitespace-nowrap",
   "transition-colors duration-150",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50",
   "disabled:pointer-events-none disabled:opacity-50",
 ].join(" ");
 
@@ -122,13 +122,21 @@ export function TabTrigger({
   ...props
 }: TabTriggerProps) {
   const variantClasses: Record<string, string> = {
-    underline: cn("px-4 py-2.5 -mb-px", "text-text-muted", "data-[state=active]:text-text-primary"),
-    pills: cn("px-3 py-1.5 rounded-md", "text-text-muted", "data-[state=active]:text-text-primary"),
+    underline: cn(
+      "rounded-none px-3 py-2 -mb-px border-b-2 border-transparent",
+      "text-text-secondary",
+      "data-[state=active]:text-accent data-[state=active]:border-accent"
+    ),
+    pills: cn(
+      "px-3 py-1.5 rounded-[6px]",
+      "text-text-secondary",
+      "data-[state=active]:text-accent"
+    ),
     boxed: cn(
       "flex-1 px-4 py-2.5",
-      "text-text-muted",
-      "data-[state=active]:text-text-primary",
-      "first:rounded-l-lg last:rounded-r-lg"
+      "text-text-secondary",
+      "data-[state=active]:text-accent",
+      "first:rounded-l-[8px] last:rounded-r-[8px]"
     ),
   };
 
@@ -149,20 +157,14 @@ export function TabTrigger({
 /* ─── Internal animated indicator ─── */
 function TabIndicator({ variant, layoutId }: { variant: string; layoutId: string }) {
   if (variant === "underline") {
-    return (
-      <motion.span
-        layoutId={layoutId}
-        className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-accent-primary"
-        transition={{ type: "spring" as const, stiffness: 400, damping: 30 }}
-      />
-    );
+    return null;
   }
 
   if (variant === "pills") {
     return (
       <motion.span
         layoutId={layoutId}
-        className="absolute inset-0 rounded-md bg-bg-surface shadow-[var(--shadow-sm)] -z-10"
+        className="absolute inset-0 rounded-[6px] bg-bg-surface shadow-[var(--shadow-sm)] -z-10"
         transition={{ type: "spring" as const, stiffness: 400, damping: 30 }}
       />
     );
@@ -172,7 +174,7 @@ function TabIndicator({ variant, layoutId }: { variant: string; layoutId: string
     return (
       <motion.span
         layoutId={layoutId}
-        className="absolute inset-0 bg-bg-surface -z-10"
+        className="absolute inset-0 bg-paper-dim -z-10"
         transition={{ type: "spring" as const, stiffness: 400, damping: 30 }}
       />
     );
@@ -201,7 +203,7 @@ export function TabContent({ className, value, forceMount, ...props }: TabConten
     <TabsPrimitive.Content
       value={value}
       forceMount={forceMount}
-      className={cn("mt-3 focus-visible:outline-none", "data-[state=inactive]:hidden", className)}
+      className={cn("pt-4 focus-visible:outline-none", "data-[state=inactive]:hidden", className)}
       {...props}
     />
   );

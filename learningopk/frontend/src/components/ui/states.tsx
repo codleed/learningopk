@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { AlertTriangle, CheckCircle, Inbox, LoaderCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 type StateProps = {
@@ -16,15 +17,15 @@ export function EmptyState({ title, description, action, className, icon }: Stat
   return (
     <section
       className={cn(
-        "surface-soft rounded-2xl border border-dashed border-border p-8 text-center",
+        "rounded-[12px] border border-dashed border-hairline bg-paper-dim/40 p-8 text-center",
         className
       )}
     >
-      <div className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+      <div className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-[8px] bg-paper-dim text-ink-faint">
         {icon ?? <Inbox className="h-5 w-5" aria-hidden />}
       </div>
-      <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-      {description ? <p className="mt-2 text-sm text-muted-foreground">{description}</p> : null}
+      <h3 className="text-lg font-semibold text-ink">{title}</h3>
+      {description ? <p className="mt-2 text-sm text-ink-soft">{description}</p> : null}
       {action ? <div className="mt-4 flex items-center justify-center">{action}</div> : null}
     </section>
   );
@@ -49,17 +50,15 @@ export function ErrorState({
       role="alert"
       aria-live="polite"
       className={cn(
-        "rounded-2xl border p-8 text-center transition-all duration-200",
-        "border-destructive/30 bg-destructive/10",
-        "hover:border-destructive/40 hover:bg-destructive/15",
+        "rounded-[12px] border border-hairline border-l-4 border-l-danger bg-danger-tint p-8 text-center",
         className
       )}
     >
-      <div className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-destructive/20 text-destructive">
+      <div className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-[8px] bg-paper-dim text-danger">
         {icon ?? <AlertTriangle className="h-5 w-5" aria-hidden />}
       </div>
-      <h3 className="text-lg font-semibold text-destructive-foreground">{title}</h3>
-      {description ? <p className="mt-2 text-sm text-muted-foreground">{description}</p> : null}
+      <h3 className="text-lg font-semibold text-danger">{title}</h3>
+      {description ? <p className="mt-2 text-sm text-ink-soft">{description}</p> : null}
       <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
         {onRetry ? (
           <Button type="button" variant="danger" size="sm" onClick={onRetry}>
@@ -86,8 +85,8 @@ export function LoadingSkeleton({
   variant = "default",
 }: LoadingSkeletonProps) {
   const containerClasses = {
-    default: "surface-soft rounded-2xl border border-border p-6",
-    card: "surface-card rounded-xl border border-border p-4",
+    default: "rounded-[12px] border border-hairline bg-paper-dim p-6",
+    card: "rounded-[12px] border border-hairline bg-paper-dim p-4",
     list: "flex flex-col gap-3",
   };
 
@@ -98,18 +97,15 @@ export function LoadingSkeleton({
       aria-live="polite"
       aria-label={title}
     >
-      <p className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+      <p className="mb-4 flex items-center gap-2 text-sm text-ink-faint">
         <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />
         <span>{title}</span>
       </p>
       <div className="space-y-3">
         {Array.from({ length: rows }).map((_entry, index) => (
-          <div
+          <Skeleton
             key={index}
-            className={cn(
-              "h-3 animate-pulse rounded bg-muted",
-              index === rows - 1 ? "w-2/3" : index % 2 === 0 ? "w-full" : "w-5/6"
-            )}
+            className={cn(index === rows - 1 ? "w-2/3" : index % 2 === 0 ? "w-full" : "w-5/6")}
           />
         ))}
       </div>
@@ -123,15 +119,15 @@ export function SuccessState({ title, description, action, className, icon }: Su
   return (
     <section
       className={cn(
-        "rounded-2xl border border-success/30 bg-success/10 p-8 text-center",
+        "rounded-[12px] border border-hairline border-l-4 border-l-accent bg-accent-tint p-8 text-center",
         className
       )}
     >
-      <div className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-success/20 text-success">
+      <div className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-[8px] bg-paper-dim text-accent">
         {icon ?? <CheckCircle className="h-5 w-5" aria-hidden />}
       </div>
-      <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-      {description ? <p className="mt-2 text-sm text-muted-foreground">{description}</p> : null}
+      <h3 className="text-lg font-semibold text-ink">{title}</h3>
+      {description ? <p className="mt-2 text-sm text-ink-soft">{description}</p> : null}
       {action ? <div className="mt-4 flex items-center justify-center">{action}</div> : null}
     </section>
   );
@@ -146,21 +142,21 @@ export function CardSkeleton({ count = 1, className }: CardSkeletonProps) {
   return (
     <div className={cn("grid gap-4", className)}>
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="rounded-2xl border border-border p-5">
+        <div key={index} className="rounded-[12px] border border-hairline bg-paper-dim p-5">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-9 w-9 animate-pulse rounded-xl bg-muted" />
-              <div className="h-3 w-20 animate-pulse rounded bg-muted" />
+              <Skeleton className="h-9 w-9 rounded-[8px]" />
+              <Skeleton className="h-3 w-20" />
             </div>
-            <div className="h-6 w-12 animate-pulse rounded-full bg-muted" />
+            <Skeleton className="h-6 w-12" />
           </div>
           <div className="mt-4 space-y-2">
-            <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
-            <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
           </div>
           <div className="mt-4 flex items-center justify-between">
-            <div className="h-3 w-24 animate-pulse rounded bg-muted" />
-            <div className="h-6 w-6 animate-pulse rounded-full bg-muted" />
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-6 w-6" />
           </div>
         </div>
       ))}
@@ -172,17 +168,17 @@ export function PageSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn("space-y-6", className)}>
       <div className="space-y-2">
-        <div className="h-4 w-32 animate-pulse rounded bg-muted" />
-        <div className="h-8 w-64 animate-pulse rounded bg-muted" />
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-8 w-64" />
       </div>
-      <div className="rounded-xl border border-border p-6">
+      <div className="rounded-[12px] border border-hairline bg-paper-dim p-6">
         <div className="space-y-4">
           {Array.from({ length: 5 }).map((_, index) => (
             <div key={index} className="flex items-center gap-4">
-              <div className="h-10 w-10 animate-pulse rounded-full bg-muted" />
+              <Skeleton className="h-10 w-10 rounded-[8px]" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 w-3/4 animate-pulse rounded bg-muted" />
-                <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+                <Skeleton className="h-3 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
               </div>
             </div>
           ))}
@@ -196,17 +192,17 @@ export function ThreadSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn("space-y-3", className)}>
       {Array.from({ length: 3 }).map((_, index) => (
-        <div key={index} className="rounded-xl border border-border p-5">
+        <div key={index} className="rounded-[12px] border border-hairline bg-paper-dim p-5">
           <div className="flex flex-wrap items-center gap-2">
-            <div className="h-5 w-16 animate-pulse rounded bg-muted" />
-            <div className="h-5 w-20 animate-pulse rounded bg-muted" />
+            <Skeleton className="h-5 w-16" />
+            <Skeleton className="h-5 w-20" />
           </div>
-          <div className="mt-2 h-6 w-3/4 animate-pulse rounded bg-muted" />
-          <div className="mt-2 h-4 w-full animate-pulse rounded bg-muted" />
+          <Skeleton className="mt-2 h-6 w-3/4" />
+          <Skeleton className="mt-2 h-4 w-full" />
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <div className="h-3 w-20 animate-pulse rounded bg-muted" />
-            <div className="h-3 w-24 animate-pulse rounded bg-muted" />
-            <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-3 w-16" />
           </div>
         </div>
       ))}

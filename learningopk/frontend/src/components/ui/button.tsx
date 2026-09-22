@@ -31,44 +31,30 @@ export const buttonVariants = cva(
     "relative inline-flex items-center justify-center gap-2 font-medium",
     "transition-all duration-150 ease-out",
     "disabled:pointer-events-none disabled:opacity-50",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40 focus-visible:ring-offset-2",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2",
   ].join(" "),
   {
     variants: {
       variant: {
         primary: [
-          "bg-accent-primary text-white",
-          "hover:bg-accent-primary-hover",
-          "shadow-[var(--shadow-sm)]",
+          "bg-accent text-on-accent hover:bg-accent-bright shadow-[var(--shadow-sm)] active:scale-[0.98]",
         ].join(" "),
         secondary: [
-          "bg-bg-surface text-text-primary",
-          "border border-border-default",
-          "hover:bg-bg-elevated hover:border-border-strong",
+          "bg-bg-surface text-text-primary border border-border-strong hover:bg-bg-elevated active:scale-[0.98]",
         ].join(" "),
-        ghost: ["text-text-secondary", "hover:bg-bg-subtle hover:text-text-primary"].join(" "),
-        danger: [
-          "bg-accent-danger text-white",
-          "hover:bg-accent-danger/90",
-          "shadow-[var(--shadow-sm)]",
-        ].join(" "),
-        success: [
-          "bg-accent-success text-white",
-          "hover:bg-accent-success/90",
-          "shadow-[var(--shadow-sm)]",
-        ].join(" "),
+        ghost: ["text-text-secondary hover:bg-accent-tint hover:text-text-primary"].join(" "),
+        danger: ["bg-danger text-white hover:opacity-90 active:scale-[0.98]"].join(" "),
+        success: ["bg-accent text-on-accent hover:bg-accent-bright active:scale-[0.98]"].join(" "),
         outline: [
-          "border border-border-strong text-text-primary",
-          "bg-transparent",
-          "hover:bg-bg-subtle",
+          "border border-border-strong text-text-primary bg-transparent hover:bg-bg-elevated",
         ].join(" "),
       },
       size: {
-        xs: "h-7 px-2.5 text-xs rounded-md",
-        sm: "h-8 px-3 text-xs rounded-md",
-        md: "h-10 px-4 text-sm rounded-lg",
-        lg: "h-12 px-6 text-base rounded-lg",
-        xl: "h-14 px-8 text-lg rounded-xl",
+        xs: "h-7 px-2.5 text-xs rounded-[6px]",
+        sm: "h-8 px-3 text-xs rounded-[8px]",
+        md: "h-10 px-4 text-sm rounded-[8px]",
+        lg: "h-12 px-6 text-base rounded-[8px]",
+        xl: "h-14 px-8 text-lg rounded-[8px]",
       },
       shape: {
         default: "",
@@ -174,7 +160,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       disabled={isDisabled}
       className={cn(
         buttonVariants({ variant, size, shape, width }),
-        !disableAnimation && !isDisabled && "active:scale-[0.97]",
+        !disableAnimation && !isDisabled && "active:scale-[0.98]",
         className
       )}
       aria-busy={loading || undefined}

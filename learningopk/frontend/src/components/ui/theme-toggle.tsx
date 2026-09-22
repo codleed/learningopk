@@ -99,13 +99,13 @@ export function ThemeToggle({ className, showLabels = true }: ThemeToggleProps) 
     return (
       <div
         className={cn(
-          "inline-flex h-10 items-center gap-1 rounded-xl border border-border-default bg-bg-surface p-1",
+          "inline-flex h-10 items-center gap-1 rounded-[8px] border border-hairline-strong bg-paper-dim p-1",
           className
         )}
         aria-label="Theme toggle"
       >
         {modes.map((m) => (
-          <div key={m} className="h-8 w-8 rounded-lg bg-bg-subtle animate-pulse" aria-hidden />
+          <div key={m} className="h-8 w-8 rounded-[6px] bg-bg-elevated" aria-hidden />
         ))}
       </div>
     );
@@ -116,7 +116,7 @@ export function ThemeToggle({ className, showLabels = true }: ThemeToggleProps) 
       role="tablist"
       aria-label="Theme selection"
       className={cn(
-        "inline-flex h-10 items-center gap-1 rounded-xl border border-border-default bg-bg-surface p-1",
+        "inline-flex h-10 items-center gap-1 rounded-[8px] border border-hairline-strong bg-paper-dim p-1",
         className
       )}
     >
@@ -135,16 +135,16 @@ export function ThemeToggle({ className, showLabels = true }: ThemeToggleProps) 
             onClick={() => setTheme(m)}
             onKeyDown={(e) => handleKeyDown(e, index)}
             className={cn(
-              "relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium",
+              "relative flex items-center gap-1.5 rounded-[6px] px-3 py-1.5 text-sm font-semibold",
               "transition-all duration-200 ease-out",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base",
-              isActive ? "text-white" : "text-text-muted hover:text-text-primary hover:bg-bg-subtle"
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-paper-dim",
+              isActive ? "text-on-accent" : "text-ink-soft hover:text-accent hover:bg-paper-raised"
             )}
           >
             {isActive ? (
               <motion.span
                 layoutId="theme-toggle-indicator"
-                className="absolute inset-0 rounded-lg bg-accent-primary"
+                className="absolute inset-0 rounded-[6px] bg-accent"
                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
               />
             ) : null}
@@ -202,7 +202,7 @@ export function ThemeToggleCompact({ className }: ThemeToggleCompactProps) {
   if (!mounted) {
     return (
       <button
-        className={cn("h-10 w-10 rounded-lg bg-bg-subtle animate-pulse", className)}
+        className={cn("h-10 w-10 rounded-[6px] bg-bg-elevated", className)}
         aria-label="Theme toggle"
         disabled
       />
@@ -216,10 +216,10 @@ export function ThemeToggleCompact({ className }: ThemeToggleCompactProps) {
       type="button"
       onClick={toggle}
       className={cn(
-        "relative inline-flex h-10 w-10 items-center justify-center rounded-lg",
-        "text-text-secondary hover:text-text-primary hover:bg-bg-subtle",
+        "relative inline-flex h-10 w-10 items-center justify-center rounded-[6px]",
+        "text-ink-soft hover:text-accent hover:bg-paper-dim",
         "transition-colors duration-150",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-paper-dim",
         className
       )}
       aria-label={label}

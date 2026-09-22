@@ -52,7 +52,7 @@ export function Spinner({
         {[0, 1, 2].map((i) => (
           <span
             key={i}
-            className={cn("rounded-full bg-accent-primary", dotSize)}
+            className={cn("rounded-full bg-accent", dotSize)}
             style={{
               animation: "streaming-dot 1.4s ease-in-out infinite",
               animationDelay: `${i * 0.2}s`,
@@ -70,7 +70,7 @@ export function Spinner({
       className={cn(
         "inline-block animate-spin rounded-full",
         "border-2 border-current border-t-transparent",
-        "text-accent-primary",
+        "text-accent",
         spinnerSizeVariants({ size }),
         className
       )}

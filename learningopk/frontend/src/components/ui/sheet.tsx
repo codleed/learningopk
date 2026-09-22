@@ -36,9 +36,9 @@ const slideVariants: Record<
 };
 
 const sidePositionClasses: Record<SheetSide, string> = {
-  left: "inset-y-0 left-0 w-80 max-w-[85vw] border-r border-border-default",
-  right: "inset-y-0 right-0 w-80 max-w-[85vw] border-l border-border-default",
-  bottom: "inset-x-0 bottom-0 h-auto max-h-[85vh] border-t border-border-default rounded-t-xl",
+  left: "inset-y-0 left-0 w-80 max-w-[85vw] border-r border-hairline-strong",
+  right: "inset-y-0 right-0 w-80 max-w-[85vw] border-l border-hairline-strong",
+  bottom: "inset-x-0 bottom-0 h-auto max-h-[85vh] border-t border-hairline-strong rounded-t-[12px]",
 };
 
 /** Props for the Sheet component. */
@@ -80,7 +80,7 @@ export function Sheet({
             {/* Overlay */}
             <DialogPrimitive.Overlay asChild forceMount>
               <motion.div
-                className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+                className="fixed inset-0 z-50 bg-black/55"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -92,7 +92,7 @@ export function Sheet({
             <DialogPrimitive.Content asChild forceMount>
               <motion.div
                 className={cn(
-                  "fixed z-50 flex flex-col bg-bg-surface shadow-[var(--shadow-elevated)]",
+                  "fixed z-50 flex flex-col bg-paper-dim shadow-[var(--shadow-md)]",
                   sidePositionClasses[side],
                   className
                 )}

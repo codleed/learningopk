@@ -29,7 +29,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     <select
       ref={ref}
       className={cn(
-        "h-12 w-full rounded-lg border border-border-default bg-bg-surface px-4 text-base text-text-primary shadow-[var(--shadow-sm)] focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/20 disabled:cursor-not-allowed disabled:opacity-50",
+        "h-12 w-full rounded-[8px] border border-hairline-strong bg-paper-dim px-4 text-base text-ink placeholder:text-ink-faint focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       {...props}
@@ -102,14 +102,11 @@ export function RadixSelect({
       >
         <SelectPrimitive.Trigger
           className={cn(
-            "flex h-10 w-full items-center justify-between rounded-lg px-3.5 text-sm",
-            "bg-bg-surface border border-border-default text-text-primary",
-            "shadow-[var(--shadow-sm)]",
-            "placeholder:text-text-muted",
-            "transition-all duration-150 ease-out",
-            "focus:outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20",
+            "flex h-10 w-full items-center justify-between rounded-[8px] px-3.5 text-sm",
+            "bg-paper-dim border border-hairline-strong text-ink placeholder:text-ink-faint",
+            "focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40",
             "disabled:cursor-not-allowed disabled:opacity-50",
-            hasError && "!border-accent-danger !ring-2 !ring-accent-danger/20",
+            hasError && "!border-danger !ring-2 !ring-danger/40",
             className
           )}
           aria-invalid={hasError || undefined}
@@ -123,9 +120,9 @@ export function RadixSelect({
         <SelectPrimitive.Portal>
           <SelectPrimitive.Content
             className={cn(
-              "z-50 overflow-hidden rounded-lg",
-              "bg-bg-elevated border border-border-default",
-              "shadow-[var(--shadow-elevated)]",
+              "z-50 overflow-hidden rounded-[8px]",
+              "bg-paper-dim border border-hairline-strong",
+              "shadow-[var(--shadow-md)]",
               "animate-in fade-in-0 zoom-in-95",
               "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
               "data-[side=top]:slide-in-from-bottom-2",
@@ -134,7 +131,7 @@ export function RadixSelect({
             position="popper"
             sideOffset={4}
           >
-            <SelectPrimitive.ScrollUpButton className="flex h-6 cursor-default items-center justify-center bg-bg-elevated text-text-muted">
+            <SelectPrimitive.ScrollUpButton className="flex h-6 cursor-default items-center justify-center bg-paper-dim text-ink-faint">
               <ChevronUp className="h-4 w-4" />
             </SelectPrimitive.ScrollUpButton>
 
@@ -142,7 +139,7 @@ export function RadixSelect({
               {children}
             </SelectPrimitive.Viewport>
 
-            <SelectPrimitive.ScrollDownButton className="flex h-6 cursor-default items-center justify-center bg-bg-elevated text-text-muted">
+            <SelectPrimitive.ScrollDownButton className="flex h-6 cursor-default items-center justify-center bg-paper-dim text-ink-faint">
               <ChevronDown className="h-4 w-4" />
             </SelectPrimitive.ScrollDownButton>
           </SelectPrimitive.Content>
@@ -203,7 +200,7 @@ export function SelectItem({
       )}
     >
       <SelectPrimitive.ItemIndicator className="absolute left-2 flex items-center justify-center">
-        <Check className="h-3.5 w-3.5 text-accent-primary" />
+        <Check className="h-3.5 w-3.5 text-accent" />
       </SelectPrimitive.ItemIndicator>
 
       <div className="flex items-center gap-2">
@@ -247,5 +244,5 @@ export function SelectGroup({ label, children }: SelectGroupProps) {
 
 /** Visual separator between groups. */
 export function SelectSeparator({ className }: { className?: string }) {
-  return <SelectPrimitive.Separator className={cn("my-1 h-px bg-border-default", className)} />;
+  return <SelectPrimitive.Separator className={cn("my-1 h-px bg-hairline", className)} />;
 }

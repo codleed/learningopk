@@ -31,24 +31,20 @@ export function EmptyState({
   return (
     <section
       className={cn(
-        "flex flex-col items-center justify-center rounded-xl",
-        "border border-dashed border-border-default bg-bg-subtle/40",
+        "flex flex-col items-center justify-center rounded-[12px]",
+        "border border-dashed border-hairline bg-paper-dim/40",
         "px-6 py-12 text-center",
         className
       )}
       {...props}
     >
-      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-bg-elevated text-text-muted">
+      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-[8px] bg-paper-dim text-ink-faint">
         {icon ?? <Inbox className="h-6 w-6" aria-hidden />}
       </div>
 
-      <h3 className="text-base font-semibold text-text-primary font-[var(--font-display)]">
-        {title}
-      </h3>
+      <h3 className="text-base font-semibold text-ink font-[var(--font-display)]">{title}</h3>
 
-      {description ? (
-        <p className="mt-1.5 max-w-sm text-sm text-text-secondary">{description}</p>
-      ) : null}
+      {description ? <p className="mt-1.5 max-w-sm text-sm text-ink-soft">{description}</p> : null}
 
       {action ? <div className="mt-5">{action}</div> : null}
     </section>

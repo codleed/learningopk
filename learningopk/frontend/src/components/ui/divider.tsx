@@ -19,7 +19,7 @@ export function Divider({ className, orientation = "horizontal", label, ...props
   if (orientation === "vertical") {
     return (
       <div
-        className={cn("inline-block h-full w-px self-stretch bg-border-default", className)}
+        className={cn("inline-block h-full w-px self-stretch bg-hairline", className)}
         role="separator"
         aria-orientation="vertical"
         {...props}
@@ -35,16 +35,16 @@ export function Divider({ className, orientation = "horizontal", label, ...props
         aria-orientation="horizontal"
         {...props}
       >
-        <span className="h-px flex-1 bg-border-default" />
-        <span className="shrink-0 text-xs font-medium text-text-muted select-none">{label}</span>
-        <span className="h-px flex-1 bg-border-default" />
+        <span className="h-px flex-1 bg-hairline" />
+        <span className="shrink-0 text-caption text-ink-faint select-none">{label}</span>
+        <span className="h-px flex-1 bg-hairline" />
       </div>
     );
   }
 
   return (
     <div
-      className={cn("h-px w-full bg-border-default", className)}
+      className={cn("h-px w-full bg-hairline", className)}
       role="separator"
       aria-orientation="horizontal"
       {...props}

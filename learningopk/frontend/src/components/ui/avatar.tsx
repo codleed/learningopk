@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 /* ─── Size map ─── */
 const avatarSizeVariants = cva(
-  "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-bg-subtle",
+  "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-[8px] bg-paper-dim ring-1 ring-hairline",
   {
     variants: {
       size: {
@@ -21,23 +21,6 @@ const avatarSizeVariants = cva(
     },
   }
 );
-
-/** Deterministic gradient from a string. Returns a CSS linear-gradient. */
-function initialsGradient(name: string): string {
-  const gradients = [
-    "linear-gradient(135deg, var(--accent-primary), var(--accent-info))",
-    "linear-gradient(135deg, var(--accent-success), var(--accent-info))",
-    "linear-gradient(135deg, var(--accent-warning), var(--accent-danger))",
-    "linear-gradient(135deg, var(--accent-primary), var(--accent-danger))",
-    "linear-gradient(135deg, var(--accent-info), var(--accent-success))",
-    "linear-gradient(135deg, var(--accent-danger), var(--accent-warning))",
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return gradients[Math.abs(hash) % gradients.length]!;
-}
 
 /** Extract up to 2 initials from a name. */
 function getInitials(name: string): string {
@@ -101,8 +84,7 @@ export function Avatar({
         />
       ) : (
         <span
-          className="flex h-full w-full items-center justify-center font-semibold text-white select-none"
-          style={{ background: initialsGradient(name) }}
+          className="flex h-full w-full items-center justify-center font-semibold text-ink-soft select-none"
           aria-hidden="true"
         >
           {getInitials(name)}
@@ -112,7 +94,7 @@ export function Avatar({
       {online ? (
         <span
           className={cn(
-            "absolute bottom-0 right-0 rounded-full border-bg-surface bg-accent-success",
+            "absolute bottom-0 right-0 rounded-full border-paper-dim bg-accent",
             "animate-pulse",
             dotSize
           )}
@@ -159,7 +141,7 @@ export function AvatarGroup({
       {...props}
     >
       {visible.map((child, idx) => (
-        <span key={idx} className={cn("ring-2 ring-bg-base rounded-full", idx > 0 && overlapClass)}>
+        <span key={idx} className={cn("ring-2 ring-paper rounded-[8px]", idx > 0 && overlapClass)}>
           {child}
         </span>
       ))}
@@ -169,7 +151,7 @@ export function AvatarGroup({
           className={cn(
             avatarSizeVariants({ size }),
             overlapClass,
-            "ring-2 ring-bg-base bg-bg-elevated text-text-secondary font-semibold select-none"
+            "ring-2 ring-paper bg-paper-dim text-ink-faint font-semibold select-none"
           )}
           aria-label={`${overflow} more`}
         >

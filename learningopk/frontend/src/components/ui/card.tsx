@@ -4,36 +4,27 @@ import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 /* ─── CVA Card Variants ─── */
-const cardVariants = cva(
-  ["rounded-xl text-text-primary", "transition-all duration-200 ease-out"].join(" "),
-  {
-    variants: {
-      variant: {
-        default: [
-          "bg-bg-surface border border-border-default",
-          "shadow-[var(--shadow-sm)]",
-          "hover:shadow-[var(--shadow-card)]",
-        ].join(" "),
-        elevated: [
-          "bg-bg-surface border border-border-default",
-          "shadow-[var(--shadow-card)]",
-          "hover:-translate-y-0.5 hover:shadow-[var(--shadow-elevated)]",
-        ].join(" "),
-        bordered: [
-          "bg-bg-surface border-2 border-border-strong",
-          "hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]",
-        ].join(" "),
-        gradient: [
-          "relative bg-bg-surface",
-          "hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]",
-        ].join(" "),
-      },
+const cardVariants = cva(["text-ink"].join(" "), {
+  variants: {
+    variant: {
+      default: [
+        "bg-paper-dim border border-hairline rounded-[12px] shadow-[var(--shadow-sm)] hover:border-hairline-strong",
+      ].join(" "),
+      elevated: [
+        "bg-paper-dim border border-hairline rounded-[12px] shadow-[var(--shadow-md)]",
+      ].join(" "),
+      bordered: [
+        "bg-paper-dim border border-hairline-strong rounded-[12px] shadow-[var(--shadow-sm)]",
+      ].join(" "),
+      gradient: [
+        "bg-paper-dim border border-hairline rounded-[12px] shadow-[var(--shadow-sm)]",
+      ].join(" "),
     },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-);
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
 
 /** Props for the Card component. */
 export interface CardProps
@@ -42,24 +33,9 @@ export interface CardProps
 /**
  * Card container with multiple visual variants.
  *
- * The `gradient` variant renders a 1px conic-gradient border using `var(--card-gradient)`.
+ * The `gradient` variant is kept for call-site compatibility and renders like `default`.
  */
 export function Card({ className, variant, children, style, ...props }: CardProps) {
-  if (variant === "gradient") {
-    return (
-      <div
-        className={cn("relative rounded-xl p-px", className)}
-        style={{
-          background: "var(--card-gradient)",
-          ...style,
-        }}
-        {...props}
-      >
-        <div className={cn(cardVariants({ variant }), "rounded-[11px] h-full")}>{children}</div>
-      </div>
-    );
-  }
-
   return (
     <div className={cn(cardVariants({ variant }), className)} style={style} {...props}>
       {children}
@@ -96,7 +72,7 @@ export type CardFooterProps = HTMLAttributes<HTMLDivElement>;
 export function CardFooter({ className, ...props }: CardFooterProps) {
   return (
     <div
-      className={cn("flex items-center gap-2 border-t border-border-default px-5 py-4", className)}
+      className={cn("flex items-center gap-2 border-t border-hairline px-5 py-4", className)}
       {...props}
     />
   );
@@ -125,7 +101,7 @@ export type CardDescriptionProps = HTMLAttributes<HTMLParagraphElement>;
 
 /** @deprecated Use within CardHeader */
 export function CardDescription({ className, ...props }: CardDescriptionProps) {
-  return <p className={cn("text-sm text-text-secondary", className)} {...props} />;
+  return <p className={cn("text-sm text-ink-soft", className)} {...props} />;
 }
 
 /** @deprecated Use CardBody instead */

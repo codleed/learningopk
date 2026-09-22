@@ -10,10 +10,10 @@ import { cn } from "@/lib/utils";
 const progressColorVariants = cva("", {
   variants: {
     colorVariant: {
-      primary: "text-accent-primary",
-      success: "text-accent-success",
-      warning: "text-accent-warning",
-      danger: "text-accent-danger",
+      primary: "text-accent",
+      success: "text-accent",
+      warning: "text-ochre",
+      danger: "text-danger",
     },
   },
   defaultVariants: {
@@ -22,17 +22,17 @@ const progressColorVariants = cva("", {
 });
 
 const fillColorMap: Record<string, string> = {
-  primary: "bg-accent-primary",
-  success: "bg-accent-success",
-  warning: "bg-accent-warning",
-  danger: "bg-accent-danger",
+  primary: "bg-accent",
+  success: "bg-accent",
+  warning: "bg-ochre",
+  danger: "bg-danger",
 };
 
 const strokeColorMap: Record<string, string> = {
-  primary: "var(--accent-primary)",
-  success: "var(--accent-success)",
-  warning: "var(--accent-warning)",
-  danger: "var(--accent-danger)",
+  primary: "var(--accent)",
+  success: "var(--accent)",
+  warning: "var(--ochre)",
+  danger: "var(--danger)",
 };
 
 /* ═══════════════════════════════════════════
@@ -83,15 +83,15 @@ export function LinearProgress({
     <div className={cn("w-full", className)} {...props}>
       {label || showValue ? (
         <div className="mb-1.5 flex items-center justify-between text-xs">
-          {label ? <span className="font-medium text-text-primary">{label}</span> : <span />}
+          {label ? <span className="font-medium text-ink">{label}</span> : <span />}
           {showValue ? (
-            <span className="tabular-nums text-text-secondary">{Math.round(percent)}%</span>
+            <span className="tabular-nums text-ink-faint">{Math.round(percent)}%</span>
           ) : null}
         </div>
       ) : null}
 
       <div
-        className={cn("w-full overflow-hidden rounded-full bg-bg-subtle", heightClass)}
+        className={cn("w-full overflow-hidden rounded-[6px] bg-paper-dim", heightClass)}
         role="progressbar"
         aria-valuenow={value}
         aria-valuemin={0}
@@ -100,7 +100,7 @@ export function LinearProgress({
       >
         <motion.div
           className={cn(
-            "h-full rounded-full",
+            "h-full rounded-[6px]",
             fill,
             striped && [
               "bg-[length:20px_20px]",
@@ -182,7 +182,7 @@ export function CircularProgress({
           cy={diameter / 2}
           r={radius}
           fill="none"
-          stroke="var(--bg-subtle)"
+          stroke="var(--bg-elevated)"
           strokeWidth={strokeWidth}
         />
         {/* Foreground ring */}
@@ -205,7 +205,7 @@ export function CircularProgress({
 
       {showValue || label ? (
         <span className="absolute inset-0 flex items-center justify-center">
-          <span className="text-sm font-semibold tabular-nums text-text-primary">
+          <span className="text-sm font-semibold tabular-nums text-ink">
             {label ?? `${Math.round(percent)}%`}
           </span>
         </span>
