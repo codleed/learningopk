@@ -1,0 +1,148 @@
+/* Kitab v3 — "Night Study" tokens. Dark default; `.light` overrides. Spec §3. */
+:root {
+  --paper: #131211;
+  --paper-raised: #1c1a17;
+  --paper-dim: #24211d;
+  --ink: #ede6da;
+  --ink-soft: #b3aa9b;
+  --ink-faint: #8a8272;
+  --hairline: #35312b;
+  --hairline-strong: #4a453c;
+
+  --accent: #9ad42e;
+  --accent-bright: #b7f04a;
+  --on-accent: #141611;
+  --accent-tint: rgba(154, 212, 46, 0.14);
+  --accent-tint-strong: rgba(154, 212, 46, 0.24);
+  /* back-compat names used across kitab/ui trees */
+  --brick: var(--accent);
+  --brick-deep: var(--accent-bright);
+  --brick-tint: var(--accent-tint);
+  --brick-tint-strong: var(--accent-tint-strong);
+  --brick-contrast: var(--on-accent);
+
+  --danger: #f07178;
+  --danger-tint: rgba(240, 113, 120, 0.14);
+  --warning: #fbbf24;
+  --warning-tint: rgba(251, 191, 36, 0.14);
+  --moss: var(--accent);          /* success == accent, spec §3.2 */
+  --moss-deep: var(--accent-bright);
+  --moss-tint: var(--accent-tint);
+  --ochre: var(--warning);
+  --ochre-tint: var(--warning-tint);
+  --plum: var(--danger);          /* errors were plum; now coral */
+  --plum-tint: var(--danger-tint);
+
+  --graphite: #c9c1b4;
+
+  /* legacy bridge → v3 */
+  --bg-base: var(--paper);
+  --bg-surface: var(--paper-raised);
+  --bg-elevated: var(--paper-dim);
+  --bg-subtle: var(--paper-dim);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-soft);
+  --text-muted: var(--ink-faint);
+  --text-inverse: var(--on-accent);
+  --border-default: var(--hairline);
+  --border-strong: var(--hairline-strong);
+  --accent-primary: var(--accent);
+  --accent-primary-hover: var(--accent-bright);
+  --accent-primary-light: var(--accent-tint);
+  --accent-primary-fg: var(--on-accent);
+  --accent-success: var(--accent);
+  --accent-success-light: var(--accent-tint);
+  --accent-warning: var(--warning);
+  --accent-warning-light: var(--warning-tint);
+  --accent-danger: var(--danger);
+  --accent-danger-light: var(--danger-tint);
+  --accent-info: var(--graphite);
+  --accent-info-light: rgba(201, 193, 180, 0.14);
+
+  --radius-tag: 6px;
+  --radius-folio: 12px;
+  --radius-btn: 8px;
+  --radius-seal: 8px;
+  --radius-0: 0px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-card: var(--shadow-sm);
+  --shadow-elevated: 0 24px 48px rgba(0, 0, 0, 0.55);
+  --shadow-md: var(--shadow-elevated);
+
+  --quietbar-h: 44px;
+  --page-max: 1152px;
+  --measure-reading: 68ch;
+  --kitab-page-pad: 24px;
+
+  --press: 120ms;
+  --swap: 180ms;
+  --overlay: 280ms;
+  --ease-kitab: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Light ("day reading") — spec §3.3 */
+:root.light,
+.light {
+  --paper: #f6f6f7;
+  --paper-raised: #ffffff;
+  --paper-dim: #ffffff;
+  --ink: #111113;
+  --ink-soft: #52525b;
+  --ink-faint: #71717a;
+  --hairline: #e4e4e7;
+  --hairline-strong: #d4d4d8;
+
+  --accent: #9ad42e;
+  --accent-bright: #4a6b0a;       /* lime text on white fails AA; see spec §3.3 */
+  --on-accent: #141611;
+  --accent-tint: rgba(74, 107, 10, 0.1);
+  --accent-tint-strong: rgba(74, 107, 10, 0.18);
+  --brick: var(--accent);
+  --brick-deep: var(--accent-bright);
+  --brick-tint: var(--accent-tint);
+  --brick-tint-strong: var(--accent-tint-strong);
+  --brick-contrast: var(--on-accent);
+
+  --danger: #dc2626;
+  --danger-tint: rgba(220, 38, 38, 0.1);
+  --warning: #b45309;
+  --warning-tint: rgba(180, 83, 9, 0.1);
+  --moss: var(--accent);
+  --moss-deep: var(--accent-bright);
+  --moss-tint: var(--accent-tint);
+  --ochre: var(--warning);
+  --ochre-tint: var(--warning-tint);
+  --plum: var(--danger);
+  --plum-tint: var(--danger-tint);
+
+  --graphite: #3f3f46;
+
+  --bg-base: var(--paper);
+  --bg-surface: var(--paper-raised);
+  --bg-elevated: var(--paper-dim);
+  --bg-subtle: var(--paper-dim);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-soft);
+  --text-muted: var(--ink-faint);
+  --text-inverse: var(--on-accent);
+  --border-default: var(--hairline);
+  --border-strong: var(--hairline-strong);
+  --accent-primary: var(--accent);
+  --accent-primary-hover: var(--accent-bright);
+  --accent-primary-light: var(--accent-tint);
+  --accent-primary-fg: var(--on-accent);
+  --accent-success: #4a6b0a;
+  --accent-success-light: var(--accent-tint);
+  --accent-warning: var(--warning);
+  --accent-warning-light: var(--warning-tint);
+  --accent-danger: var(--danger);
+  --accent-danger-light: var(--danger-tint);
+  --accent-info: var(--graphite);
+  --accent-info-light: rgba(63, 63, 70, 0.1);
+
+  --shadow-sm: 0 1px 2px rgba(17, 17, 19, 0.06), 0 8px 24px rgba(17, 17, 19, 0.08);
+  --shadow-card: var(--shadow-sm);
+  --shadow-elevated: 0 24px 48px rgba(17, 17, 19, 0.16);
+  --shadow-md: var(--shadow-elevated);
+}

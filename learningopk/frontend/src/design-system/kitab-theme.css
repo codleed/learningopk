@@ -1,0 +1,128 @@
+/* Kitab v3 — Tailwind v4 bridge. Fonts from next/font vars. */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-paper-dim: var(--paper-dim);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-bright: var(--accent-bright);
+  --color-on-accent: var(--on-accent);
+  --color-accent-tint: var(--accent-tint);
+  --color-brick: var(--brick);
+  --color-brick-deep: var(--brick-deep);
+  --color-brick-tint: var(--brick-tint);
+  --color-brick-tint-strong: var(--brick-tint-strong);
+  --color-brick-contrast: var(--brick-contrast);
+
+  --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
+  --color-moss: var(--moss);
+  --color-moss-deep: var(--moss-deep);
+  --color-moss-tint: var(--moss-tint);
+  --color-ochre: var(--ochre);
+  --color-ochre-tint: var(--ochre-tint);
+  --color-plum: var(--plum);
+  --color-plum-tint: var(--plum-tint);
+  --color-graphite: var(--graphite);
+
+  --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-ui: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-data: var(--font-plex-mono), ui-monospace, monospace;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  --radius-tag: 6px;
+  --radius-btn: 8px;
+  --radius-folio: 12px;
+  --radius-seal: 8px;
+
+  --container-page: 1152px;
+
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.5;
+  --text-data: 0.875rem;
+  --text-data--line-height: 1.45;
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+  --text-subhead: 1rem;
+  --text-subhead--line-height: 1.5;
+  --text-heading: 1.25rem;
+  --text-heading--line-height: 1.4;
+  --text-title: 1.75rem;
+  --text-title--line-height: 1.2;
+  --text-display: 2.5rem;
+  --text-display--line-height: 1.1;
+  --text-display-xl: 3.25rem;
+  --text-display-xl--line-height: 1.05;
+}
+
+@layer base {
+  html {
+    background-color: var(--paper);
+    font-family: var(--font-ui);
+    font-size: 16px;
+  }
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  h1 { letter-spacing: -0.03em; }
+  .tnum {
+    font-family: var(--font-data);
+    font-feature-settings: "tnum";
+  }
+  .overline {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent-bright);
+    outline-offset: 2px;
+  }
+}
+
+/* QuietBar glass — ONLY place backdrop-filter is allowed (dark mode only). */
+.quietbar-glass {
+  background: var(--paper);
+  border-bottom: 1px solid var(--hairline);
+}
+:root:not(.light) .quietbar-glass,
+:root.dark .quietbar-glass {
+  background: rgba(28, 26, 23, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom-color: rgba(53, 49, 43, 0.6);
+}
+
+/* preserved: pull-out.tsx animates with this name */
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "katex/dist/katex.min.css";
+@import "../src/design-system/kitab-tokens.css";
+@import "../src/design-system/kitab-theme.css";
 @import "../src/design-system/tokens.css";
 @import "./theme.css";
 
@@ -98,8 +100,6 @@
 
   html {
     background-color: var(--bg-base);
-    /* Default sidebar offset - updated dynamically by LeftRail component */
-    --left-rail-width: 72px;
   }
 
   body {
@@ -209,15 +209,6 @@
   }
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
 @keyframes count-up-flash {
   0% {
     opacity: 1;
@@ -257,9 +248,6 @@
 }
 .animate-spin {
   animation: spin 1s linear infinite;
-}
-.animate-shimmer {
-  animation: shimmer 2s linear infinite;
 }
 .animate-streak-pulse {
   animation: streak-pulse 2s ease-in-out infinite;
@@ -489,25 +477,8 @@
   @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40 focus-visible:ring-offset-2;
 }
 
-.hover-lift {
-  transition:
-    transform var(--transition-fast),
-    box-shadow var(--transition-fast);
-}
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-card);
-}
-
 .text-balance {
   text-wrap: balance;
-}
-
-.gradient-text {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-info) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 /* ── Reduced motion ── */
@@ -517,7 +488,6 @@
   .animate-pulse-soft,
   .animate-message-in,
   .animate-spin,
-  .animate-shimmer,
   .animate-streak-pulse,
   .animate-exercise-content-enter {
     animation: none !important;
@@ -534,10 +504,6 @@
 
   .blank-underline-active {
     animation: none !important;
-  }
-
-  .hover-lift:hover {
-    transform: none;
   }
 
   .katex {

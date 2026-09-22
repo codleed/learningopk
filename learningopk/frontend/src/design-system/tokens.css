@@ -1,0 +1,59 @@
+/* Legacy token layer — now indirection into Kitab v3. No hex literals. */
+:root,
+:root[class~="dark"],
+:root[class~="light"] {
+  --chart-1: var(--accent);
+  --chart-2: var(--danger);
+  --chart-3: var(--warning);
+  --chart-4: var(--graphite);
+  --chart-5: var(--ink-soft);
+
+  --sidebar-bg: var(--paper);
+  --sidebar-border: var(--hairline);
+
+  --card-gradient: var(--hairline); /* conic gradient removed — Card gradient variant dies */
+
+  --exercise-long: var(--accent);
+  --exercise-long-light: var(--accent-tint);
+  --exercise-long-border: var(--hairline-strong);
+  --exercise-long-bg: var(--accent-tint);
+  --exercise-short: var(--danger);
+  --exercise-short-light: var(--danger-tint);
+  --exercise-short-border: var(--hairline-strong);
+  --exercise-short-bg: var(--danger-tint);
+  --exercise-blanks: var(--warning);
+  --exercise-blanks-light: var(--warning-tint);
+  --exercise-blanks-border: var(--hairline-strong);
+  --exercise-blanks-bg: var(--warning-tint);
+  --exercise-physics: var(--graphite);
+  --exercise-physics-light: rgba(201, 193, 180, 0.12);
+  --exercise-physics-border: var(--hairline-strong);
+  --exercise-physics-bg: rgba(201, 193, 180, 0.06);
+}
+
+/* Shared scale tokens still referenced across the app (not owned by Kitab v3) */
+:root {
+  --space-0:  0px;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  --transition-fast: 150ms ease-out;
+
+  --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
